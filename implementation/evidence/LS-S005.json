@@ -1,7 +1,7 @@
 {
   "slice": "LS-S005",
   "status": "verified",
-  "revision": "pending-commit",
+  "revision": "c8102e2",
   "checks": [
     { "command": "pnpm typecheck", "result": "pass", "evidence": "Strict TypeScript workspace typecheck passed." },
     { "command": "pnpm test", "result": "pass", "evidence": "Eight deterministic workspace and SQLite tests passed, including WAL, migration persistence, digest rejection, and rollback." },
