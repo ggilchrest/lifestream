@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "247fb5b4d2b9ac40281ba3ede918b23516c271fc",
-  "currentRevision": "761c54968c42dd2c3c70c9688f59e4ad8ccf82f0",
+  "currentRevision": "96fcafda05a423d5b0641e7f6e12d366ec2aa10f",
   "activeSlice": "LS-S003",
   "sliceStatus": "verified",
   "completedSlices": ["LS-S001", "LS-S002"],
