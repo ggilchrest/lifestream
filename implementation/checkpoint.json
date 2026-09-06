@@ -2,23 +2,31 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "247fb5b4d2b9ac40281ba3ede918b23516c271fc",
-  "currentRevision": "96fcafda05a423d5b0641e7f6e12d366ec2aa10f",
-  "activeSlice": "LS-S003",
+  "baseRevision": "06fdc60f88923ac904e063cde7c85dbd260e5782",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S004",
   "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002"],
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003"],
   "allowedFiles": [
-    "packages/contracts/src/index.ts",
-    "packages/contracts/src/primitives/index.ts",
-    "packages/contracts/src/primitives/clock.ts",
-    "packages/contracts/src/primitives/identity.ts",
-    "packages/contracts/src/primitives/deadline.ts",
-    "packages/contracts/src/primitives/error.ts",
-    "packages/contracts/test/primitives.test.ts",
+    "apps/server/src/config/index.ts",
+    "apps/server/src/config/schema.ts",
+    "apps/server/src/config/loader.ts",
+    "apps/server/src/config/profiles/test.json",
+    "apps/server/src/config/profiles/local-dev.json",
+    "apps/server/test/config.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S003.json"
+    "implementation/evidence/LS-S004.json"
   ],
-  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S003.json"],
+  "changedFiles": [
+    "apps/server/src/config/index.ts",
+    "apps/server/src/config/loader.ts",
+    "apps/server/src/config/profiles/local-dev.json",
+    "apps/server/src/config/profiles/test.json",
+    "apps/server/src/config/schema.ts",
+    "apps/server/test/config.test.ts",
+    "implementation/checkpoint.json",
+    "implementation/evidence/LS-S004.json"
+  ],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -58,8 +66,8 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "Commit the verified LS-S003 implementation with its evidence receipt, then activate LS-S004 in the batch.",
-  "updatedAt": "2026-09-07T00:05:00Z",
+  "nextAction": "LS-S001 through LS-S004 are verified. Batch complete; await the next explicitly authorized batch.",
+  "updatedAt": "2026-09-07T00:50:00Z",
   "updatedBy": "Codex",
   "notes": "Authorized batch LS-S001 through LS-S004. Current slice is LS-S001. Checkpoint updates and evidence remain per slice; advance automatically only after verification. No runtime or production acceptance."
 }

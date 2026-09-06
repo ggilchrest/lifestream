@@ -1,0 +1,7 @@
+{
+  "profile": "test",
+  "providers": { "inference": "fixture", "memory": "fixture", "stt": "fixture", "tts": "fixture", "world": "fixture", "capability": "fixture", "renderer": "fixture", "clock": "fixture" },
+  "storage": { "databasePath": ":memory:", "artifactDirectory": ".artifacts/test" },
+  "authority": { "provider": "fixture", "authentication": "fixture" },
+  "secretRefs": {}
+}
