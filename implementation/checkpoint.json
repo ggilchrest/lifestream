@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "9b81a6139ddf47298443cbc651839b42e7b856e8",
-  "currentRevision": "WORKTREE",
+  "currentRevision": "f2723ba84906d51777c72818a18192f09cbadfd9",
   "activeSlice": "LS-S006",
   "sliceStatus": "verified",
   "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005"],
@@ -14,7 +14,7 @@
     "implementation/checkpoint.json",
     "implementation/evidence/LS-S006.json"
   ],
-  "changedFiles": ["packages/storage-sqlite/src/assistant-profile.ts", "packages/storage-sqlite/src/migrations/0002_assistant_profiles.sql", "packages/storage-sqlite/test/assistant-profile.test.ts", "implementation/checkpoint.json", "implementation/evidence/LS-S006.json"],
+  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S006.json"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
