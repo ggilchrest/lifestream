@@ -4,11 +4,11 @@
   "checkoutPath": ".private",
   "status": "pinned",
   "baseRevision": "3f89f9625e1b5cfd91559dd351130f2005c8f2e0",
-  "revision": "2a7e9cc5b8457ea782c6690a1227765198e2b623",
-  "contractManifestSha256": "ea7edf3431c0d4bc87d813bebd247d282b061060f9f3479f7dc2e364c26fe643",
+  "revision": "fdd60a1a5eaf7cbf4a9c1699378937300e17d20a",
+  "contractManifestSha256": "00eacba46876515105607ac43e13441ef53999e8ac066697f995df2f56d9c652",
   "review": {
     "reviewer": "ggilchrest",
-    "reviewedAt": "2026-09-06T22:10:08Z",
-    "evidence": "User-authorized batch-mode handoff change and publication of ggilchrest/lifestream-specs commit 2a7e9cc5b8457ea782c6690a1227765198e2b623."
+    "reviewedAt": "2026-09-06T22:38:00Z",
+    "evidence": "User-authorized batch-mode handoff change, evidence-scope amendment, and publication of ggilchrest/lifestream-specs commit fdd60a1a5eaf7cbf4a9c1699378937300e17d20a."
   }
 }

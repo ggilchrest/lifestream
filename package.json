@@ -1,0 +1,17 @@
+{
+  "name": "lifestream",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.0.0",
+  "engines": { "node": ">=24.0.0" },
+  "scripts": {
+    "build": "tsc -b apps/server packages/contracts packages/runtime packages/providers-fixture packages/storage-sqlite",
+    "lint": "eslint .",
+    "test": "node --test --experimental-strip-types tests/workspace.test.ts",
+    "typecheck": "tsc -b --pretty false apps/server packages/contracts packages/runtime packages/providers-fixture packages/storage-sqlite"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "typescript": "^5.7.0"
+  }
+}

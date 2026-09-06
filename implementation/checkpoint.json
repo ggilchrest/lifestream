@@ -2,13 +2,67 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "eefaf0bb62ea1571a10e456ba7fd3cce2261d767",
+  "baseRevision": "b43a5bccaa5966d2eef0494f756f6f4e4c2dbcd8",
   "currentRevision": "WORKTREE",
-  "activeSlice": null,
-  "sliceStatus": "blocked",
-  "completedSlices": [],
-  "allowedFiles": [],
-  "changedFiles": [],
+  "activeSlice": "LS-S001",
+  "sliceStatus": "verified",
+  "completedSlices": ["LS-S001"],
+  "allowedFiles": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "tsconfig.base.json",
+    "eslint.config.mjs",
+    "vitest.config.ts",
+    ".node-version",
+    "README.md",
+    ".github/workflows/application.yml",
+    "implementation/checkpoint.json",
+    "implementation/evidence/LS-S001.json",
+    "apps/server/package.json",
+    "apps/server/tsconfig.json",
+    "apps/server/src/index.ts",
+    "packages/contracts/package.json",
+    "packages/contracts/tsconfig.json",
+    "packages/contracts/src/index.ts",
+    "packages/runtime/package.json",
+    "packages/runtime/tsconfig.json",
+    "packages/runtime/src/index.ts",
+    "packages/providers-fixture/package.json",
+    "packages/providers-fixture/tsconfig.json",
+    "packages/providers-fixture/src/index.ts",
+    "packages/storage-sqlite/package.json",
+    "packages/storage-sqlite/tsconfig.json",
+    "packages/storage-sqlite/src/index.ts",
+    "tests/workspace.test.ts"
+  ],
+  "changedFiles": [
+    ".github/workflows/application.yml",
+    ".node-version",
+    "apps/server/package.json",
+    "apps/server/src/index.ts",
+    "apps/server/tsconfig.json",
+    "eslint.config.mjs",
+    "implementation/checkpoint.json",
+    "package.json",
+    "packages/contracts/package.json",
+    "packages/contracts/src/index.ts",
+    "packages/contracts/tsconfig.json",
+    "packages/providers-fixture/package.json",
+    "packages/providers-fixture/src/index.ts",
+    "packages/providers-fixture/tsconfig.json",
+    "packages/runtime/package.json",
+    "packages/runtime/src/index.ts",
+    "packages/runtime/tsconfig.json",
+    "packages/storage-sqlite/package.json",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/tsconfig.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "tests/workspace.test.ts",
+    "tsconfig.base.json",
+    "vitest.config.ts"
+  ],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -27,16 +81,29 @@
     },
     {
       "command": "node scripts/workspace.mjs preflight LS-S001",
-      "result": "blocked",
-      "evidence": "The corrected private specification is pinned, but no application slice is active/authorized and no exact writable scope has been instantiated in this checkpoint."
+      "result": "pass",
+      "evidence": "Preflight passed against private baseline 2a7e9cc5b8457ea782c6690a1227765198e2b623 with the exact LS-S001 packet before implementation."
+    },
+    {
+      "command": "pnpm install --frozen-lockfile --offline",
+      "result": "pass",
+      "evidence": "Frozen workspace install completed from the local package store on 2026-09-06 UTC."
+    },
+    {
+      "command": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
+      "result": "pass",
+      "evidence": "Strict TypeScript build, ESLint, one workspace boundary test, and package builds passed locally on 2026-09-06 UTC."
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "evidence": "No whitespace errors in the LS-S001 worktree changes."
     }
   ],
   "decisions": [],
-  "blockers": [
-    "No application implementation slice has been requested or started."
-  ],
-  "nextAction": "After this bootstrap baseline is committed, explicitly authorize LS-S001 and instantiate its exact packet scope in this checkpoint before implementation.",
-  "updatedAt": "2026-09-06T18:01:06Z",
+  "blockers": [],
+  "nextAction": "Activate LS-S002 in the checkpoint after its LS-S001 prerequisite receipt is committed, then run the next batch packet.",
+  "updatedAt": "2026-09-06T22:30:00Z",
   "updatedBy": "Codex",
-  "notes": "Initialized for readiness finding 6. The bootstrap commit containing this checkpoint becomes the public baseline; its exact revision is recorded when a slice is activated, avoiding a self-referential commit hash. Bootstrap maintenance is not LS-S001. No runtime or production acceptance; no completed slices."
+  "notes": "Authorized batch LS-S001 through LS-S004. Current slice is LS-S001. Checkpoint updates and evidence remain per slice; advance automatically only after verification. No runtime or production acceptance."
 }
