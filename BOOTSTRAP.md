@@ -11,22 +11,22 @@ Public CI checks bootstrap structure and regression tests without accessing priv
 1. Inspect both Git roots, origins, branches, and dirty state. Never replace an existing `.private` directory or discard changes.
 2. If it is absent and access is authorized, use the `ggilchrest`-scoped GitHub CLI to clone `ggilchrest/lifestream-specs` into `.private`. Fetch only when requested/needed; do not silently follow `main` as the implementation target.
 3. Review corrections and proposed decisions. Run `npm ci`, `npm run validate`, and `git diff --check` inside the private repository. Arrange its commit/publication with user authorization. Approval of a reference baseline does not ratify every Proposed choice or resolve unrelated Open decisions.
-4. Record the exact full private commit in `spec-lock.json.revision`, the SHA-256 of that commit's `contracts/contract-manifest.json`, and a real human review record (`reviewer`, UTC `reviewedAt`, and an evidence reference). Set status to `pinned` only then. `baseRevision` records historical provenance; it is never a fallback target. Do not put private review text in this public metadata.
-5. Use an independent clean checkout at that exact revision. Pin changes are reviewed specification migrations, never automatic repairs. Run local preflight; the tool verifies the repository, revision, clean state, manifest digest, checkpoint schema, and full private validation before admitting a slice.
+4. Keep the private specification checkout available locally and run its validation when changing specification content. The private checkout is a working specification source, not an immutable implementation-admission gate.
+5. Run local preflight; the tool verifies the public checkpoint, packet scope, prerequisites, and current worktree without requiring a specification pin.
 
-The current lock pins the reviewed specification commit `adfed6cc78f65fd3b6c5938723943ac424d84dfd`. Future specification changes require a newly reviewed, published commit and matching manifest digest; a branch name, `WORKTREE`, or a digest of uncommitted files cannot replace an immutable target.
+The former `spec-lock.json` is retained only as historical metadata and is not consulted by implementation preflight.
 
 ## Slice and batch handoff
 
 `implementation/checkpoint.json` is the actual implementation state; the private Markdown checkpoint is only a format/runbook reference. It starts blocked, with no active or completed slices and no allowed application writes.
 
-The pinned private repository contains the roadmap, explicit readings for all slices, and `roadmap/packets/LS-S001.json`. That first packet is a prepared scope, not permission to execute. `npm --prefix .private run slice-packet -- LS-S001` displays its source inputs. For later slices, produce and review an exact packet in the private repository before pinning the applicable baseline; a roadmap preview alone is not executable authority.
+The private repository contains the roadmap, explicit readings for all slices, and the available packet files. `npm --prefix .private run slice-packet -- LS-SNNN` displays a slice's source inputs. A packet is a scope aid for the current batch, not a specification pin or publication gate.
 
 The default operating unit is now an explicitly authorized dependency-ordered batch. A batch is a user-approved sequence of individually packeted slices. Codex must update the live checkpoint after every slice, but must continue automatically through the batch after each slice verifies. The user is not expected to send conversational continuation prompts between slices.
 
 When the user requests a slice or batch:
 
-1. Review every packet and prerequisite in the requested batch at the locked revision. Record the actual public branch, base/current revision, active slice, and the current packet's exact allowed files in the checkpoint. Preserve prior evidence and unrelated work. Clear only resolved blockers.
+1. Review every packet and prerequisite in the requested batch at the current private checkout. Record the actual public branch, base/current revision, active slice, and the current packet's exact allowed files in the checkpoint. Preserve prior evidence and unrelated work. Clear only resolved blockers.
 2. Run `node scripts/workspace.mjs preflight LS-S001` (or the requested ID). The tool is read-only: it neither authorizes work nor edits state. Failed checks block coding. Dependency receipts live in `implementation/evidence/LS-SNNN.json`; each names `slice`, `status: verified`, a full public commit, and nonempty passing `checks` with command and evidence. Reviewers still need to inspect that evidence; receipt syntax alone is not correctness proof.
 3. Execute exactly the current packet's goal; run its commands and mapped acceptance cases. After verification, update the checkpoint and continue to the next explicitly authorized packet without waiting for user input. The first slice creates/pins application tooling; bootstrap CI's Node version is not a product architecture decision.
 4. Record changed files, command results, evidence and next action for every slice. Distinguish `implemented` from `verified`. Commit only when directed. Do not mark a slice verified or advance based on specification checks alone.

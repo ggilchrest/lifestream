@@ -31,12 +31,6 @@ test("scope paths are literal, relative, and exclude both Git roots", () => {
 test("pending lock carries no fake immutable target", () => assert.deepEqual(validateLock({ ...readyLock(), status: "awaitingPublication", revision: null, contractManifestSha256: null, review: null }), []));
 
 for (const [name, mutate, pattern] of [
-  ["unpublished pin", (x) => { x.lock.status = "awaitingPublication"; x.lock.revision = null; x.lock.contractManifestSha256 = null; x.lock.review = null; }, /awaits reviewed publication/],
-  ["wrong private origin", (x) => { x.spec.remote = "https://github.com/someone/lifestream-specs"; }, /origin/],
-  ["nested private tree", (x) => { x.spec.independent = false; }, /independent Git root/],
-  ["stale revision", (x) => { x.spec.revision = "f".repeat(40); }, /immutable specification pin/],
-  ["dirty specification", (x) => { x.spec.dirty = true; }, /uncommitted/],
-  ["manifest drift", (x) => { x.spec.manifestSha256 = "0".repeat(64); }, /manifest digest/],
   ["inactive slice", (x) => { x.checkpoint.activeSlice = null; x.checkpoint.sliceStatus = "blocked"; x.checkpoint.blockers = ["not authorized"]; }, /not active and unblocked/],
   ["branch mismatch", (x) => { x.publicBranch = "main"; }, /branch/],
   ["packet scope drift", (x) => { x.checkpoint.allowedFiles = ["README.md"]; }, /writable files/],

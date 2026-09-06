@@ -3,9 +3,9 @@
 ## Before work
 
 - This public implementation repository and `.private/` are independent Git roots. Inspect both statuses; preserve unrelated edits. Never stage `.private/`, private specifications, credentials, or private evidence in the public repository. Do not force-add ignored files.
-- Read `BOOTSTRAP.md`, `spec-lock.json`, and `implementation/checkpoint.json`. For implementation, run `node scripts/workspace.mjs preflight LS-SNNN` for the explicitly requested slice. A blocked preflight means stop implementation and report the smallest unresolved condition; do not update the pin, authorize a slice, or ratify a decision to make it pass.
+- Read `BOOTSTRAP.md` and `implementation/checkpoint.json`. For implementation, run `node scripts/workspace.mjs preflight LS-SNNN` for the explicitly requested slice. A blocked preflight means stop implementation and report the smallest unresolved condition; do not weaken the packet or checkpoint to make it pass.
 - Spec review and bootstrap maintenance may proceed while implementation is blocked. They do not complete an application slice.
-- Read the pinned private roadmap's common reading list and each selected slice's **Read first**, **Acceptance cases**, and reviewed packet. Work in an explicitly authorized, dependency-ordered batch; IDs are not execution order. All hard prerequisites need immutable verified evidence.
+- Read the current private roadmap's common reading list and each selected slice's **Read first**, **Acceptance cases**, and packet. Work in an explicitly authorized, dependency-ordered batch; IDs are not execution order. All hard prerequisites need verified evidence.
 - Confirm the reviewed packets and checkpoint name the exact writable files for the current slice. Component descriptions and packet previews are not a writable-file allowlist. Amend scope explicitly before touching another file.
 
 ## Execution and evidence

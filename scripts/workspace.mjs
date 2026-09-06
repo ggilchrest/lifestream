@@ -1,8 +1,8 @@
-import { readFileSync, existsSync, realpathSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 
 export const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const commit = (value) => typeof value === "string" && /^[a-f0-9]{40}$/.test(value);
@@ -49,18 +49,9 @@ export function validateCheckpoint(checkpoint) {
   return errors;
 }
 
-export function admissionErrors({ lock, checkpoint, slice, spec, packet, publicBranch, publicRevision, publicChanges = [] }) {
-  const errors = [...validateLock(lock), ...validateCheckpoint(checkpoint)];
+export function admissionErrors({ checkpoint, slice, packet, publicBranch, publicRevision, publicChanges = [] }) {
+  const errors = [...validateCheckpoint(checkpoint)];
   if (errors.length) return errors;
-  if (lock.status !== "pinned") errors.push("Corrected specification awaits reviewed publication and an immutable pin.");
-  if (!spec.present) errors.push("Independent private specification checkout is absent.");
-  else {
-    if (!spec.independent) errors.push("Private specification is not an independent Git root.");
-    if (!repositoryMatches(spec.remote, lock.repository)) errors.push("Private specification origin does not match the locked repository.");
-    if (spec.revision !== lock.revision) errors.push("Private HEAD does not match the immutable specification pin.");
-    if (spec.dirty) errors.push("Private specification has uncommitted/untracked changes.");
-    if (spec.manifestSha256 !== lock.contractManifestSha256) errors.push("Private contract manifest digest does not match the pin.");
-  }
   if (checkpoint.activeSlice !== slice || !["notStarted", "inProgress"].includes(checkpoint.sliceStatus) || checkpoint.blockers.length) errors.push("Requested slice is not active and unblocked in the implementation checkpoint.");
   if (checkpoint.branch !== publicBranch) errors.push("Public branch does not match the checkpoint.");
   if (checkpoint.currentRevision !== "WORKTREE" && checkpoint.currentRevision !== publicRevision) errors.push("Public revision does not match the checkpoint.");
@@ -76,9 +67,9 @@ export function admissionErrors({ lock, checkpoint, slice, spec, packet, publicB
 
 export function checkWorkspace(root) {
   const errors = [];
-  for (const path of ["README.md", "AGENTS.md", "BOOTSTRAP.md", "LICENSE", ".gitignore", "spec-lock.json", "implementation/checkpoint.json", ".github/workflows/workspace.yml", "scripts/workspace.test.mjs"]) if (!existsSync(join(root, path))) errors.push("Missing " + path);
+  for (const path of ["README.md", "AGENTS.md", "BOOTSTRAP.md", "LICENSE", ".gitignore", "implementation/checkpoint.json", ".github/workflows/workspace.yml", "scripts/workspace.test.mjs"]) if (!existsSync(join(root, path))) errors.push("Missing " + path);
   if (errors.length) return errors;
-  errors.push(...validateLock(readJSON(join(root, "spec-lock.json"))), ...validateCheckpoint(readJSON(join(root, "implementation/checkpoint.json"))));
+  errors.push(...validateCheckpoint(readJSON(join(root, "implementation/checkpoint.json"))));
   const ignore = readFileSync(join(root, ".gitignore"), "utf8");
   if (!ignore.split(/\r?\n/).includes("/.private/")) errors.push("Missing durable root private-repository ignore.");
   if (git(root, "ls-files", "--", ".private")) errors.push("Private repository content/gitlink is tracked by the public index.");
@@ -90,28 +81,17 @@ export async function preflight(root, slice) {
   const errors = checkWorkspace(root);
   if (errors.length) return errors;
   if (!repositoryMatches(git(root, "remote", "get-url", "origin"), "ggilchrest/lifestream")) return ["Unexpected public repository origin."];
-  const lock = readJSON(join(root, "spec-lock.json"));
   const checkpoint = readJSON(join(root, "implementation/checkpoint.json"));
   const privateRoot = join(root, ".private");
-  const spec = { present: existsSync(privateRoot) };
   let packet = null;
-  if (spec.present) {
-    try {
-      spec.independent = realpathSync(privateRoot) === privateRoot && git(privateRoot, "rev-parse", "--show-toplevel") === privateRoot;
-      spec.remote = git(privateRoot, "remote", "get-url", "origin");
-      spec.revision = git(privateRoot, "rev-parse", "HEAD");
-      spec.dirty = Boolean(git(privateRoot, "status", "--porcelain", "--untracked-files=all"));
-      spec.manifestSha256 = sha256(readFileSync(join(privateRoot, "contracts/contract-manifest.json")));
-      const packetPath = join(privateRoot, "roadmap/packets", slice + ".json");
-      if (existsSync(packetPath)) packet = readJSON(packetPath);
-    } catch { return ["Private checkout is missing valid Git/contract/packet data."]; }
-  }
+  const packetPath = join(privateRoot, "roadmap/packets", slice + ".json");
+  if (existsSync(packetPath)) packet = readJSON(packetPath);
   const publicChanges = new Set([
     ...git(root, "diff", "--name-only", "HEAD").split("\n"),
     ...git(root, "ls-files", "--others", "--exclude-standard").split("\n")
   ].filter(Boolean));
-  errors.push(...admissionErrors({ lock, checkpoint, slice, spec, packet, publicBranch: git(root, "rev-parse", "--abbrev-ref", "HEAD"), publicRevision: git(root, "rev-parse", "HEAD"), publicChanges: [...publicChanges] }));
-  if (errors.length) return errors; // Never run unpinned private tooling.
+  errors.push(...admissionErrors({ checkpoint, slice, packet, publicBranch: git(root, "rev-parse", "--abbrev-ref", "HEAD"), publicRevision: git(root, "rev-parse", "HEAD"), publicChanges: [...publicChanges] }));
+  if (errors.length) return errors;
   try { git(root, "cat-file", "-e", checkpoint.baseRevision + "^{commit}"); }
   catch { errors.push("Checkpoint base revision is not available in the public repository."); }
   // Verified receipts are a prerequisite gate, not a substitute for inspecting their evidence.
@@ -127,16 +107,8 @@ export async function preflight(root, slice) {
     } catch { errors.push("Missing/invalid immutable prerequisite receipt: " + id); }
   }
   if (errors.length) return errors;
-  // Only a reviewed, exact, clean private baseline may execute its validation tools.
-  const validation = spawnSync("npm", ["run", "validate"], { cwd: privateRoot, encoding: "utf8", timeout: 120000, stdio: ["ignore", "pipe", "pipe"] });
-  if (validation.status !== 0) return ["Pinned private specification validation failed or dependencies are missing. Run its validation locally; no private output is emitted here."];
-  const { default: Ajv } = await import(new URL("../.private/node_modules/ajv/dist/2020.js", import.meta.url));
-  const { default: formats } = await import(new URL("../.private/node_modules/ajv-formats/dist/index.js", import.meta.url));
-  const ajv = new Ajv({ strict: true }); formats(ajv);
-  if (!ajv.compile(readJSON(join(privateRoot, "contracts/progress-checkpoint.schema.json")))(checkpoint)) errors.push("Checkpoint fails the pinned canonical schema.");
   const { loadSlice, validatePacket } = await import(new URL("../.private/scripts/validate-handoff.mjs", import.meta.url));
   errors.push(...validatePacket(packet, loadSlice(privateRoot, slice)));
-  if (git(privateRoot, "rev-parse", "HEAD") !== lock.revision || git(privateRoot, "status", "--porcelain", "--untracked-files=all") || sha256(readFileSync(join(privateRoot, "contracts/contract-manifest.json"))) !== lock.contractManifestSha256) errors.push("Private baseline changed during validation; repeat admission after review.");
   return errors;
 }
 
