@@ -1,0 +1,390 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "proposed-reference",
+  "guardSemantics": "All named facts must equal the stated Boolean values; missing facts fail closed. Unlisted transitions fail closed.",
+  "machines": [
+    {
+      "id": "interaction",
+      "ownerSlice": "LS-S016",
+      "initial": "received",
+      "terminal": [
+        "completed",
+        "interrupted",
+        "failed"
+      ],
+      "states": [
+        "received",
+        "preparing",
+        "generating",
+        "awaitingCapability",
+        "acknowledging",
+        "speaking",
+        "completed",
+        "interrupted",
+        "failed"
+      ],
+      "guards": [
+        "bindingCurrent",
+        "contextPinned",
+        "turnCommitted",
+        "requestValid",
+        "admissionConfirmed",
+        "slowOperation",
+        "ackPermitted",
+        "generationTerminal",
+        "noPendingInvocation",
+        "outputDrained",
+        "resultVerified",
+        "approvalPending",
+        "replyValidated"
+      ],
+      "transitions": [
+        {
+          "from": "received",
+          "event": "beginPreparation",
+          "to": "preparing",
+          "guards": {
+            "bindingCurrent": true
+          }
+        },
+        {
+          "from": "preparing",
+          "event": "beginGeneration",
+          "to": "generating",
+          "guards": {
+            "bindingCurrent": true,
+            "contextPinned": true,
+            "turnCommitted": true
+          }
+        },
+        {
+          "from": "generating",
+          "event": "requestCapability",
+          "to": "awaitingCapability",
+          "guards": {
+            "requestValid": true
+          }
+        },
+        {
+          "from": "speaking",
+          "event": "requestCapability",
+          "to": "awaitingCapability",
+          "guards": {
+            "requestValid": true
+          }
+        },
+        {
+          "from": "awaitingCapability",
+          "event": "startAcknowledgment",
+          "to": "acknowledging",
+          "guards": {
+            "slowOperation": true,
+            "ackPermitted": true
+          }
+        },
+        {
+          "from": "acknowledging",
+          "event": "acknowledgmentDrained",
+          "to": "awaitingCapability",
+          "guards": {
+            "outputDrained": true
+          }
+        },
+        {
+          "from": "awaitingCapability",
+          "event": "capabilitySettled",
+          "to": "generating",
+          "guards": {
+            "resultVerified": true
+          }
+        },
+        {
+          "from": "awaitingCapability",
+          "event": "consentPending",
+          "to": "generating",
+          "guards": {
+            "approvalPending": true
+          }
+        },
+        {
+          "from": "acknowledging",
+          "event": "capabilitySettled",
+          "to": "generating",
+          "guards": {
+            "resultVerified": true
+          }
+        },
+        {
+          "from": "acknowledging",
+          "event": "consentPending",
+          "to": "generating",
+          "guards": {
+            "approvalPending": true
+          }
+        },
+        {
+          "from": "generating",
+          "event": "deliverResponse",
+          "to": "speaking",
+          "guards": {
+            "replyValidated": true
+          }
+        },
+        {
+          "from": "generating",
+          "event": "finish",
+          "to": "completed",
+          "guards": {
+            "generationTerminal": true,
+            "noPendingInvocation": true,
+            "outputDrained": true,
+            "replyValidated": true
+          }
+        },
+        {
+          "from": "speaking",
+          "event": "finish",
+          "to": "completed",
+          "guards": {
+            "generationTerminal": true,
+            "noPendingInvocation": true,
+            "outputDrained": true,
+            "replyValidated": true
+          }
+        },
+        {
+          "from": "received",
+          "event": "interrupt",
+          "to": "interrupted",
+          "guards": {}
+        },
+        {
+          "from": "received",
+          "event": "fail",
+          "to": "failed",
+          "guards": {}
+        },
+        {
+          "from": "preparing",
+          "event": "interrupt",
+          "to": "interrupted",
+          "guards": {}
+        },
+        {
+          "from": "preparing",
+          "event": "fail",
+          "to": "failed",
+          "guards": {}
+        },
+        {
+          "from": "generating",
+          "event": "interrupt",
+          "to": "interrupted",
+          "guards": {}
+        },
+        {
+          "from": "generating",
+          "event": "fail",
+          "to": "failed",
+          "guards": {}
+        },
+        {
+          "from": "awaitingCapability",
+          "event": "interrupt",
+          "to": "interrupted",
+          "guards": {}
+        },
+        {
+          "from": "awaitingCapability",
+          "event": "fail",
+          "to": "failed",
+          "guards": {}
+        },
+        {
+          "from": "acknowledging",
+          "event": "interrupt",
+          "to": "interrupted",
+          "guards": {}
+        },
+        {
+          "from": "acknowledging",
+          "event": "fail",
+          "to": "failed",
+          "guards": {}
+        },
+        {
+          "from": "speaking",
+          "event": "interrupt",
+          "to": "interrupted",
+          "guards": {}
+        },
+        {
+          "from": "speaking",
+          "event": "fail",
+          "to": "failed",
+          "guards": {}
+        }
+      ]
+    },
+    {
+      "id": "dreaming",
+      "ownerSlice": "LS-S012",
+      "initial": "requested",
+      "terminal": [
+        "applied",
+        "rejected",
+        "failed",
+        "cancelled"
+      ],
+      "states": [
+        "requested",
+        "snapshotPinned",
+        "analyzing",
+        "proposed",
+        "validating",
+        "applied",
+        "rejected",
+        "failed",
+        "cancelled"
+      ],
+      "guards": [
+        "boundaryVerified",
+        "checkpointCommitted",
+        "analysisComplete",
+        "continuationAvailable",
+        "sameBoundary",
+        "preconditionsCurrent",
+        "validationComplete",
+        "hasAcceptedProposals",
+        "applicationCommitted",
+        "dispositionsCommitted"
+      ],
+      "transitions": [
+        {
+          "from": "requested",
+          "event": "pinSnapshot",
+          "to": "snapshotPinned",
+          "guards": {
+            "boundaryVerified": true
+          }
+        },
+        {
+          "from": "snapshotPinned",
+          "event": "beginAnalysis",
+          "to": "analyzing",
+          "guards": {
+            "boundaryVerified": true
+          }
+        },
+        {
+          "from": "analyzing",
+          "event": "stageProposals",
+          "to": "proposed",
+          "guards": {
+            "checkpointCommitted": true
+          }
+        },
+        {
+          "from": "proposed",
+          "event": "resumeAnalysis",
+          "to": "analyzing",
+          "guards": {
+            "analysisComplete": false,
+            "continuationAvailable": true,
+            "sameBoundary": true
+          }
+        },
+        {
+          "from": "proposed",
+          "event": "beginValidation",
+          "to": "validating",
+          "guards": {
+            "analysisComplete": true,
+            "preconditionsCurrent": true
+          }
+        },
+        {
+          "from": "validating",
+          "event": "commitApplication",
+          "to": "applied",
+          "guards": {
+            "preconditionsCurrent": true,
+            "validationComplete": true,
+            "hasAcceptedProposals": true,
+            "applicationCommitted": true
+          }
+        },
+        {
+          "from": "validating",
+          "event": "reject",
+          "to": "rejected",
+          "guards": {
+            "validationComplete": true,
+            "hasAcceptedProposals": false,
+            "dispositionsCommitted": true
+          }
+        },
+        {
+          "from": "requested",
+          "event": "fail",
+          "to": "failed",
+          "guards": {}
+        },
+        {
+          "from": "requested",
+          "event": "cancel",
+          "to": "cancelled",
+          "guards": {}
+        },
+        {
+          "from": "snapshotPinned",
+          "event": "fail",
+          "to": "failed",
+          "guards": {}
+        },
+        {
+          "from": "snapshotPinned",
+          "event": "cancel",
+          "to": "cancelled",
+          "guards": {}
+        },
+        {
+          "from": "analyzing",
+          "event": "fail",
+          "to": "failed",
+          "guards": {}
+        },
+        {
+          "from": "analyzing",
+          "event": "cancel",
+          "to": "cancelled",
+          "guards": {}
+        },
+        {
+          "from": "proposed",
+          "event": "fail",
+          "to": "failed",
+          "guards": {}
+        },
+        {
+          "from": "proposed",
+          "event": "cancel",
+          "to": "cancelled",
+          "guards": {}
+        },
+        {
+          "from": "validating",
+          "event": "fail",
+          "to": "failed",
+          "guards": {}
+        },
+        {
+          "from": "validating",
+          "event": "cancel",
+          "to": "cancelled",
+          "guards": {}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0",
+  "title": "InteractionTraceEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "eventId",
+    "traceScope",
+    "interactionTraceId",
+    "backgroundJobId",
+    "correlationId",
+    "sequence",
+    "eventType",
+    "eventVersion",
+    "eventTime",
+    "processingTime",
+    "monotonic",
+    "assistantId",
+    "conversationId",
+    "sessionId",
+    "endpointId",
+    "environmentId",
+    "executionMode",
+    "privacyClass",
+    "causedByEventIds",
+    "sourceEventIds",
+    "payload",
+    "redactions"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "eventId": {
+      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+    },
+    "traceScope": {
+      "enum": [
+        "interaction",
+        "background"
+      ]
+    },
+    "interactionTraceId": {
+      "anyOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "backgroundJobId": {
+      "anyOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "correlationId": {
+      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "eventType": {
+      "enum": [
+        "interaction.received",
+        "interaction.turnStarted",
+        "interaction.turnCommitted",
+        "interaction.responseStarted",
+        "interaction.responseCompleted",
+        "interaction.interrupted",
+        "interaction.stateChanged",
+        "interaction.failed",
+        "audio.captureStarted",
+        "audio.sttPartial",
+        "audio.sttCommitted",
+        "audio.ttsRequested",
+        "audio.ttsFirstAudio",
+        "audio.playbackFirstSample",
+        "audio.playbackCompleted",
+        "audio.playbackStopped",
+        "context.viewSelected",
+        "context.viewRefreshed",
+        "context.sourceUsed",
+        "context.omitted",
+        "context.redacted",
+        "inference.requested",
+        "inference.inputManifest",
+        "inference.firstToken",
+        "inference.completed",
+        "inference.failed",
+        "capability.requested",
+        "capability.authorization",
+        "capability.started",
+        "capability.result",
+        "capability.failed",
+        "capability.outcomeUnknown",
+        "memory.referencesSelected",
+        "memory.candidateProposed",
+        "memory.lifecycleChanged",
+        "memory.dreamingStateChanged",
+        "embodiment.stateChanged",
+        "embodiment.rendererApplied",
+        "embodiment.rendererDegraded",
+        "embodiment.rendererFailed",
+        "system.providerHealth",
+        "system.queueLoss",
+        "system.policyWait",
+        "system.degradedMode",
+        "system.invalidTransition"
+      ]
+    },
+    "eventVersion": {
+      "const": "1.0.0"
+    },
+    "eventTime": {
+      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+    },
+    "processingTime": {
+      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+    },
+    "monotonic": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "clockId",
+            "milliseconds"
+          ],
+          "properties": {
+            "clockId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "milliseconds": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "assistantId": {
+      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+    },
+    "conversationId": {
+      "anyOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sessionId": {
+      "anyOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "endpointId": {
+      "anyOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "environmentId": {
+      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+    },
+    "executionMode": {
+      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+    },
+    "privacyClass": {
+      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/PrivacyClass"
+    },
+    "causedByEventIds": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 100,
+      "items": {
+        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+      },
+      "uniqueItems": true
+    },
+    "sourceEventIds": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 100,
+      "items": {
+        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+      },
+      "uniqueItems": true
+    },
+    "payload": {
+      "type": "object"
+    },
+    "redactions": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 100,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "traceScope": {
+            "const": "interaction"
+          }
+        },
+        "required": [
+          "traceScope"
+        ]
+      },
+      "then": {
+        "properties": {
+          "interactionTraceId": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "backgroundJobId": {
+            "const": null
+          },
+          "conversationId": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "sessionId": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "endpointId": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "interactionTraceId": {
+            "const": null
+          },
+          "backgroundJobId": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "eventType": {
+            "enum": [
+              "context.viewSelected",
+              "context.viewRefreshed",
+              "context.sourceUsed",
+              "context.omitted",
+              "context.redacted",
+              "memory.referencesSelected",
+              "memory.candidateProposed",
+              "memory.lifecycleChanged",
+              "memory.dreamingStateChanged",
+              "system.providerHealth",
+              "system.queueLoss",
+              "system.policyWait",
+              "system.degradedMode",
+              "system.invalidTransition"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "executionMode": {
+            "const": "replay"
+          }
+        },
+        "required": [
+          "executionMode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "sourceEventIds": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "interaction.received"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionReceivedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "interaction.turnStarted"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionTurnStartedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "interaction.turnCommitted"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionTurnCommittedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "interaction.responseStarted"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionResponseStartedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "interaction.responseCompleted"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionResponseCompletedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "interaction.interrupted"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionInterruptedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "interaction.stateChanged"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionStateChangedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "interaction.failed"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionFailedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "audio.captureStarted"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioCaptureStartedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "audio.sttPartial"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioSttPartialPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "audio.sttCommitted"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioSttCommittedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "audio.ttsRequested"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioTtsRequestedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "audio.ttsFirstAudio"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioTtsFirstAudioPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "audio.playbackFirstSample"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioPlaybackFirstSamplePayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "audio.playbackCompleted"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioPlaybackCompletedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "audio.playbackStopped"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioPlaybackStoppedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "context.viewSelected"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/ContextViewSelectedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "context.viewRefreshed"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/ContextViewRefreshedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "context.sourceUsed"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/ContextSourceUsedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "context.omitted"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/ContextOmittedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "context.redacted"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/ContextRedactedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "inference.requested"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InferenceRequestedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "inference.inputManifest"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InferenceInputManifestPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "inference.firstToken"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InferenceFirstTokenPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "inference.completed"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InferenceCompletedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "inference.failed"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InferenceFailedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "capability.requested"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityRequestedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "capability.authorization"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityAuthorizationPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "capability.started"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityStartedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "capability.result"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityResultPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "capability.failed"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityFailedPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "capability.outcomeUnknown"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityOutcomeUnknownPayload"
+          },
+          "monotonic": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "memory.referencesSelected"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/MemoryReferencesSelectedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "memory.candidateProposed"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/MemoryCandidateProposedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "memory.lifecycleChanged"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/MemoryLifecycleChangedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "memory.dreamingStateChanged"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/MemoryDreamingStateChangedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "embodiment.stateChanged"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/EmbodimentStateChangedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "embodiment.rendererApplied"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/EmbodimentRendererAppliedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "embodiment.rendererDegraded"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/EmbodimentRendererDegradedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "embodiment.rendererFailed"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/EmbodimentRendererFailedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "system.providerHealth"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/SystemProviderHealthPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "system.queueLoss"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/SystemQueueLossPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "system.policyWait"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/SystemPolicyWaitPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "system.degradedMode"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/SystemDegradedModePayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "system.invalidTransition"
+          }
+        },
+        "required": [
+          "eventType"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/SystemInvalidTransitionPayload"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "InteractionReceivedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inputArtifact",
+        "mode"
+      ],
+      "properties": {
+        "inputArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "mode": {
+          "enum": [
+            "message",
+            "voiceCall",
+            "richCall",
+            "ambientPresence"
+          ]
+        }
+      }
+    },
+    "InteractionTurnStartedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "audioInputId"
+      ],
+      "properties": {
+        "audioInputId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "InteractionTurnCommittedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inputArtifact",
+        "commitReason"
+      ],
+      "properties": {
+        "inputArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "commitReason": {
+          "enum": [
+            "send",
+            "endOfTurn",
+            "explicit"
+          ]
+        }
+      }
+    },
+    "InteractionResponseStartedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "responseId",
+        "modality"
+      ],
+      "properties": {
+        "responseId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "modality": {
+          "enum": [
+            "text",
+            "audio"
+          ]
+        }
+      }
+    },
+    "InteractionResponseCompletedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "responseId",
+        "responseArtifact",
+        "disposition",
+        "pendingApprovalRequestId"
+      ],
+      "properties": {
+        "responseId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "responseArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "disposition": {
+          "enum": [
+            "answered",
+            "approvalRequired",
+            "declined"
+          ]
+        },
+        "pendingApprovalRequestId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "InteractionInterruptedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reason",
+        "cancelledRequestIds",
+        "pendingInvocationIds"
+      ],
+      "properties": {
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        },
+        "cancelledRequestIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "pendingInvocationIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        }
+      }
+    },
+    "InteractionStateChangedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "trigger",
+        "revision"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionState"
+        },
+        "to": {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionState"
+        },
+        "trigger": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        }
+      }
+    },
+    "InteractionFailedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "problem",
+        "pendingInvocationIds"
+      ],
+      "properties": {
+        "problem": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+        },
+        "pendingInvocationIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        }
+      }
+    },
+    "AudioCaptureStartedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "audioInputId",
+        "format"
+      ],
+      "properties": {
+        "audioInputId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "format": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/AudioFormat"
+        }
+      }
+    },
+    "AudioSttPartialPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "utteranceId",
+        "textArtifact",
+        "startSample",
+        "endSample"
+      ],
+      "properties": {
+        "utteranceId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "textArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "startSample": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endSample": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "AudioSttCommittedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "utteranceId",
+        "textArtifact",
+        "startSample",
+        "endSample"
+      ],
+      "properties": {
+        "utteranceId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "textArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "startSample": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endSample": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "AudioTtsRequestedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "segmentId",
+        "textArtifact"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "segmentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "textArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "AudioTtsFirstAudioPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "segmentId",
+        "frameId"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "segmentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "frameId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        }
+      }
+    },
+    "AudioPlaybackFirstSamplePayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "segmentId",
+        "frameId",
+        "sampleOffset",
+        "endpointClockId"
+      ],
+      "properties": {
+        "segmentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "frameId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sampleOffset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endpointClockId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        }
+      }
+    },
+    "AudioPlaybackCompletedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "segmentId",
+        "playedSamples"
+      ],
+      "properties": {
+        "segmentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "playedSamples": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "AudioPlaybackStoppedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "segmentId",
+        "playedSamples",
+        "reason"
+      ],
+      "properties": {
+        "segmentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "playedSamples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "ContextViewSelectedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "viewId",
+        "revision",
+        "sourceRevisions",
+        "freshness"
+      ],
+      "properties": {
+        "viewId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "sourceRevisions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+          }
+        },
+        "freshness": {
+          "enum": [
+            "fresh",
+            "stale"
+          ]
+        }
+      }
+    },
+    "ContextViewRefreshedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "viewId",
+        "revision",
+        "sourceRevisions",
+        "freshness"
+      ],
+      "properties": {
+        "viewId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "sourceRevisions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+          }
+        },
+        "freshness": {
+          "enum": [
+            "fresh",
+            "stale"
+          ]
+        }
+      }
+    },
+    "ContextSourceUsedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "sourceRevision"
+      ],
+      "properties": {
+        "reference": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        }
+      }
+    },
+    "ContextOmittedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "reason"
+      ],
+      "properties": {
+        "reference": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "ContextRedactedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "redactedPaths",
+        "reason"
+      ],
+      "properties": {
+        "reference": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "redactedPaths": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "InferenceRequestedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "providerRef",
+        "modelRef",
+        "manifest",
+        "profileRevision"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "modelRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "manifest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "profileRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        }
+      }
+    },
+    "InferenceInputManifestPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "manifest"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "manifest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "InferenceFirstTokenPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "streamId",
+        "sequence"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "streamId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "InferenceCompletedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "summary",
+        "outputArtifact"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "summary": {
+          "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/InferenceSummary"
+        },
+        "outputArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "InferenceFailedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "problem"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "problem": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+        }
+      }
+    },
+    "CapabilityRequestedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocationId",
+        "capabilityId",
+        "capabilityVersion",
+        "inputArtifact",
+        "inputDigest",
+        "snapshotId",
+        "snapshotRevision",
+        "authorityContextRef"
+      ],
+      "properties": {
+        "invocationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "capabilityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/CapabilityId"
+        },
+        "capabilityVersion": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+        },
+        "inputArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "inputDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "snapshotId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "snapshotRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "authorityContextRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/AuthorityContextRef"
+        }
+      }
+    },
+    "CapabilityAuthorizationPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocationId",
+        "kind",
+        "disposition",
+        "decisionRef",
+        "reason"
+      ],
+      "properties": {
+        "invocationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "kind": {
+          "enum": [
+            "preview",
+            "dispatch"
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "authorized",
+            "denied",
+            "approvalRequired"
+          ]
+        },
+        "decisionRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "CapabilityStartedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocationId",
+        "receiptRef"
+      ],
+      "properties": {
+        "invocationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "receiptRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "CapabilityResultPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocationId",
+        "outputArtifact",
+        "resultSchema",
+        "evidenceRef"
+      ],
+      "properties": {
+        "invocationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "outputArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "resultSchema": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "evidenceRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "CapabilityFailedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocationId",
+        "problem",
+        "effectState",
+        "evidenceRef"
+      ],
+      "properties": {
+        "invocationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "problem": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+        },
+        "effectState": {
+          "enum": [
+            "notStarted",
+            "confirmedFailed"
+          ]
+        },
+        "evidenceRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CapabilityOutcomeUnknownPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocationId",
+        "receiptRef",
+        "reason",
+        "reconciliationRef"
+      ],
+      "properties": {
+        "invocationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "receiptRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        },
+        "reconciliationRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        }
+      }
+    },
+    "MemoryReferencesSelectedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "memoryIds",
+        "sourceRevision"
+      ],
+      "properties": {
+        "memoryIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        }
+      }
+    },
+    "MemoryCandidateProposedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "memoryId",
+        "candidateArtifact",
+        "sourceRefs"
+      ],
+      "properties": {
+        "memoryId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "candidateArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        }
+      }
+    },
+    "MemoryLifecycleChangedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "memoryId",
+        "lifecycleEventId",
+        "oldRevision",
+        "newRevision",
+        "sourceRevision"
+      ],
+      "properties": {
+        "memoryId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "lifecycleEventId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "oldRevision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "newRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        }
+      }
+    },
+    "MemoryDreamingStateChangedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "from",
+        "to",
+        "boundary",
+        "reason"
+      ],
+      "properties": {
+        "runId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "from": {
+          "enum": [
+            "requested",
+            "snapshotPinned",
+            "analyzing",
+            "proposed",
+            "validating"
+          ]
+        },
+        "to": {
+          "enum": [
+            "snapshotPinned",
+            "analyzing",
+            "proposed",
+            "validating",
+            "applied",
+            "rejected",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "boundary": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "EmbodimentStateChangedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "$ref": "https://lifestream.dev/contracts/embodiment-state/1.0.0"
+        }
+      }
+    },
+    "EmbodimentRendererAppliedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stateId",
+        "rendererRef",
+        "sequence"
+      ],
+      "properties": {
+        "stateId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "rendererRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "EmbodimentRendererDegradedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stateId",
+        "rendererRef",
+        "unsupportedAxes",
+        "reason"
+      ],
+      "properties": {
+        "stateId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "rendererRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "unsupportedAxes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "EmbodimentRendererFailedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stateId",
+        "rendererRef",
+        "problem"
+      ],
+      "properties": {
+        "stateId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "rendererRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "problem": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+        }
+      }
+    },
+    "SystemProviderHealthPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "providerRef",
+        "health",
+        "reason"
+      ],
+      "properties": {
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "health": {
+          "enum": [
+            "healthy",
+            "degraded",
+            "unavailable"
+          ]
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "SystemQueueLossPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "queue",
+        "lostCount",
+        "firstSequence",
+        "lastSequence",
+        "reason"
+      ],
+      "properties": {
+        "queue": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "lostCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "firstSequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastSequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "SystemPolicyWaitPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "boundary",
+        "reason"
+      ],
+      "properties": {
+        "boundary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "SystemDegradedModePayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component",
+        "reason",
+        "fallback"
+      ],
+      "properties": {
+        "component": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        },
+        "fallback": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SystemInvalidTransitionPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aggregate",
+        "aggregateId",
+        "from",
+        "attemptedEvent",
+        "reason"
+      ],
+      "properties": {
+        "aggregate": {
+          "enum": [
+            "interaction",
+            "dreaming",
+            "grant",
+            "session",
+            "invocation"
+          ]
+        },
+        "aggregateId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "attemptedEvent": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    }
+  }
+}

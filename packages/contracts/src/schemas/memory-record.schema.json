@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/memory-record/2.0.0",
+  "title": "MemoryRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "memoryId", "assistantId", "kind", "content", "factuality", "confidence", "sensitivity", "status", "provenance", "createdAt", "createdBy", "lastReinforcedAt", "contradictedBy"],
+  "properties": {
+    "schemaVersion": { "const": "2.0.0" },
+    "memoryId": { "$ref": "#/$defs/uuid" },
+    "assistantId": { "$ref": "#/$defs/uuid" },
+    "kind": { "enum": ["relational", "experiential", "preference", "proceduralHint", "conversationSummary"] },
+    "content": { "type": "string", "minLength": 1, "maxLength": 16000 },
+    "factuality": { "enum": ["participantStatement", "inferred", "unverified", "worldGrounded"] },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "sensitivity": { "enum": ["public", "personal", "sensitive", "restricted"] },
+    "status": { "enum": ["candidate", "active", "contradicted", "superseded", "invalidated"] },
+    "worldEvidenceRefs": { "type": "array", "items": { "$ref": "#/$defs/externalRef" }, "uniqueItems": true },
+    "contradictedBy": { "type": "array", "items": { "$ref": "#/$defs/uuid" }, "uniqueItems": true, "description": "Known contradiction links at the declared lifecycle boundary. Empty means no known links, not proof of truth or unknown history." },
+    "supersedes": { "type": "array", "items": { "$ref": "#/$defs/uuid" }, "uniqueItems": true },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceType", "sourceRefs", "transformationId", "transformationVersion"],
+      "properties": {
+        "sourceType": { "enum": ["interaction", "humanEntry", "dreaming", "migration"] },
+        "sourceRefs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1, "maxLength": 500 } },
+        "transformationId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "transformationVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "createdAt": { "$ref": "#/$defs/time" },
+    "createdBy": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "lastReinforcedAt": { "anyOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }], "description": "Latest effective evidence-backed reinforcement time at the declared lifecycle boundary; null means never reinforced, not unknown history. Creation and recall are not reinforcement." },
+    "reviewAfter": { "$ref": "#/$defs/time" },
+    "extensions": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "factuality": { "const": "worldGrounded" } }, "required": ["factuality"] },
+      "then": { "required": ["worldEvidenceRefs"], "properties": { "worldEvidenceRefs": { "type": "array", "minItems": 1 } } }
+    }
+  ],
+  "$defs": {
+    "uuid": { "type": "string", "format": "uuid", "pattern": "^[0-9a-f-]+$" },
+    "time": { "type": "string", "format": "date-time", "pattern": "Z$" },
+    "externalRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "reference", "schemaVersion"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "reference": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "schemaVersion": { "type": "string", "minLength": 1, "maxLength": 50 }
+      }
+    }
+  }
+}

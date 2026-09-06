@@ -1,0 +1,577 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/skill/1.0.0",
+  "title": "Skill",
+  "$ref": "#/$defs/Skill",
+  "$defs": {
+    "JsonPointer": {
+      "type": "string",
+      "maxLength": 1000,
+      "pattern": "^(?:/(?:[^~/]|~0|~1)*)*$"
+    },
+    "ValueBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targetPointer",
+        "source"
+      ],
+      "properties": {
+        "targetPointer": {
+          "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/JsonPointer"
+        },
+        "source": {
+          "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/BindingSource"
+        }
+      }
+    },
+    "BindingSource": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "literal"
+            },
+            "value": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/JsonValue"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "pointer"
+          ],
+          "properties": {
+            "type": {
+              "const": "input"
+            },
+            "pointer": {
+              "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/JsonPointer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "stepId",
+            "pointer"
+          ],
+          "properties": {
+            "type": {
+              "const": "stepOutput"
+            },
+            "stepId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "pointer": {
+              "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/JsonPointer"
+            }
+          }
+        }
+      ]
+    },
+    "SkillStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stepId",
+        "capabilityId",
+        "capabilityVersion",
+        "inputBindings",
+        "onMissingInput"
+      ],
+      "properties": {
+        "stepId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "capabilityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/CapabilityId"
+        },
+        "capabilityVersion": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+        },
+        "inputBindings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/ValueBinding"
+          }
+        },
+        "onMissingInput": {
+          "const": "reject"
+        }
+      }
+    },
+    "Skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "skillId",
+        "assistantId",
+        "revision",
+        "version",
+        "status",
+        "name",
+        "description",
+        "inputSchema",
+        "outputSchema",
+        "requiredCapabilities",
+        "preconditions",
+        "maxSteps",
+        "steps",
+        "outputBindings",
+        "failurePolicy",
+        "compensationGuidance",
+        "provenance",
+        "createdAt",
+        "createdBy",
+        "activationRef"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "skillId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "version": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "active",
+            "retired"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "inputSchema": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "outputSchema": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "requiredCapabilities": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "capabilityId",
+              "version"
+            ],
+            "properties": {
+              "capabilityId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/CapabilityId"
+              },
+              "version": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+              }
+            }
+          }
+        },
+        "preconditions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "pointer"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "inputPresent"
+                  },
+                  "pointer": {
+                    "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/JsonPointer"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "pointer",
+                  "value"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "inputEquals"
+                  },
+                  "pointer": {
+                    "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/JsonPointer"
+                  },
+                  "value": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/JsonValue"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "mode"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "executionModeIs"
+                  },
+                  "mode": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "maxSteps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/SkillStep"
+          }
+        },
+        "outputBindings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/ValueBinding"
+          }
+        },
+        "failurePolicy": {
+          "const": "stop"
+        },
+        "compensationGuidance": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "provenance": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Provenance"
+        },
+        "createdAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "createdBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "activationRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "const": "active"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "activationRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "const": "draft"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "activationRef": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SkillDraft": {
+      "allOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/Skill"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "status": {
+              "const": "draft"
+            },
+            "activationRef": {
+              "type": "null"
+            }
+          }
+        }
+      ]
+    },
+    "SkillHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "skillId",
+        "skillRevision",
+        "capabilityId",
+        "kind",
+        "guidance"
+      ],
+      "properties": {
+        "skillId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "skillRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "capabilityId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/CapabilityId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "enum": [
+            "prefer",
+            "avoid",
+            "ordering",
+            "recovery"
+          ]
+        },
+        "guidance": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "SkillExecutionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "skillId",
+        "skillRevision",
+        "executionId",
+        "status",
+        "completedStepIds",
+        "stoppedAtStepId",
+        "invocationIds",
+        "output",
+        "outputSchema",
+        "reason"
+      ],
+      "properties": {
+        "skillId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "skillRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "executionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed",
+            "approvalRequired",
+            "outcomeUnknown"
+          ]
+        },
+        "completedStepIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "uniqueItems": true
+        },
+        "stoppedAtStepId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "invocationIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "output": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/JsonValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outputSchema": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "CapabilityProposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "proposalId",
+        "assistantId",
+        "desiredCapabilityId",
+        "userVisibleValue",
+        "triggerInteractionTraceId",
+        "requiredDataRefs",
+        "desiredEffects",
+        "risks",
+        "candidateProviderRefs",
+        "status",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "proposalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "desiredCapabilityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/CapabilityId"
+        },
+        "userVisibleValue": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "triggerInteractionTraceId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "requiredDataRefs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "desiredEffects": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "risks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "candidateProviderRefs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "status": {
+          "const": "proposed"
+        },
+        "createdAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        }
+      }
+    }
+  }
+}

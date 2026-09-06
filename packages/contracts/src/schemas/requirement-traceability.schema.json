@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/requirement-traceability/1.0.0",
+  "title": "RequirementTraceability",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "verificationStatus",
+    "requirements",
+    "cases",
+    "importedCaseCatalogs"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "verificationStatus": {
+      "const": "specifiedNotExecuted"
+    },
+    "requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "requirementId",
+          "definitionPath",
+          "definitionDigest",
+          "ownerSlice",
+          "acceptanceCaseIds"
+        ],
+        "properties": {
+          "requirementId": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^LS-(GEN|ID|MEM|RUN|CAP|INT|EMB|PERF|OBS|PORT|SEC|DEP|ACC|COMP)-[0-9]{3}[A-Z]?$"
+          },
+          "definitionPath": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^docs/[^/]+\\.md$"
+          },
+          "definitionDigest": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "ownerSlice": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^LS-S[0-9]{3}$"
+          },
+          "acceptanceCaseIds": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^LS-(TEST-[0-9]{3}|AUTH-T[0-9]{3})$"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "ownerSlice",
+          "verificationLayer",
+          "setup",
+          "action",
+          "assertions",
+          "negativeChecks",
+          "requiredEvidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^LS-TEST-[0-9]{3}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ownerSlice": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^LS-S[0-9]{3}$"
+          },
+          "verificationLayer": {
+            "enum": [
+              "contract",
+              "component",
+              "integration",
+              "scenario",
+              "performance",
+              "perceptual",
+              "resilience",
+              "security",
+              "migration",
+              "governance"
+            ]
+          },
+          "setup": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "assertions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "requirementIds",
+                "expected"
+              ],
+              "properties": {
+                "requirementIds": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^LS-(GEN|ID|MEM|RUN|CAP|INT|EMB|PERF|OBS|PORT|SEC|DEP|ACC|COMP)-[0-9]{3}[A-Z]?$"
+                  },
+                  "uniqueItems": true
+                },
+                "expected": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "negativeChecks": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "requirementIds",
+                "condition",
+                "expected"
+              ],
+              "properties": {
+                "requirementIds": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^LS-(GEN|ID|MEM|RUN|CAP|INT|EMB|PERF|OBS|PORT|SEC|DEP|ACC|COMP)-[0-9]{3}[A-Z]?$"
+                  },
+                  "uniqueItems": true
+                },
+                "condition": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "expected": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "requiredEvidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "importedCaseCatalogs": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "fixtures/authority-scenarios.json"
+        ]
+      },
+      "uniqueItems": true
+    }
+  }
+}

@@ -1,0 +1,3360 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/runtime-api/1.0.0",
+  "title": "RuntimeApi",
+  "$ref": "#/$defs/ApiMessage",
+  "$defs": {
+    "InteractionState": {
+      "enum": [
+        "received",
+        "preparing",
+        "generating",
+        "awaitingCapability",
+        "acknowledging",
+        "speaking",
+        "completed",
+        "interrupted",
+        "failed"
+      ]
+    },
+    "Conversation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "conversationId",
+        "assistantId",
+        "revision",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "conversationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "createdAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "updatedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        }
+      }
+    },
+    "SessionBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sessionId",
+        "conversationId",
+        "assistantId",
+        "endpointId",
+        "environmentId",
+        "revision",
+        "mode",
+        "state",
+        "authorityContextRef",
+        "audioOwnerEndpointId",
+        "createdAt",
+        "endedAt"
+      ],
+      "properties": {
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "conversationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "endpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "environmentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "mode": {
+          "enum": [
+            "message",
+            "voiceCall",
+            "richCall",
+            "ambientPresence"
+          ]
+        },
+        "state": {
+          "enum": [
+            "active",
+            "ended"
+          ]
+        },
+        "authorityContextRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/AuthorityContextRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "audioOwnerEndpointId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "createdAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "endedAt": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Session": {
+      "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/SessionBinding"
+    },
+    "InteractionReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "state",
+        "sessionRevision",
+        "acceptedAt",
+        "lastSequence"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/InteractionIdentity"
+        },
+        "state": {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionState"
+        },
+        "sessionRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "acceptedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "lastSequence": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "InteractionView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt",
+        "generation",
+        "output",
+        "pendingInvocationId",
+        "failure",
+        "responseArtifact"
+      ],
+      "properties": {
+        "receipt": {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionReceipt"
+        },
+        "generation": {
+          "enum": [
+            "notStarted",
+            "streaming",
+            "terminal"
+          ]
+        },
+        "output": {
+          "enum": [
+            "idle",
+            "delivering",
+            "drained",
+            "stopped"
+          ]
+        },
+        "pendingInvocationId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failure": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "responseArtifact": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ResponseChunk": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "text"
+          ],
+          "properties": {
+            "type": {
+              "const": "textDelta"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8000
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "result"
+          ],
+          "properties": {
+            "type": {
+              "const": "capabilityStatus"
+            },
+            "result": {
+              "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityStatus"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "state",
+            "finalResponse",
+            "error"
+          ],
+          "properties": {
+            "type": {
+              "const": "terminal"
+            },
+            "state": {
+              "enum": [
+                "completed",
+                "interrupted",
+                "failed"
+              ]
+            },
+            "finalResponse": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "InteractionStreamEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "interactionTraceId",
+        "sequence",
+        "occurredAt",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "interactionTraceId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "occurredAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "payload": {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ResponseChunk"
+        }
+      }
+    },
+    "EndpointProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "endpointId",
+        "endpointClass",
+        "locationRef",
+        "ownership",
+        "inputModalities",
+        "outputModalities",
+        "privacyClass",
+        "presenceCapabilities",
+        "rendererCapabilities",
+        "handoffSupport",
+        "speakerIdentity",
+        "health",
+        "configurationRevision"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "endpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "endpointClass": {
+          "enum": [
+            "ambientPresence",
+            "personalCompanion",
+            "desktopCompanion",
+            "voiceOnly",
+            "testHarness"
+          ]
+        },
+        "locationRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ownership": {
+          "enum": [
+            "personal",
+            "shared",
+            "managed",
+            "fixture"
+          ]
+        },
+        "inputModalities": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "enum": [
+              "text",
+              "audio"
+            ]
+          }
+        },
+        "outputModalities": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "text",
+              "audio",
+              "semanticEmbodiment"
+            ]
+          }
+        },
+        "privacyClass": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/PrivacyClass"
+        },
+        "presenceCapabilities": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 4,
+          "items": {
+            "enum": [
+              "glanceable",
+              "spatial",
+              "walkUp",
+              "notifications"
+            ]
+          }
+        },
+        "rendererCapabilities": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RendererCapabilities"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "handoffSupport": {
+          "enum": [
+            "none",
+            "newLinkedSession",
+            "sameSession"
+          ]
+        },
+        "speakerIdentity": {
+          "enum": [
+            "verified",
+            "inferred",
+            "ambiguous",
+            "unavailable"
+          ]
+        },
+        "health": {
+          "enum": [
+            "healthy",
+            "degraded",
+            "unavailable"
+          ]
+        },
+        "configurationRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        }
+      }
+    },
+    "InteractionEndpoint": {
+      "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/EndpointProfile"
+    },
+    "AudioOwnershipLease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leaseId",
+        "sessionId",
+        "ownerEndpointId",
+        "revision",
+        "expiresAt",
+        "fencingToken"
+      ],
+      "properties": {
+        "leaseId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "ownerEndpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "fencingToken": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        }
+      }
+    },
+    "HandoffRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handoffId",
+        "sourceSessionId",
+        "destinationSession",
+        "sourceEndpointId",
+        "destinationEndpointId",
+        "initiatorRef",
+        "authorization",
+        "contextBoundary",
+        "redactedReferences",
+        "oldLeaseId",
+        "newLease",
+        "occurredAt",
+        "outcome",
+        "reason"
+      ],
+      "properties": {
+        "handoffId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sourceSessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "destinationSession": {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/SessionBinding"
+        },
+        "sourceEndpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "destinationEndpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "initiatorRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "authorization": {
+          "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityDecision"
+        },
+        "contextBoundary": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "redactedReferences": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "oldLeaseId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "newLease": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/AudioOwnershipLease"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occurredAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "const": "completed"
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "MessageRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "assistantId",
+            "conversationId",
+            "sessionId",
+            "endpointId",
+            "expectedSessionRevision",
+            "text"
+          ],
+          "properties": {
+            "assistantId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "conversationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "sessionId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "endpointId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "expectedSessionRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 16000
+            }
+          }
+        }
+      }
+    },
+    "MessageResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionReceipt"
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "GetInteractionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "const": null
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "interactionTraceId"
+          ],
+          "properties": {
+            "interactionTraceId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            }
+          }
+        }
+      }
+    },
+    "GetInteractionResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionView"
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "CancelInteractionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "interactionTraceId",
+            "reason"
+          ],
+          "properties": {
+            "interactionTraceId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "reason": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+            }
+          }
+        }
+      }
+    },
+    "CancelInteractionResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionView"
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "CreateSessionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "assistantId",
+            "conversationId",
+            "endpointId",
+            "mode"
+          ],
+          "properties": {
+            "assistantId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "conversationId": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "endpointId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "mode": {
+              "enum": [
+                "message",
+                "voiceCall",
+                "richCall",
+                "ambientPresence"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "CreateSessionResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "conversation",
+                "session"
+              ],
+              "properties": {
+                "conversation": {
+                  "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/Conversation"
+                },
+                "session": {
+                  "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/SessionBinding"
+                }
+              }
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "GetSessionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "const": null
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sessionId"
+          ],
+          "properties": {
+            "sessionId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            }
+          }
+        }
+      }
+    },
+    "GetSessionResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/SessionBinding"
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "EndSessionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sessionId",
+            "expectedRevision",
+            "reason"
+          ],
+          "properties": {
+            "sessionId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "expectedRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+            },
+            "reason": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+            }
+          }
+        }
+      }
+    },
+    "EndSessionResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/SessionBinding"
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "HandoffRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sessionId",
+            "expectedRevision",
+            "destinationEndpointId",
+            "contextBoundary",
+            "reason"
+          ],
+          "properties": {
+            "sessionId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "expectedRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+            },
+            "destinationEndpointId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "contextBoundary": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+            },
+            "reason": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+            }
+          }
+        }
+      }
+    },
+    "HandoffResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/HandoffRecord"
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "ListAuthorityRequestsRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "const": null
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "assistantId",
+            "states",
+            "page"
+          ],
+          "properties": {
+            "assistantId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "states": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 5,
+              "items": {
+                "enum": [
+                  "pending",
+                  "approved",
+                  "denied",
+                  "cancelled",
+                  "expired"
+                ]
+              }
+            },
+            "page": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Page"
+            }
+          }
+        }
+      }
+    },
+    "ListAuthorityRequestsResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+            },
+            "result": {
+              "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantRequestList"
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "GetAuthorityRequestRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "const": null
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requestId"
+          ],
+          "properties": {
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            }
+          }
+        }
+      }
+    },
+    "GetAuthorityRequestResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+            },
+            "result": {
+              "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantRequest"
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "CreateAuthorityRequestRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "assistantId",
+            "endpointId",
+            "sessionId",
+            "invocationId",
+            "interactionTraceId",
+            "scope",
+            "inputDigest",
+            "effectSummary",
+            "requestedClass",
+            "grantExpiresAt",
+            "reviewAfter",
+            "expiresAt",
+            "untrustedRationale"
+          ],
+          "properties": {
+            "assistantId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "endpointId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "sessionId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "invocationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "interactionTraceId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "scope": {
+              "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityOperationScope"
+            },
+            "inputDigest": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+            },
+            "effectSummary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "requestedClass": {
+              "enum": [
+                "allowOnce",
+                "allowSession",
+                "allowPersistent"
+              ]
+            },
+            "grantExpiresAt": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            "reviewAfter": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expiresAt": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            "untrustedRationale": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "CreateAuthorityRequestResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+            },
+            "result": {
+              "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantRequest"
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "ApproveAuthorityRequestRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requestId",
+            "expectedRevision",
+            "confirmationDigest",
+            "grantClass",
+            "expiresAt",
+            "reviewAfter"
+          ],
+          "properties": {
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "expectedRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+            },
+            "confirmationDigest": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+            },
+            "grantClass": {
+              "enum": [
+                "allowOnce",
+                "allowSession",
+                "allowPersistent"
+              ]
+            },
+            "expiresAt": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            "reviewAfter": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ApproveAuthorityRequestResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+            },
+            "result": {
+              "allOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantAdminData"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "request": {
+                      "allOf": [
+                        {
+                          "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantRequest"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "state": {
+                              "const": "approved"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "grant": {
+                      "$ref": "https://lifestream.dev/contracts/human-authority-grant/1.0.0"
+                    }
+                  }
+                }
+              ]
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "DenyAuthorityRequestRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requestId",
+            "expectedRevision",
+            "confirmationDigest",
+            "reason"
+          ],
+          "properties": {
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "expectedRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+            },
+            "confirmationDigest": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+            },
+            "reason": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+            }
+          }
+        }
+      }
+    },
+    "DenyAuthorityRequestResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+            },
+            "result": {
+              "allOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantAdminData"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "request": {
+                      "allOf": [
+                        {
+                          "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantRequest"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "state": {
+                              "const": "denied"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "grant": {
+                      "const": null
+                    }
+                  }
+                }
+              ]
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "CancelAuthorityRequestRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requestId",
+            "expectedRevision",
+            "confirmationDigest",
+            "reason"
+          ],
+          "properties": {
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "expectedRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+            },
+            "confirmationDigest": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+            },
+            "reason": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+            }
+          }
+        }
+      }
+    },
+    "CancelAuthorityRequestResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+            },
+            "result": {
+              "allOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantAdminData"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "request": {
+                      "allOf": [
+                        {
+                          "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantRequest"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "state": {
+                              "const": "cancelled"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "grant": {
+                      "const": null
+                    }
+                  }
+                }
+              ]
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "ListAuthorityGrantsRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "const": null
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "assistantId",
+            "states",
+            "page"
+          ],
+          "properties": {
+            "assistantId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "states": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 4,
+              "items": {
+                "enum": [
+                  "active",
+                  "consumed",
+                  "revoked",
+                  "expired"
+                ]
+              }
+            },
+            "page": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Page"
+            }
+          }
+        }
+      }
+    },
+    "ListAuthorityGrantsResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+            },
+            "result": {
+              "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantQueryData"
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "GetAuthorityGrantRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "const": null
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "grantId",
+            "cursor"
+          ],
+          "properties": {
+            "grantId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "cursor": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "GetAuthorityGrantResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+            },
+            "result": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "grant",
+                "eligible",
+                "reason",
+                "sourceRevision",
+                "events",
+                "nextCursor",
+                "admittedInvocationIds"
+              ],
+              "properties": {
+                "grant": {
+                  "$ref": "https://lifestream.dev/contracts/human-authority-grant/1.0.0"
+                },
+                "eligible": {
+                  "type": "boolean"
+                },
+                "reason": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+                },
+                "sourceRevision": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                "events": {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 100,
+                  "items": {
+                    "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantLifecycleEvent"
+                  }
+                },
+                "nextCursor": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1000
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "admittedInvocationIds": {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 100,
+                  "items": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                  }
+                }
+              }
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "RevokeAuthorityGrantRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "grantId",
+            "expectedRevision",
+            "reason"
+          ],
+          "properties": {
+            "grantId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "expectedRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+            },
+            "reason": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+            }
+          }
+        }
+      }
+    },
+    "RevokeAuthorityGrantResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "succeeded"
+            },
+            "sourceRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+            },
+            "result": {
+              "allOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantAdminData"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "request": {
+                      "const": null
+                    },
+                    "grant": {
+                      "$ref": "https://lifestream.dev/contracts/human-authority-grant/1.0.0"
+                    }
+                  }
+                }
+              ]
+            },
+            "error": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "requestId",
+            "correlationId",
+            "status",
+            "sourceRevision",
+            "result",
+            "error"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "correlationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "status": {
+              "const": "failed"
+            },
+            "sourceRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "const": null
+            },
+            "error": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "EventsRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interactionTraceId",
+        "afterSequence"
+      ],
+      "properties": {
+        "interactionTraceId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "afterSequence": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "VoiceInteractionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "correlationId",
+        "sessionId",
+        "expectedSessionRevision",
+        "endpointId",
+        "audioInputId",
+        "format"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedSessionRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "endpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "audioInputId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "format": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/AudioFormat"
+        }
+      }
+    },
+    "AudioClientMessage": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "request"
+          ],
+          "properties": {
+            "type": {
+              "const": "start"
+            },
+            "request": {
+              "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/VoiceInteractionRequest"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "audioInputId",
+            "frame"
+          ],
+          "properties": {
+            "type": {
+              "const": "frame"
+            },
+            "audioInputId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "frame": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/AudioFrame"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "audioInputId",
+            "nextSequence",
+            "sampleCount"
+          ],
+          "properties": {
+            "type": {
+              "const": "commitTurn"
+            },
+            "audioInputId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "nextSequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sampleCount": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "interactionTraceId",
+            "reason"
+          ],
+          "properties": {
+            "type": {
+              "const": "interrupt"
+            },
+            "interactionTraceId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "reason": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "audioInputId"
+          ],
+          "properties": {
+            "type": {
+              "const": "stop"
+            },
+            "audioInputId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            }
+          }
+        }
+      ]
+    },
+    "AudioServerMessage": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "identity",
+            "audioInputId"
+          ],
+          "properties": {
+            "type": {
+              "const": "accepted"
+            },
+            "identity": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/InteractionIdentity"
+            },
+            "audioInputId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "event"
+          ],
+          "properties": {
+            "type": {
+              "const": "response"
+            },
+            "event": {
+              "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionStreamEvent"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "interactionTraceId",
+            "chunk"
+          ],
+          "properties": {
+            "type": {
+              "const": "audio"
+            },
+            "interactionTraceId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "chunk": {
+              "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AudioChunk"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "interactionTraceId",
+            "reason"
+          ],
+          "properties": {
+            "type": {
+              "const": "stopPlayback"
+            },
+            "interactionTraceId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "reason": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "requestId",
+            "problem"
+          ],
+          "properties": {
+            "type": {
+              "const": "error"
+            },
+            "requestId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "problem": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            }
+          }
+        }
+      ]
+    },
+    "ApiMessage": {
+      "anyOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/MessageRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/MessageResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetInteractionRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetInteractionResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelInteractionRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelInteractionResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateSessionRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateSessionResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetSessionRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetSessionResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/EndSessionRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/EndSessionResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/HandoffRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/HandoffResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityRequestsRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityRequestsResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityRequestRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityRequestResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateAuthorityRequestRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateAuthorityRequestResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ApproveAuthorityRequestRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ApproveAuthorityRequestResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/DenyAuthorityRequestRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/DenyAuthorityRequestResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelAuthorityRequestRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelAuthorityRequestResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityGrantsRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityGrantsResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityGrantRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityGrantResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/RevokeAuthorityGrantRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/RevokeAuthorityGrantResponse"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/EventsRequest"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionStreamEvent"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/AudioClientMessage"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/AudioServerMessage"
+        }
+      ]
+    }
+  }
+}

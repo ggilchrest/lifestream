@@ -1,0 +1,954 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/dreaming/1.0.0",
+  "title": "DreamingProposal",
+  "$ref": "#/$defs/DreamingProposal",
+  "$defs": {
+    "DreamingBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profileId",
+        "profileRevision",
+        "memorySource",
+        "algorithmVersion",
+        "promptVersion",
+        "analyzerProviderRef",
+        "configurationDigest",
+        "timeBoundary",
+        "inputArtifact"
+      ],
+      "properties": {
+        "profileId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "profileRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "memorySource": {
+          "allOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "highWaterMark": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 300
+                }
+              }
+            }
+          ]
+        },
+        "algorithmVersion": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+        },
+        "promptVersion": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+        },
+        "analyzerProviderRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "configurationDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "timeBoundary": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "inputArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "DreamingLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxInputRecords",
+        "maxTokens",
+        "maxDurationMs",
+        "maxProviderCalls",
+        "maxProposals",
+        "maxResumes"
+      ],
+      "properties": {
+        "maxInputRecords": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "maxTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "maxDurationMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600000
+        },
+        "maxProviderCalls": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "maxProposals": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "maxResumes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        }
+      }
+    },
+    "DreamingRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "runId",
+        "assistantId",
+        "environmentId",
+        "executionMode",
+        "requestedBy",
+        "trigger",
+        "state",
+        "boundary",
+        "limits",
+        "analysisComplete",
+        "continuation",
+        "proposalIds",
+        "createdAt",
+        "updatedAt",
+        "failure",
+        "resumeCount",
+        "applicationIds"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "runId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "environmentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "requestedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "trigger": {
+          "enum": [
+            "manual",
+            "schedule",
+            "volumeThreshold"
+          ]
+        },
+        "state": {
+          "enum": [
+            "requested",
+            "snapshotPinned",
+            "analyzing",
+            "proposed",
+            "validating",
+            "applied",
+            "rejected",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "boundary": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingBoundary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limits": {
+          "$ref": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingLimits"
+        },
+        "analysisComplete": {
+          "type": "boolean"
+        },
+        "continuation": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "inputCursor",
+                "nextProposalSequence",
+                "checkpointArtifact"
+              ],
+              "properties": {
+                "inputCursor": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "nextProposalSequence": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "checkpointArtifact": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposalIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "uniqueItems": true
+        },
+        "createdAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "updatedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "failure": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resumeCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "applicationIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "uniqueItems": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "state"
+            ],
+            "properties": {
+              "state": {
+                "enum": [
+                  "snapshotPinned",
+                  "analyzing",
+                  "proposed",
+                  "validating",
+                  "applied",
+                  "rejected"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "boundary": {
+                "$ref": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingBoundary"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DreamingOperation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "record"
+          ],
+          "properties": {
+            "type": {
+              "const": "createDerivedMemory"
+            },
+            "record": {
+              "$ref": "https://lifestream.dev/contracts/memory-record/2.0.0"
+            }
+          }
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ReinforceMemory"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/CorrectMemory"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/SupersedeMemory"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/InvalidateMemory"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "key",
+            "valueType",
+            "priorValue",
+            "proposedValue",
+            "expectedAdaptationRevision",
+            "reviewAfter"
+          ],
+          "properties": {
+            "type": {
+              "const": "adaptPersona"
+            },
+            "key": {
+              "type": "string",
+              "pattern": "^[a-z][a-zA-Z0-9]{0,63}$"
+            },
+            "valueType": {
+              "const": "number"
+            },
+            "priorValue": {
+              "type": "number"
+            },
+            "proposedValue": {
+              "type": "number"
+            },
+            "expectedAdaptationRevision": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reviewAfter": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "draft"
+          ],
+          "properties": {
+            "type": {
+              "const": "draftSkill"
+            },
+            "draft": {
+              "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/SkillDraft"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "hint"
+          ],
+          "properties": {
+            "type": {
+              "const": "skillHint"
+            },
+            "hint": {
+              "$ref": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/SkillHint"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "memoryIds",
+            "reason",
+            "reviewTarget"
+          ],
+          "properties": {
+            "type": {
+              "const": "flagConflict"
+            },
+            "memoryIds": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 100,
+              "items": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "uniqueItems": true
+            },
+            "reason": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+            },
+            "reviewTarget": {
+              "enum": [
+                "human",
+                "worldProvider"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "DreamingProposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "proposalId",
+        "runId",
+        "assistantId",
+        "sequence",
+        "evidence",
+        "transformationVersion",
+        "rationaleSummary",
+        "confidence",
+        "sensitivityResult",
+        "operation",
+        "inverse"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "proposalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "runId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "evidence": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/EvidenceSet"
+        },
+        "transformationVersion": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+        },
+        "rationaleSummary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sensitivityResult": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "privacyClass",
+            "decision"
+          ],
+          "properties": {
+            "privacyClass": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/PrivacyClass"
+            },
+            "decision": {
+              "enum": [
+                "allow",
+                "needsHumanReview",
+                "reject"
+              ]
+            }
+          }
+        },
+        "operation": {
+          "$ref": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingOperation"
+        },
+        "inverse": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "target",
+            "requireNoDependents"
+          ],
+          "properties": {
+            "type": {
+              "const": "appendReversal"
+            },
+            "target": {
+              "const": "resultingApplication"
+            },
+            "requireNoDependents": {
+              "const": true
+            }
+          }
+        }
+      }
+    },
+    "ProposalDisposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proposalId",
+        "disposition",
+        "reason",
+        "applicationId",
+        "resultingReferences"
+      ],
+      "properties": {
+        "proposalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "disposition": {
+          "enum": [
+            "applied",
+            "rejected",
+            "needsReview"
+          ]
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        },
+        "applicationId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resultingReferences": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "applied"
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "properties": {
+              "applicationId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "applicationId": {
+                "const": null
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ConflictResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "memoryIds",
+        "evidence",
+        "reason"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "exactDuplicate",
+            "compatible",
+            "needsReview",
+            "worldReferral"
+          ]
+        },
+        "memoryIds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "uniqueItems": true
+        },
+        "evidence": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/EvidenceSet"
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "DreamingApplication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "applicationId",
+        "runId",
+        "assistantId",
+        "expectedMemorySource",
+        "resultingMemorySource",
+        "profileRevision",
+        "dispositions",
+        "createdEventIds",
+        "dependentApplicationIds",
+        "appliedAt",
+        "appliedBy",
+        "inverseArtifact"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "applicationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "runId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedMemorySource": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        },
+        "resultingMemorySource": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        },
+        "profileRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "dispositions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/ProposalDisposition"
+          }
+        },
+        "createdEventIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "dependentApplicationIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "uniqueItems": true
+        },
+        "appliedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "appliedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "inverseArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "DreamingReversal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "reversalId",
+        "applicationId",
+        "assistantId",
+        "expectedMemorySource",
+        "actorRef",
+        "reason",
+        "createdEventIds",
+        "reversedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "reversalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "applicationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedMemorySource": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        },
+        "actorRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        },
+        "createdEventIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "reversedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        }
+      }
+    },
+    "DreamingMutationIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "applicationId",
+        "runId",
+        "proposalId",
+        "assistantId",
+        "requestId",
+        "idempotencyKey",
+        "expectedMemorySource",
+        "expectedProfileRevision",
+        "state",
+        "mutationReceipt",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "applicationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "runId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "proposalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedMemorySource": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        },
+        "expectedProfileRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "state": {
+          "enum": [
+            "prepared",
+            "mutationConfirmed",
+            "committed",
+            "outcomeUnknown"
+          ]
+        },
+        "mutationReceipt": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "createdAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "updatedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "mutationConfirmed",
+                  "committed"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "mutationReceipt": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DreamingAnalysisInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run",
+        "inputPage"
+      ],
+      "properties": {
+        "run": {
+          "$ref": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingRun"
+        },
+        "inputPage": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "DreamingAnalysisResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "proposals",
+        "analysisComplete",
+        "continuation",
+        "usage"
+      ],
+      "properties": {
+        "runId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "proposals": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingProposal"
+          }
+        },
+        "analysisComplete": {
+          "type": "boolean"
+        },
+        "continuation": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "inputCursor",
+                "nextProposalSequence",
+                "checkpointArtifact"
+              ],
+              "properties": {
+                "inputCursor": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "nextProposalSequence": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "checkpointArtifact": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "usage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "inputRecords",
+            "tokens",
+            "durationMs",
+            "providerCalls"
+          ],
+          "properties": {
+            "inputRecords": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "durationMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "providerCalls": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/prepared-context/1.0.0",
+  "title": "PreparedContextView",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "viewId", "revision", "assistantId", "conversationId", "sessionId", "endpointId", "builtAt", "freshUntil", "staleUntil", "invalidationKey", "sourceRevisions", "sections"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "viewId": { "$ref": "#/$defs/uuid" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "assistantId": { "$ref": "#/$defs/uuid" },
+    "conversationId": { "$ref": "#/$defs/uuid" },
+    "sessionId": { "$ref": "#/$defs/uuid" },
+    "endpointId": { "$ref": "#/$defs/uuid" },
+    "builtAt": { "$ref": "#/$defs/time" },
+    "freshUntil": { "$ref": "#/$defs/time" },
+    "staleUntil": { "$ref": "#/$defs/time" },
+    "invalidationKey": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "sourceRevisions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/sourceRevision" } },
+    "sections": { "type": "array", "items": { "$ref": "#/$defs/section" } },
+    "omissions": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 500 } },
+    "redactions": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 500 } }
+  },
+  "$defs": {
+    "uuid": { "type": "string", "format": "uuid", "pattern": "^[0-9a-f-]+$" },
+    "time": { "type": "string", "format": "date-time", "pattern": "Z$" },
+    "sourceRevision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source", "revision", "freshness"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "revision": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "freshness": { "enum": ["fresh", "staleAllowed", "unavailable"] }
+      }
+    },
+    "section": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "content", "referenceIds", "tokenEstimate", "trust"],
+      "properties": {
+        "kind": { "enum": ["session", "conversation", "relationalMemory", "worldContext", "pendingWork"] },
+        "content": { "type": "string", "maxLength": 32000 },
+        "referenceIds": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 1000 } },
+        "tokenEstimate": { "type": "integer", "minimum": 0 },
+        "trust": { "enum": ["runtimeState", "assistantMemory", "externalEvidence", "participantContent"] }
+      }
+    }
+  }
+}

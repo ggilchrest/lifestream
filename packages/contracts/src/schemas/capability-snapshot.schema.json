@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/capability-snapshot/2.0.0",
+  "title": "CapabilitySnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "snapshotId", "revision", "assistantId", "endpointId", "sessionId", "environmentId", "authorityContextRef", "issuedAt", "expiresAt", "capabilities"],
+  "properties": {
+    "schemaVersion": { "const": "2.0.0" },
+    "snapshotId": { "$ref": "#/$defs/uuid" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "assistantId": { "$ref": "#/$defs/uuid" },
+    "endpointId": { "$ref": "#/$defs/uuid" },
+    "sessionId": { "$ref": "#/$defs/uuid" },
+    "environmentId": { "$ref": "#/$defs/uuid" },
+    "authorityContextRef": { "$ref": "#/$defs/authorityContextRef" },
+    "issuedAt": { "$ref": "#/$defs/time" },
+    "expiresAt": { "$ref": "#/$defs/time" },
+    "capabilities": { "type": "array", "items": { "$ref": "#/$defs/capability" } }
+  },
+  "$defs": {
+    "uuid": { "type": "string", "format": "uuid", "pattern": "^[0-9a-f-]+$" },
+    "time": { "type": "string", "format": "date-time", "pattern": "Z$" },
+    "authorityContextRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerRef", "contextId", "revision"],
+      "properties": {
+        "providerRef": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "contextId": { "$ref": "#/$defs/uuid" },
+        "revision": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "capability": {
+      "type": "object", "additionalProperties": false,
+      "required": ["capabilityId", "version", "inputSchemaRef", "outputSchemaRef", "sideEffectClass", "authorization", "idempotency", "latencyClass", "offlineAvailable", "simulationSupported", "providerRouteRef"],
+      "properties": {
+        "capabilityId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "inputSchemaRef": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "outputSchemaRef": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "sideEffectClass": { "enum": ["none", "reversible", "irreversible", "unknown"] },
+        "authorization": { "enum": ["snapshotSufficient", "invokeDecision", "approvalRequired"] },
+        "idempotency": { "enum": ["notApplicable", "required", "unsupported"] },
+        "latencyClass": { "enum": ["instant", "interactive", "slow", "background"] },
+        "offlineAvailable": { "type": "boolean" },
+        "simulationSupported": { "type": "boolean" },
+        "providerRouteRef": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    }
+  }
+}

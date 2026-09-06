@@ -7,10 +7,13 @@
   "scripts": {
     "build": "tsc -b apps/server packages/contracts packages/runtime packages/providers-fixture packages/storage-sqlite",
     "lint": "eslint .",
-    "test": "node --test --experimental-strip-types tests/workspace.test.ts",
+    "test": "node --test --experimental-strip-types tests/**/*.test.ts packages/**/*.test.ts apps/**/*.test.ts",
     "typecheck": "tsc -b --pretty false apps/server packages/contracts packages/runtime packages/providers-fixture packages/storage-sqlite"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ajv": "^8.18.0",
+    "ajv-formats": "^3.0.1",
     "eslint": "^9.0.0",
     "typescript": "^5.7.0"
   }

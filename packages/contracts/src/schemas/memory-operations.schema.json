@@ -1,0 +1,730 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/memory-operations/1.0.0",
+  "title": "MemoryOperations",
+  "$ref": "#/$defs/MemoryLifecycleEvent",
+  "$defs": {
+    "ReinforceMemory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "memoryId",
+        "expectedRevision",
+        "evidence",
+        "confidence",
+        "provenance"
+      ],
+      "properties": {
+        "type": {
+          "const": "reinforce"
+        },
+        "memoryId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "evidence": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/EvidenceSet"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "provenance": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Provenance"
+        }
+      }
+    },
+    "CorrectMemory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "memoryId",
+        "expectedRevision",
+        "replacement",
+        "reason"
+      ],
+      "properties": {
+        "type": {
+          "const": "correct"
+        },
+        "memoryId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "replacement": {
+          "$ref": "https://lifestream.dev/contracts/memory-record/2.0.0"
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "SupersedeMemory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "memoryId",
+        "expectedRevision",
+        "replacementMemoryId",
+        "reason"
+      ],
+      "properties": {
+        "type": {
+          "const": "supersede"
+        },
+        "memoryId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "replacementMemoryId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "InvalidateMemory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "memoryId",
+        "expectedRevision",
+        "reason",
+        "evidence"
+      ],
+      "properties": {
+        "type": {
+          "const": "invalidate"
+        },
+        "memoryId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        },
+        "evidence": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/EvidenceSet"
+        }
+      }
+    },
+    "ContradictMemory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "memoryId",
+        "expectedRevision",
+        "contradictedBy",
+        "reason"
+      ],
+      "properties": {
+        "type": {
+          "const": "contradict"
+        },
+        "memoryId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "contradictedBy": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "uniqueItems": true
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "ReverseMemoryChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "memoryId",
+        "expectedRevision",
+        "lifecycleEventId",
+        "reason"
+      ],
+      "properties": {
+        "type": {
+          "const": "reverse"
+        },
+        "memoryId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "lifecycleEventId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    },
+    "MemoryTransition": {
+      "oneOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ReinforceMemory"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/CorrectMemory"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/SupersedeMemory"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/InvalidateMemory"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ContradictMemory"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ReverseMemoryChange"
+        },
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ActivateMemory"
+        }
+      ]
+    },
+    "MemoryLifecycleEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "assistantId",
+        "memoryId",
+        "oldRevision",
+        "newRevision",
+        "occurredAt",
+        "actorRef",
+        "correlationId",
+        "operation",
+        "sourceRevision"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "eventId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "memoryId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "oldRevision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "newRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "occurredAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "actorRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "operation": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "record"
+              ],
+              "properties": {
+                "type": {
+                  "const": "created"
+                },
+                "record": {
+                  "$ref": "https://lifestream.dev/contracts/memory-record/2.0.0"
+                }
+              }
+            },
+            {
+              "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryTransition"
+            }
+          ]
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        }
+      }
+    },
+    "MemoryWrite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "records",
+        "events",
+        "sourceRevision"
+      ],
+      "properties": {
+        "records": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/memory-record/2.0.0"
+          }
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryLifecycleEvent"
+          }
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        }
+      }
+    },
+    "RecallMatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "score",
+        "matchReasons",
+        "recordRevision"
+      ],
+      "properties": {
+        "record": {
+          "$ref": "https://lifestream.dev/contracts/memory-record/2.0.0"
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "matchReasons": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "recordRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        }
+      }
+    },
+    "RecallData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matches",
+        "sourceRevision",
+        "nextCursor",
+        "truncated"
+      ],
+      "properties": {
+        "matches": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/RecallMatch"
+          }
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        },
+        "nextCursor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SourceTraceData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "memoryIds",
+        "edges",
+        "sourceRevision",
+        "truncated"
+      ],
+      "properties": {
+        "memoryIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "uniqueItems": true
+        },
+        "edges": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fromMemoryId",
+              "toReference",
+              "relationship"
+            ],
+            "properties": {
+              "fromMemoryId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "toReference": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "relationship": {
+                "enum": [
+                  "source",
+                  "supersedes",
+                  "contradicts",
+                  "derivedFrom"
+                ]
+              }
+            }
+          }
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MemoryExportData": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "assistantId",
+            "sourceRevision",
+            "schemaVersions",
+            "originalArtifactRefs"
+          ],
+          "properties": {
+            "type": {
+              "const": "header"
+            },
+            "assistantId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "sourceRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+            },
+            "schemaVersions": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              }
+            },
+            "originalArtifactRefs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "record",
+            "recordRevision"
+          ],
+          "properties": {
+            "type": {
+              "const": "record"
+            },
+            "record": {
+              "$ref": "https://lifestream.dev/contracts/memory-record/2.0.0"
+            },
+            "recordRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "event"
+          ],
+          "properties": {
+            "type": {
+              "const": "lifecycleEvent"
+            },
+            "event": {
+              "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryLifecycleEvent"
+            }
+          }
+        }
+      ]
+    },
+    "MemoryExportSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordCount",
+        "eventCount",
+        "sourceRevision",
+        "contentDigest",
+        "originalArtifactRefs"
+      ],
+      "properties": {
+        "recordCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "eventCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        },
+        "contentDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "originalArtifactRefs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+          }
+        }
+      }
+    },
+    "MemoryImportData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "importId",
+        "recordCount",
+        "eventCount",
+        "sourceRevision",
+        "sourceDigest",
+        "upcastChain"
+      ],
+      "properties": {
+        "importId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "recordCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "eventCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        },
+        "sourceDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "upcastChain": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "upcasterId",
+              "version",
+              "sourceVersion",
+              "targetVersion"
+            ],
+            "properties": {
+              "upcasterId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "version": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+              },
+              "sourceVersion": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+              },
+              "targetVersion": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ConsolidationRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "sourceRevision",
+        "recordRevision"
+      ],
+      "properties": {
+        "record": {
+          "$ref": "https://lifestream.dev/contracts/memory-record/2.0.0"
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        },
+        "recordRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        }
+      }
+    },
+    "ConsolidationSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordCount",
+        "sourceRevision",
+        "nextCursor",
+        "complete"
+      ],
+      "properties": {
+        "recordCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision"
+        },
+        "nextCursor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "complete": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MemoryExportArchiveLine": {
+      "oneOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryExportData"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "summary"
+          ],
+          "properties": {
+            "type": {
+              "const": "summary"
+            },
+            "summary": {
+              "$ref": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryExportSummary"
+            }
+          }
+        }
+      ]
+    },
+    "ActivateMemory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "memoryId",
+        "expectedRevision",
+        "validationRef",
+        "reason"
+      ],
+      "properties": {
+        "type": {
+          "const": "activate"
+        },
+        "memoryId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "validationRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "reason": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason"
+        }
+      }
+    }
+  }
+}

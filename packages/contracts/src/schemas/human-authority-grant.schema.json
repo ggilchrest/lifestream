@@ -1,0 +1,322 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/human-authority-grant/1.0.0",
+  "title": "HumanAuthorityGrant",
+  "description": "Immutable approved terms with an event-derived lifecycle revision. Shape validation does not prove authentication, scope eligibility, dates, or atomic consumption.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "grantId",
+    "revision",
+    "status",
+    "grantClass",
+    "principalId",
+    "assistantId",
+    "endpointId",
+    "environmentId",
+    "authorityProviderRef",
+    "scope",
+    "sessionId",
+    "invocationId",
+    "inputDigest",
+    "issuedAt",
+    "expiresAt",
+    "reviewAfter",
+    "issuedBy",
+    "grantRequestId",
+    "authenticationEvidenceRef",
+    "consumedDecisionId"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "grantId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "active",
+        "consumed",
+        "revoked",
+        "expired"
+      ]
+    },
+    "grantClass": {
+      "enum": [
+        "allowOnce",
+        "allowSession",
+        "allowPersistent"
+      ]
+    },
+    "principalId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "assistantId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "endpointId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "environmentId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "authorityProviderRef": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "scope": {
+      "$ref": "#/$defs/scope"
+    },
+    "sessionId": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "invocationId": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "inputDigest": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "issuedAt": {
+      "$ref": "#/$defs/time"
+    },
+    "expiresAt": {
+      "$ref": "#/$defs/time"
+    },
+    "reviewAfter": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "issuedBy": {
+      "$ref": "#/$defs/uuid"
+    },
+    "grantRequestId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "authenticationEvidenceRef": {
+      "$ref": "#/$defs/scopeRef"
+    },
+    "consumedDecisionId": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "grantClass"
+        ],
+        "properties": {
+          "grantClass": {
+            "const": "allowOnce"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sessionId": {
+            "$ref": "#/$defs/uuid"
+          },
+          "invocationId": {
+            "$ref": "#/$defs/uuid"
+          },
+          "inputDigest": {
+            "$ref": "#/$defs/digest"
+          },
+          "reviewAfter": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "grantClass"
+        ],
+        "properties": {
+          "grantClass": {
+            "const": "allowSession"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sessionId": {
+            "$ref": "#/$defs/uuid"
+          },
+          "invocationId": {
+            "type": "null"
+          },
+          "inputDigest": {
+            "type": "null"
+          },
+          "reviewAfter": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "grantClass"
+        ],
+        "properties": {
+          "grantClass": {
+            "const": "allowPersistent"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sessionId": {
+            "type": "null"
+          },
+          "invocationId": {
+            "type": "null"
+          },
+          "inputDigest": {
+            "type": "null"
+          },
+          "reviewAfter": {
+            "$ref": "#/$defs/time"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "const": "consumed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "grantClass": {
+            "const": "allowOnce"
+          },
+          "consumedDecisionId": {
+            "$ref": "#/$defs/uuid"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "consumedDecisionId": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f-]+$"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "scopeRef": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "pattern": "^[^\\s*]+$"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capabilityId",
+        "capabilityVersion",
+        "operation",
+        "targetRefs",
+        "dataScopeRefs"
+      ],
+      "properties": {
+        "capabilityId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"
+        },
+        "capabilityVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "operation": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9.:-]{0,63}$"
+        },
+        "targetRefs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/scopeRef"
+          }
+        },
+        "dataScopeRefs": {
+          "type": "array",
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/scopeRef"
+          }
+        }
+      }
+    }
+  }
+}

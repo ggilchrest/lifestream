@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/human-authority-decision/2.0.0",
+  "title": "HumanAuthorityDecision",
+  "description": "Preview or durable dispatch admission, never proof of effect completion and never a bearer credential.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "decisionId",
+    "kind",
+    "disposition",
+    "reasonCode",
+    "correlationId",
+    "invocationId",
+    "principalId",
+    "assistantId",
+    "endpointId",
+    "environmentId",
+    "executionMode",
+    "grantId",
+    "grantRevision",
+    "snapshotId",
+    "snapshotRevision",
+    "authorityContextRef",
+    "inputDigest",
+    "scopeDigest",
+    "evaluatedAt",
+    "admittedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "decisionId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "kind": {
+      "enum": [
+        "preview",
+        "dispatch"
+      ]
+    },
+    "disposition": {
+      "enum": [
+        "authorized",
+        "denied",
+        "approvalRequired"
+      ]
+    },
+    "reasonCode": {
+      "enum": [
+        "authority_authorized",
+        "authority_consent_required",
+        "authority_identity_invalid",
+        "authority_scope_mismatch",
+        "authority_stale_context",
+        "authority_grant_expired",
+        "authority_grant_revoked",
+        "authority_grant_consumed",
+        "authority_review_due",
+        "authority_session_inactive",
+        "authority_unavailable",
+        "authority_replay_mismatch",
+        "authority_provider_denied"
+      ]
+    },
+    "correlationId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "invocationId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "principalId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "assistantId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "endpointId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "environmentId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "executionMode": {
+      "enum": [
+        "normal",
+        "replay",
+        "simulation"
+      ]
+    },
+    "grantId": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "grantRevision": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "snapshotId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "snapshotRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "authorityContextRef": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/authorityContextRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "inputDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "scopeDigest": {
+      "$ref": "#/$defs/digest"
+    },
+    "evaluatedAt": {
+      "$ref": "#/$defs/time"
+    },
+    "admittedAt": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "disposition"
+        ],
+        "properties": {
+          "disposition": {
+            "const": "authorized"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "grantId": {
+            "$ref": "#/$defs/uuid"
+          },
+          "grantRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "authorityContextRef": {
+            "$ref": "#/$defs/authorityContextRef"
+          },
+          "reasonCode": {
+            "const": "authority_authorized"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "admittedAt": {
+            "type": "null"
+          },
+          "reasonCode": {
+            "not": {
+              "const": "authority_authorized"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "disposition"
+        ],
+        "properties": {
+          "disposition": {
+            "const": "approvalRequired"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "reasonCode": {
+            "const": "authority_consent_required"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "disposition"
+        ],
+        "properties": {
+          "disposition": {
+            "const": "denied"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "reasonCode": {
+            "not": {
+              "const": "authority_consent_required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "const": "preview"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "admittedAt": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind",
+          "disposition"
+        ],
+        "properties": {
+          "kind": {
+            "const": "dispatch"
+          },
+          "disposition": {
+            "const": "authorized"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "admittedAt": {
+            "$ref": "#/$defs/time"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f-]+$"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "authorityContextRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "providerRef",
+        "contextId",
+        "revision"
+      ],
+      "properties": {
+        "providerRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "contextId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1702 @@
+{
+  "schemaVersion": "1.0.0",
+  "profile": "lifestream.ports.v1",
+  "status": "proposed-reference",
+  "methods": [
+    {
+      "port": "AssistantMemoryProvider",
+      "method": "recall",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RecallRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RecallResult",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S009",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "AssistantMemoryProvider",
+      "method": "append",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AppendMemoryRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AppendMemoryResult",
+      "stream": false,
+      "effects": true,
+      "ownerSlice": "LS-S008",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "AssistantMemoryProvider",
+      "method": "transition",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryTransitionRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryTransitionResult",
+      "stream": false,
+      "effects": true,
+      "ownerSlice": "LS-S008",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "AssistantMemoryProvider",
+      "method": "exportConsolidationInput",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/ConsolidationInputRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/ConsolidationInputEvent",
+      "stream": true,
+      "effects": false,
+      "ownerSlice": "LS-S011",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "AssistantMemoryProvider",
+      "method": "traceSources",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemorySourceTraceRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemorySourceTraceResult",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S009",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "AssistantMemoryProvider",
+      "method": "exportState",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryExportRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryExportEvent",
+      "stream": true,
+      "effects": false,
+      "ownerSlice": "LS-S009",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "AssistantMemoryProvider",
+      "method": "importState",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryImportRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryImportResult",
+      "stream": false,
+      "effects": true,
+      "ownerSlice": "LS-S009",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "WorldContextProvider",
+      "method": "getPreparedInputs",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/WorldContextRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/WorldContextResult",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S010",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "WorldContextProvider",
+      "method": "getEvidence",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/EvidenceRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/EvidenceResult",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S010",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "WorldContextProvider",
+      "method": "subscribeInvalidations",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/ContextInvalidationRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/ContextInvalidationEvent",
+      "stream": true,
+      "effects": false,
+      "ownerSlice": "LS-S010",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "AuthorityProvider",
+      "method": "evaluate",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityResult",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S042",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "AuthorityProvider",
+      "method": "authorizeDispatch",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityDispatchRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityDispatchResult",
+      "stream": false,
+      "effects": true,
+      "ownerSlice": "LS-S042",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "AuthorityProvider",
+      "method": "getGrants",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantQueryRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantQueryResult",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S041",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "AuthorityProvider",
+      "method": "subscribeInvalidations",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityInvalidationRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityInvalidationEvent",
+      "stream": true,
+      "effects": false,
+      "ownerSlice": "LS-S042",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "InferenceProvider",
+      "method": "generate",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/InferenceRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/InferenceEvent",
+      "stream": true,
+      "effects": false,
+      "ownerSlice": "LS-S015",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "SpeechToTextProvider",
+      "method": "transcribe",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/SttRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/SttEvent",
+      "stream": true,
+      "effects": false,
+      "ownerSlice": "LS-S019",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "TextToSpeechProvider",
+      "method": "synthesize",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TtsRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TtsEvent",
+      "stream": true,
+      "effects": false,
+      "ownerSlice": "LS-S019",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "CapabilityProvider",
+      "method": "getSnapshot",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilitySnapshotRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilitySnapshotResult",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S017",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "CapabilityProvider",
+      "method": "invoke",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityInvocationRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityInvocationResult",
+      "stream": false,
+      "effects": true,
+      "ownerSlice": "LS-S017",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "CapabilityProvider",
+      "method": "getInvocation",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityStatusRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityStatusResult",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S017",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "CapabilityProvider",
+      "method": "subscribeInvalidations",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityInvalidationRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityInvalidationEvent",
+      "stream": true,
+      "effects": false,
+      "ownerSlice": "LS-S017",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "RendererProvider",
+      "method": "getCapabilities",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RendererCapabilitiesRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RendererCapabilitiesResult",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S026",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "RendererProvider",
+      "method": "apply",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RendererApplyRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RendererApplyResult",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S026",
+      "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "TraceSink",
+      "method": "publish",
+      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TracePublishRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TracePublishResult",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S014",
+      "signal": "ProviderCallContext.signal"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Message",
+      "method": "POST",
+      "path": "/api/runtime/v1/messages",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/MessageRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/MessageResponse",
+      "successStatus": 202,
+      "ownerSlice": "LS-S016"
+    },
+    {
+      "name": "GetInteraction",
+      "method": "GET",
+      "path": "/api/runtime/v1/interactions/{interactionTraceId}",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetInteractionRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetInteractionResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S016"
+    },
+    {
+      "name": "CancelInteraction",
+      "method": "POST",
+      "path": "/api/runtime/v1/interactions/{interactionTraceId}/cancel",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelInteractionRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelInteractionResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S022"
+    },
+    {
+      "name": "CreateSession",
+      "method": "POST",
+      "path": "/api/runtime/v1/sessions",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateSessionRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateSessionResponse",
+      "successStatus": 201,
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "GetSession",
+      "method": "GET",
+      "path": "/api/runtime/v1/sessions/{sessionId}",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetSessionRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetSessionResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "EndSession",
+      "method": "POST",
+      "path": "/api/runtime/v1/sessions/{sessionId}/end",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/EndSessionRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/EndSessionResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "Handoff",
+      "method": "POST",
+      "path": "/api/runtime/v1/sessions/{sessionId}/handoff",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/HandoffRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/HandoffResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S024"
+    },
+    {
+      "name": "ListAuthorityRequests",
+      "method": "GET",
+      "path": "/api/authority/v1/requests",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityRequestsRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityRequestsResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S043"
+    },
+    {
+      "name": "GetAuthorityRequest",
+      "method": "GET",
+      "path": "/api/authority/v1/requests/{requestId}",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityRequestRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityRequestResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S043"
+    },
+    {
+      "name": "CreateAuthorityRequest",
+      "method": "POST",
+      "path": "/api/authority/v1/requests",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateAuthorityRequestRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateAuthorityRequestResponse",
+      "successStatus": 201,
+      "ownerSlice": "LS-S043"
+    },
+    {
+      "name": "ApproveAuthorityRequest",
+      "method": "POST",
+      "path": "/api/authority/v1/requests/{requestId}/approve",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ApproveAuthorityRequestRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ApproveAuthorityRequestResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S043"
+    },
+    {
+      "name": "DenyAuthorityRequest",
+      "method": "POST",
+      "path": "/api/authority/v1/requests/{requestId}/deny",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/DenyAuthorityRequestRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/DenyAuthorityRequestResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S043"
+    },
+    {
+      "name": "CancelAuthorityRequest",
+      "method": "POST",
+      "path": "/api/authority/v1/requests/{requestId}/cancel",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelAuthorityRequestRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelAuthorityRequestResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S043"
+    },
+    {
+      "name": "ListAuthorityGrants",
+      "method": "GET",
+      "path": "/api/authority/v1/grants",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityGrantsRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityGrantsResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S043"
+    },
+    {
+      "name": "GetAuthorityGrant",
+      "method": "GET",
+      "path": "/api/authority/v1/grants/{grantId}",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityGrantRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityGrantResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S043"
+    },
+    {
+      "name": "RevokeAuthorityGrant",
+      "method": "POST",
+      "path": "/api/authority/v1/grants/{grantId}/revoke",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/RevokeAuthorityGrantRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/RevokeAuthorityGrantResponse",
+      "successStatus": 200,
+      "ownerSlice": "LS-S043"
+    },
+    {
+      "name": "InteractionEvents",
+      "method": "GET",
+      "path": "/api/runtime/v1/interactions/{interactionTraceId}/events",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/EventsRequest",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionStreamEvent",
+      "successStatus": 200,
+      "transport": "SSE",
+      "ownerSlice": "LS-S016"
+    },
+    {
+      "name": "Audio",
+      "method": "GET",
+      "path": "/api/runtime/v1/audio",
+      "request": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/AudioClientMessage",
+      "response": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/AudioServerMessage",
+      "successStatus": 101,
+      "transport": "WebSocket",
+      "ownerSlice": "LS-S020"
+    }
+  ],
+  "traceEvents": [
+    {
+      "eventType": "interaction.received",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionReceivedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "interaction.turnStarted",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionTurnStartedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "interaction.turnCommitted",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionTurnCommittedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "interaction.responseStarted",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionResponseStartedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "interaction.responseCompleted",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionResponseCompletedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "interaction.interrupted",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionInterruptedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "interaction.stateChanged",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionStateChangedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "interaction.failed",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InteractionFailedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "audio.captureStarted",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioCaptureStartedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "audio.sttPartial",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioSttPartialPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "audio.sttCommitted",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioSttCommittedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "audio.ttsRequested",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioTtsRequestedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "audio.ttsFirstAudio",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioTtsFirstAudioPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "audio.playbackFirstSample",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioPlaybackFirstSamplePayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "audio.playbackCompleted",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioPlaybackCompletedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "audio.playbackStopped",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/AudioPlaybackStoppedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "context.viewSelected",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/ContextViewSelectedPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "context.viewRefreshed",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/ContextViewRefreshedPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "context.sourceUsed",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/ContextSourceUsedPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "context.omitted",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/ContextOmittedPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "context.redacted",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/ContextRedactedPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "inference.requested",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InferenceRequestedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "inference.inputManifest",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InferenceInputManifestPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "inference.firstToken",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InferenceFirstTokenPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "inference.completed",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InferenceCompletedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "inference.failed",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/InferenceFailedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "capability.requested",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityRequestedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "capability.authorization",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityAuthorizationPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "capability.started",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityStartedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "capability.result",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityResultPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "capability.failed",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityFailedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "capability.outcomeUnknown",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/CapabilityOutcomeUnknownPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": true
+    },
+    {
+      "eventType": "memory.referencesSelected",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/MemoryReferencesSelectedPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "memory.candidateProposed",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/MemoryCandidateProposedPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "memory.lifecycleChanged",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/MemoryLifecycleChangedPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "memory.dreamingStateChanged",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/MemoryDreamingStateChangedPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "embodiment.stateChanged",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/EmbodimentStateChangedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "embodiment.rendererApplied",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/EmbodimentRendererAppliedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "embodiment.rendererDegraded",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/EmbodimentRendererDegradedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "embodiment.rendererFailed",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/EmbodimentRendererFailedPayload",
+      "backgroundAllowed": false,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "system.providerHealth",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/SystemProviderHealthPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "system.queueLoss",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/SystemQueueLossPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "system.policyWait",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/SystemPolicyWaitPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "system.degradedMode",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/SystemDegradedModePayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    },
+    {
+      "eventType": "system.invalidTransition",
+      "eventVersion": "1.0.0",
+      "payload": "https://lifestream.dev/contracts/interaction-trace-event/2.0.0#/$defs/SystemInvalidTransitionPayload",
+      "backgroundAllowed": true,
+      "monotonicRequired": false
+    }
+  ],
+  "types": [
+    {
+      "name": "UUID",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "Time",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "Revision",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "Digest",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "Semver",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "OpaqueRef",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ExecutionMode",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "PrivacyClass",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/PrivacyClass",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilityId",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/CapabilityId",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AuthorityContextRef",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/AuthorityContextRef",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ArtifactRef",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ExternalEvidenceRef",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExternalEvidenceRef",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "SourceRevision",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/SourceRevision",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CallScope",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/CallScope",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "InteractionIdentity",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/InteractionIdentity",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "Problem",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "Page",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Page",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "Reason",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Reason",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "Provenance",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Provenance",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "EvidenceSet",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/EvidenceSet",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AudioFormat",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/AudioFormat",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AudioFrame",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/AudioFrame",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ProviderManifest",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ProviderManifest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "JsonValue",
+      "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/JsonValue",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ReinforceMemory",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ReinforceMemory",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "CorrectMemory",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/CorrectMemory",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "SupersedeMemory",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/SupersedeMemory",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "InvalidateMemory",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/InvalidateMemory",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "ContradictMemory",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ContradictMemory",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "ReverseMemoryChange",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ReverseMemoryChange",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "MemoryTransition",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryTransition",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "MemoryLifecycleEvent",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryLifecycleEvent",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "MemoryWrite",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryWrite",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "RecallMatch",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/RecallMatch",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "RecallData",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/RecallData",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "SourceTraceData",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/SourceTraceData",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "MemoryExportData",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryExportData",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "MemoryExportSummary",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryExportSummary",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "MemoryImportData",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryImportData",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "ConsolidationRecord",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ConsolidationRecord",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "ConsolidationSummary",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ConsolidationSummary",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "DreamingBoundary",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingBoundary",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "DreamingLimits",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingLimits",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "DreamingRun",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingRun",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "DreamingOperation",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingOperation",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "DreamingProposal",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingProposal",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "ProposalDisposition",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/ProposalDisposition",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "ConflictResult",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/ConflictResult",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "DreamingApplication",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingApplication",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "DreamingReversal",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingReversal",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "JsonPointer",
+      "schemaRef": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/JsonPointer",
+      "ownerSlice": "LS-S018"
+    },
+    {
+      "name": "ValueBinding",
+      "schemaRef": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/ValueBinding",
+      "ownerSlice": "LS-S018"
+    },
+    {
+      "name": "BindingSource",
+      "schemaRef": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/BindingSource",
+      "ownerSlice": "LS-S018"
+    },
+    {
+      "name": "SkillStep",
+      "schemaRef": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/SkillStep",
+      "ownerSlice": "LS-S018"
+    },
+    {
+      "name": "Skill",
+      "schemaRef": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/Skill",
+      "ownerSlice": "LS-S018"
+    },
+    {
+      "name": "SkillDraft",
+      "schemaRef": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/SkillDraft",
+      "ownerSlice": "LS-S018"
+    },
+    {
+      "name": "SkillHint",
+      "schemaRef": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/SkillHint",
+      "ownerSlice": "LS-S018"
+    },
+    {
+      "name": "SkillExecutionResult",
+      "schemaRef": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/SkillExecutionResult",
+      "ownerSlice": "LS-S018"
+    },
+    {
+      "name": "CapabilityProposal",
+      "schemaRef": "https://lifestream.dev/contracts/skill/1.0.0#/$defs/CapabilityProposal",
+      "ownerSlice": "LS-S018"
+    },
+    {
+      "name": "PromptSection",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/PromptSection",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "PromptSections",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/PromptSections",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "InputManifest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/InputManifest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "InferenceData",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/InferenceData",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "InferenceSummary",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/InferenceSummary",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "SttData",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/SttData",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "SttSummary",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/SttSummary",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "SpeechSegment",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/SpeechSegment",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AudioChunk",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AudioChunk",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "TtsSummary",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TtsSummary",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "WorldPreparedData",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/WorldPreparedData",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "EvidenceSummary",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/EvidenceSummary",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "EvidenceData",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/EvidenceData",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ContextInvalidation",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/ContextInvalidation",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilityInvalidation",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityInvalidation",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AuthorityInvalidation",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityInvalidation",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "InvalidationSummary",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/InvalidationSummary",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilityOperationScope",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityOperationScope",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "GovernedDisposition",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GovernedDisposition",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilityStatus",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityStatus",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "RendererCapabilities",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RendererCapabilities",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "RendererApplyData",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RendererApplyData",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "TracePublishData",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TracePublishData",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "GrantQueryData",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantQueryData",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "GrantRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "GrantRequestList",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantRequestList",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "GrantAdminData",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantAdminData",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AuthenticatedHumanContext",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthenticatedHumanContext",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "GrantLifecycleEvent",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantLifecycleEvent",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "RecallRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RecallRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "RecallResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RecallResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AppendMemoryRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AppendMemoryRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AppendMemoryResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AppendMemoryResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "MemoryTransitionRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryTransitionRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "MemoryTransitionResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryTransitionResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ConsolidationInputRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/ConsolidationInputRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ConsolidationInputEvent",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/ConsolidationInputEvent",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "MemorySourceTraceRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemorySourceTraceRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "MemorySourceTraceResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemorySourceTraceResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "MemoryExportRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryExportRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "MemoryExportEvent",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryExportEvent",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "MemoryImportRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryImportRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "MemoryImportResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/MemoryImportResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "WorldContextRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/WorldContextRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "WorldContextResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/WorldContextResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "EvidenceRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/EvidenceRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "EvidenceResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/EvidenceResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ContextInvalidationRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/ContextInvalidationRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ContextInvalidationEvent",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/ContextInvalidationEvent",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AuthorityRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AuthorityResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AuthorityDispatchRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityDispatchRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AuthorityDispatchResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityDispatchResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "GrantQueryRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantQueryRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "GrantQueryResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/GrantQueryResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AuthorityInvalidationRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityInvalidationRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AuthorityInvalidationEvent",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityInvalidationEvent",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "InferenceRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/InferenceRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "InferenceEvent",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/InferenceEvent",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "SttRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/SttRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "SttEvent",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/SttEvent",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "SttInput",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/SttInput",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "TtsRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TtsRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "TtsEvent",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TtsEvent",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilitySnapshotRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilitySnapshotRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilitySnapshotResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilitySnapshotResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilityInvocationRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityInvocationRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilityInvocationResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityInvocationResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilityStatusRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityStatusRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilityStatusResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityStatusResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilityInvalidationRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityInvalidationRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "CapabilityInvalidationEvent",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityInvalidationEvent",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "RendererCapabilitiesRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RendererCapabilitiesRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "RendererCapabilitiesResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RendererCapabilitiesResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "RendererApplyRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RendererApplyRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "RendererApplyResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/RendererApplyResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "TracePublishRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TracePublishRequest",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "TracePublishResult",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TracePublishResult",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ProviderMessage",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/ProviderMessage",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "ExternalAuthorityDecision",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/ExternalAuthorityDecision",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "AuthorityDecision",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityDecision",
+      "ownerSlice": "LS-S002"
+    },
+    {
+      "name": "InteractionState",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionState",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "Conversation",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/Conversation",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "SessionBinding",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/SessionBinding",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "Session",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/Session",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "InteractionReceipt",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionReceipt",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "InteractionView",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionView",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "ResponseChunk",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ResponseChunk",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "InteractionStreamEvent",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionStreamEvent",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "EndpointProfile",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/EndpointProfile",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "InteractionEndpoint",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/InteractionEndpoint",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "AudioOwnershipLease",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/AudioOwnershipLease",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "HandoffRecord",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/HandoffRecord",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "MessageRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/MessageRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "MessageResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/MessageResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "GetInteractionRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetInteractionRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "GetInteractionResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetInteractionResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "CancelInteractionRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelInteractionRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "CancelInteractionResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelInteractionResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "CreateSessionRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateSessionRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "CreateSessionResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateSessionResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "GetSessionRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetSessionRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "GetSessionResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetSessionResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "EndSessionRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/EndSessionRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "EndSessionResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/EndSessionResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "HandoffRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/HandoffRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "HandoffResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/HandoffResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "ListAuthorityRequestsRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityRequestsRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "ListAuthorityRequestsResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityRequestsResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "GetAuthorityRequestRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityRequestRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "GetAuthorityRequestResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityRequestResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "CreateAuthorityRequestRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateAuthorityRequestRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "CreateAuthorityRequestResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CreateAuthorityRequestResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "ApproveAuthorityRequestRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ApproveAuthorityRequestRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "ApproveAuthorityRequestResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ApproveAuthorityRequestResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "DenyAuthorityRequestRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/DenyAuthorityRequestRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "DenyAuthorityRequestResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/DenyAuthorityRequestResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "CancelAuthorityRequestRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelAuthorityRequestRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "CancelAuthorityRequestResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/CancelAuthorityRequestResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "ListAuthorityGrantsRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityGrantsRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "ListAuthorityGrantsResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityGrantsResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "GetAuthorityGrantRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityGrantRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "GetAuthorityGrantResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/GetAuthorityGrantResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "RevokeAuthorityGrantRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/RevokeAuthorityGrantRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "RevokeAuthorityGrantResponse",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/RevokeAuthorityGrantResponse",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "EventsRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/EventsRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "VoiceInteractionRequest",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/VoiceInteractionRequest",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "AudioClientMessage",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/AudioClientMessage",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "AudioServerMessage",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/AudioServerMessage",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "ApiMessage",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ApiMessage",
+      "ownerSlice": "LS-S013"
+    },
+    {
+      "name": "DreamingMutationIntent",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingMutationIntent",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "DreamingAnalysisInput",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingAnalysisInput",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "DreamingAnalysisResult",
+      "schemaRef": "https://lifestream.dev/contracts/dreaming/1.0.0#/$defs/DreamingAnalysisResult",
+      "ownerSlice": "LS-S011"
+    },
+    {
+      "name": "MemoryExportArchiveLine",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/MemoryExportArchiveLine",
+      "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "ActivateMemory",
+      "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ActivateMemory",
+      "ownerSlice": "LS-S008"
+    }
+  ]
+}

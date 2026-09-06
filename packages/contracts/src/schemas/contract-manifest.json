@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "1.0.0",
+  "manifestId": "lifestream.contracts.v1.draft",
+  "status": "draft",
+  "digestAlgorithm": "sha256-bytes-v1",
+  "artifacts": [
+    {
+      "path": "contracts/assistant-profile.schema.json",
+      "sha256": "ccaa756d700492c18385f736aec41d775aa81a9eda8b0019c444e912ed38b77f"
+    },
+    {
+      "path": "contracts/capability-snapshot.schema.json",
+      "sha256": "3f12f36f3d0b9a97032d1939b77eb6aac6c0477591d20674158fa1de1cd94123"
+    },
+    {
+      "path": "contracts/contract-catalog.json",
+      "sha256": "44acfabf5789fd348f66c6ac5961c6f0efa4fc8b86ea34b676a6e5de7e1a33ea"
+    },
+    {
+      "path": "contracts/dreaming.schema.json",
+      "sha256": "1c1c9f478531d714dca962ccfa77d12923031d38d5ae4b7c78f07a49e0a1d1cf"
+    },
+    {
+      "path": "contracts/embodiment-state.schema.json",
+      "sha256": "be08a9043716cd54966a920b030d8c7cbc5fa41e62458bee37d82aa512791523"
+    },
+    {
+      "path": "contracts/human-authority-decision.schema.json",
+      "sha256": "1311ee5b75fa6ef98bf79324ced3d04d7f68c22919058249d62e13ca63810631"
+    },
+    {
+      "path": "contracts/human-authority-grant.schema.json",
+      "sha256": "deaf40c152ad5c64d1b77444c1c4fa23821544afe452045a09671d4443abd546"
+    },
+    {
+      "path": "contracts/interaction-trace-event.schema.json",
+      "sha256": "135c611137e2f69b6d164d0313116de1d67bc7494538491da40103ea30938f3c"
+    },
+    {
+      "path": "contracts/legacy/human-authority-decision-1.0.0.schema.json",
+      "sha256": "252ce1aedc6e9dd5742ba7d5390956d84ad115a711552e6b375cbd2d0f4f1c37"
+    },
+    {
+      "path": "contracts/legacy/interaction-trace-event-1.0.0.schema.json",
+      "sha256": "eb7012e802373f99b18645cf03cbf2ea33a70cad9376c0727a6ba05d3183331f"
+    },
+    {
+      "path": "contracts/lifecycle-transitions.json",
+      "sha256": "7d28bc9c6b938c747279877c4346e505d7535a56e99d26541f4e37e0a4db7462"
+    },
+    {
+      "path": "contracts/memory-operations.schema.json",
+      "sha256": "eed46e60b5691f2ad8adac58ec1a7f9fce2d8017b21253825d07c095039da316"
+    },
+    {
+      "path": "contracts/memory-record.schema.json",
+      "sha256": "1d5ba67e9c3c89fdda0e2233b3f1afb8b49af4ff443c81ceaeb4a41fd37b6317"
+    },
+    {
+      "path": "contracts/prepared-context.schema.json",
+      "sha256": "8daa8430d96db08631f950a86a757b5e49cbdec635db5a604a141100afd9998d"
+    },
+    {
+      "path": "contracts/progress-checkpoint.schema.json",
+      "sha256": "5c2084374e81f56855333efe3ca41039c235103c5dd1c7b93044f7478f205510"
+    },
+    {
+      "path": "contracts/protocol-common.schema.json",
+      "sha256": "d7bdc15c51875828b6b72dbbdf7b849856afdc9b2b66c0fbff479e84ba60b0d6"
+    },
+    {
+      "path": "contracts/provider-messages.schema.json",
+      "sha256": "c845f73461f73d5852659fb8f29d749fc035f7a6d846bc0c5b3399e0e896c025"
+    },
+    {
+      "path": "contracts/requirement-traceability.schema.json",
+      "sha256": "9822c3a46f77fdc70764db547d8bae3679da77a5d9c2eed600ea7b59bf197239"
+    },
+    {
+      "path": "contracts/runtime-api.schema.json",
+      "sha256": "52c321b43c2ca2d2db28cb1418cc8915fd5775759ec24dac64bc218984e57819"
+    },
+    {
+      "path": "contracts/skill.schema.json",
+      "sha256": "6e0c65dd30557b7a842f7057ffaa7b26604e0949e15160054ccd99c83966b5d9"
+    },
+    {
+      "path": "fixtures/authority-scenarios.json",
+      "sha256": "654f28394a821f8500355cd3414d1614a70e6fe02335ff8fbfe1ff89d353b15a"
+    },
+    {
+      "path": "fixtures/contract-closure-vectors.json",
+      "sha256": "44ddbd5f9705034c74a6007061707efc5f6ebef7d797fb57283e5b7d9d4c9efe"
+    },
+    {
+      "path": "fixtures/contract-semantic-vectors.json",
+      "sha256": "0d29e549b0d9fdf5f813e6da8129626b912ff50e643bda9deb26c11937b8507a"
+    },
+    {
+      "path": "fixtures/contract-vectors.json",
+      "sha256": "b1b3721f2b510e50e3e3da05be720bfce387832f0991f61b8a7f384a340315f2"
+    },
+    {
+      "path": "fixtures/requirement-traceability.json",
+      "sha256": "f8a68c9acfb8b934695a0a4c4bf7ee575f9cb2e7e15457d802d4dae7526d181b"
+    },
+    {
+      "path": "fixtures/validation-vectors.json",
+      "sha256": "c982a1b74384f6aaec4c645272f2e1016a628016645dd989963625e6d6e3ea21"
+    },
+    {
+      "path": "roadmap/packets/LS-S001.json",
+      "sha256": "f3192c24fc9a7a301c699077b95bffa461b2174b58879e51a91ebe831da4275a"
+    }
+  ],
+  "approvalEvidence": null
+}
