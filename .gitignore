@@ -1,0 +1,10 @@
+# Independent private specification repository; never vendor into this repository.
+/.private/
+.DS_Store
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log

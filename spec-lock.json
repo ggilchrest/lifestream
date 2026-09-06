@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0.0",
+  "repository": "ggilchrest/lifestream-specs",
+  "checkoutPath": ".private",
+  "status": "pinned",
+  "baseRevision": "3f89f9625e1b5cfd91559dd351130f2005c8f2e0",
+  "revision": "adfed6cc78f65fd3b6c5938723943ac424d84dfd",
+  "contractManifestSha256": "ea7edf3431c0d4bc87d813bebd247d282b061060f9f3479f7dc2e364c26fe643",
+  "review": {
+    "reviewer": "ggilchrest",
+    "reviewedAt": "2026-09-06T13:27:40Z",
+    "evidence": "Explicit user-authorized publication of ggilchrest/lifestream-specs commit adfed6cc78f65fd3b6c5938723943ac424d84dfd."
+  }
+}
