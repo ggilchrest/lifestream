@@ -1,7 +1,7 @@
 {
   "slice": "LS-S004",
   "status": "verified",
-  "revision": "pending-commit",
+  "revision": "21d639a710d3bda1ff03e7aa7e94677ce1da299e",
   "checks": [
     { "command": "pnpm typecheck", "result": "pass", "evidence": "Strict TypeScript workspace typecheck passed." },
     { "command": "pnpm lint", "result": "pass", "evidence": "ESLint passed with no diagnostics." },

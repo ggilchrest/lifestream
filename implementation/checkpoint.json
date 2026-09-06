@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "06fdc60f88923ac904e063cde7c85dbd260e5782",
-  "currentRevision": "WORKTREE",
+  "currentRevision": "21d639a710d3bda1ff03e7aa7e94677ce1da299e",
   "activeSlice": "LS-S004",
   "sliceStatus": "verified",
   "completedSlices": ["LS-S001", "LS-S002", "LS-S003"],
@@ -17,16 +17,7 @@
     "implementation/checkpoint.json",
     "implementation/evidence/LS-S004.json"
   ],
-  "changedFiles": [
-    "apps/server/src/config/index.ts",
-    "apps/server/src/config/loader.ts",
-    "apps/server/src/config/profiles/local-dev.json",
-    "apps/server/src/config/profiles/test.json",
-    "apps/server/src/config/schema.ts",
-    "apps/server/test/config.test.ts",
-    "implementation/checkpoint.json",
-    "implementation/evidence/LS-S004.json"
-  ],
+  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S004.json"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
