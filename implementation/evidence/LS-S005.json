@@ -1,0 +1,11 @@
+{
+  "slice": "LS-S005",
+  "status": "verified",
+  "revision": "pending-commit",
+  "checks": [
+    { "command": "pnpm typecheck", "result": "pass", "evidence": "Strict TypeScript workspace typecheck passed." },
+    { "command": "pnpm test", "result": "pass", "evidence": "Eight deterministic workspace and SQLite tests passed, including WAL, migration persistence, digest rejection, and rollback." },
+    { "command": "pnpm lint && pnpm build", "result": "pass", "evidence": "ESLint and all five workspace project builds passed." },
+    { "command": "node --test scripts/workspace.test.mjs && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Bootstrap tests, workspace check, and whitespace validation passed." }
+  ]
+}

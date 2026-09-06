@@ -1,0 +1,21 @@
+import assert from "node:assert/strict";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test } from "node:test";
+import { Database } from "../src/database.ts";
+
+test("SQLite database migrates, persists, and rejects changed history", () => {
+  const directory = mkdtempSync(join(tmpdir(), "lifestream-sqlite-")); const path = join(directory, "state.db");
+  const first = new Database({ path }); assert.equal(first.connection.prepare("PRAGMA journal_mode").get()?.journal_mode, "wal");
+  assert.equal(first.migrate().length, 1); assert.equal(first.migrate().length, 1); first.close();
+  const second = new Database({ path }); assert.equal(second.migrate().length, 1); second.close();
+  const changed = new Database({ path, migrations: [{ id: 1, name: "initial", sql: "SELECT 1", digest: "changed" }] });
+  assert.throws(() => changed.migrate(), /digest mismatch/); changed.close(); rmSync(directory, { recursive: true, force: true });
+});
+
+test("transaction rolls back on failure", () => {
+  const database = new Database({ path: ":memory:" }); database.migrate(); database.exec("CREATE TABLE sample (value TEXT NOT NULL)");
+  assert.throws(() => database.transaction((tx) => { tx.run("INSERT INTO sample VALUES (?)", "discarded"); throw new Error("stop"); }), /stop/);
+  assert.deepEqual(database.connection.prepare("SELECT * FROM sample").all(), []); database.close();
+});
