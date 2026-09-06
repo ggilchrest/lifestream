@@ -1,0 +1,6 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { Database } from "../src/database.ts";
+import { AssistantProfileRepository } from "../src/assistant-profile.ts";
+const base = (revision: number, profileId: string, status: "draft" | "active" = "draft") => ({ schemaVersion: "2.0.0", assistantId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", profileId, revision, status, corePersona: { canonicalName: "A", identityStatement: "I", values: ["v"], prohibitions: ["p"], relationshipBoundaries: ["b"], styleBoundaries: ["s"] }, adaptivePersonaPolicy: { dimensions: [] }, createdAt: "2026-09-06T00:00:00Z", createdBy: "test" });
+test("profiles are immutable revisions and activation is CAS protected", () => { const db = new Database({ path: ":memory:" }); db.migrate(); const repo = new AssistantProfileRepository(db); repo.create(base(1, "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")); assert.equal(repo.activate("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", null, "human", "initial", "2026-09-06T00:00:00Z").status, "active"); assert.throws(() => repo.activate("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", null, "human", "again", "2026-09-06T00:00:00Z"), /activatable|conflict/); db.close(); });

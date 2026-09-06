@@ -2,21 +2,19 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "50494fb2b896c048908afa2d7932811be60f7280",
-  "currentRevision": "c8102e2",
-  "activeSlice": "LS-S005",
+  "baseRevision": "9b81a6139ddf47298443cbc651839b42e7b856e8",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S006",
   "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004"],
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005"],
   "allowedFiles": [
-    "packages/storage-sqlite/src/database.ts",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/src/migrations/0001_initial.sql",
-    "packages/storage-sqlite/src/transaction.ts",
-    "packages/storage-sqlite/test/database.test.ts",
+    "packages/storage-sqlite/src/assistant-profile.ts",
+    "packages/storage-sqlite/src/migrations/0002_assistant_profiles.sql",
+    "packages/storage-sqlite/test/assistant-profile.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S005.json"
+    "implementation/evidence/LS-S006.json"
   ],
-  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S005.json"],
+  "changedFiles": ["packages/storage-sqlite/src/assistant-profile.ts", "packages/storage-sqlite/src/migrations/0002_assistant_profiles.sql", "packages/storage-sqlite/test/assistant-profile.test.ts", "implementation/checkpoint.json", "implementation/evidence/LS-S006.json"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -56,7 +54,7 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "LS-S005 implementation and acceptance checks verified; activate LS-S006 automatically after recording the commit.",
+  "nextAction": "LS-S006 implementation and acceptance checks verified; activate LS-S007 automatically.",
   "updatedAt": "2026-09-07T01:10:00Z",
   "updatedBy": "Codex",
   "notes": "Authorized batch LS-S005 through LS-S012. Current slice is LS-S005. Checkpoint updates and evidence remain per slice; advance automatically only after verification. No runtime or production acceptance."
