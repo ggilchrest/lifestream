@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "b43a5bccaa5966d2eef0494f756f6f4e4c2dbcd8",
-  "currentRevision": "WORKTREE",
+  "currentRevision": "bcacc3cc63687ec9cc70e3234ef77780a60c0dd0",
   "activeSlice": "LS-S001",
   "sliceStatus": "verified",
   "completedSlices": ["LS-S001"],
@@ -36,33 +36,7 @@
     "packages/storage-sqlite/src/index.ts",
     "tests/workspace.test.ts"
   ],
-  "changedFiles": [
-    ".github/workflows/application.yml",
-    ".node-version",
-    "apps/server/package.json",
-    "apps/server/src/index.ts",
-    "apps/server/tsconfig.json",
-    "eslint.config.mjs",
-    "implementation/checkpoint.json",
-    "package.json",
-    "packages/contracts/package.json",
-    "packages/contracts/src/index.ts",
-    "packages/contracts/tsconfig.json",
-    "packages/providers-fixture/package.json",
-    "packages/providers-fixture/src/index.ts",
-    "packages/providers-fixture/tsconfig.json",
-    "packages/runtime/package.json",
-    "packages/runtime/src/index.ts",
-    "packages/runtime/tsconfig.json",
-    "packages/storage-sqlite/package.json",
-    "packages/storage-sqlite/src/index.ts",
-    "packages/storage-sqlite/tsconfig.json",
-    "pnpm-lock.yaml",
-    "pnpm-workspace.yaml",
-    "tests/workspace.test.ts",
-    "tsconfig.base.json",
-    "vitest.config.ts"
-  ],
+  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S001.json"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -82,7 +56,7 @@
     {
       "command": "node scripts/workspace.mjs preflight LS-S001",
       "result": "pass",
-      "evidence": "Preflight passed against private baseline 2a7e9cc5b8457ea782c6690a1227765198e2b623 with the exact LS-S001 packet before implementation."
+      "evidence": "Preflight passed against private baseline fdd60a1a5eaf7cbf4a9c1699378937300e17d20a with the exact LS-S001 packet before implementation."
     },
     {
       "command": "pnpm install --frozen-lockfile --offline",

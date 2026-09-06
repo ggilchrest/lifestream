@@ -1,0 +1,22 @@
+{
+  "slice": "LS-S001",
+  "status": "verified",
+  "revision": "bcacc3cc63687ec9cc70e3234ef77780a60c0dd0",
+  "checks": [
+    {
+      "command": "pnpm install --frozen-lockfile --offline",
+      "result": "pass",
+      "evidence": "Frozen workspace install completed from the local package store."
+    },
+    {
+      "command": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
+      "result": "pass",
+      "evidence": "Strict TypeScript build, ESLint, one workspace boundary test, and package builds passed locally."
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs && node scripts/workspace.mjs check && git diff --check",
+      "result": "pass",
+      "evidence": "Public bootstrap tests, workspace check, and whitespace validation passed locally."
+    }
+  ]
+}
