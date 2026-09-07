@@ -8,6 +8,8 @@ export type RendererState = {
   readonly engagement: "idle" | "available" | "engaged" | "disengaging";
   readonly affect: { readonly valence: number; readonly arousal: number; readonly confidence: number; readonly label?: string };
   readonly urgency: "low" | "normal" | "high" | "critical";
+  readonly expressionDecisionId?: string;
+  readonly expressionDecisionRevision?: number;
   readonly effectiveAt: string;
   readonly expiresAt?: string;
 };

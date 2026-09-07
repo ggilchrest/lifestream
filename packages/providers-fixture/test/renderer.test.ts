@@ -31,3 +31,10 @@ test("reports a renderer fault as a rejected application", () => {
   assert.deepEqual(result, { stateId: "00000000-0000-4000-8000-000000000031", sequence: 1, disposition: "rejected", degradedAxes: [], appliedAt: null, reason: "renderer_fault" });
   assert.equal(renderer.current(), undefined);
 });
+
+test("keeps the renderer projection correlated to the speech decision", () => {
+  const renderer = new FixtureRendererProvider();
+  const applied = renderer.apply(state(1, { expressionDecisionId: "decision-1", expressionDecisionRevision: 3 }), "2026-09-07T00:00:01Z");
+  assert.equal(applied.disposition, "applied");
+  assert.deepEqual([renderer.current()?.expressionDecisionId, renderer.current()?.expressionDecisionRevision], ["decision-1", 3]);
+});
