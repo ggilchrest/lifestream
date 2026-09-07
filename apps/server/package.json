@@ -2,5 +2,5 @@
   "name": "@lifestream/server",
   "private": true,
   "type": "module",
-  "scripts": { "build": "tsc -b", "typecheck": "tsc -b --pretty false" }
+  "scripts": { "build": "tsc -b", "typecheck": "tsc -b --pretty false", "start": "node dist/index.js" }
 }
