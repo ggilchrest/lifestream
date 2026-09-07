@@ -2,18 +2,18 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "8dd9ce73b2fe30df65b75530a2cec2f8cc715e0b",
-  "currentRevision": "d236bbe1efe0c275f866e83fd1a47b848ea0abe3",
-  "activeSlice": "LS-S024",
+  "baseRevision": "775d32b4de3a2e70f149ec884d4e37409eaf7771",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S025",
   "sliceStatus": "verified",
   "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021", "LS-S022", "LS-S023", "LS-S024"],
   "allowedFiles": [
-    "packages/runtime/src/endpoints/handoff.ts",
-    "packages/runtime/test/endpoints-handoff.test.ts",
+    "packages/runtime/src/embodiment/controller.ts",
+    "packages/runtime/test/embodiment.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S024.json"
+    "implementation/evidence/LS-S025.json"
   ],
-  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S024.json", "packages/runtime/src/endpoints/handoff.ts", "packages/runtime/test/endpoints-handoff.test.ts"],
+  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S025.json", "packages/runtime/src/embodiment/controller.ts", "packages/runtime/test/embodiment.test.ts"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -53,7 +53,7 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "Advance to LS-S025; prepare its routine scope aid before implementing the deterministic embodiment behavior controller.",
+  "nextAction": "Advance to LS-S026; prepare its routine scope aid before implementing the fixture renderer and Presence view.",
   "updatedAt": "2026-09-07T04:00:00Z",
   "updatedBy": "Codex",
   "notes": "LS-S023 verified after LS-S005 and LS-S013. Keep endpoint identity distinct from physical devices and authority."
