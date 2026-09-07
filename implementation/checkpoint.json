@@ -3,10 +3,10 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "dbbc5921f02d0d9c2785f71f8a4d51db8e969675",
-  "currentRevision": "WORKTREE",
+  "currentRevision": "32327ec6e3051f0a119e456a1b788a222d035491",
   "activeSlice": "LS-S028",
-  "sliceStatus": "inProgress",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021", "LS-S022", "LS-S023", "LS-S024", "LS-S025", "LS-S026", "LS-S027", "LS-S046"],
+  "sliceStatus": "verified",
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021", "LS-S022", "LS-S023", "LS-S024", "LS-S025", "LS-S026", "LS-S027", "LS-S046", "LS-S028"],
   "allowedFiles": ["packages/providers-pwce/src/client.ts", "packages/providers-pwce/test/client.test.ts", "implementation/checkpoint.json", "implementation/evidence/LS-S028.json"],
   "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S028.json", "packages/providers-pwce/src/client.ts", "packages/providers-pwce/test/client.test.ts"],
   "validation": [
@@ -48,7 +48,7 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "Implement the PWCE process/network adapter against the pinned gateway profile with read-only and fail-closed integration checks.",
+  "nextAction": "LS-S029 requires one explicit human resolution of LS-DEC-011 selecting a named real provider port before implementation.",
   "updatedAt": "2026-09-07T04:10:00Z",
   "updatedBy": "Codex",
   "notes": "LS-S026 keeps semantic embodiment state separate from renderer details; UI is a deterministic projection and renderer faults remain observable without changing cognition or authority."
