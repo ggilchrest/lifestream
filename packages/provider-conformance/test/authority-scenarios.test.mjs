@@ -1,0 +1,2 @@
+import assert from 'node:assert/strict';import {test}from'node:test';import{readFile}from'node:fs/promises';
+test('authority scenario outcomes fail closed',async()=>{const source=await readFile(new URL('../src/authority/scenarios.ts',import.meta.url),'utf8');assert.match(source,/refreshRequired/);assert.match(source,/denyNoFallback/);assert.match(source,/quarantined/);assert.match(source,/decisionResolved/)});

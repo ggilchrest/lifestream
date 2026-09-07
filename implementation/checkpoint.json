@@ -11,8 +11,10 @@
     "apps/server/src/composition/authority.ts",
     "packages/provider-conformance/src/authority/report.ts",
     "packages/provider-conformance/src/authority/catalog.ts",
+    "packages/provider-conformance/src/authority/scenarios.ts",
     "packages/provider-conformance/test/authority-report.test.mjs",
     "packages/provider-conformance/test/authority-catalog.test.mjs",
+    "packages/provider-conformance/test/authority-scenarios.test.mjs",
     "implementation/checkpoint.json",
     "implementation/evidence/LS-S045.json"
   ],
