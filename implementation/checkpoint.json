@@ -2,20 +2,20 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "93131f6550070549f22400d30eccec55e82507d5",
-  "currentRevision": "5316512c5c23536603c29e67008375a2791d89bc",
-  "activeSlice": "LS-S019",
+  "baseRevision": "a59a6eaef10a9194a66b979f538bebc5585debb8",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S020",
   "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019"],
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020"],
   "allowedFiles": [
-    "packages/runtime/src/voice/ports.ts",
-    "packages/runtime/test/voice.test.ts",
-    "packages/providers-fixture/src/voice/providers.ts",
-    "packages/providers-fixture/test/voice.test.ts",
+    "packages/runtime/src/voice/pipeline.ts",
+    "packages/runtime/test/voice-pipeline.test.ts",
+    "packages/providers-fixture/src/voice/playback.ts",
+    "packages/providers-fixture/test/voice-pipeline.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S019.json"
+    "implementation/evidence/LS-S020.json"
   ],
-  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S019.json", "packages/providers-fixture/src/voice/providers.ts", "packages/providers-fixture/test/voice.test.ts", "packages/runtime/src/voice/ports.ts", "packages/runtime/test/voice.test.ts"],
+  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S020.json", "packages/providers-fixture/src/voice/playback.ts", "packages/providers-fixture/test/voice-pipeline.test.ts", "packages/runtime/src/voice/pipeline.ts", "packages/runtime/test/voice-pipeline.test.ts"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -55,8 +55,8 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "Advance to LS-S020; prepare its routine scope aid before implementing the fixture streaming voice pipeline.",
+  "nextAction": "Advance to LS-S021; prepare its routine scope aid before implementing speech-safe segmentation and TTFSW metrics.",
   "updatedAt": "2026-09-07T04:00:00Z",
   "updatedBy": "Codex",
-  "notes": "LS-S019 verified after LS-S003 and LS-S014. Use only deterministic virtual-time fixtures; no microphone, speaker, or real provider."
+  "notes": "LS-S020 verified after LS-S016 and LS-S019. Use only deterministic fixtures; no microphone, speaker, or real provider."
 }
