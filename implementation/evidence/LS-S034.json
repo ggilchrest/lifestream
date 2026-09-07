@@ -1,0 +1,12 @@
+{
+  "slice": "LS-S034",
+  "status": "verified",
+  "revision": "36b01c451c43051c4896b25802a65d0d10423431",
+  "checks": [
+    { "command": "node --test --experimental-strip-types packages/perceptual/test/harness.test.ts", "result": "pass", "evidence": "Three deterministic tests passed for VLM-free evaluation, clipped/stuck-speaking/wrong-attention detection, and fixed capture ordering." },
+    { "command": "pnpm exec tsc --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext --strict packages/perceptual/src/harness.ts", "result": "pass", "evidence": "Standalone strict typecheck passed locally on 2026-09-07." },
+    { "command": "pnpm test && pnpm lint", "result": "pass", "evidence": "80 workspace tests and ESLint passed locally on 2026-09-07." },
+    { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally." }
+  ],
+  "notes": "Deterministic perceptual acceptance is implemented and verified. The VLM portion is explicitly unavailable because no approved judge model/version/calibration was supplied; no VLM claim is made."
+}
