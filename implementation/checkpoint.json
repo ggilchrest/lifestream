@@ -2,18 +2,22 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "775d32b4de3a2e70f149ec884d4e37409eaf7771",
-  "currentRevision": "a9ef5d6b8866d2d67252b1ee114d77dc8be9c437",
-  "activeSlice": "LS-S025",
-  "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021", "LS-S022", "LS-S023", "LS-S024"],
+  "baseRevision": "69a75df026ee99daa29fa023e34f393153037461",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S026",
+  "sliceStatus": "inProgress",
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021", "LS-S022", "LS-S023", "LS-S024", "LS-S025"],
   "allowedFiles": [
-    "packages/runtime/src/embodiment/controller.ts",
-    "packages/runtime/test/embodiment.test.ts",
+    "packages/providers-fixture/src/renderer/provider.ts",
+    "packages/providers-fixture/test/renderer.test.ts",
+    "apps/presence-web/index.html",
+    "apps/presence-web/styles.css",
+    "apps/presence-web/app.js",
+    "apps/presence-web/test/structural.test.mjs",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S025.json"
+    "implementation/evidence/LS-S026.json"
   ],
-  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S025.json", "packages/runtime/src/embodiment/controller.ts", "packages/runtime/test/embodiment.test.ts"],
+  "changedFiles": ["apps/presence-web/app.js", "apps/presence-web/index.html", "apps/presence-web/styles.css", "apps/presence-web/test/structural.test.mjs", "implementation/checkpoint.json", "implementation/evidence/LS-S026.json", "packages/providers-fixture/src/renderer/provider.ts", "packages/providers-fixture/test/renderer.test.ts"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -53,8 +57,8 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "Advance to LS-S026; prepare its routine scope aid before implementing the fixture renderer and Presence view.",
-  "updatedAt": "2026-09-07T04:00:00Z",
+  "nextAction": "Commit LS-S026 evidence, normalize the checkpoint revision, then advance to LS-S027 provider conformance.",
+  "updatedAt": "2026-09-07T04:10:00Z",
   "updatedBy": "Codex",
-  "notes": "LS-S023 verified after LS-S005 and LS-S013. Keep endpoint identity distinct from physical devices and authority."
+  "notes": "LS-S026 keeps semantic embodiment state separate from renderer details; UI is a deterministic projection and renderer faults remain observable without changing cognition or authority."
 }

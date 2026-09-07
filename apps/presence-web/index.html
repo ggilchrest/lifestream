@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Lifestream Presence</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+  <main class="shell">
+    <header class="hero"><p class="eyebrow">LIFESTREAM / PRESENCE</p><div class="hero-row"><div><h1 id="assistant-name">Assistant presence</h1><p class="lede">A calm, semantic view of what the Assistant is doing now.</p></div><span id="renderer-status" class="status ready">Renderer ready</span></div></header>
+    <section class="presence-card" aria-labelledby="presence-title"><div class="presence-orb" aria-hidden="true"><span id="orb-glyph">·</span></div><div><p class="eyebrow">CURRENT STATE</p><h2 id="presence-title">Available</h2><p id="presence-summary" class="summary" role="status" aria-live="polite">Listening for you.</p></div></section>
+    <section class="card" aria-labelledby="details-title"><div class="section-head"><div><p class="eyebrow">SEMANTIC SIGNALS</p><h2 id="details-title">What Presence means</h2></div><span id="sequence" class="sequence">Sequence 0</span></div><dl class="signals"><div><dt>Speech</dt><dd id="speech-state">Silent</dd></div><div><dt>Activity</dt><dd id="activity-state">Idle</dd></div><div><dt>Attention</dt><dd id="attention-state">None</dd></div><div><dt>Engagement</dt><dd id="engagement-state">Available</dd></div><div><dt>Urgency</dt><dd id="urgency-state">Normal</dd></div><div><dt>State freshness</dt><dd id="expiry-state">No expiry</dd></div></dl></section>
+    <footer><span>Semantic state only</span><span id="renderer-note">Visual details stay local to the renderer.</span></footer>
+  </main><script src="app.js"></script>
+</body></html>
