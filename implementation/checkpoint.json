@@ -55,7 +55,7 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "LS-S042 verified; continue to LS-S043 authenticated grant administration API.",
+  "nextAction": "LS-S042 hardened with durable serialized one-use admission; continue to LS-S043.",
   "updatedAt": "2026-09-07T01:10:00Z",
   "updatedBy": "Codex",
   "notes": "Authorized batch LS-S005 through LS-S012. Current slice is LS-S005. Checkpoint updates and evidence remain per slice; advance automatically only after verification. No runtime or production acceptance."
