@@ -2,13 +2,13 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "2bdff657737de1ac8853cba0aea9f529b27a915b",
-  "currentRevision": "2bdff657737de1ac8853cba0aea9f529b27a915b",
-  "activeSlice": "LS-S036",
+  "baseRevision": "f8922fbd1a3e203bb7ce201e69a96208512806e3",
+  "currentRevision": "23f5f24da52715d920f4b68a7f62e5dfcfcd7c4c",
+  "activeSlice": "LS-S037",
   "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021", "LS-S022", "LS-S023", "LS-S024", "LS-S025", "LS-S026", "LS-S027", "LS-S046", "LS-S028", "LS-S030", "LS-S031", "LS-S032", "LS-S033", "LS-S034", "LS-S035", "LS-S036"],
-  "allowedFiles": ["packages/storage-sqlite/src/rehearsal.ts", "packages/storage-sqlite/test/rehearsal.test.ts", "implementation/checkpoint.json", "implementation/evidence/LS-S036.json"],
-  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S036.json"],
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021", "LS-S022", "LS-S023", "LS-S024", "LS-S025", "LS-S026", "LS-S027", "LS-S046", "LS-S028", "LS-S030", "LS-S031", "LS-S032", "LS-S033", "LS-S034", "LS-S035", "LS-S036", "LS-S037"],
+  "allowedFiles": ["packages/security/src/threats.ts", "packages/security/test/threats.test.ts", "implementation/checkpoint.json", "implementation/evidence/LS-S037.json"],
+  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S037.json"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -48,7 +48,7 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "LS-S037 is dependency-ready; LS-S029 and LS-S034 VLM claims remain gated by human decisions.",
+  "nextAction": "LS-S038 requires packaging/operations work and is dependency-ready after LS-S044/LS-S045; LS-S029 and LS-S034 VLM claims remain gated by human decisions.",
   "updatedAt": "2026-09-07T00:00:00Z",
   "updatedBy": "Codex",
   "notes": "LS-S026 keeps semantic embodiment state separate from renderer details; UI is a deterministic projection and renderer faults remain observable without changing cognition or authority."

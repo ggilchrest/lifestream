@@ -1,0 +1,12 @@
+{
+  "slice": "LS-S037",
+  "status": "verified",
+  "revision": "23f5f24da52715d920f4b68a7f62e5dfcfcd7c4c",
+  "checks": [
+    { "command": "node --test --experimental-strip-types packages/security/test/threats.test.ts", "result": "pass", "evidence": "Three focused fixture threat tests passed for self/forged authority, live replay, ambient privacy, secret scanning, and error redaction." },
+    { "command": "pnpm exec tsc --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext --strict packages/security/src/threats.ts", "result": "pass", "evidence": "Standalone strict typecheck passed locally on 2026-09-07." },
+    { "command": "pnpm test && pnpm lint", "result": "pass", "evidence": "88 workspace tests and ESLint passed locally on 2026-09-07." },
+    { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally." }
+  ],
+  "notes": "Fixture-only threat checks; no formal penetration-test or production security certification is claimed. No real credential was discovered or used."
+}
