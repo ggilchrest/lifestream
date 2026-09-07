@@ -2,19 +2,20 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "9b81a6139ddf47298443cbc651839b42e7b856e8",
-  "currentRevision": "f2723ba84906d51777c72818a18192f09cbadfd9",
-  "activeSlice": "LS-S006",
-  "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005"],
+  "baseRevision": "68adfc29a262b702809f63d6b98d09fce945399d",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S007",
+  "sliceStatus": "inProgress",
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006"],
   "allowedFiles": [
-    "packages/storage-sqlite/src/assistant-profile.ts",
-    "packages/storage-sqlite/src/migrations/0002_assistant_profiles.sql",
-    "packages/storage-sqlite/test/assistant-profile.test.ts",
+    "packages/runtime/src/persona/projection.ts",
+    "packages/runtime/src/persona/adaptation-validator.ts",
+    "packages/storage-sqlite/src/migrations/0003_adaptations.sql",
+    "packages/runtime/test/persona.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S006.json"
+    "implementation/evidence/LS-S007.json"
   ],
-  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S006.json"],
+  "changedFiles": ["implementation/checkpoint.json"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -54,7 +55,7 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "LS-S006 implementation and acceptance checks verified; activate LS-S007 automatically.",
+  "nextAction": "Implement LS-S007 bounded persona projection and adaptation validation within its packet.",
   "updatedAt": "2026-09-07T01:10:00Z",
   "updatedBy": "Codex",
   "notes": "Authorized batch LS-S005 through LS-S012. Current slice is LS-S005. Checkpoint updates and evidence remain per slice; advance automatically only after verification. No runtime or production acceptance."
