@@ -1,0 +1,6 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { InterruptionController } from "../src/voice/interruption.ts";
+
+test("noise and partial input do not stop playback; committed input cancels once", () => { let cancelled = 0; const controller = new InterruptionController(() => { cancelled += 1; }); const fence = controller.currentFence(); assert.equal(controller.receive({ kind: "noise", interactionId: "i" }), "ignored"); assert.equal(controller.receive({ kind: "partial", interactionId: "i" }), "ignored"); assert.equal(controller.mayPlay(fence), true); assert.equal(controller.receive({ kind: "committed", interactionId: "i" }), "cancelled"); assert.equal(controller.receive({ kind: "committed", interactionId: "i" }), "duplicate"); assert.equal(cancelled, 1); assert.equal(controller.mayPlay(fence), false); });
+test("a new interaction receives a new fence", () => { const controller = new InterruptionController(() => undefined); const oldFence = controller.currentFence(); controller.receive({ kind: "committed", interactionId: "i" }); const newFence = controller.beginNextInteraction(); assert.notEqual(newFence, oldFence); assert.equal(controller.mayPlay(newFence), true); assert.equal(controller.mayPlay(oldFence), false); });

@@ -3,8 +3,10 @@ type AudioFrame = { frameId: string; sequence: number; format: { encoding: "pcm_
 export class FixturePlaybackSink {
   readonly played: { segmentId: string; frame: AudioFrame }[] = [];
   closed = false;
+  private fenceToken = 0;
   private readonly maxQueue: number;
   constructor(maxQueue: number) { this.maxQueue = maxQueue; }
-  async play(segmentId: string, frame: AudioFrame): Promise<void> { if (this.closed) throw new Error("playback closed"); if (this.played.length >= this.maxQueue) throw new Error("playback queue full"); this.played.push({ segmentId, frame: structuredClone(frame) }); }
+  async play(segmentId: string, frame: AudioFrame, fenceToken = this.fenceToken): Promise<void> { if (this.closed) throw new Error("playback closed"); if (fenceToken !== this.fenceToken) throw new Error("stale playback fence"); if (this.played.length >= this.maxQueue) throw new Error("playback queue full"); this.played.push({ segmentId, frame: structuredClone(frame) }); }
+  fence(): number { this.fenceToken += 1; return this.fenceToken; }
   async close(): Promise<void> { this.closed = true; }
 }
