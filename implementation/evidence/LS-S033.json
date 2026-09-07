@@ -1,0 +1,12 @@
+{
+  "slice": "LS-S033",
+  "status": "verified",
+  "revision": "5aa80c5707dd71ac12e0f5968edd25e92b095b3e",
+  "checks": [
+    { "command": "node --test --experimental-strip-types packages/simulation/test/scenario.test.ts", "result": "pass", "evidence": "Five focused tests passed, including all 15 acceptance fault kinds, deterministic scenario behavior, live-route rejection, and bounded-queue validation." },
+    { "command": "pnpm exec tsc --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext --strict packages/simulation/src/scenario.ts", "result": "pass", "evidence": "Standalone strict typecheck passed locally on 2026-09-07." },
+    { "command": "pnpm test && pnpm lint", "result": "pass", "evidence": "77 workspace tests and ESLint passed locally on 2026-09-07." },
+    { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally." }
+  ],
+  "notes": "Fixture-only fault matrix. Faults produce explicit user-visible and durable-state observations without arbitrary sleeps, live endpoints, production data, or external effects."
+}
