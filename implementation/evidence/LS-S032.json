@@ -1,0 +1,12 @@
+{
+  "slice": "LS-S032",
+  "status": "verified",
+  "revision": "42790faba866e5e4e47aa272ab4abfbad6c5b35b",
+  "checks": [
+    { "command": "node --test --experimental-strip-types packages/simulation/test/scenario.test.ts", "result": "pass", "evidence": "Three focused tests passed: deterministic virtual-time reports, fault outcome reporting, and fail-closed unknown actor/live endpoint handling." },
+    { "command": "pnpm exec tsc --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext --strict packages/simulation/src/scenario.ts", "result": "pass", "evidence": "Standalone strict typecheck passed locally on 2026-09-07." },
+    { "command": "pnpm test && pnpm lint", "result": "pass", "evidence": "75 workspace tests and ESLint passed locally on 2026-09-07." },
+    { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally." }
+  ],
+  "notes": "Fixture-only virtual-time scenario runner. It produces deterministic structured reports, represents faults as events, and rejects live endpoints. No production or external effects were used."
+}
