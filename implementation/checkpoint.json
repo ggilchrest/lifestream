@@ -2,17 +2,18 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "a77553cc9632f2058d120c6a1ceff5555faf0621",
-  "currentRevision": "8fa68e3112b22ea6bb130caec72c58fef4499c54",
-  "activeSlice": "LS-S040",
+  "baseRevision": "2dae61aaae24f62e1cf35659140641b4752032f6",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S041",
   "sliceStatus": "inProgress",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016"],
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040"],
   "allowedFiles": [
-    "packages/runtime/src/authority/ports.ts",
-    "packages/providers-fixture/src/authentication/provider.ts",
-    "packages/runtime/test/authority.test.ts",
+    "packages/storage-sqlite/src/authority/grants.ts",
+    "packages/runtime/src/authority/grants.ts",
+    "packages/storage-sqlite/src/migrations/0009_human_authority.sql",
+    "packages/runtime/test/grants.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S040.json"
+    "implementation/evidence/LS-S041.json"
   ],
   "changedFiles": ["implementation/checkpoint.json"],
   "validation": [
@@ -54,7 +55,7 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "Implement fixture-only human authority contracts and authenticated context boundary.",
+  "nextAction": "Implement immutable grant requests and lifecycle repository within the LS-S041 packet.",
   "updatedAt": "2026-09-07T01:10:00Z",
   "updatedBy": "Codex",
   "notes": "Authorized batch LS-S005 through LS-S012. Current slice is LS-S005. Checkpoint updates and evidence remain per slice; advance automatically only after verification. No runtime or production acceptance."

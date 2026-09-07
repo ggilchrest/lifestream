@@ -1,0 +1,2 @@
+CREATE TABLE IF NOT EXISTS authority_grants (id TEXT PRIMARY KEY, principal_id TEXT NOT NULL, assistant_id TEXT NOT NULL, status TEXT NOT NULL, scope_json TEXT NOT NULL, revision INTEGER NOT NULL, terms_json TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS authority_events (id INTEGER PRIMARY KEY, grant_id TEXT NOT NULL, event TEXT NOT NULL, actor TEXT NOT NULL, occurred_at TEXT NOT NULL);

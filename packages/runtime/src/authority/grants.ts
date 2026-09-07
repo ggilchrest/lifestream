@@ -1,0 +1,2 @@
+type Grant = { id: string; principalId: string; assistantId: string; status: "pending" | "active" | "denied" | "revoked"; scope: string[]; revision: number; terms: Record<string, unknown>; createdAt: string };
+export function approveGrant(grant: Grant, principalId: string): Grant { if (grant.principalId !== principalId || grant.status !== "pending") throw new Error("grant approval denied"); return { ...grant, status: "active", revision: grant.revision + 1 }; }

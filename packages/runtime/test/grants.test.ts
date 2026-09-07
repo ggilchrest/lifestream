@@ -1,0 +1,2 @@
+import assert from "node:assert/strict"; import { test } from "node:test"; import { GrantRepository } from "../../storage-sqlite/src/authority/grants.ts";
+test("grant lifecycle is revision checked and principal scoped", () => { const r = new GrantRepository(); r.create({ id: "g", principalId: "h", assistantId: "a", status: "pending", scope: ["fixture"], revision: 1, terms: {}, createdAt: "2026-09-06T00:00:00Z" }); assert.equal(r.decide("g", "h", 1, "active").status, "active"); assert.equal(r.get("g", "other"), undefined); });
