@@ -2,20 +2,18 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "ca89be254d1987ce6d2c71397aac1f62835fc31f",
-  "currentRevision": "cb46b896d47eb3d82b62005ae7bfe9d3caba974a",
-  "activeSlice": "LS-S042",
+  "baseRevision": "41908879fbf813f39e764e64202135ed54e9ea5f",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S043",
   "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042"],
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043"],
   "allowedFiles": [
-    "packages/runtime/src/authority/evaluate.ts",
-    "packages/runtime/src/authority/authorize-dispatch.ts",
-    "packages/storage-sqlite/src/authority/admission.ts",
-    "packages/runtime/test/authority-dispatch.test.ts",
+    "apps/server/src/authority/api.ts",
+    "apps/server/test/authority-api.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S042.json"
+    "implementation/evidence/LS-S043.json"
   ],
-  "changedFiles": ["packages/runtime/src/authority/evaluate.ts", "packages/runtime/src/authority/authorize-dispatch.ts", "packages/storage-sqlite/src/authority/admission.ts", "packages/runtime/test/authority-dispatch.test.ts", "implementation/checkpoint.json", "implementation/evidence/LS-S042.json"],
+  "changedFiles": ["implementation/checkpoint.json"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -55,7 +53,7 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "LS-S042 hardened with durable serialized one-use admission; continue to LS-S043.",
+  "nextAction": "LS-S043 verified; continue to LS-S044 only with a faithfully reviewable, server-confirmed control UI.",
   "updatedAt": "2026-09-07T01:10:00Z",
   "updatedBy": "Codex",
   "notes": "Authorized batch LS-S005 through LS-S012. Current slice is LS-S005. Checkpoint updates and evidence remain per slice; advance automatically only after verification. No runtime or production acceptance."
