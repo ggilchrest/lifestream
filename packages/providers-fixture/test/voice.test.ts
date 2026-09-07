@@ -1,0 +1,10 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { FixtureSpeechToTextProvider, FixtureTextToSpeechProvider } from "../src/voice/providers.ts";
+
+const format = { encoding: "pcm_s16le" as const, sampleRateHz: 16000 as const, channels: 1 as const };
+const input = async function* () { yield { type: "frame" as const, audioInputId: "a", frame: { frameId: "f", sequence: 0, format, sampleOffset: 0, sampleCount: 10, dataBase64: "AAAA" } }; yield { type: "end" as const, audioInputId: "a", nextSequence: 1, sampleCount: 10 }; };
+
+test("fixture STT and TTS provide ordered terminal streams", async () => { const request = { deadlineAt: "2026-09-07T00:01:00Z", now: () => "2026-09-07T00:00:00Z" }; const stt = []; for await (const event of new FixtureSpeechToTextProvider().transcribe(request, input())) stt.push(event); assert.deepEqual(stt.map((event) => event.kind), ["data", "data", "terminal"]); const tts = []; for await (const event of new FixtureTextToSpeechProvider().synthesize(request, "segment", "hello", format)) tts.push(event); assert.deepEqual(tts.map((event) => event.kind), ["data", "terminal"]); });
+
+test("fixture speech cancellation and deadline are terminal", async () => { const controller = new AbortController(); controller.abort(); const events = []; for await (const event of new FixtureSpeechToTextProvider().transcribe({ deadlineAt: "2026-09-07T00:01:00Z", now: () => "2026-09-07T00:00:00Z" }, input(), controller.signal)) events.push(event); assert.equal(events.at(-1)?.outcome, "cancelled"); const timedOut = []; for await (const event of new FixtureSpeechToTextProvider().transcribe({ deadlineAt: "2026-09-07T00:00:00Z", now: () => "2026-09-07T00:00:01Z" }, input())) timedOut.push(event); assert.equal(timedOut.at(-1)?.outcome, "timedOut"); });

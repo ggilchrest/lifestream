@@ -2,22 +2,20 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "5f8fc16d19eb3d5448f41940dee276b5a62e1600",
-  "currentRevision": "1e7b5e36367bced2459c3806fdaec7980d4b6ae5",
-  "activeSlice": "LS-S018",
+  "baseRevision": "93131f6550070549f22400d30eccec55e82507d5",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S019",
   "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018"],
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019"],
   "allowedFiles": [
-    "packages/runtime/src/skills/skill.ts",
-    "packages/runtime/test/skills.test.ts",
-    "packages/storage-sqlite/src/database.ts",
-    "packages/storage-sqlite/src/migrations/0012_skills_proposals.sql",
-    "packages/storage-sqlite/test/database.test.ts",
-    "packages/storage-sqlite/test/skills.test.ts",
+    "packages/runtime/src/voice/ports.ts",
+    "packages/runtime/test/voice.test.ts",
+    "packages/providers-fixture/src/voice/providers.ts",
+    "packages/providers-fixture/test/voice.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S018.json"
+    "implementation/evidence/LS-S019.json"
   ],
-  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S018.json", "packages/runtime/src/skills/skill.ts", "packages/runtime/test/skills.test.ts", "packages/storage-sqlite/src/database.ts", "packages/storage-sqlite/src/migrations/0012_skills_proposals.sql", "packages/storage-sqlite/test/database.test.ts", "packages/storage-sqlite/test/skills.test.ts"],
+  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S019.json", "packages/providers-fixture/src/voice/providers.ts", "packages/providers-fixture/test/voice.test.ts", "packages/runtime/src/voice/ports.ts", "packages/runtime/test/voice.test.ts"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -57,8 +55,8 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "Advance to LS-S019; prepare its routine scope aid before implementing fixture STT/TTS ports.",
-  "updatedAt": "2026-09-07T03:00:00Z",
+  "nextAction": "Advance to LS-S020; prepare its routine scope aid before implementing the fixture streaming voice pipeline.",
+  "updatedAt": "2026-09-07T04:00:00Z",
   "updatedBy": "Codex",
-  "notes": "LS-S018 verified after LS-S012, LS-S016, LS-S045, and LS-S017. Preserve bounded declarative execution and inert proposal boundaries."
+  "notes": "LS-S019 verified after LS-S003 and LS-S014. Use only deterministic virtual-time fixtures; no microphone, speaker, or real provider."
 }
