@@ -1,0 +1,2 @@
+import assert from "node:assert/strict"; import { test } from "node:test"; import { validateContext } from "../src/authority/ports.ts"; import { FixtureAuthenticationProvider } from "../../providers-fixture/src/authentication/provider.ts";
+test("fixture authentication produces immutable trusted context", () => { const c = new FixtureAuthenticationProvider().authenticate("human"); validateContext(c); assert.throws(() => { (c as { principalId: string }).principalId = "forged"; }, TypeError); });

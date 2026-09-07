@@ -1,0 +1,1 @@
+{"slice":"LS-S040","status":"verified","revision":"pending-commit","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Fixture-only authenticated context and authority boundary checks passed."}]}
