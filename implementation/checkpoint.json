@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "33a7cd5a9dae80916f05b8fcec3a0d56defd6b76",
-  "currentRevision": "WORKTREE",
+  "currentRevision": "29260b5f351d265be4a6a3528c900a1d109b6711",
   "activeSlice": "LS-S021",
   "sliceStatus": "verified",
   "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021"],
