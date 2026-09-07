@@ -1,0 +1,2 @@
+import assert from "node:assert/strict"; import { test } from "node:test"; import { InteractionLoop } from "../src/interaction/loop.ts";
+test("interactions have isolated explicit state transitions", () => { const loop = new InteractionLoop(); loop.start({ interactionId: "a", text: "hi" }); loop.start({ interactionId: "b", text: "hi" }); loop.complete("a"); assert.equal(loop.state("a"), "completed"); assert.equal(loop.state("b"), "running"); assert.throws(() => loop.complete("a"), /transition/); });
