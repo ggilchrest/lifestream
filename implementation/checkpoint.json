@@ -2,20 +2,22 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "e3ceba380cc846b2efa96108340fea127999bc49",
-  "currentRevision": "2e625446083ad923c04b0388a0f029259b02e92a",
-  "activeSlice": "LS-S022",
+  "baseRevision": "bd394d1d6e626ac50c61701de9827686c9bf0fd0",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S023",
   "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021", "LS-S022"],
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021", "LS-S022", "LS-S023"],
   "allowedFiles": [
-    "packages/runtime/src/voice/interruption.ts",
-    "packages/runtime/test/voice-interruption.test.ts",
-    "packages/providers-fixture/src/voice/playback.ts",
-    "packages/providers-fixture/test/voice-interruption.test.ts",
+    "packages/runtime/src/endpoints/registry.ts",
+    "packages/runtime/test/endpoints.test.ts",
+    "packages/storage-sqlite/src/database.ts",
+    "packages/storage-sqlite/src/migrations/0013_endpoints.sql",
+    "packages/storage-sqlite/test/database.test.ts",
+    "packages/storage-sqlite/test/endpoints.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S022.json"
+    "implementation/evidence/LS-S023.json"
   ],
-  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S022.json", "packages/providers-fixture/src/voice/playback.ts", "packages/providers-fixture/test/voice-interruption.test.ts", "packages/runtime/src/voice/interruption.ts", "packages/runtime/test/voice-interruption.test.ts"],
+  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S023.json", "packages/runtime/src/endpoints/registry.ts", "packages/runtime/test/endpoints.test.ts", "packages/storage-sqlite/src/database.ts", "packages/storage-sqlite/src/migrations/0013_endpoints.sql", "packages/storage-sqlite/test/database.test.ts", "packages/storage-sqlite/test/endpoints.test.ts"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -55,8 +57,8 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "Advance to LS-S023; prepare its routine scope aid before implementing the endpoint registry.",
+  "nextAction": "Advance to LS-S024; prepare its routine scope aid before implementing endpoint handoff and audio ownership.",
   "updatedAt": "2026-09-07T04:00:00Z",
   "updatedBy": "Codex",
-  "notes": "LS-S022 verified after LS-S021. Committed interruptions fence old output; noise and partial input do not cancel playback."
+  "notes": "LS-S023 verified after LS-S005 and LS-S013. Keep endpoint identity distinct from physical devices and authority."
 }
