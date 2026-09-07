@@ -1,11 +1,11 @@
 {
   "slice": "LS-S050",
   "status": "verified",
-  "revision": "8656dca6f71d99ffa89183d9d08e5652da2becf2",
+  "revision": "0b7ea74501f839bb64a4331934d84f3ab712904f",
   "checks": [
-    { "command": "node --test --experimental-strip-types packages/runtime/test/voice.test.ts packages/runtime/test/voice-pipeline.test.ts packages/providers-fixture/test/voice.test.ts packages/provider-conformance/test/harness.test.mjs", "result": "pass", "evidence": "Ten expressive speech and provider conformance tests passed locally on 2026-09-07." },
-    { "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build", "result": "pass", "evidence": "TypeScript, 92 workspace tests, ESLint, and package builds passed locally on 2026-09-07." },
+    { "command": "node --test --experimental-strip-types packages/runtime/test/voice.test.ts packages/runtime/test/voice-pipeline.test.ts packages/providers-fixture/test/voice.test.ts packages/providers-fixture/test/renderer.test.ts packages/provider-conformance/test/harness.test.mjs", "result": "pass", "evidence": "Fifteen expressive speech, renderer correlation, and provider conformance tests passed locally on 2026-09-07." },
+    { "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build", "result": "pass", "evidence": "TypeScript, 95 workspace tests, ESLint, and package builds passed locally on 2026-09-07 with local socket access for server tests." },
     { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally on 2026-09-07." }
   ],
-  "notes": "Provider-neutral expressive TTS boundary only. LS-S027 v1 evidence remains valid at its recorded revision; no VoxCPM2 provider, standard inference, renderer, perceptual, hardware, or production acceptance is claimed."
+  "notes": "Provider-neutral expressive TTS boundary only. TtsRequest/TtsEvent contract revision is 2.0.0 with preAudio -> data -> terminal lifecycle; LS-S027 v1 evidence remains valid at its recorded revision and is not relabeled. Canonical decision, safe text segmentation, SpeechDeliveryIntent, fixture TTS, fixture renderer correlation, and trace propagation are covered. No VoxCPM2 provider, standard inference, production renderer, perceptual, hardware, or production acceptance is claimed."
 }

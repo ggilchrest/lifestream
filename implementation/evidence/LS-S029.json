@@ -1,0 +1,18 @@
+{
+  "slice": "LS-S029",
+  "status": "blocked",
+  "revision": "39849b82d130b860afd15a2aeb84c99fda737eef",
+  "checks": [
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S029",
+      "result": "pass",
+      "evidence": "The corrected LS-S029 packet, prerequisite LS-S050, checkpoint scope, and resumability checks passed locally on 2026-09-07."
+    },
+    {
+      "command": "authoritative VoxCPM2 artifact and process-contract review",
+      "result": "blocked",
+      "evidence": "Official OpenBMB/PyPI material identifies voxcpm 2.0.3, source commit 19b6bf7590025418821a86dcb817504e0ad7e5df, the openbmb/VoxCPM2 model, and Apache-2.0 licensing, but the separately deployed process protocol required by LS-DEC-032/LS-S029 is not pinned. The official vLLM-Omni path is described as rapidly evolving, so no wire contract was inferred."
+    }
+  ],
+  "notes": "No provider package or invented transport was added. LS-S029 remains blocked only on the exact local process bundle/protocol and associated checkpoint/voice-asset provenance inputs; standard inference, renderer selection, STT, and unrelated decision entries remain outside scope."
+}
