@@ -1,0 +1,12 @@
+{
+  "slice": "LS-S030",
+  "status": "verified",
+  "revision": "bc94ed8f753c6bd7bf45bed5bd838ade379f63a6",
+  "checks": [
+    { "command": "node --test --experimental-strip-types packages/runtime/test/observability-exporter.test.ts", "result": "pass", "evidence": "Four focused tests passed: redaction/source correlation, sink outage retention, single-flight duplicate batching with partial rejection, and synchronous enqueue for speech-path isolation." },
+    { "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build", "result": "pass", "evidence": "Strict workspace typecheck, 69 tests, ESLint, and package builds passed locally on 2026-09-07." },
+    { "command": "node scripts/workspace.mjs check", "result": "pass", "evidence": "Public offline workspace structure and private tracking guard passed locally." },
+    { "command": "git diff --check", "result": "pass", "evidence": "No whitespace errors in the LS-S030 worktree changes." }
+  ],
+  "notes": "Fixture-only asynchronous TraceSink boundary. Accepted events advance the high-water sequence; rejected or unavailable batches remain pending. No live gateway, credentials, production data, or effect-critical dispatch was used."
+}
