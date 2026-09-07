@@ -1,0 +1,11 @@
+{
+  "slice": "LS-S036",
+  "status": "verified",
+  "revision": "2bdff657737de1ac8853cba0aea9f529b27a915b",
+  "checks": [
+    { "command": "node --test --experimental-strip-types packages/storage-sqlite/test/rehearsal.test.ts", "result": "pass", "evidence": "Two focused tests passed for fixture backup/restore integrity, migration-head preservation, missing/changed backup rejection, and memory/collision safety." },
+    { "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build", "result": "pass", "evidence": "Strict workspace typecheck, 85 tests, ESLint, and package builds passed locally on 2026-09-07." },
+    { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally." }
+  ],
+  "notes": "Fixture-only backup/restore rehearsal with explicit injected database opener and temporary paths. Integrity is digest-verified before restore; no production or destructive target was used."
+}
