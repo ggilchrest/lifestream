@@ -1,10 +1,10 @@
 # Lifestream
 
-Implementation workspace for a persistent assistant runtime. This checkout currently contains development handoff tooling, not a working application. No implementation slice or runtime acceptance is claimed.
+Implementation workspace for a persistent assistant runtime. The exact completed and active work is recorded in `implementation/checkpoint.json`; a green bootstrap or specification check is not runtime or production acceptance.
 
 ## Start here
 
-Read [AGENTS.md](AGENTS.md), [the bootstrap guide](BOOTSTRAP.md), [the specification lock](spec-lock.json), and [the current checkpoint](implementation/checkpoint.json).
+Read [AGENTS.md](AGENTS.md), [the bootstrap guide](BOOTSTRAP.md), and [the current checkpoint](implementation/checkpoint.json).
 
 With Node.js 24 available, run:
 
@@ -14,9 +14,9 @@ node scripts/workspace.mjs check
 node scripts/workspace.mjs preflight LS-S001
 ```
 
-The first two commands validate the handoff tooling without private access. Preflight deliberately fails until the corrected private specification has a reviewed, committed pin and a slice has been explicitly authorized. A green public CI check is not permission to begin implementation.
+The first two commands validate the workspace tooling without private access. Preflight checks that the selected slice, worktree, scope aid, and prerequisites agree; it is not an authorization mechanism. A user request for a bounded task, milestone, or batch covers its ordinary dependency-ready implementation work, subject to the safety and external-action boundaries in `AGENTS.md`.
 
-The private specification is a separate Git repository at `.private/`; its contents, private reports, and credentials must not be committed here. See the bootstrap guide for authorized checkout and pinning. Public CI never fetches the private repository or needs its credentials.
+The private specification is a separate Git repository at `.private/`; its contents, private reports, and credentials must not be committed here. Public CI never fetches the private repository or needs its credentials. The historical `spec-lock.json` is retained as provenance and is not an implementation gate.
 
 Application runtime/package-manager versions, build scripts, and application CI belong to the first implementation slice. Node 24 here is only the bootstrap/CI tool runtime.
 
