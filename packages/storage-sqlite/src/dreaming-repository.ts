@@ -1,0 +1,2 @@
+type Proposal = { id: string; kind: string; memoryId?: string; priorValue?: number; proposedValue?: number; evidenceIds: string[] };
+export class DreamingRepository { private readonly proposals = new Map<string, Proposal>(); save(proposal: Proposal): void { if (this.proposals.has(proposal.id)) throw new Error("proposal is immutable"); this.proposals.set(proposal.id, structuredClone(proposal)); } get(id: string): Proposal | undefined { const p = this.proposals.get(id); return p && structuredClone(p); } }

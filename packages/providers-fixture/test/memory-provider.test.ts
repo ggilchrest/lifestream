@@ -1,0 +1,2 @@
+import assert from "node:assert/strict"; import { test } from "node:test"; import { FixtureMemoryProvider } from "../src/memory/provider.ts";
+test("fixture recall is deterministic and assistant scoped", () => { const p = new FixtureMemoryProvider([{ id: "m", assistantId: "a", content: "Hello", provenance: {}, lifecycle: {}, createdAt: "x" }]); assert.equal(p.recall("b", "hello", 5).length, 0); assert.equal(p.recall("a", "hello", 5).length, 1); });

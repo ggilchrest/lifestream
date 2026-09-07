@@ -1,0 +1,1 @@
+export function reverseProposal(proposalId: string, dependentRevision: number, expectedRevision: number): { proposalId: string; reversed: true } { if (dependentRevision !== expectedRevision) throw new Error("reversal conflict"); return { proposalId, reversed: true }; }

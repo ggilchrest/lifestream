@@ -1,0 +1,2 @@
+export type Proposal = { id: string; kind: string; memoryId?: string; priorValue?: number; proposedValue?: number; evidenceIds: string[] };
+export function validateProposal(proposal: Proposal): void { if (!proposal.id || !proposal.kind || proposal.evidenceIds.length === 0) throw new Error("invalid proposal"); if (proposal.kind === "adaptation" && (proposal.priorValue === undefined || proposal.proposedValue === undefined)) throw new Error("invalid adaptation proposal"); }

@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS persona_adaptations (id TEXT PRIMARY KEY, assistant_id TEXT NOT NULL, dimension_key TEXT NOT NULL, prior_value REAL NOT NULL, proposed_value REAL NOT NULL, status TEXT NOT NULL, evidence_json TEXT NOT NULL, created_at TEXT NOT NULL);

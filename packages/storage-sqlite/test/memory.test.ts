@@ -1,0 +1,2 @@
+import assert from "node:assert/strict"; import { test } from "node:test"; import { MemoryRepository } from "../src/memory.ts";
+test("memory is assistant scoped and immutable", () => { const repo = new MemoryRepository(); const r = { id: "m1", assistantId: "a1", content: "x", provenance: {}, lifecycle: {}, createdAt: "2026-09-06T00:00:00Z" }; repo.save(r); assert.equal(repo.get("a2", "m1"), undefined); assert.throws(() => repo.save(r), /immutable/); });

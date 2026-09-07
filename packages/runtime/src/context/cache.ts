@@ -1,0 +1,1 @@
+export class ContextCache<T> { private readonly entries = new Map<string, T>(); get(key: string): T | undefined { return this.entries.get(key); } set(key: string, value: T): void { this.entries.set(key, value); } invalidate(key: string): void { this.entries.delete(key); } clear(): void { this.entries.clear(); } }

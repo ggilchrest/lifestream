@@ -1,0 +1,2 @@
+import assert from "node:assert/strict"; import { test } from "node:test"; import { buildContext } from "../src/context/builder.ts"; import { ContextCache } from "../src/context/cache.ts";
+test("context ordering and cache invalidation are deterministic", () => { assert.deepEqual(buildContext([{ id: "b", content: "b", rank: 1 }, { id: "a", content: "a", rank: 1 }]).map((x) => x.id), ["a", "b"]); const c = new ContextCache<number>(); c.set("x", 1); c.invalidate("x"); assert.equal(c.get("x"), undefined); });
