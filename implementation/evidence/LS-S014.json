@@ -1,1 +1,1 @@
-{"slice":"LS-S014","status":"verified","revision":"pending-commit","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Trace ordering and deduplication checks passed."}]}
+{"slice":"LS-S014","status":"verified","revision":"5614f86","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Trace ordering and deduplication checks passed."}]}
