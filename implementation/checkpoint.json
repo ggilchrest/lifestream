@@ -5,8 +5,8 @@
   "baseRevision": "646e1f91acd2729e0e760f777d43604c856a7ef0",
   "currentRevision": "WORKTREE",
   "activeSlice": "LS-S045",
-  "sliceStatus": "inProgress",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044"],
+  "sliceStatus": "verified",
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045"],
   "allowedFiles": [
     "apps/server/src/composition/authority.ts",
     "packages/provider-conformance/src/authority/report.ts",
@@ -18,7 +18,7 @@
     "implementation/checkpoint.json",
     "implementation/evidence/LS-S045.json"
   ],
-  "changedFiles": ["implementation/checkpoint.json"],
+  "changedFiles": ["apps/server/src/composition/authority.ts", "packages/provider-conformance/src/authority/report.ts", "packages/provider-conformance/src/authority/catalog.ts", "packages/provider-conformance/src/authority/scenarios.ts", "packages/provider-conformance/test/authority-report.test.mjs", "packages/provider-conformance/test/authority-catalog.test.mjs", "packages/provider-conformance/test/authority-scenarios.test.mjs", "implementation/checkpoint.json", "implementation/evidence/LS-S045.json"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -58,8 +58,8 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "Implement fixture-only standalone authority composition and conformance reporting.",
-  "updatedAt": "2026-09-07T01:10:00Z",
+  "nextAction": "Advance to the next dependency-ready slice after LS-S045; preserve fixture-only authority boundaries until LS-DEC-025 is resolved.",
+  "updatedAt": "2026-09-07T01:30:00Z",
   "updatedBy": "Codex",
-  "notes": "Authorized batch LS-S005 through LS-S012. Current slice is LS-S005. Checkpoint updates and evidence remain per slice; advance automatically only after verification. No runtime or production acceptance."
+  "notes": "LS-S045 verified as fixture-only. Catalog evidence covers all four S045-owned authority cases. No non-fixture, production, external-governance, or human acceptance is claimed."
 }
