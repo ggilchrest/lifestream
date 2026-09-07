@@ -2,24 +2,22 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "4763284372d7c2628638d7ddfb30b43d2b90dcfa",
-  "currentRevision": "40f8a49b14268bc2d2672ee32ba418963835b1fa",
-  "activeSlice": "LS-S017",
+  "baseRevision": "5f8fc16d19eb3d5448f41940dee276b5a62e1600",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S018",
   "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017"],
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018"],
   "allowedFiles": [
-    "packages/runtime/src/capabilities/ports.ts",
-    "packages/runtime/src/capabilities/cache.ts",
-    "packages/runtime/src/capabilities/resolver.ts",
-    "packages/runtime/test/capabilities.test.ts",
-    "packages/providers-fixture/src/capability/provider.ts",
+    "packages/runtime/src/skills/skill.ts",
+    "packages/runtime/test/skills.test.ts",
     "packages/storage-sqlite/src/database.ts",
-    "packages/storage-sqlite/src/migrations/0011_capability_cache.sql",
+    "packages/storage-sqlite/src/migrations/0012_skills_proposals.sql",
     "packages/storage-sqlite/test/database.test.ts",
+    "packages/storage-sqlite/test/skills.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S017.json"
+    "implementation/evidence/LS-S018.json"
   ],
-  "changedFiles": ["packages/runtime/src/capabilities/ports.ts", "packages/runtime/src/capabilities/cache.ts", "packages/runtime/src/capabilities/resolver.ts", "packages/runtime/test/capabilities.test.ts", "packages/providers-fixture/src/capability/provider.ts", "packages/storage-sqlite/src/database.ts", "packages/storage-sqlite/src/migrations/0011_capability_cache.sql", "packages/storage-sqlite/test/database.test.ts", "implementation/checkpoint.json", "implementation/evidence/LS-S017.json"],
+  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S018.json", "packages/runtime/src/skills/skill.ts", "packages/runtime/test/skills.test.ts", "packages/storage-sqlite/src/database.ts", "packages/storage-sqlite/src/migrations/0012_skills_proposals.sql", "packages/storage-sqlite/test/database.test.ts", "packages/storage-sqlite/test/skills.test.ts"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -59,8 +57,8 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "Advance to LS-S018 after preparing its routine scope aid; preserve the S017 fixture-only boundary.",
-  "updatedAt": "2026-09-07T02:30:00Z",
+  "nextAction": "Advance to LS-S019; prepare its routine scope aid before implementing fixture STT/TTS ports.",
+  "updatedAt": "2026-09-07T03:00:00Z",
   "updatedBy": "Codex",
-  "notes": "LS-S017 verified after LS-S016 and LS-S045. Fixture-only capability implementation; no non-fixture, production, external-governance, or human acceptance is claimed."
+  "notes": "LS-S018 verified after LS-S012, LS-S016, LS-S045, and LS-S017. Preserve bounded declarative execution and inert proposal boundaries."
 }

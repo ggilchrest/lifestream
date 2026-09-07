@@ -8,9 +8,9 @@ import { Database } from "../src/database.ts";
 test("SQLite database migrates, persists, and rejects changed history", () => {
   const directory = mkdtempSync(join(tmpdir(), "lifestream-sqlite-")); const path = join(directory, "state.db");
   const first = new Database({ path }); assert.equal(first.connection.prepare("PRAGMA journal_mode").get()?.journal_mode, "wal");
-  assert.equal(first.migrate().length, 2); assert.equal(first.migrate().length, 2);
+  assert.equal(first.migrate().length, 3); assert.equal(first.migrate().length, 3);
   assert.ok(first.connection.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'capability_snapshots'").get()); first.close();
-  const second = new Database({ path }); assert.equal(second.migrate().length, 2); second.close();
+  const second = new Database({ path }); assert.equal(second.migrate().length, 3); second.close();
   const changed = new Database({ path, migrations: [{ id: 1, name: "initial", sql: "SELECT 1", digest: "changed" }] });
   assert.throws(() => changed.migrate(), /digest mismatch/); changed.close(); rmSync(directory, { recursive: true, force: true });
 });
