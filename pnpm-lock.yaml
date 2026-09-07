@@ -30,6 +30,12 @@ importers:
 
   packages/providers-fixture: {}
 
+  packages/providers-voxcpm:
+    dependencies:
+      '@lifestream/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+
   packages/runtime: {}
 
   packages/storage-sqlite: {}

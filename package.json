@@ -5,10 +5,10 @@
   "packageManager": "pnpm@10.0.0",
   "engines": { "node": ">=24.0.0" },
   "scripts": {
-    "build": "tsc -b apps/server packages/contracts packages/runtime packages/providers-fixture packages/storage-sqlite",
+    "build": "tsc -b apps/server packages/contracts packages/runtime packages/providers-fixture packages/providers-voxcpm packages/storage-sqlite",
     "lint": "eslint .",
     "test": "node --test --experimental-strip-types tests/**/*.test.ts packages/**/*.test.ts apps/**/*.test.ts",
-    "typecheck": "tsc -b --pretty false apps/server packages/contracts packages/runtime packages/providers-fixture packages/storage-sqlite"
+    "typecheck": "tsc -b --pretty false apps/server packages/contracts packages/runtime packages/providers-fixture packages/providers-voxcpm packages/storage-sqlite"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

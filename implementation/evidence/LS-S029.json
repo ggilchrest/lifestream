@@ -1,7 +1,7 @@
 {
   "slice": "LS-S029",
   "status": "blocked",
-  "revision": "39849b82d130b860afd15a2aeb84c99fda737eef",
+  "revision": "bf5ed2bf13bb8f938ed0782e47185de9988ba731",
   "checks": [
     {
       "command": "node scripts/workspace.mjs preflight LS-S029",
@@ -12,7 +12,12 @@
       "command": "authoritative VoxCPM2 artifact and process-contract review",
       "result": "blocked",
       "evidence": "Official OpenBMB/PyPI material identifies voxcpm 2.0.3, source commit 19b6bf7590025418821a86dcb817504e0ad7e5df, the openbmb/VoxCPM2 model, and Apache-2.0 licensing, but the separately deployed process protocol required by LS-DEC-032/LS-S029 is not pinned. The official vLLM-Omni path is described as rapidly evolving, so no wire contract was inferred."
+    },
+    {
+      "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build && python3 sidecar syntax check",
+      "result": "pass",
+      "evidence": "The adapter package, private protocol tests, 97 workspace tests, typecheck, lint, build, and Python sidecar syntax passed locally on 2026-09-07."
     }
   ],
-  "notes": "No provider package or invented transport was added. LS-S029 remains blocked only on the exact local process bundle/protocol and associated checkpoint/voice-asset provenance inputs; standard inference, renderer selection, STT, and unrelated decision entries remain outside scope."
+  "notes": "The pinned loopback protocol and adapter are implemented, but real sidecar readiness and RTX 3080 measurements are not claimed. The artifact manifest fails closed until immutable model snapshot/file digests, complete locked binary dependencies, and an OCI image digest are populated and verified. No production activation or arbitrary voice sample was used."
 }
