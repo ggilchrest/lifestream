@@ -1,1 +1,1 @@
-{"slice":"LS-S007","status":"verified","revision":"1190df0","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Bounded persona projection and adaptation validation passed in the workspace suite."}]}
+{"slice":"LS-S007","status":"verified","revision":"1190df0d97c2adee64cb0e7c438b1d1cd9fb0f6b","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Bounded persona projection and adaptation validation passed in the workspace suite."}]}
