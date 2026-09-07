@@ -2,21 +2,19 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "7beb74d09f9484b3a3c6d5823be1a8f79986d8a1",
-  "currentRevision": "1190df0",
-  "activeSlice": "LS-S012",
+  "baseRevision": "df599fdc255d68ad8c3687e12c87445f31c6b622",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S015",
   "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012"],
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015"],
   "allowedFiles": [
-    "packages/runtime/src/dreaming/apply.ts",
-    "packages/runtime/src/dreaming/conflict.ts",
-    "packages/runtime/src/dreaming/reverse.ts",
-    "packages/storage-sqlite/src/dreaming-repository.ts",
-    "packages/runtime/test/dreaming-application.test.ts",
+    "packages/runtime/src/inference/port.ts",
+    "packages/runtime/src/inference/fixture.ts",
+    "packages/runtime/test/inference.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S012.json"
+    "implementation/evidence/LS-S015.json"
   ],
-  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S012.json"],
+  "changedFiles": ["implementation/checkpoint.json"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -56,7 +54,7 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "LS-S005 through LS-S012 implemented and locally verified; await next bounded task.",
+  "nextAction": "LS-S013 through LS-S015 implemented and locally verified; await next bounded task.",
   "updatedAt": "2026-09-07T01:10:00Z",
   "updatedBy": "Codex",
   "notes": "Authorized batch LS-S005 through LS-S012. Current slice is LS-S005. Checkpoint updates and evidence remain per slice; advance automatically only after verification. No runtime or production acceptance."

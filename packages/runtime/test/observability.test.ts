@@ -1,0 +1,2 @@
+import assert from "node:assert/strict"; import { test } from "node:test"; import { TraceOutbox } from "../src/observability/outbox.ts";
+test("trace outbox preserves order and deduplicates receipts", () => { const o = new TraceOutbox(); o.append({ id: "2", traceId: "t", sequence: 2, payload: {} }); o.append({ id: "1", traceId: "t", sequence: 1, payload: {} }); o.append({ id: "1", traceId: "t", sequence: 1, payload: { changed: true } }); assert.deepEqual(o.pending().map((e) => e.id), ["1", "2"]); });

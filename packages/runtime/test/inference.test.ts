@@ -1,0 +1,2 @@
+import assert from "node:assert/strict"; import { test } from "node:test"; import { FixtureInferenceProvider } from "../src/inference/fixture.ts";
+test("fixture inference has deterministic section output", async () => { const a = []; for await (const c of new FixtureInferenceProvider().infer({ sections: [{ kind: "persona", content: "a", trusted: true }] })) a.push(c); assert.equal(a[0].text, "a"); });

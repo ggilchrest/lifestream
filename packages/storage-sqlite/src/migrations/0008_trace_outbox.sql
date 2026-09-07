@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS trace_outbox (id TEXT PRIMARY KEY, trace_id TEXT NOT NULL, sequence INTEGER NOT NULL, payload_json TEXT NOT NULL, status TEXT NOT NULL);

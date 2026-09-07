@@ -1,0 +1,2 @@
+export type TraceEvent = { id: string; traceId: string; sequence: number; payload: Record<string, unknown> };
+export class TraceOutbox { private readonly events: TraceEvent[] = []; append(event: TraceEvent): void { if (this.events.some((e) => e.id === event.id)) return; this.events.push(structuredClone(event)); this.events.sort((a, b) => a.sequence - b.sequence); } pending(): TraceEvent[] { return this.events.map((e) => structuredClone(e)); } }

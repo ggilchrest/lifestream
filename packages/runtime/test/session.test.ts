@@ -1,0 +1,2 @@
+import assert from "node:assert/strict"; import { test } from "node:test"; import { SessionStore } from "../src/session/session.ts";
+test("session updates use optimistic revision", () => { const s = new SessionStore(); s.create({ id: "s", conversationId: "c", revision: 1, status: "active", interactionId: "i" }); assert.equal(s.update("s", 1, { status: "ended" }).status, "ended"); assert.throws(() => s.update("s", 1, { status: "active" }), /stale/); });
