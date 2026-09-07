@@ -3,10 +3,24 @@ export type AudioFrame = { frameId: string; sequence: number; format: AudioForma
 export type SttInput = { type: "frame"; audioInputId: string; frame: AudioFrame } | { type: "end"; audioInputId: string; nextSequence: number; sampleCount: number };
 export type SttData = { type: "partial" | "committed"; utteranceId: string; text: string; startSample: number; endSample: number; speakerRef: string | null; confidence: number };
 export type SttEvent = { kind: "data"; sequence: number; payload: SttData } | { kind: "terminal"; sequence: number; outcome: "succeeded" | "rejected" | "cancelled" | "timedOut" | "failed"; inputSamples: number };
-export type TtsEvent = { kind: "data"; sequence: number; segmentId: string; frame: AudioFrame } | { kind: "terminal"; sequence: number; segmentId: string; outcome: "succeeded" | "cancelled" | "timedOut" | "failed"; outputSamples: number; frameCount: number };
+export type VoiceProfileRef = { voiceRef: string; revision: number };
+export type ExpressiveSemanticDecision = { decisionId: string; revision: number; valence: number; arousal: number; urgency: "low" | "normal" | "high" | "critical"; deliveryMode: "neutral" | "explanation" | "reassurance" | "concern" | "celebration" | "warning" | "emergency"; pace: number; energy: number };
+export type SpeechDeliveryIntent = { interactionId: string; segmentId: string; decisionId: string; decisionRevision: number; deliveryMode: ExpressiveSemanticDecision["deliveryMode"]; urgency: ExpressiveSemanticDecision["urgency"]; pace: number; energy: number };
+export type ExpressiveDimension = "affect" | "urgency" | "deliveryMode" | "pace" | "energy";
+export type DeliveryDisposition = "fullyApplied" | "partiallyApplied" | "unsupported" | "policyOverridden" | "providerFailure" | "cancelled" | "timedOut";
+export type TtsRequest = SpeechRequest & { text: string; segmentId: string; format: AudioFormat; voiceProfile: VoiceProfileRef; decision: ExpressiveSemanticDecision; delivery: SpeechDeliveryIntent; maxOutputSamples?: number };
+export type TtsEvent = { kind: "data"; sequence: number; segmentId: string; frame: AudioFrame; mappingRevision: string } | { kind: "terminal"; sequence: number; segmentId: string; outcome: "succeeded" | "cancelled" | "timedOut" | "failed"; outputSamples: number; frameCount: number; disposition: DeliveryDisposition; degradedDimensions: ExpressiveDimension[]; mappingRevision: string };
 export type SpeechRequest = { deadlineAt: string; now: () => string };
 export interface SpeechToTextProvider { transcribe(request: SpeechRequest, audio: AsyncIterable<SttInput>, signal?: AbortSignal): AsyncIterable<SttEvent>; }
-export interface TextToSpeechProvider { synthesize(request: SpeechRequest, segmentId: string, text: string, format: AudioFormat, signal?: AbortSignal): AsyncIterable<TtsEvent>; }
+export interface TextToSpeechProvider { synthesize(request: TtsRequest, signal?: AbortSignal): AsyncIterable<TtsEvent>; }
+
+export function validateTtsRequest(request: TtsRequest): void {
+  if (!request.text.trim() || !request.segmentId || !request.delivery.interactionId || !request.voiceProfile.voiceRef || !Number.isInteger(request.voiceProfile.revision) || request.voiceProfile.revision < 0) throw new Error("tts request identity invalid");
+  const d = request.decision;
+  if (!d.decisionId || !Number.isInteger(d.revision) || d.revision < 0 || d.valence < -1 || d.valence > 1 || d.arousal < 0 || d.arousal > 1 || d.pace < 0 || d.pace > 1 || d.energy < 0 || d.energy > 1) throw new Error("tts expressive decision invalid");
+  if (request.delivery.decisionId !== d.decisionId || request.delivery.decisionRevision !== d.revision || request.delivery.segmentId !== request.segmentId || request.delivery.urgency !== d.urgency || request.delivery.deliveryMode !== d.deliveryMode || request.delivery.pace !== d.pace || request.delivery.energy !== d.energy) throw new Error("tts delivery correlation invalid");
+  if (request.maxOutputSamples !== undefined && (!Number.isInteger(request.maxOutputSamples) || request.maxOutputSamples < 1)) throw new Error("tts output limit invalid");
+}
 
 export function validateAudioFrame(frame: AudioFrame, expected: AudioFormat): void {
   if (frame.format.encoding !== expected.encoding || frame.format.sampleRateHz !== expected.sampleRateHz || frame.format.channels !== expected.channels) throw new Error("audio format mismatch");

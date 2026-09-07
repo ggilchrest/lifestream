@@ -50,3 +50,11 @@ export async function runConformance(adapter: ConformanceAdapter, now = "2026-09
 export function assertConformance(report: ConformanceReport): void {
   if (report.cases.length !== cases.length || report.cases.some((item) => item.status !== "pass")) throw new Error("provider conformance failed");
 }
+
+export function validateExpressiveTtsEvents(events: readonly { readonly kind: string; readonly sequence: number; readonly mappingRevision?: string; readonly disposition?: string; readonly degradedDimensions?: readonly string[] }[]): void {
+  if (!events.length || events.at(-1)?.kind !== "terminal") throw new Error("expressive TTS stream missing terminal");
+  const mappingRevision = events[0]?.mappingRevision;
+  if (!mappingRevision || events.some((event, index) => event.sequence !== index || event.mappingRevision !== mappingRevision)) throw new Error("expressive TTS stream ordering or mapping invalid");
+  const terminal = events.at(-1);
+  if (!terminal?.disposition || !Array.isArray(terminal.degradedDimensions)) throw new Error("expressive TTS disposition missing");
+}
