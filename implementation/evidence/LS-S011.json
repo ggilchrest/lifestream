@@ -1,1 +1,1 @@
-{"slice":"LS-S011","status":"verified","revision":"pending-commit","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Dreaming proposal validation and non-mutating run checks passed."}]}
+{"slice":"LS-S011","status":"verified","revision":"1190df0","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Dreaming proposal validation and non-mutating run checks passed."}]}

@@ -1,1 +1,1 @@
-{"slice":"LS-S012","status":"verified","revision":"pending-commit","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Revision-conflict application and reversal guard checks passed."}]}
+{"slice":"LS-S012","status":"verified","revision":"1190df0","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Revision-conflict application and reversal guard checks passed."}]}
