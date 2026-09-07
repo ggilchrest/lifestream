@@ -1,1 +1,1 @@
-{"slice":"LS-S009","status":"verified","revision":"1190df0","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Deterministic fixture memory recall and provider boundary checks passed."}]}
+{"slice":"LS-S009","status":"verified","revision":"1190df0d97c2adee64cb0e7c438b1d1cd9fb0f6b","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Deterministic fixture memory recall and provider boundary checks passed."}]}
