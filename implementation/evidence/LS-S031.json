@@ -1,0 +1,12 @@
+{
+  "slice": "LS-S031",
+  "status": "verified",
+  "revision": "cb2b1015a28d0546eaa2f713b8587e8b7b45b254",
+  "checks": [
+    { "command": "node --test --experimental-strip-types packages/runtime/test/replay.test.ts", "result": "pass", "evidence": "Three focused tests passed: new event IDs/source links, live-route and effect rejection, and artifact/output comparison." },
+    { "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build", "result": "pass", "evidence": "Strict workspace typecheck, 72 tests, ESLint, and package builds passed locally on 2026-09-07." },
+    { "command": "node scripts/workspace.mjs check", "result": "pass", "evidence": "Public offline workspace structure and private tracking guard passed locally." },
+    { "command": "git diff --check", "result": "pass", "evidence": "No whitespace errors in the LS-S031 worktree changes." }
+  ],
+  "notes": "Replay is fixture-only and always uses executionMode=replay. Replayed events receive new IDs and non-empty sourceEventIds; live routes, credentials, and effect-marked events fail closed."
+}
