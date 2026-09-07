@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "cc7e5ceb08d9feaefe3bea382976ab25ee158618",
+  "baseRevision": "646e1f91acd2729e0e760f777d43604c856a7ef0",
   "currentRevision": "WORKTREE",
   "activeSlice": "LS-S045",
   "sliceStatus": "inProgress",
@@ -10,7 +10,9 @@
   "allowedFiles": [
     "apps/server/src/composition/authority.ts",
     "packages/provider-conformance/src/authority/report.ts",
+    "packages/provider-conformance/src/authority/catalog.ts",
     "packages/provider-conformance/test/authority-report.test.mjs",
+    "packages/provider-conformance/test/authority-catalog.test.mjs",
     "implementation/checkpoint.json",
     "implementation/evidence/LS-S045.json"
   ],

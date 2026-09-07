@@ -1,0 +1,2 @@
+import assert from 'node:assert/strict';import {readFile}from'node:fs/promises';import{test}from'node:test';
+test('authority catalog runner requires explicit evidence for every case',async()=>{const source=await readFile(new URL('../src/authority/catalog.ts',import.meta.url),'utf8');assert.match(source,/runAuthorityCatalog/);assert.match(source,/assertCompleteAuthorityEvidence/);assert.match(source,/status !== "pass"/) });
