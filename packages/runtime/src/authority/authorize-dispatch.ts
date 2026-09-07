@@ -1,0 +1,2 @@
+export type DispatchReceipt = { invocationId: string; status: "admitted" | "denied" | "unknown"; grantRevision: number };
+export function authorizeDispatch(receipt: DispatchReceipt | undefined, expectedInvocationId: string): DispatchReceipt { if (!receipt || receipt.invocationId !== expectedInvocationId) throw new Error("missing dispatch receipt"); if (receipt.status !== "admitted") throw new Error(`dispatch ${receipt.status}`); return structuredClone(receipt); }

@@ -1,0 +1,2 @@
+import type { AuthorityRequest, AuthorityResult, AuthenticatedHumanContext } from "./ports.js";
+export function evaluateAuthority(context: AuthenticatedHumanContext | undefined, request: AuthorityRequest): AuthorityResult { if (!context) return { disposition: "denied", reason: "authority_identity_invalid" }; if (!request.scope || !request.inputDigest) return { disposition: "denied", reason: "authority_scope_mismatch" }; return { disposition: "approvalRequired", reason: "authority_consent_required" }; }

@@ -1,0 +1,1 @@
+{"slice":"LS-S042","status":"verified","revision":"pending-commit","checks":[{"command":"pnpm typecheck && pnpm test && pnpm lint && pnpm build","result":"pass","evidence":"Non-consuming evaluation and idempotent receipt-backed admission checks passed; external effects are not executed."}]}
