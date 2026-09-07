@@ -1,0 +1,12 @@
+{
+  "slice": "LS-S035",
+  "status": "verified",
+  "revision": "3b5fea8298d9934b8d3a098a03eb13858e98f446",
+  "checks": [
+    { "command": "node --test --experimental-strip-types packages/performance/test/benchmark.test.ts", "result": "pass", "evidence": "Three focused tests passed for environment capture, separate latency percentiles, and invalid/undersized sample rejection." },
+    { "command": "pnpm exec tsc --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext --strict packages/performance/src/benchmark.ts", "result": "pass", "evidence": "Standalone strict typecheck passed locally on 2026-09-07." },
+    { "command": "pnpm test && pnpm lint", "result": "pass", "evidence": "83 workspace tests and ESLint passed locally on 2026-09-07." },
+    { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally." }
+  ],
+  "notes": "Fixture-only latency report. Hardware, OS, power mode, network, provider, warm state, concurrency, sample count, acknowledgment, first audio, and result milestones are recorded. This does not claim production performance acceptance."
+}

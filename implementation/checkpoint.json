@@ -2,13 +2,13 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "36b01c451c43051c4896b25802a65d0d10423431",
-  "currentRevision": "36b01c451c43051c4896b25802a65d0d10423431",
-  "activeSlice": "LS-S034",
+  "baseRevision": "2fa9392fc073336a7899c5b49960908e9f8caa78",
+  "currentRevision": "3b5fea8298d9934b8d3a098a03eb13858e98f446",
+  "activeSlice": "LS-S035",
   "sliceStatus": "verified",
-  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021", "LS-S022", "LS-S023", "LS-S024", "LS-S025", "LS-S026", "LS-S027", "LS-S046", "LS-S028", "LS-S030", "LS-S031", "LS-S032", "LS-S033"],
-  "allowedFiles": ["packages/perceptual/src/harness.ts", "packages/perceptual/test/harness.test.ts", "implementation/checkpoint.json", "implementation/evidence/LS-S034.json"],
-  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S034.json"],
+  "completedSlices": ["LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010", "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S040", "LS-S041", "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S017", "LS-S018", "LS-S019", "LS-S020", "LS-S021", "LS-S022", "LS-S023", "LS-S024", "LS-S025", "LS-S026", "LS-S027", "LS-S046", "LS-S028", "LS-S030", "LS-S031", "LS-S032", "LS-S033", "LS-S034", "LS-S035"],
+  "allowedFiles": ["packages/performance/src/benchmark.ts", "packages/performance/test/benchmark.test.ts", "implementation/checkpoint.json", "implementation/evidence/LS-S035.json"],
+  "changedFiles": ["implementation/checkpoint.json", "implementation/evidence/LS-S035.json"],
   "validation": [
     {
       "command": "node --test scripts/workspace.test.mjs",
@@ -48,7 +48,7 @@
   ],
   "decisions": [],
   "blockers": [],
-  "nextAction": "LS-S035 is dependency-ready; LS-S034 VLM claims remain unavailable pending an approved judge model.",
+  "nextAction": "LS-S036 is dependency-ready; backup/restore rehearsal will use explicit temporary fixture paths only. LS-S029 and LS-S034 VLM claims remain gated by human decisions.",
   "updatedAt": "2026-09-07T00:00:00Z",
   "updatedBy": "Codex",
   "notes": "LS-S026 keeps semantic embodiment state separate from renderer details; UI is a deterministic projection and renderer faults remain observable without changing cognition or authority."
