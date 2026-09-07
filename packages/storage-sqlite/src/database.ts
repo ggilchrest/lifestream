@@ -28,8 +28,14 @@ function withTransaction<T>(database: DatabaseSync, operation: (transaction: Tra
 interface Migration { id: number; name: string; sql: string; digest: string; }
 export interface MigrationRecord { id: number; name: string; digest: string; appliedAt: string; }
 function loadMigrations(): Migration[] {
-  const sql = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "migrations/0001_initial.sql"), "utf8");
-  return [{ id: 1, name: "initial", sql, digest: createHash("sha256").update(sql).digest("hex") }];
+  const directory = join(dirname(fileURLToPath(import.meta.url)), "migrations");
+  return [
+    [1, "initial", "0001_initial.sql"],
+    [11, "capability_cache", "0011_capability_cache.sql"],
+  ].map(([id, name, file]) => {
+    const sql = readFileSync(join(directory, file as string), "utf8");
+    return { id: id as number, name: name as string, sql, digest: createHash("sha256").update(sql).digest("hex") };
+  });
 }
 
 export interface DatabaseOptions { path: string; busyTimeoutMs?: number; migrations?: ReturnType<typeof loadMigrations>; }
