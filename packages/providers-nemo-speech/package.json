@@ -1,0 +1,1 @@
+{"name":"@lifestream/providers-nemo-speech","private":true,"type":"module","dependencies":{"@lifestream/runtime":"workspace:*"},"scripts":{"build":"tsc -b","typecheck":"tsc -b --pretty false"}}
