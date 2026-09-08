@@ -1,7 +1,7 @@
 {
   "slice": "LS-S029",
   "status": "blocked",
-  "revision": "5e4c3e2",
+  "revision": "780830b3b2d67cf78ccd35e9f317ab2fad340fc3",
   "checks": [
     {
       "command": "node scripts/workspace.mjs preflight LS-S029",
@@ -47,6 +47,11 @@
       "command": "ai5090 corrected sidecar expired-deadline fixture",
       "result": "pass",
       "evidence": "The corrected sidecar returned HTTP 200 with preAudio sequence 0 followed by terminal sequence 1, outcome deadlineExceeded, outputSamples 0, and frameCount 0 for deterministic request ls-s029-deadline-001. Correlation, decision revision, voice revision, mapping revision, runtime revision, model revision, and requested/applied delivery were present before the terminal event; no PCM data event was emitted."
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-voxcpm/test/provider.test.ts && pnpm typecheck && pnpm lint",
+      "result": "pass",
+      "evidence": "Three VoxCPM adapter tests passed, including early preAudio delivery before response completion, transport cancellation mapping, and malformed lifecycle rejection. TypeScript and ESLint passed after replacing full-response buffering with incremental bounded NDJSON consumption."
     }
   ],
   "notes": "The pinned loopback protocol and adapter are implemented. A corrected disposable runtime now has readiness, complete PCM lifecycle, synchronized WSL placement, and expired-deadline evidence. Source-lock downloaded-byte hashes, locked binary dependencies, image provenance, deployment receipt, cancellation fencing, and the remaining expressive conformance matrix remain incomplete. The existing operator-owned container is still an older preAudio-only skeleton. No image was pushed, no external deployment occurred, and no arbitrary voice sample was used."
