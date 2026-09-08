@@ -5,8 +5,27 @@ interface TextToSpeechProvider { capabilities(): TtsCapabilities; synthesize(req
 const PROTOCOL_VERSION = "voxcpm.loopback.v1" as const;
 type ProtocolRequest = { protocolVersion: typeof PROTOCOL_VERSION; requestId: string; correlationId: string; interactionId: string; deadlineAt: string; voiceBundleKey: string; voiceBundleRevision: number; text: string; delivery: Record<string, unknown>; format: { encoding: "pcm_s16le"; sampleRateHz: 48000; channels: 1 } };
 type ProtocolEvent = { kind: "preAudio"; sequence: 0; requestId: string; correlationId: string; voiceBundleRevision: number; requestedDelivery: Record<string, unknown>; appliedDelivery: Record<string, unknown>; degradedDimensions: string[]; mappingRevision: string; effectiveSynthesis: Record<string, unknown>; format: ProtocolRequest["format"]; runtimeRevision: string; modelRevision: string } | { kind: "data"; sequence: number; sampleOffset: number; sampleCount: number; dataBase64: string; format: ProtocolRequest["format"] } | { kind: "terminal"; sequence: number; outcome: "completed" | "cancelled" | "deadlineExceeded" | "retryableProviderFailure" | "nonRetryableProviderFailure" | "malformedRequest" | "unsupportedRequest" | "providerUnavailable"; outputSamples: number; frameCount: number };
-const parseNdjson = (body: string): ProtocolEvent[] => body.split("\n").map((line) => line.trim()).filter(Boolean).map((line) => JSON.parse(line) as ProtocolEvent);
-const validateProtocolEvents = (events: readonly ProtocolEvent[]): void => { if (!events.length || events[0]?.kind !== "preAudio" || events.at(-1)?.kind !== "terminal") throw new Error("protocol lifecycle invalid"); events.forEach((event, index) => { if (event.sequence !== index) throw new Error("protocol sequence invalid"); }); };
+async function* readProtocolEvents(body: ReadableStream<Uint8Array>): AsyncIterable<ProtocolEvent> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      buffer += decoder.decode(value ?? new Uint8Array(), { stream: !done });
+      if (buffer.length > 65_536) throw new Error("protocol line buffer exceeded");
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) if (line.trim()) yield JSON.parse(line) as ProtocolEvent;
+      if (done) {
+        if (buffer.trim()) yield JSON.parse(buffer) as ProtocolEvent;
+        break;
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
 
 export type VoxCpmOptions = { baseUrl: string; voiceBundleKey: string; voiceBundleRevision: number; runtimeRevision: string; modelRevision: string; mappingRevision: string; fetch?: typeof globalThis.fetch };
 export class VoxCpmProvider implements TextToSpeechProvider {
@@ -18,8 +37,26 @@ export class VoxCpmProvider implements TextToSpeechProvider {
     let response: Response;
     try { response = await this.requestFetch(`${this.options.baseUrl}/v1/tts/synthesize`, { method: "POST", headers: { "content-type": "application/json", accept: "application/x-ndjson" }, body: JSON.stringify(body), ...(signal ? { signal } : {}) }); } catch { yield { kind: "terminal", sequence: 0, segmentId: request.segmentId, outcome: signal?.aborted ? "cancelled" : "failed", outputSamples: 0, frameCount: 0, disposition: signal?.aborted ? "cancelled" : "providerFailure", degradedDimensions: [], mappingRevision: this.options.mappingRevision }; return; }
     if (!response.ok || !response.body) { yield { kind: "terminal", sequence: 0, segmentId: request.segmentId, outcome: "failed", outputSamples: 0, frameCount: 0, disposition: "providerFailure", degradedDimensions: [], mappingRevision: this.options.mappingRevision }; return; }
-    const events = parseNdjson(await response.text()); validateProtocolEvents(events);
-    for (const event of events) yield this.mapEvent(event, request);
+    let sequence = 0;
+    let sawPreAudio = false;
+    let sawTerminal = false;
+    try {
+      for await (const event of readProtocolEvents(response.body)) {
+        if (sawTerminal || event.sequence !== sequence) throw new Error("protocol sequence invalid");
+        if (!sawPreAudio && event.kind !== "preAudio") throw new Error("protocol lifecycle invalid");
+        if (event.kind === "preAudio") {
+          if (sawPreAudio) throw new Error("duplicate preAudio event");
+          sawPreAudio = true;
+        }
+        if (event.kind === "data" && (event.sampleCount < 1 || event.sampleCount > 4800 || event.sampleOffset < 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(event.dataBase64))) throw new Error("protocol audio chunk invalid");
+        yield this.mapEvent(event, request);
+        sequence += 1;
+        sawTerminal = event.kind === "terminal";
+      }
+      if (!sawPreAudio || !sawTerminal) throw new Error("protocol lifecycle invalid");
+    } catch {
+      yield { kind: "terminal", sequence, segmentId: request.segmentId, outcome: signal?.aborted ? "cancelled" : "failed", outputSamples: 0, frameCount: 0, disposition: signal?.aborted ? "cancelled" : "providerFailure", degradedDimensions: [], mappingRevision: this.options.mappingRevision };
+    }
   }
   private mapEvent(event: ProtocolEvent, request: TtsRequest): TtsEvent { if (event.kind === "preAudio") return { kind: "preAudio", sequence: 0, segmentId: request.segmentId, decisionId: request.decision.decisionId, decisionRevision: request.decision.revision, delivery: structuredClone(request.delivery), disposition: event.degradedDimensions.length ? "partiallyApplied" : "fullyApplied", degradedDimensions: event.degradedDimensions as never[], mappingRevision: event.mappingRevision }; if (event.kind === "data") return { kind: "data", sequence: event.sequence, segmentId: request.segmentId, frame: { frameId: `${request.segmentId}:${event.sequence}`, sequence: event.sequence - 1, format: request.format, sampleOffset: event.sampleOffset, sampleCount: event.sampleCount, dataBase64: event.dataBase64 }, mappingRevision: this.options.mappingRevision }; return { kind: "terminal", sequence: event.sequence, segmentId: request.segmentId, outcome: event.outcome === "completed" ? "succeeded" : event.outcome === "cancelled" ? "cancelled" : event.outcome === "deadlineExceeded" ? "timedOut" : "failed", outputSamples: event.outputSamples, frameCount: event.frameCount, disposition: event.outcome === "completed" ? "fullyApplied" : event.outcome === "cancelled" ? "cancelled" : event.outcome === "deadlineExceeded" ? "timedOut" : "providerFailure", degradedDimensions: [], mappingRevision: this.options.mappingRevision }; }
 }
