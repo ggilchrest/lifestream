@@ -17,7 +17,12 @@
       "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build && python3 sidecar syntax check",
       "result": "pass",
       "evidence": "The adapter package, private protocol tests, 97 workspace tests, typecheck, lint, build, and Python sidecar syntax passed locally on 2026-09-07."
+    },
+    {
+      "command": "curl Hugging Face model API with revision=main and files_metadata=true; inspect nvidia-smi",
+      "result": "blocked",
+      "evidence": "Resolved openbmb/VoxCPM2 to snapshot 32279effe8c19989596f05d353d1447f51d9e915 and recorded the nine-file inventory plus LFS metadata. This host has Docker 29.6.2 but no nvidia-smi/NVIDIA runtime, so RTX 3080 selection, model load, warmup, real sidecar readiness, conformance, image build validation, and measurements cannot be executed here."
     }
   ],
-  "notes": "The pinned loopback protocol and adapter are implemented, but real sidecar readiness and RTX 3080 measurements are not claimed. The artifact manifest fails closed until immutable model snapshot/file digests, complete locked binary dependencies, and an OCI image digest are populated and verified. No production activation or arbitrary voice sample was used."
+  "notes": "The pinned loopback protocol and adapter are implemented. Source-lock, post-build-attestation, and deployment-receipt lifecycle artifacts are separated; deployment receipt remains intentionally unpopulated. Real sidecar readiness and RTX 3080 measurements are blocked by absent NVIDIA runtime/GPU access, and artifact acquisition/build remains fail-closed until downloaded-byte hashes, locked binary dependencies, and image provenance are populated. No image was pushed, no external deployment occurred, and no arbitrary voice sample was used."
 }
