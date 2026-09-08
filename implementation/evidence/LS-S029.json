@@ -1,7 +1,7 @@
 {
   "slice": "LS-S029",
   "status": "blocked",
-  "revision": "4524a330b8f9c3b00b30bee046b9f29b2488bd3e",
+  "revision": "11eb9bd57578949d2feb644c1bdf516e7cbb5e2c",
   "checks": [
     {
       "command": "node scripts/workspace.mjs preflight LS-S029",
@@ -62,6 +62,11 @@
       "command": "ai5090 disposable corrected sidecar cancellation-fencing launch",
       "result": "pass",
       "evidence": "After temporarily stopping the operator-owned ls-s029-warmup container, the current corrected sidecar reached ready on logical cuda:0 with the declared RTX 3080 WSL profile. A bounded client cancellation fixture returned 24 NDJSON events before curl timed out after 3 seconds: one preAudio, 23 PCM data events, and zero terminal events. The sidecar remained ready after disconnect. Remote response SHA256: 90dad11c657b8c4f2be7d2530ab830ad1528e27d5018cbd04f5ff243ce6c1ed0. The warmup container was then restarted and readiness was restored; no production or external deployment occurred."
+    },
+    {
+      "command": "ai5090 image history and installed runtime provenance inspection",
+      "result": "blocked",
+      "evidence": "The existing image reports Docker 29.7.2, voxcpm 2.0.3, torch 2.7.1+cu128, torchaudio 2.7.1+cu128, and the recorded VoxCPM wheel hash. Its history has no reproducible checked-in build definition or base-image digest, pip cache is disabled, and the dependency set is not a complete downloaded-byte wheelhouse lock. Source-lock remains blocked; the Docker version was corrected to the observed 29.7.2."
     }
   ],
   "notes": "The pinned loopback protocol and adapter are implemented. A corrected disposable runtime now has readiness, complete PCM lifecycle, synchronized WSL placement, expired-deadline evidence, and bounded client-cancellation evidence. Source-lock downloaded-byte hashes, locked binary dependencies, image provenance, deployment receipt, server-side cancellation trace, and the remaining expressive conformance matrix remain incomplete. The existing operator-owned container is still an older preAudio-only skeleton. No image was pushed, no external deployment occurred, and no arbitrary voice sample was used."
