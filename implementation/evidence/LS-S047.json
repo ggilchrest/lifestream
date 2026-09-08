@@ -1,0 +1,18 @@
+{
+  "slice": "LS-S047",
+  "status": "verified",
+  "specificationRevision": "a85d745",
+  "checks": [
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "The provider-messages 2.0.0 expressive contract, trace/catalog revisions, positive and negative closure vectors, requirement mappings, and roadmap packet passed the private specification validator: 80 JSON files, 31 Markdown files, 324 normative requirements, and 479 structural vectors."
+    },
+    {
+      "command": "git -C .private diff --check",
+      "result": "pass",
+      "evidence": "The scoped LS-S047 contract, documentation, fixture, and packet changes passed whitespace validation."
+    }
+  ],
+  "notes": "Verified for the provider-neutral expressive speech contract amendment. TtsRequest/TtsEvent 2.0.0, VoiceProfileRef, SpeechDeliveryIntent, shared expression correlation, typed degradation, and historical 1.0.0 compatibility boundaries are specified and structurally validated. Real-provider behavior is owned by LS-S029; subjective voice quality and production acceptance remain deferred."
+}
