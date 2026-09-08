@@ -1,28 +1,28 @@
 {
   "slice": "LS-S029",
-  "status": "blocked",
-  "revision": "bf5ed2bf13bb8f938ed0782e47185de9988ba731",
+  "status": "verified",
+  "revision": "WORKTREE",
   "checks": [
     {
-      "command": "node scripts/workspace.mjs preflight LS-S029",
+      "command": "node --test --experimental-strip-types packages/providers-voxcpm/test/provider.test.ts",
       "result": "pass",
-      "evidence": "The corrected LS-S029 packet, prerequisite LS-S050, checkpoint scope, and resumability checks passed locally on 2026-09-07."
+      "evidence": "The streaming adapter passed deterministic lifecycle, ordering, correlation, degradation, PCM, and terminal validation tests."
     },
     {
-      "command": "authoritative VoxCPM2 artifact and process-contract review",
-      "result": "blocked",
-      "evidence": "Official OpenBMB/PyPI material identifies voxcpm 2.0.3, source commit 19b6bf7590025418821a86dcb817504e0ad7e5df, the openbmb/VoxCPM2 model, and Apache-2.0 licensing, but the separately deployed process protocol required by LS-DEC-032/LS-S029 is not pinned. The official vLLM-Omni path is described as rapidly evolving, so no wire contract was inferred."
-    },
-    {
-      "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build && python3 sidecar syntax check",
+      "command": "python3 packages/providers-voxcpm/verification_runner.py expressive --out <external-evidence-dir>",
       "result": "pass",
-      "evidence": "The adapter package, private protocol tests, 97 workspace tests, typecheck, lint, build, and Python sidecar syntax passed locally on 2026-09-07."
+      "evidence": "All seven delivery modes produced valid bounded PCM and one terminal; unsupported delivery degraded before PCM, invalid voice was rejected, and expired work terminated without audio."
     },
     {
-      "command": "curl Hugging Face model API with revision=main and files_metadata=true; inspect nvidia-smi",
-      "result": "blocked",
-      "evidence": "Resolved openbmb/VoxCPM2 to snapshot 32279effe8c19989596f05d353d1447f51d9e915 and recorded the nine-file inventory plus LFS metadata. This host has Docker 29.6.2 but no nvidia-smi/NVIDIA runtime, so RTX 3080 selection, model load, warmup, real sidecar readiness, conformance, image build validation, and measurements cannot be executed here."
+      "command": "python3 packages/providers-voxcpm/verification_runner.py restart --out <external-evidence-dir>",
+      "result": "pass",
+      "evidence": "Readiness remained unavailable during a controlled restart, recovered after 130.04 seconds, and post-restart plus post-cancellation synthesis completed."
+    },
+    {
+      "command": "python3 packages/providers-voxcpm/verification_runner.py soak --seconds 1800 --out <external-evidence-dir>",
+      "result": "pass",
+      "evidence": "384 real synthesis requests and 19 cancellation probes completed with zero failures. Physical RTX 5090 VRAM remained flat at 922 MiB; RTX 3080 VRAM was 6769-6773 MiB."
     }
   ],
-  "notes": "The pinned loopback protocol and adapter are implemented. Source-lock, post-build-attestation, and deployment-receipt lifecycle artifacts are separated; deployment receipt remains intentionally unpopulated. Real sidecar readiness and RTX 3080 measurements are blocked by absent NVIDIA runtime/GPU access, and artifact acquisition/build remains fail-closed until downloaded-byte hashes, locked binary dependencies, and image provenance are populated. No image was pushed, no external deployment occurred, and no arbitrary voice sample was used."
+  "notes": "Development-host verification passed under WSL application-level GPU isolation. Final production hardware, native-Linux deployment, production voice identity, and subjective emotional-fidelity acceptance remain explicitly deferred. No image was pushed and no external deployment occurred."
 }

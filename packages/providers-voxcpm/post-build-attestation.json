@@ -1,1 +1,21 @@
-{"schemaVersion":"1.0.0","status":"not-built","sourceLockSha256":null,"sourceRevision":"7731cd6e2e5670036ea558035ac9b157d8a68d19","buildDefinitionSha256":null,"buildCommand":null,"builderRevision":null,"ociManifestDigest":null,"ociConfigDigest":null,"platform":null,"createdAt":null,"sbomSha256":null,"vulnerabilityScan":null,"conformanceEvidence":"implementation/evidence/LS-S029.json","modelBundleManifestSha256":null,"voiceBundleManifestSha256":null}
+{
+  "schemaVersion": "1.0.0",
+  "status": "locally-built",
+  "sourceLockSha256": "3b3d84e1f78e345109f1f22164e3a5d53c4411e75500ddd8925926925a545d48",
+  "sourceRevision": "19b6bf7590025418821a86dcb817504e0ad7e5df",
+  "buildDefinitionSha256": "3ca1c72b9e21440fcb538b5abdd5f567bd764d7226b92e3d793fce435631d9d0",
+  "buildCommand": "docker build -f packages/providers-voxcpm/sidecar/Dockerfile.runtime -t lifestream/voxcpm2:ls-s029-fixed packages/providers-voxcpm/sidecar",
+  "builderRevision": "Docker Engine 29.6.2 / BuildKit",
+  "ociIndexDigest": "sha256:3e8c6f8c6c8cee1471ddd74867160438ace849f9921b5d52997a88db251deb99",
+  "ociManifestDigest": "sha256:829de8326355d4876e751a298683e87ae1a6e32fc0b1b982dc874be40cd0d12a",
+  "ociConfigDigest": "sha256:5806411b8af2aa21ca1870746f2c7f914430364a48b4fd1397b551c207b22085",
+  "platform": "linux/amd64",
+  "createdAt": "2026-09-08T03:32:18Z",
+  "sbomSha256": null,
+  "vulnerabilityScan": null,
+  "conformanceEvidence": "implementation/evidence/LS-S029-wsl-warmup.json",
+  "modelBundleManifestSha256": "0af0758965a5f848cc317758286e66a059a3674c266a27bb1c86c4d251544819",
+  "voiceBundleManifestSha256": "c6822a9ed1c17c5c18244a81ed2817556fd2d3848db657b700d83fd3f96d3c88",
+  "registryDigest": null,
+  "imagePushed": false
+}

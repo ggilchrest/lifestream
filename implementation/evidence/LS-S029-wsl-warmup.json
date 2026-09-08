@@ -1,1 +1,54 @@
-{"schemaVersion":"1.0.0","evidenceKind":"development-host-execution","claimScope":"WSL development verification; not native-Linux or production acceptance","repositoryRevision":"7731cd6e2e5670036ea558035ac9b157d8a68d19","imageDigest":"sha256:779bd35a55d86804a59252ece442d535a0f6caaa83e6a8e9e352964dd44e6c8a","modelSnapshot":"32279effe8c19989596f05d353d1447f51d9e915","isolationClaim":"WSL application-level GPU isolation","results":{"hostPreflight":"pass","expressiveConformance":"fail","restartReadiness":"pass","restartTerminalAndFencing":"fail-not-observable","soakAdmission":"fail","soak30Minutes":"not-run-after-failed-admission"},"observations":{"expressiveModes":["neutral","explanation","reassurance","concen","celebration","waning","emergency"],"eventsPerRequest":["preAudio"],"pcmFrames":0,"terminalEvents":0,"restartUnavailableProbes":46,"restartReadyAttempt":47,"rtx3080ResidentMiB":6755,"rtx5090BaselineMiBRange":[893,913],"rtx5090MaterialModelAllocation":false},"failedCriterion":"The provisioned image is the readiness skeleton: synthesis retuns preAudio only, no PCM data, typed degradation, effective synthesis, or terminal outcome.","remediation":"Implement generate_streaming-to-bounded-pcm_s16le lifecycle, rebuild locally, and rerun.","rawEvidence":["C:/AI-Stack/logs/LS-S029-restart-20260907.log","C:/AI-Stack/logs/LS-S029-expressive-soak-gate-20260907.log"],"nonClaims":["subjective Tifa identity","emotional fidelity","native-Linux production","production acceptance"],"imagePushed":false,"extenallyDeployed":false,"timestamp":"2026-09-08T02:45:00Z"}
+{
+  "schemaVersion": "1.0.0",
+  "evidenceKind": "development-host-execution",
+  "claimScope": "WSL development verification; not strict container isolation, native-Linux, production hardware, or production voice acceptance",
+  "repositoryBaseRevision": "96f4260bae6e67e93668a8a22a0557f464455888",
+  "image": {
+    "localTag": "lifestream/voxcpm2:ls-s029-fixed",
+    "ociIndexDigest": "sha256:3e8c6f8c6c8cee1471ddd74867160438ace849f9921b5d52997a88db251deb99",
+    "ociManifestDigest": "sha256:829de8326355d4876e751a298683e87ae1a6e32fc0b1b982dc874be40cd0d12a",
+    "ociConfigDigest": "sha256:5806411b8af2aa21ca1870746f2c7f914430364a48b4fd1397b551c207b22085",
+    "pushed": false
+  },
+  "runtimeRevision": "19b6bf7590025418821a86dcb817504e0ad7e5df",
+  "modelSnapshot": "32279effe8c19989596f05d353d1447f51d9e915",
+  "mappingRevision": "voxcpm2-map-1",
+  "isolation": {
+    "claim": "WSL application-level GPU isolation",
+    "cudaVisibleDevices": "1",
+    "providerLocalDevice": "cuda:0",
+    "strictContainerInvisibilityClaimed": false,
+    "rtx5090MaterialModelAllocation": false
+  },
+  "results": {
+    "hostPreflight": "pass",
+    "expressiveConformance": "pass",
+    "restartAndDegradedReadiness": "pass",
+    "cancellationFencing": "pass",
+    "soak30Minutes": "pass"
+  },
+  "measurements": {
+    "restartRecoverySeconds": 130.04,
+    "expressiveFirstPcmMsRange": [85.18, 1205.76],
+    "soakRequests": 384,
+    "soakCancellationProbes": 19,
+    "soakFailures": 0,
+    "soakLatencyMs": { "p50": 4093.43, "p95": 8986.44, "max": 12177.95 },
+    "soakFirstPcmMs": { "p50": 88.84, "p95": 107.43, "max": 390.37 },
+    "rtx5090MemoryMiB": { "min": 922, "max": 922 },
+    "rtx3080MemoryMiB": { "min": 6769, "max": 6773 },
+    "rtx3080UtilizationPctMax": 95,
+    "rtx3080TemperatureCMax": 79,
+    "rtx3080PowerWMax": 302.74,
+    "containerMemoryAtEnd": "4.904-4.905 GiB"
+  },
+  "rawEvidence": "/home/ggilc/.cache/lifestream/voxcpm2/evidence/LS-S029-fixed-20260908",
+  "nonClaims": [
+    "subjective Tifa identity or emotional fidelity",
+    "strict container GPU invisibility",
+    "native-Linux production acceptance",
+    "production hardware or production voice acceptance"
+  ],
+  "externalDeployment": false,
+  "timestamp": "2026-09-08T04:14:14Z"
+}
