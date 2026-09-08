@@ -3,61 +3,51 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "96f4260bae6e67e93668a8a22a0557f464455888",
-  "currentRevision": "41e13b513d0c5c5b6cc2b2fb961301d502ef4012",
-  "activeSlice": "LS-S049",
+  "currentRevision": "WORKTREE",
+  "activeSlice": "LS-S039",
   "sliceStatus": "verified",
   "completedSlices": [
     "LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010",
     "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S017", "LS-S018", "LS-S019", "LS-S020",
     "LS-S021", "LS-S022", "LS-S023", "LS-S024", "LS-S025", "LS-S026", "LS-S027", "LS-S028", "LS-S029", "LS-S030",
     "LS-S031", "LS-S032", "LS-S033", "LS-S034", "LS-S035", "LS-S036", "LS-S037", "LS-S038", "LS-S040", "LS-S041",
-    "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S046", "LS-S047", "LS-S049", "LS-S050"
+    "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S046", "LS-S047", "LS-S039", "LS-S049", "LS-S050"
   ],
   "allowedFiles": [
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S049.json",
-    "package.json",
-    "packages/providers-nemo-speech/src/index.ts",
-    "packages/providers-nemo-speech/src/provider.ts",
-    "packages/providers-nemo-speech/test/provider.test.ts",
-    "packages/providers-nemo-speech/provider-manifest.json",
-    "packages/providers-nemo-speech/tsconfig.json",
-    "packages/providers-nemo-speech/package.json"
+    "implementation/candidate-manifest.json",
+    "implementation/evidence/LS-S039.json",
+    "scripts/candidate-manifest.test.mjs"
   ],
   "changedFiles": [
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S049.json",
-    "package.json",
-    "packages/providers-nemo-speech/src/index.ts",
-    "packages/providers-nemo-speech/src/provider.ts",
-    "packages/providers-nemo-speech/test/provider.test.ts",
-    "packages/providers-nemo-speech/provider-manifest.json",
-    "packages/providers-nemo-speech/tsconfig.json",
-    "packages/providers-nemo-speech/package.json"
+    "implementation/candidate-manifest.json",
+    "implementation/evidence/LS-S039.json",
+    "scripts/candidate-manifest.test.mjs"
   ],
   "validation": [
     {
-      "command": "node --test --experimental-strip-types packages/providers-voxcpm/test/provider.test.ts",
+      "command": "node --test --experimental-strip-types scripts/candidate-manifest.test.mjs",
       "result": "pass",
-      "evidence": "Two deterministic streaming-adapter tests passed on 2026-09-08."
+      "evidence": "Three deterministic bounded-candidate and LS-S048 reconciliation tests passed on 2026-09-08."
     },
     {
-      "command": "python3 packages/providers-voxcpm/verification_runner.py expressive|restart|soak --out <external-evidence-dir>",
+      "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "Real-provider expressive and restart verification passed; the 1800-second soak completed 384 requests and 19 cancellation probes with zero failures and no material RTX 5090 allocation."
+      "evidence": "Public workspace structural validation passed on 2026-09-08."
     },
     {
       "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build && node scripts/workspace.mjs check && git diff --check",
       "result": "pass",
-      "evidence": "Workspace typecheck, 97 tests, lint, builds, structural validation, and whitespace validation passed on 2026-09-08."
+      "evidence": "LS-S029 and LS-S050 runtime evidence remains referenced by their existing records; current candidate checks passed."
     }
   ],
   "decisions": [
     "WSL development isolation remains application-level: host physical GPU index 1 is exposed as provider-local cuda:0 through CUDA_VISIBLE_DEVICES=1; strict container GPU invisibility is not claimed."
   ],
   "blockers": [],
-  "nextAction": "LS-S049 is verified. The next material choice is the LS-S048 reference-TTS package boundary versus the already verified LS-S029 adapter, or a named LS-S039 candidate claim; request direction before expanding scope.",
-  "updatedAt": "2026-09-08T04:16:00Z",
+  "nextAction": "LS-S039 bounded VoxCPM2 development-host candidate is verified. LS-S048 is superseded/absorbed and is not executable; stop for a new claim or material decision.",
+  "updatedAt": "2026-09-08T05:00:00Z",
   "updatedBy": "Codex",
-  "notes": "LS-S028 adapter surface and compatibility pin corrected and verified against PWCE committed revision a2cb5b5. LS-S049 fixture-interchangeable NeMo adapter and ai5090 development-host probe are verified. LS-S047 provider-neutral expressive contract verification and LS-S029 real-provider WSL verification remain complete. No image was pushed and no external deployment occurred."
+  "notes": "LS-S048 was reconciled as a stable superseded/absorbed identifier; no duplicate provider package or independent LS-S048 evidence was created. LS-S039 is limited to the named development-host candidate and consumes actual LS-S029/LS-S050 evidence. No image was pushed and no external deployment occurred."
 }

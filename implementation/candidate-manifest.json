@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "1.0.0",
+  "claimName": "Lifestream VoxCPM2 TTS Development-Host Candidate",
+  "claimClass": "bounded-development-host-candidate",
+  "status": "candidate",
+  "production": false,
+  "selectedAdapter": {
+    "package": "packages/providers-voxcpm",
+    "providerFamily": "VoxCPM",
+    "modelFamily": "VoxCPM2",
+    "decision": "LS-DEC-032",
+    "contract": "TextToSpeechProvider 2.0.0",
+    "protocolRevision": "voxcpm.loopback.v1",
+    "expressiveMappingRevision": "voxcpm2-map-1",
+    "voiceFixtureRevision": "fixture-voice-design@1",
+    "runtime": "voxcpm==2.0.3",
+    "runtimeCommit": "19b6bf7590025418821a86dcb817504e0ad7e5df",
+    "modelSnapshot": {
+      "repository": "openbmb/VoxCPM2",
+      "revision": "32279effe8c19989596f05d353d1447f51d9e915",
+      "weightsLfsSha256": "f7f964cfa9da23653baec6e6f7750719977ad944ed9f95fe52fe3a620506891d",
+      "vocoderLfsSha256": "94b5d51e107e0507d4acc976cfdadb64edd6fd06d1f751dadbf2fd1594274bf1"
+    }
+  },
+  "evidence": [
+    { "slice": "LS-S029", "path": "implementation/evidence/LS-S029.json", "status": "verified" },
+    { "slice": "LS-S050", "path": "implementation/evidence/LS-S050.json", "status": "verified" }
+  ],
+  "hostBoundary": {
+    "profile": "wsl-development",
+    "placement": "RTX 3080 host physical index 1, provider-local cuda:0",
+    "isolation": "WSL application-level GPU isolation only"
+  },
+  "lsS048OverlapAudit": [
+    { "item": "goal", "disposition": "satisfied", "by": ["LS-S029", "LS-S050"] },
+    { "item": "adapter package and provider identity", "disposition": "satisfied", "by": ["LS-S029"], "note": "The existing provider-family package is the sole adapter package; no numeral-suffixed package is required." },
+    { "item": "exact provider, runtime, model, and artifact pins", "disposition": "satisfied", "by": ["LS-S029"], "note": "Provider and artifact manifests carry the VoxCPM2 identity and immutable revisions; release-image provenance remains excluded." },
+    { "item": "canonical expressive mapping and TTS 2.0.0 boundary", "disposition": "satisfied", "by": ["LS-S050", "LS-S029"] },
+    { "item": "streaming, cancellation, deadlines, limits, redaction, replay isolation, and typed degradation", "disposition": "satisfied", "by": ["LS-S029", "LS-S050"] },
+    { "item": "resolved device identity and development-host feasibility", "disposition": "satisfied", "by": ["LS-S029"] },
+    { "item": "fixture/provider conformance and LS-TEST-065 intent", "disposition": "absorbed", "by": ["LS-S029", "LS-S050"], "note": "No independent LS-S048 execution or evidence is claimed." },
+    { "item": "LS-S048 files and evidence report", "disposition": "superseded", "by": ["LS-S029", "LS-S050"], "note": "The voxcpm2 file list is not an executable scope." },
+    { "item": "production, native-Linux, hardware-performance, perceptual-identity, and release provenance", "disposition": "deferred", "by": ["LS-S029"], "note": "These are exclusions or separately gated claims, not a unique LS-S048 implementation gap." }
+  ],
+  "knownExclusions": [
+    "strict container GPU invisibility under WSL",
+    "native-Linux acceptance",
+    "production RTX 3090/3080 acceptance",
+    "final Tifa voice identity and subjective emotional-fidelity acceptance",
+    "production deployment",
+    "release-image provenance while the packaging inputs remain pending"
+  ],
+  "deferredAcceptance": ["LS-DEC-012 performance targets", "LS-DEC-013 perceptual acceptance", "LS-DEC-025 non-fixture Human administration", "LS-S038 reproducible packaging/provenance"],
+  "unresolvedDecisions": ["LS-DEC-011 standard inference and renderer entries remain outside this candidate claim"],
+  "sourceRevision": "78601cb8397134ef2b463199f16fd975b3875fd0"
+}

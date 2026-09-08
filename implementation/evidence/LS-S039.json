@@ -1,0 +1,14 @@
+{
+  "slice": "LS-S039",
+  "status": "verified",
+  "claim": "Lifestream VoxCPM2 TTS Development-Host Candidate",
+  "claimClass": "bounded-development-host-candidate",
+  "revision": "78601cb8397134ef2b463199f16fd975b3875fd0",
+  "checks": [
+    { "command": "node --test --experimental-strip-types scripts/candidate-manifest.test.mjs", "result": "pass", "evidence": "Three deterministic candidate-boundary tests passed on 2026-09-08." },
+    { "command": "node scripts/workspace.mjs check", "result": "pass", "evidence": "Public workspace structural checks passed on 2026-09-08." },
+    { "command": "git diff --check", "result": "pass", "evidence": "No whitespace errors in the candidate changes." }
+  ],
+  "evidenceSources": ["implementation/evidence/LS-S029.json", "implementation/evidence/LS-S050.json"],
+  "limitations": ["This is not a production, native-Linux, strict-container-isolation, perceptual, or release-provenance claim.", "LS-S048 has no independent execution evidence; its material scope is absorbed by LS-S029 and LS-S050."]
+}
