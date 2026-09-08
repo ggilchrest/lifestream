@@ -1,7 +1,7 @@
 {
   "slice": "LS-S029",
   "status": "blocked",
-  "revision": "ae5888c0f493ef965def419f94368e8ddff9f2c3",
+  "revision": "4524a330b8f9c3b00b30bee046b9f29b2488bd3e",
   "checks": [
     {
       "command": "node scripts/workspace.mjs preflight LS-S029",
@@ -16,7 +16,7 @@
     {
       "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build && python3 sidecar syntax check",
       "result": "pass",
-      "evidence": "The adapter package, private protocol tests, 101 workspace tests, typecheck, lint, build, and Python sidecar syntax passed locally on 2026-09-07."
+      "evidence": "The adapter package, private protocol tests, 102 workspace tests, typecheck, lint, build, and Python sidecar syntax passed locally on 2026-09-07."
     },
     {
       "command": "curl Hugging Face model API with revision=main and files_metadata=true; inspect nvidia-smi",
@@ -51,12 +51,12 @@
     {
       "command": "node --test --experimental-strip-types packages/providers-voxcpm/test/provider.test.ts && pnpm typecheck && pnpm lint",
       "result": "pass",
-      "evidence": "Six VoxCPM adapter tests passed, including early preAudio delivery before response completion, transport cancellation mapping, malformed lifecycle rejection, request/decision/voice/mapping correlation and fixed-format rejection before audio, terminal accounting, and request output-bound enforcement. TypeScript and ESLint passed after replacing full-response buffering with incremental bounded NDJSON consumption."
+      "evidence": "Seven VoxCPM adapter tests passed, including early preAudio delivery before response completion, transport cancellation mapping, malformed lifecycle rejection, request/decision/voice/mapping correlation and fixed-format rejection before audio, terminal accounting, stale delivery/voice revision rejection before transport, and request output-bound enforcement. TypeScript and ESLint passed after replacing full-response buffering with incremental bounded NDJSON consumption."
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "All 101 workspace tests passed on 2026-09-07 with loopback binding enabled for the server integration fixtures."
+      "evidence": "All 102 workspace tests passed on 2026-09-07 with loopback binding enabled for the server integration fixtures."
     },
     {
       "command": "ai5090 disposable corrected sidecar cancellation-fencing launch",
