@@ -33,6 +33,7 @@ export class VoxCpmProvider implements TextToSpeechProvider {
   constructor(options: VoxCpmOptions) { this.options = options; this.requestFetch = options.fetch ?? globalThis.fetch; }
   capabilities(): TtsCapabilities { return { contractVersion: "2.0.0", supportedDimensions: ["affect", "urgency", "deliveryMode", "pace", "energy"], degradableDimensions: ["affect", "pace", "energy"], supportsStreaming: true, maxOutputSamples: 48000 }; }
   async *synthesize(request: TtsRequest, signal?: AbortSignal): AsyncIterable<TtsEvent> {
+    if (request.format.sampleRateHz !== 48000 || request.format.channels !== 1) { yield { kind: "terminal", sequence: 0, segmentId: request.segmentId, outcome: "failed", outputSamples: 0, frameCount: 0, disposition: "providerFailure", degradedDimensions: [], mappingRevision: this.options.mappingRevision }; return; }
     const body: ProtocolRequest = { protocolVersion: PROTOCOL_VERSION, requestId: `${request.delivery.interactionId}:${request.segmentId}`, correlationId: request.decision.decisionId, interactionId: request.delivery.interactionId, deadlineAt: request.deadlineAt, voiceBundleKey: this.options.voiceBundleKey, voiceBundleRevision: this.options.voiceBundleRevision, text: request.text, delivery: request.delivery, format: { encoding: "pcm_s16le", sampleRateHz: 48000, channels: 1 } };
     let response: Response;
     try { response = await this.requestFetch(`${this.options.baseUrl}/v1/tts/synthesize`, { method: "POST", headers: { "content-type": "application/json", accept: "application/x-ndjson" }, body: JSON.stringify(body), ...(signal ? { signal } : {}) }); } catch { yield { kind: "terminal", sequence: 0, segmentId: request.segmentId, outcome: signal?.aborted ? "cancelled" : "failed", outputSamples: 0, frameCount: 0, disposition: signal?.aborted ? "cancelled" : "providerFailure", degradedDimensions: [], mappingRevision: this.options.mappingRevision }; return; }
@@ -46,6 +47,7 @@ export class VoxCpmProvider implements TextToSpeechProvider {
         if (!sawPreAudio && event.kind !== "preAudio") throw new Error("protocol lifecycle invalid");
         if (event.kind === "preAudio") {
           if (sawPreAudio) throw new Error("duplicate preAudio event");
+          if (event.requestId !== body.requestId || event.correlationId !== body.correlationId || event.voiceBundleRevision !== body.voiceBundleRevision || event.mappingRevision !== this.options.mappingRevision) throw new Error("protocol correlation mismatch");
           sawPreAudio = true;
         }
         if (event.kind === "data" && (event.sampleCount < 1 || event.sampleCount > 4800 || event.sampleOffset < 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(event.dataBase64))) throw new Error("protocol audio chunk invalid");
