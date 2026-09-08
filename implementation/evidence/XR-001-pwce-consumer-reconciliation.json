@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "1.0.0",
+  "evidenceId": "XR-001-pwce-consumer-reconciliation",
+  "recordedAt": "2026-09-08T18:14:22Z",
+  "status": "verified",
+  "claimType": "development contract and authenticated HTTP conformance",
+  "claim": "The Lifestream PWCE adapter is a buildable workspace package whose operational calls fail closed unless the served PWCE profile, bundle digest, seven artifact pins, and generated-client digest match the Lifestream consumer pin.",
+  "repositories": {
+    "lifestreamImplementationRevision": "8297cbc571aa776b47459c40185f4971e295ac2f",
+    "pwceProducerRevision": "d3ac5c4591c25446f51d9961aef7d24f1a22b0f2"
+  },
+  "contractIdentity": {
+    "bundleId": "pwce-agent-gateway.bundle.v1",
+    "bundleVersion": "1.0.0",
+    "profileId": "pwce-agent-gateway.v1",
+    "profileVersion": "1.0.0",
+    "bundleDigest": "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2",
+    "generatedClientSha256": "fdb2a5a425b1a54e0d41c923e6ae701eb865e710334869c885b499f06abde175",
+    "artifactCount": 7,
+    "lifestreamMappingProfile": "lifestream-pwce.v1@1.0.0",
+    "mappingSchemaSha256": "8daa8430d96db08631f950a86a757b5e49cbdec635db5a604a141100afd9998d",
+    "fixtureSha256": "9554ff2ddd4c1e1564961d1d1a9d0e8e98dc03088e0443967f1279a15e02df39"
+  },
+  "verification": [
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/client.test.ts packages/contracts/test/pwce-compatibility.test.ts packages/runtime/test/pwce-mapping.test.ts",
+      "environment": "deterministic fixture transport",
+      "result": "13 passed, 0 failed"
+    },
+    {
+      "command": "PWCE_GATEWAY_URL=http://127.0.0.1:4193 PWCE_GATEWAY_TOKEN=<redacted-disposable> node --test --experimental-strip-types packages/providers-pwce/test/client.test.ts packages/contracts/test/pwce-compatibility.test.ts packages/runtime/test/pwce-mapping.test.ts",
+      "environment": "authenticated local PWCE development gateway at producer revision",
+      "result": "13 passed, 0 failed"
+    },
+    {
+      "command": "corepack pnpm test",
+      "environment": "local development host with loopback permission",
+      "result": "105 passed, 0 failed"
+    },
+    {
+      "command": "corepack pnpm typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "corepack pnpm lint",
+      "result": "passed"
+    },
+    {
+      "command": "corepack pnpm build",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "passed; structure only"
+    },
+    {
+      "command": "npm test",
+      "repository": "PWCE",
+      "result": "138 passed, 0 failed"
+    },
+    {
+      "command": "npm run validate",
+      "repository": "PWCE",
+      "result": "13 fixtures, 3 manifest checks, 0 failures"
+    }
+  ],
+  "rawEvidenceOutsideGit": [
+    "/tmp/tifa-orchestration-scn012/state.json"
+  ],
+  "exclusions": [
+    "The adapter is not instantiated by apps/server.",
+    "No full SCN-012 product scenario is accepted.",
+    "No Home Assistant source was configured for this smoke; reads used the PWCE development gateway's honest local state.",
+    "No production, deployment, performance, perceptual, hardware, or Human acceptance is claimed.",
+    "The composition workspace has no immutable revision, so no accepted product compatibility lock can be issued."
+  ]
+}
