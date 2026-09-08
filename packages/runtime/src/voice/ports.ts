@@ -34,7 +34,7 @@ export async function validateSttInput(input: AsyncIterable<SttInput>, expected:
   for await (const item of input) {
     if (ended || !audioInputId) audioInputId ??= item.audioInputId;
     if (item.audioInputId !== audioInputId) throw new Error("audio input identity changed");
-    if (item.type === "frame") { if (item.frame.sequence !== nextSequence) throw new Error("audio sequence gap"); validateAudioFrame(item.frame, expected); samples += item.frame.sampleCount; nextSequence += 1; }
+    if (item.type === "frame") { if (item.frame.sequence !== nextSequence) throw new Error("audio sequence gap"); if (item.frame.sampleOffset !== samples) throw new Error("audio sample offset mismatch"); validateAudioFrame(item.frame, expected); samples += item.frame.sampleCount; nextSequence += 1; }
     else { if (item.nextSequence !== nextSequence || item.sampleCount !== samples) throw new Error("audio end count mismatch"); ended = true; }
   }
   if (!ended) throw new Error("audio stream missing end");
