@@ -1,7 +1,7 @@
 {
   "slice": "LS-S029",
   "status": "blocked",
-  "revision": "bf5ed2bf13bb8f938ed0782e47185de9988ba731",
+  "revision": "5e4c3e2",
   "checks": [
     {
       "command": "node scripts/workspace.mjs preflight LS-S029",
@@ -20,9 +20,14 @@
     },
     {
       "command": "curl Hugging Face model API with revision=main and files_metadata=true; inspect nvidia-smi",
+      "result": "pass",
+      "evidence": "Resolved openbmb/VoxCPM2 to snapshot 32279effe8c19989596f05d353d1447f51d9e915 and recorded the nine-file inventory plus LFS metadata. On ai5090 WSL Ubuntu-24.04-AI, host preflight passed physical index 1 as NVIDIA GeForce RTX 3080 with 10240 MiB; the profile exports CUDA_VISIBLE_DEVICES=1 and logical cuda:0. Docker 29.7.2 and the selected Python 3.11.13 runtime are available."
+    },
+    {
+      "command": "ai5090 host-observed loopback /healthz /readyz /v1/capabilities and container inspection",
       "result": "blocked",
-      "evidence": "Resolved openbmb/VoxCPM2 to snapshot 32279effe8c19989596f05d353d1447f51d9e915 and recorded the nine-file inventory plus LFS metadata. This host has Docker 29.6.2 but no nvidia-smi/NVIDIA runtime, so RTX 3080 selection, model load, warmup, real sidecar readiness, conformance, image build validation, and measurements cannot be executed here."
+      "evidence": "The existing loopback container ls-s029-warmup reports alive/ready, runtime revision 19b6bf7590025418821a86dcb817504e0ad7e5df, model snapshot 32279effe8c19989596f05d353d1447f51d9e915, Python 3.11.13, and loopback binding. Its observed image manifest descriptor is sha256:d55edfb66afa15172ba8bd6abb17f25790544ac9213b2a5d0377830e586b3038, but its mounted sidecar source is the prior skeleton: it emits preAudio only and does not produce data or terminal events. It also requests all GPUs at the Docker layer. This is host-observed/operator-supplied evidence, not LS-S029 acceptance."
     }
   ],
-  "notes": "The pinned loopback protocol and adapter are implemented. Source-lock, post-build-attestation, and deployment-receipt lifecycle artifacts are separated; deployment receipt remains intentionally unpopulated. Real sidecar readiness and RTX 3080 measurements are blocked by absent NVIDIA runtime/GPU access, and artifact acquisition/build remains fail-closed until downloaded-byte hashes, locked binary dependencies, and image provenance are populated. No image was pushed, no external deployment occurred, and no arbitrary voice sample was used."
+  "notes": "The pinned loopback protocol and adapter are implemented. Source-lock, post-build-attestation, and deployment-receipt lifecycle artifacts are separated; deployment receipt remains intentionally unpopulated. WSL GPU preflight and host runtime availability are now evidenced, but the existing host container is an older incomplete skeleton and no corrected image build, real PCM conformance, cancellation/deadline/fencing, or synchronized telemetry receipt has been accepted. No image was pushed, no external deployment occurred, and no arbitrary voice sample was used."
 }

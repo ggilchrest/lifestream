@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "bf5ed2bf13bb8f938ed0782e47185de9988ba731",
+  "baseRevision": "5e4c3e2bf066da2db251fa3d4a07d38f8b8aacc2",
   "currentRevision": "WORKTREE",
   "activeSlice": "LS-S029",
   "sliceStatus": "blocked",
@@ -15,9 +15,9 @@
     { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally on 2026-09-07." }
   ],
   "decisions": [],
-  "blockers": ["The official VoxCPM2 sources pin the voxcpm package/model family, but do not provide a stable, versioned separately-deployed process protocol that can be recorded for LS-S029; vLLM-Omni is explicitly described as rapidly evolving. Voice asset provenance/rights and a resolved model checkpoint digest also remain implementation-manifest inputs rather than ratified values."],
-  "nextAction": "Run the acquisition/build/readiness/measurement workflow on the designated Linux host with NVIDIA RTX 3080 access; populate the source lock, then generate the external post-build attestation after local image build.",
-  "updatedAt": "2026-09-07T19:00:00Z",
+  "blockers": ["The ai5090 WSL host is reachable and passes the RTX 3080 application-level preflight, but the observed ls-s029-warmup image contains the prior preAudio-only skeleton and is not conformance evidence. Build and execute the corrected provider image or an equivalent host-verified corrected runtime, then collect synchronized host telemetry and the remaining lifecycle evidence. Source-lock downloaded-byte hashes, locked binary dependencies, image provenance, and deployment receipt remain unpopulated."],
+  "nextAction": "Build the corrected sidecar image on ai5090 from the pinned source and staged model without pushing it; run readiness, PCM lifecycle, cancellation/deadline/fencing, and synchronized telemetry checks; populate source-lock and post-build attestation only from captured artifacts.",
+  "updatedAt": "2026-09-08T00:20:00Z",
   "updatedBy": "Codex",
   "notes": "LS-S038 verifies safe fixture-only local packaging; real provider and non-fixture authority claims remain separately gated."
 }
