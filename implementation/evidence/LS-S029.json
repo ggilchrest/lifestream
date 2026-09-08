@@ -1,7 +1,7 @@
 {
   "slice": "LS-S029",
   "status": "verified",
-  "revision": "WORKTREE",
+  "revision": "46fea7c9196ba8f764b721366b4468b4b9832d18",
   "checks": [
     {
       "command": "node --test --experimental-strip-types packages/providers-voxcpm/test/provider.test.ts",
