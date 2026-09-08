@@ -15,8 +15,8 @@
     { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally on 2026-09-07." }
   ],
   "decisions": [],
-  "blockers": ["The corrected sidecar now loads and runs VoxCPM2 on ai5090, but a complete deterministic preAudio/data/terminal response and cancellation/deadline/fencing evidence were not captured. The existing operator-owned container remains a preAudio-only skeleton. Source-lock downloaded-byte hashes, locked binary dependencies, image provenance, and deployment receipt remain unpopulated."],
-  "nextAction": "Harden the corrected sidecar's request lifecycle and run a complete short utterance with bounded output, then capture synchronized host telemetry and cancellation/deadline/fencing results before updating LS-S029 acceptance status.",
+  "blockers": ["A complete corrected-sidecar preAudio/data/terminal fixture is now captured, but synchronized host telemetry, cancellation/deadline/fencing evidence, source-lock downloaded-byte hashes, locked binary dependencies, image provenance, and deployment receipt remain incomplete. The existing operator-owned container remains a preAudio-only skeleton."],
+  "nextAction": "Capture a timestamp-correlated telemetry receipt during a complete corrected-sidecar fixture, then exercise cancellation and deadline fencing before updating LS-S029 acceptance status.",
   "updatedAt": "2026-09-08T00:20:00Z",
   "updatedBy": "Codex",
   "notes": "LS-S038 verifies safe fixture-only local packaging; real provider and non-fixture authority claims remain separately gated."
