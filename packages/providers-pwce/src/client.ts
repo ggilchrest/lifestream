@@ -1,7 +1,8 @@
 export type PwceProfile = { readonly profileId: string; readonly profileVersion: string; readonly bundleId: string; readonly bundleVersion: string; readonly schemaStatus: string; readonly schemaDigest: string; readonly operationCatalogVersion: string; readonly operationCatalogDigest: string; readonly compatibilityRange?: { readonly minimum: string; readonly maximum: string }; readonly operationCatalog: readonly { readonly operation: string; readonly kind?: string; readonly availability?: string }[] };
 export type PwceClientOptions = { readonly baseUrl: string; readonly token: string; readonly fetchImpl?: typeof fetch };
 export type PwceClientResult = { readonly status: string; readonly [key: string]: unknown };
-export const EXPECTED_PWCE_PROFILE = Object.freeze({ profileId: "pwce-agent-gateway.v1", profileVersion: "1.0.0", bundleId: "pwce-agent-gateway.bundle.v1", bundleVersion: "1.0.0", schemaDigest: "3af96275bc26754a8cebc64febb10b5ca50c951fd5003f106e06cfda846d4d3b", operationCatalogVersion: "0.1.0", operationCatalogDigest: "445cb4e4b9811a26a41c5821c7d68b09f377b69d24d42ec6dcd0acec5d950b65" });
+export type PwceInvalidationEvent = { readonly id: string | null; readonly event: string; readonly data: string };
+export const EXPECTED_PWCE_PROFILE = Object.freeze({ profileId: "pwce-agent-gateway.v1", profileVersion: "1.0.0", bundleId: "pwce-agent-gateway.bundle.v1", bundleVersion: "1.0.0", schemaDigest: "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2", operationCatalogVersion: "0.1.0", operationCatalogDigest: "445cb4e4b9811a26a41c5821c7d68b09f377b69d24d42ec6dcd0acec5d950b65" });
 
 export class PwceGatewayClient {
   private readonly baseUrl: string; private readonly token: string; private readonly fetchImpl: typeof fetch;
@@ -11,6 +12,29 @@ export class PwceGatewayClient {
   async request(payload: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { const profile = await this.profile(signal); if (!profile.operationCatalog.some((entry) => entry.operation === payload.operation)) throw new Error("PWCE operation is not advertised"); return this.json("/gateway/v1/request", { method: "POST", body: payload, signal }); }
   getPreparedInputs(authorityContextRef: string, siteRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "context.getPreparedInputs", authorityContextRef, siteRef }, signal); }
   queryContext(authorityContextRef: string, query: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "context.query", authorityContextRef, ...query }, signal); }
+  getEvidence(authorityContextRef: string, evidenceRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "evidence.get", authorityContextRef, evidenceRef }, signal); }
+  getGrants(authorityContextRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "authority.getGrants", authorityContextRef }, signal); }
+  evaluate(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "authority.evaluate", authorityContextRef, ...input }, signal); }
+  authorizeDispatch(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "authority.authorizeDispatch", authorityContextRef, ...input }, signal); }
+  getCapabilities(authorityContextRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "capabilities.getSnapshot", authorityContextRef }, signal); }
+  invoke(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "capabilities.invoke", authorityContextRef, ...input }, signal); }
+  getInvocation(authorityContextRef: string, actionRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "capabilities.getInvocation", authorityContextRef, actionRef }, signal); }
+  publishTrace(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "trace.publish", authorityContextRef, ...input }, signal); }
+  eventsUrl(authorityContextRef: string, siteRef: string, afterCursor = "0", limit = 100): string { const params = new URLSearchParams({ authorityContextRef, siteRef, afterCursor, limit: String(limit) }); return `${this.baseUrl}/gateway/v1/events?${params}`; }
+  async *subscribeInvalidations(authorityContextRef: string, siteRef: string, options: { readonly afterCursor?: string; readonly limit?: number; readonly signal?: AbortSignal } = {}): AsyncGenerator<PwceInvalidationEvent> {
+    await this.profile(options.signal);
+    const response = await this.fetchImpl(this.eventsUrl(authorityContextRef, siteRef, options.afterCursor ?? "0", options.limit ?? 100), { method: "GET", headers: { Authorization: `Bearer ${this.token}`, Accept: "text/event-stream" }, signal: options.signal });
+    if (!response.ok || !response.body) throw new Error(`PWCE gateway event stream failed with status ${response.status}`);
+    const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = ""; let event: { id?: string; event?: string; data: string[] } = { data: [] };
+    const emit = (): PwceInvalidationEvent | null => { if (!event.data.length) return null; const value = { id: event.id ?? null, event: event.event ?? "message", data: event.data.join("\n") }; event = { data: [] }; return value; };
+    try {
+      while (true) {
+        const chunk = await reader.read(); buffer += decoder.decode(chunk.value ?? new Uint8Array(), { stream: !chunk.done }); const lines = buffer.split("\n"); buffer = lines.pop() ?? "";
+        for (const rawLine of lines) { const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine; if (!line) { const parsed = emit(); if (parsed) yield parsed; continue; } if (line.startsWith(":")) continue; const separator = line.indexOf(":"); const field = separator < 0 ? line : line.slice(0, separator); const value = separator < 0 ? "" : line.slice(separator + 1).replace(/^ /, ""); if (field === "id") event.id = value; else if (field === "event") event.event = value; else if (field === "data") event.data.push(value); }
+        if (chunk.done) { const parsed = emit(); if (parsed) yield parsed; break; }
+      }
+    } finally { reader.releaseLock(); }
+  }
   health(authorityContextRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "health.get", authorityContextRef }, signal); }
   private async json<T extends PwceClientResult | PwceProfile>(path: string, options: { readonly method?: string; readonly body?: unknown; readonly signal?: AbortSignal } = {}): Promise<T> { const response = await this.fetchImpl(`${this.baseUrl}${path}`, { method: options.method ?? "GET", headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json" }, ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }), signal: options.signal }); const value = await response.json() as T & { readonly error?: { readonly message?: string } }; if (!response.ok) throw new Error(value.error?.message ?? "PWCE gateway request failed"); return value; }
 }

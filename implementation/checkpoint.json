@@ -4,7 +4,7 @@
   "branch": "main",
   "baseRevision": "96f4260bae6e67e93668a8a22a0557f464455888",
   "currentRevision": "WORKTREE",
-  "activeSlice": "LS-S047",
+  "activeSlice": "LS-S028",
   "sliceStatus": "verified",
   "completedSlices": [
     "LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010",
@@ -15,11 +15,19 @@
   ],
   "allowedFiles": [
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S047.json"
+    "implementation/evidence/LS-S028.json",
+    "packages/contracts/src/pwce/compatibility-lock.ts",
+    "packages/contracts/test/pwce-compatibility.test.ts",
+    "packages/providers-pwce/src/client.ts",
+    "packages/providers-pwce/test/client.test.ts"
   ],
   "changedFiles": [
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S047.json"
+    "implementation/evidence/LS-S028.json",
+    "packages/contracts/src/pwce/compatibility-lock.ts",
+    "packages/contracts/test/pwce-compatibility.test.ts",
+    "packages/providers-pwce/src/client.ts",
+    "packages/providers-pwce/test/client.test.ts"
   ],
   "validation": [
     {
@@ -42,8 +50,8 @@
     "WSL development isolation remains application-level: host physical GPU index 1 is exposed as provider-local cuda:0 through CUDA_VISIBLE_DEVICES=1; strict container GPU invisibility is not claimed."
   ],
   "blockers": [],
-  "nextAction": "Inspect the LS-S049 NeMo-Speech.cpp adapter boundary and implement its fixture-interchangeable streaming STT slice; preserve the explicit LS-S048 duplicate/superseded-provider boundary.",
+  "nextAction": "Resume LS-S049 NeMo-Speech.cpp fixture-interchangeable streaming STT implementation; preserve the explicit LS-S048 duplicate/superseded-provider boundary.",
   "updatedAt": "2026-09-08T04:16:00Z",
   "updatedBy": "Codex",
-  "notes": "LS-S047 provider-neutral expressive contract verification and LS-S029 real-provider WSL verification are complete. No image was pushed and no external deployment occurred."
+  "notes": "LS-S028 adapter surface and compatibility pin corrected and verified against PWCE committed revision a2cb5b5. LS-S047 provider-neutral expressive contract verification and LS-S029 real-provider WSL verification remain complete. No image was pushed and no external deployment occurred."
 }

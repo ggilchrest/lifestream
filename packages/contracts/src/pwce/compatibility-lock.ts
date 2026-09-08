@@ -13,17 +13,19 @@ export const PWCE_GATEWAY_ARTIFACTS = Object.freeze([
   { path: "contracts/gateway/pwce-agent-gateway-request.schema.json", sha256: "56fdd84719ddbe6d5d2a9644e9079b25df2e719dcbf0a9e33b3bf16d79760175" },
   { path: "contracts/gateway/pwce-agent-gateway-response.schema.json", sha256: "06fc6a9635c192329d43723f596330a336f1f3e57edd05e7d634110ebbb6f9ae" },
   { path: "contracts/gateway/pwce-lifestream-compatibility-lock.schema.json", sha256: "25fe08baaf362deb929abdb99980a7911fc6b63a4cbaf651749d66b021ffd78e" },
+  { path: "contracts/gateway/pwce-agent-gateway-authority-request.schema.json", sha256: "c88e5eb7bb98c867ed5e0a2bf71c4e58f012aa068ecd8fc93cd40caecc42b318" },
+  { path: "contracts/gateway/pwce-agent-gateway-authority-response.schema.json", sha256: "b064fc855886a63beb7ca934cdef8f2c51a20e9244c399a0d19afeb635a2c82f" },
 ] as const);
 export const PWCE_GENERATED_CLIENT_SHA256 = "2b5bc339e0e50b021af274d042a99e2443be8ce241adc7ff1db547cb1a12e96c";
 export const REQUIRED_PWCE_OPERATIONS = Object.freeze(["context.getPreparedInputs", "context.query", "evidence.get", "events.subscribe", "authority.evaluate", "authority.authorizeDispatch", "authority.getGrants", "capabilities.getSnapshot", "capabilities.invoke", "capabilities.getInvocation", "trace.publish", "health.get"]);
 
 export function createPwceCompatibilityLock(adapterRevision: string): PwceCompatibilityLock {
   if (!adapterRevision.trim()) throw new Error("adapter revision required");
-  return { lockVersion: "1.0.0", pwceBundle: { bundleId: "pwce-agent-gateway.bundle.v1", bundleVersion: "1.0.0", bundleDigest: "3af96275bc26754a8cebc64febb10b5ca50c951fd5003f106e06cfda846d4d3b", profileId: "pwce-agent-gateway.v1", profileVersion: "1.0.0", artifacts: [...PWCE_GATEWAY_ARTIFACTS], generatedClientSha256: PWCE_GENERATED_CLIENT_SHA256 }, lifestreamProfile: { profileId: "lifestream-pwce.v1", profileVersion: "1.0.0", mappingSchemaSha256: "8daa8430d96db08631f950a86a757b5e49cbdec635db5a604a141100afd9998d", fixtureSha256: "9554ff2ddd4c1e1564961d1d1a9d0e8e98dc03088e0443967f1279a15e02df39" }, requiredOperations: [...REQUIRED_PWCE_OPERATIONS], adapterRevision };
+  return { lockVersion: "1.0.0", pwceBundle: { bundleId: "pwce-agent-gateway.bundle.v1", bundleVersion: "1.0.0", bundleDigest: "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2", profileId: "pwce-agent-gateway.v1", profileVersion: "1.0.0", artifacts: [...PWCE_GATEWAY_ARTIFACTS], generatedClientSha256: PWCE_GENERATED_CLIENT_SHA256 }, lifestreamProfile: { profileId: "lifestream-pwce.v1", profileVersion: "1.0.0", mappingSchemaSha256: "8daa8430d96db08631f950a86a757b5e49cbdec635db5a604a141100afd9998d", fixtureSha256: "9554ff2ddd4c1e1564961d1d1a9d0e8e98dc03088e0443967f1279a15e02df39" }, requiredOperations: [...REQUIRED_PWCE_OPERATIONS], adapterRevision };
 }
 
 export function validatePwceCompatibilityLock(lock: PwceCompatibilityLock): void {
-  if (lock.lockVersion !== "1.0.0" || lock.pwceBundle.bundleId !== "pwce-agent-gateway.bundle.v1" || lock.pwceBundle.bundleVersion !== "1.0.0" || lock.pwceBundle.bundleDigest !== "3af96275bc26754a8cebc64febb10b5ca50c951fd5003f106e06cfda846d4d3b" || lock.pwceBundle.profileId !== "pwce-agent-gateway.v1" || lock.pwceBundle.profileVersion !== "1.0.0") throw new Error("unsupported PWCE compatibility lock");
+  if (lock.lockVersion !== "1.0.0" || lock.pwceBundle.bundleId !== "pwce-agent-gateway.bundle.v1" || lock.pwceBundle.bundleVersion !== "1.0.0" || lock.pwceBundle.bundleDigest !== "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2" || lock.pwceBundle.profileId !== "pwce-agent-gateway.v1" || lock.pwceBundle.profileVersion !== "1.0.0") throw new Error("unsupported PWCE compatibility lock");
   if (JSON.stringify(lock.pwceBundle.artifacts) !== JSON.stringify(PWCE_GATEWAY_ARTIFACTS)) throw new Error("PWCE artifact digest mismatch");
   if (lock.pwceBundle.generatedClientSha256 !== PWCE_GENERATED_CLIENT_SHA256) throw new Error("PWCE generated client digest mismatch");
   if (JSON.stringify(lock.requiredOperations) !== JSON.stringify(REQUIRED_PWCE_OPERATIONS)) throw new Error("required operation coverage mismatch");
