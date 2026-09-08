@@ -40,9 +40,9 @@
     },
     {
       "command": "ai5090 synchronized host telemetry correlated to complete synthesis",
-      "result": "blocked",
-      "evidence": "A complete lifecycle was captured, but the available run did not yet produce a durable timestamp-correlated telemetry receipt covering the request interval. The observed GPU samples prove high memory occupancy on physical RTX 3080 index 1 but are not sufficient to claim synchronized placement evidence."
+      "result": "pass",
+      "evidence": "The corrected sidecar returned HTTP 200 with a complete telemetry-correlated response: six data events plus preAudio and terminal sequence 7, outcome completed, outputSamples 46080, frameCount 6. The paired remote telemetry receipt contains timestamp 2026-09-08T00:49:42.857Z and both host GPUs, including physical index 1 UUID GPU-5ac588e9-40c1-4c6e-e5e2-32b873447b9e, NVIDIA GeForce RTX 3080, 9872/10240 MiB. Telemetry SHA256: 253fec04fa46a393137bf31d23b7ee0360ef65ca44aeab5ad791b628b76ef1b8. Response SHA256: 2a231be82e07a9269e9af739a36138939516ed6c35ae5e99a845578e091ca40c. The receipt establishes WSL application-level placement for this short run; it does not claim strict container isolation."
     }
   ],
-  "notes": "The pinned loopback protocol and adapter are implemented. Source-lock, post-build-attestation, and deployment-receipt lifecycle artifacts are separated; deployment receipt remains intentionally unpopulated. WSL GPU preflight and host runtime availability are now evidenced, but the existing host container is an older incomplete skeleton and no corrected image build, real PCM conformance, cancellation/deadline/fencing, or synchronized telemetry receipt has been accepted. No image was pushed, no external deployment occurred, and no arbitrary voice sample was used."
+  "notes": "The pinned loopback protocol and adapter are implemented. A corrected disposable runtime now has readiness, complete PCM lifecycle, and one synchronized WSL placement receipt. Source-lock downloaded-byte hashes, locked binary dependencies, image provenance, deployment receipt, and the remaining cancellation/deadline/fencing and expressive conformance matrix remain incomplete. The existing operator-owned container is still an older preAudio-only skeleton. No image was pushed, no external deployment occurred, and no arbitrary voice sample was used."
 }

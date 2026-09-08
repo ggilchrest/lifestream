@@ -15,8 +15,8 @@
     { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally on 2026-09-07." }
   ],
   "decisions": [],
-  "blockers": ["A complete corrected-sidecar preAudio/data/terminal fixture is now captured, but synchronized host telemetry, cancellation/deadline/fencing evidence, source-lock downloaded-byte hashes, locked binary dependencies, image provenance, and deployment receipt remain incomplete. The existing operator-owned container remains a preAudio-only skeleton."],
-  "nextAction": "Capture a timestamp-correlated telemetry receipt during a complete corrected-sidecar fixture, then exercise cancellation and deadline fencing before updating LS-S029 acceptance status.",
+  "blockers": ["A complete corrected-sidecar lifecycle and synchronized WSL placement receipt are now captured, but cancellation/deadline/fencing evidence, expressive conformance coverage, source-lock downloaded-byte hashes, locked binary dependencies, image provenance, and deployment receipt remain incomplete. The existing operator-owned container remains a preAudio-only skeleton."],
+  "nextAction": "Exercise cancellation and deadline fencing against the corrected sidecar, then capture the required expressive degradation and stale-expression cases before updating LS-S029 acceptance status.",
   "updatedAt": "2026-09-08T00:20:00Z",
   "updatedBy": "Codex",
   "notes": "LS-S038 verifies safe fixture-only local packaging; real provider and non-fixture authority claims remain separately gated."
