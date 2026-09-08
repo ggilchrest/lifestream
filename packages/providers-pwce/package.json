@@ -1,0 +1,6 @@
+{
+  "name": "@lifestream/providers-pwce",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "tsc -b", "typecheck": "tsc -b --pretty false" }
+}

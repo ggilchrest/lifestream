@@ -28,5 +28,5 @@ test("all LS-S048 material items are reconciled without independent evidence", (
   assert.ok(manifest.lsS048OverlapAudit.every((item) => ["satisfied", "absorbed", "superseded", "deferred"].includes(item.disposition)));
   assert.ok(manifest.lsS048OverlapAudit.some((item) => item.item === "fixture/provider conformance and LS-TEST-065 intent" && item.disposition === "absorbed"));
   assert.ok(manifest.knownExclusions.includes("strict container GPU invisibility under WSL"));
-  assert.ok(manifest.knownExclusions.includes("final Tifa voice identity and subjective emotional-fidelity acceptance"));
+  assert.ok(manifest.knownExclusions.includes("final production VoiceProfile identity and subjective expressive-fidelity acceptance"));
 });

@@ -30,6 +30,14 @@ importers:
 
   packages/providers-fixture: {}
 
+  packages/providers-nemo-speech:
+    dependencies:
+      '@lifestream/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+
+  packages/providers-pwce: {}
+
   packages/providers-voxcpm:
     dependencies:
       '@lifestream/runtime':
