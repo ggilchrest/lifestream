@@ -1,92 +1,129 @@
-"""Single-worker, loopback-only VoxCPM2 sidecar skeleton.
-
-It intentionally refuses readiness until the staged immutable artifact manifest
-and model snapshot are complete. No startup download path exists.
-"""
-import base64, json, os, select, socket, threading
+"""Single-worker, loopback-only VoxCPM2 streaming sidecar."""
+import base64, json, os, threading
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 RUNTIME_REVISION = "19b6bf7590025418821a86dcb817504e0ad7e5df"
 MODEL_REVISION = os.environ.get("VOXCPM_MODEL_SNAPSHOT", "")
 MAPPING_REVISION = "voxcpm2-map-1"
+FORMAT = {"encoding": "pcm_s16le", "sampleRateHz": 48000, "channels": 1}
 READY = False
 MODEL = None
-LOAD_ERROR = None
-MAPPING = {"neutral": "", "explanation": "Speak clearly and conversationally.", "reassurance": "Speak warmly and reassuringly.", "concern": "Speak with calm concern.", "celebration": "Speak with bright celebratory energy.", "warning": "Speak clearly with firm warning.", "emergency": "Speak urgently and clearly."}
+LOCK = threading.Lock()
+STYLES = {
+    "neutral": "A calm, clear adult voice",
+    "explanation": "A clear, measured adult voice speaking helpfully",
+    "reassurance": "A warm, calm adult voice with a reassuring tone",
+    "concern": "A serious, attentive adult voice expressing gentle concern",
+    "celebration": "An upbeat adult voice with cheerful energy",
+    "warning": "A firm, urgent adult voice delivering a clear warning",
+    "emergency": "A commanding adult voice, urgent and concise",
+}
 
-def client_disconnected(connection):
-    readable, _, _ = select.select([connection], [], [], 0)
-    if not readable:
-        return False
-    try:
-        return connection.recv(1, socket.MSG_PEEK | socket.MSG_DONTWAIT) == b""
-    except (BlockingIOError, ConnectionResetError):
-        return False
+def now():
+    return datetime.now(timezone.utc)
 
 def load_once():
-    global READY, MODEL, LOAD_ERROR
-    if os.environ.get("CUDA_VISIBLE_DEVICES") != "1" or os.environ.get("VOXCPM_CUDA_DEVICE", "cuda:0") != "cuda:0":
-        LOAD_ERROR = "gpu_profile_mismatch"; return
-    if not MODEL_REVISION or os.environ.get("VOXCPM_ARTIFACTS_STAGED") != "1" or not os.path.isdir(os.environ.get("VOXCPM_MODEL_PATH", "")):
-        LOAD_ERROR = "immutable_artifacts_not_staged"; return
+    global READY, MODEL
+    if not MODEL_REVISION or os.environ.get("VOXCPM_ARTIFACTS_STAGED") != "1":
+        return
+    import torch
+    if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
+        raise RuntimeError("exactly one CUDA-visible logical device required")
+    if "RTX 3080" not in torch.cuda.get_device_name(0):
+        raise RuntimeError(f"cuda:0 is {torch.cuda.get_device_name(0)}")
+    from voxcpm import VoxCPM
+    MODEL = VoxCPM.from_pretrained(os.environ["VOXCPM_MODEL_PATH"], load_denoiser=False)
+    warmup = MODEL.generate_streaming(text="warmup", retry_badcase=False)
+    next(warmup)
+    warmup.close()
+    READY = True
+
+def map_delivery(delivery):
+    mode, degraded = delivery.get("deliveryMode"), []
+    if mode not in STYLES:
+        mode = "neutral"; degraded.append("deliveryMode")
+    pace, energy, urgency = delivery.get("pace"), delivery.get("energy"), delivery.get("urgency")
+    if not isinstance(pace, (int, float)) or not 0 <= pace <= 1:
+        pace = .5; degraded.append("pace")
+    if not isinstance(energy, (int, float)) or not 0 <= energy <= 1:
+        energy = .5; degraded.append("energy")
+    if urgency not in ("low", "normal", "high", "critical"):
+        urgency = "normal"; degraded.append("urgency")
+    style = STYLES[mode]
+    style += ", speaking deliberately" if pace < .35 else ", speaking briskly" if pace > .65 else ""
+    style += ", with restrained energy" if energy < .35 else ", with strong energy" if energy > .65 else ""
+    applied = dict(delivery)
+    applied.update(deliveryMode=mode, pace=pace, energy=energy, urgency=urgency)
+    return applied, sorted(set(degraded)), style
+
+def validate(request):
+    required = ("requestId","correlationId","interactionId","deadlineAt","voiceBundleKey",
+                "voiceBundleRevision","text","delivery","format")
+    if request.get("protocolVersion") != "voxcpm.loopback.v1": return "unsupportedRequest"
+    if any(k not in request for k in required): return "malformedRequest"
+    if not isinstance(request["text"], str) or not request["text"].strip(): return "malformedRequest"
+    if request["voiceBundleKey"] != "fixture-voice-design" or request["voiceBundleRevision"] != 1:
+        return "unsupportedRequest"
+    if request["format"] != FORMAT: return "unsupportedRequest"
     try:
-        import torch
-        if not torch.cuda.is_available() or torch.cuda.current_device() != 0:
-            LOAD_ERROR = "logical_cuda_device_unavailable"; return
-    except Exception:
-        LOAD_ERROR = "cuda_runtime_unavailable"; return
-    try:
-        from voxcpm import VoxCPM
-        MODEL = VoxCPM.from_pretrained(os.environ["VOXCPM_MODEL_PATH"], load_denoiser=False)
-        next(MODEL.generate_streaming(text="warmup"))
-        READY = True
-    except Exception:
-        LOAD_ERROR = "model_initialization_failed"
+        if datetime.fromisoformat(request["deadlineAt"].replace("Z","+00:00")) <= now():
+            return "deadlineExceeded"
+    except (AttributeError, TypeError, ValueError): return "malformedRequest"
 
 class Handler(BaseHTTPRequestHandler):
-    def _json(self, status, payload):
-        data = json.dumps(payload).encode(); self.send_response(status); self.send_header("content-type", "application/json"); self.send_header("content-length", str(len(data))); self.end_headers(); self.wfile.write(data)
+    protocol_version = "HTTP/1.1"
+    def json(self, status, payload):
+        data=json.dumps(payload,separators=(",",":")).encode()
+        self.send_response(status); self.send_header("content-type","application/json")
+        self.send_header("content-length",str(len(data))); self.end_headers(); self.wfile.write(data)
+    def event(self, payload):
+        self.wfile.write((json.dumps(payload,separators=(",",":"))+"\n").encode()); self.wfile.flush()
+    def terminal(self, outcome):
+        self.send_response(200); self.send_header("content-type","application/x-ndjson")
+        self.send_header("connection","close"); self.end_headers()
+        self.event({"kind":"terminal","sequence":0,"outcome":outcome,"outputSamples":0,"frameCount":0})
     def do_GET(self):
-        if self.path == "/healthz": return self._json(200, {"status":"alive"})
-        if self.path == "/readyz": return self._json(200 if READY else 503, {"status":"ready" if READY else "unavailable", "reason":None if READY else LOAD_ERROR, "runtimeRevision":RUNTIME_REVISION, "modelRevision":MODEL_REVISION, "mappingRevision":MAPPING_REVISION, "logicalDevice":"cuda:0"})
-        if self.path == "/v1/capabilities": return self._json(200, {"protocolVersion":"voxcpm.loopback.v1", "contractVersion":"2.0.0", "streaming":True, "workers":1, "ready":READY})
-        self._json(404, {"error":"not_found"})
+        if self.path=="/healthz": return self.json(200,{"status":"alive"})
+        if self.path=="/readyz": return self.json(200 if READY else 503,{"status":"ready" if READY else "unavailable","runtimeRevision":RUNTIME_REVISION,"modelRevision":MODEL_REVISION,"mappingRevision":MAPPING_REVISION})
+        if self.path=="/v1/capabilities": return self.json(200,{"protocolVersion":"voxcpm.loopback.v1","contractVersion":"2.0.0","streaming":True,"workers":1,"ready":READY,"format":FORMAT})
+        self.json(404,{"error":"not_found"})
     def do_POST(self):
-        if self.path != "/v1/tts/synthesize" or not READY: return self._json(503, {"error":"provider_unavailable"})
-        size = int(self.headers.get("content-length", "0")); request = json.loads(self.rfile.read(min(size, 65536)))
-        if request.get("protocolVersion") != "voxcpm.loopback.v1": return self._json(400, {"error":"unsupported_request"})
-        mode = request["delivery"].get("deliveryMode", "neutral")
-        control = MAPPING.get(mode)
-        if control is None: return self._json(422, {"error":"unsupported_request"})
-        self.send_response(200); self.send_header("content-type", "application/x-ndjson"); self.end_headers()
-        applied = dict(request["delivery"]); degraded = []
-        self.wfile.write((json.dumps({"kind":"preAudio","sequence":0,"requestId":request["requestId"],"correlationId":request["correlationId"],"voiceBundleRevision":request["voiceBundleRevision"],"requestedDelivery":request["delivery"],"appliedDelivery":applied,"degradedDimensions":degraded,"mappingRevision":MAPPING_REVISION,"effectiveSynthesis":{"controlInstruction":control,"pace":request["delivery"].get("pace"),"energy":request["delivery"].get("energy")},"format":request["format"],"runtimeRevision":RUNTIME_REVISION,"modelRevision":MODEL_REVISION})+"\n").encode()); self.wfile.flush()
-        sequence = 1; samples = 0
+        if self.path!="/v1/tts/synthesize" or not READY: return self.json(503,{"error":"provider_unavailable"})
         try:
-            target = f"({control}){request['text']}" if control else request["text"]
-            stream = iter(MODEL.generate_streaming(text=target))
-            while True:
-                if client_disconnected(self.connection):
-                    raise BrokenPipeError
-                if datetime.now(timezone.utc).isoformat() >= request["deadlineAt"]:
-                    raise TimeoutError
-                try:
-                    chunk = next(stream)
-                except StopIteration:
-                    break
-                pcm = (chunk.clip(-1, 1) * 32767).astype("<i2").tobytes()
-                event = {"kind":"data","sequence":sequence,"sampleOffset":samples,"sampleCount":len(pcm)//2,"dataBase64":base64.b64encode(pcm).decode("ascii"),"format":request["format"]}
-                self.wfile.write((json.dumps(event)+"\n").encode()); self.wfile.flush(); samples += event["sampleCount"]; sequence += 1
-            self.wfile.write((json.dumps({"kind":"terminal","sequence":sequence,"outcome":"completed","outputSamples":samples,"frameCount":sequence-1})+"\n").encode()); self.wfile.flush()
-        except TimeoutError:
-            self.wfile.write((json.dumps({"kind":"terminal","sequence":sequence,"outcome":"deadlineExceeded","outputSamples":samples,"frameCount":sequence-1})+"\n").encode()); self.wfile.flush()
-        except (BrokenPipeError, ConnectionResetError):
-            return
-        except Exception:
-            try: self.wfile.write((json.dumps({"kind":"terminal","sequence":sequence,"outcome":"retryableProviderFailure","outputSamples":samples,"frameCount":sequence-1})+"\n").encode()); self.wfile.flush()
-            except (BrokenPipeError, ConnectionResetError): pass
-    def log_message(self, *_): pass
+            size=int(self.headers.get("content-length","0"))
+            if not 1<size<=65536: raise ValueError()
+            request=json.loads(self.rfile.read(size))
+        except (ValueError,json.JSONDecodeError): return self.terminal("malformedRequest")
+        failure=validate(request)
+        if failure: return self.terminal(failure)
+        if not LOCK.acquire(False): return self.terminal("providerUnavailable")
+        sequence=samples=frames=0; generator=None
+        try:
+            applied,degraded,style=map_delivery(request["delivery"])
+            self.send_response(200); self.send_header("content-type","application/x-ndjson")
+            self.send_header("cache-control","no-store"); self.send_header("connection","close"); self.end_headers()
+            self.event({"kind":"preAudio","sequence":sequence,"requestId":request["requestId"],"correlationId":request["correlationId"],"voiceBundleRevision":request["voiceBundleRevision"],"requestedDelivery":request["delivery"],"appliedDelivery":applied,"degradedDimensions":degraded,"mappingRevision":MAPPING_REVISION,"effectiveSynthesis":{"voiceDesign":style,"cfgValue":2.0,"inferenceTimesteps":10},"format":FORMAT,"runtimeRevision":RUNTIME_REVISION,"modelRevision":MODEL_REVISION})
+            sequence+=1; deadline=datetime.fromisoformat(request["deadlineAt"].replace("Z","+00:00"))
+            generator=MODEL.generate_streaming(text=f"({style}){request['text']}",cfg_value=2.0,inference_timesteps=10,retry_badcase=False)
+            import numpy as np
+            for wave in generator:
+                if now()>=deadline:
+                    self.event({"kind":"terminal","sequence":sequence,"outcome":"deadlineExceeded","outputSamples":samples,"frameCount":frames}); return
+                pcm=(np.clip(wave,-1,1)*32767).astype("<i2")
+                for start in range(0,len(pcm),4800):
+                    chunk=pcm[start:start+4800]
+                    self.event({"kind":"data","sequence":sequence,"sampleOffset":samples,"sampleCount":len(chunk),"dataBase64":base64.b64encode(chunk.tobytes()).decode(),"format":FORMAT})
+                    sequence+=1; samples+=len(chunk); frames+=1
+            self.event({"kind":"terminal","sequence":sequence,"outcome":"completed","outputSamples":samples,"frameCount":frames})
+        except (BrokenPipeError,ConnectionResetError):
+            if generator: generator.close()
+        except Exception as error:
+            try: self.event({"kind":"terminal","sequence":sequence,"outcome":"retryableProviderFailure","outputSamples":samples,"frameCount":frames,"errorCode":type(error).__name__})
+            except (BrokenPipeError,ConnectionResetError): pass
+        finally: LOCK.release()
+    def log_message(self,*_): pass
 
-if __name__ == "__main__":
-    load_once(); ThreadingHTTPServer((os.environ.get("VOXCPM_BIND", "127.0.0.1"), int(os.environ.get("VOXCPM_PORT", "8787"))), Handler).serve_forever()
+if __name__=="__main__":
+    load_once()
+    ThreadingHTTPServer((os.environ.get("VOXCPM_BIND","127.0.0.1"),int(os.environ.get("VOXCPM_PORT","8787"))),Handler).serve_forever()

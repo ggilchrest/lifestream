@@ -1,0 +1,6 @@
+FROM lifestream/voxcpm2:ls-s029
+LABEL org.lifestream.base-image-digest="sha256:779bd35a55d86804a59252ece442d535a0f6caaa83e6a8e9e352964dd44e6c8a"
+COPY voxcpm_sidecar.py entrypoint.sh /app/
+RUN chmod 0555 /app/entrypoint.sh
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["python", "/app/voxcpm_sidecar.py"]
