@@ -1,7 +1,7 @@
 {
   "slice": "LS-S029",
   "status": "blocked",
-  "revision": "8e1e6d609310da3ab893d84bfd0fcd7b087a864c",
+  "revision": "4c18170d0447514b90b10ef8eb0a4573786c1ac2",
   "checks": [
     {
       "command": "node scripts/workspace.mjs preflight LS-S029",
