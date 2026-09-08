@@ -22,6 +22,20 @@ test("fixture package exposes distinct health states, UI, and authenticated auth
   assert.equal((await fetch(`${base}/api/authority/v1/requests`, { method: "POST", headers: { "x-lifestream-fixture-session": "s1", "x-lifestream-fixture-principal": "human", origin: base }, body: "{}" })).status, 202);
 });
 
+test("fixture Assistant administration persists revisions and requires authority", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "lifestream-admin-"));
+  t.after(async () => rm(root, { recursive: true, force: true }));
+  const app = createLifestreamServer({ config: config(root) }); await app.start(); t.after(() => app.shutdown());
+  const base = `http://127.0.0.1:${app.address().port}`; const auth = { "content-type": "application/json", "x-lifestream-fixture-session": "s1", "x-lifestream-fixture-principal": "human", origin: base };
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })).status, 401);
+  const createdResponse = await fetch(`${base}/api/admin/v1/assistants`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Example Assistant" }) }); assert.equal(createdResponse.status, 201);
+  const created = await createdResponse.json() as { assistantId: string; profile: { profileId: string } };
+  const revisionResponse = await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/revisions`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Updated Assistant" }) }); assert.equal(revisionResponse.status, 201);
+  const revision = await revisionResponse.json() as { profile: { profileId: string; revision: number } }; assert.equal(revision.profile.revision, 2);
+  const activatedResponse = await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ profileId: revision.profile.profileId, expectedActiveRevision: null }) }); assert.equal(activatedResponse.status, 200);
+  const exported = await (await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/export`, { headers: auth })).json() as { profiles: unknown[] }; assert.equal(exported.profiles.length, 2);
+});
+
 test("restart recreates persistent paths and readiness", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-server-"));
   t.after(async () => rm(root, { recursive: true, force: true }));
