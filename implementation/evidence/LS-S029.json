@@ -27,6 +27,11 @@
       "command": "ai5090 host-observed loopback /healthz /readyz /v1/capabilities and container inspection",
       "result": "blocked",
       "evidence": "The existing loopback container ls-s029-warmup reports alive/ready, runtime revision 19b6bf7590025418821a86dcb817504e0ad7e5df, model snapshot 32279effe8c19989596f05d353d1447f51d9e915, Python 3.11.13, and loopback binding. Its observed image manifest descriptor is sha256:d55edfb66afa15172ba8bd6abb17f25790544ac9213b2a5d0377830e586b3038, but its mounted sidecar source is the prior skeleton: it emits preAudio only and does not produce data or terminal events. It also requests all GPUs at the Docker layer. This is host-observed/operator-supplied evidence, not LS-S029 acceptance."
+    },
+    {
+      "command": "ai5090 disposable corrected sidecar readiness and deterministic synthesis probe",
+      "result": "blocked",
+      "evidence": "The corrected local sidecar loaded the staged model on logical cuda:0 and reported ready with runtime 19b6bf7590025418821a86dcb817504e0ad7e5df, model 32279effe8c19989596f05d353d1447f51d9e915, and mapping voxcpm2-map-1. Host logs showed real VoxCPM2 generation progressing through a 52-step stream and RTX 3080 memory reaching approximately 9.8 GiB. The deterministic request client was cancelled before a complete preAudio/data/terminal response was captured; the sidecar did not yet demonstrate cancellation fencing or a bounded terminal outcome. The disposable container was removed; the operator-owned warmup container was not modified."
     }
   ],
   "notes": "The pinned loopback protocol and adapter are implemented. Source-lock, post-build-attestation, and deployment-receipt lifecycle artifacts are separated; deployment receipt remains intentionally unpopulated. WSL GPU preflight and host runtime availability are now evidenced, but the existing host container is an older incomplete skeleton and no corrected image build, real PCM conformance, cancellation/deadline/fencing, or synchronized telemetry receipt has been accepted. No image was pushed, no external deployment occurred, and no arbitrary voice sample was used."

@@ -3,7 +3,7 @@
 It intentionally refuses readiness until the staged immutable artifact manifest
 and model snapshot are complete. No startup download path exists.
 """
-import base64, json, os, threading
+import base64, json, os, select, socket, threading
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -14,6 +14,15 @@ READY = False
 MODEL = None
 LOAD_ERROR = None
 MAPPING = {"neutral": "", "explanation": "Speak clearly and conversationally.", "reassurance": "Speak warmly and reassuringly.", "concern": "Speak with calm concern.", "celebration": "Speak with bright celebratory energy.", "warning": "Speak clearly with firm warning.", "emergency": "Speak urgently and clearly."}
+
+def client_disconnected(connection):
+    readable, _, _ = select.select([connection], [], [], 0)
+    if not readable:
+        return False
+    try:
+        return connection.recv(1, socket.MSG_PEEK | socket.MSG_DONTWAIT) == b""
+    except (BlockingIOError, ConnectionResetError):
+        return False
 
 def load_once():
     global READY, MODEL, LOAD_ERROR
@@ -56,8 +65,16 @@ class Handler(BaseHTTPRequestHandler):
         sequence = 1; samples = 0
         try:
             target = f"({control}){request['text']}" if control else request["text"]
-            for chunk in MODEL.generate_streaming(text=target):
-                if datetime.now(timezone.utc).isoformat() >= request["deadlineAt"]: raise TimeoutError
+            stream = iter(MODEL.generate_streaming(text=target))
+            while True:
+                if client_disconnected(self.connection):
+                    raise BrokenPipeError
+                if datetime.now(timezone.utc).isoformat() >= request["deadlineAt"]:
+                    raise TimeoutError
+                try:
+                    chunk = next(stream)
+                except StopIteration:
+                    break
                 pcm = (chunk.clip(-1, 1) * 32767).astype("<i2").tobytes()
                 event = {"kind":"data","sequence":sequence,"sampleOffset":samples,"sampleCount":len(pcm)//2,"dataBase64":base64.b64encode(pcm).decode("ascii"),"format":request["format"]}
                 self.wfile.write((json.dumps(event)+"\n").encode()); self.wfile.flush(); samples += event["sampleCount"]; sequence += 1

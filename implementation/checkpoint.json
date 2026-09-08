@@ -15,8 +15,8 @@
     { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally on 2026-09-07." }
   ],
   "decisions": [],
-  "blockers": ["The ai5090 WSL host is reachable and passes the RTX 3080 application-level preflight, but the observed ls-s029-warmup image contains the prior preAudio-only skeleton and is not conformance evidence. Build and execute the corrected provider image or an equivalent host-verified corrected runtime, then collect synchronized host telemetry and the remaining lifecycle evidence. Source-lock downloaded-byte hashes, locked binary dependencies, image provenance, and deployment receipt remain unpopulated."],
-  "nextAction": "Build the corrected sidecar image on ai5090 from the pinned source and staged model without pushing it; run readiness, PCM lifecycle, cancellation/deadline/fencing, and synchronized telemetry checks; populate source-lock and post-build attestation only from captured artifacts.",
+  "blockers": ["The corrected sidecar now loads and runs VoxCPM2 on ai5090, but a complete deterministic preAudio/data/terminal response and cancellation/deadline/fencing evidence were not captured. The existing operator-owned container remains a preAudio-only skeleton. Source-lock downloaded-byte hashes, locked binary dependencies, image provenance, and deployment receipt remain unpopulated."],
+  "nextAction": "Harden the corrected sidecar's request lifecycle and run a complete short utterance with bounded output, then capture synchronized host telemetry and cancellation/deadline/fencing results before updating LS-S029 acceptance status.",
   "updatedAt": "2026-09-08T00:20:00Z",
   "updatedBy": "Codex",
   "notes": "LS-S038 verifies safe fixture-only local packaging; real provider and non-fixture authority claims remain separately gated."
