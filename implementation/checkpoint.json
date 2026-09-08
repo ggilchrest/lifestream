@@ -39,7 +39,7 @@
     {
       "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build && node scripts/workspace.mjs check && git diff --check",
       "result": "pass",
-      "evidence": "LS-S029 and LS-S050 runtime evidence remains referenced by their existing records; current candidate checks passed."
+      "evidence": "Full workspace typecheck, 101 tests, lint, build, structural validation, and whitespace validation passed on 2026-09-08; server tests required loopback socket permission."
     }
   ],
   "decisions": [
