@@ -57,6 +57,7 @@ export class VoxCpmProvider implements TextToSpeechProvider {
       }
       if (!sawPreAudio || !sawTerminal) throw new Error("protocol lifecycle invalid");
     } catch {
+      if (sawTerminal) return;
       yield { kind: "terminal", sequence, segmentId: request.segmentId, outcome: signal?.aborted ? "cancelled" : "failed", outputSamples: 0, frameCount: 0, disposition: signal?.aborted ? "cancelled" : "providerFailure", degradedDimensions: [], mappingRevision: this.options.mappingRevision };
     }
   }
