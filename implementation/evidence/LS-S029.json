@@ -1,7 +1,7 @@
 {
   "slice": "LS-S029",
   "status": "blocked",
-  "revision": "11eb9bd57578949d2feb644c1bdf516e7cbb5e2c",
+  "revision": "8e1e6d609310da3ab893d84bfd0fcd7b087a864c",
   "checks": [
     {
       "command": "node scripts/workspace.mjs preflight LS-S029",
@@ -22,6 +22,11 @@
       "command": "curl Hugging Face model API with revision=main and files_metadata=true; inspect nvidia-smi",
       "result": "pass",
       "evidence": "Resolved openbmb/VoxCPM2 to snapshot 32279effe8c19989596f05d353d1447f51d9e915 and recorded the nine-file inventory plus LFS metadata. On ai5090 WSL Ubuntu-24.04-AI, host preflight passed physical index 1 as NVIDIA GeForce RTX 3080 with 10240 MiB; the profile exports CUDA_VISIBLE_DEVICES=1 and logical cuda:0. Docker 29.7.2 and the selected Python 3.11.13 runtime are available."
+    },
+    {
+      "command": "ai5090 staged source, wheel, and model-byte SHA-256 reconciliation",
+      "result": "pass",
+      "evidence": "The staged source archive hash db11caa8b24eb91ba94190f3707b06dbca82bb6b6911c04eccd12bde5b59086f and wheel hash 24da58a30d094a9e9a7ead450ae9cffda0d31eaeba620b61ad99179dd87e486b match the checked-in artifact manifest. All seven ordinary model-file SHA-256 values were computed from the pinned snapshot and populated; the two LFS-backed hashes were already recorded."
     },
     {
       "command": "ai5090 host-observed loopback /healthz /readyz /v1/capabilities and container inspection",
