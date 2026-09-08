@@ -1,4 +1,4 @@
-type TtsRequest = { contractVersion: "2.0.0"; text: string; segmentId: string; format: { encoding: "pcm_s16le"; sampleRateHz: 16000 | 24000 | 48000; channels: 1 | 2 }; voiceProfile: { voiceRef: string; revision: number }; decision: { decisionId: string; revision: number }; delivery: { interactionId: string; segmentId: string; decisionId: string; decisionRevision: number }; deadlineAt: string };
+type TtsRequest = { contractVersion: "2.0.0"; text: string; segmentId: string; format: { encoding: "pcm_s16le"; sampleRateHz: 16000 | 24000 | 48000; channels: 1 | 2 }; voiceProfile: { voiceRef: string; revision: number }; decision: { decisionId: string; revision: number }; delivery: { interactionId: string; segmentId: string; decisionId: string; decisionRevision: number }; deadlineAt: string; maxOutputSamples?: number };
 type TtsEvent = { kind: "preAudio"; sequence: number; segmentId: string; decisionId: string; decisionRevision: number; delivery: Record<string, unknown>; disposition: "fullyApplied" | "partiallyApplied"; degradedDimensions: string[]; mappingRevision: string } | { kind: "data"; sequence: number; segmentId: string; frame: { frameId: string; sequence: number; format: TtsRequest["format"]; sampleOffset: number; sampleCount: number; dataBase64: string }; mappingRevision: string } | { kind: "terminal"; sequence: number; segmentId: string; outcome: "succeeded" | "cancelled" | "timedOut" | "failed"; outputSamples: number; frameCount: number; disposition: "fullyApplied" | "partiallyApplied" | "providerFailure" | "cancelled" | "timedOut"; degradedDimensions: string[]; mappingRevision: string };
 type TtsCapabilities = { contractVersion: "2.0.0"; supportedDimensions: readonly string[]; degradableDimensions: readonly string[]; supportsStreaming: true; maxOutputSamples: number };
 interface TextToSpeechProvider { capabilities(): TtsCapabilities; synthesize(request: TtsRequest, signal?: AbortSignal): AsyncIterable<TtsEvent>; }
@@ -41,6 +41,8 @@ export class VoxCpmProvider implements TextToSpeechProvider {
     let sequence = 0;
     let sawPreAudio = false;
     let sawTerminal = false;
+    let outputSamples = 0;
+    let frameCount = 0;
     try {
       for await (const event of readProtocolEvents(response.body)) {
         if (sawTerminal || event.sequence !== sequence) throw new Error("protocol sequence invalid");
@@ -48,9 +50,16 @@ export class VoxCpmProvider implements TextToSpeechProvider {
         if (event.kind === "preAudio") {
           if (sawPreAudio) throw new Error("duplicate preAudio event");
           if (event.requestId !== body.requestId || event.correlationId !== body.correlationId || event.voiceBundleRevision !== body.voiceBundleRevision || event.mappingRevision !== this.options.mappingRevision) throw new Error("protocol correlation mismatch");
+          if (event.format.encoding !== body.format.encoding || event.format.sampleRateHz !== body.format.sampleRateHz || event.format.channels !== body.format.channels) throw new Error("protocol format mismatch");
           sawPreAudio = true;
         }
-        if (event.kind === "data" && (event.sampleCount < 1 || event.sampleCount > 4800 || event.sampleOffset < 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(event.dataBase64))) throw new Error("protocol audio chunk invalid");
+        if (event.kind === "data") {
+          if (event.format.encoding !== body.format.encoding || event.format.sampleRateHz !== body.format.sampleRateHz || event.format.channels !== body.format.channels || !Number.isInteger(event.sampleCount) || event.sampleCount < 1 || event.sampleCount > 4800 || !Number.isInteger(event.sampleOffset) || event.sampleOffset < 0 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(event.dataBase64) || event.dataBase64.length < 4) throw new Error("protocol audio chunk invalid");
+          outputSamples += event.sampleCount;
+          frameCount += 1;
+          if (outputSamples > (request.maxOutputSamples ?? this.capabilities().maxOutputSamples)) throw new Error("protocol output limit exceeded");
+        }
+        if (event.kind === "terminal" && (!Number.isInteger(event.outputSamples) || event.outputSamples < 0 || !Number.isInteger(event.frameCount) || event.frameCount < 0 || event.outputSamples !== outputSamples || event.frameCount !== frameCount || event.outputSamples > (request.maxOutputSamples ?? this.capabilities().maxOutputSamples))) throw new Error("protocol terminal counts invalid");
         yield this.mapEvent(event, request);
         sequence += 1;
         sawTerminal = event.kind === "terminal";
