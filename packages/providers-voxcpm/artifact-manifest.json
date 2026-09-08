@@ -99,5 +99,5 @@
     "digest": null
   },
   "license": "Apache-2.0",
-  "blocker": "All model snapshot byte hashes are recorded from the designated ai5090 cache, but locked Linux/CUDA dependencies, base image digest, reproducible build definition, and final image provenance remain unestablished; adapter startup and release acceptance remain fail-closed until those inputs are populated."
+  "blocker": "All model snapshot byte hashes are recorded from the designated ai5090 cache. Locked Linux/CUDA dependencies, base image digest, reproducible build definition, and final image provenance remain unestablished for the prospective LS-S038 packaging/provenance claim; the uniquely identified operator-provisioned image may still support LS-S029 functional/dev-host evidence, not release or production acceptance."
 }

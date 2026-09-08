@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "5a04b3ed342d605bc1a31c163561a764fb1170d1",
+  "baseRevision": "f42ce0edea5f52d63a8a7559c57702fcb3c79812",
   "currentRevision": "WORKTREE",
   "activeSlice": "LS-S029",
   "sliceStatus": "blocked",
@@ -15,9 +15,9 @@
     { "command": "node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Workspace structure and whitespace checks passed locally on 2026-09-07." }
   ],
   "decisions": [],
-  "blockers": ["A complete corrected-sidecar lifecycle, synchronized WSL placement receipt, and expired-deadline terminal are now captured, but cancellation fencing, expressive conformance coverage, source-lock downloaded-byte hashes, locked binary dependencies, image provenance, and deployment receipt remain incomplete. The existing operator-owned container remains a preAudio-only skeleton."],
-  "nextAction": "Exercise client cancellation fencing against the corrected sidecar, then capture the required expressive degradation and stale-expression cases before updating LS-S029 acceptance status.",
+  "blockers": ["LS-S029 still lacks the remaining real-provider expressive matrix, stale-expression/fencing regression coverage, crash/restart and degraded-readiness evidence, and the short/medium/long plus 30-minute soak measurements. Missing historical image build inputs, reproducible source/build provenance, release acceptance, and deployment receipt are explicitly out of scope for LS-S029 and owned by downstream LS-S038."],
+  "nextAction": "Continue the LS-S029 host packet with warning/emergency and stale-expression cases, crash/restart and degraded-readiness checks, then short/medium/long measurements and the 30-minute soak; retain the exact non-release claim boundary.",
   "updatedAt": "2026-09-08T00:20:00Z",
   "updatedBy": "Codex",
-  "notes": "LS-S038 verifies safe fixture-only local packaging; real provider and non-fixture authority claims remain separately gated."
+  "notes": "LS-S029 may use the uniquely identified operator-provisioned image for real-provider functional and WSL development-host evidence. LS-S027 historical evidence remains valid only for its verified contract revision. LS-S038 owns prospective reproducible real-provider packaging/provenance; no LS-S029 evidence claims release or production acceptance."
 }
