@@ -14,6 +14,7 @@ export type RuntimeConfig = {
     clock: string;
   };
   providerRequirements: Record<keyof RuntimeConfig["providers"], ProviderRequirement>;
+  inferenceProfile?: { runtime: string; runtimeVersion: string; model: string; modelRevision: string; servedModelName: string; quantization: string; contextLength: number; endpoint: string; containerImageDigest: string; developmentOnly: true };
   storage: { databasePath: string; artifactDirectory: string };
   authority: { provider: string; authentication: string };
   secretRefs: Record<string, SecretRef>;

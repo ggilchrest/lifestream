@@ -1,4 +1,7 @@
 import type { RuntimeConfig } from "../config/schema.js";
+import type { InferenceProvider } from "@lifestream/runtime/inference";
+import { FixtureInferenceProvider } from "@lifestream/runtime/inference/fixture";
+import { SglangInferenceProvider } from "@lifestream/providers-sglang";
 
 export type ProviderHealthStatus = "healthy" | "degraded" | "unavailable";
 export type ProviderInstanceHealth = {
@@ -18,12 +21,14 @@ const descriptors: Record<string, ProviderDescriptor> = {
   system: { implementation: "node:system", revision: process.version, status: "healthy", fixture: false },
   unavailable: { implementation: "unavailable-test-provider", revision: "none", status: "unavailable", fixture: false, reason: "provider is intentionally unavailable" },
   "nemo-speech": { implementation: "@lifestream/providers-nemo-speech", revision: "workspace", status: "unavailable", fixture: false, reason: "provider is not configured for this runtime profile" },
+  "ai5090-development": { implementation: "@lifestream/providers-sglang", revision: "319f741cce68d7914884900c138a1fbb70a42f30", status: "unavailable", fixture: false, reason: "ai5090 development service has not been probed" },
   voxcpm: { implementation: "@lifestream/providers-voxcpm", revision: "workspace", status: "unavailable", fixture: false, reason: "provider is not configured for this runtime profile" },
   pwce: { implementation: "@lifestream/providers-pwce", revision: "workspace", status: "unavailable", fixture: false, reason: "provider is not configured for this runtime profile" }
 };
 
 export class ProviderRegistry {
   readonly providers: Readonly<Record<string, ProviderInstanceHealth>>;
+  readonly inference?: InferenceProvider;
   constructor(config: RuntimeConfig) {
     const instances: Record<string, ProviderInstanceHealth> = {};
     for (const [id, provider] of Object.entries(config.providers)) {
@@ -33,6 +38,8 @@ export class ProviderRegistry {
       instances[id] = Object.freeze({ id, ...descriptor, required: config.providerRequirements[providerKey] === "required" });
     }
     this.providers = Object.freeze(instances);
+    if (config.providers.inference === "fixture") this.inference = new FixtureInferenceProvider();
+    if (config.providers.inference === "ai5090-development" && config.inferenceProfile) this.inference = new SglangInferenceProvider({ endpoint: config.inferenceProfile.endpoint, model: config.inferenceProfile.servedModelName, ...(process.env.LIFESTREAM_INFERENCE_API_KEY ? { apiKey: process.env.LIFESTREAM_INFERENCE_API_KEY } : {}) });
   }
   get ready(): boolean { return Object.values(this.providers).every((provider) => !provider.required || provider.status === "healthy"); }
   get degraded(): boolean { return Object.values(this.providers).some((provider) => provider.status !== "healthy"); }

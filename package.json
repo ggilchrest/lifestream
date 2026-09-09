@@ -5,10 +5,10 @@
   "packageManager": "pnpm@10.0.0",
   "engines": { "node": ">=24.0.0" },
   "scripts": {
-    "build": "tsc -b apps/server packages/contracts packages/runtime packages/providers-fixture packages/providers-voxcpm packages/providers-nemo-speech packages/providers-pwce packages/storage-sqlite && mkdir -p apps/server/dist/config/profiles && cp apps/server/src/config/profiles/*.json apps/server/dist/config/profiles/",
+    "build": "tsc -b apps/server packages/contracts packages/runtime packages/providers-fixture packages/providers-voxcpm packages/providers-nemo-speech packages/providers-pwce packages/providers-sglang packages/storage-sqlite && mkdir -p apps/server/dist/config/profiles && cp apps/server/src/config/profiles/*.json apps/server/dist/config/profiles/",
     "lint": "eslint .",
     "test": "node --test --experimental-strip-types tests/**/*.test.ts packages/**/*.test.ts apps/**/*.test.ts",
-    "typecheck": "tsc -b --pretty false apps/server packages/contracts packages/runtime packages/providers-fixture packages/providers-voxcpm packages/providers-nemo-speech packages/providers-pwce packages/storage-sqlite"
+    "typecheck": "tsc -b --pretty false apps/server packages/contracts packages/runtime packages/providers-fixture packages/providers-voxcpm packages/providers-nemo-speech packages/providers-pwce packages/providers-sglang packages/storage-sqlite"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

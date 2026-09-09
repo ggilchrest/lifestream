@@ -5,7 +5,7 @@ import type { Profile, ProviderRequirement, RuntimeConfig, SecretRef } from "./s
 type ConfigInput = Partial<RuntimeConfig> & { [key: string]: unknown };
 type ConfigSources = { defaults: ConfigInput; profile: ConfigInput; environment: ConfigInput; cli: ConfigInput };
 
-const keys = new Set(["profile", "providers", "providerRequirements", "storage", "authority", "secretRefs"]);
+const keys = new Set(["profile", "providers", "providerRequirements", "inferenceProfile", "storage", "authority", "secretRefs"]);
 const providerKeys = new Set(["inference", "memory", "stt", "tts", "world", "capability", "renderer", "clock"]);
 const storageKeys = new Set(["databasePath", "artifactDirectory"]);
 const authorityKeys = new Set(["provider", "authentication"]);
@@ -51,6 +51,8 @@ export const loadConfig = (sources: ConfigSources): RuntimeConfig => {
   assertKeys(providers, providerKeys, "providers");
   const providerRequirements = { ...defaultRequirements, ...assertObject(merged.providerRequirements ?? {}, "providerRequirements") };
   assertKeys(providerRequirements, requirementKeys, "providerRequirements");
+  const inferenceProfile = merged.inferenceProfile === undefined ? undefined : assertObject(merged.inferenceProfile, "inferenceProfile");
+  if (inferenceProfile) { for (const key of ["runtime", "runtimeVersion", "model", "modelRevision", "servedModelName", "quantization", "endpoint", "containerImageDigest"]) if (typeof inferenceProfile[key] !== "string" || !inferenceProfile[key]) throw new Error(`invalid inference profile value: ${key}`); if (typeof inferenceProfile.contextLength !== "number" || !Number.isInteger(inferenceProfile.contextLength) || inferenceProfile.contextLength <= 0 || inferenceProfile.developmentOnly !== true) throw new Error("invalid inference profile limits"); }
   const storage = assertObject(merged.storage, "storage");
   assertKeys(storage, storageKeys, "storage");
   const authority = assertObject(merged.authority, "authority");
@@ -60,7 +62,9 @@ export const loadConfig = (sources: ConfigSources): RuntimeConfig => {
   for (const [key, value] of Object.entries(authority)) if (typeof value !== "string" || value.length === 0) throw new Error(`invalid authority value: ${key}`);
   if (merged.profile === "test" && Object.values(providers).some((value) => value !== "fixture")) throw new Error("test profile requires fixture providers");
   for (const [key, value] of Object.entries(providerRequirements)) if (value !== "required" && value !== "optional") throw new Error(`invalid provider requirement: ${key}`);
-  return { profile: merged.profile, providers: providers as RuntimeConfig["providers"], providerRequirements: providerRequirements as RuntimeConfig["providerRequirements"], storage: storage as RuntimeConfig["storage"], authority: authority as RuntimeConfig["authority"], secretRefs: validateSecretRefs(merged.secretRefs ?? {}) };
+  const result = { profile: merged.profile, providers: providers as RuntimeConfig["providers"], providerRequirements: providerRequirements as RuntimeConfig["providerRequirements"], storage: storage as RuntimeConfig["storage"], authority: authority as RuntimeConfig["authority"], secretRefs: validateSecretRefs(merged.secretRefs ?? {}) } as RuntimeConfig;
+  if (inferenceProfile) result.inferenceProfile = inferenceProfile as NonNullable<RuntimeConfig["inferenceProfile"]>;
+  return result;
 };
 
 export function loadProfile(profile: Profile, profilesDirectory = new URL("./profiles/", import.meta.url)): RuntimeConfig {

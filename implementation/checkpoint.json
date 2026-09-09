@@ -4,8 +4,8 @@
   "branch": "main",
   "baseRevision": "96f4260bae6e67e93668a8a22a0557f464455888",
   "currentRevision": "WORKTREE",
-  "activeSlice": "LS-S051",
-  "sliceStatus": "verified",
+  "activeSlice": "LS-S052",
+  "sliceStatus": "implemented",
   "completedSlices": [
     "LS-S001", "LS-S002", "LS-S003", "LS-S004", "LS-S005", "LS-S006", "LS-S007", "LS-S008", "LS-S009", "LS-S010",
     "LS-S011", "LS-S012", "LS-S013", "LS-S014", "LS-S015", "LS-S016", "LS-S017", "LS-S018", "LS-S019", "LS-S020",
@@ -13,8 +13,8 @@
     "LS-S031", "LS-S032", "LS-S033", "LS-S034", "LS-S035", "LS-S036", "LS-S037", "LS-S038", "LS-S040", "LS-S041",
     "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S046", "LS-S047", "LS-S039", "LS-S049", "LS-S050", "LS-S051"
   ],
-  "allowedFiles": ["package.json", "pnpm-lock.yaml", "tsconfig.base.json", "apps/server/package.json", "apps/server/src/index.ts", "apps/server/src/config/index.ts", "apps/server/src/config/loader.ts", "apps/server/src/config/schema.ts", "apps/server/src/config/profiles/test.json", "apps/server/src/config/profiles/local-dev.json", "apps/server/src/composition/providers.ts", "apps/server/test/config.test.ts", "apps/server/test/server.test.ts", "apps/server/test/providers.test.ts", "packages/runtime/package.json", "packages/providers-fixture/package.json", "packages/providers-nemo-speech/package.json", "packages/storage-sqlite/src/database.ts", "packages/storage-sqlite/src/migrations/index.ts", "packages/storage-sqlite/test/database.test.ts", "packages/runtime/test/authority-dispatch.test.ts", "packages/storage-sqlite/test/skills.test.ts", "implementation/checkpoint.json", "implementation/evidence/LS-S051.json"],
-  "changedFiles": ["package.json", "tsconfig.base.json", "apps/server/src/index.ts", "apps/server/src/config/index.ts", "apps/server/src/config/loader.ts", "apps/server/src/config/schema.ts", "apps/server/src/config/profiles/test.json", "apps/server/src/config/profiles/local-dev.json", "apps/server/src/composition/providers.ts", "apps/server/test/config.test.ts", "apps/server/test/server.test.ts", "apps/server/test/providers.test.ts", "packages/storage-sqlite/src/database.ts", "packages/storage-sqlite/src/migrations/index.ts", "packages/storage-sqlite/test/database.test.ts", "packages/runtime/test/authority-dispatch.test.ts", "packages/storage-sqlite/test/skills.test.ts", "implementation/checkpoint.json", "implementation/evidence/LS-S051.json"],
+  "allowedFiles": ["package.json", "pnpm-lock.yaml", "apps/server/package.json", "apps/server/src/index.ts", "apps/server/src/runtime/inference.ts", "apps/server/src/composition/providers.ts", "apps/server/src/config/schema.ts", "apps/server/src/config/loader.ts", "apps/server/src/config/profiles/local-dev.json", "apps/server/test/server.test.ts", "packages/runtime/package.json", "packages/runtime/src/index.ts", "packages/runtime/src/inference/port.ts", "packages/runtime/src/inference/prompt.ts", "packages/runtime/src/inference/fixture.ts", "packages/runtime/test/inference.test.ts", "packages/providers-sglang/package.json", "packages/providers-sglang/src/index.ts", "packages/providers-sglang/src/provider.ts", "packages/providers-sglang/provider-manifest.json", "packages/providers-sglang/test/provider.test.ts", "packages/providers-sglang/tsconfig.json", "implementation/checkpoint.json", "implementation/evidence/LS-S052.json"],
+  "changedFiles": ["package.json", "pnpm-lock.yaml", "apps/server/package.json", "apps/server/src/index.ts", "apps/server/src/runtime/inference.ts", "apps/server/src/composition/providers.ts", "apps/server/src/config/schema.ts", "apps/server/src/config/loader.ts", "apps/server/src/config/profiles/local-dev.json", "apps/server/test/server.test.ts", "packages/runtime/package.json", "packages/runtime/src/index.ts", "packages/runtime/src/inference/port.ts", "packages/runtime/src/inference/prompt.ts", "packages/runtime/src/inference/fixture.ts", "packages/runtime/test/inference.test.ts", "packages/providers-sglang/package.json", "packages/providers-sglang/src/index.ts", "packages/providers-sglang/src/provider.ts", "packages/providers-sglang/provider-manifest.json", "packages/providers-sglang/test/provider.test.ts", "packages/providers-sglang/tsconfig.json", "implementation/checkpoint.json", "implementation/evidence/LS-S052.json"],
   "validation": [
     {
       "command": "node --test --experimental-strip-types scripts/candidate-manifest.test.mjs",
@@ -29,7 +29,7 @@
     {
       "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build && node scripts/workspace.mjs check && git diff --check",
       "result": "pass",
-      "evidence": "Full workspace typecheck, 114 tests, lint, build, structural validation, and whitespace validation passed on 2026-09-09; server tests required loopback socket permission."
+      "evidence": "Full workspace typecheck, 119 tests, lint, build, structural validation, and whitespace validation passed on 2026-09-09; server tests required loopback socket permission."
     },
     {
       "command": "built local-dev server health and bounded SIGTERM shutdown",
@@ -40,9 +40,9 @@
   "decisions": [
     "WSL development isolation remains application-level: host physical GPU index 1 is exposed as provider-local cuda:0 through CUDA_VISIBLE_DEVICES=1; strict container GPU invisibility is not claimed."
   ],
-  "blockers": [],
-  "nextAction": "No dependency-ready slice remains in the authorized envelope. LS-S052 remains a separate decision-gated item for standard-inference/provider selection; do not choose it implicitly.",
-  "updatedAt": "2026-09-09T07:05:00Z",
+  "blockers": ["ai5090 development inference service on authenticated loopback port 30000 is unavailable from this execution environment; LS-TEST-069 real-provider streamed-answer acceptance remains pending."],
+  "nextAction": "When the selected ai5090 service is reachable, run the real LS-TEST-069 typed-text stream and record exact provider/model/configuration/InputManifest identity. Do not substitute fixture evidence or select a production model.",
+  "updatedAt": "2026-09-09T08:30:00Z",
   "updatedBy": "Codex",
-  "notes": "LS-S051 was implemented and verified under the explicitly authorized bounded runtime-completion phase. The historical LS-S050 boundary remains preserved, and the general prohibition on unapproved audit proposals remains active. No image was pushed and no external deployment occurred."
+  "notes": "LS-S052 development implementation is complete locally, but real-provider acceptance is pending because the exact selected ai5090 development service was unreachable. OD-006 development is applied; production inference and LS-S056 endpoint selection remain separate. The historical LS-S050 boundary and general prohibition on unapproved audit proposals remain active. No image was pushed and no external deployment occurred."
 }

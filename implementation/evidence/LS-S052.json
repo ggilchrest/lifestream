@@ -1,0 +1,26 @@
+{
+  "slice": "LS-S052",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "real-inference-development",
+  "revision": "WORKTREE",
+  "acceptanceCase": "LS-TEST-069",
+  "developmentProfile": {
+    "decision": "OD-006-development",
+    "runtime": "SGLang 0.0.0.dev1+g5f55db35e",
+    "model": "RadixArk/Qwen3.8-27B-NVFP4",
+    "modelRevision": "319f741cce68d7914884900c138a1fbb70a42f30",
+    "servedModelName": "qwen3.8-27b-local",
+    "quantization": "NVFP4",
+    "contextLength": 65536,
+    "containerImageDigest": "sha256:616a3e97f45191af975896cfa644279096cb31bd408a071c2e99ca7209c3cafe",
+    "endpoint": "authenticated loopback port 30000",
+    "productionQualified": false
+  },
+  "checks": [
+    { "command": "corepack pnpm build && corepack pnpm lint && corepack pnpm test", "result": "pass", "evidence": "Build and lint passed; all 118 Lifestream tests passed, including canonical prompt/manifest, fixture SSE route, SGLang streaming/replay adapter, and existing suites." },
+    { "command": "curl --max-time 2 http://127.0.0.1:30000/health", "result": "blocked", "evidence": "HTTP 000: the selected ai5090 development service was not reachable from this execution environment; real-provider streamed-answer acceptance remains pending and was not substituted by fixture evidence." }
+    ,{ "command": "ssh -o BatchMode=yes ai5090-wsl curl http://127.0.0.1:30000/health", "result": "blocked", "evidence": "The configured SSH host reset the connection on 192.168.2.164:2222; no remote service evidence was claimed." }
+  ],
+  "implemented": ["canonical nine ordered sections", "InputManifest provenance/digest/redaction/token metadata", "typed-text SSE runtime route with fixture authority", "pinned SGLang development adapter with bounded streaming and replay isolation", "explicit local-dev profile identity and truthful unavailable-provider health"],
+  "excluded": ["permanent production model/runtime selection", "RTX 3090 qualification", "physical endpoint, renderer, avatar, voice, PWCE, production performance, Human acceptance"]
+}

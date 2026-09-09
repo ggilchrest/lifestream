@@ -26,6 +26,12 @@ importers:
 
   apps/server:
     dependencies:
+      '@lifestream/providers-sglang':
+        specifier: workspace:*
+        version: link:../../packages/providers-sglang
+      '@lifestream/runtime':
+        specifier: workspace:*
+        version: link:../../packages/runtime
       '@lifestream/storage-sqlite':
         specifier: workspace:*
         version: link:../../packages/storage-sqlite
@@ -41,6 +47,12 @@ importers:
         version: link:../runtime
 
   packages/providers-pwce: {}
+
+  packages/providers-sglang:
+    dependencies:
+      '@lifestream/runtime':
+        specifier: workspace:*
+        version: link:../runtime
 
   packages/providers-voxcpm:
     dependencies:

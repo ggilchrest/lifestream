@@ -6,6 +6,8 @@
     { "path": "../../packages/contracts" },
     { "path": "../../packages/runtime" },
     { "path": "../../packages/providers-fixture" },
+    { "path": "../../packages/providers-sglang" },
+    { "path": "../../packages/runtime" },
     { "path": "../../packages/storage-sqlite" }
   ]
 }
