@@ -40,9 +40,9 @@
   "decisions": [
     "WSL development isolation remains application-level: host physical GPU index 1 is exposed as provider-local cuda:0 through CUDA_VISIBLE_DEVICES=1; strict container GPU invisibility is not claimed."
   ],
-  "blockers": ["ai5090 development inference service on authenticated loopback port 30000 is unavailable from this execution environment; LS-TEST-069 real-provider streamed-answer acceptance remains pending."],
-  "nextAction": "When the selected ai5090 service is reachable, run the real LS-TEST-069 typed-text stream and record exact provider/model/configuration/InputManifest identity. Do not substitute fixture evidence or select a production model.",
+  "blockers": ["The composite LS-TEST-069 server-route/session/capability/cancellation acceptance has not yet been exercised end-to-end against the live provider; the direct real-provider stream is now verified."],
+  "nextAction": "Run the authenticated typed-text server route through the verified ai5090 tunnel and record session/interaction, read-only capability, cancellation/deadline/limit/outage/replay evidence. Do not substitute fixture evidence or select a production model.",
   "updatedAt": "2026-09-09T08:30:00Z",
   "updatedBy": "Codex",
-  "notes": "LS-S052 development implementation is complete locally, but real-provider acceptance is pending because the exact selected ai5090 development service was unreachable. OD-006 development is applied; production inference and LS-S056 endpoint selection remain separate. The historical LS-S050 boundary and general prohibition on unapproved audit proposals remain active. No image was pushed and no external deployment occurred."
+  "notes": "LS-S052 development implementation and direct real-provider stream are complete locally; composite route acceptance remains pending. OD-006 development is applied; production inference and LS-S056 endpoint selection remain separate. The historical LS-S050 boundary and general prohibition on unapproved audit proposals remain active. No image was pushed and no external deployment occurred."
 }

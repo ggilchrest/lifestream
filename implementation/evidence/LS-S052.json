@@ -17,10 +17,11 @@
     "productionQualified": false
   },
   "checks": [
-    { "command": "corepack pnpm build && corepack pnpm lint && corepack pnpm test", "result": "pass", "evidence": "Build and lint passed; all 118 Lifestream tests passed, including canonical prompt/manifest, fixture SSE route, SGLang streaming/replay adapter, and existing suites." },
+    { "command": "corepack pnpm build && corepack pnpm lint && corepack pnpm test", "result": "pass", "evidence": "Build and lint passed; all 119 Lifestream tests passed, including canonical prompt/manifest, fixture SSE route, SGLang streaming/replay adapter, and existing suites." },
     { "command": "curl --max-time 2 http://127.0.0.1:30000/health", "result": "blocked", "evidence": "HTTP 000: the selected ai5090 development service was not reachable from this execution environment; real-provider streamed-answer acceptance remains pending and was not substituted by fixture evidence." }
-    ,{ "command": "ssh -o BatchMode=yes ai5090-wsl curl http://127.0.0.1:30000/health", "result": "blocked", "evidence": "The configured SSH host reset the connection on 192.168.2.164:2222; no remote service evidence was claimed." }
+    ,{ "command": "ssh -o BatchMode=yes ai5090-wsl curl http://127.0.0.1:30000/health", "result": "blocked", "evidence": "An earlier probe recorded a transient connection reset on 192.168.2.164:2222; the later Windows SSH path succeeded." },
+    { "command": "SSH loopback tunnel + authenticated SglangInferenceProvider smoke", "result": "pass", "evidence": "Windows-hosted SGLANG_API_KEY was used transiently and not printed or stored. ai5090 health returned HTTP 200; authenticated /v1/models identified qwen3.8-27b-local with max_model_len 65536; the actual adapter streamed '\\n\\nREADY' and terminal done for the canonical nine-section InputManifest." }
   ],
   "implemented": ["canonical nine ordered sections", "InputManifest provenance/digest/redaction/token metadata", "typed-text SSE runtime route with fixture authority", "pinned SGLang development adapter with bounded streaming and replay isolation", "explicit local-dev profile identity and truthful unavailable-provider health"],
-  "excluded": ["permanent production model/runtime selection", "RTX 3090 qualification", "physical endpoint, renderer, avatar, voice, PWCE, production performance, Human acceptance"]
+  "excluded": ["permanent production model/runtime selection", "RTX 3090 qualification", "physical endpoint, renderer, avatar, voice, PWCE, production performance, Human acceptance", "composite server-route/session/capability/cancellation acceptance remains pending"]
 }
