@@ -1,7 +1,7 @@
 {
   "slice": "LS-S051",
   "status": "verified",
-  "revision": "WORKTREE",
+  "revision": "30076e785e837d93d55e27ad19baaf35a3af08a2",
   "acceptanceCases": ["LS-TEST-068"],
   "requirements": ["LS-DEP-022", "LS-DEP-030", "LS-DEP-031", "LS-DEP-032", "LS-COMP-020", "LS-COMP-022"],
   "checks": [
