@@ -15,6 +15,7 @@
 - Run the selected packet's commands and acceptance cases. Record exact commands, revision, result, and durable evidence. Never turn planned checks, an empty suite, or specification validation into runtime acceptance.
 - Update the checkpoint at slice start and after material validation. Keep completed-slice evidence, then continue automatically through the requested scope while prerequisites are satisfied.
 - Stop only for a material scope/dependency conflict, an unresolved material product/safety/privacy/compatibility/data decision, unreproducible validation, credential or live/production-effect risk, or a genuine packet stop condition. Ask the smallest concrete question needed to continue.
+- A blocked slice does not stop an authorized batch when another dependency-ready operation exists. Report `continue`, `waiting`, `complete`, or `stopped` as the run disposition separately from slice status; `waiting` must identify the exact decision or environment requirement and affected behavior.
 - Local slice commits may preserve verified evidence within a requested bounded task, milestone, or batch. Pushes, releases, production activation, and specification publication require separate user direction. Use `codex/` for a requested new working branch; do not change an existing branch just for inspection.
 
 ## Commands and GitHub identity
