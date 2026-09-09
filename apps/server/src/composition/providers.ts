@@ -27,9 +27,11 @@ const descriptors: Record<string, ProviderDescriptor> = {
 };
 
 export class ProviderRegistry {
-  readonly providers: Readonly<Record<string, ProviderInstanceHealth>>;
+  readonly providers: Record<string, ProviderInstanceHealth>;
   readonly inference?: InferenceProvider;
+  private readonly config: RuntimeConfig;
   constructor(config: RuntimeConfig) {
+    this.config = config;
     const instances: Record<string, ProviderInstanceHealth> = {};
     for (const [id, provider] of Object.entries(config.providers)) {
       const descriptor = descriptors[provider];
@@ -37,9 +39,21 @@ export class ProviderRegistry {
       const providerKey = id as keyof RuntimeConfig["providers"];
       instances[id] = Object.freeze({ id, ...descriptor, required: config.providerRequirements[providerKey] === "required" });
     }
-    this.providers = Object.freeze(instances);
+    this.providers = instances;
     if (config.providers.inference === "fixture") this.inference = new FixtureInferenceProvider();
     if (config.providers.inference === "ai5090-development" && config.inferenceProfile) this.inference = new SglangInferenceProvider({ endpoint: config.inferenceProfile.endpoint, model: config.inferenceProfile.servedModelName, ...(process.env.LIFESTREAM_INFERENCE_API_KEY ? { apiKey: process.env.LIFESTREAM_INFERENCE_API_KEY } : {}) });
+  }
+  async probe(timeoutMs = 2_000): Promise<void> {
+    const current = this.providers.inference;
+    if (!current || current.id !== "inference" || this.config.providers.inference !== "ai5090-development" || !this.config.inferenceProfile) return;
+    const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(`${this.config.inferenceProfile.endpoint.replace(/\/$/u, "")}/health`, { signal: controller.signal });
+      const { reason: _previousReason, ...base } = current;
+      this.providers.inference = Object.freeze({ ...base, status: response.ok ? "healthy" : "unavailable", ...(response.ok ? {} : { reason: `ai5090 health returned HTTP ${response.status}` }) });
+    } catch (error) {
+      this.providers.inference = Object.freeze({ ...current, status: "unavailable", reason: error instanceof Error && error.name === "AbortError" ? "ai5090 health probe timed out" : "ai5090 health probe failed" });
+    } finally { clearTimeout(timer); }
   }
   get ready(): boolean { return Object.values(this.providers).every((provider) => !provider.required || provider.status === "healthy"); }
   get degraded(): boolean { return Object.values(this.providers).some((provider) => provider.status !== "healthy"); }

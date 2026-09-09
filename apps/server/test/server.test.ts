@@ -43,8 +43,8 @@ test("fixture Assistant administration persists revisions and requires authority
 test("typed-text runtime streams a canonical manifest and fixture response", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-runtime-")); t.after(async () => rm(root, { recursive: true, force: true }));
   const app = createLifestreamServer({ config: config(root) }); await app.start(); t.after(() => app.shutdown()); const base = `http://127.0.0.1:${app.address().port}`;
-  const response = await fetch(`${base}/api/runtime/v1/messages`, { method: "POST", headers: { "content-type": "application/json", "x-lifestream-fixture-session": "session-1", "x-lifestream-fixture-principal": "human", origin: base }, body: JSON.stringify({ userInput: "hello" }) });
-  assert.equal(response.status, 200); const body = await response.text(); assert.match(body, /event: input\.manifest/); assert.match(body, /"schemaVersion":"1\.0\.0"/); assert.match(body, /Fixture response: hello/); assert.match(body, /event: interaction\.completed/);
+  const response = await fetch(`${base}/api/runtime/v1/messages`, { method: "POST", headers: { "content-type": "application/json", "x-lifestream-fixture-session": "session-1", "x-lifestream-fixture-principal": "human", origin: base }, body: JSON.stringify({ userInput: "hello", readOnlyCapability: { name: "capability.read-only.status", input: { scope: "assistant-neutral" } } }) });
+  assert.equal(response.status, 200); const body = await response.text(); assert.match(body, /event: input\.manifest/); assert.match(body, /"schemaVersion":"1\.0\.0"/); assert.match(body, /event: capability\.read-only/); assert.match(body, /capability\.read-only\.status/); assert.match(body, /Fixture response: hello/); assert.match(body, /event: interaction\.completed/);
 });
 
 test("restart recreates persistent paths and readiness", async (t) => {
