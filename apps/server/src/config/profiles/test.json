@@ -1,6 +1,7 @@
 {
   "profile": "test",
   "providers": { "inference": "fixture", "memory": "fixture", "stt": "fixture", "tts": "fixture", "world": "fixture", "capability": "fixture", "renderer": "fixture", "clock": "fixture" },
+  "providerRequirements": { "inference": "required", "memory": "required", "stt": "required", "tts": "required", "world": "optional", "capability": "optional", "renderer": "optional", "clock": "required" },
   "storage": { "databasePath": ":memory:", "artifactDirectory": ".artifacts/test" },
   "authority": { "provider": "fixture", "authentication": "fixture" },
   "secretRefs": {}

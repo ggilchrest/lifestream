@@ -1,5 +1,6 @@
 export type Profile = "test" | "local-dev";
 export type SecretRef = { kind: "env"; name: string };
+export type ProviderRequirement = "required" | "optional";
 export type RuntimeConfig = {
   profile: Profile;
   providers: {
@@ -12,6 +13,7 @@ export type RuntimeConfig = {
     renderer: string;
     clock: string;
   };
+  providerRequirements: Record<keyof RuntimeConfig["providers"], ProviderRequirement>;
   storage: { databasePath: string; artifactDirectory: string };
   authority: { provider: string; authentication: string };
   secretRefs: Record<string, SecretRef>;

@@ -1,0 +1,45 @@
+{
+  "slice": "LS-S051",
+  "status": "verified",
+  "revision": "WORKTREE",
+  "acceptanceCases": ["LS-TEST-068"],
+  "requirements": ["LS-DEP-022", "LS-DEP-030", "LS-DEP-031", "LS-DEP-032", "LS-COMP-020", "LS-COMP-022"],
+  "checks": [
+    {
+      "command": "corepack pnpm build",
+      "result": "pass",
+      "evidence": "All referenced workspace packages compiled; server profile JSON files are copied into the built distribution."
+    },
+    {
+      "command": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm test",
+      "result": "pass",
+      "evidence": "Strict typecheck and ESLint passed; all 114 workspace tests passed on 2026-09-09 with loopback permission enabled."
+    },
+    {
+      "command": "node scripts/workspace.mjs check && git diff --check",
+      "result": "pass",
+      "evidence": "Public workspace structural validation and whitespace validation passed."
+    },
+    {
+      "command": "built local-dev server health and bounded SIGTERM shutdown",
+      "result": "pass",
+      "evidence": "Temporary localhost run reported status ready, profile local-dev, storage ready, acceptingInteractions true, migrations [1,2,3,4,5,6,7,8,9,11,12,13], required fixture providers healthy, system clock healthy, and live endpoint status live; SIGTERM exited cleanly. Configuration digest was bc000745f762f12f891dc7212feaa80405f01a3de56a144dcee344a8e9096671."
+    }
+  ],
+  "scope": {
+    "implemented": [
+      "explicit test/local-dev profile loading and provider requirements",
+      "allowlisted provider construction with fail-closed unknown/unavailable states",
+      "ordered durable SQLite migrations with sparse-ledger preservation",
+      "truthful effective configuration, provider, migration, storage, and readiness health",
+      "bounded server shutdown and packaged profile assets"
+    ],
+    "excluded": [
+      "production provider selection or enrollment",
+      "real Human authentication or acceptance",
+      "external publication, deployment, and live effects",
+      "composition-repository implementation of Lifestream-owned behavior",
+      "unapproved audit proposals"
+    ]
+  }
+}

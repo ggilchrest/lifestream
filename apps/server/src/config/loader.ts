@@ -1,13 +1,16 @@
 import { createHash } from "node:crypto";
-import type { RuntimeConfig, SecretRef } from "./schema.js";
+import { readFileSync } from "node:fs";
+import type { Profile, ProviderRequirement, RuntimeConfig, SecretRef } from "./schema.js";
 
 type ConfigInput = Partial<RuntimeConfig> & { [key: string]: unknown };
 type ConfigSources = { defaults: ConfigInput; profile: ConfigInput; environment: ConfigInput; cli: ConfigInput };
 
-const keys = new Set(["profile", "providers", "storage", "authority", "secretRefs"]);
+const keys = new Set(["profile", "providers", "providerRequirements", "storage", "authority", "secretRefs"]);
 const providerKeys = new Set(["inference", "memory", "stt", "tts", "world", "capability", "renderer", "clock"]);
 const storageKeys = new Set(["databasePath", "artifactDirectory"]);
 const authorityKeys = new Set(["provider", "authentication"]);
+const requirementKeys = new Set(["inference", "memory", "stt", "tts", "world", "capability", "renderer", "clock"]);
+const defaultRequirements: Record<string, ProviderRequirement> = { inference: "required", memory: "required", stt: "required", tts: "required", world: "optional", capability: "optional", renderer: "optional", clock: "required" };
 const isProfile = (value: unknown): value is RuntimeConfig["profile"] => value === "test" || value === "local-dev";
 
 const assertObject = (value: unknown, name: string): Record<string, unknown> => {
@@ -46,6 +49,8 @@ export const loadConfig = (sources: ConfigSources): RuntimeConfig => {
   if (!isProfile(merged.profile)) throw new Error("profile must be test or local-dev");
   const providers = assertObject(merged.providers, "providers");
   assertKeys(providers, providerKeys, "providers");
+  const providerRequirements = { ...defaultRequirements, ...assertObject(merged.providerRequirements ?? {}, "providerRequirements") };
+  assertKeys(providerRequirements, requirementKeys, "providerRequirements");
   const storage = assertObject(merged.storage, "storage");
   assertKeys(storage, storageKeys, "storage");
   const authority = assertObject(merged.authority, "authority");
@@ -54,8 +59,15 @@ export const loadConfig = (sources: ConfigSources): RuntimeConfig => {
   for (const [key, value] of Object.entries(storage)) if (typeof value !== "string" || value.length === 0) throw new Error(`invalid storage value: ${key}`);
   for (const [key, value] of Object.entries(authority)) if (typeof value !== "string" || value.length === 0) throw new Error(`invalid authority value: ${key}`);
   if (merged.profile === "test" && Object.values(providers).some((value) => value !== "fixture")) throw new Error("test profile requires fixture providers");
-  return { profile: merged.profile, providers: providers as RuntimeConfig["providers"], storage: storage as RuntimeConfig["storage"], authority: authority as RuntimeConfig["authority"], secretRefs: validateSecretRefs(merged.secretRefs ?? {}) };
+  for (const [key, value] of Object.entries(providerRequirements)) if (value !== "required" && value !== "optional") throw new Error(`invalid provider requirement: ${key}`);
+  return { profile: merged.profile, providers: providers as RuntimeConfig["providers"], providerRequirements: providerRequirements as RuntimeConfig["providerRequirements"], storage: storage as RuntimeConfig["storage"], authority: authority as RuntimeConfig["authority"], secretRefs: validateSecretRefs(merged.secretRefs ?? {}) };
 };
+
+export function loadProfile(profile: Profile, profilesDirectory = new URL("./profiles/", import.meta.url)): RuntimeConfig {
+  const path = new URL(`${profile}.json`, profilesDirectory);
+  const profileConfig = JSON.parse(readFileSync(path, "utf8")) as ConfigInput;
+  return loadConfig({ defaults: {}, profile: profileConfig, environment: {}, cli: {} });
+}
 
 const canonical = (value: unknown): string => {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;

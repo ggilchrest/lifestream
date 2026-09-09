@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadConfig, redactedDigest } from "../src/config/loader.ts";
+import { loadConfig, loadProfile, redactedDigest } from "../src/config/loader.ts";
 
 const base = {
   profile: "test",
@@ -15,6 +15,13 @@ test("configuration precedence and redacted digest are deterministic", () => {
   const second = loadConfig({ defaults: base, profile: {}, environment: { storage: { databasePath: "env" } }, cli: { storage: { databasePath: "cli" }, secretRefs: { token: { kind: "env", name: "TOKEN" } } } });
   assert.equal(first.storage.databasePath, "cli");
   assert.equal(redactedDigest(first), redactedDigest(second));
+  const changed = loadConfig({ defaults: base, profile: {}, environment: {}, cli: { providers: { memory: "fixture" }, providerRequirements: { world: "required" } } });
+  assert.notEqual(redactedDigest(first), redactedDigest(changed));
+});
+
+test("profiles are explicit and include provider requirements", () => {
+  assert.equal(loadProfile("test").profile, "test");
+  assert.equal(loadProfile("local-dev").providerRequirements.world, "optional");
 });
 
 test("unknown keys and non-fixture test providers fail closed", () => {

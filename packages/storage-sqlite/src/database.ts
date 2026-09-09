@@ -1,9 +1,8 @@
-import { createHash } from "node:crypto";
 import { backup, DatabaseSync } from "node:sqlite";
-import { mkdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import type { StatementSync } from "node:sqlite";
+import { loadMigrations } from "./migrations/index.ts";
 
 export interface Transaction {
   readonly database: DatabaseSync;
@@ -25,20 +24,7 @@ function withTransaction<T>(database: DatabaseSync, operation: (transaction: Tra
   catch (error) { try { database.exec("ROLLBACK"); } catch { /* preserve original error */ } throw error; }
 }
 
-interface Migration { id: number; name: string; sql: string; digest: string; }
 export interface MigrationRecord { id: number; name: string; digest: string; appliedAt: string; }
-function loadMigrations(): Migration[] {
-  const directory = join(dirname(fileURLToPath(import.meta.url)), "migrations");
-  return [
-    [1, "initial", "0001_initial.sql"],
-    [11, "capability_cache", "0011_capability_cache.sql"],
-    [12, "skills_proposals", "0012_skills_proposals.sql"],
-    [13, "endpoints", "0013_endpoints.sql"],
-  ].map(([id, name, file]) => {
-    const sql = readFileSync(join(directory, file as string), "utf8");
-    return { id: id as number, name: name as string, sql, digest: createHash("sha256").update(sql).digest("hex") };
-  });
-}
 
 export interface DatabaseOptions { path: string; busyTimeoutMs?: number; migrations?: ReturnType<typeof loadMigrations>; }
 
