@@ -71,6 +71,6 @@ test("shutdown drains only until its deadline and production is not a fixture pr
   assert.ok(Date.now() - started < 500);
   assert.equal(app.health.status, "stopped");
   await rm(root, { recursive: true, force: true });
-  assert.throws(() => loadConfig({ defaults: { ...config("."), profile: "production" as never }, profile: {}, environment: {}, cli: {} }), /profile must be test or local-dev/);
+  assert.throws(() => loadConfig({ defaults: { ...config("."), profile: "production" as never }, profile: {}, environment: {}, cli: {} }), /profile must be test, local-dev, ai5090, or mac-local/);
   void work.catch(() => undefined);
 });

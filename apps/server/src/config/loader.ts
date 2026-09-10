@@ -5,13 +5,13 @@ import type { Profile, ProviderRequirement, RuntimeConfig, SecretRef } from "./s
 type ConfigInput = Partial<RuntimeConfig> & { [key: string]: unknown };
 type ConfigSources = { defaults: ConfigInput; profile: ConfigInput; environment: ConfigInput; cli: ConfigInput };
 
-const keys = new Set(["profile", "providers", "providerRequirements", "inferenceProfile", "storage", "authority", "secretRefs"]);
+const keys = new Set(["profile", "providers", "providerRequirements", "inferenceProfile", "ttsProfile", "storage", "authority", "secretRefs"]);
 const providerKeys = new Set(["inference", "memory", "stt", "tts", "world", "capability", "renderer", "clock"]);
 const storageKeys = new Set(["databasePath", "artifactDirectory"]);
 const authorityKeys = new Set(["provider", "authentication"]);
 const requirementKeys = new Set(["inference", "memory", "stt", "tts", "world", "capability", "renderer", "clock"]);
 const defaultRequirements: Record<string, ProviderRequirement> = { inference: "required", memory: "required", stt: "required", tts: "required", world: "optional", capability: "optional", renderer: "optional", clock: "required" };
-const isProfile = (value: unknown): value is RuntimeConfig["profile"] => value === "test" || value === "local-dev";
+export const isProfile = (value: unknown): value is Profile => value === "test" || value === "local-dev" || value === "ai5090" || value === "mac-local";
 
 const assertObject = (value: unknown, name: string): Record<string, unknown> => {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${name} must be an object`);
@@ -46,13 +46,23 @@ const validateSecretRefs = (value: unknown): Record<string, SecretRef> => {
 export const loadConfig = (sources: ConfigSources): RuntimeConfig => {
   const merged = merge(sources.defaults, sources.profile, sources.environment, sources.cli);
   assertKeys(merged, keys, "configuration");
-  if (!isProfile(merged.profile)) throw new Error("profile must be test or local-dev");
+  if (!isProfile(merged.profile)) throw new Error("profile must be test, local-dev, ai5090, or mac-local");
   const providers = assertObject(merged.providers, "providers");
   assertKeys(providers, providerKeys, "providers");
   const providerRequirements = { ...defaultRequirements, ...assertObject(merged.providerRequirements ?? {}, "providerRequirements") };
   assertKeys(providerRequirements, requirementKeys, "providerRequirements");
   const inferenceProfile = merged.inferenceProfile === undefined ? undefined : assertObject(merged.inferenceProfile, "inferenceProfile");
-  if (inferenceProfile) { for (const key of ["runtime", "runtimeVersion", "model", "modelRevision", "servedModelName", "quantization", "endpoint", "containerImageDigest"]) if (typeof inferenceProfile[key] !== "string" || !inferenceProfile[key]) throw new Error(`invalid inference profile value: ${key}`); if (typeof inferenceProfile.contextLength !== "number" || !Number.isInteger(inferenceProfile.contextLength) || inferenceProfile.contextLength <= 0 || inferenceProfile.developmentOnly !== true) throw new Error("invalid inference profile limits"); }
+  if (inferenceProfile) {
+    for (const key of ["runtime", "runtimeVersion", "model", "modelRevision", "servedModelName", "quantization", "endpoint"]) if (typeof inferenceProfile[key] !== "string" || !inferenceProfile[key]) throw new Error(`invalid inference profile value: ${key}`);
+    const artifacts = [inferenceProfile.containerImageDigest, inferenceProfile.modelArtifactDigest].filter((value) => typeof value === "string" && value.length > 0);
+    if (artifacts.length !== 1) throw new Error("inference profile requires exactly one runtime artifact digest");
+    if (typeof inferenceProfile.contextLength !== "number" || !Number.isInteger(inferenceProfile.contextLength) || inferenceProfile.contextLength <= 0 || inferenceProfile.developmentOnly !== true) throw new Error("invalid inference profile limits");
+  }
+  const ttsProfile = merged.ttsProfile === undefined ? undefined : assertObject(merged.ttsProfile, "ttsProfile");
+  if (ttsProfile) {
+    for (const key of ["runtime", "runtimeVersion", "model", "modelRevision", "quantization", "endpoint", "voiceBundleKey", "mappingRevision"]) if (typeof ttsProfile[key] !== "string" || !ttsProfile[key]) throw new Error(`invalid TTS profile value: ${key}`);
+    if (!Number.isInteger(ttsProfile.voiceBundleRevision) || (ttsProfile.voiceBundleRevision as number) <= 0 || ttsProfile.developmentOnly !== true) throw new Error("invalid TTS profile limits");
+  }
   const storage = assertObject(merged.storage, "storage");
   assertKeys(storage, storageKeys, "storage");
   const authority = assertObject(merged.authority, "authority");
@@ -64,6 +74,7 @@ export const loadConfig = (sources: ConfigSources): RuntimeConfig => {
   for (const [key, value] of Object.entries(providerRequirements)) if (value !== "required" && value !== "optional") throw new Error(`invalid provider requirement: ${key}`);
   const result = { profile: merged.profile, providers: providers as RuntimeConfig["providers"], providerRequirements: providerRequirements as RuntimeConfig["providerRequirements"], storage: storage as RuntimeConfig["storage"], authority: authority as RuntimeConfig["authority"], secretRefs: validateSecretRefs(merged.secretRefs ?? {}) } as RuntimeConfig;
   if (inferenceProfile) result.inferenceProfile = inferenceProfile as NonNullable<RuntimeConfig["inferenceProfile"]>;
+  if (ttsProfile) result.ttsProfile = ttsProfile as NonNullable<RuntimeConfig["ttsProfile"]>;
   return result;
 };
 

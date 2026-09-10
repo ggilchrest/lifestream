@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { AssistantProfileRepository, Database, type AssistantProfile } from "@lifestream/storage-sqlite";
-import { loadProfile, redactedDigest } from "./config/loader.ts";
+import { isProfile, loadProfile, redactedDigest } from "./config/loader.ts";
 import { createProviderRegistry, type ProviderInstanceHealth, type ProviderRegistry } from "./composition/providers.ts";
 import type { RuntimeConfig } from "./config/schema.js";
 import { streamMessage } from "./runtime/inference.ts";
@@ -44,4 +44,4 @@ export class LifestreamServer {
   private async serveUi(response: ServerResponse, relativePath: string, contentType: string | undefined): Promise<void> { if (!/^[A-Za-z0-9_.-]+$/.test(relativePath)) return json(response, 404, { code: "not_found", message: "not found" }); try { const body = await readFile(resolve(this.controlUiDirectory, relativePath), "utf8"); const type = contentType ?? (relativePath.endsWith(".html") ? "text/html; charset=utf-8" : relativePath.endsWith(".css") ? "text/css; charset=utf-8" : relativePath.endsWith(".js") ? "text/javascript; charset=utf-8" : "application/octet-stream"); return text(response, 200, type, body); } catch { return json(response, 404, { code: "not_found", message: "not found" }); } }
 }
 export const createLifestreamServer = (options: ServerOptions): LifestreamServer => new LifestreamServer(options);
-if (process.argv[1] === fileURLToPath(import.meta.url)) { const profile = process.env.LIFESTREAM_PROFILE === "local-dev" ? "local-dev" : "test"; const app = createLifestreamServer({ config: loadProfile(profile), port: Number(process.env.PORT ?? 3000) }); await app.start(); process.once("SIGTERM", () => { void app.shutdown().then(() => process.exit(0)); }); process.once("SIGINT", () => { void app.shutdown().then(() => process.exit(0)); }); console.log(`Lifestream server listening on http://${app.host}:${app.address().port}/control/`); }
+if (process.argv[1] === fileURLToPath(import.meta.url)) { const requestedProfile = process.env.LIFESTREAM_PROFILE ?? "test"; if (!isProfile(requestedProfile)) throw new Error(`unknown Lifestream profile: ${requestedProfile}`); const app = createLifestreamServer({ config: loadProfile(requestedProfile), port: Number(process.env.PORT ?? 3000) }); await app.start(); process.once("SIGTERM", () => { void app.shutdown().then(() => process.exit(0)); }); process.once("SIGINT", () => { void app.shutdown().then(() => process.exit(0)); }); console.log(`Lifestream server listening on http://${app.host}:${app.address().port}/control/`); }

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0.0",
+  "profile": "mac-local",
+  "platform": "darwin-arm64",
+  "backend": "mlx",
+  "runtime": "mlx-audio@0.5.3",
+  "runtimeDistributionSha256": "8d920b2dcbcf37b5fd2bbb070e21a9a33442bf231a754e0d39387e65986bd830",
+  "model": "mlx-community/VoxCPM2-4bit",
+  "modelRevision": "dc9e5c187858da5f4a13dc4c247e297339216381",
+  "quantization": "4bit",
+  "modelBytes": 2298352089,
+  "sidecar": { "baseUrl": "http://127.0.0.1:8787", "bind": "127.0.0.1", "protocol": "voxcpm.loopback.v1" },
+  "production": false,
+  "exclusions": ["perceptual acceptance", "production performance", "automatic remote-to-local failover"]
+}

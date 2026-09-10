@@ -22,9 +22,17 @@ test("configuration precedence and redacted digest are deterministic", () => {
 test("profiles are explicit and include provider requirements", () => {
   assert.equal(loadProfile("test").profile, "test");
   assert.equal(loadProfile("local-dev").providerRequirements.world, "optional");
+  assert.equal(loadProfile("ai5090").providers.inference, "ai5090-development");
+  const mac = loadProfile("mac-local");
+  assert.equal(mac.providers.inference, "ollama-mac-local");
+  assert.equal(mac.inferenceProfile?.servedModelName, "qwen3.5:2b-q4_K_M");
+  assert.equal(mac.providers.tts, "voxcpm");
+  assert.equal(mac.ttsProfile?.model, "mlx-community/VoxCPM2-4bit");
+  assert.equal(mac.providerRequirements.stt, "optional");
 });
 
 test("unknown keys and non-fixture test providers fail closed", () => {
   assert.throws(() => loadConfig({ defaults: { ...base, unknown: true }, profile: {}, environment: {}, cli: {} }), /unknown configuration key/);
   assert.throws(() => loadConfig({ defaults: { ...base, providers: { ...base.providers, memory: "live" } }, profile: {}, environment: {}, cli: {} }), /requires fixture/);
+  assert.throws(() => loadConfig({ defaults: { ...base, profile: "mac-local", inferenceProfile: { runtime: "Ollama", runtimeVersion: "0.31.1", model: "Qwen", modelRevision: "r", servedModelName: "qwen", quantization: "q4", contextLength: 1, endpoint: "http://127.0.0.1:11434", developmentOnly: true } }, profile: {}, environment: {}, cli: {} }), /runtime artifact digest/);
 });

@@ -1,0 +1,10 @@
+{
+  "profile": "mac-local",
+  "providers": { "inference": "ollama-mac-local", "memory": "fixture", "stt": "unavailable", "tts": "voxcpm", "world": "fixture", "capability": "fixture", "renderer": "fixture", "clock": "system" },
+  "providerRequirements": { "inference": "required", "memory": "required", "stt": "optional", "tts": "required", "world": "optional", "capability": "optional", "renderer": "optional", "clock": "required" },
+  "inferenceProfile": { "runtime": "Ollama", "runtimeVersion": "0.31.1", "model": "Qwen3.5 2B", "modelRevision": "sha256:124a03c347777e8e4e5955c33610ae01d9d90d8c2a718bfba069c498d5c7f3c9", "servedModelName": "qwen3.5:2b-q4_K_M", "quantization": "Q4_K_M", "contextLength": 32768, "endpoint": "http://127.0.0.1:11434", "modelArtifactDigest": "sha256:7a3a8d55382135a773916fd7c35044b2a2a3a7b8dee788095d70f122e6d8f520", "developmentOnly": true },
+  "ttsProfile": { "runtime": "MLX-Audio", "runtimeVersion": "mlx-audio@0.5.3", "model": "mlx-community/VoxCPM2-4bit", "modelRevision": "dc9e5c187858da5f4a13dc4c247e297339216381", "quantization": "4bit", "endpoint": "http://127.0.0.1:8787", "voiceBundleKey": "fixture-voice-design", "voiceBundleRevision": 1, "mappingRevision": "voxcpm2-map-1", "developmentOnly": true },
+  "storage": { "databasePath": ".lifestream/mac-local/data.sqlite", "artifactDirectory": ".lifestream/mac-local/artifacts" },
+  "authority": { "provider": "fixture", "authentication": "fixture" },
+  "secretRefs": {}
+}

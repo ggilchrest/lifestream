@@ -5,6 +5,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 coverage/
+.lifestream/
 .env
 .env.*
 !.env.example

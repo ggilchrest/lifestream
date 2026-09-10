@@ -26,9 +26,15 @@ importers:
 
   apps/server:
     dependencies:
+      '@lifestream/providers-ollama':
+        specifier: workspace:*
+        version: link:../../packages/providers-ollama
       '@lifestream/providers-sglang':
         specifier: workspace:*
         version: link:../../packages/providers-sglang
+      '@lifestream/providers-voxcpm':
+        specifier: workspace:*
+        version: link:../../packages/providers-voxcpm
       '@lifestream/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
@@ -41,6 +47,12 @@ importers:
   packages/providers-fixture: {}
 
   packages/providers-nemo-speech:
+    dependencies:
+      '@lifestream/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+
+  packages/providers-ollama:
     dependencies:
       '@lifestream/runtime':
         specifier: workspace:*

@@ -1,0 +1,22 @@
+{
+  "change": "Mac-local development inference and TTS fallback",
+  "status": "verified",
+  "claimClass": "real-provider-development-smoke",
+  "revision": "WORKTREE",
+  "decision": "LS-DEC-038",
+  "profile": {
+    "id": "mac-local",
+    "inference": "Ollama 0.31.1 / qwen3.5:2b-q4_K_M / Q4_K_M / 32768 configured context",
+    "tts": "MLX-Audio 0.5.3 / mlx-community/VoxCPM2-4bit dc9e5c187858da5f4a13dc4c247e297339216381",
+    "stt": "optional and unavailable",
+    "selection": "explicit; no automatic failover"
+  },
+  "checks": [
+    { "command": "npm --prefix orchestration run runtime:check:mac", "result": "pass", "evidence": "Ollama returned exactly LOCAL_READY after its tag and manifest digest matched. Vox returned terminal completed with 99848 48 kHz PCM samples across 21 frames and exact pinned runtime/model/mapping identity." },
+    { "command": "temporary-storage Lifestream mac-local server smoke", "result": "pass", "evidence": "Health was ready with required inference and TTS healthy, optional STT unavailable, and acceptingInteractions true; the canonical route streamed exactly MAC_PROFILE_READY." },
+    { "command": "corepack pnpm test", "result": "pass", "evidence": "All 123 public Lifestream tests passed, including the Ollama adapter and exact Mac provider health probes." },
+    { "command": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm build && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, lint, build, workspace structure, and whitespace validation passed." },
+    { "command": "npm run validate (private specifications)", "result": "pass", "evidence": "All 46 validator tests and specification validation passed after LS-DEC-038 was recorded." }
+  ],
+  "excluded": ["Mac-local STT", "automatic failover", "recorded-speech acceptance", "voice perceptual acceptance", "performance qualification", "production deployment", "Human acceptance"]
+}

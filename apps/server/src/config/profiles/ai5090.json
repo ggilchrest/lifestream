@@ -1,0 +1,9 @@
+{
+  "profile": "ai5090",
+  "providers": { "inference": "ai5090-development", "memory": "fixture", "stt": "fixture", "tts": "fixture", "world": "fixture", "capability": "fixture", "renderer": "fixture", "clock": "system" },
+  "providerRequirements": { "inference": "required", "memory": "required", "stt": "required", "tts": "required", "world": "optional", "capability": "optional", "renderer": "optional", "clock": "required" },
+  "inferenceProfile": { "runtime": "SGLang", "runtimeVersion": "0.0.0.dev1+g5f55db35e", "model": "RadixArk/Qwen3.8-27B-NVFP4", "modelRevision": "319f741cce68d7914884900c138a1fbb70a42f30", "servedModelName": "qwen3.8-27b-local", "quantization": "NVFP4", "contextLength": 65536, "endpoint": "http://127.0.0.1:30000", "containerImageDigest": "sha256:616a3e97f45191af975896cfa644279096cb31bd408a071c2e99ca7209c3cafe", "developmentOnly": true },
+  "storage": { "databasePath": ".lifestream/ai5090/data.sqlite", "artifactDirectory": ".lifestream/ai5090/artifacts" },
+  "authority": { "provider": "fixture", "authentication": "fixture" },
+  "secretRefs": {}
+}

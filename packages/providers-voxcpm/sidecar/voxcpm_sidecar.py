@@ -1,9 +1,11 @@
 """Single-worker, loopback-only VoxCPM2 streaming sidecar."""
 import base64, json, os, threading
 from datetime import datetime, timezone
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 
-RUNTIME_REVISION = "19b6bf7590025418821a86dcb817504e0ad7e5df"
+BACKEND = os.environ.get("VOXCPM_BACKEND", "pytorch-cuda")
+RUNTIME_REVISION = os.environ.get("VOXCPM_RUNTIME_REVISION", "19b6bf7590025418821a86dcb817504e0ad7e5df")
 MODEL_REVISION = os.environ.get("VOXCPM_MODEL_SNAPSHOT", "")
 MAPPING_REVISION = "voxcpm2-map-1"
 FORMAT = {"encoding": "pcm_s16le", "sampleRateHz": 48000, "channels": 1}
@@ -27,17 +29,31 @@ def load_once():
     global READY, MODEL
     if not MODEL_REVISION or os.environ.get("VOXCPM_ARTIFACTS_STAGED") != "1":
         return
-    import torch
-    if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
-        raise RuntimeError("exactly one CUDA-visible logical device required")
-    if "RTX 3080" not in torch.cuda.get_device_name(0):
-        raise RuntimeError(f"cuda:0 is {torch.cuda.get_device_name(0)}")
-    from voxcpm import VoxCPM
-    MODEL = VoxCPM.from_pretrained(os.environ["VOXCPM_MODEL_PATH"], load_denoiser=False)
-    warmup = MODEL.generate_streaming(text="warmup", retry_badcase=False)
-    next(warmup)
-    warmup.close()
+    if BACKEND == "mlx":
+        from mlx_audio.tts.utils import load_model
+        MODEL = load_model(Path(os.environ["VOXCPM_MODEL_PATH"]))
+    elif BACKEND == "pytorch-cuda":
+        import torch
+        if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
+            raise RuntimeError("exactly one CUDA-visible logical device required")
+        if "RTX 3080" not in torch.cuda.get_device_name(0):
+            raise RuntimeError(f"cuda:0 is {torch.cuda.get_device_name(0)}")
+        from voxcpm import VoxCPM
+        MODEL = VoxCPM.from_pretrained(os.environ["VOXCPM_MODEL_PATH"], load_denoiser=False)
+        warmup = MODEL.generate_streaming(text="warmup", retry_badcase=False)
+        next(warmup)
+        warmup.close()
+    else:
+        raise RuntimeError(f"unsupported VoxCPM backend: {BACKEND}")
     READY = True
+
+def generate_audio(text, style):
+    if BACKEND == "mlx":
+        import numpy as np
+        for result in MODEL.generate(text=text, instruct=style, cfg_value=2.0, inference_timesteps=7):
+            yield np.asarray(result.audio, dtype=np.float32)
+        return
+    yield from MODEL.generate_streaming(text=f"({style}){text}", cfg_value=2.0, inference_timesteps=10, retry_badcase=False)
 
 def map_delivery(delivery):
     mode, degraded = delivery.get("deliveryMode"), []
@@ -86,7 +102,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path=="/healthz": return self.json(200,{"status":"alive"})
         if self.path=="/readyz": return self.json(200 if READY else 503,{"status":"ready" if READY else "unavailable","runtimeRevision":RUNTIME_REVISION,"modelRevision":MODEL_REVISION,"mappingRevision":MAPPING_REVISION})
-        if self.path=="/v1/capabilities": return self.json(200,{"protocolVersion":"voxcpm.loopback.v1","contractVersion":"2.0.0","streaming":True,"workers":1,"ready":READY,"format":FORMAT})
+        if self.path=="/v1/capabilities": return self.json(200,{"protocolVersion":"voxcpm.loopback.v1","contractVersion":"2.0.0","streaming":True,"workers":1,"ready":READY,"format":FORMAT,"backend":BACKEND})
         self.json(404,{"error":"not_found"})
     def do_POST(self):
         if self.path!="/v1/tts/synthesize" or not READY: return self.json(503,{"error":"provider_unavailable"})
@@ -103,9 +119,9 @@ class Handler(BaseHTTPRequestHandler):
             applied,degraded,style=map_delivery(request["delivery"])
             self.send_response(200); self.send_header("content-type","application/x-ndjson")
             self.send_header("cache-control","no-store"); self.send_header("connection","close"); self.end_headers()
-            self.event({"kind":"preAudio","sequence":sequence,"requestId":request["requestId"],"correlationId":request["correlationId"],"voiceBundleRevision":request["voiceBundleRevision"],"requestedDelivery":request["delivery"],"appliedDelivery":applied,"degradedDimensions":degraded,"mappingRevision":MAPPING_REVISION,"effectiveSynthesis":{"voiceDesign":style,"cfgValue":2.0,"inferenceTimesteps":10},"format":FORMAT,"runtimeRevision":RUNTIME_REVISION,"modelRevision":MODEL_REVISION})
+            self.event({"kind":"preAudio","sequence":sequence,"requestId":request["requestId"],"correlationId":request["correlationId"],"voiceBundleRevision":request["voiceBundleRevision"],"requestedDelivery":request["delivery"],"appliedDelivery":applied,"degradedDimensions":degraded,"mappingRevision":MAPPING_REVISION,"effectiveSynthesis":{"voiceDesign":style,"cfgValue":2.0,"inferenceTimesteps":7 if BACKEND=="mlx" else 10,"backend":BACKEND},"format":FORMAT,"runtimeRevision":RUNTIME_REVISION,"modelRevision":MODEL_REVISION})
             sequence+=1; deadline=datetime.fromisoformat(request["deadlineAt"].replace("Z","+00:00"))
-            generator=MODEL.generate_streaming(text=f"({style}){request['text']}",cfg_value=2.0,inference_timesteps=10,retry_badcase=False)
+            generator=generate_audio(request["text"],style)
             import numpy as np
             for wave in generator:
                 if now()>=deadline:
@@ -126,4 +142,6 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__=="__main__":
     load_once()
-    ThreadingHTTPServer((os.environ.get("VOXCPM_BIND","127.0.0.1"),int(os.environ.get("VOXCPM_PORT","8787"))),Handler).serve_forever()
+    # MLX streams are thread-local. A single-worker server also matches the
+    # provider contract and prevents native generation from crossing threads.
+    HTTPServer((os.environ.get("VOXCPM_BIND","127.0.0.1"),int(os.environ.get("VOXCPM_PORT","8787"))),Handler).serve_forever()

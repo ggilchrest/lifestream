@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "providerRef": "ollama-mac-local",
+  "adapterVersion": "1.0.0",
+  "ports": ["InferenceProvider"],
+  "runtime": "Ollama 0.31.1",
+  "model": "qwen3.5:2b-q4_K_M",
+  "quantization": "Q4_K_M",
+  "modelArtifactDigest": "sha256:124a03c347777e8e4e5955c33610ae01d9d90d8c2a718bfba069c498d5c7f3c9",
+  "modelLayerDigest": "sha256:7a3a8d55382135a773916fd7c35044b2a2a3a7b8dee788095d70f122e6d8f520",
+  "contextLength": 32768,
+  "developmentOnly": true
+}

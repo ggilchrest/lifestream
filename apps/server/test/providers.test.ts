@@ -27,3 +27,52 @@ test("unknown providers fail closed and unavailable requirements affect readines
   assert.equal(createProviderRegistry(config("unavailable", { inference: "optional", memory: "required", stt: "required", tts: "required", world: "optional", capability: "optional", renderer: "optional", clock: "required" })).ready, true);
   assert.equal(createProviderRegistry(config("unavailable")).providers.inference.status, "unavailable");
 });
+
+test("Mac providers become healthy only when exact Ollama and Vox identities are ready", async () => {
+  const profile = loadConfig({
+    defaults: {
+      profile: "mac-local",
+      providers: { inference: "ollama-mac-local", memory: "fixture", stt: "unavailable", tts: "voxcpm", world: "fixture", capability: "fixture", renderer: "fixture", clock: "system" },
+      providerRequirements: { inference: "required", memory: "required", stt: "optional", tts: "required", world: "optional", capability: "optional", renderer: "optional", clock: "required" },
+      inferenceProfile: { runtime: "Ollama", runtimeVersion: "0.31.1", model: "Qwen3.5 2B", modelRevision: "sha256:model", servedModelName: "qwen3.5:2b-q4_K_M", quantization: "Q4_K_M", contextLength: 32768, endpoint: "http://local.invalid", modelArtifactDigest: "sha256:model", developmentOnly: true },
+      ttsProfile: { runtime: "MLX-Audio", runtimeVersion: "mlx-audio@0.5.3", model: "mlx-community/VoxCPM2-4bit", modelRevision: "revision", quantization: "4bit", endpoint: "http://tts.invalid", voiceBundleKey: "fixture-voice-design", voiceBundleRevision: 1, mappingRevision: "voxcpm2-map-1", developmentOnly: true },
+      storage: { databasePath: ":memory:", artifactDirectory: ".artifacts" }, authority: { provider: "fixture", authentication: "fixture" }, secretRefs: {}
+    }, profile: {}, environment: {}, cli: {}
+  });
+  const original = globalThis.fetch;
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+    if (url.endsWith("/api/tags")) return Response.json({ models: [{ name: "qwen3.5:2b-q4_K_M", digest: "model" }] });
+    return Response.json({ status: "ready", runtimeRevision: "mlx-audio@0.5.3", modelRevision: "revision", mappingRevision: "voxcpm2-map-1" });
+  };
+  try {
+    const registry = createProviderRegistry(profile);
+    assert.equal(registry.ready, false);
+    await registry.probe();
+    assert.equal(registry.providers.inference?.status, "healthy");
+    assert.equal(registry.providers.tts?.status, "healthy");
+    assert.equal(registry.providers.stt?.status, "unavailable");
+    assert.equal(registry.ready, true);
+  } finally { globalThis.fetch = original; }
+});
+
+test("Mac provider health rejects a retagged Ollama model", async () => {
+  const profile = loadConfig({
+    defaults: {
+      profile: "mac-local",
+      providers: { inference: "ollama-mac-local", memory: "fixture", stt: "unavailable", tts: "fixture", world: "fixture", capability: "fixture", renderer: "fixture", clock: "system" },
+      providerRequirements: { inference: "required", memory: "required", stt: "optional", tts: "required", world: "optional", capability: "optional", renderer: "optional", clock: "required" },
+      inferenceProfile: { runtime: "Ollama", runtimeVersion: "0.31.1", model: "Qwen3.5 2B", modelRevision: "sha256:expected", servedModelName: "qwen3.5:2b-q4_K_M", quantization: "Q4_K_M", contextLength: 32768, endpoint: "http://local.invalid", modelArtifactDigest: "sha256:layer", developmentOnly: true },
+      storage: { databasePath: ":memory:", artifactDirectory: ".artifacts" }, authority: { provider: "fixture", authentication: "fixture" }, secretRefs: {}
+    }, profile: {}, environment: {}, cli: {}
+  });
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ models: [{ name: "qwen3.5:2b-q4_K_M", digest: "changed" }] });
+  try {
+    const registry = createProviderRegistry(profile);
+    await registry.probe();
+    assert.equal(registry.providers.inference?.status, "unavailable");
+    assert.match(registry.providers.inference?.reason ?? "", /identity changed/);
+    assert.equal(registry.ready, false);
+  } finally { globalThis.fetch = original; }
+});
