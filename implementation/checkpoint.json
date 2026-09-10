@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "96f4260bae6e67e93668a8a22a0557f464455888",
-  "currentRevision": "WORKTREE",
+  "currentRevision": "be4fb56e253a0dfa56c0fde4d883028d5758136a",
   "activeSlice": "LS-S056",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -14,7 +14,7 @@
     "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S046", "LS-S047", "LS-S039", "LS-S049", "LS-S050", "LS-S051", "LS-S052"
   ],
   "allowedFiles": ["package.json", "pnpm-lock.yaml", "apps/server/package.json", "apps/server/src/index.ts", "apps/server/src/runtime/inference.ts", "apps/server/src/composition/providers.ts", "apps/server/src/config/schema.ts", "apps/server/src/config/loader.ts", "apps/server/src/config/profiles/local-dev.json", "apps/server/test/server.test.ts", "packages/runtime/package.json", "packages/runtime/src/index.ts", "packages/runtime/src/inference/port.ts", "packages/runtime/src/inference/prompt.ts", "packages/runtime/src/inference/fixture.ts", "packages/runtime/test/inference.test.ts", "packages/providers-sglang/package.json", "packages/providers-sglang/src/index.ts", "packages/providers-sglang/src/provider.ts", "packages/providers-sglang/provider-manifest.json", "packages/providers-sglang/test/provider.test.ts", "packages/providers-sglang/tsconfig.json", "apps/control-web/conversation.html", "apps/control-web/conversation.js", "apps/control-web/test/conversation-ui.test.mjs", "implementation/checkpoint.json", "implementation/evidence/LS-S052.json"],
-  "changedFiles": ["package.json", "pnpm-lock.yaml", "apps/server/package.json", "apps/server/src/index.ts", "apps/server/src/runtime/inference.ts", "apps/server/src/composition/providers.ts", "apps/server/src/config/schema.ts", "apps/server/src/config/loader.ts", "apps/server/src/config/profiles/local-dev.json", "apps/server/test/server.test.ts", "packages/runtime/package.json", "packages/runtime/src/index.ts", "packages/runtime/src/inference/port.ts", "packages/runtime/src/inference/prompt.ts", "packages/runtime/src/inference/fixture.ts", "packages/runtime/test/inference.test.ts", "packages/providers-sglang/package.json", "packages/providers-sglang/src/index.ts", "packages/providers-sglang/src/provider.ts", "packages/providers-sglang/provider-manifest.json", "packages/providers-sglang/test/provider.test.ts", "packages/providers-sglang/tsconfig.json", "implementation/checkpoint.json", "implementation/evidence/LS-S052.json"],
+  "changedFiles": ["package.json", "pnpm-lock.yaml", "apps/server/package.json", "apps/server/src/index.ts", "apps/server/src/runtime/inference.ts", "apps/server/src/composition/providers.ts", "apps/server/src/config/schema.ts", "apps/server/src/config/loader.ts", "apps/server/src/config/profiles/local-dev.json", "apps/server/test/server.test.ts", "packages/runtime/package.json", "packages/runtime/src/index.ts", "packages/runtime/src/inference/port.ts", "packages/runtime/src/inference/prompt.ts", "packages/runtime/src/inference/fixture.ts", "packages/runtime/test/inference.test.ts", "packages/providers-sglang/package.json", "packages/providers-sglang/src/index.ts", "packages/providers-sglang/src/provider.ts", "packages/providers-sglang/provider-manifest.json", "packages/providers-sglang/test/provider.test.ts", "packages/providers-sglang/tsconfig.json", "apps/control-web/conversation.html", "apps/control-web/conversation.js", "apps/control-web/test/conversation-ui.test.mjs", "implementation/checkpoint.json", "implementation/evidence/LS-S052.json"],
   "validation": [
     {
       "command": "node --test --experimental-strip-types scripts/candidate-manifest.test.mjs",
@@ -41,8 +41,8 @@
     "WSL development isolation remains application-level: host physical GPU index 1 is exposed as provider-local cuda:0 through CUDA_VISIBLE_DEVICES=1; strict container GPU invisibility is not claimed."
   ],
   "blockers": [],
-  "nextAction": "Run LS-S056 localhost browser journey after the Mac is unlocked; the browser surface and deterministic tests are implemented. Recorded speech through STT/TTS remains unclaimed because the current server exposes no composed bidirectional audio route.",
-  "updatedAt": "2026-09-10T15:00:00Z",
+  "nextAction": "Continue LS-S056 voice-transport implementation only when a composed bidirectional audio route and configured speech providers exist. Typed browser streaming through real ai5090 is verified; recorded speech through STT/TTS remains unclaimed.",
+  "updatedAt": "2026-09-10T18:00:00Z",
   "updatedBy": "Codex",
   "notes": "LS-S052 remains verified. LS-S056 browser-first surface is implemented and deterministic checks pass; localhost browser automation is pending the locked Mac environment. OD-006 development is applied; production inference, native endpoint hardware, and recorded speech acceptance remain separate. No image was pushed and no external deployment occurred."
 }
