@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0.0",
+  "auditRevision": "a7adeb28ddc438e3c31aaf2d2e7867c36660745e",
+  "rawScreenshotsCommitted": false,
+  "externalDirectory": "/Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df",
+  "screenshots": [
+    {
+      "surface": "control-web",
+      "url": "http://127.0.0.1:3831/control/",
+      "path": "/Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/control-web-1440x900.jpg",
+      "mediaType": "image/jpeg",
+      "viewport": {"width": 1440, "height": 900},
+      "sha256": "f2cdbbd653192a11bbc8b25f579267d53fceb731ac57cd616416cb7b788e1219",
+      "observation": "Hard-coded Atlas permission request. Buttons mutate the DOM and send no approval request."
+    },
+    {
+      "surface": "presence-web",
+      "url": "http://127.0.0.1:3832/",
+      "path": "/Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/presence-web-1440x810.jpg",
+      "mediaType": "image/jpeg",
+      "viewport": {"width": 1440, "height": 810},
+      "sha256": "a37001a1b562049743f2ebd36ddfb3010f5ba1e886f8cc3c6995a9c7446af3a4",
+      "observation": "Hard-coded Atlas semantic-state diagnostic. Presence was served by an audit-only static server because the application does not serve it."
+    },
+    {
+      "surface": "presence-web",
+      "url": "http://127.0.0.1:3832/",
+      "path": "/Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/presence-web-390x844.jpg",
+      "mediaType": "image/jpeg",
+      "viewport": {"width": 390, "height": 844},
+      "sha256": "3ecdfd1e930d9280125dd7a1305e386ec0ab12389b6c9c9ad5283ec06ede7131",
+      "observation": "Responsive layout evidence only; still static fixture data and not a mobile companion application."
+    }
+  ]
+}

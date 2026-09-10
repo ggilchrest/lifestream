@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "1.0.0",
+  "auditRevision": "a7adeb28ddc438e3c31aaf2d2e7867c36660745e",
+  "commands": [
+    {
+      "command": "npm --prefix .private ci",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm install --frozen-lockfile --lockfile-only --offline",
+      "result": "fail as expected",
+      "detail": "ERR_PNPM_OUTDATED_LOCKFILE: packages/providers-nemo-speech/package.json requires @lifestream/runtime workspace:* while its lock importer is empty"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "detail": "46 validator tests; 324 requirements; 50 registered slices; 87 registered acceptance cases remain specified-not-executed. Proposed LS-S051-LS-S061 and LS-TEST-068-LS-TEST-078 are not yet registered."
+    },
+    {
+      "command": "git -C .private diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass with loopback permission",
+      "detail": "101 of 101 tests"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "detail": "structural workspace check only"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass for tracked public changes",
+      "detail": "Audit deliverables are new untracked files; separate content validators covered them."
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/inference.test.ts packages/runtime/test/interaction.test.ts packages/runtime/test/voice.test.ts packages/runtime/test/voice-pipeline.test.ts packages/runtime/test/voice-segmenter.test.ts packages/runtime/test/voice-interruption.test.ts packages/runtime/test/pwce-mapping.test.ts packages/providers-fixture/test/voice.test.ts packages/providers-fixture/test/voice-pipeline.test.ts packages/providers-fixture/test/voice-interruption.test.ts packages/providers-nemo-speech/test/provider.test.ts packages/providers-voxcpm/test/provider.test.ts packages/providers-pwce/test/client.test.ts packages/contracts/test/pwce-compatibility.test.ts",
+      "result": "pass",
+      "detail": "31 of 31 tests; fixture and adapter-unit scope only"
+    },
+    {
+      "command": "corepack pnpm exec tsc --noEmit --target ES2022 --module NodeNext --moduleResolution NodeNext --strict packages/providers-pwce/src/client.ts packages/providers-nemo-speech/src/provider.ts",
+      "result": "pass",
+      "detail": "Isolated strict compile; this is not proof that the unpublished PWCE directory is in the workspace or that NeMo launches its external service."
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/persona.test.ts packages/storage-sqlite/test/assistant-profile.test.ts packages/storage-sqlite/test/memory.test.ts packages/providers-fixture/test/memory-provider.test.ts packages/runtime/test/context.test.ts packages/runtime/test/dreaming-application.test.ts packages/runtime/test/dreaming-run.test.ts packages/storage-sqlite/test/rehearsal.test.ts",
+      "result": "pass",
+      "detail": "9 of 9 tests; helper and fixture scope only"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/presence-web/test/structural.test.mjs apps/control-web/test/approval-ui.test.mjs packages/runtime/test/embodiment.test.ts packages/providers-fixture/test/renderer.test.ts packages/perceptual/test/harness.test.ts packages/storage-sqlite/test/rehearsal.test.ts",
+      "result": "pass",
+      "detail": "15 of 15 tests; fixture and structural scope only"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/server.test.ts apps/server/test/authority-api.test.ts apps/server/test/config.test.ts",
+      "result": "pass",
+      "detail": "6 of 6 tests; stub server scope only"
+    },
+    {
+      "command": "pnpm start",
+      "result": "fail as expected",
+      "detail": "ERR_PNPM_NO_SCRIPT_OR_SERVER"
+    },
+    {
+      "command": "PORT=3831 pnpm --filter @lifestream/server start",
+      "result": "pass after build",
+      "detail": "fixture/stub server only"
+    },
+    {
+      "command": "python3 -m http.server 3832 --bind 127.0.0.1 --directory apps/presence-web",
+      "result": "pass",
+      "detail": "audit-only inspection command; not a supported application startup"
+    },
+    {
+      "commandLog": "implementation/evidence/product-reality/probe-commands.md",
+      "result": "focused probes completed",
+      "detail": "Exact commands, transient server helper source, process-control sequence, and observed outputs are retained there. Findings cover same-path restart, migration inventory, lexical/paraphrased recall, profile activation/direct-active bypass, configuration digest, Vox format mapping, segment identity, and Dreaming protection."
+    },
+    {
+      "command": "node /Users/gg/.codex/skills/archify/bin/archify.mjs validate architecture /Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.json --quality showcase --repo-root /Users/gg/Documents/Development/Agentic/lifestream --json",
+      "result": "pass",
+      "detail": "0 composition errors; 0 composition warnings"
+    },
+    {
+      "command": "node /Users/gg/.codex/skills/archify/bin/archify.mjs visual-check /Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.html --json",
+      "result": "pass",
+      "detail": "Light/dark viewport coverage; containment, readability, and viewer chrome passed"
+    },
+    {
+      "command": "for f in implementation/capability-reality-matrix.json implementation/evidence/product-reality/*.json; do jq empty \"$f\" || exit 1; done",
+      "result": "pass",
+      "detail": "9 JSON files parsed: the matrix plus 8 evidence receipts"
+    },
+    {
+      "command": "jq -e '([.capabilities[].id] | length == (unique | length)) and (.summary.capabilityCount == (.capabilities | length)) and (.summary.statusCounts.A == ([.capabilities[] | select(.status == \"A\")] | length)) and (.summary.statusCounts.B == ([.capabilities[] | select(.status == \"B\")] | length)) and (.summary.statusCounts.C == ([.capabilities[] | select(.status == \"C\")] | length)) and (.summary.statusCounts.D == ([.capabilities[] | select(.status == \"D\")] | length)) and (.summary.statusCounts.E == ([.capabilities[] | select(.status == \"E\")] | length)) and (.summary.statusCounts.F == ([.capabilities[] | select(.status == \"F\")] | length)) and (all(.capabilities[]; (.status | test(\"^[A-F]$\")) and ([.specified,.implemented,.verified,.currentCandidate,.personalAlpha,.production] | all(. == \"yes\" or . == \"no\" or . == \"partial\"))))' implementation/capability-reality-matrix.json",
+      "result": "pass",
+      "detail": "91 unique capability IDs; counts A 0, B 10, C 24, D 49, E 8, F 0; all separate dimensions use yes/no/partial"
+    },
+    {
+      "command": "node --input-type=module -e 'import fs from \"node:fs\"; const m=JSON.parse(fs.readFileSync(\"implementation/capability-reality-matrix.json\",\"utf8\")); const bad=[]; for(const row of m.capabilities) for(const ref of row.evidence){const hit=ref.match(/^(.*?)(?::(\\d+)(?:-(\\d+))?)?$/); const path=hit?.[1]; if(!path||!fs.existsSync(path)||!fs.statSync(path).isFile()){bad.push({id:row.id,ref,problem:\"missing-or-not-file\"});continue} if(hit[2]){const lines=fs.readFileSync(path,\"utf8\").split(/\\r?\\n/).length; if(Number(hit[2])>lines||Number(hit[3]??hit[2])>lines) bad.push({id:row.id,ref,problem:`line-out-of-range:${lines}`})}} console.log(JSON.stringify({rows:m.capabilities.length,problems:bad},null,2)); if(bad.length) process.exit(1);'",
+      "result": "pass",
+      "detail": "All matrix evidence targets are files and all cited line bounds exist"
+    },
+    {
+      "command": "node --input-type=module -e 'import fs from \"node:fs\"; const f=\".private/roadmap/MINIMUM-LOVABLE-TIFA-GAP-PLAN.md\"; const s=fs.readFileSync(f,\"utf8\"); const refs=[...new Set([...s.matchAll(/docs\\/[A-Za-z0-9._/-]+\\.md/g)].map(m=>m[0]))]; const missing=refs.filter(p=>!fs.existsSync(\".private/\"+p)); console.log(JSON.stringify({references:refs.length,missing},null,2)); if(missing.length)process.exit(1);'",
+      "result": "pass",
+      "detail": "22 unique private Read-first document references; none missing"
+    },
+    {
+      "command": "node --input-type=module -e 'import fs from \"node:fs\"; import path from \"node:path\"; const files=[\"implementation/PRODUCT-REALITY-AUDIT.md\",\"implementation/runnable-surfaces-and-providers.md\",\".private/roadmap/MINIMUM-LOVABLE-TIFA-GAP-PLAN.md\"]; const broken=[]; for(const file of files){const body=fs.readFileSync(file,\"utf8\"); for(const match of body.matchAll(/\\[[^\\]]*\\]\\(([^)]+)\\)/g)){const target=match[1]; if(/^(?:https?:|#)/.test(target)) continue; const resolved=path.resolve(path.dirname(file),target); if(!fs.existsSync(resolved)) broken.push({file,target})}} console.log(JSON.stringify({files:files.length,broken},null,2)); if(broken.length) process.exit(1);'",
+      "result": "pass",
+      "detail": "Zero broken relative Markdown links in the two public reports and private plan"
+    },
+    {
+      "command": "shasum -a 256 /Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/control-web-1440x900.jpg /Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/presence-web-1440x810.jpg /Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/presence-web-390x844.jpg /Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.json /Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.html /Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.visual-check.json /Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.visual-check.1440x900.light.png",
+      "result": "pass",
+      "detail": "All values match the recorded screenshot and architecture indexes"
+    }
+  ],
+  "limitations": [
+    "No real inference, STT, TTS, PWCE, or external capability endpoint was called during this audit.",
+    "Recorded provider evidence was inspected rather than re-running operator-provisioned GPU hosts.",
+    "Passing repository tests do not upgrade fixture or isolated-infrastructure classifications.",
+    "Proposed gap-plan identifiers are not yet registered roadmap slices, traceability cases, or executable packets."
+  ]
+}

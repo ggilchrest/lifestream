@@ -1,0 +1,206 @@
+{
+  "schemaVersion": "1.0.0",
+  "auditRevision": "a7adeb28ddc438e3c31aaf2d2e7867c36660745e",
+  "searches": [
+    {
+      "purpose": "authoritative Tifa source search, excluding the audit deliverables created after the audit anchor",
+      "command": "rg -n -i -w --hidden --glob '!.git/**' --glob '!.private/**' --glob '!node_modules/**' --glob '!implementation/PRODUCT-REALITY-AUDIT.md' --glob '!implementation/capability-reality-matrix.json' --glob '!implementation/runnable-surfaces-and-providers.md' --glob '!implementation/evidence/product-reality/**' 'tifa' .",
+      "exitCode": 0,
+      "matchCount": 4,
+      "matches": [
+        "scripts/candidate-manifest.test.mjs:31",
+        "implementation/candidate-manifest.json:49",
+        "implementation/evidence/LS-S029-wsl-warmup.json:47",
+        "packages/runtime/test/voice.test.ts:11"
+      ],
+      "conclusion": "No authored Tifa profile or presentation source exists. The matches are an exclusion test, two exclusion statements, and an opaque voiceRef test value."
+    },
+    {
+      "purpose": "authoritative Tifa source search in the independent private specification root, excluding the audit-created gap plan",
+      "workingDirectory": ".private",
+      "command": "rg -n -i -w --hidden --glob '!.git/**' --glob '!node_modules/**' --glob '!roadmap/MINIMUM-LOVABLE-TIFA-GAP-PLAN.md' 'tifa' .",
+      "exitCode": 0,
+      "matchCount": 3,
+      "matches": [
+        "fixtures/validation-vectors.json:12",
+        "fixtures/contract-closure-vectors.json:14538",
+        "docs/16-decision-register.md:37"
+      ],
+      "conclusion": "The only private-root matches are an opaque fixture voice reference repeated in generated closure coverage and provider-neutral Tifa presence contract prose; no authored Tifa profile exists."
+    },
+    {
+      "purpose": "authored private persona fixture identity search",
+      "workingDirectory": ".private",
+      "command": "rg -n -i 'canonicalName|identityStatement|corePersona' fixtures --glob '*.json'",
+      "exitCode": 0,
+      "authoredPersonaName": "Example Assistant",
+      "matches": [
+        "fixtures/validation-vectors.json:32-34",
+        "fixtures/validation-vectors.json:81-83",
+        "fixtures/contract-vectors.json:14-16",
+        "fixtures/contract-vectors.json:63-65",
+        "fixtures/contract-vectors.json:194-196",
+        "fixtures/contract-vectors.json:242-244",
+        "fixtures/contract-vectors.json:291-293",
+        "fixtures/contract-vectors.json:340-342",
+        "fixtures/contract-vectors.json:389-391",
+        "fixtures/contract-vectors.json:438-440",
+        "fixtures/contract-closure-vectors.json:2347",
+        "fixtures/contract-closure-vectors.json:2527",
+        "fixtures/contract-closure-vectors.json:13941"
+      ],
+      "otherMatches": "Generated contract-closure operation vocabulary",
+      "conclusion": "The private fixture persona is Example Assistant, not Tifa."
+    },
+    {
+      "purpose": "pre-existing untracked private Archive.zip persona and asset boundary",
+      "workingDirectory": ".private",
+      "repositoryState": "pre-existing untracked archive; not canonical current specification state",
+      "commands": [
+        "unzip -Z1 Archive.zip",
+        "zipgrep -i -l 'tifa' Archive.zip",
+        "zipgrep -i -n 'canonicalName\\|identityStatement\\|corePersona' Archive.zip"
+      ],
+      "results": {
+        "archiveEntries": "roadmap, packet, documentation, and __MACOSX metadata files only; no visual, audio, or persona data asset filenames",
+        "tifaMatchFiles": [
+          "roadmap/CODEX_HANDOFF.md",
+          "roadmap/IMPLEMENTATION_ROADMAP.md",
+          "roadmap/PROGRESS_CHECKPOINT.md",
+          "docs/20-concrete-port-and-transport-contracts.md",
+          "docs/21-lifecycle-operation-and-trace-semantics.md",
+          "docs/00-normative-conventions.md",
+          "docs/10-observability-replay-and-simulation.md",
+          "docs/13-deployment-and-configuration.md",
+          "docs/15-compatibility-and-migration.md",
+          "docs/17-requirement-coverage.md"
+        ],
+        "personaFieldSearchExitCode": 1,
+        "personaFieldMatches": 0
+      },
+      "conclusion": "The archive contains older roadmap/specification Tifa prose but no authored Core Persona fields or visual/audio asset entries."
+    },
+    {
+      "purpose": "checked-in application/source surface inventory excluding generated dist output",
+      "command": "find apps -type f -not -path '*/dist/*' -print | sort",
+      "exitCode": 0,
+      "sourceFiles": [
+        "apps/control-web/app.js",
+        "apps/control-web/index.html",
+        "apps/control-web/styles.css",
+        "apps/control-web/test/approval-ui.test.mjs",
+        "apps/presence-web/app.js",
+        "apps/presence-web/index.html",
+        "apps/presence-web/styles.css",
+        "apps/presence-web/test/structural.test.mjs",
+        "apps/server/package.json",
+        "apps/server/src/authority/api.ts",
+        "apps/server/src/composition/authority.ts",
+        "apps/server/src/config/index.ts",
+        "apps/server/src/config/loader.ts",
+        "apps/server/src/config/profiles/local-dev.json",
+        "apps/server/src/config/profiles/test.json",
+        "apps/server/src/config/schema.ts",
+        "apps/server/src/index.ts",
+        "apps/server/test/authority-api.test.ts",
+        "apps/server/test/config.test.ts",
+        "apps/server/test/server.test.ts",
+        "apps/server/tsconfig.json"
+      ],
+      "generatedFilesExcludedButSeparatelyObserved": [
+        "apps/server/dist/index.d.ts",
+        "apps/server/dist/index.d.ts.map",
+        "apps/server/dist/index.js",
+        "apps/server/dist/index.js.map"
+      ]
+    },
+    {
+      "purpose": "presentation feature implementation search",
+      "command": "rg -n -i 'avatar|lip.?sync|gaze|microphone|speaker|caption|transcript' apps",
+      "exitCode": 1,
+      "matchCount": 0,
+      "conclusion": "No application source implements the searched presentation or endpoint-audio features."
+    },
+    {
+      "purpose": "visual/avatar asset inventory across both repository roots",
+      "command": "find . -type f \\( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.svg' -o -iname '*.avif' -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mov' -o -iname '*.glb' -o -iname '*.gltf' -o -iname '*.fbx' -o -iname '*.vrm' -o -iname '*.obj' -o -iname '*.blend' -o -iname '*.psd' \\) -not -path './.git/*' -not -path './.private/.git/*' -not -path './node_modules/*' -not -path './.private/node_modules/*' -print | sort",
+      "exitCode": 0,
+      "matchCount": 0,
+      "conclusion": "No checked-in visual, avatar, video, or 3D asset file exists in either repository root."
+    },
+    {
+      "purpose": "voice/reference audio asset inventory across both repository roots",
+      "command": "find . -type f \\( -iname '*.wav' -o -iname '*.mp3' -o -iname '*.flac' -o -iname '*.ogg' -o -iname '*.m4a' -o -iname '*.aac' \\) -not -path './.git/*' -not -path './.private/.git/*' -not -path './node_modules/*' -not -path './.private/node_modules/*' -print | sort",
+      "exitCode": 0,
+      "matchCount": 0,
+      "conclusion": "No checked-in voice reference or other audio asset exists in either repository root."
+    },
+    {
+      "purpose": "server composition import and construction search",
+      "command": "rg -n 'providers-|storage-sqlite|@lifestream/runtime|new Database|new .*Provider' apps/server/src",
+      "exitCode": 1,
+      "matchCount": 0,
+      "conclusion": "The server source imports and constructs none of the runtime, storage, fixture, or real-provider implementations."
+    },
+    {
+      "purpose": "persona and memory administration UI search",
+      "command": "rg -n -i 'profile|persona|memory|correction|contradiction|supersession|invalidation' apps/control-web apps/presence-web",
+      "exitCode": 1,
+      "matchCount": 0,
+      "conclusion": "Neither user-facing page contains a profile or memory inspection, administration, correction, or lifecycle workflow."
+    },
+    {
+      "purpose": "non-fixture semantic-memory implementation or dependency search",
+      "command": "rg -n -i 'hindsight|embedding|vector|semantic.*(recall|retriev)|episodic|entity.*memory|fact.*memory' packages apps package.json pnpm-workspace.yaml pnpm-lock.yaml --glob '!packages/contracts/**' --glob '!**/dist/**'",
+      "exitCode": 1,
+      "matchCount": 0,
+      "conclusion": "Outside contracts and generated output, no Hindsight dependency, embedding/vector implementation, or semantic/episodic/entity/fact retrieval implementation exists."
+    },
+    {
+      "purpose": "memory candidate extraction and admission implementation search",
+      "command": "rg -n -i 'memory.?candidate|candidate.*memory|extract.*memory|memory.*extract|quarantine.*memory|admit.*memory' apps packages --glob '!packages/contracts/**' --glob '!**/test/**' --glob '!**/dist/**'",
+      "exitCode": 1,
+      "matchCount": 0,
+      "conclusion": "No application/package source implements conversation-to-memory candidate extraction, quarantine, or admission."
+    },
+    {
+      "purpose": "persona and memory helper application-call-site search",
+      "command": "rg -n 'projectPersona|validateAdaptation|AssistantProfileRepository|MemoryRepository|FixtureMemoryProvider' apps packages --glob '!**/dist/**'",
+      "exitCode": 0,
+      "matches": [
+        "packages/storage-sqlite/src/memory.ts:2",
+        "packages/storage-sqlite/src/assistant-profile.ts:13",
+        "packages/runtime/src/persona/adaptation-validator.ts:2",
+        "packages/runtime/src/persona/projection.ts:2",
+        "packages/storage-sqlite/test/memory.test.ts:1-2",
+        "packages/storage-sqlite/test/assistant-profile.test.ts:4-6",
+        "packages/runtime/test/persona.test.ts:1-2",
+        "packages/providers-fixture/test/memory-provider.test.ts:1-2",
+        "packages/providers-fixture/src/memory/provider.ts:2",
+        "packages/providers-fixture/src/memory/export.ts:1"
+      ],
+      "conclusion": "The symbols appear only at helper/repository declarations, exports, and direct tests; no application call site composes them."
+    },
+    {
+      "purpose": "workspace package-manifest inventory",
+      "command": "find packages -mindepth 1 -maxdepth 2 -name package.json -print",
+      "exitCode": 0,
+      "packageManifests": [
+        "packages/contracts/package.json",
+        "packages/providers-fixture/package.json",
+        "packages/providers-nemo-speech/package.json",
+        "packages/providers-voxcpm/package.json",
+        "packages/runtime/package.json",
+        "packages/storage-sqlite/package.json"
+      ],
+      "directoriesWithoutPackageManifest": [
+        "packages/perceptual",
+        "packages/performance",
+        "packages/provider-conformance",
+        "packages/providers-pwce",
+        "packages/security",
+        "packages/simulation"
+      ]
+    }
+  ]
+}

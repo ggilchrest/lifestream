@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "1.0.0",
+  "auditRevision": "a7adeb28ddc438e3c31aaf2d2e7867c36660745e",
+  "isolatedPathsOnly": true,
+  "exactCommandLog": "implementation/evidence/product-reality/probe-commands.md",
+  "probes": [
+    {
+      "name": "server persistence journey",
+      "path": "/tmp/lifestream-product-reality/persistence-audit.sqlite",
+      "firstRequest": "My favorite hot drink is jasmine tea.",
+      "firstResponse": {"status": 202, "body": {"code": "accepted", "message": "interaction admitted to bounded runtime"}},
+      "firstStopDatabaseFile": "absent",
+      "restartPath": "same path",
+      "paraphrase": "Which beverage do I prefer?",
+      "paraphraseResponse": {"status": 202, "body": {"code": "accepted", "message": "interaction admitted to bounded runtime"}},
+      "secondStopDatabaseFile": "absent",
+      "result": "fail-before-memory-admission",
+      "reason": "The server only creates the database parent directory. It does not open SQLite, parse the interaction, return a response, or expose correction."
+    },
+    {
+      "name": "fixture lexical recall",
+      "stored": "My favorite hot drink is Earl Grey tea.",
+      "exactQuery": "Earl Grey",
+      "exactMatches": ["memory-1"],
+      "paraphraseQuery": "Which beverage do I prefer?",
+      "paraphraseMatches": [],
+      "newRepositoryAfterRestartCount": 0,
+      "result": "exact-substring-only-and-volatile"
+    },
+    {
+      "name": "profile activation consistency",
+      "sqlStatusesAfterSecondActivation": {"revision1": "superseded", "revision2": "active"},
+      "repositoryStatusesAfterReopen": {"revision1": "active", "revision2": "active"},
+      "invalidDirectActiveProfileAccepted": true,
+      "activationAuditRowsForDirectInsert": 0,
+      "result": "fail",
+      "reason": "Activation does not update the old serialized profile JSON, reads parse that stale JSON, and create uses weaker validation than the canonical schema."
+    },
+    {
+      "name": "configuration digest coverage",
+      "changedFields": ["providers.memory", "providers.inference", "storage.databasePath", "storage.artifactDirectory"],
+      "digestA": "ba2e17d5d9d8bb2ddf39a95e337125f6ecc426361ca88e87337cc39047e4f0e2",
+      "digestB": "ba2e17d5d9d8bb2ddf39a95e337125f6ecc426361ca88e87337cc39047e4f0e2",
+      "equal": true,
+      "result": "fail"
+    },
+    {
+      "name": "voice format mapping",
+      "voxcpmWireSampleRateHz": 48000,
+      "callerRequestedSampleRateHz": 16000,
+      "adapterReportedFrameSampleRateHz": 16000,
+      "resamplerPresent": false,
+      "result": "false-format-label"
+    },
+    {
+      "name": "voice segmentation",
+      "inferenceChunks": 2,
+      "segmentIds": ["segment-0", "segment-0"],
+      "canonicalSegmenterUsed": false,
+      "result": "duplicate-segment-identities"
+    },
+    {
+      "name": "dreaming protected-operation enforcement",
+      "proposal": {"kind": "changeCorePersona", "evidenceIds": ["m1"]},
+      "runAccepted": true,
+      "validatorAccepted": true,
+      "applyAccepted": true,
+      "result": "protected-core-persona-boundary-not-enforced"
+    }
+  ]
+}

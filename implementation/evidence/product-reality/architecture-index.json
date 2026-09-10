@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0.0",
+  "auditRevision": "a7adeb28ddc438e3c31aaf2d2e7867c36660745e",
+  "source": {
+    "path": "/Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.json",
+    "sha256": "00fabc0b8d48bdac14d4b4bd03e187b7df7c093800aab60f93a442b07b79fc1b"
+  },
+  "artifact": {
+    "path": "/Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.html",
+    "sha256": "6ac592da98a0735a35197057d72d26b4afc31d3538f71ec9f27ac4f3bd7e3cbf",
+    "bytes": 723385
+  },
+  "validation": {
+    "command": "node /Users/gg/.codex/skills/archify/bin/archify.mjs validate architecture /Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.json --quality showcase --repo-root /Users/gg/Documents/Development/Agentic/lifestream --json",
+    "result": "pass",
+    "compositionErrors": 0,
+    "compositionWarnings": 0
+  },
+  "browserCheck": {
+    "command": "node /Users/gg/.codex/skills/archify/bin/archify.mjs visual-check /Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.html --json",
+    "result": "pass",
+    "receiptPath": "/Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.visual-check.json",
+    "receiptSha256": "f3a6e122deb82c22a561cd61dc6ab21c60567b128bc01bd9b6128242a4114dbb",
+    "viewports": ["1440x900 light", "1600x1000 light", "1920x1080 light", "2048x1320 light", "1440x900 dark", "2048x1320 dark"],
+    "containment": "pass",
+    "readability": "pass",
+    "viewerChrome": "pass"
+  },
+  "perceptualReview": {
+    "reviewer": "Codex image inspection",
+    "screenshot": "/Users/gg/.codex/visualizations/2026/09/08/01a0815b-5e5f-7363-b883-3609c45cd7df/lifestream-product-reality-architecture.visual-check.1440x900.light.png",
+    "screenshotSha256": "6a2363de321a7cf0dc9270fe470182d4cb9958e67ad6e327b571bf3ea6380e8f",
+    "result": "readable and consistent with the source; not Human acceptance"
+  }
+}

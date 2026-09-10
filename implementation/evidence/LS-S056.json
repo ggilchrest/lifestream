@@ -1,0 +1,52 @@
+{
+  "slice": "LS-S056",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "real-provider-development-smoke",
+  "revision": "WORKTREE",
+  "checks": [
+    {
+      "command": "npm --prefix orchestration run runtime:check:mac",
+      "result": "pass",
+      "evidence": "Ollama, Moonshine STT, and VoxCPM2 TTS all returned exact pinned identities; Moonshine committed 'Local speech is ready.' and VoxCPM2 returned a completed PCM stream."
+    },
+    {
+      "command": "authenticated POST /api/runtime/v1/tts",
+      "result": "pass",
+      "evidence": "The rebuilt Mac-local server streamed 34 non-fixture VoxCPM2 PCM data frames and a succeeded terminal with 161288 output samples."
+    },
+    {
+      "command": "authenticated POST /api/runtime/v1/stt",
+      "result": "pass",
+      "evidence": "The rebuilt Mac-local server accepted a bounded 16 kHz PCM frame and returned a non-fixture Moonshine committed transcript with a succeeded terminal and 4800 input samples."
+    },
+    {
+      "command": "browser surface and server tests",
+      "result": "pass",
+      "evidence": "Browser tests passed 2/2, focused server tests passed 5/5, and the full Lifestream suite passed 125/125."
+    },
+    {
+      "command": "authenticated /api/runtime/v1/audio WebSocket",
+      "result": "pass",
+      "evidence": "A bounded live smoke against the rebuilt Mac-local server completed accepted session, committed Moonshine transcript, streamed Ollama response, 369 VoxCPM2 PCM chunks, and canonical completed terminal event."
+    },
+    {
+      "command": "VAD and barge-in regression",
+      "result": "pass",
+      "evidence": "Server tests cover bounded PCM energy classification, silence suppression, downstream abort fencing, stopPlayback emission, and interrupted terminal state."
+    }
+  ],
+  "implemented": [
+    "authenticated server-mediated bounded STT and TTS routes",
+    "browser PCM capture, resampling, STT submission, and committed transcript display",
+    "browser streaming PCM playback for selected TTS provider",
+    "canonical audio WebSocket upgrade and session transport",
+    "bounded browser WebSocket capture, silence endpointing, and playback interruption",
+    "truthful provider readiness and failure messaging"
+  ],
+  "excluded": [
+    "physical microphone and audible-playback Human acceptance",
+    "perceptual acceptance",
+    "performance qualification",
+    "production deployment"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1.0.0",
+  "auditRevision": "a7adeb28ddc438e3c31aaf2d2e7867c36660745e",
+  "providers": [
+    {
+      "provider": "NeMo-Speech.cpp STT",
+      "evidencePath": "implementation/evidence/LS-S049.json",
+      "evidenceSha256": "38de107015b34d3165d3ba32e6100b1b1ca6eda6de85cf5948a8419fe299e9eb",
+      "recordedRevision": "41e13b513d0c5c5b6cc2b2fb961301d502ef4012",
+      "checks": [
+        {
+          "command": "git merge-base --is-ancestor 41e13b5 HEAD",
+          "exitCode": 1,
+          "result": "recorded revision is not an ancestor of audit HEAD"
+        },
+        {
+          "command": "git diff --quiet 41e13b5 HEAD -- packages/providers-nemo-speech",
+          "exitCode": 0,
+          "result": "the provider package tree is byte-equivalent across the compared revisions"
+        }
+      ],
+      "claimBoundary": "Historical development-host adapter evidence remains relevant to the unchanged provider tree, but it is not current-HEAD runtime composition, packaged-service, endpoint, personal-alpha, or production evidence."
+    },
+    {
+      "provider": "VoxCPM2 TTS",
+      "evidencePath": "implementation/evidence/LS-S029.json",
+      "evidenceSha256": "42df77754a4b108cca8a28d8eac487b0ddf1f0cd089d4f3ac47828c155a5a1ec",
+      "recordedRevision": "46fea7c9196ba8f764b721366b4468b4b9832d18",
+      "candidateSourceRevision": "78601cb8397134ef2b463199f16fd975b3875fd0",
+      "candidateManifestSha256": "70ac21a9a4cfbe6f02daaed79d3a2376173dfa929186a69a19fa7f7dcfd38f02",
+      "checks": [
+        {
+          "command": "git merge-base --is-ancestor 46fea7c9196ba8f764b721366b4468b4b9832d18 HEAD",
+          "exitCode": 0,
+          "result": "LS-S029 evidence revision is an ancestor of audit HEAD"
+        },
+        {
+          "command": "git merge-base --is-ancestor 78601cb8397134ef2b463199f16fd975b3875fd0 HEAD",
+          "exitCode": 0,
+          "result": "candidate source revision is an ancestor of audit HEAD"
+        },
+        {
+          "command": "git diff --quiet 78601cb8397134ef2b463199f16fd975b3875fd0 HEAD -- packages/providers-voxcpm",
+          "exitCode": 0,
+          "result": "the provider package tree is byte-equivalent across the compared revisions"
+        }
+      ],
+      "claimBoundary": "The bounded adapter/development-host claim remains traceable; it does not establish Tifa voice identity, server composition, endpoint playback, fresh packaging, personal-alpha, deployment, or production acceptance."
+    }
+  ]
+}

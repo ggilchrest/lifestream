@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0.0",
+  "auditRevision": "a7adeb28ddc438e3c31aaf2d2e7867c36660745e",
+  "command": "PORT=3831 pnpm --filter @lifestream/server start",
+  "profileActuallyUsed": "hard-coded test",
+  "observations": [
+    {"method": "GET", "path": "/health", "status": 200, "result": "ready; storage ready; fixture-authenticated; all eight provider categories reported healthy"},
+    {"method": "GET", "path": "/health/live", "status": 200, "result": "live"},
+    {"method": "GET", "path": "/health/ready", "status": 200, "result": "ready"},
+    {"method": "GET", "path": "/health/degraded", "status": 200, "result": "ready"},
+    {"method": "GET", "path": "/control/", "status": 200, "result": "static authority HTML"},
+    {"method": "GET", "path": "/presence/", "status": 404, "result": "not_found"},
+    {"method": "GET", "path": "/api/runtime/v1/messages", "status": 404, "result": "not_found"},
+    {"method": "GET", "path": "/api/runtime/v1/interactions/demo/events", "status": 404, "result": "not_found"},
+    {"method": "GET", "path": "/api/runtime/v1/audio", "status": 404, "result": "not_found"},
+    {"method": "POST", "path": "/api/interactions", "status": 202, "request": {"text": "Remember that I prefer jasmine tea."}, "result": {"code": "accepted", "message": "interaction admitted to bounded runtime"}},
+    {"method": "POST", "path": "/api/runtime/v1/messages", "status": 404, "result": "not_found"}
+  ],
+  "healthBody": {
+    "status": "ready",
+    "profile": "test",
+    "configurationDigest": "356ae4dc5735d49c327ccb4032c22ce0ef6a0955f0b8a3eb795d5e4905046d11",
+    "storage": "ready",
+    "authority": "fixture-authenticated",
+    "providers": {
+      "inference": "healthy",
+      "memory": "healthy",
+      "stt": "healthy",
+      "tts": "healthy",
+      "world": "healthy",
+      "capability": "healthy",
+      "renderer": "healthy",
+      "clock": "healthy"
+    },
+    "acceptingInteractions": true
+  },
+  "interpretation": "Health is configuration-label output, not provider construction or readiness evidence. The only interaction route is a body-agnostic 202 stub."
+}

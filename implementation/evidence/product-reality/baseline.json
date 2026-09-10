@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1.0.0",
+  "audit": "Lifestream Product-Reality Audit",
+  "observedAt": "2026-09-08T14:45:43Z",
+  "publicRepository": {
+    "branch": "main",
+    "revision": "a7adeb28ddc438e3c31aaf2d2e7867c36660745e",
+    "originMain": "682ce240f8c5f844fef784452363815e2bae77cd",
+    "aheadBy": 11,
+    "dirtyAtAuditStart": false
+  },
+  "privateSpecificationRepository": {
+    "branch": "main",
+    "revision": "a85d74505461934b5b89ee0288c817dbe10b73b6",
+    "aheadBy": 3,
+    "dirtyAtAuditStart": true,
+    "disposition": "Pre-existing changes were preserved and were not copied into the public repository."
+  },
+  "runtime": {
+    "node": "v24.14.1",
+    "npm": "11.11.0",
+    "pnpm": "10.0.0"
+  },
+  "migrationProbe": {
+    "reportedHead": 13,
+    "appliedMigrationIds": [1, 11, 12, 13],
+    "tables": [
+      "capability_proposals",
+      "capability_snapshots",
+      "interaction_endpoints",
+      "schema_migrations",
+      "skills"
+    ],
+    "conclusion": "The numeric head is 13, but migrations 2 through 9 are not loaded by Database.migrate and there is no migration 10."
+  },
+  "activeCandidate": {
+    "claimName": "Lifestream VoxCPM2 TTS Development-Host Candidate",
+    "claimClass": "bounded-development-host-candidate",
+    "status": "candidate",
+    "production": false,
+    "sourceRevision": "78601cb8397134ef2b463199f16fd975b3875fd0",
+    "manifestSha256": "70ac21a9a4cfbe6f02daaed79d3a2376173dfa929186a69a19fa7f7dcfd38f02",
+    "currentHeadMatch": false
+  },
+  "checkpoint": {
+    "recordedCurrentRevision": "WORKTREE",
+    "actualRevision": "a7adeb28ddc438e3c31aaf2d2e7867c36660745e",
+    "checkpointSha256": "f99d372f343240d7aae9a00d50b6858f15b4163714515b841f49f6fdbf17f217",
+    "conclusion": "The checkpoint revision field is stale and is not current-revision evidence."
+  }
+}
