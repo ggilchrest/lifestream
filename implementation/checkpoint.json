@@ -13,7 +13,7 @@
     "LS-S031", "LS-S032", "LS-S033", "LS-S034", "LS-S035", "LS-S036", "LS-S037", "LS-S038", "LS-S040", "LS-S041",
     "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S046", "LS-S047", "LS-S039", "LS-S049", "LS-S050", "LS-S051", "LS-S052"
   ],
-  "allowedFiles": ["apps/control-web/conversation.html", "apps/control-web/conversation.js", "apps/control-web/test/conversation-ui.test.mjs", "apps/server/src/index.ts", "apps/server/src/runtime/audio.ts", "apps/server/test/audio.test.ts", "apps/server/test/server.test.ts", "apps/server/package.json", "packages/runtime/package.json", "packages/providers-voxcpm/sidecar/voxcpm_sidecar.py", "package.json", "pnpm-lock.yaml", "implementation/evidence/LS-S056.json", "implementation/checkpoint.json"],
+  "allowedFiles": ["apps/control-web/conversation.html", "apps/control-web/conversation.js", "apps/control-web/test/conversation-ui.test.mjs", "apps/server/src/config/profiles/ai5090.json", "apps/server/src/index.ts", "apps/server/src/runtime/audio.ts", "apps/server/test/audio.test.ts", "apps/server/test/server.test.ts", "apps/server/package.json", "packages/runtime/package.json", "packages/providers-voxcpm/sidecar/voxcpm_sidecar.py", "package.json", "pnpm-lock.yaml", "implementation/evidence/LS-S056.json", "implementation/checkpoint.json"],
   "changedFiles": [],
   "validation": [
     {
