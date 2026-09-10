@@ -62,6 +62,15 @@ test("development profile selector is explicit, authenticated, and idempotent", 
   assert.equal(selected.status, 200); assert.equal((await selected.json() as { switched: boolean }).switched, false);
 });
 
+test("development profile selector atomically swaps a ready profile", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "lifestream-profile-swap-")); t.after(async () => rm(root, { recursive: true, force: true }));
+  const initial = { ...config(join(root, "mac")), profile: "mac-local" as const };
+  const app = createLifestreamServer({ config: initial, profileLoader: (profile) => ({ ...config(join(root, profile)), profile }) }); await app.start(); t.after(() => app.shutdown()); const base = `http://127.0.0.1:${app.address().port}`;
+  const selected = await fetch(`${base}/api/runtime/v1/profile`, { method: "POST", headers: { "content-type": "application/json", "x-lifestream-fixture-session": "s1", "x-lifestream-fixture-principal": "human", origin: base }, body: JSON.stringify({ profile: "ai5090" }) });
+  const body = await selected.json() as { profile: string; switched: boolean; status: string };
+  assert.equal(selected.status, 200); assert.deepEqual(body, { ...body, profile: "ai5090", switched: true, status: "ready" }); assert.equal(app.health.profile, "ai5090");
+});
+
 test("restart recreates persistent paths and readiness", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-server-"));
   t.after(async () => rm(root, { recursive: true, force: true }));

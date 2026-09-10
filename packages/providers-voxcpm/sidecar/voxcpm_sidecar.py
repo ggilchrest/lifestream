@@ -49,8 +49,13 @@ def load_once():
 
 def generate_audio(text, style):
     if BACKEND == "mlx":
+        import mlx.core as mx
         import numpy as np
-        for result in MODEL.generate(text=text, instruct=style, cfg_value=2.0, inference_timesteps=7):
+        # VoxCPM's diffusion stage is stochastic. Re-seed every bounded request
+        # so the fallback does not drift from intelligible speech into a noisy
+        # sample after earlier generations have advanced MLX's random state.
+        mx.random.seed(0)
+        for result in MODEL.generate(text=text, instruct=style, cfg_value=2.0, inference_timesteps=10):
             yield np.asarray(result.audio, dtype=np.float32)
         return
     yield from MODEL.generate_streaming(text=f"({style}){text}", cfg_value=2.0, inference_timesteps=10, retry_badcase=False)
@@ -119,7 +124,7 @@ class Handler(BaseHTTPRequestHandler):
             applied,degraded,style=map_delivery(request["delivery"])
             self.send_response(200); self.send_header("content-type","application/x-ndjson")
             self.send_header("cache-control","no-store"); self.send_header("connection","close"); self.end_headers()
-            self.event({"kind":"preAudio","sequence":sequence,"requestId":request["requestId"],"correlationId":request["correlationId"],"voiceBundleRevision":request["voiceBundleRevision"],"requestedDelivery":request["delivery"],"appliedDelivery":applied,"degradedDimensions":degraded,"mappingRevision":MAPPING_REVISION,"effectiveSynthesis":{"voiceDesign":style,"cfgValue":2.0,"inferenceTimesteps":7 if BACKEND=="mlx" else 10,"backend":BACKEND},"format":FORMAT,"runtimeRevision":RUNTIME_REVISION,"modelRevision":MODEL_REVISION})
+            self.event({"kind":"preAudio","sequence":sequence,"requestId":request["requestId"],"correlationId":request["correlationId"],"voiceBundleRevision":request["voiceBundleRevision"],"requestedDelivery":request["delivery"],"appliedDelivery":applied,"degradedDimensions":degraded,"mappingRevision":MAPPING_REVISION,"effectiveSynthesis":{"voiceDesign":style,"cfgValue":2.0,"inferenceTimesteps":10,"backend":BACKEND},"format":FORMAT,"runtimeRevision":RUNTIME_REVISION,"modelRevision":MODEL_REVISION})
             sequence+=1; deadline=datetime.fromisoformat(request["deadlineAt"].replace("Z","+00:00"))
             generator=generate_audio(request["text"],style)
             import numpy as np
