@@ -1,5 +1,7 @@
 const fixtureHeaders={"content-type":"application/json","x-lifestream-fixture-session":"browser-conversation","x-lifestream-fixture-principal":"human"};
 const $=id=>document.getElementById(id);let stream=null,audioContext=null,analyser=null,levelFrame=0,requestController=null;
+$("connect").textContent="Start microphone";
+$("voice-note").textContent="Local microphone and speaker controls are available. Backend STT/TTS are not configured in this development composition, so this is not a voice-session connection.";
 const setStatus=(id,text,kind="")=>{$(id).textContent=text;$(id).dataset.kind=kind};
 const addMessage=(role,text)=>{const node=document.createElement("article");node.className=`message ${role}`;node.innerHTML=`<strong>${role==="user"?"You":"Assistant"}</strong><pre></pre>`;node.querySelector("pre").textContent=text;$("messages").append(node);node.scrollIntoView({block:"end"});return node.querySelector("pre")};
 async function refreshDevices(){if(!navigator.mediaDevices?.enumerateDevices)return;const devices=await navigator.mediaDevices.enumerateDevices();$("microphone").replaceChildren(...devices.filter(device=>device.kind==="audioinput").map((device,index)=>{const option=document.createElement("option");option.value=device.deviceId;option.textContent=device.label||`Microphone ${index+1}`;return option}))}
