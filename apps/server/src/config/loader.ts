@@ -5,7 +5,7 @@ import type { Profile, ProviderRequirement, RuntimeConfig, SecretRef } from "./s
 type ConfigInput = Partial<RuntimeConfig> & { [key: string]: unknown };
 type ConfigSources = { defaults: ConfigInput; profile: ConfigInput; environment: ConfigInput; cli: ConfigInput };
 
-const keys = new Set(["profile", "providers", "providerRequirements", "inferenceProfile", "ttsProfile", "storage", "authority", "secretRefs"]);
+const keys = new Set(["profile", "providers", "providerRequirements", "inferenceProfile", "sttProfile", "ttsProfile", "storage", "authority", "secretRefs"]);
 const providerKeys = new Set(["inference", "memory", "stt", "tts", "world", "capability", "renderer", "clock"]);
 const storageKeys = new Set(["databasePath", "artifactDirectory"]);
 const authorityKeys = new Set(["provider", "authentication"]);
@@ -58,6 +58,11 @@ export const loadConfig = (sources: ConfigSources): RuntimeConfig => {
     if (artifacts.length !== 1) throw new Error("inference profile requires exactly one runtime artifact digest");
     if (typeof inferenceProfile.contextLength !== "number" || !Number.isInteger(inferenceProfile.contextLength) || inferenceProfile.contextLength <= 0 || inferenceProfile.developmentOnly !== true) throw new Error("invalid inference profile limits");
   }
+  const sttProfile = merged.sttProfile === undefined ? undefined : assertObject(merged.sttProfile, "sttProfile");
+  if (sttProfile) {
+    for (const key of ["runtime", "runtimeVersion", "model", "modelRevision", "endpoint", "modelArtifactDigest", "mappingRevision", "language"]) if (typeof sttProfile[key] !== "string" || !sttProfile[key]) throw new Error(`invalid STT profile value: ${key}`);
+    if (!String(sttProfile.modelArtifactDigest).startsWith("sha256:") || sttProfile.developmentOnly !== true) throw new Error("invalid STT profile limits");
+  }
   const ttsProfile = merged.ttsProfile === undefined ? undefined : assertObject(merged.ttsProfile, "ttsProfile");
   if (ttsProfile) {
     for (const key of ["runtime", "runtimeVersion", "model", "modelRevision", "quantization", "endpoint", "voiceBundleKey", "mappingRevision"]) if (typeof ttsProfile[key] !== "string" || !ttsProfile[key]) throw new Error(`invalid TTS profile value: ${key}`);
@@ -74,6 +79,7 @@ export const loadConfig = (sources: ConfigSources): RuntimeConfig => {
   for (const [key, value] of Object.entries(providerRequirements)) if (value !== "required" && value !== "optional") throw new Error(`invalid provider requirement: ${key}`);
   const result = { profile: merged.profile, providers: providers as RuntimeConfig["providers"], providerRequirements: providerRequirements as RuntimeConfig["providerRequirements"], storage: storage as RuntimeConfig["storage"], authority: authority as RuntimeConfig["authority"], secretRefs: validateSecretRefs(merged.secretRefs ?? {}) } as RuntimeConfig;
   if (inferenceProfile) result.inferenceProfile = inferenceProfile as NonNullable<RuntimeConfig["inferenceProfile"]>;
+  if (sttProfile) result.sttProfile = sttProfile as NonNullable<RuntimeConfig["sttProfile"]>;
   if (ttsProfile) result.ttsProfile = ttsProfile as NonNullable<RuntimeConfig["ttsProfile"]>;
   return result;
 };

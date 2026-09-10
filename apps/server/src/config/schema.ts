@@ -15,6 +15,7 @@ export type RuntimeConfig = {
   };
   providerRequirements: Record<keyof RuntimeConfig["providers"], ProviderRequirement>;
   inferenceProfile?: { runtime: string; runtimeVersion: string; model: string; modelRevision: string; servedModelName: string; quantization: string; contextLength: number; endpoint: string; containerImageDigest?: string; modelArtifactDigest?: string; developmentOnly: true };
+  sttProfile?: { runtime: string; runtimeVersion: string; model: string; modelRevision: string; endpoint: string; modelArtifactDigest: string; mappingRevision: string; language: string; developmentOnly: true };
   ttsProfile?: { runtime: string; runtimeVersion: string; model: string; modelRevision: string; quantization: string; endpoint: string; voiceBundleKey: string; voiceBundleRevision: number; mappingRevision: string; developmentOnly: true };
   storage: { databasePath: string; artifactDirectory: string };
   authority: { provider: string; authentication: string };

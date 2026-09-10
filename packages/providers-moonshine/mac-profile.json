@@ -1,0 +1,13 @@
+{
+  "profile": "mac-local",
+  "backend": "mlx",
+  "runtime": "mlx-audio@0.5.3",
+  "model": "moonshine-ai/moonshine-tiny",
+  "modelRevision": "390624ed33d594443aa4aa221f5b9f283b545b5a",
+  "modelArtifactDigest": "sha256:867cd2215804859c55aa972d740bd5002be149b4e7526328c895d2408848c736",
+  "parameters": 27092736,
+  "language": "en",
+  "sidecar": { "baseUrl": "http://127.0.0.1:8788", "bind": "127.0.0.1", "protocol": "moonshine.loopback.v1" },
+  "limits": { "maxInputSamples": 480000, "sampleRateHz": 16000, "streaming": false },
+  "production": false
+}

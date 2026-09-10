@@ -1,0 +1,9 @@
+{
+  "providerRef": "moonshine-mlx",
+  "providerContract": "SpeechToTextProvider",
+  "runtime": { "name": "mlx-audio", "version": "0.5.3", "backend": "MLX" },
+  "model": { "repository": "moonshine-ai/moonshine-tiny", "revision": "390624ed33d594443aa4aa221f5b9f283b545b5a", "artifactSha256": "867cd2215804859c55aa972d740bd5002be149b4e7526328c895d2408848c736", "parameters": 27092736, "language": "English" },
+  "transport": { "protocol": "moonshine.loopback.v1", "endpoint": "http://127.0.0.1:8788", "input": "16 kHz mono PCM s16le", "output": "committed transcript" },
+  "limits": { "maxInputSeconds": 30, "singleWorker": true, "streamingPartials": false },
+  "claim": "Mac-local development fallback only; no multilingual, performance, production, speaker-identity, or turn-authority claim"
+}

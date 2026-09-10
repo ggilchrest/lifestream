@@ -26,6 +26,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@lifestream/providers-moonshine':
+        specifier: workspace:*
+        version: link:../../packages/providers-moonshine
       '@lifestream/providers-ollama':
         specifier: workspace:*
         version: link:../../packages/providers-ollama
@@ -45,6 +48,12 @@ importers:
   packages/contracts: {}
 
   packages/providers-fixture: {}
+
+  packages/providers-moonshine:
+    dependencies:
+      '@lifestream/runtime':
+        specifier: workspace:*
+        version: link:../runtime
 
   packages/providers-nemo-speech:
     dependencies:

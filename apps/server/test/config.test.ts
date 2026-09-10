@@ -28,7 +28,9 @@ test("profiles are explicit and include provider requirements", () => {
   assert.equal(mac.inferenceProfile?.servedModelName, "qwen3.5:2b-q4_K_M");
   assert.equal(mac.providers.tts, "voxcpm");
   assert.equal(mac.ttsProfile?.model, "mlx-community/VoxCPM2-4bit");
-  assert.equal(mac.providerRequirements.stt, "optional");
+  assert.equal(mac.providers.stt, "moonshine-mlx");
+  assert.equal(mac.sttProfile?.model, "moonshine-ai/moonshine-tiny");
+  assert.equal(mac.providerRequirements.stt, "required");
 });
 
 test("unknown keys and non-fixture test providers fail closed", () => {

@@ -13,8 +13,8 @@
     "LS-S031", "LS-S032", "LS-S033", "LS-S034", "LS-S035", "LS-S036", "LS-S037", "LS-S038", "LS-S040", "LS-S041",
     "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S046", "LS-S047", "LS-S039", "LS-S049", "LS-S050", "LS-S051", "LS-S052"
   ],
-  "allowedFiles": [".gitignore", "package.json", "pnpm-lock.yaml", "apps/server/package.json", "apps/server/tsconfig.json", "apps/server/src/index.ts", "apps/server/src/composition/providers.ts", "apps/server/src/config/schema.ts", "apps/server/src/config/loader.ts", "apps/server/src/config/profiles/ai5090.json", "apps/server/src/config/profiles/mac-local.json", "apps/server/test/config.test.ts", "apps/server/test/providers.test.ts", "apps/server/test/server.test.ts", "packages/providers-ollama/package.json", "packages/providers-ollama/tsconfig.json", "packages/providers-ollama/provider-manifest.json", "packages/providers-ollama/src/index.ts", "packages/providers-ollama/src/provider.ts", "packages/providers-ollama/test/provider.test.ts", "packages/providers-voxcpm/package.json", "packages/providers-voxcpm/mac-local.sh", "packages/providers-voxcpm/mac-profile.json", "packages/providers-voxcpm/sidecar/voxcpm_sidecar.py", "implementation/checkpoint.json", "implementation/evidence/LS-MAINT-mac-local-runtime-profile.json"],
-  "changedFiles": [".gitignore", "package.json", "pnpm-lock.yaml", "apps/server/package.json", "apps/server/tsconfig.json", "apps/server/src/index.ts", "apps/server/src/composition/providers.ts", "apps/server/src/config/schema.ts", "apps/server/src/config/loader.ts", "apps/server/src/config/profiles/ai5090.json", "apps/server/src/config/profiles/mac-local.json", "apps/server/test/config.test.ts", "apps/server/test/providers.test.ts", "apps/server/test/server.test.ts", "packages/providers-ollama/package.json", "packages/providers-ollama/tsconfig.json", "packages/providers-ollama/provider-manifest.json", "packages/providers-ollama/src/index.ts", "packages/providers-ollama/src/provider.ts", "packages/providers-ollama/test/provider.test.ts", "packages/providers-voxcpm/package.json", "packages/providers-voxcpm/mac-local.sh", "packages/providers-voxcpm/mac-profile.json", "packages/providers-voxcpm/sidecar/voxcpm_sidecar.py", "implementation/checkpoint.json", "implementation/evidence/LS-MAINT-mac-local-runtime-profile.json"],
+  "allowedFiles": [".gitignore", "package.json", "pnpm-lock.yaml", "apps/server/package.json", "apps/server/tsconfig.json", "apps/server/src/index.ts", "apps/server/src/composition/providers.ts", "apps/server/src/config/schema.ts", "apps/server/src/config/loader.ts", "apps/server/src/config/profiles/ai5090.json", "apps/server/src/config/profiles/mac-local.json", "apps/server/test/config.test.ts", "apps/server/test/providers.test.ts", "apps/server/test/server.test.ts", "scripts/check-mac-local-profile.mjs", "packages/providers-ollama/package.json", "packages/providers-ollama/tsconfig.json", "packages/providers-ollama/provider-manifest.json", "packages/providers-ollama/src/index.ts", "packages/providers-ollama/src/provider.ts", "packages/providers-ollama/test/provider.test.ts", "packages/providers-moonshine/package.json", "packages/providers-moonshine/tsconfig.json", "packages/providers-moonshine/provider-manifest.json", "packages/providers-moonshine/mac-local.sh", "packages/providers-moonshine/mac-profile.json", "packages/providers-moonshine/sidecar/moonshine_sidecar.py", "packages/providers-moonshine/src/index.ts", "packages/providers-moonshine/src/provider.ts", "packages/providers-moonshine/test/provider.test.ts", "packages/providers-voxcpm/package.json", "packages/providers-voxcpm/mac-local.sh", "packages/providers-voxcpm/mac-profile.json", "packages/providers-voxcpm/sidecar/voxcpm_sidecar.py", "implementation/checkpoint.json", "implementation/evidence/LS-MAINT-mac-local-runtime-profile.json"],
+  "changedFiles": [".gitignore", "package.json", "pnpm-lock.yaml", "apps/server/package.json", "apps/server/tsconfig.json", "apps/server/src/index.ts", "apps/server/src/composition/providers.ts", "apps/server/src/config/schema.ts", "apps/server/src/config/loader.ts", "apps/server/src/config/profiles/ai5090.json", "apps/server/src/config/profiles/mac-local.json", "apps/server/test/config.test.ts", "apps/server/test/providers.test.ts", "apps/server/test/server.test.ts", "scripts/check-mac-local-profile.mjs", "packages/providers-ollama/package.json", "packages/providers-ollama/tsconfig.json", "packages/providers-ollama/provider-manifest.json", "packages/providers-ollama/src/index.ts", "packages/providers-ollama/src/provider.ts", "packages/providers-ollama/test/provider.test.ts", "packages/providers-moonshine/package.json", "packages/providers-moonshine/tsconfig.json", "packages/providers-moonshine/provider-manifest.json", "packages/providers-moonshine/mac-local.sh", "packages/providers-moonshine/mac-profile.json", "packages/providers-moonshine/sidecar/moonshine_sidecar.py", "packages/providers-moonshine/src/index.ts", "packages/providers-moonshine/src/provider.ts", "packages/providers-moonshine/test/provider.test.ts", "packages/providers-voxcpm/package.json", "packages/providers-voxcpm/mac-local.sh", "packages/providers-voxcpm/mac-profile.json", "packages/providers-voxcpm/sidecar/voxcpm_sidecar.py", "implementation/checkpoint.json", "implementation/evidence/LS-MAINT-mac-local-runtime-profile.json"],
   "validation": [
     {
       "command": "node --test --experimental-strip-types scripts/candidate-manifest.test.mjs",
@@ -39,17 +39,17 @@
     {
       "command": "npm --prefix orchestration run runtime:check:mac",
       "result": "pass",
-      "evidence": "Pinned Ollama returned exactly LOCAL_READY; native MLX Vox returned a completed 48 kHz PCM stream with exact runtime, model, and mapping identity and consistent sample accounting."
+      "evidence": "Pinned Ollama returned exactly LOCAL_READY; native MLX Vox produced 130568 48 kHz PCM samples, and pinned native MLX Moonshine transcribed the derived 43522-sample 16 kHz input as exactly 'Local speech is ready.' with exact identities."
     },
     {
       "command": "temporary-storage Lifestream mac-local server smoke",
       "result": "pass",
-      "evidence": "Server reported mac-local ready with required Ollama and Vox healthy, optional STT unavailable, acceptingInteractions true, and streamed exactly MAC_PROFILE_READY through the canonical route."
+      "evidence": "Server reported mac-local ready with required Ollama, Moonshine, and Vox healthy and non-fixture, acceptingInteractions true, and streamed exactly MAC_PROFILE_READY through the canonical route."
     },
     {
       "command": "corepack pnpm test",
       "result": "pass",
-      "evidence": "All 123 public Lifestream tests passed on 2026-09-10, including Ollama adapter and exact Mac provider health probes."
+      "evidence": "All 125 public Lifestream tests passed on 2026-09-10, including the bounded Moonshine adapter and exact three-provider Mac health probes."
     },
     {
       "command": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm build && node scripts/workspace.mjs check && git diff --check",
@@ -59,11 +59,11 @@
   ],
   "decisions": [
     "WSL development isolation remains application-level: host physical GPU index 1 is exposed as provider-local cuda:0 through CUDA_VISIBLE_DEVICES=1; strict container GPU invisibility is not claimed.",
-    "LS-DEC-038 adds an explicitly selected Mac-local development fallback using Ollama Qwen3.5 2B Q4_K_M and native MLX VoxCPM2 4-bit; no automatic failover or local STT is claimed."
+    "LS-DEC-038 adds an explicitly selected Mac-local development fallback using Ollama Qwen3.5 2B Q4_K_M plus native MLX VoxCPM2 4-bit TTS and compact English Moonshine Tiny STT; no automatic failover or NeMo-equivalent streaming partials are claimed."
   ],
   "blockers": [],
-  "nextAction": "Use the explicit ai5090 or mac-local target for dependency-ready testing. Continue LS-S056 voice transport only when a composed bidirectional audio route exists; Mac-local STT and recorded-speech acceptance remain unselected and unclaimed.",
-  "updatedAt": "2026-09-10T23:30:00Z",
+  "nextAction": "Use the explicit ai5090 or mac-local target for dependency-ready testing. Continue LS-S056 voice transport when a composed browser microphone/playback route exists; the Mac-local STT runtime is available, but physical-microphone and audible-playback acceptance remain unclaimed.",
+  "updatedAt": "2026-09-10T22:49:02Z",
   "updatedBy": "Codex",
-  "notes": "LS-S052 remains verified. LS-S056 browser-first surface is implemented and deterministic checks pass. The Mac-local maintenance profile is installed and real-provider-smoked without changing LS-S056 acceptance. Production inference, native endpoint hardware, recorded speech, perceptual acceptance, and Human acceptance remain separate. No image was pushed and no external deployment occurred."
+  "notes": "LS-S052 remains verified. LS-S056 browser-first surface is implemented and deterministic checks pass. The Mac-local maintenance profile now has installed and real-provider-smoked inference, bounded utterance-batch STT, and TTS without changing LS-S056 physical-device acceptance. Production inference, native endpoint hardware, microphone/playback, perceptual acceptance, and Human acceptance remain separate. No image was pushed and no external deployment occurred."
 }
