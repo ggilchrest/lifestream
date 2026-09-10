@@ -2,7 +2,7 @@
   "slice": "LS-S056",
   "status": "implementationCompleteVerificationPending",
   "claimClass": "real-provider-development-smoke",
-  "revision": "0856b2a",
+  "revision": "f8279de",
   "checks": [
     {
       "command": "npm --prefix orchestration run runtime:check:mac",

@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "716c77851f22e11444237cebcd598fa314074b76",
-  "currentRevision": "0856b2a0de869d05525f3a3aab55260489ced8a4",
+  "currentRevision": "f8279defceca27c848bc74feb4aafb7ed5369ebf",
   "activeSlice": "LS-S056",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -60,6 +60,11 @@
       "command": "corepack pnpm test; focused server/profile tests; two consecutive Mac-local real-provider checks",
       "result": "pass",
       "evidence": "All 129 public tests passed before the added ready-profile swap regression; the final focused suite passed 15/15, strict typecheck/lint/build passed, and both repeated Vox-to-Moonshine checks recovered exactly 'Local speech is ready.' after the TTS stability repair."
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/config.test.ts",
+      "result": "pass",
+      "evidence": "All 3 configuration tests passed after removing the duplicate, identical ai5090 STT profile key."
     }
   ],
   "decisions": [
