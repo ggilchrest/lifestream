@@ -23,6 +23,10 @@ test("profiles are explicit and include provider requirements", () => {
   assert.equal(loadProfile("test").profile, "test");
   assert.equal(loadProfile("local-dev").providerRequirements.world, "optional");
   assert.equal(loadProfile("ai5090").providers.inference, "ai5090-development");
+  assert.equal(loadProfile("ai5090").providers.stt, "nemo-speech");
+  assert.equal(loadProfile("ai5090").providers.tts, "voxcpm");
+  assert.equal(loadProfile("ai5090").sttProfile?.model, "nvidia/nemotron-speech-streaming-en-0.6b");
+  assert.equal(loadProfile("ai5090").ttsProfile?.model, "openbmb/VoxCPM2");
   const mac = loadProfile("mac-local");
   assert.equal(mac.providers.inference, "ollama-mac-local");
   assert.equal(mac.inferenceProfile?.servedModelName, "qwen3.5:2b-q4_K_M");

@@ -1,8 +1,11 @@
 {
   "profile": "ai5090",
-  "providers": { "inference": "ai5090-development", "memory": "fixture", "stt": "fixture", "tts": "fixture", "world": "fixture", "capability": "fixture", "renderer": "fixture", "clock": "system" },
+  "providers": { "inference": "ai5090-development", "memory": "fixture", "stt": "nemo-speech", "tts": "voxcpm", "world": "fixture", "capability": "fixture", "renderer": "fixture", "clock": "system" },
   "providerRequirements": { "inference": "required", "memory": "required", "stt": "required", "tts": "required", "world": "optional", "capability": "optional", "renderer": "optional", "clock": "required" },
   "inferenceProfile": { "runtime": "SGLang", "runtimeVersion": "0.0.0.dev1+g5f55db35e", "model": "RadixArk/Qwen3.8-27B-NVFP4", "modelRevision": "319f741cce68d7914884900c138a1fbb70a42f30", "servedModelName": "qwen3.8-27b-local", "quantization": "NVFP4", "contextLength": 65536, "endpoint": "http://127.0.0.1:30000", "containerImageDigest": "sha256:616a3e97f45191af975896cfa644279096cb31bd408a071c2e99ca7209c3cafe", "developmentOnly": true },
+  "sttProfile": { "runtime": "NeMo-Speech.cpp", "runtimeVersion": "0.1.0", "model": "nvidia/nemotron-speech-streaming-en-0.6b", "modelRevision": "ebe59e5a817142986528bbbee5dba8db7b38ed50", "endpoint": "http://127.0.0.1:8080", "modelArtifactDigest": "sha256:d9a01898d2a611c8764e23a1c2f45e70bbd5a425dc4de93692ac951dd603812d", "mappingRevision": "nemo-speech-map-1", "language": "en-US", "developmentOnly": true },
+  "sttProfile": { "runtime": "NeMo-Speech.cpp", "runtimeVersion": "0.1.0", "model": "nvidia/nemotron-speech-streaming-en-0.6b", "modelRevision": "ebe59e5a817142986528bbbee5dba8db7b38ed50", "endpoint": "http://127.0.0.1:8080", "modelArtifactDigest": "sha256:d9a01898d2a611c8764e23a1c2f45e70bbd5a425dc4de93692ac951dd603812d", "mappingRevision": "nemo-speech-map-1", "language": "en-US", "developmentOnly": true },
+  "ttsProfile": { "runtime": "PyTorch-CUDA", "runtimeVersion": "19b6bf7590025418821a86dcb817504e0ad7e5df", "model": "openbmb/VoxCPM2", "modelRevision": "32279effe8c19989596f05d353d1447f51d9e915", "quantization": "bf16", "endpoint": "http://127.0.0.1:8787", "voiceBundleKey": "fixture-voice-design", "voiceBundleRevision": 1, "mappingRevision": "voxcpm2-map-1", "developmentOnly": true },
   "storage": { "databasePath": ".lifestream/ai5090/data.sqlite", "artifactDirectory": ".lifestream/ai5090/artifacts" },
   "authority": { "provider": "fixture", "authentication": "fixture" },
   "secretRefs": {}

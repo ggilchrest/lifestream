@@ -67,7 +67,7 @@ export class AudioSession {
       let committed = false;
       for await (const stt of this.deps.stt.transcribe({ deadlineAt, now: () => new Date().toISOString() }, audio, this.controller.signal)) {
         if (stt.kind !== "data" || stt.payload.type !== "committed" || committed) continue;
-        committed = true; response(this.socket, traceId, this.sequence++, { type: "textDelta", text: stt.payload.text });
+        committed = true;
         const prompt = buildCanonicalPrompt({ assistantId: this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: request.endpointId, userInput: stt.payload.text, deadlineAt, executionMode: "live" });
         let answer = "";
         for await (const chunk of this.deps.inference.generate(prompt, { signal: this.controller.signal })) {
@@ -78,10 +78,16 @@ export class AudioSession {
         if (!answer.trim()) throw new Error("inference returned no text");
         if (this.controller.signal.aborted) throw new Error("audio turn interrupted");
         const segmentId = randomUUID(); const decisionId = randomUUID();
+        let speechSucceeded = false;
         for await (const speech of this.deps.tts.synthesize({ contractVersion: "2.0.0", text: answer, segmentId, format: { encoding: "pcm_s16le", sampleRateHz: 48000, channels: 1 }, voiceProfile: { voiceRef: "fixture-voice-design", revision: 1 }, decision: { decisionId, revision: 1 }, delivery: { interactionId: traceId, segmentId, decisionId, decisionRevision: 1, deliveryMode: "neutral", urgency: "normal", pace: 0.5, energy: 0.4 }, deadlineAt })) {
           if (this.controller.signal.aborted) throw new Error("audio turn interrupted");
           if (speech.kind === "data") send(this.socket, { type: "audio", interactionTraceId: traceId, chunk: { segmentId: speech.segmentId, frame: speech.frame } });
+          if (speech.kind === "terminal") {
+            if (speech.outcome !== "succeeded") throw new Error(`speech synthesis ${speech.outcome}`);
+            speechSucceeded = true;
+          }
         }
+        if (!speechSucceeded) throw new Error("speech synthesis returned no successful terminal");
         if (this.controller.signal.aborted) throw new Error("audio turn interrupted");
         response(this.socket, traceId, this.sequence++, { type: "terminal", state: "completed", finalResponse: null, error: null });
       }

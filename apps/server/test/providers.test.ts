@@ -78,3 +78,31 @@ test("Mac provider health rejects a retagged Ollama model", async () => {
     assert.equal(registry.ready, false);
   } finally { globalThis.fetch = original; }
 });
+
+test("ai5090 profile constructs and probes real inference, STT, and TTS providers", async () => {
+  const profile = loadConfig({
+    defaults: {
+      profile: "ai5090",
+      providers: { inference: "ai5090-development", memory: "fixture", stt: "nemo-speech", tts: "voxcpm", world: "fixture", capability: "fixture", renderer: "fixture", clock: "system" },
+      providerRequirements: { inference: "required", memory: "required", stt: "required", tts: "required", world: "optional", capability: "optional", renderer: "optional", clock: "required" },
+      inferenceProfile: { runtime: "SGLang", runtimeVersion: "v", model: "Qwen", modelRevision: "inference-revision", servedModelName: "qwen", quantization: "q", contextLength: 1, endpoint: "http://inference.invalid", containerImageDigest: "sha256:image", developmentOnly: true },
+      sttProfile: { runtime: "NeMo-Speech.cpp", runtimeVersion: "0.1.0", model: "Nemotron", modelRevision: "stt-revision", endpoint: "http://stt.invalid", modelArtifactDigest: "sha256:stt-model", mappingRevision: "nemo-speech-map-1", language: "en-US", developmentOnly: true },
+      ttsProfile: { runtime: "PyTorch-CUDA", runtimeVersion: "tts-runtime", model: "VoxCPM2", modelRevision: "tts-revision", quantization: "bf16", endpoint: "http://tts.invalid", voiceBundleKey: "fixture-voice-design", voiceBundleRevision: 1, mappingRevision: "voxcpm2-map-1", developmentOnly: true },
+      storage: { databasePath: ":memory:", artifactDirectory: ".artifacts" }, authority: { provider: "fixture", authentication: "fixture" }, secretRefs: {}
+    }, profile: {}, environment: {}, cli: {}
+  });
+  const original = globalThis.fetch;
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+    if (url === "http://stt.invalid/health") return Response.json({ status: "ok", version: "0.1.0" });
+    if (url === "http://tts.invalid/readyz") return Response.json({ status: "ready", runtimeRevision: "tts-runtime", modelRevision: "tts-revision", mappingRevision: "voxcpm2-map-1" });
+    return Response.json({ status: "ok" });
+  };
+  try {
+    const registry = createProviderRegistry(profile); await registry.probe();
+    assert.equal(registry.providers.inference.fixture, false); assert.equal(registry.providers.inference.status, "healthy");
+    assert.equal(registry.providers.stt.fixture, false); assert.equal(registry.providers.stt.status, "healthy");
+    assert.equal(registry.providers.tts.fixture, false); assert.equal(registry.providers.tts.status, "healthy");
+    assert.equal(registry.ready, true);
+  } finally { globalThis.fetch = original; }
+});

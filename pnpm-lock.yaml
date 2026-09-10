@@ -29,6 +29,9 @@ importers:
       '@lifestream/providers-moonshine':
         specifier: workspace:*
         version: link:../../packages/providers-moonshine
+      '@lifestream/providers-nemo-speech':
+        specifier: workspace:*
+        version: link:../../packages/providers-nemo-speech
       '@lifestream/providers-ollama':
         specifier: workspace:*
         version: link:../../packages/providers-ollama

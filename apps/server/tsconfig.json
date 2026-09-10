@@ -7,6 +7,7 @@
     { "path": "../../packages/runtime" },
     { "path": "../../packages/providers-fixture" },
     { "path": "../../packages/providers-moonshine" },
+    { "path": "../../packages/providers-nemo-speech" },
     { "path": "../../packages/providers-ollama" },
     { "path": "../../packages/providers-sglang" },
     { "path": "../../packages/providers-voxcpm" },

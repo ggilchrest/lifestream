@@ -4,6 +4,7 @@
   "type": "module",
   "dependencies": {
     "@lifestream/providers-moonshine": "workspace:*",
+    "@lifestream/providers-nemo-speech": "workspace:*",
     "@lifestream/providers-ollama": "workspace:*",
     "@lifestream/providers-sglang": "workspace:*",
     "@lifestream/providers-voxcpm": "workspace:*",

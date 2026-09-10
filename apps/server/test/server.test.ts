@@ -21,6 +21,7 @@ test("fixture package exposes distinct health states, UI, and authenticated auth
   assert.deepEqual(health.migrations.ids, [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13]);
   assert.equal(health.providers.inference.implementation, "@lifestream/providers-fixture");
   assert.equal(health.providers.inference.fixture, true);
+  assert.equal((await fetch(`${base}/api/runtime/v1/profile`)).status, 200);
   const conversation = await fetch(`${base}/control/conversation.html`);
   assert.equal(conversation.status, 200);
   assert.equal(conversation.headers.get("content-type"), "text/html; charset=utf-8");
@@ -48,7 +49,17 @@ test("typed-text runtime streams a canonical manifest and fixture response", asy
   const root = await mkdtemp(join(tmpdir(), "lifestream-runtime-")); t.after(async () => rm(root, { recursive: true, force: true }));
   const app = createLifestreamServer({ config: config(root) }); await app.start(); t.after(() => app.shutdown()); const base = `http://127.0.0.1:${app.address().port}`;
   const response = await fetch(`${base}/api/runtime/v1/messages`, { method: "POST", headers: { "content-type": "application/json", "x-lifestream-fixture-session": "session-1", "x-lifestream-fixture-principal": "human", origin: base }, body: JSON.stringify({ userInput: "hello", readOnlyCapability: { name: "capability.read-only.status", input: { scope: "assistant-neutral" } } }) });
-  assert.equal(response.status, 200); const body = await response.text(); assert.match(body, /event: input\.manifest/); assert.match(body, /"schemaVersion":"1\.0\.0"/); assert.match(body, /event: capability\.read-only/); assert.match(body, /capability\.read-only\.status/); assert.match(body, /Fixture response: hello/); assert.match(body, /event: interaction\.completed/);
+  assert.equal(response.status, 200); const body = await response.text(); assert.match(body, /event: input\.manifest/); assert.match(body, /"schemaVersion":"1\.0\.0"/); assert.match(body, /event: capability\.read-only/); assert.match(body, /capability\.read-only\.status/); assert.match(body, /Fixture response: hello/); assert.match(body, /event: interaction\.completed/); assert.match(body, /"provider":\{"profile":"test","implementation":"@lifestream\/providers-fixture","model":"fixture","revision":"workspace","fixture":true\}/);
+});
+
+test("development profile selector is explicit, authenticated, and idempotent", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "lifestream-profile-")); t.after(async () => rm(root, { recursive: true, force: true }));
+  const app = createLifestreamServer({ config: { ...config(root), profile: "mac-local" } }); await app.start(); t.after(() => app.shutdown()); const base = `http://127.0.0.1:${app.address().port}`;
+  const selection = await (await fetch(`${base}/api/runtime/v1/profile`)).json() as { activeProfile: string; selectableProfiles: string[] };
+  assert.equal(selection.activeProfile, "mac-local"); assert.deepEqual(selection.selectableProfiles, ["mac-local", "ai5090"]);
+  assert.equal((await fetch(`${base}/api/runtime/v1/profile`, { method: "POST", body: JSON.stringify({ profile: "mac-local" }) })).status, 401);
+  const selected = await fetch(`${base}/api/runtime/v1/profile`, { method: "POST", headers: { "content-type": "application/json", "x-lifestream-fixture-session": "s1", "x-lifestream-fixture-principal": "human", origin: base }, body: JSON.stringify({ profile: "mac-local" }) });
+  assert.equal(selected.status, 200); assert.equal((await selected.json() as { switched: boolean }).switched, false);
 });
 
 test("restart recreates persistent paths and readiness", async (t) => {

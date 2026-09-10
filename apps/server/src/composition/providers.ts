@@ -1,10 +1,13 @@
 import type { RuntimeConfig } from "../config/schema.js";
 import type { InferenceProvider } from "@lifestream/runtime/inference";
 import { FixtureInferenceProvider } from "@lifestream/runtime/inference/fixture";
+import type { SpeechToTextProvider } from "@lifestream/runtime/voice";
 import { MoonshineSpeechProvider } from "@lifestream/providers-moonshine";
+import { NemoSpeechProvider } from "@lifestream/providers-nemo-speech";
 import { OllamaInferenceProvider } from "@lifestream/providers-ollama";
 import { SglangInferenceProvider } from "@lifestream/providers-sglang";
 import { VoxCpmProvider } from "@lifestream/providers-voxcpm";
+import { WebSocket } from "ws";
 
 export type ProviderHealthStatus = "healthy" | "degraded" | "unavailable";
 export type ProviderInstanceHealth = {
@@ -18,6 +21,17 @@ export type ProviderInstanceHealth = {
 };
 
 type ProviderDescriptor = Omit<ProviderInstanceHealth, "id" | "required">;
+type NemoSocketBridge = { onopen: (() => void) | null; onmessage: ((event: { data: string }) => void) | null; onerror: (() => void) | null; onclose: (() => void) | null; send(data: string | ArrayBuffer): void; close(): void };
+
+const createNemoSocket = (url: string): NemoSocketBridge => {
+  const socket = new WebSocket(url);
+  const bridge: NemoSocketBridge = { onopen: null, onmessage: null, onerror: null, onclose: null, send: (data) => socket.send(data), close: () => socket.close() };
+  socket.on("open", () => bridge.onopen?.());
+  socket.on("message", (data) => bridge.onmessage?.({ data: data.toString() }));
+  socket.on("error", () => bridge.onerror?.());
+  socket.on("close", () => bridge.onclose?.());
+  return bridge;
+};
 
 const descriptors: Record<string, ProviderDescriptor> = {
   fixture: { implementation: "@lifestream/providers-fixture", revision: "workspace", status: "healthy", fixture: true },
@@ -34,7 +48,7 @@ const descriptors: Record<string, ProviderDescriptor> = {
 export class ProviderRegistry {
   readonly providers: Record<string, ProviderInstanceHealth>;
   readonly inference?: InferenceProvider;
-  readonly stt?: MoonshineSpeechProvider;
+  readonly stt?: SpeechToTextProvider;
   readonly tts?: VoxCpmProvider;
   private readonly config: RuntimeConfig;
   constructor(config: RuntimeConfig) {
@@ -51,6 +65,7 @@ export class ProviderRegistry {
     if (config.providers.inference === "ai5090-development" && config.inferenceProfile) this.inference = new SglangInferenceProvider({ endpoint: config.inferenceProfile.endpoint, model: config.inferenceProfile.servedModelName, ...(process.env.LIFESTREAM_INFERENCE_API_KEY ? { apiKey: process.env.LIFESTREAM_INFERENCE_API_KEY } : {}) });
     if (config.providers.inference === "ollama-mac-local" && config.inferenceProfile) this.inference = new OllamaInferenceProvider({ endpoint: config.inferenceProfile.endpoint, model: config.inferenceProfile.servedModelName, contextLength: config.inferenceProfile.contextLength });
     if (config.providers.stt === "moonshine-mlx" && config.sttProfile) this.stt = new MoonshineSpeechProvider({ baseUrl: config.sttProfile.endpoint, runtimeRevision: config.sttProfile.runtimeVersion, modelRevision: config.sttProfile.modelRevision, modelArtifactDigest: config.sttProfile.modelArtifactDigest, mappingRevision: config.sttProfile.mappingRevision });
+    if (config.providers.stt === "nemo-speech" && config.sttProfile) this.stt = new NemoSpeechProvider({ baseUrl: config.sttProfile.endpoint, model: config.sttProfile.model, language: config.sttProfile.language, webSocketFactory: createNemoSocket });
     if (config.providers.tts === "voxcpm" && config.ttsProfile) this.tts = new VoxCpmProvider({ baseUrl: config.ttsProfile.endpoint, voiceBundleKey: config.ttsProfile.voiceBundleKey, voiceBundleRevision: config.ttsProfile.voiceBundleRevision, runtimeRevision: config.ttsProfile.runtimeVersion, modelRevision: config.ttsProfile.modelRevision, mappingRevision: config.ttsProfile.mappingRevision });
   }
   async probe(timeoutMs = 2_000): Promise<void> {
@@ -58,16 +73,20 @@ export class ProviderRegistry {
   }
   private async probeStt(timeoutMs: number): Promise<void> {
     const current = this.providers.stt;
-    if (!current || current.id !== "stt" || this.config.providers.stt !== "moonshine-mlx" || !this.config.sttProfile) return;
+    if (!current || current.id !== "stt" || !["moonshine-mlx", "nemo-speech"].includes(this.config.providers.stt) || !this.config.sttProfile) return;
     const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(`${this.config.sttProfile.endpoint.replace(/\/$/u, "")}/readyz`, { signal: controller.signal });
-      const payload = response.ok ? await response.json() as { runtimeRevision?: string; modelRevision?: string; modelArtifactDigest?: string; mappingRevision?: string } : {};
-      const healthy = response.ok && payload.runtimeRevision === this.config.sttProfile.runtimeVersion && payload.modelRevision === this.config.sttProfile.modelRevision && payload.modelArtifactDigest === this.config.sttProfile.modelArtifactDigest && payload.mappingRevision === this.config.sttProfile.mappingRevision;
+      const moonshine = this.config.providers.stt === "moonshine-mlx";
+      const response = await fetch(`${this.config.sttProfile.endpoint.replace(/\/$/u, "")}${moonshine ? "/readyz" : "/health"}`, { signal: controller.signal });
+      const payload = response.ok ? await response.json() as { status?: string; version?: string; runtimeRevision?: string; modelRevision?: string; modelArtifactDigest?: string; mappingRevision?: string } : {};
+      const healthy = moonshine
+        ? response.ok && payload.runtimeRevision === this.config.sttProfile.runtimeVersion && payload.modelRevision === this.config.sttProfile.modelRevision && payload.modelArtifactDigest === this.config.sttProfile.modelArtifactDigest && payload.mappingRevision === this.config.sttProfile.mappingRevision
+        : response.ok && payload.status === "ok" && payload.version === this.config.sttProfile.runtimeVersion;
       const { reason: _previousReason, ...base } = current;
-      this.providers.stt = Object.freeze({ ...base, status: healthy ? "healthy" : "unavailable", ...(healthy ? {} : { reason: response.ok ? "Moonshine runtime identity changed" : `Moonshine readiness returned HTTP ${response.status}` }) });
+      this.providers.stt = Object.freeze({ ...base, revision: this.config.sttProfile.modelRevision, status: healthy ? "healthy" : "unavailable", ...(healthy ? {} : { reason: response.ok ? `${moonshine ? "Moonshine" : "NeMo"} runtime identity changed` : `${moonshine ? "Moonshine readiness" : "NeMo health"} returned HTTP ${response.status}` }) });
     } catch (error) {
-      this.providers.stt = Object.freeze({ ...current, status: "unavailable", reason: error instanceof Error && error.name === "AbortError" ? "Moonshine readiness probe timed out" : "Moonshine readiness probe failed" });
+      const provider = this.config.providers.stt === "moonshine-mlx" ? "Moonshine" : "NeMo";
+      this.providers.stt = Object.freeze({ ...current, status: "unavailable", reason: error instanceof Error && error.name === "AbortError" ? `${provider} readiness probe timed out` : `${provider} readiness probe failed` });
     } finally { clearTimeout(timer); }
   }
   private async probeInference(timeoutMs: number): Promise<void> {
