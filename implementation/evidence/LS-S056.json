@@ -2,7 +2,7 @@
   "slice": "LS-S056",
   "status": "implementationCompleteVerificationPending",
   "claimClass": "real-provider-development-smoke",
-  "revision": "3f77282",
+  "revision": "0856b2a",
   "checks": [
     {
       "command": "npm --prefix orchestration run runtime:check:mac",
@@ -33,12 +33,24 @@
       "command": "VAD and barge-in regression",
       "result": "pass",
       "evidence": "Server tests cover bounded PCM energy classification, silence suppression, downstream abort fencing, stopPlayback emission, and interrupted terminal state."
+    },
+    {
+      "command": "npm --prefix orchestration run --silent runtime:check:mac (two consecutive runs)",
+      "result": "pass",
+      "evidence": "After deterministic MLX seeding and ten-step synthesis, both consecutive real VoxCPM2 outputs were recovered by real Moonshine as exactly 'Local speech is ready.'; each returned 69128 48 kHz samples in 15 frames."
+    },
+    {
+      "command": "live browser and authenticated runtime profile checks at http://127.0.0.1:3910",
+      "result": "pass",
+      "evidence": "The browser exposed Mac-local and ai5090 selection, kept Mac-local active when all required ai5090 transports were unavailable, and displayed mac-local, qwen3.5:2b-q4_K_M, real after a streamed REAL_MODEL_CONFIRMED response. Browser TTS completed 34 scheduled PCM frames; final audible quality remains a Human observation."
     }
   ],
   "implemented": [
     "authenticated server-mediated bounded STT and TTS routes",
     "browser PCM capture, resampling, STT submission, and committed transcript display",
     "browser streaming PCM playback for selected TTS provider",
+    "explicit Mac-local and ai5090 runtime profile selection with atomic ready-only switching",
+    "visible real-versus-fixture inference provider and model identity",
     "canonical audio WebSocket upgrade and session transport",
     "bounded browser WebSocket capture, silence endpointing, and playback interruption",
     "truthful provider readiness and failure messaging"

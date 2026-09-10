@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "716c77851f22e11444237cebcd598fa314074b76",
-  "currentRevision": "c547a33b92f898c1e5f8be6930713a45b201f3ff",
+  "currentRevision": "0856b2a0de869d05525f3a3aab55260489ced8a4",
   "activeSlice": "LS-S056",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -13,7 +13,7 @@
     "LS-S031", "LS-S032", "LS-S033", "LS-S034", "LS-S035", "LS-S036", "LS-S037", "LS-S038", "LS-S040", "LS-S041",
     "LS-S042", "LS-S043", "LS-S044", "LS-S045", "LS-S046", "LS-S047", "LS-S039", "LS-S049", "LS-S050", "LS-S051", "LS-S052"
   ],
-  "allowedFiles": ["apps/control-web/conversation.html", "apps/control-web/conversation.js", "apps/control-web/test/conversation-ui.test.mjs", "apps/server/src/index.ts", "apps/server/src/runtime/audio.ts", "apps/server/test/audio.test.ts", "apps/server/test/server.test.ts", "apps/server/package.json", "packages/runtime/package.json", "package.json", "pnpm-lock.yaml", "implementation/evidence/LS-S056.json", "implementation/checkpoint.json"],
+  "allowedFiles": ["apps/control-web/conversation.html", "apps/control-web/conversation.js", "apps/control-web/test/conversation-ui.test.mjs", "apps/server/src/index.ts", "apps/server/src/runtime/audio.ts", "apps/server/test/audio.test.ts", "apps/server/test/server.test.ts", "apps/server/package.json", "packages/runtime/package.json", "packages/providers-voxcpm/sidecar/voxcpm_sidecar.py", "package.json", "pnpm-lock.yaml", "implementation/evidence/LS-S056.json", "implementation/checkpoint.json"],
   "changedFiles": [],
   "validation": [
     {
@@ -55,6 +55,11 @@
       "command": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm build && node scripts/workspace.mjs check && git diff --check",
       "result": "pass",
       "evidence": "Strict typecheck, lint, build, workspace structure, and whitespace validation passed on 2026-09-10."
+    },
+    {
+      "command": "corepack pnpm test; focused server/profile tests; two consecutive Mac-local real-provider checks",
+      "result": "pass",
+      "evidence": "All 129 public tests passed before the added ready-profile swap regression; the final focused suite passed 15/15, strict typecheck/lint/build passed, and both repeated Vox-to-Moonshine checks recovered exactly 'Local speech is ready.' after the TTS stability repair."
     }
   ],
   "decisions": [
@@ -62,8 +67,8 @@
     "LS-DEC-038 adds an explicitly selected Mac-local development fallback using Ollama Qwen3.5 2B Q4_K_M plus native MLX VoxCPM2 4-bit TTS and compact English Moonshine Tiny STT; no automatic failover or NeMo-equivalent streaming partials are claimed."
   ],
   "blockers": [],
-  "nextAction": "Run the browser microphone journey against the restarted Mac-local server and record human playback/physical-device acceptance separately. Keep ai5090 production qualification separate.",
-  "updatedAt": "2026-09-10T23:12:00Z",
+  "nextAction": "Have the operator reload the browser and repeat Assistant TTS for audible Human confirmation; preserve the real provider traces and keep ai5090 production qualification separate.",
+  "updatedAt": "2026-09-10T23:50:43Z",
   "updatedBy": "Codex",
-  "notes": "LS-S052 remains verified. LS-S056 now has a verified canonical audio WebSocket transport, bounded PCM VAD/barge-in fencing, browser capture/endpointing/playback, and real Mac-local inference, STT, and TTS. Physical microphone/audible playback, perceptual, performance, production, and Human acceptance remain separate. No image was pushed and no external deployment occurred."
+  "notes": "LS-S052 remains verified. LS-S056 now has a canonical audio WebSocket transport, bounded PCM VAD/barge-in fencing, browser capture/endpointing/playback, explicit ready-only runtime profile selection, visible provider identity, and stable real Mac-local inference, STT, and TTS. The operator reported text, microphone capture, speaker test, and Assistant STT passing; the reported garbled TTS exposed stochastic Vox quality drift and browser scheduling overlap, both repaired at 0856b2a. Audible playback retest, perceptual, performance, production, and final Human acceptance remain separate. No image was pushed and no external deployment occurred."
 }
