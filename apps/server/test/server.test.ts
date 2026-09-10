@@ -21,7 +21,9 @@ test("fixture package exposes distinct health states, UI, and authenticated auth
   assert.deepEqual(health.migrations.ids, [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13]);
   assert.equal(health.providers.inference.implementation, "@lifestream/providers-fixture");
   assert.equal(health.providers.inference.fixture, true);
-  assert.equal((await fetch(`${base}/control/`)).status, 200);
+  const conversation = await fetch(`${base}/control/conversation.html`);
+  assert.equal(conversation.status, 200);
+  assert.equal(conversation.headers.get("content-type"), "text/html; charset=utf-8");
   assert.equal((await fetch(`${base}/api/authority/v1/requests`, { method: "POST", body: "{}" })).status, 401);
   assert.equal((await fetch(`${base}/api/authority/v1/requests`, { method: "POST", headers: { "x-lifestream-fixture-session": "s1", "x-lifestream-fixture-principal": "human", origin: base }, body: "{}" })).status, 202);
 });
