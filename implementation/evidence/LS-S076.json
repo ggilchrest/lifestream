@@ -2,7 +2,7 @@
   "slice": "LS-S076",
   "status": "inProgress",
   "claimClass": "fixture-and-source-grounded-runtime-implementation",
-  "revision": "41935c3",
+  "revision": "fa55573",
   "checks": [
     { "command": "relationship configuration server integration test", "result": "pass", "evidence": "Relationship-scoped preset/control drafts, effective-context omission limits, and revision-checked activation passed with stale activation rejection." },
     { "command": "relationship configuration idempotency test", "result": "pass", "evidence": "Draft creation and activation retries return their original results without duplicate configuration revisions or repeated activation effects." },
@@ -10,7 +10,8 @@
     { "command": "target-bound replay key review", "result": "pass", "evidence": "Configuration activation/rollback and candidate decisions bind receipts to their exact target record, preventing a reused key from replaying another target's result." },
     { "command": "active relationship control prompt test", "result": "pass", "evidence": "Canonical prepared relationship context includes active expression control values with approved baseline and corrections; runtime/context tests passed." },
     { "command": "rendered effective-control inspector test", "result": "pass", "evidence": "The control panel exposes effective control values and source-revision coverage with included/omitted context counts and explicit limitations." },
-    { "command": "pnpm typecheck && pnpm lint && pnpm build && node --test --experimental-strip-types apps/server/test/server.test.ts && pnpm test:browser-surface && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, lint, build, 17 server tests, 10 browser-surface tests, workspace structure and whitespace validation passed." },
+    { "command": "rendered full relationship control inventory", "result": "pass", "evidence": "The Relationship settings editor exposes all 11 bounded server-supported controls: formality, directness, warmth, humor, verbosity, explanation level, examples, challenge, personalization intensity, callback frequency and relevance threshold." },
+    { "command": "pnpm typecheck && pnpm lint && pnpm build && selected runtime tests && pnpm test:browser-surface && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, lint, build, 24 selected server/runtime tests, 10 browser-surface tests, workspace structure and whitespace validation passed." },
     { "command": "live fixture control-panel inspection", "result": "observed", "evidence": "Rebuilt server served the rendered Relationship settings panel with Balanced/Concise/Coaching presets, bounded sliders, Save draft and Inspect effective context controls." },
     { "command": "live draft/activation/effective-context journey", "result": "observed", "evidence": "In the rendered panel, an Assistant relationship review was created, a settings draft was saved and activated, and the effective inspector displayed all 11 control values plus included/omitted/source-revision counts and limitations." }
   ],
