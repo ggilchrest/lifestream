@@ -6,7 +6,7 @@ type SttData = { type: "partial" | "committed"; utteranceId: string; text: strin
 type SttEvent = { kind: "data"; sequence: number; payload: SttData } | { kind: "terminal"; sequence: number; outcome: "succeeded" | "rejected" | "cancelled" | "timedOut" | "failed"; inputSamples: number };
 type SpeechToTextProvider = { transcribe(request: SpeechRequest, audio: AsyncIterable<SttInput>, signal?: AbortSignal): AsyncIterable<SttEvent> };
 
-type NemoMessage = { type?: string; text?: string; delta?: string; error?: { message?: string } };
+type NemoMessage = { type?: string; text?: string; transcript?: string; delta?: string; error?: { message?: string } };
 type NemoSocket = { onopen: (() => void) | null; onmessage: ((event: { data: string }) => void) | null; onerror: (() => void) | null; onclose: (() => void) | null; send(data: string | ArrayBuffer): void; close(): void };
 type NemoSocketFactory = (url: string) => NemoSocket;
 
@@ -80,7 +80,7 @@ export class NemoSpeechProvider implements SpeechToTextProvider {
           yield { kind: "data", sequence: eventSequence++, payload: { type: "partial", utteranceId: `${inputId ?? "audio"}:${eventSequence}`, text: message.delta ?? message.text ?? "", startSample: 0, endSample: inputSamples, speakerRef: null, confidence: 0 } };
         } else if (message.type === "conversation.item.input_audio_transcription.completed") {
           committed = true;
-          yield { kind: "data", sequence: eventSequence++, payload: { type: "committed", utteranceId: `${inputId ?? "audio"}:${eventSequence}`, text: message.text ?? "", startSample: 0, endSample: inputSamples, speakerRef: null, confidence: 1 } };
+          yield { kind: "data", sequence: eventSequence++, payload: { type: "committed", utteranceId: `${inputId ?? "audio"}:${eventSequence}`, text: message.transcript ?? message.text ?? "", startSample: 0, endSample: inputSamples, speakerRef: null, confidence: 1 } };
         } else if (message.type === "error") throw new Error(message.error?.message ? "provider error" : "provider error");
       }
       socket.close();
