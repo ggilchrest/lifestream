@@ -61,7 +61,9 @@ try{
     const elapsed=(performance.now()-start)/1000;
     const state=await page.evaluate(()=>({capture:document.querySelector('#capture').textContent,events:document.querySelector('#events').textContent,turns:window.voiceSoak.turns.length,heap:performance.memory?.usedJSHeapSize??null,metrics:window.voiceSoak}));
     const {metrics,...observation}=state;record.metrics=metrics;record.observations??=[];record.observations.push({elapsed,...observation});evidence.finish('inProgress');
-    if(errors.length||state.capture!=='Capture: running')throw new Error(JSON.stringify({errors,state}));
+    // Full bounded PCM/VAD diagnostics already live in the private receipt.
+    // Keep terminal output small; never duplicate base64 audio into the log.
+    if(errors.length||state.capture!=='Capture: running')throw new Error(JSON.stringify({errors,...observation}));
     const failed=metrics.turns.filter(turn=>turn.state==='failed');if(failed.length)throw new Error(JSON.stringify(failed));
     if(metrics.lateScheduled)throw new Error('Late fenced audio was scheduled');
     if(expectedTranscript)for(const turn of metrics.turns)if(turn.transcript&&!expectedTranscript.test(turn.transcript))throw new Error(`Unexpected fixture transcript: ${turn.transcript}`);
