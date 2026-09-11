@@ -26,6 +26,11 @@ export class MemoryRepository {
     if (this.database) return (this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? ORDER BY id").all(assistantId) as MemoryRow[]).map(fromRow);
     return [...this.records.values()].filter((record) => record.assistantId === assistantId).map((record) => structuredClone(record));
   }
+  search(assistantId: string, query: string, limit = 20): MemoryRecord[] {
+    const normalized = query.trim().toLocaleLowerCase();
+    if (!normalized) return [];
+    return this.list(assistantId).filter((record) => record.content.toLocaleLowerCase().includes(normalized)).slice(0, Math.max(1, Math.min(100, limit)));
+  }
   history(assistantId: string, id: string): MemoryLifecycleEvent[] {
     if (this.database) {
       return (this.database.connection.prepare("SELECT memory_id AS memoryId, assistant_id AS assistantId, revision, event_type AS eventType, payload_json AS payload, occurred_at AS occurredAt FROM memory_lifecycle_events WHERE assistant_id = ? AND memory_id = ? ORDER BY revision").all(assistantId, id) as { memoryId: string; assistantId: string; revision: number; eventType: string; payload: string; occurredAt: string }[]).map((event) => ({ ...event, payload: JSON.parse(event.payload) }));

@@ -64,6 +64,7 @@ class AssistantAdminApi {
     if (!profiles.length) return { status: 404, body: { code: "not_found", message: "assistant not found" } };
     if (parts[5] === "memories") {
       if (method === "GET" && parts.length === 6) return { status: 200, body: { assistantId, memories: this.memories.list(assistantId) } };
+      if (method === "POST" && parts.length === 7 && parts[6] === "search") { const raw = asObject(body); const query = typeof raw?.query === "string" ? raw.query : ""; const limit = typeof raw?.limit === "number" ? raw.limit : 20; return query.trim() ? { status: 200, body: { assistantId, query, memories: this.memories.search(assistantId, query, limit) } } : { status: 422, body: { code: "invalid_search", message: "query is required" } }; }
       if (method === "GET" && parts.length === 8 && parts[7] === "history") { const memoryId = parts[6]; return memoryId ? { status: 200, body: { assistantId, memoryId, history: this.memories.history(assistantId, memoryId) } } : { status: 422, body: { code: "invalid_request", message: "memory id required" } }; }
       if (method === "POST" && parts.length === 8 && parts[7] === "lifecycle") {
         const raw = asObject(body); const status = typeof raw?.status === "string" ? raw.status : ""; const memoryId = parts[6];
