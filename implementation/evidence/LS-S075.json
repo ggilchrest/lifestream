@@ -1,0 +1,12 @@
+{
+  "slice": "LS-S075",
+  "status": "implemented",
+  "claimClass": "fixture-and-source-grounded-runtime-implementation",
+  "revision": "WORKTREE",
+  "checks": [
+    { "command": "relationship server integration test", "result": "pass", "evidence": "Authenticated relationship creation, scoped candidate review, approve decision and stale decision rejection passed." },
+    { "command": "pnpm typecheck && pnpm lint && pnpm build && pnpm test:browser-surface && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, lint, build, 10 browser-surface tests, workspace structure and whitespace validation passed." }
+  ],
+  "implemented": ["Fixture-authenticated relationship administration scoped to the session principal.", "Candidate provenance, source family and uncertainty rendered for review with explicit approve/reject CAS decisions.", "Bootstrap skip preserves ordinary Assistant use and relationship review remains visible in the control panel."],
+  "excluded": ["Production authentication, personal-data import, learned-quality/perceptual acceptance, live deployment and Human acceptance claim.", "Automatic candidate admission, psychological scoring, authority inference and cross-user visibility."]
+}
