@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from collections import OrderedDict
+from contextlib import contextmanager
 
 BACKEND = os.environ.get("VOXCPM_BACKEND", "pytorch-cuda")
 RUNTIME_REVISION = os.environ.get("VOXCPM_RUNTIME_REVISION", "19b6bf7590025418821a86dcb817504e0ad7e5df")
@@ -26,6 +27,22 @@ def check_generation():
     if ACTIVE_JOB:
         if ACTIVE_JOB.cancelled.is_set(): raise GenerationStopped("cancelled")
         if time.monotonic() >= ACTIVE_JOB.deadline: raise GenerationStopped("deadlineExceeded")
+
+@contextmanager
+def guard_mlx_generation(model):
+    # MLX-Audio 0.5.3 yields only after decoding the complete sentence. Check
+    # cancellation between its existing feature-sampling patches instead of
+    # holding admission until that final yield. No decoder/numerics changes.
+    decoder=model.feat_decoder
+    original=decoder.sample
+    def guarded(*args,**kwargs):
+        check_generation()
+        result=original(*args,**kwargs)
+        check_generation()
+        return result
+    decoder.sample=guarded
+    try: yield
+    finally: decoder.sample=original
 
 class SynthesisJob:
     def __init__(self, request):
@@ -163,9 +180,10 @@ def raw_generate(text, style, seed, reference_path=None, transcript="", max_toke
         conditioning = {"ref_audio":reference_path} if reference_path else {}
         if reference_path and transcript:
             conditioning.update(prompt_audio=prompt_path or reference_path,prompt_text=transcript.rstrip()+" ")
-        for result in MODEL.generate(text=text, instruct=style or None, max_tokens=max_tokens, cfg_value=2.0, inference_timesteps=10, **conditioning):
-            check_generation()
-            yield np.asarray(result.audio, dtype=np.float32)
+        with guard_mlx_generation(MODEL):
+            for result in MODEL.generate(text=text, instruct=style or None, max_tokens=max_tokens, cfg_value=2.0, inference_timesteps=10, **conditioning):
+                check_generation()
+                yield np.asarray(result.audio, dtype=np.float32)
         return
     import torch
     torch.manual_seed(seed)

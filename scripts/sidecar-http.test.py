@@ -15,6 +15,32 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class SidecarHttpTest(unittest.TestCase):
+    def test_mlx_patch_cancellation_restores_sampling_method(self):
+        from types import SimpleNamespace
+        spec=importlib.util.spec_from_file_location('mlx_cancel_test',ROOT/'packages/providers-voxcpm/sidecar/voxcpm_sidecar.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        cancelled=threading.Event();module.ACTIVE_JOB=SimpleNamespace(cancelled=cancelled,deadline=time.monotonic()+5)
+        calls=[]
+        def sample(value):
+            calls.append(value)
+            if value=='cancel':cancelled.set()
+            return value
+        model=SimpleNamespace(feat_decoder=SimpleNamespace(sample=sample))
+        with module.guard_mlx_generation(model):
+            self.assertEqual(model.feat_decoder.sample('unchanged'),'unchanged')
+        self.assertIs(model.feat_decoder.sample,sample)
+        with self.assertRaisesRegex(module.GenerationStopped,'cancelled'):
+            with module.guard_mlx_generation(model):
+                model.feat_decoder.sample('cancel')
+                model.feat_decoder.sample('must-not-run')
+        self.assertEqual(calls,['unchanged','cancel'])
+        self.assertIs(model.feat_decoder.sample,sample)
+        cancelled.clear();module.ACTIVE_JOB.deadline=time.monotonic()-1
+        with self.assertRaisesRegex(module.GenerationStopped,'deadlineExceeded'):
+            with module.guard_mlx_generation(model):model.feat_decoder.sample('expired')
+        self.assertEqual(calls,['unchanged','cancel'])
+        self.assertIs(model.feat_decoder.sample,sample)
+
     def test_one_successor_waits_for_cleanup_without_starving_health(self):
         import numpy as np
         spec=importlib.util.spec_from_file_location('successor_test',ROOT/'packages/providers-voxcpm/sidecar/voxcpm_sidecar.py')

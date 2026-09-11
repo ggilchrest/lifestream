@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "cad6836526a9064af927cb0114530c88c534723c",
+  "baseRevision": "d0fbc78645d9fb9d5edeb33e5aaf0474e4581817",
   "currentRevision": "WORKTREE",
   "activeSlice": "LS-S056",
   "sliceStatus": "inProgress",
@@ -137,10 +137,12 @@
     "scripts/voice-stabilization-corpus.json"
   ],
   "changedFiles": [
-    "scripts/check-browser-voice.mjs",
-    "scripts/soak-browser-voice.mjs",
+    "packages/providers-voxcpm/sidecar/voxcpm_sidecar.py",
+    "packages/providers-voxcpm/VOICE-CONTROLS.md",
+    "scripts/sidecar-http.test.py",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S056-voice-stabilization-v2.json"
+    "implementation/evidence/LS-S056-voice-stabilization-v2.json",
+    "scripts/check-voice-transport.mjs"
   ],
   "validation": [
     {
@@ -282,5 +284,5 @@
   "nextAction": "Finish current bounded mixed browser runs, record measured targets without waiver, and leave the verified local browser for operator audition. No unrelated slices.",
   "updatedAt": "2026-09-11T08:20:50.157Z",
   "updatedBy": "Codex",
-  "notes": "Revision 2 bounded voice stabilization remains active. Runtime 9a51bb7 includes recognition cleanup and idle VAD reset; original failures, long GPU successes, host recovery and responsiveness failures remain separately preserved. Current Mac biVIWz and GPU qAizVX mixed tests exercise unchanged runtime after composition launcher 475ca81 fixed remote SSH exhaustion killing the local backend. Irhgtb retained 26 whole transcripts before that launcher shutdown; iJ3BMz failed STT during the same network-route outage. Windows connectivity recovered without another restart. No Mac reboot, provider change, target waiver, push or unrelated slice. Additional deterministic jitter/cancellation playback diagnostics remain fixture-only; they do not replace real-provider acceptance."
+  "notes": "Revision 2 bounded voice stabilization remains active. Runtime 9a51bb7 includes recognition cleanup and idle VAD reset; original failures, long GPU successes, host recovery and responsiveness failures remain separately preserved. Current Mac biVIWz and GPU qAizVX mixed tests exercise unchanged runtime after composition launcher 475ca81 fixed remote SSH exhaustion killing the local backend. Irhgtb retained 26 whole transcripts before that launcher shutdown; iJ3BMz failed STT during the same network-route outage. Windows connectivity recovered without another restart. No Mac reboot, provider change, target waiver, push or unrelated slice. Additional deterministic jitter/cancellation playback diagnostics remain fixture-only; they do not replace real-provider acceptance. Mac biVIWz failed after repeated interruptions because non-yielding MLX sentence generation retained admission beyond the three bounded 5-second waits. Add cooperative cancellation at the pinned MLX feature-sampling method boundary; do not change decoder, model settings, queue limits or GPU service during qAizVX."
 }
