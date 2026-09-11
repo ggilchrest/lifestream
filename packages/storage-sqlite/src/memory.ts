@@ -47,9 +47,9 @@ export class MemoryRepository {
   }
   proposeCorrection(assistantId: string, id: string, proposedContent: string, actor: string): MemoryLifecycleEvent | undefined {
     const existing = this.get(assistantId, id); if (!existing) return undefined;
-    const history = this.history(assistantId, id); const revision = (history.at(-1)?.revision ?? 0) + 1; const occurredAt = new Date().toISOString(); const payload = { proposedContent, status: "needsReview", actor };
-    if (this.database) { this.database.transaction((tx) => tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, revision, "correctionProposed", JSON.stringify(payload), occurredAt)); }
-    else { const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt }); this.events.set(id, events); }
+    const occurredAt = new Date().toISOString(); const payload = { proposedContent, status: "needsReview", actor };
+    const revision = this.database ? this.database.transaction((tx) => { const nextRevision = tx.get<{ revision: number }>("SELECT COALESCE(MAX(revision), 0) + 1 AS revision FROM memory_lifecycle_events WHERE memory_id = ? AND assistant_id = ?", id, assistantId)?.revision ?? 1; tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, nextRevision, "correctionProposed", JSON.stringify(payload), occurredAt); return nextRevision; }) : (this.events.get(id)?.at(-1)?.revision ?? 0) + 1;
+    if (!this.database) { const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt }); this.events.set(id, events); }
     return { memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt };
   }
   transition(assistantId: string, id: string, status: string, actor: string, reason?: string, expectedRevision?: number): MemoryRecord | undefined {
