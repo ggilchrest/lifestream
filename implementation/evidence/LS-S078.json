@@ -1,0 +1,23 @@
+{
+  "slice": "LS-S078",
+  "status": "inProgress",
+  "claimClass": "fixture-and-source-grounded-runtime-implementation",
+  "revision": "49b8960",
+  "checks": [
+    { "command": "isolated Lab runtime tests", "result": "pass", "evidence": "Lab creation requires the two distinct record-oriented and convention-oriented representations, declared criteria and repeated runs; comparison excludes held-out scenarios and reports variability." },
+    { "command": "Lab isolation negative test", "result": "pass", "evidence": "Live provider routes and underdeclared criteria are rejected before comparison." },
+    { "command": "relationship Lab server integration test", "result": "pass", "evidence": "Authenticated relationship-scoped preparation, bounded comparison and explicit promotion complete without changing active relationship state; held-out scenarios and limitations are returned." },
+    { "command": "pnpm typecheck && focused runtime/server tests && pnpm test:browser-surface && pnpm lint && pnpm build", "result": "pass", "evidence": "Strict typecheck, 24 focused runtime/server tests, 12 browser-surface tests, lint and build passed." },
+    { "command": "live authenticated S078 control-panel journey", "result": "observed", "evidence": "The local browser rendered the authenticated Relationship Lab, prepared an experiment with record-oriented and convention-oriented representations, ran 24 isolated fixture results while excluding held-out scenarios, and displayed the promotion/rejection controls with the live-state boundary." }
+  ],
+  "implemented": [
+    "Provider-independent isolated Lab manifest with pinned relationship/configuration, dataset/snapshot, provider, compiler, cache and grant identities.",
+    "Two distinct inspectable representations, predeclared criteria, bounded scenarios, held-out exclusion and repeated-run variability reporting.",
+    "Authenticated relationship Lab preparation, comparison and promotion/rejection lifecycle with explicit no-live-effects and normal-review boundary.",
+    "Rendered Relationship Lab controls in the Assistant administration surface."
+  ],
+  "remaining": [
+    "Human acceptance of the complete S078 workflow remains distinct from fixture and source-grounded implementation evidence."
+  ],
+  "excluded": ["Production authentication, personal-data replay, live tools/notifications, canonical reinforcement, learned-quality, deployment, publication and PWCE internals."]
+}
