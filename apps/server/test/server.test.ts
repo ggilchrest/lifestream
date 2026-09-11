@@ -134,6 +134,21 @@ test("shared Assistant administration preserves cross-Assistant isolation", asyn
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${second.assistantId}/import`, { method: "POST", headers: auth, body: JSON.stringify({ schemaVersion: "1.0.0", dataScope: "assistant-profiles", assistantId: first.assistantId, profile: { displayName: "foreign" } }) })).status, 422);
 });
 
+test("shared Assistant administration preserves memory continuity across restart", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "lifestream-admin-restart-"));
+  t.after(async () => rm(root, { recursive: true, force: true }));
+  const makeApp = () => createLifestreamServer({ config: config(root) });
+  const firstApp = makeApp(); await firstApp.start();
+  const base = `http://127.0.0.1:${firstApp.address().port}`; const auth = { "content-type": "application/json", "x-lifestream-fixture-session": "s1", "x-lifestream-fixture-principal": "human", origin: base };
+  const createdResponse = await fetch(`${base}/api/admin/v1/assistants`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Restarted Assistant" }) }); assert.equal(createdResponse.status, 201); const created = await createdResponse.json() as { assistantId: string };
+  const memoryResponse = await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/memories`, { method: "POST", headers: auth, body: JSON.stringify({ content: "Survives server restart" }) }); assert.equal(memoryResponse.status, 201); const memory = await memoryResponse.json() as { memory: { id: string; lifecycle: { status: string } } }; assert.equal(memory.memory.lifecycle.status, "candidate");
+  await firstApp.shutdown();
+  const secondApp = makeApp(); await secondApp.start(); t.after(() => secondApp.shutdown());
+  const secondBase = `http://127.0.0.1:${secondApp.address().port}`; const secondAuth = { ...auth, origin: secondBase };
+  const memories = await (await fetch(`${secondBase}/api/admin/v1/assistants/${created.assistantId}/memories`, { headers: secondAuth })).json() as { memories: { id: string; content: string }[] }; assert.deepEqual(memories.memories.map((record) => [record.id, record.content]), [[memory.memory.id, "Survives server restart"]]);
+  const history = await (await fetch(`${secondBase}/api/admin/v1/assistants/${created.assistantId}/memories/${memory.memory.id}/history`, { headers: secondAuth })).json() as { history: { revision: number; eventType: string }[] }; assert.deepEqual(history.history.map((event) => [event.revision, event.eventType]), [[1, "created"]]);
+});
+
 test("typed-text runtime streams a canonical manifest and fixture response", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-runtime-")); t.after(async () => rm(root, { recursive: true, force: true }));
   const app = createLifestreamServer({ config: config(root) }); await app.start(); t.after(() => app.shutdown()); const base = `http://127.0.0.1:${app.address().port}`;
