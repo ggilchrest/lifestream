@@ -53,7 +53,7 @@ export class MemoryRepository {
     return { memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt };
   }
   transition(assistantId: string, id: string, status: string, actor: string, reason?: string, expectedRevision?: number): MemoryRecord | undefined {
-    const allowed = new Set(["candidate", "active", "superseded", "invalidated", "retracted"]);
+    const allowed = new Set(["candidate", "active", "superseded", "invalidated", "contradicted"]);
     if (!allowed.has(status)) throw new Error("unsupported memory lifecycle status");
     const existing = this.get(assistantId, id); if (!existing) return undefined;
     const previousRevision = typeof existing.lifecycle.revision === "number" ? existing.lifecycle.revision : 1;
