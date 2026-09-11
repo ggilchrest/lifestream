@@ -114,6 +114,7 @@ class AssistantAdminApi {
       if (method === "POST" && parts.length === 8 && parts[7] === "decision") {
         const adaptationId = parts[6]; const raw = asObject(body); const decision = typeof raw?.status === "string" ? raw.status : ""; const expectedStatus = typeof raw?.expectedStatus === "string" ? raw.expectedStatus : undefined;
         if (!adaptationId || !new Set(["active", "rejected", "reversed"]).has(decision)) return { status: 422, body: { code: "invalid_adaptation_decision", message: "a supported decision is required" } };
+        if (raw?.expectedStatus !== undefined && expectedStatus === undefined) return { status: 422, body: { code: "invalid_adaptation_decision", message: "expectedStatus must be a string when provided" } };
         const current = this.database.connection.prepare("SELECT id, assistant_id AS assistantId, status FROM persona_adaptations WHERE id = ? AND assistant_id = ?").get(adaptationId, assistantId) as { id: string; assistantId: string; status: string } | undefined;
         if (!current) return { status: 404, body: { code: "not_found", message: "adaptation not found" } };
         if (expectedStatus !== undefined && expectedStatus !== current.status) return { status: 409, body: { code: "adaptation_conflict", message: "adaptation status is stale" } };
