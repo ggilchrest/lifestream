@@ -119,7 +119,11 @@
     "packages/runtime/test/voice-segmenter.test.ts",
     "packages/storage-sqlite/src/index.ts",
     "packages/storage-sqlite/src/memory.ts",
+    "packages/storage-sqlite/src/migrations/0014_memory_lifecycle.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/test/database.test.ts",
     "packages/storage-sqlite/test/memory.test.ts",
+    "packages/storage-sqlite/test/rehearsal.test.ts",
     "tests/workspace.test.ts",
     "pnpm-lock.yaml",
     "scripts/check-ai5090-voice.mjs",
@@ -150,7 +154,11 @@
     "implementation/checkpoint.json",
     "packages/storage-sqlite/src/index.ts",
     "packages/storage-sqlite/src/memory.ts",
+    "packages/storage-sqlite/src/migrations/0014_memory_lifecycle.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/test/database.test.ts",
     "packages/storage-sqlite/test/memory.test.ts",
+    "packages/storage-sqlite/test/rehearsal.test.ts",
     "tests/workspace.test.ts"
   ],
   "validation": [
