@@ -1,8 +1,8 @@
 {
   "slice": "LS-S076",
-  "status": "inProgress",
+  "status": "verified",
   "claimClass": "fixture-and-source-grounded-runtime-implementation",
-  "revision": "fa55573",
+  "revision": "fa555734df7ea89e87cbaeb0a099c63b171cd556",
   "checks": [
     { "command": "relationship configuration server integration test", "result": "pass", "evidence": "Relationship-scoped preset/control drafts, effective-context omission limits, and revision-checked activation passed with stale activation rejection." },
     { "command": "relationship configuration idempotency test", "result": "pass", "evidence": "Draft creation and activation retries return their original results without duplicate configuration revisions or repeated activation effects." },
@@ -13,7 +13,8 @@
     { "command": "rendered full relationship control inventory", "result": "pass", "evidence": "The Relationship settings editor exposes all 11 bounded server-supported controls: formality, directness, warmth, humor, verbosity, explanation level, examples, challenge, personalization intensity, callback frequency and relevance threshold." },
     { "command": "pnpm typecheck && pnpm lint && pnpm build && selected runtime tests && pnpm test:browser-surface && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, lint, build, 24 selected server/runtime tests, 10 browser-surface tests, workspace structure and whitespace validation passed." },
     { "command": "live fixture control-panel inspection", "result": "observed", "evidence": "Rebuilt server served the rendered Relationship settings panel with Balanced/Concise/Coaching presets, all 11 bounded controls, Save draft and Inspect effective context controls." },
-    { "command": "live draft/activation/effective-context journey", "result": "observed", "evidence": "In the rendered panel, an Assistant relationship review was created, a settings draft was saved and activated, and the effective inspector displayed all 11 control values plus included/omitted/source-revision counts and limitations." }
+    { "command": "live draft/activation/effective-context journey", "result": "observed", "evidence": "In the rendered panel, an Assistant relationship review was created, a settings draft was saved and activated, and the effective inspector displayed all 11 control values plus included/omitted/source-revision counts and limitations." },
+    { "command": "Human acceptance of LS-S076", "result": "pass", "evidence": "Operator explicitly accepted the authenticated relationship settings, draft/activation and effective-context inspection workflow." }
   ],
   "implemented": [
     "Relationship-scoped bounded expression controls with explicit preset metadata and draft-before-activation lifecycle.",
@@ -21,7 +22,7 @@
     "Authenticated runtime message binding that resolves prepared relationship context from the requested relationship and rejects cross-subject scope; client-supplied prepared context is discarded."
   ],
   "remaining": [
-    "Human acceptance of the complete S076 journey remains distinct from this implementation evidence."
+    "No Human-acceptance work remains for this slice."
   ],
   "excluded": ["Production authentication, personal-data import, live deployment, learned-quality, physical/perceptual and production claims."]
 }

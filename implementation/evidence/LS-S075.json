@@ -1,16 +1,17 @@
 {
   "slice": "LS-S075",
-  "status": "implemented",
+  "status": "verified",
   "claimClass": "fixture-and-source-grounded-runtime-implementation",
-  "revision": "84b211e",
+  "revision": "84b211ebd6af41d1d0361e40856f124418a06c6c",
   "checks": [
     { "command": "relationship server integration test", "result": "pass", "evidence": "Authenticated relationship creation, scoped candidate review, approve decision and stale decision rejection passed." },
     { "command": "cross-subject administration isolation test", "result": "pass", "evidence": "A different authenticated principal receives non-disclosing 404 responses for another Assistant profile, memory and relationship reads." },
     { "command": "relationship mutation CAS test", "result": "pass", "evidence": "Candidate creation rejects a missing relationship revision, and the rendered skip/candidate paths submit the current revision before mutation." },
     { "command": "relationship mutation idempotency test", "result": "pass", "evidence": "Candidate create and decision retries return the original durable result without duplicating or reapplying the mutation; missing keys are rejected." },
     { "command": "relationship idempotency restart test", "result": "pass", "evidence": "A candidate create receipt replays the original candidate after SQLite-backed server restart and the relationship remains single-record." },
-    { "command": "pnpm typecheck && pnpm lint && pnpm build && node --test --experimental-strip-types apps/server/test/server.test.ts && pnpm test:browser-surface && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, lint, build, 16 server tests, 10 browser-surface tests, workspace structure and whitespace validation passed." }
+    { "command": "pnpm typecheck && pnpm lint && pnpm build && node --test --experimental-strip-types apps/server/test/server.test.ts && pnpm test:browser-surface && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, lint, build, 16 server tests, 10 browser-surface tests, workspace structure and whitespace validation passed." },
+    { "command": "Human acceptance of LS-S075", "result": "pass", "evidence": "Operator explicitly accepted the authenticated relationship-administration workflow, candidate provenance/review, decisions, persistence and bootstrap-skip behavior." }
   ],
   "implemented": ["Fixture-authenticated relationship administration scoped to the session principal.", "Candidate provenance, source family and uncertainty rendered for review with explicit approve/reject CAS decisions and durable local restart persistence.", "Bootstrap skip preserves ordinary Assistant use and relationship review remains visible in the control panel."],
-  "excluded": ["Production authentication, personal-data import, learned-quality/perceptual acceptance, live deployment and Human acceptance claim.", "Automatic candidate admission, psychological scoring, authority inference and cross-user visibility."]
+  "excluded": ["Production authentication, personal-data import, learned-quality/perceptual acceptance and live deployment.", "Automatic candidate admission, psychological scoring, authority inference and cross-user visibility."]
 }
