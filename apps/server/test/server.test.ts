@@ -120,6 +120,20 @@ test("fixture Assistant administration persists revisions and requires authority
   const rollbackActivation = await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ profileId: rollbackBody.profile.profileId, expectedActiveRevision: 2 }) }); assert.equal(rollbackActivation.status, 200); const activeAfterRollback = await (await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}`, { headers: auth })).json() as { activeProfile: { displayName: string } }; assert.equal(activeAfterRollback.activeProfile.displayName, "Example Assistant");
 });
 
+test("shared Assistant administration preserves cross-Assistant isolation", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "lifestream-admin-isolation-"));
+  t.after(async () => rm(root, { recursive: true, force: true }));
+  const app = createLifestreamServer({ config: config(root) }); await app.start(); t.after(() => app.shutdown());
+  const base = `http://127.0.0.1:${app.address().port}`; const auth = { "content-type": "application/json", "x-lifestream-fixture-session": "s1", "x-lifestream-fixture-principal": "human", origin: base };
+  const create = async (displayName: string) => { const response = await fetch(`${base}/api/admin/v1/assistants`, { method: "POST", headers: auth, body: JSON.stringify({ displayName }) }); assert.equal(response.status, 201); return await response.json() as { assistantId: string; profile: { profileId: string } }; };
+  const first = await create("First Assistant"); const second = await create("Second Assistant");
+  const memoryResponse = await fetch(`${base}/api/admin/v1/assistants/${first.assistantId}/memories`, { method: "POST", headers: auth, body: JSON.stringify({ content: "First-only preference" }) }); assert.equal(memoryResponse.status, 201); const memory = await memoryResponse.json() as { memory: { id: string } };
+  const secondMemories = await (await fetch(`${base}/api/admin/v1/assistants/${second.assistantId}/memories`, { headers: auth })).json() as { memories: unknown[] }; assert.deepEqual(secondMemories.memories, []);
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${second.assistantId}/memories/${memory.memory.id}/history`, { headers: auth })).status, 404);
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${second.assistantId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ profileId: first.profile.profileId, expectedActiveRevision: null }) })).status, 404);
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${second.assistantId}/import`, { method: "POST", headers: auth, body: JSON.stringify({ schemaVersion: "1.0.0", dataScope: "assistant-profiles", assistantId: first.assistantId, profile: { displayName: "foreign" } }) })).status, 422);
+});
+
 test("typed-text runtime streams a canonical manifest and fixture response", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-runtime-")); t.after(async () => rm(root, { recursive: true, force: true }));
   const app = createLifestreamServer({ config: config(root) }); await app.start(); t.after(() => app.shutdown()); const base = `http://127.0.0.1:${app.address().port}`;
