@@ -58,7 +58,7 @@ test("fixture Assistant administration persists revisions and requires authority
   const createdResponse = await fetch(`${base}/api/admin/v1/assistants`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Example Assistant" }) }); assert.equal(createdResponse.status, 201);
   const created = await createdResponse.json() as { assistantId: string; profile: { profileId: string } };
   const revisionResponse = await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/revisions`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Updated Assistant", adaptivePersonaPolicy: { dimensions: [{ key: "warmth", valueType: "number", minimum: 0, maximum: 1, maxDeltaPerDreamingRun: 0.1, sensitive: false, activation: "automatic" }] } }) }); assert.equal(revisionResponse.status, 201);
-  const revision = await revisionResponse.json() as { profile: { profileId: string; revision: number } }; assert.equal(revision.profile.revision, 2);
+  const revision = await revisionResponse.json() as { profile: { profileId: string; revision: number; corePersona: { canonicalName: string; values: string[]; prohibitions: string[] } } }; assert.equal(revision.profile.revision, 2); assert.equal(revision.profile.corePersona.canonicalName, "Updated Assistant"); assert.ok(revision.profile.corePersona.values.length > 0); assert.ok(revision.profile.corePersona.prohibitions.length > 0);
   const activatedResponse = await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ profileId: revision.profile.profileId, expectedActiveRevision: null }) }); assert.equal(activatedResponse.status, 200);
   const exported = await (await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/export`, { headers: auth })).json() as { profiles: unknown[] }; assert.equal(exported.profiles.length, 2);
   const preview = await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/preview`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Preview only", expectedRevision: 2 }) }); assert.equal(preview.status, 200);
@@ -97,6 +97,7 @@ test("fixture Assistant administration persists revisions and requires authority
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/preview`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Stale", expectedRevision: 1 }) })).status, 409);
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/preview`, { method: "POST", headers: auth, body: JSON.stringify({ apiKey: "not-accepted" }) })).status, 422);
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ profileId: revision.profileId, expectedActiveRevision: "1" }) })).status, 422);
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/revisions`, { method: "POST", headers: auth, body: JSON.stringify({ corePersona: "not-an-object" }) })).status, 422);
 });
 
 test("typed-text runtime streams a canonical manifest and fixture response", async (t) => {
