@@ -21,7 +21,8 @@ export function loadMigrations(): Migration[] {
     [11, "capability_cache", "0011_capability_cache.sql"],
     [12, "skills_proposals", "0012_skills_proposals.sql"],
     [13, "endpoints", "0013_endpoints.sql"],
-    [14, "memory_lifecycle", "0014_memory_lifecycle.sql"]
+    [14, "memory_lifecycle", "0014_memory_lifecycle.sql"],
+    [15, "adaptation_lifecycle", "0015_adaptation_lifecycle.sql"]
   ].map(([id, name, file]) => {
     const sql = readFileSync(join(migrationDirectory, file as string), "utf8");
     return { id: id as number, name: name as string, sql, digest: createHash("sha256").update(sql).digest("hex") };
