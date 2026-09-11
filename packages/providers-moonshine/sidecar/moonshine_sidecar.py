@@ -65,6 +65,12 @@ def validate(request):
 
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
+    timeout = 5
+
+    def end_headers(self):
+        self.send_header("connection", "close")
+        self.close_connection = True
+        super().end_headers()
 
     def json(self, status, payload):
         data = json.dumps(payload, separators=(",", ":")).encode()

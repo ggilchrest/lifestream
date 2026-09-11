@@ -11,3 +11,5 @@ coverage/
 !.env.example
 *.log
 Archive.zip
+__pycache__/
+apps/control-web/vad-bundle.js

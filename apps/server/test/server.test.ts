@@ -66,6 +66,11 @@ test("development profile selector atomically swaps a ready profile", async (t) 
   const root = await mkdtemp(join(tmpdir(), "lifestream-profile-swap-")); t.after(async () => rm(root, { recursive: true, force: true }));
   const initial = { ...config(join(root, "mac")), profile: "mac-local" as const };
   const app = createLifestreamServer({ config: initial, profileLoader: (profile) => ({ ...config(join(root, profile)), profile }) }); await app.start(); t.after(() => app.shutdown()); const base = `http://127.0.0.1:${app.address().port}`;
+  const headers = { "content-type": "application/json", "x-lifestream-fixture-session": "s1", "x-lifestream-fixture-principal": "human", origin: base };
+  const check = await fetch(`${base}/api/runtime/v1/profile`, { method: "POST", headers, body: JSON.stringify({ profile: "ai5090", action: "check" }) });
+  assert.equal(check.status, 200); assert.equal((await check.json() as { ready: boolean }).ready, true); assert.equal(app.health.profile, "mac-local", "checking must not switch providers");
+  const invalid = await fetch(`${base}/api/runtime/v1/profile`, { method: "POST", headers, body: JSON.stringify({ profile: "ai5090", action: "typo" }) });
+  assert.equal(invalid.status, 422); assert.equal(app.health.profile, "mac-local");
   const selected = await fetch(`${base}/api/runtime/v1/profile`, { method: "POST", headers: { "content-type": "application/json", "x-lifestream-fixture-session": "s1", "x-lifestream-fixture-principal": "human", origin: base }, body: JSON.stringify({ profile: "ai5090" }) });
   const body = await selected.json() as { profile: string; switched: boolean; status: string };
   assert.equal(selected.status, 200); assert.deepEqual(body, { ...body, profile: "ai5090", switched: true, status: "ready" }); assert.equal(app.health.profile, "ai5090");

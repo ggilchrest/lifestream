@@ -10,6 +10,21 @@ const audio = async function* () {
 const request = { deadlineAt: "2026-09-10T00:01:00Z", now: () => "2026-09-10T00:00:00Z" };
 const options = { baseUrl: "http://127.0.0.1:8788", runtimeRevision: "mlx-audio@0.5.3", modelRevision: "390624ed33d594443aa4aa221f5b9f283b545b5a", modelArtifactDigest: "sha256:model", mappingRevision: "moonshine-map-1" };
 
+test("Moonshine deadline and interruption remain active after headers arrive", { timeout: 2000 }, async () => {
+  for (const interrupted of [false, true]) {
+    const controller = new AbortController();
+    const provider = new MoonshineSpeechProvider({ ...options, fetch: async (_input, init) => {
+      if (interrupted) setTimeout(() => controller.abort(), 10);
+      return new Response(new ReadableStream({ start(stream) {
+        init?.signal?.addEventListener("abort", () => stream.error(new Error("aborted during body")), { once: true });
+      } }));
+    } });
+    const events = [];
+    for await (const event of provider.transcribe({ deadlineAt: new Date(Date.now() + 40).toISOString(), now: () => new Date().toISOString() }, audio(), controller.signal)) events.push(event);
+    assert.equal(events.at(-1)?.outcome, interrupted ? "cancelled" : "timedOut");
+  }
+});
+
 test("Moonshine adapter buffers bounded 16 kHz PCM and maps a committed transcript", async () => {
   const provider = new MoonshineSpeechProvider({
     ...options,

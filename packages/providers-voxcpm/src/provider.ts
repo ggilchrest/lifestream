@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 const PROTOCOL_VERSION = "voxcpm.loopback.v1" as const;
 type ProtocolRequest = { protocolVersion: typeof PROTOCOL_VERSION; requestId: string; correlationId: string; interactionId: string; deadlineAt: string; voiceBundleKey: string; voiceBundleRevision: number; text: string; delivery: Record<string, unknown>; format: { encoding: "pcm_s16le"; sampleRateHz: 48000; channels: 1 } };
 type ProtocolEvent = { kind: "preAudio"; sequence: 0; requestId: string; correlationId: string; voiceBundleRevision: number; requestedDelivery: Record<string, unknown>; appliedDelivery: Record<string, unknown>; degradedDimensions: string[]; mappingRevision: string; effectiveSynthesis: Record<string, unknown>; format: ProtocolRequest["format"]; runtimeRevision: string; modelRevision: string } | { kind: "data"; sequence: number; sampleOffset: number; sampleCount: number; dataBase64: string; format: ProtocolRequest["format"] } | { kind: "terminal"; sequence: number; outcome: "completed" | "cancelled" | "deadlineExceeded" | "retryableProviderFailure" | "nonRetryableProviderFailure" | "malformedRequest" | "unsupportedRequest" | "providerUnavailable"; outputSamples: number; frameCount: number; errorCode?: string };
@@ -8,12 +9,21 @@ type TtsEvent = { kind: "preAudio"; sequence: number; segmentId: string; decisio
 type TtsCapabilities = { contractVersion: "2.0.0"; supportedDimensions: readonly string[]; degradableDimensions: readonly string[]; supportsStreaming: true; maxOutputSamples: number };
 interface TextToSpeechProvider { capabilities(): TtsCapabilities; synthesize(request: TtsRequest, signal?: AbortSignal): AsyncIterable<TtsEvent>; }
 
-export type VoxCpmOptions = { baseUrl: string; voiceBundleKey: string; voiceBundleRevision: number; runtimeRevision: string; modelRevision: string; mappingRevision: string; fetch?: typeof globalThis.fetch };
+type VoiceReference = { dataBase64: string; sampleRateHz: 16000; transcript: string };
+type VoiceDesign = { description: string; seed: number; reference?: VoiceReference | null };
+export type VoxCpmOptions = { baseUrl: string; voiceBundleKey: string; voiceBundleRevision: number; runtimeRevision: string; modelRevision: string; mappingRevision: string; voiceDesign?: VoiceDesign; fetch?: typeof globalThis.fetch; onDiagnostic?: (event: { requestId: string; code: string }) => void };
 
 export class VoxCpmProvider implements TextToSpeechProvider {
   private readonly options: VoxCpmOptions;
   private readonly requestFetch: typeof globalThis.fetch;
+  private controls: { description: boolean; reference: boolean } | undefined;
   constructor(options: VoxCpmOptions) { this.options = options; this.requestFetch = options.fetch ?? globalThis.fetch; }
+  withVoiceDesign(voiceDesign: VoiceDesign): VoxCpmProvider { const provider = new VoxCpmProvider({ ...this.options, voiceDesign }); provider.controls = this.controls; return provider; }
+  async voiceControls(): Promise<{ description: boolean; reference: boolean }> {
+    if (this.controls) return { ...this.controls };
+    try { const response = await this.requestFetch(`${this.options.baseUrl}/v1/capabilities`, { signal: AbortSignal.timeout(2000) }); const body = await response.json() as { voiceDesignControl?: string; voiceReferenceControl?: string }; if (response.ok) this.controls = { description: body.voiceDesignControl === "voxcpm.voice-design.v1", reference: body.voiceReferenceControl === "voxcpm.voice-reference.v1" }; return this.controls ? { ...this.controls } : { description: false, reference: false }; } catch { return { description: false, reference: false }; }
+  }
+  async supportsVoiceDesign(): Promise<boolean> { return (await this.voiceControls()).description; }
   capabilities(): TtsCapabilities { return { contractVersion: "2.0.0", supportedDimensions: ["urgency", "deliveryMode", "pace", "energy"], degradableDimensions: ["affect", "urgency", "deliveryMode", "pace", "energy"], supportsStreaming: true, maxOutputSamples: 48_000 * 60 }; }
 
   async *synthesize(request: TtsRequest, signal?: AbortSignal): AsyncIterable<TtsEvent> {
@@ -21,14 +31,26 @@ export class VoxCpmProvider implements TextToSpeechProvider {
     let nextSequence = 0, nextOffset = 0, frames = 0;
     let degraded: string[] = [];
     let disposition: "fullyApplied" | "partiallyApplied" = "fullyApplied";
+    let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+    const controller = new AbortController();
+    let timedOut = false;
+    const abort = () => controller.abort();
+    if (signal?.aborted) abort();
+    signal?.addEventListener("abort", abort, { once: true });
+    const remainingMs = Date.parse(request.deadlineAt) - Date.now();
+    const timer = setTimeout(() => { timedOut = true; controller.abort(); }, Math.max(1, remainingMs));
     try {
-      const response = await this.requestFetch(`${this.options.baseUrl}/v1/tts/synthesize`, { method: "POST", headers: { "content-type": "application/json", accept: "application/x-ndjson" }, body: JSON.stringify(body), ...(signal ? { signal } : {}) });
+      if (remainingMs <= 0) { timedOut = true; throw new Error("speech deadline expired"); }
+      const design = this.options.voiceDesign, reference = design?.reference;
+      const referenceDigest = reference ? createHash("sha256").update(Buffer.from(reference.dataBase64, "base64")).digest("hex") : null;
+      const response = await this.requestFetch(`${this.options.baseUrl}/v1/tts/synthesize`, { method: "POST", headers: { "content-type": "application/json", accept: "application/x-ndjson" }, body: JSON.stringify({ ...body, ...(design ? { voiceDesign: { version: "voxcpm.voice-design.v1", description: design.description, seed: design.seed } } : {}), ...(reference ? { voiceReference: { version: "voxcpm.voice-reference.v1", sampleRateHz: reference.sampleRateHz, dataBase64: reference.dataBase64, transcript: reference.transcript } } : {}) }), signal: controller.signal });
+      reader = response.body?.getReader();
       if (!response.ok || !response.body) throw new Error(`provider HTTP ${response.status}`);
-      const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "", terminalSeen = false, preAudioSeen = false;
       while (!terminalSeen) {
-        const { value, done } = await reader.read();
+        const { value, done } = await reader!.read();
+        if (controller.signal.aborted) throw new Error("speech request aborted");
         buffer += decoder.decode(value, { stream: !done });
         const lines = buffer.split("\n");
         buffer = done ? "" : (lines.pop() ?? "");
@@ -39,6 +61,9 @@ export class VoxCpmProvider implements TextToSpeechProvider {
           if (event.kind === "preAudio") {
             if (preAudioSeen || event.sequence !== 0 || event.requestId !== body.requestId || event.correlationId !== body.correlationId || event.voiceBundleRevision !== body.voiceBundleRevision) throw new Error("protocol identity invalid");
             if (event.runtimeRevision !== this.options.runtimeRevision || event.modelRevision !== this.options.modelRevision || event.mappingRevision !== this.options.mappingRevision) throw new Error("protocol revision invalid");
+            if (this.options.voiceDesign && (event.effectiveSynthesis.voiceDescription !== this.options.voiceDesign.description || event.effectiveSynthesis.seed !== this.options.voiceDesign.seed)) throw new Error("provider did not apply voice design settings");
+            if (referenceDigest && event.effectiveSynthesis.referenceDigest !== referenceDigest) throw new Error("provider did not apply the reference audio");
+            if (reference && event.effectiveSynthesis.conditioningMode !== (reference.transcript ? "continuation" : "reference")) throw new Error("provider did not apply the reference conditioning mode");
             preAudioSeen = true;
             degraded = [...event.degradedDimensions];
             disposition = degraded.length ? "partiallyApplied" : "fullyApplied";
@@ -50,14 +75,25 @@ export class VoxCpmProvider implements TextToSpeechProvider {
             const terminalOnly = event.sequence === 0 && event.outcome !== "completed" && event.outputSamples === 0 && event.frameCount === 0;
             if ((!preAudioSeen && !terminalOnly) || event.outputSamples !== nextOffset || event.frameCount !== frames) throw new Error("protocol terminal counts invalid");
             terminalSeen = true;
+            if (event.outcome !== "completed") this.options.onDiagnostic?.({ requestId: body.requestId, code: `remote:${event.outcome}` });
           }
           yield this.mapEvent(event, request, disposition, degraded);
-          if (terminalSeen) { await reader.cancel(); break; }
+          if (terminalSeen) break;
         }
         if (done && !terminalSeen) throw new Error("protocol lifecycle invalid");
       }
-    } catch {
-      yield { kind: "terminal", sequence: nextSequence, segmentId: request.segmentId, outcome: signal?.aborted ? "cancelled" : "failed", outputSamples: nextOffset, frameCount: frames, disposition: signal?.aborted ? "cancelled" : "providerFailure", degradedDimensions: degraded, mappingRevision: this.options.mappingRevision };
+    } catch (error) {
+      // Only adapter-authored diagnostics; never log request text, audio, keys,
+      // remote exception strings, or arbitrary fetch error messages.
+      const message = error instanceof Error ? error.message : "";
+      const code = /^(protocol (sequence|identity|revision|audio ordering|PCM length|terminal counts|lifecycle) invalid|provider HTTP \d{3}|provider did not apply (voice design settings|the reference audio|the reference conditioning mode)|speech deadline expired|speech request aborted)$/u.test(message) ? message : "transport_or_parse_failure";
+      if (!signal?.aborted) this.options.onDiagnostic?.({ requestId: body.requestId, code });
+      yield { kind: "terminal", sequence: nextSequence, segmentId: request.segmentId, outcome: signal?.aborted ? "cancelled" : timedOut ? "timedOut" : "failed", outputSamples: nextOffset, frameCount: frames, disposition: signal?.aborted ? "cancelled" : timedOut ? "timedOut" : "providerFailure", degradedDimensions: degraded, mappingRevision: this.options.mappingRevision };
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", abort);
+      controller.abort();
+      if (reader) { try { await reader.cancel(); } catch { /* Transport may already be closed. */ } finally { reader.releaseLock(); } }
     }
   }
 

@@ -36,7 +36,7 @@ test("Mac providers become healthy only when exact Ollama, Moonshine, and Vox id
       providerRequirements: { inference: "required", memory: "required", stt: "required", tts: "required", world: "optional", capability: "optional", renderer: "optional", clock: "required" },
       inferenceProfile: { runtime: "Ollama", runtimeVersion: "0.31.1", model: "Qwen3.5 2B", modelRevision: "sha256:model", servedModelName: "qwen3.5:2b-q4_K_M", quantization: "Q4_K_M", contextLength: 32768, endpoint: "http://local.invalid", modelArtifactDigest: "sha256:model", developmentOnly: true },
       sttProfile: { runtime: "MLX-Audio", runtimeVersion: "mlx-audio@0.5.3", model: "moonshine-ai/moonshine-tiny", modelRevision: "stt-revision", endpoint: "http://stt.invalid", modelArtifactDigest: "sha256:stt-model", mappingRevision: "moonshine-map-1", language: "en", developmentOnly: true },
-      ttsProfile: { runtime: "MLX-Audio", runtimeVersion: "mlx-audio@0.5.3", model: "mlx-community/VoxCPM2-4bit", modelRevision: "revision", quantization: "4bit", endpoint: "http://tts.invalid", voiceBundleKey: "fixture-voice-design", voiceBundleRevision: 1, mappingRevision: "voxcpm2-map-1", developmentOnly: true },
+      ttsProfile: { runtime: "MLX-Audio", runtimeVersion: "mlx-audio@0.5.3", model: "mlx-community/VoxCPM2-4bit", modelRevision: "revision", quantization: "4bit", endpoint: "http://tts.invalid", voiceBundleKey: "fixture-voice-design", voiceBundleRevision: 1, mappingRevision: "voxcpm2-map-2", developmentOnly: true },
       storage: { databasePath: ":memory:", artifactDirectory: ".artifacts" }, authority: { provider: "fixture", authentication: "fixture" }, secretRefs: {}
     }, profile: {}, environment: {}, cli: {}
   });
@@ -45,7 +45,7 @@ test("Mac providers become healthy only when exact Ollama, Moonshine, and Vox id
     const url = String(input);
     if (url.endsWith("/api/tags")) return Response.json({ models: [{ name: "qwen3.5:2b-q4_K_M", digest: "model" }] });
     if (url.startsWith("http://stt.invalid")) return Response.json({ status: "ready", runtimeRevision: "mlx-audio@0.5.3", modelRevision: "stt-revision", modelArtifactDigest: "sha256:stt-model", mappingRevision: "moonshine-map-1" });
-    return Response.json({ status: "ready", runtimeRevision: "mlx-audio@0.5.3", modelRevision: "revision", mappingRevision: "voxcpm2-map-1" });
+    return Response.json({ status: "ready", runtimeRevision: "mlx-audio@0.5.3", modelRevision: "revision", mappingRevision: "voxcpm2-map-2" });
   };
   try {
     const registry = createProviderRegistry(profile);
@@ -87,16 +87,18 @@ test("ai5090 profile constructs and probes real inference, STT, and TTS provider
       providerRequirements: { inference: "required", memory: "required", stt: "required", tts: "required", world: "optional", capability: "optional", renderer: "optional", clock: "required" },
       inferenceProfile: { runtime: "SGLang", runtimeVersion: "v", model: "Qwen", modelRevision: "inference-revision", servedModelName: "qwen", quantization: "q", contextLength: 1, endpoint: "http://inference.invalid", containerImageDigest: "sha256:image", developmentOnly: true },
       sttProfile: { runtime: "NeMo-Speech.cpp", runtimeVersion: "0.1.0", model: "Nemotron", modelRevision: "stt-revision", endpoint: "http://stt.invalid", modelArtifactDigest: "sha256:stt-model", mappingRevision: "nemo-speech-map-1", language: "en-US", developmentOnly: true },
-      ttsProfile: { runtime: "PyTorch-CUDA", runtimeVersion: "tts-runtime", model: "VoxCPM2", modelRevision: "tts-revision", quantization: "bf16", endpoint: "http://tts.invalid", voiceBundleKey: "fixture-voice-design", voiceBundleRevision: 1, mappingRevision: "voxcpm2-map-1", developmentOnly: true },
+      ttsProfile: { runtime: "PyTorch-CUDA", runtimeVersion: "tts-runtime", model: "VoxCPM2", modelRevision: "tts-revision", quantization: "bf16", endpoint: "http://tts.invalid", voiceBundleKey: "fixture-voice-design", voiceBundleRevision: 1, mappingRevision: "voxcpm2-map-2", developmentOnly: true },
       storage: { databasePath: ":memory:", artifactDirectory: ".artifacts" }, authority: { provider: "fixture", authentication: "fixture" }, secretRefs: {}
     }, profile: {}, environment: {}, cli: {}
   });
+  const previousKey = process.env.LIFESTREAM_INFERENCE_API_KEY; process.env.LIFESTREAM_INFERENCE_API_KEY = "test-only-key";
   const original = globalThis.fetch;
-  globalThis.fetch = async (input) => {
+  globalThis.fetch = async (input, init) => {
     const url = String(input);
     if (url === "http://stt.invalid/health") return Response.json({ status: "ok", version: "0.1.0" });
-    if (url === "http://tts.invalid/readyz") return Response.json({ status: "ready", runtimeRevision: "tts-runtime", modelRevision: "tts-revision", mappingRevision: "voxcpm2-map-1" });
-    return Response.json({ status: "ok" });
+    if (url === "http://tts.invalid/readyz") return Response.json({ status: "ready", runtimeRevision: "tts-runtime", modelRevision: "tts-revision", mappingRevision: "voxcpm2-map-2" });
+    assert.equal(url, "http://inference.invalid/v1/models"); assert.equal(new Headers(init?.headers).get("authorization"), "Bearer test-only-key");
+    return Response.json({ data: [{ id: "qwen" }] });
   };
   try {
     const registry = createProviderRegistry(profile); await registry.probe();
@@ -104,5 +106,6 @@ test("ai5090 profile constructs and probes real inference, STT, and TTS provider
     assert.equal(registry.providers.stt.fixture, false); assert.equal(registry.providers.stt.status, "healthy");
     assert.equal(registry.providers.tts.fixture, false); assert.equal(registry.providers.tts.status, "healthy");
     assert.equal(registry.ready, true);
-  } finally { globalThis.fetch = original; }
+    delete process.env.LIFESTREAM_INFERENCE_API_KEY; await registry.probe(); assert.equal(registry.providers.inference.status, "unavailable"); assert.match(registry.providers.inference.reason ?? "", /credential/);
+  } finally { globalThis.fetch = original; if (previousKey === undefined) delete process.env.LIFESTREAM_INFERENCE_API_KEY; else process.env.LIFESTREAM_INFERENCE_API_KEY = previousKey; }
 });

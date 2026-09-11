@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S056",
+  "claim": "Bounded dual-profile conversation testing and ephemeral voice conditioning",
+  "revision": "WORKTREE",
+  "baseRevision": "e4a573d3df8d1e3727279bd6490a5142d48b6684",
+  "compositionBaseRevision": "665492613f7ef5be6f6b945617ea4d34270c0bb2",
+  "specificationBaseRevision": "ac808981551fa9719f09ac7dc6f5a4b56b50adb3",
+  "authorization": "Operator requested screen selection of either server profile, voice influence controls, and a voice-cloning interface; human conversation retest precedes another slice.",
+  "automated": {
+    "pnpm test": "140 passed",
+    "pnpm test:browser-surface": "4 passed, including executable draft validation and reference consent",
+    "pnpm typecheck": "passed",
+    "pnpm lint": "passed",
+    "pnpm build": "passed",
+    "python3 scripts/sidecar-http.test.py": "2 passed, including temporary reference cleanup on generator cancellation",
+    "npm --prefix orchestration test": "94 passed in composition, including disjoint forward configuration and secret-safe key loading",
+    "npm --prefix .private run validate": "46 tests and canonical specification validation passed"
+  },
+  "realProvider": {
+    "macLocal": {
+      "command": "node scripts/check-voice-settings.mjs",
+      "description": {
+        "samples": 138248,
+        "rms": 0.03754411763323236,
+        "outcome": "succeeded"
+      },
+      "reference": {
+        "samples": 84488,
+        "rms": 0.03892274301161498,
+        "outcome": "succeeded"
+      },
+      "continuation": {
+        "samples": 330248,
+        "rms": 0.035603616047664446,
+        "outcome": "succeeded"
+      },
+      "referenceOrigin": "synthetic neutral test speech, no human recording"
+    },
+    "ai5090": {
+      "typedText": "Real SGLang qwen3.8-27b-local streamed PROFILE_READY and interaction.completed with fixture:false",
+      "speechRoundTrip": "176640 synthesized 48 kHz samples; NeMo committed 'This is a live assistant text to speech test' from 58880 derived 16 kHz samples; succeeded",
+      "limitation": "One earlier short-phrase TTS request returned timedOut; subsequent exact browser phrase and speech round-trip requests succeeded. Continuous reliability is not claimed.",
+      "advancedControls": "Installed remote sidecar does not advertise description/seed/reference extensions. UI disables these and backend fails closed. Tone/pace/energy retain existing mapping. No remote deployment or Windows startup-script modification."
+    }
+  },
+  "browser": {
+    "target": "http://127.0.0.1:3910/control/conversation.html",
+    "profileSelection": "Applied ai5090 from the screen; all three real service probes healthy; switched back to Mac-local for cloning",
+    "ai5090Tts": "Actual Assistant TTS test button: succeeded, 44 frames, browser playback finished",
+    "macDescription": "Actual Feminine and calm draft preview: succeeded, 26 frames, browser playback finished",
+    "macReference": "File chooser selected generated 3.7 second WAV; browser decoded/resampled to mono 16 kHz; preview without consent rejected; with permission reference-conditioned preview succeeded, 37 frames, browser playback finished",
+    "applyAndClear": "Applied snapshot to next connection; Clear released reference and unchecked permission. No microphone capture in automated UI checks.",
+    "visual": "Narrow in-app viewport inspected; form labels, consent checkbox, preview/apply and unavailable controls visible; corrected wrapping and input widths"
+  },
+  "retention": "No reference or credential enters Git. Page/session memory only; sidecar temporary WAV cleaned after synthesis. Synthetic browser-upload test WAV generated outside repository in private temporary directory.",
+  "exclusions": [
+    "Human audibility and speaker similarity",
+    "perceptual stability",
+    "new physical microphone acceptance",
+    "remote cloning availability",
+    "saved VoiceProfile authoring",
+    "training",
+    "production qualification",
+    "publication or deployment",
+    "next slice"
+  ],
+  "nextAction": "Operator tests both server profiles, reference-conditioned voice, live transcription and barge-in before another slice.",
+  "recordedAt": "2026-09-11T03:34:48.589Z",
+  "sourceSha256": {
+    ".gitignore": "a484b068000d3c8020badba44d73caa951839233033bc82efbe951c340d21d3b",
+    "apps/control-web/conversation.html": "bb65640c387d7db19faf732200c312358fbc61c963805e1abf675904ef587056",
+    "apps/control-web/conversation.js": "f08c081e606b8fdccf6774d7f8805dba15e94feb5e4b82bac7d3db66fd44e655",
+    "apps/control-web/test/conversation-ui.test.mjs": "ffc2cfbd3b2934bbe4beecc47d65a56f90d78d8db40327afd57bc61f48493863",
+    "apps/server/src/composition/providers.ts": "a55a2acbb96a4a68116dfcb63931950b936fe9da4acc5d9784c7ea52fd6bf2ec",
+    "apps/server/src/config/profiles/ai5090.json": "e3493700cf81cafe176345109e20993a63b40bc8e289d196f804edca3fdecada",
+    "apps/server/src/index.ts": "15864ae7381e3147b96c26d65dd5b5566364b08700fca4b135fa6ded46102098",
+    "apps/server/src/runtime/audio.ts": "9e27dfb96954a96a1a2520f4a425f7c3673173712e82ea91dc5c6a8688169716",
+    "apps/server/src/runtime/voice-settings.ts": "23b529b086e71c6c57742259ae715cb48fe1ae2779005a1a70ec43e9cdd893ca",
+    "apps/server/test/audio.test.ts": "cba240e47dd4f6b39f083b70e7e7bd8910120d936cc49efc1d5a6d2ae6c0ea9c",
+    "apps/server/test/providers.test.ts": "3eb9beec4e04bd970019d791494195e006fa68eee1ad2dc55c7aff60ab537d27",
+    "apps/server/test/server.test.ts": "e78b93df9cc51dc99d15af214cde0b8de166b7d8c5c331a9b3314960c82c6788",
+    "apps/server/test/voice-settings.test.ts": "fef28570cb14494aca2aeb0880661085c00d1f95d32646b8458ed465f9f00265",
+    "packages/providers-moonshine/sidecar/moonshine_sidecar.py": "cf072c65b56f707e148d0770eefe63318958bdc213fbab5b9cb1f14e3985711b",
+    "packages/providers-moonshine/src/provider.ts": "89080f2d2a0dc19cf5ab8f39f963a7b9ba90bb6f4a29df796c5b8945c9363b85",
+    "packages/providers-moonshine/test/provider.test.ts": "8dd6e6bb7366903efaa2dfb95dd7f001a05a9a0591c3c511ef2f38ed14a7984f",
+    "packages/providers-voxcpm/VOICE-CONTROLS.md": "88c0644625869b87e919cf7c1199fa695981e51b52374756863cda2cbd29af18",
+    "packages/providers-voxcpm/sidecar/voxcpm_sidecar.py": "94f37ab811b653014f24f6336f59a0a645f0ee6fc98e8ccdd11202af56e7ff86",
+    "packages/providers-voxcpm/src/provider.ts": "cc483681328bead07b5105b8510ac4b0fc845deb820d551cfc38241b494d99ef",
+    "packages/providers-voxcpm/test/provider.test.ts": "c9e84e035cc7242c36760f9c11354ee74130eeb19d514b9e232f435c0c3c3686",
+    "packages/runtime/package.json": "bcb6b9726cb4ae4f38c91656ad77169c3df515e04dd43576a150250e5c9bc929",
+    "scripts/check-live-voice.mjs": "8f0dc1cf3614250f1fc7fa38f9f0068622ecc2a0e0677dbfdfc4f07b0069419e",
+    "scripts/check-voice-settings.mjs": "136fb689f290871b2281e9c0c82802fa07d7439b25ef206bc87dacd7ed6d325d",
+    "scripts/sidecar-http.test.py": "621571e1f3b5fb3a9335790bb74b00a4f8670fb680f8df72f23e22b48619cfec"
+  },
+  "preflight": "Existing immutable LS-S052 prerequisite receipt invalid; preserved. Current scope and changed-files linkage reconciled. This is not a new runtime failure."
+}

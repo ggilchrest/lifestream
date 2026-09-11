@@ -1,0 +1,183 @@
+{
+  "slice": "LS-S056",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "real-provider-development-recovery",
+  "baseRevision": "e4a573d3df8d1e3727279bd6490a5142d48b6684",
+  "revision": "WORKTREE",
+  "specificationBaseRevision": "ac808981551fa9719f09ac7dc6f5a4b56b50adb3",
+  "historicalEvidence": "LS-S056.json remains unchanged; its earlier operator-confirmed journey does not establish acceptance of this repair.",
+  "checks": [
+    {
+      "command": "pnpm test && pnpm lint && pnpm typecheck",
+      "result": "pass",
+      "evidence": "135 tests passed, including body-timeout cancellation, abandoned TTS reader cleanup, repeated barge-in and deadline-to-next-turn recovery. Lint and strict typecheck passed."
+    },
+    {
+      "command": "pnpm build; pnpm test:browser-surface; python3 scripts/sidecar-http.test.py",
+      "result": "pass",
+      "evidence": "Build passed; 2 browser-surface tests passed; both sidecars close health responses and accept subsequent clients."
+    },
+    {
+      "command": "node scripts/check-live-voice.mjs",
+      "result": "pass",
+      "evidence": "Five turns on one real-provider socket: interrupted, interrupted, explicit audio_deadline_exceeded after 30 seconds, completed, completed. All five transcribed; post-conversation real TTS succeeded with non-silent PCM. The long reply is NOT claimed as successful full-answer acceptance."
+    },
+    {
+      "command": "Assistant TTS test in Codex in-app browser",
+      "result": "pass",
+      "evidence": "Actual button click returned: Events: TTS succeeded (37 frames) — browser playback finished. No microphone was captured in this automated browser check; physical audibility remains operator-owned."
+    },
+    {
+      "command": "npm --prefix .private run validate; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass",
+      "evidence": "46 private tests and canonical validation passed; public structural and whitespace checks passed."
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S056",
+      "result": "fail",
+      "evidence": "Existing immutable prerequisite receipt LS-S052.json has revision WORKTREE and historical blocked entries despite later passing real-provider checks. Preserved unchanged; packet and active checkpoint scopes were reconciled. This pre-existing metadata defect is not a new runtime failure."
+    }
+  ],
+  "exclusions": [
+    "physical microphone and physical audibility retest",
+    "Human acceptance of this repair",
+    "ai5090 profile activation",
+    "production qualification"
+  ],
+  "nextAction": "Operator retests audible live conversation and barge-in in the browser before any next slice. ai5090 diagnosis complete; permanent tunnel/profile/key wiring repair not performed.",
+  "checkedAt": "2026-09-11T03:03:39Z",
+  "liveResults": [
+    {
+      "check": "real-synthesis",
+      "frames": 37,
+      "samples": 176648,
+      "rms": 0.04119695260526218,
+      "elapsedMs": 4411
+    },
+    {
+      "check": "real-synthesis",
+      "frames": 39,
+      "samples": 184328,
+      "rms": 0.057444966777580445,
+      "elapsedMs": 4073
+    },
+    {
+      "check": "real-synthesis",
+      "frames": 36,
+      "samples": 168968,
+      "rms": 0.030520721080087375,
+      "elapsedMs": 3407
+    },
+    {
+      "check": "real-voice-turn",
+      "turn": 1,
+      "transcript": "Say hello, then count from 1 to 20.",
+      "audioFrames": 7,
+      "terminal": "interrupted",
+      "error": {
+        "code": "audio_interrupted",
+        "message": "audio turn interrupted",
+        "retryable": false,
+        "correlationId": "db13c77f-3abd-47f8-a9eb-78c13837a254",
+        "details": {}
+      }
+    },
+    {
+      "check": "real-voice-turn",
+      "turn": 2,
+      "transcript": "Say hello, then count from 1 to 20.",
+      "audioFrames": 7,
+      "terminal": "interrupted",
+      "error": {
+        "code": "audio_interrupted",
+        "message": "audio turn interrupted",
+        "retryable": false,
+        "correlationId": "3d1fa00e-33a9-4849-822d-7f8fbc19980f",
+        "details": {}
+      }
+    },
+    {
+      "check": "real-voice-turn",
+      "turn": 3,
+      "transcript": "Say hello, then count from 1 to 20.",
+      "audioFrames": 65,
+      "terminal": "failed",
+      "error": {
+        "code": "audio_deadline_exceeded",
+        "message": "Voice turn exceeded its 30 second deadline; you can try another turn.",
+        "retryable": true,
+        "correlationId": "2b74a609-57e8-4c41-9b60-2919699bc89a",
+        "details": {}
+      }
+    },
+    {
+      "check": "real-voice-turn",
+      "turn": 4,
+      "transcript": "Reply with just the word hello.",
+      "audioFrames": 7,
+      "terminal": "completed",
+      "error": null
+    },
+    {
+      "check": "real-voice-turn",
+      "turn": 5,
+      "transcript": "Reply with just the word hello.",
+      "audioFrames": 7,
+      "terminal": "completed",
+      "error": null
+    },
+    {
+      "check": "real-synthesis",
+      "frames": 34,
+      "samples": 161288,
+      "rms": 0.07102757428692967,
+      "elapsedMs": 3816
+    },
+    {
+      "check": "voice-recovery",
+      "result": "pass",
+      "profile": "mac-local",
+      "exclusions": [
+        "physical microphone",
+        "physical audibility",
+        "human acceptance",
+        "production qualification"
+      ]
+    }
+  ],
+  "rootCauses": [
+    "TTS HTTP reader not cancelled when a consumer abandons synthesis; active voice turn did not propagate abort to TTS.",
+    "Single-worker sidecar persistent HTTP clients could monopolize the worker.",
+    "STT cancelled its timeout and abort listener at response headers instead of after reading the response body.",
+    "Barge-in dropped the triggering PCM frame and queued transcription lacked robust cancellation/recovery.",
+    "Whole-answer TTS delayed audio; browser capture/playback and terminal states did not fence interrupted playback consistently."
+  ],
+  "ai5090Diagnosis": {
+    "mode": "read-only",
+    "ssh": {
+      "windows": "passed",
+      "wsl": "passed"
+    },
+    "remoteHealth": {
+      "inference": 200,
+      "stt": 200,
+      "tts": 200,
+      "authenticatedServedModel": "qwen3.8-27b-local"
+    },
+    "macProfileFailures": [
+      "no local inference port 30000 listener",
+      "no local STT port 8080 listener",
+      "port 8787 occupied by Mac-local MLX TTS, not selected ai5090 CUDA TTS identity",
+      "LIFESTREAM_INFERENCE_API_KEY absent in backend launch environment"
+    ],
+    "temporaryTunnel": {
+      "inference": 200,
+      "stt": 200,
+      "tts": 200,
+      "closedAfterCheck": true
+    },
+    "remoteChanges": false,
+    "activeProfileChanged": false,
+    "recommendedRepair": "Maintain dedicated SSH forwards with a non-conflicting ai5090 TTS local port; align composition and Lifestream profile records; load the Windows key server-side without logging or persisting it."
+  }
+}

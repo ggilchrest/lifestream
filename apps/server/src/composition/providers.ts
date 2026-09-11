@@ -66,7 +66,7 @@ export class ProviderRegistry {
     if (config.providers.inference === "ollama-mac-local" && config.inferenceProfile) this.inference = new OllamaInferenceProvider({ endpoint: config.inferenceProfile.endpoint, model: config.inferenceProfile.servedModelName, contextLength: config.inferenceProfile.contextLength });
     if (config.providers.stt === "moonshine-mlx" && config.sttProfile) this.stt = new MoonshineSpeechProvider({ baseUrl: config.sttProfile.endpoint, runtimeRevision: config.sttProfile.runtimeVersion, modelRevision: config.sttProfile.modelRevision, modelArtifactDigest: config.sttProfile.modelArtifactDigest, mappingRevision: config.sttProfile.mappingRevision });
     if (config.providers.stt === "nemo-speech" && config.sttProfile) this.stt = new NemoSpeechProvider({ baseUrl: config.sttProfile.endpoint, model: config.sttProfile.model, language: config.sttProfile.language, webSocketFactory: createNemoSocket });
-    if (config.providers.tts === "voxcpm" && config.ttsProfile) this.tts = new VoxCpmProvider({ baseUrl: config.ttsProfile.endpoint, voiceBundleKey: config.ttsProfile.voiceBundleKey, voiceBundleRevision: config.ttsProfile.voiceBundleRevision, runtimeRevision: config.ttsProfile.runtimeVersion, modelRevision: config.ttsProfile.modelRevision, mappingRevision: config.ttsProfile.mappingRevision });
+if (config.providers.tts === "voxcpm" && config.ttsProfile) this.tts = new VoxCpmProvider({ baseUrl: config.ttsProfile.endpoint, voiceBundleKey: config.ttsProfile.voiceBundleKey, voiceBundleRevision: config.ttsProfile.voiceBundleRevision, runtimeRevision: config.ttsProfile.runtimeVersion, modelRevision: config.ttsProfile.modelRevision, mappingRevision: config.ttsProfile.mappingRevision, onDiagnostic: event => console.warn(JSON.stringify({ component: "speech-provider", ...event })) });
   }
   async probe(timeoutMs = 2_000): Promise<void> {
     await Promise.all([this.probeInference(timeoutMs), this.probeStt(timeoutMs), this.probeTts(timeoutMs)]);
@@ -95,15 +95,21 @@ export class ProviderRegistry {
     const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const ollama = this.config.providers.inference === "ollama-mac-local";
-      const response = await fetch(`${this.config.inferenceProfile.endpoint.replace(/\/$/u, "")}${ollama ? "/api/tags" : "/health"}`, { signal: controller.signal });
+      const apiKey = process.env.LIFESTREAM_INFERENCE_API_KEY;
+      if (!ollama && !apiKey) { this.providers.inference = Object.freeze({ ...current, status: "unavailable", reason: "Inference credential is not loaded; start the conversation connection launcher." }); return; }
+      const response = await fetch(`${this.config.inferenceProfile.endpoint.replace(/\/$/u, "")}${ollama ? "/api/tags" : "/v1/models"}`, { signal: controller.signal, ...(!ollama ? { headers: { authorization: `Bearer ${apiKey}` } } : {}) });
       let healthy = response.ok;
       if (healthy && ollama) {
         const payload = await response.json() as { models?: Array<{ name?: string; model?: string; digest?: string }> };
         const expectedDigest = this.config.inferenceProfile.modelRevision.replace(/^sha256:/u, "");
         healthy = payload.models?.some((model) => (model.name === this.config.inferenceProfile?.servedModelName || model.model === this.config.inferenceProfile?.servedModelName) && model.digest === expectedDigest) === true;
       }
+      if (healthy && !ollama) {
+        const payload = await response.json() as { data?: Array<{ id?: string }> };
+        healthy = payload.data?.some(model => model.id === this.config.inferenceProfile?.servedModelName) === true;
+      }
       const { reason: _previousReason, ...base } = current;
-      this.providers.inference = Object.freeze({ ...base, status: healthy ? "healthy" : "unavailable", ...(healthy ? {} : { reason: ollama && response.ok ? "configured Ollama model identity changed or is not installed" : `inference health returned HTTP ${response.status}` }) });
+      this.providers.inference = Object.freeze({ ...base, status: healthy ? "healthy" : "unavailable", ...(healthy ? {} : { reason: response.ok ? "configured inference model identity changed or is not installed" : `inference authentication/readiness returned HTTP ${response.status}` }) });
     } catch (error) {
       this.providers.inference = Object.freeze({ ...current, status: "unavailable", reason: error instanceof Error && error.name === "AbortError" ? "inference health probe timed out" : "inference health probe failed" });
     } finally { clearTimeout(timer); }
@@ -118,6 +124,7 @@ export class ProviderRegistry {
       const healthy = response.ok && payload.runtimeRevision === this.config.ttsProfile.runtimeVersion && payload.modelRevision === this.config.ttsProfile.modelRevision && payload.mappingRevision === this.config.ttsProfile.mappingRevision;
       const { reason: _previousReason, ...base } = current;
       this.providers.tts = Object.freeze({ ...base, status: healthy ? "healthy" : "unavailable", ...(healthy ? {} : { reason: response.ok ? "VoxCPM runtime identity changed" : `VoxCPM readiness returned HTTP ${response.status}` }) });
+      if (healthy) await this.tts?.voiceControls();
     } catch (error) {
       this.providers.tts = Object.freeze({ ...current, status: "unavailable", reason: error instanceof Error && error.name === "AbortError" ? "VoxCPM readiness probe timed out" : "VoxCPM readiness probe failed" });
     } finally { clearTimeout(timer); }

@@ -94,9 +94,11 @@ export class MoonshineSpeechProvider implements SpeechToTextProvider {
       let deadlineExpired = false;
       const abort = () => controller.abort(signal?.reason);
       signal?.addEventListener("abort", abort, { once: true });
+      if (signal?.aborted) abort();
       const remainingMs = Math.max(1, Date.parse(request.deadlineAt) - Date.parse(request.now()));
       const timer = setTimeout(() => { deadlineExpired = true; controller.abort(); }, remainingMs);
       let response: Response;
+      let responseText: string;
       try {
         response = await (this.options.fetch ?? globalThis.fetch)(`${this.options.baseUrl.replace(/\/$/u, "")}/v1/stt/transcribe`, {
           method: "POST",
@@ -112,18 +114,21 @@ export class MoonshineSpeechProvider implements SpeechToTextProvider {
           }),
           signal: controller.signal
         });
+        // The deadline and cancellation cover the body, not only HTTP headers.
+        responseText = await response.text();
       } catch {
         yield { kind: "terminal", sequence: 0, outcome: signal?.aborted ? "cancelled" : deadlineExpired ? "timedOut" : "failed", inputSamples };
         return;
       } finally {
         clearTimeout(timer);
         signal?.removeEventListener("abort", abort);
+        controller.abort();
       }
       if (!response.ok) {
         yield { kind: "terminal", sequence: 0, outcome: "failed", inputSamples };
         return;
       }
-      const lines = (await response.text()).split("\n").filter((line) => line.trim()).map((line) => JSON.parse(line) as SidecarEvent);
+      const lines = responseText.split("\n").filter((line) => line.trim()).map((line) => JSON.parse(line) as SidecarEvent);
       if (lines.length < 1 || lines.some((event, index) => event.sequence !== index) || lines.at(-1)?.kind !== "terminal") throw new Error("invalid sidecar lifecycle");
       const terminal = lines.at(-1)!;
       if (terminal.inputSamples !== inputSamples || terminal.requestId !== inputId) throw new Error("sidecar accounting changed");

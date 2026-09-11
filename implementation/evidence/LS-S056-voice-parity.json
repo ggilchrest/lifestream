@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S056",
+  "claim": "Corrective development voice conditioning, long-turn deadlines and adjustable onset; human retest hold",
+  "revision": "WORKTREE",
+  "baseRevision": "e4a573d3df8d1e3727279bd6490a5142d48b6684",
+  "compositionBaseRevision": "665492613f7ef5be6f6b945617ea4d34270c0bb2",
+  "specificationBaseRevision": "ac808981551fa9719f09ac7dc6f5a4b56b50adb3",
+  "authorization": "Operator requested spoken-style leakage and long-reply timeout fixes, ai5090 voice-configuration parity with durable Enter-VoiceAIMode.ps1 changes, and an immediate sensitivity adjustment before another slice.",
+  "changes": [
+    "Mapping voxcpm2-map-2: unplayed temporary reference anchor, audible target text excludes style instructions on MLX and CUDA.",
+    "180-second whole-turn bound; independent 30-second STT budget; fresh 45-second speech segment budget capped by whole-turn deadline; 60-second preview synthesis.",
+    "Browser level-and-duration gate with immediate 0-100 sensitivity control, bounded pre-roll, no idle PCM forwarding before confirmed onset.",
+    "Cache negotiated voice extensions per provider instance; one consistent capability response for the UI.",
+    "Preview operation incrementally reuses the live speech-safe segmenter; ordered frames preserve segment identities, one aggregate terminal, 60-second total and 45-second segment limits, maximum 60 seconds output audio."
+  ],
+  "automated": {
+    "pnpm test": "144 passed, including long-preview segmentation and terminal/deadline aggregation",
+    "pnpm test:browser-surface": "6 passed",
+    "pnpm typecheck": "passed",
+    "pnpm lint": "passed",
+    "pnpm build": "passed",
+    "Python sidecar HTTP/anchor tests": "3 passed with NumPy and localhost permission; initial sandbox-only bind attempt failed EPERM, authorized rerun passed",
+    "npm --prefix orchestration test": "95 passed",
+    "npm --prefix .private run validate": "46 tests and canonical validation passed",
+    "node scripts/workspace.mjs check": "passed",
+    "node scripts/workspace.mjs preflight LS-S056": "Before recording the remote failure, only the pre-existing invalid immutable LS-S052 receipt failed. Final checkpoint records the ai5090 environment blocker, so preflight now rejects selection as unblocked work. Historical receipts are preserved."
+  },
+  "realProvider": {
+    "macLocal": {
+      "mappingRevision": "voxcpm2-map-2",
+      "voiceSettings": {
+        "description": {
+          "samples": 130568,
+          "rms": 0.0559498666
+        },
+        "reference": {
+          "samples": 76808,
+          "rms": 0.0760397147
+        },
+        "continuation": {
+          "samples": 69128,
+          "rms": 0.05736924496
+        },
+        "outcome": "all succeeded",
+        "referenceOrigin": "synthetic neutral speech in memory"
+      },
+      "sixSentences": {
+        "samples": 522288,
+        "elapsedMs": 22512,
+        "transcript": "The package will arrive tomorrow. Please leave it beside the front door. The garden is quiet this evening. We can take a short walk after dinner. Bring a jacket if the air feels cool. I will meet you outside.",
+        "spokenInstructionCheck": "passed after final preview segmentation; exact real Moonshine transcript, no style or anchor words"
+      },
+      "liveSocket": {
+        "outcomes": [
+          "interrupted",
+          "interrupted",
+          "completed",
+          "completed",
+          "completed"
+        ],
+        "audioFrameCounts": [
+          25,
+          25,
+          563,
+          17,
+          17
+        ],
+        "postConversationTts": {
+          "samples": 184328,
+          "rms": 0.047678,
+          "elapsedMs": 5603,
+          "outcome": "succeeded"
+        },
+        "claim": "real synthetic-input five-turn recovery and long-answer completion; not physical microphone acceptance"
+      },
+      "beforePreviewSegmentation": {
+        "samples": 545288,
+        "elapsedMs": 10053,
+        "transcript": "The package will arrive tomorrow. Please leave it beside the front door. The garden is quiet this evening. We can take a short walk after dinner. Bring a jacket if the air feels cool. I will meet you outside.",
+        "spokenInstructionCheck": "pass; no style or anchor words recovered by real Moonshine ASR"
+      }
+    },
+    "ai5090": {
+      "status": "blockedEnvironment",
+      "upgrade": "Same sidecar source installed in lifestream/voxcpm2:voice-controls-v2; exact map-2 readiness and description/reference/isolation capabilities passed before the first real request.",
+      "startup": "First non-detached attempt reached readiness but WSL service processes disappeared after SSH exit. Same-identity detached startup completed and STT/TTS remained reachable after the startup SSH connection exited.",
+      "synthesis": "Partial real success, not reliable parity: warmed description, reference and continuation each completed in approximately five seconds. Subsequent continuation and long-preview requests still timed out. See attempts; no ai5090 six-sentence ASR acceptance.",
+      "diagnosis": "Speech PID 1305 generated its unplayed anchor, then was observed waiting in __wait_on_buffer and folio_wait_bit_common through ext4_file_read_iter/ovl_read_iter. Read bytes advanced from 7017623904 to 7019782496; not proof of a permanent disk fault. No matching recent Windows storage-error event was reported. Subsequent /readyz probes timed out.",
+      "inference": "Recovered without model/resource changes: existing qwen5090 was restarted after the SSH-lifetime interruption; later HTTP /health returned 200. No new generated-answer acceptance in this follow-up.",
+      "preserved": "No GPU placement, model revision, credentials, machine-wide execution policy, WSL resource limits or production selection changed.",
+      "attempts": [
+        {
+          "stage": "initial description",
+          "outcome": "timedOut",
+          "limitMs": 60000,
+          "frames": 0,
+          "samples": 0
+        },
+        {
+          "stage": "second description after I/O recovery",
+          "outcome": "timedOut",
+          "limitMs": 60000,
+          "frames": 14,
+          "samples": 53760
+        },
+        {
+          "stage": "warmed controls",
+          "description": {
+            "outcome": "succeeded",
+            "samples": 145920,
+            "rms": 0.07464109041402552,
+            "elapsedMs": 4814
+          },
+          "reference": {
+            "outcome": "succeeded",
+            "samples": 107520,
+            "rms": 0.09435854846084396,
+            "elapsedMs": 4749
+          },
+          "continuation": {
+            "outcome": "succeeded",
+            "samples": 84480,
+            "rms": 0.09086161386829199,
+            "elapsedMs": 4855
+          },
+          "followingUnsegmentedSixSentences": {
+            "outcome": "timedOut",
+            "frames": 6,
+            "samples": 23040
+          }
+        },
+        {
+          "stage": "repeat controls",
+          "description": {
+            "outcome": "succeeded",
+            "samples": 145920,
+            "elapsedMs": 4922
+          },
+          "reference": {
+            "outcome": "succeeded",
+            "samples": 107520,
+            "elapsedMs": 4553
+          },
+          "continuation": {
+            "outcome": "timedOut",
+            "frames": 0,
+            "samples": 0
+          },
+          "sixSentences": "not reached"
+        },
+        {
+          "stage": "focused final segmented six-sentence preview",
+          "command": "node scripts/check-ai5090-voice.mjs --long-only",
+          "outcome": "timedOut",
+          "frames": 56,
+          "samples": 215040,
+          "limits": "60-second overall, 45-second segment",
+          "realAsr": "not reached"
+        }
+      ],
+      "recovery": "WSL remained alive via detached keep-alive; STT and TTS basic endpoints recovered to HTTP 200 after cold I/O waits; repeated real synthesis still failed. Basic health is not performance or perceptual acceptance.",
+      "aggregateHostMemory": "Windows reported approximately 31.9 GiB physical RAM with 4.4 GiB free and 78.1 GiB virtual memory with 6.8 GiB free. These counters do not by themselves establish the I/O root cause."
+    }
+  },
+  "browser": {
+    "target": "http://127.0.0.1:3910/control/conversation.html",
+    "sixSentenceMacPreview": "Final rebuilt backend, actual Preview draft voice click: TTS succeeded (151 frames), browser playback finished; sensitivity 25 reports 260 ms sustained onset.",
+    "sensitivity": "Actual slider set from 50 to 25; feedback reports 260 ms sustained onset and immediate application; screenshot inspected",
+    "capabilities": "After final backend restart both description and reference inputs are enabled on Mac-local",
+    "physicalMicrophone": "not used in this automated check",
+    "beforePreviewSegmentation": "Actual Preview draft voice click: TTS succeeded (127 frames), browser playback finished"
+  },
+  "retention": "No human recordings, credentials or model artifacts added to Git; generated anchor/reference audio is private temporary data with cleanup.",
+  "exclusions": [
+    "Human audibility, perceptual stability and speaker similarity",
+    "New physical microphone acceptance",
+    "Production, permanent model selection, RTX 3090 qualification",
+    "Saved Assistant VoiceProfile authoring or training",
+    "Publication, pushing or another slice"
+  ],
+  "sourceSha256": {
+    "apps/control-web/conversation.html": "ea0f10d840d992832f25e45cc30c5f542a2b91ee50e9ffa448bf762424ac447b",
+    "apps/control-web/conversation.js": "50b211e6728e52ea5d2d10e37b007bc28d6d56fad71a4ded1460135e303408f7",
+    "apps/control-web/speech-gate.js": "51b79f70a898a5fe934a09c4af71ecd423a1437a22965203459e3e69a2dd56ca",
+    "apps/server/src/runtime/audio.ts": "4ab74bbbdab9b6efbadaa2341382be280ff8469c1f677770676cf674048cafd1",
+    "apps/server/src/index.ts": "f49d0fccaf8b8a6bf8719c7cf33c89543f88b674734f621e8bc19ed6795b107b",
+    "apps/server/src/composition/providers.ts": "ea586fec3f34c3ae2af77c0e5a43dbaacf74d9f3ba35a7061d18cbab6998cd8c",
+    "packages/providers-voxcpm/sidecar/voxcpm_sidecar.py": "980628611325d527f7f0d5fa029a4d8bcbd945c7abe0b7cf364147e53856bbb8",
+    "packages/providers-voxcpm/sidecar/Dockerfile.voice-controls": "55331f044f766369095f9f146701a55c1be1d72767d7e1d70bbe9a561668fd47",
+    "packages/providers-voxcpm/src/provider.ts": "8fcce7b15f82b6b82f2c7f1aecdd485f8953bdaa823f87b1d0b066b8456d4312",
+    "scripts/check-voice-parity.mjs": "c0ee34d237b290b9a44cc64dd820f768de78e466b9bdba3524c5b672fd468550",
+    "scripts/check-voice-settings.mjs": "49fd38c1715de28318447d9092973b468aead4e856b369501998d8b3d2743687",
+    "scripts/check-live-voice.mjs": "e8e054a2e9e02cad34c62407f3ffa72364e1679cfaff0ca8bc6c3d2d3d8ed3dc",
+    "scripts/check-ai5090-voice.mjs": "92ebbc0f734739acce769ed24f0b4d5cb1f1968efb0279de239c46b7e2f1df33",
+    "apps/server/src/runtime/preview-speech.ts": "2f79e55b4a26bdb506872d9e4ff70e79995210d5437c7ca0ca21c9af28605598",
+    "apps/server/test/preview-speech.test.ts": "cea9f71984ba40e9b075a94121e00484f8732492048da976a171e7b0c5fc4446"
+  },
+  "nextAction": "Human Mac-local retest of long replies, voice style and sensitivity before another slice. ai5090 must complete long speech and repeated conditioning within the existing bounds; investigate recurring WSL/container filesystem-read stalls. Obtain separate direction before broader WSL restart/storage/capacity changes affecting other workloads.",
+  "updatedAt": "2026-09-11T04:45:11.272Z"
+}

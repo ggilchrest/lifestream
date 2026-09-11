@@ -5,11 +5,13 @@ const kinds = ["policy", "corePersona", "adaptivePersona", "interactionState", "
 const digest = (content: string) => createHash("sha256").update(content, "utf8").digest("hex");
 const tokens = (content: string) => content.trim() ? content.trim().split(/\s+/u).length : 0;
 
-export type PromptInput = { assistantId: string; sessionId: string; interactionId: string; endpointId: string | null; userInput: string; conversation?: string; memory?: string; world?: string; capabilities?: string; deadlineAt?: string; executionMode?: "live" | "replay" };
+export type PromptInput = { assistantId: string; sessionId: string; interactionId: string; endpointId: string | null; userInput: string; conversation?: string; memory?: string; world?: string; capabilities?: string; deadlineAt?: string; executionMode?: "live" | "replay"; voiceMode?: boolean };
+
+const voicePolicy = " Respond for spoken conversation. Start with a concise complete sentence that addresses the request. Use natural plain language, without emoji, markdown decoration, headings, tables, code fences, internal control tags or stage directions in speech. Ordinary replies should usually be one to three sentences; honor requests for detail. Present complex code, commands, links and tables visually with an accurate brief spoken explanation. Preserve uncertainty; never claim actions or lookups that have not occurred.";
 
 export function buildCanonicalPrompt(input: PromptInput): InferenceRequest {
   const values = [
-    ["policy", "Follow the Assistant contract. Never claim an effect without a governed result.", true, "policy:v1"],
+    ["policy", "Follow the Assistant contract. Never claim an effect without a governed result." + (input.voiceMode ? voicePolicy : ""), true, input.voiceMode ? "policy:spoken-v1" : "policy:v1"],
     ["corePersona", "A user-authored Assistant with provider-neutral identity and bounded behavior.", true, "assistant-profile:generic-v1"],
     ["adaptivePersona", "No adaptive changes are active for this interaction.", true, "adaptive-policy:v1"],
     ["interactionState", `assistant=${input.assistantId};session=${input.sessionId};interaction=${input.interactionId};endpoint=${input.endpointId ?? "none"}`, true, "interaction-scope:v1"],

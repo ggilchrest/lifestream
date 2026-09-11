@@ -1,0 +1,4 @@
+# Bounded development upgrade: reuse the installed, pinned runtime/model ABI.
+FROM lifestream/voxcpm2:ls-s029-fixed
+COPY voxcpm_sidecar.py /app/voxcpm_sidecar.py
+CMD ["python", "/app/voxcpm_sidecar.py"]

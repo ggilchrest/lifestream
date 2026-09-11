@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@ricky0123/vad-web": "0.0.30",
+    "onnxruntime-web": "1.22.0",
     "@lifestream/providers-moonshine": "workspace:*",
     "@lifestream/providers-nemo-speech": "workspace:*",
     "@lifestream/providers-ollama": "workspace:*",
@@ -13,11 +15,12 @@
     "ws": "^8.21.3"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "../../node_modules/.bin/tsc -b && esbuild ../control-web/vad-source.js --bundle --format=esm --outfile=../control-web/vad-bundle.js",
     "typecheck": "tsc -b --pretty false",
     "start": "node dist/index.js"
   },
   "devDependencies": {
+    "esbuild": "0.25.12",
     "@types/ws": "^8.18.1"
   }
 }
