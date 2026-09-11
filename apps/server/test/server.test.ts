@@ -96,6 +96,7 @@ test("fixture Assistant administration persists revisions and requires authority
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/memories`, { method: "POST", headers: auth, body: JSON.stringify({ content: "" }) })).status, 422);
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/preview`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Stale", expectedRevision: 1 }) })).status, 409);
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/preview`, { method: "POST", headers: auth, body: JSON.stringify({ apiKey: "not-accepted" }) })).status, 422);
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ profileId: revision.profileId, expectedActiveRevision: "1" }) })).status, 422);
 });
 
 test("typed-text runtime streams a canonical manifest and fixture response", async (t) => {
