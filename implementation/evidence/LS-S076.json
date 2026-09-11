@@ -1,0 +1,21 @@
+{
+  "slice": "LS-S076",
+  "status": "inProgress",
+  "claimClass": "fixture-and-source-grounded-runtime-implementation",
+  "revision": "d2b2219",
+  "checks": [
+    { "command": "relationship configuration server integration test", "result": "pass", "evidence": "Relationship-scoped preset/control drafts, effective-context omission limits, and revision-checked activation passed with stale activation rejection." },
+    { "command": "pnpm typecheck && pnpm lint && pnpm build && pnpm test:browser-surface && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, lint, build, 10 browser-surface tests, workspace structure and whitespace validation passed." },
+    { "command": "live fixture control-panel inspection", "result": "observed", "evidence": "Rebuilt server served the rendered Relationship settings panel with Balanced/Concise/Coaching presets, bounded sliders, Save draft and Inspect effective context controls." }
+  ],
+  "implemented": [
+    "Relationship-scoped bounded expression controls with explicit preset metadata and draft-before-activation lifecycle.",
+    "Effective-context inspector that reports included and omitted candidate references with limitations and no hidden-thought claim."
+  ],
+  "remaining": [
+    "Complete reset-to-known-good and rollback controls.",
+    "Complete authorized influence cross-check against an actual prepared inference request and rendered two-subject journey.",
+    "Human acceptance of the complete S076 journey remains distinct from this implementation evidence."
+  ],
+  "excluded": ["Production authentication, personal-data import, live deployment, learned-quality, physical/perceptual and production claims."]
+}

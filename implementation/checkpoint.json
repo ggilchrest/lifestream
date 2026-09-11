@@ -4,8 +4,8 @@
   "branch": "main",
   "baseRevision": "30f334e024b9ba00fe04b1d7b84babb19916ad6f",
   "currentRevision": "WORKTREE",
-  "activeSlice": "LS-S075",
-  "sliceStatus": "implemented",
+  "activeSlice": "LS-S076",
+  "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
     "LS-S002",
@@ -68,6 +68,7 @@
     "apps/control-web/conversation.js",
     "apps/control-web/speech-gate.js",
     "apps/control-web/test/approval-ui.test.mjs",
+    "apps/control-web/styles.css",
     "apps/control-web/test/conversation-ui.test.mjs",
     "apps/control-web/test/speech-gate.test.mjs",
     "apps/control-web/test/vad-context.test.mjs",
@@ -108,6 +109,7 @@
     "implementation/evidence/LS-S073.json",
     "implementation/evidence/LS-S074.json",
     "implementation/evidence/LS-S075.json",
+    "implementation/evidence/LS-S076.json",
     "package.json",
     "packages/providers-moonshine/sidecar/moonshine_sidecar.py",
     "packages/providers-moonshine/src/provider.ts",
@@ -167,6 +169,7 @@
   ],
   "changedFiles": [
     "apps/control-web/app.js",
+    "apps/control-web/styles.css",
     "apps/control-web/test/approval-ui.test.mjs",
     "apps/server/src/admin/profile-builder.ts",
     "apps/server/src/index.ts",
@@ -178,6 +181,7 @@
     "implementation/evidence/LS-S071.json",
     "implementation/evidence/LS-S073.json",
     "implementation/evidence/LS-S074.json",
+    "implementation/evidence/LS-S076.json",
     "packages/runtime/src/context/builder.ts",
     "packages/runtime/src/inference/prompt.ts",
     "packages/runtime/test/context.test.ts",
@@ -349,7 +353,7 @@
     "2026-09-11: LS-DEC-040 expanded scope adopted in the independent specification repository; this pass is documentation/planning only. No new implementation, scenario acceptance, provider/model choice or execution permission is implied. Canonical specification adoption commit: 30f8605a8a94f7ab6a45a832885008551ec91411."
   ],
   "blockers": [],
-  "nextAction": "LS-S075 relationship administration is complete at the fixture/source-grounded layer; preserve LS-S056 gates and continue with downstream implementation only after live acceptance is performed. Real-provider, personal-data, physical, perceptual, training and production claims remain unaccepted.",
+  "nextAction": "Continue LS-S076 relationship configuration and influence inspection. Reset/rollback and actual prepared-request cross-check remain. Preserve LS-S056 gates and keep fixture/source-grounded, Human, real-provider, personal-data, physical, perceptual, performance, training and production claims separate.",
   "updatedAt": "2026-09-11T19:07:18Z",
   "updatedBy": "Codex",
   "notes": "Revision 2 voice stabilization: original 60-second-deadline regression, three GPU long browser replies, and final 30-minute GPU/Mac synthetic conversation/recovery runs passed their named functional checks. Both profiles fail observed latency targets; Mac retains up to 8.36-second starvation. GPU qAizVX had 29 whole transcripts, 19 completed voiced replies, nine interruptions and three reconnects with zero starvation; Mac RsEmQ3 had 29 whole transcripts, 17 completed voiced replies, eleven interruptions and three reconnects. Each ends one active turn deliberately at the time limit. No failed turns or late fenced audio in either final run. Mac sampling-boundary cancellation released actual compute in about 105-106 ms with byte-identical original/recovery PCM. Windows startup no-op preserved container start times; SSH exhaustion now leaves the local backend alive. Historical failed tests, host diagnostics, commits and LS-S052 receipt are preserved. Exact identities, exclusions and the next bounded performance experiment are in implementation/evidence/LS-S056-voice-stabilization-v2.json. Physical audibility/AEC/identity remain unverified; no production claim, push, Mac reboot or unrelated feature work. Documentation-only scope reconciliation at public HEAD b45937b44740b23f269d9f6a064f8b5a423fadd1 preserves prior implementation fields, completed list and runtime validation history. No new active slice or runtime evidence is created. Current continuation disposition is stopped by operator instruction; legacy WORKTREE/base/scope fields describe the prior LS-S063 work and must be reconciled on implementation resumption. Specification validation is separate from runtime acceptance."
