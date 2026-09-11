@@ -7,6 +7,23 @@ const frame = (value: number) => { const bytes = Buffer.alloc(4800 * 2); for (le
 
 test("PCM level diagnostic measures energy only, not speech qualification", () => { assert.equal(hasAudioEnergy(frame(0).dataBase64), false); assert.equal(hasAudioEnergy(frame(1200).dataBase64), true); });
 
+test('STT terminal failure is visible and does not poison the next turn', async () => {
+  const events:any[]=[]; let attempts=0;
+  const socket={readyState:1,send:(value:string)=>events.push(JSON.parse(value)),close:()=>undefined};
+  const stt={async *transcribe(){if(++attempts===1)yield {kind:'terminal',outcome:'failed'};else yield {kind:'data',payload:{type:'committed',text:'Recovered.'}};}};
+  const inference={async *generate(){yield {kind:'text',text:'Ready.'};}};
+  const tts={async *synthesize(){yield {kind:'data',segmentId:randomUUID(),frame:frame(1200)};yield {kind:'terminal',outcome:'succeeded'};}};
+  const sessionId=randomUUID(),audioInputId=randomUUID(),session=new AudioSession(socket,{stt:stt as never,inference:inference as never,tts:tts as never},sessionId);
+  await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,expectedSessionRevision:1,endpointId:randomUUID(),audioInputId,format:frame(0).format}}));
+  for(let i=0;i<2;i++){
+    await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(0)}));
+    await session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));
+    if(!i)assert.match(events.at(-1).event.payload.error.message,/Speech recognition failed/);
+  }
+  assert.equal(events.at(-1).event.payload.state,'completed');
+  assert.equal(events.filter(e=>e.type==='transcript').length,1);
+});
+
 test("a multi-sentence reply over 30 seconds gets fresh bounded segment deadlines", async context => {
   context.mock.timers.enable({ apis: ["setTimeout", "Date"] });
   const events: any[] = [], deadlines: number[] = [];

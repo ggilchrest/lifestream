@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "40f51f1ec36c26a0b4a1cfa5ce5928c59078480d",
+  "baseRevision": "f0db723d9919110c6d26c572670a8c3fb808aa25",
   "currentRevision": "WORKTREE",
   "activeSlice": "LS-S056",
   "sliceStatus": "inProgress",
@@ -137,10 +137,15 @@
     "scripts/voice-stabilization-corpus.json"
   ],
   "changedFiles": [
-    "apps/control-web/speech-gate.js",
-    "implementation/checkpoint.json",
-    "packages/providers-voxcpm/VOICE-CONTROLS.md",
-    "scripts/check-vad-continuity.mjs"
+    "apps/control-web/conversation.js",
+    "apps/server/src/composition/providers.ts",
+    "apps/server/src/index.ts",
+    "apps/server/src/runtime/audio.ts",
+    "apps/server/test/audio.test.ts",
+    "apps/server/test/providers.test.ts",
+    "apps/server/test/server.test.ts",
+    "scripts/soak-browser-voice.mjs",
+    "implementation/checkpoint.json"
   ],
   "validation": [
     {
@@ -270,7 +275,7 @@
   ],
   "blockers": [],
   "nextAction": "Finish current bounded mixed browser runs, record measured targets without waiver, and leave the verified local browser for operator audition. No unrelated slices.",
-  "updatedAt": "2026-09-11T07:35:49.358Z",
+  "updatedAt": "2026-09-11T07:59:35.934Z",
   "updatedBy": "Codex",
-  "notes": "Revision 2 voice-usability stabilization is active by explicit operator authorization. Historical receipts and completed commits preserved. RTX 3080 is a required defect-repair target, not optional benchmarking; Mac-only results cannot complete it. Remote changes require exclusive host ownership. Existing synthesis failures and the latest cancelled Mac long-preview rerun are regression defects, not permission gates. Operator confirmed exclusive host-change ownership and authorized non-production Windows service/WSL/host restarts, excluding the Mac host. Original six-sentence 60-second-deadline regression now passed with exact NeMo content; required long GPU browser acceptance remains pending. A later WSL reboot followed virtual swap-device I/O errors; preserved host kernel log identifies offline sdc, not proven GPU capacity failure. The missing Silero 64-sample ONNX history was reproduced with split/missed repeated phrases and corrected at the existing maintained model adapter. Original 448 ms endpointing retained. The trusted spoken policy selects SGLang direct-answer decoding; typed-text defaults and OD-006 model/artifact/context/GPU identities remain unchanged. A 256-token diagnostic measured default reasoning with no answer versus 90 ms first content without reasoning. Three RTX 3080 browser replies (72.64/81.44/91.36 seconds) completed with zero measured starvation; mixed and latency acceptance are still measured separately. Follow-up: a 600-second accelerated negative-input test found a 576 ms within-phrase VAD gap after history correction; model reset did not remove it. End-of-turn silence is therefore 800 ms, separate from 150 ms barge-in qualification, with latency targets unchanged. Full wall-clock soaks remain mandatory; shorter capture probes cannot replace them."
+  "notes": "Revision 2 voice-usability stabilization is active by explicit operator authorization. Historical receipts and completed commits preserved. RTX 3080 is a required defect-repair target, not optional benchmarking; Mac-only results cannot complete it. Remote changes require exclusive host ownership. Existing synthesis failures and the latest cancelled Mac long-preview rerun are regression defects, not permission gates. Operator confirmed exclusive host-change ownership and authorized non-production Windows service/WSL/host restarts, excluding the Mac host. Original six-sentence 60-second-deadline regression now passed with exact NeMo content; required long GPU browser acceptance remains pending. A later WSL reboot followed virtual swap-device I/O errors; preserved host kernel log identifies offline sdc, not proven GPU capacity failure. The missing Silero 64-sample ONNX history was reproduced with split/missed repeated phrases and corrected at the existing maintained model adapter. Original 448 ms endpointing retained. The trusted spoken policy selects SGLang direct-answer decoding; typed-text defaults and OD-006 model/artifact/context/GPU identities remain unchanged. A 256-token diagnostic measured default reasoning with no answer versus 90 ms first content without reasoning. Three RTX 3080 browser replies (72.64/81.44/91.36 seconds) completed with zero measured starvation; mixed and latency acceptance are still measured separately. Follow-up: a 600-second accelerated negative-input test found a 576 ms within-phrase VAD gap after history correction; model reset did not remove it. End-of-turn silence is therefore 800 ms, separate from 150 ms barge-in qualification, with latency targets unchanged. Full wall-clock soaks remain mandatory; shorter capture probes cannot replace them. Current follow-up: readiness now probes actual services with concurrent-call coalescing; STT terminal failures remain visible and the next turn can recover. The 910-second Mac soak failure was a harness reconnect during its own active phrase, not a new VAD failure; input-settled reconnect is required and the exact transcript assertion retained. Both host failures show virtual swap disk I/O failures after Weston crashes. Windows reboot was explicitly authorized and recovery remains under measurement."
 }

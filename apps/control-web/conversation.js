@@ -140,7 +140,7 @@ const voiceMessage=message=>{
       const turn=voiceTurns.get(traceId);if(turn&&!turn.classList.contains("user")){turn.dataset.state=payload.state;turn.querySelector(".turn-state").textContent=payload.state;}
       activeTraceId=null;voiceAnswer=null;activeVoiceTurn=null;bargeInSent=false;
       const failed=payload.state!=="completed"&&payload.state!=="interrupted";
-      if(failed){interruptedTraces.add(traceId);if(interruptedTraces.size>128)interruptedTraces.delete(interruptedTraces.values().next().value);stopPlayback();}
+      if(failed){interruptedTraces.add(traceId);if(interruptedTraces.size>128)interruptedTraces.delete(interruptedTraces.values().next().value);stopPlayback();void refreshBackend();}
       setVoiceState(playingSources.size?"speaking":voiceTurnInFlight?"queued":stream?"listening":"ready",failed?"error":"");
       setStatus("events",`Events: voice ${payload.state}${failed?` — ${payload.error?.message||"speech provider failed"}`:""}`,failed?"error":"");
     }

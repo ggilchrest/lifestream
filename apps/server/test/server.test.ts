@@ -5,8 +5,26 @@ import { join } from "node:path";
 import test from "node:test";
 import { createLifestreamServer } from "../src/index.ts";
 import { loadConfig } from "../src/config/loader.ts";
+import { ProviderRegistry } from "../src/composition/providers.ts";
 
 const config = (root: string) => loadConfig({ defaults: { profile: "test", providers: { inference: "fixture", memory: "fixture", stt: "fixture", tts: "fixture", world: "fixture", capability: "fixture", renderer: "fixture", clock: "fixture" }, storage: { databasePath: join(root, "data", "state.sqlite"), artifactDirectory: join(root, "artifacts") }, authority: { provider: "fixture", authentication: "fixture" }, secretRefs: {} }, profile: {}, environment: {}, cli: {} });
+
+test('readiness refreshes after a provider outage and recovery; liveness does not probe', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'lifestream-fresh-health-'));
+  t.after(() => rm(root, {recursive:true, force:true}));
+  let available = true, calls = 0;
+  t.mock.method(ProviderRegistry.prototype, 'probe', async function(this: ProviderRegistry) {
+    calls++;
+    this.providers.inference = {...this.providers.inference, required:true, status:available?'healthy':'unavailable'};
+  });
+  const app = createLifestreamServer({config:config(root)}); await app.start(); t.after(() => app.shutdown());
+  const base = `http://127.0.0.1:${app.address().port}`;
+  available = false;
+  const before = calls; assert.equal((await fetch(`${base}/health/live`)).status, 200); assert.equal(calls, before);
+  const down = await fetch(`${base}/health`); assert.equal(down.status, 503); assert.equal((await down.json() as any).providers.inference.status, 'unavailable');
+  available = true;
+  const up = await fetch(`${base}/health/ready`); assert.equal(up.status, 200); assert.equal((await up.json() as any).status, 'ready');
+});
 
 test("fixture package exposes distinct health states, UI, and authenticated authority", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-server-"));

@@ -67,7 +67,11 @@ try{
     if(elapsed<negative&&state.turns)throw new Error('Synthetic negative input produced an authoritative turn');
     if(elapsed>negative+150&&state.turns===lastCount&&state.turns===0)throw new Error('Synthetic speech did not become a turn');
     lastCount=state.turns;
-    if(elapsed>=nextReconnect&&await page.locator('#voice-state').textContent()==='Voice state: listening'){await page.locator('#stop-capture').click();await page.locator('#connect').click();await page.waitForFunction(()=>document.querySelector('#capture').textContent==='Capture: running',null,{timeout:15000});record.reconnections=(record.reconnections||0)+1;nextReconnect+=300;}
+    // "Listening" also includes the VAD's candidate-onset window. The old
+    // harness disconnected at the 900-second timer while its own phrase was
+    // already playing, truncating "Please count" before capture reconnected.
+    const inputSettled=await page.evaluate(()=>performance.now()>(window.voiceSoak.inputs.at(-1)?.endMs??0)+2000);
+    if(elapsed>=nextReconnect&&inputSettled&&await page.locator('#voice-state').textContent()==='Voice state: listening'){await page.locator('#stop-capture').click();await page.locator('#connect').click();await page.waitForFunction(()=>document.querySelector('#capture').textContent==='Capture: running',null,{timeout:15000});record.reconnections=(record.reconnections||0)+1;nextReconnect+=300;}
   }
   await page.locator('#stop-capture').click();
   if(!record.metrics.turns.some(turn=>turn.state==='completed'&&turn.audioFrames>0)||!record.metrics.playback||!record.metrics.interrupts.length||!record.reconnections)throw new Error('Missing complete voiced turn, playback, qualified barge-in, or reconnect');

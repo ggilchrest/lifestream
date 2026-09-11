@@ -51,6 +51,7 @@ export class ProviderRegistry {
   readonly stt?: SpeechToTextProvider;
   readonly tts?: VoxCpmProvider;
   private readonly config: RuntimeConfig;
+  private probing: Promise<void> | undefined;
   constructor(config: RuntimeConfig) {
     this.config = config;
     const instances: Record<string, ProviderInstanceHealth> = {};
@@ -69,7 +70,10 @@ export class ProviderRegistry {
 if (config.providers.tts === "voxcpm" && config.ttsProfile) this.tts = new VoxCpmProvider({ baseUrl: config.ttsProfile.endpoint, voiceBundleKey: config.ttsProfile.voiceBundleKey, voiceBundleRevision: config.ttsProfile.voiceBundleRevision, runtimeRevision: config.ttsProfile.runtimeVersion, modelRevision: config.ttsProfile.modelRevision, mappingRevision: config.ttsProfile.mappingRevision, onDiagnostic: event => console.warn(JSON.stringify({ component: "speech-provider", ...event })) });
   }
   async probe(timeoutMs = 2_000): Promise<void> {
-    await Promise.all([this.probeInference(timeoutMs), this.probeStt(timeoutMs), this.probeTts(timeoutMs)]);
+    // Coalesce concurrent readiness callers; do not retain a startup snapshot
+    // after the bounded probe completes. These calls never generate speech.
+    this.probing ??= Promise.all([this.probeInference(timeoutMs), this.probeStt(timeoutMs), this.probeTts(timeoutMs)]).then(() => undefined).finally(() => { this.probing = undefined; });
+    await this.probing;
   }
   private async probeStt(timeoutMs: number): Promise<void> {
     const current = this.providers.stt;

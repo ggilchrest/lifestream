@@ -99,6 +99,7 @@ export class AudioSession {
     try {
       let committed = false;
       for await (const stt of this.deps.stt.transcribe({ deadlineAt: new Date(Math.min(Date.parse(deadlineAt), Date.now() + 30_000)).toISOString(), now: () => new Date().toISOString() }, audio, this.controller.signal)) {
+        if (stt.kind === "terminal" && stt.outcome !== "succeeded") throw new Error(`Speech recognition ${stt.outcome}; check the selected STT service and retry this turn.`);
         if (stt.kind !== "data" || stt.payload.type !== "committed" || committed) continue;
         committed = true;
         send(this.socket, { type: "transcript", interactionTraceId: traceId, state: "committed", text: stt.payload.text });

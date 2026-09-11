@@ -55,6 +55,13 @@ test("Mac providers become healthy only when exact Ollama, Moonshine, and Vox id
     assert.equal(registry.providers.stt?.status, "healthy");
     assert.equal(registry.providers.tts?.status, "healthy");
     assert.equal(registry.ready, true);
+    let probes = 0;
+    globalThis.fetch = async () => { probes++; await new Promise(resolve => setTimeout(resolve, 5)); throw new Error('host stopped'); };
+    await Promise.all([registry.probe(), registry.probe(), registry.probe()]);
+    assert.equal(probes, 3, 'concurrent callers share one probe per provider');
+    assert.equal(registry.ready, false, 'a later outage must replace startup health');
+    assert.equal(registry.providers.stt.status, 'unavailable');
+    assert.match(registry.providers.stt.reason ?? '', /probe failed/);
   } finally { globalThis.fetch = original; }
 });
 
