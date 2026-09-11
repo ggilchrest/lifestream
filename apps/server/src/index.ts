@@ -83,6 +83,7 @@ class AssistantAdminApi {
       if (method === "POST" && parts.length === 8 && parts[7] === "lifecycle") {
         const raw = asObject(body); const status = typeof raw?.status === "string" ? raw.status : ""; const expectedRevision = raw?.expectedRevision; const memoryId = parts[6];
         if (!memoryId || !status) return { status: 422, body: { code: "invalid_memory_transition", message: "memory id and lifecycle status are required" } };
+        if (expectedRevision !== undefined && (typeof expectedRevision !== "number" || !Number.isInteger(expectedRevision) || expectedRevision < 1)) return { status: 422, body: { code: "invalid_memory_transition", message: "expectedRevision must be a positive integer" } };
         try { const memory = this.memories.transition(assistantId, memoryId, status, actor, typeof raw?.reason === "string" ? raw.reason : undefined, expectedRevision === undefined ? undefined : typeof expectedRevision === "number" ? expectedRevision : NaN); return memory ? { status: 200, body: { memory, historyAppended: true } } : { status: 404, body: { code: "not_found", message: "memory not found" } }; }
         catch (error) { const message = error instanceof Error ? error.message : "invalid memory transition"; return { status: message.includes("conflict") ? 409 : 422, body: { code: message.includes("conflict") ? "memory_revision_conflict" : "invalid_memory_transition", message } }; }
       }
