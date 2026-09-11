@@ -273,6 +273,20 @@ test("relationship idempotency receipts survive restart", async (t) => {
   assert.equal(replay.status, 201); assert.equal((await replay.json() as { candidate: { candidateId: string } }).candidate.candidateId, first.candidate.candidateId);
   const listed = await (await fetch(`${secondBase}/api/admin/v1/assistants/${assistant.assistantId}/relationships/${relationship.relationship.relationshipId}`, { headers: secondAuth })).json() as { relationship: { candidates: { candidateId: string }[] } }; assert.deepEqual(listed.relationship.candidates.map((candidate) => candidate.candidateId), [first.candidate.candidateId]);
 });
+test("relationship configuration idempotency receipts survive restart", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "lifestream-relationship-config-idempotency-restart-")); t.after(async () => rm(root, { recursive: true, force: true }));
+  const makeApp = () => createLifestreamServer({ config: config(root) });
+  const firstApp = makeApp(); await firstApp.start(); const firstBase = `http://127.0.0.1:${firstApp.address().port}`; const auth = { "content-type": "application/json", "x-lifestream-fixture-session": "config-idempotency-restart", "x-lifestream-fixture-principal": "human", origin: firstBase };
+  const assistant = await (await fetch(`${firstBase}/api/admin/v1/assistants`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Configuration Idempotency Restart Fixture" }) })).json() as { assistantId: string };
+  const relationship = await (await fetch(`${firstBase}/api/admin/v1/assistants/${assistant.assistantId}/relationships`, { method: "POST", headers: auth, body: JSON.stringify({ userId: "human" }) })).json() as { relationship: { relationshipId: string } };
+  const path = `${firstBase}/api/admin/v1/assistants/${assistant.assistantId}/relationships/${relationship.relationship.relationshipId}/configurations`;
+  const first = await (await fetch(path, { method: "POST", headers: auth, body: JSON.stringify({ preset: "concise", controls: { verbosity: 0.2 }, idempotencyKey: "restart-config-1" }) })).json() as { configuration: { configurationId: string } };
+  await firstApp.shutdown();
+  const secondApp = makeApp(); await secondApp.start(); t.after(() => secondApp.shutdown()); const secondBase = `http://127.0.0.1:${secondApp.address().port}`; const secondAuth = { ...auth, origin: secondBase };
+  const replay = await fetch(`${secondBase}/api/admin/v1/assistants/${assistant.assistantId}/relationships/${relationship.relationship.relationshipId}/configurations`, { method: "POST", headers: secondAuth, body: JSON.stringify({ preset: "coaching", idempotencyKey: "restart-config-1" }) });
+  assert.equal(replay.status, 201); assert.equal((await replay.json() as { configuration: { configurationId: string } }).configuration.configurationId, first.configuration.configurationId);
+  const listed = await (await fetch(`${secondBase}/api/admin/v1/assistants/${assistant.assistantId}/relationships/${relationship.relationship.relationshipId}/configurations`, { headers: secondAuth })).json() as { configurations: { configurationId: string }[] }; assert.deepEqual(listed.configurations.map((configuration) => configuration.configurationId), [first.configuration.configurationId]);
+});
 test("relationship-scoped runtime messages use only the authenticated subject context", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-runtime-relationship-")); t.after(async () => rm(root, { recursive: true, force: true }));
   const app = createLifestreamServer({ config: config(root) }); await app.start(); t.after(() => app.shutdown()); const base = `http://127.0.0.1:${app.address().port}`; const auth = (principal: string) => ({ "content-type": "application/json", "x-lifestream-fixture-session": `runtime-relationship-${principal}`, "x-lifestream-fixture-principal": principal, origin: base });
