@@ -1,0 +1,21 @@
+{
+  "slice": "LS-S079",
+  "status": "inProgress",
+  "claimClass": "fixture-and-source-grounded-runtime-implementation",
+  "revision": "working-tree",
+  "checks": [
+    { "command": "training readiness runtime tests", "result": "pass", "evidence": "Dataset manifests require purpose-specific consent and distinct train, validation and test membership; fixture-only exports reject sensitive records." },
+    { "command": "adapter eligibility and revocation tests", "result": "pass", "evidence": "Routing requires approved status, private authenticated Assistant/subject scope, exact base-model/tokenizer/template identity and dataset digest; revoked dependencies fall back and invalidate caches." },
+    { "command": "pnpm typecheck and focused training tests", "result": "pass", "evidence": "Strict typecheck and two focused runtime tests passed; fixture provider seam compiles without selecting a real backend." }
+  ],
+  "implemented": [
+    "Provider-neutral dataset and adapter readiness contracts with provenance, consent, source-family, split, lineage, artifact and compatibility fields.",
+    "Fixture provider seam for dataset preparation and safe adapter routing.",
+    "Fail-closed fallback and cache invalidation for audience mismatch, identity drift, revoked dependencies and non-approved artifacts."
+  ],
+  "remaining": [
+    "Human acceptance of the S079 readiness workflow remains distinct from fixture and source-grounded implementation evidence.",
+    "Actual training, personal-data export, supported backend serving and learned-quality evidence remain separately gated under S082."
+  ],
+  "excluded": ["voice training, real personal data, provider/model selection, live effects, autonomous promotion, deployment, publication and PWCE internals"]
+}
