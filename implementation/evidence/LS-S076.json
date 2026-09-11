@@ -2,11 +2,12 @@
   "slice": "LS-S076",
   "status": "inProgress",
   "claimClass": "fixture-and-source-grounded-runtime-implementation",
-  "revision": "2419d07",
+  "revision": "d4f756f",
   "checks": [
     { "command": "relationship configuration server integration test", "result": "pass", "evidence": "Relationship-scoped preset/control drafts, effective-context omission limits, and revision-checked activation passed with stale activation rejection." },
     { "command": "relationship configuration idempotency test", "result": "pass", "evidence": "Draft creation and activation retries return their original results without duplicate configuration revisions or repeated activation effects." },
-    { "command": "pnpm typecheck && pnpm lint && pnpm build && node --test --experimental-strip-types apps/server/test/server.test.ts && pnpm test:browser-surface && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, lint, build, 16 server tests, 10 browser-surface tests, workspace structure and whitespace validation passed." },
+    { "command": "relationship configuration idempotency restart test", "result": "pass", "evidence": "A configuration draft receipt replays the original configuration after SQLite-backed server restart and the relationship retains one configuration record." },
+    { "command": "pnpm typecheck && pnpm lint && pnpm build && node --test --experimental-strip-types apps/server/test/server.test.ts && pnpm test:browser-surface && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, lint, build, 17 server tests, 10 browser-surface tests, workspace structure and whitespace validation passed." },
     { "command": "live fixture control-panel inspection", "result": "observed", "evidence": "Rebuilt server served the rendered Relationship settings panel with Balanced/Concise/Coaching presets, bounded sliders, Save draft and Inspect effective context controls." }
   ],
   "implemented": [
