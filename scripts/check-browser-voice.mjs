@@ -13,10 +13,13 @@ await page.addInitScript(()=>{
     const response=await originalFetch(...args);
     if(String(args[0]).endsWith('/api/runtime/v1/tts')&&response.ok){
       window.voiceReceiptDone=(async()=>{const reader=response.clone().body.getReader(),decoder=new TextDecoder();let pending='';try{while(true){const {done,value}=await reader.read();if(done)break;pending+=decoder.decode(value,{stream:true});const lines=pending.split('\n');pending=lines.pop();for(const line of lines)if(line)await window.__recordVoiceEvent(JSON.parse(line));}}finally{reader.releaseLock();}})();
+      void window.voiceReceiptDone.catch(()=>{}); // observed below, including intentional cancellation
     }
     return response;
   };
-  window.playbackEvidence={sources:0,ended:0,maxAheadSeconds:0,firstStartMs:null,maxGapSeconds:0,cursor:null};
+  window.playbackEvidence={sources:0,ended:0,stops:[],maxAheadSeconds:0,firstStartMs:null,maxGapSeconds:0,cursor:null};
+  const stop=AudioBufferSourceNode.prototype.stop;
+  AudioBufferSourceNode.prototype.stop=function(...args){window.playbackEvidence.stops.push(performance.now());return stop.apply(this,args);};
   const start=AudioBufferSourceNode.prototype.start;
   AudioBufferSourceNode.prototype.start=function(when,...rest){
     const evidence=window.playbackEvidence,now=this.context.currentTime;
@@ -48,6 +51,27 @@ try{
   assert.equal(await page.locator('#voice-preview-text').inputValue(),spokenText,'browser must not shorten the test corpus');record.configuration.text=spokenText;
   record.playRequestMs=await page.evaluate(()=>performance.now());
   await page.locator('#tts-test').click();
+  if(process.env.VOICE_CANCEL_AFTER_SECONDS){
+    const after=Number(process.env.VOICE_CANCEL_AFTER_SECONDS);assert.ok(after>=1&&after<=90);
+    await page.waitForFunction(after=>window.playbackEvidence.firstStartMs!==null&&performance.now()-window.playbackEvidence.firstStartMs>=after*1000,after,{timeout:150000});
+    assert.match(await page.locator('#events').textContent(),/playing|generating/,'request must still be active at the late cancellation');
+    const fence=await page.evaluate(()=>{const at=performance.now();document.querySelector('#voice-settings-form').requestSubmit();return {at,sources:window.playbackEvidence.sources};});
+    await page.waitForFunction(()=>!document.querySelector('#tts-test').disabled);
+    await page.evaluate(async()=>{await window.voiceReceiptDone.catch(()=>{});});
+    await new Promise(resolve=>setTimeout(resolve,500));
+    const stopped=await page.evaluate(()=>window.playbackEvidence);
+    record.playback=stopped;record.cancelAfterSeconds=after;record.fence=fence;record.outcome='cancelled';
+    assert.ok(record.samples/48000>=after,'late cancellation must follow the declared amount of real speech, not a long stall');
+    assert.equal(stopped.sources,fence.sources,'no old audio may be scheduled after the render fence');
+    const stops=stopped.stops.filter(at=>at>=fence.at);assert.ok(stops.length,'queued browser sources must be stopped');
+    record.cancelToLastStopMs=Math.max(...stops)-fence.at;assert.ok(record.cancelToLastStopMs<=250);
+    // Same page/profile, fresh request after cancellation; no model restart.
+    record=evidence.startCase('recovery',{profile:await page.locator('#runtime-profile').inputValue(),text:'The voice is ready for another turn.'});
+    await page.evaluate(()=>{window.playbackEvidence={sources:0,ended:0,stops:[],maxAheadSeconds:0,firstStartMs:null,maxGapSeconds:0,cursor:null};});
+    await page.locator('#voice-preview-text').fill(record.configuration.text);
+    record.playRequestMs=await page.evaluate(()=>performance.now());
+    await page.locator('#tts-test').click();
+  }
   await page.waitForFunction(()=>/browser playback finished|TTS failed/.test(document.querySelector('#events').textContent),{},{timeout:190000});
   const status=await page.locator('#events').textContent();
   const playback=await page.evaluate(async()=>{await window.voiceReceiptDone;return window.playbackEvidence;});
@@ -55,7 +79,7 @@ try{
   evidence.finish('inProgress');
   assert.equal(playback.ended,playback.sources);assert.ok(playback.sources>0);assert.ok(playback.maxAheadSeconds<3.5,JSON.stringify(playback));
   assert.match(status,/browser playback finished/);assert.deepEqual(errors,[]);
-  if(process.env.VOICE_MIN_AUDIO_SECONDS)assert.ok(record.samples/48000>=Number(process.env.VOICE_MIN_AUDIO_SECONDS),'actual decoded duration is shorter than the declared long case');
+  if(process.env.VOICE_MIN_AUDIO_SECONDS&&!process.env.VOICE_CANCEL_AFTER_SECONDS)assert.ok(record.samples/48000>=Number(process.env.VOICE_MIN_AUDIO_SECONDS),'actual decoded duration is shorter than the declared long case');
   assert.ok(playback.maxGapSeconds<=.25,`browser starvation ${playback.maxGapSeconds.toFixed(3)} seconds exceeds 250 ms`);
   evidence.finish('passed');console.log(JSON.stringify({status,vad,playback,artifacts:evidence.directory,claim:'real provider to headless browser scheduled playback; no physical audibility or live microphone acceptance'}));
 }catch(error){evidence.finish('failed',error);console.error(JSON.stringify({error:error.message,errors,artifacts:evidence.directory}));process.exitCode=1;}
