@@ -79,7 +79,7 @@ class AssistantAdminApi {
     const assistantId = parts[4];
     if (!assistantId) return { status: 422, body: { code: "invalid_request", message: "assistant id required" } };
     const profiles = this.profiles.list(assistantId);
-    if (!profiles.length) return { status: 404, body: { code: "not_found", message: "assistant not found" } };
+    if (!profiles.length || !profiles.some((profile) => profile.createdBy === actor)) return { status: 404, body: { code: "not_found", message: "assistant not found" } };
     if (parts[5] === "relationships") {
       if (method === "GET" && parts.length === 6) return { status: 200, body: { assistantId, relationships: [...this.relationships.values()].filter((item) => item.assistantId === assistantId && item.userId === actor).map((item) => structuredClone(item)) } };
       if (method === "POST" && parts.length === 6) { const raw = asObject(body); const userId = typeof raw?.userId === "string" && raw.userId ? raw.userId : actor; if (userId !== actor) return { status: 403, body: { code: "relationship_scope_denied", message: "relationship scope is not owned by this session" } }; const relationship: RelationshipView = { relationshipId: randomUUID(), assistantId, userId, revision: 1, status: "active", candidates: [] }; this.relationships.set(relationship.relationshipId, relationship); this.persistRelationship(relationship); return { status: 201, body: { relationship: structuredClone(relationship) } }; }

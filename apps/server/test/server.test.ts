@@ -160,6 +160,10 @@ test("shared Assistant administration preserves cross-Assistant isolation", asyn
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${second.assistantId}/memories/${memory.memory.id}/history`, { headers: auth })).status, 404);
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${second.assistantId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ profileId: first.profile.profileId, expectedActiveRevision: null }) })).status, 404);
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${second.assistantId}/import`, { method: "POST", headers: auth, body: JSON.stringify({ schemaVersion: "1.0.0", dataScope: "assistant-profiles", assistantId: first.assistantId, profile: { displayName: "foreign" } }) })).status, 422);
+  const otherAuth = { ...auth, "x-lifestream-fixture-session": "other-session", "x-lifestream-fixture-principal": "other" };
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${first.assistantId}`, { headers: otherAuth })).status, 404);
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${first.assistantId}/memories`, { headers: otherAuth })).status, 404);
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${first.assistantId}/relationships`, { headers: otherAuth })).status, 404);
 });
 
 test("shared Assistant administration preserves memory continuity across restart", async (t) => {
@@ -241,7 +245,7 @@ test("relationship administration is authenticated, scoped, reviewable and CAS p
   const candidateResponse = await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/relationships/${relationship.relationship.relationshipId}/candidates`, { method: "POST", headers: auth, body: JSON.stringify({ content: "Prefers concise replies", source: "synthetic-note", sourceFamily: "fixture", uncertainty: "medium" }) }); assert.equal(candidateResponse.status, 201); const candidate = await candidateResponse.json() as { candidate: { candidateId: string } };
   const decided = await (await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/relationships/${relationship.relationship.relationshipId}/candidates/${candidate.candidate.candidateId}/decision`, { method: "POST", headers: auth, body: JSON.stringify({ decision: "approved", expectedRevision: 2 }) })).json() as { candidate: { status: string } };
   assert.equal(decided.candidate.status, "approved"); assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/relationships/${relationship.relationship.relationshipId}/candidates/${candidate.candidate.candidateId}/decision`, { method: "POST", headers: auth, body: JSON.stringify({ decision: "rejected", expectedRevision: 2 }) })).status, 409);
-  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/relationships`, { method: "GET", headers: { ...auth, "x-lifestream-fixture-principal": "other" } })).status, 200);
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/relationships`, { method: "GET", headers: { ...auth, "x-lifestream-fixture-principal": "other" } })).status, 404);
 });
 test("effective request inspector returns the canonical prepared-memory manifest", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-effective-request-")); t.after(async () => rm(root, { recursive: true, force: true }));
