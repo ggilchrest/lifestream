@@ -46,7 +46,6 @@ const profileDiff = (before: AssistantProfile | null, after: AssistantProfile): 
   if (!before) return Object.keys(after).filter((key) => !["assistantId", "profileId", "revision", "status", "createdAt", "createdBy"].includes(key));
   return [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]));
 };
-const memoryCandidate = (assistantId: string, actor: string, input: Record<string, unknown>): MemoryRecord => { const content = typeof input.content === "string" ? input.content.trim() : ""; if (!content || content.length > 4_000) throw new Error("memory content must be between 1 and 4000 characters"); return { id: randomUUID(), assistantId, content, provenance: { source: "authenticated-administration", actor }, lifecycle: { status: "candidate", revision: 1 }, createdAt: new Date().toISOString() }; };
 class AssistantAdminApi {
   private readonly profiles: AssistantProfileRepository;
   constructor(profiles: AssistantProfileRepository) { this.profiles = profiles; }
