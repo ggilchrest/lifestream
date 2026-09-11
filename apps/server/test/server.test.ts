@@ -61,6 +61,11 @@ test("fixture Assistant administration persists revisions and requires authority
   const revision = await revisionResponse.json() as { profile: { profileId: string; revision: number } }; assert.equal(revision.profile.revision, 2);
   const activatedResponse = await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ profileId: revision.profile.profileId, expectedActiveRevision: null }) }); assert.equal(activatedResponse.status, 200);
   const exported = await (await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/export`, { headers: auth })).json() as { profiles: unknown[] }; assert.equal(exported.profiles.length, 2);
+  const preview = await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/preview`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Preview only", expectedRevision: 2 }) }); assert.equal(preview.status, 200);
+  const previewBody = await preview.json() as { previewOnly: boolean; draft: { displayName: string }; changedFields: string[] }; assert.equal(previewBody.previewOnly, true); assert.equal(previewBody.draft.displayName, "Preview only"); assert.ok(previewBody.changedFields.includes("displayName"));
+  const unchanged = await (await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}`, { headers: auth })).json() as { profiles: unknown[] }; assert.equal(unchanged.profiles.length, 2, "preview must not persist a revision");
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/preview`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Stale", expectedRevision: 1 }) })).status, 409);
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/preview`, { method: "POST", headers: auth, body: JSON.stringify({ apiKey: "not-accepted" }) })).status, 422);
 });
 
 test("typed-text runtime streams a canonical manifest and fixture response", async (t) => {

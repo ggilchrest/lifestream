@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "2f32b7c0b39e68a183033e4821516c3da4b6c509",
+  "baseRevision": "30f334e024b9ba00fe04b1d7b84babb19916ad6f",
   "currentRevision": "WORKTREE",
   "activeSlice": "LS-S056",
   "sliceStatus": "inProgress",
@@ -137,8 +137,9 @@
     "scripts/voice-stabilization-corpus.json"
   ],
   "changedFiles": [
-    "implementation/checkpoint.json",
-    "implementation/evidence/LS-S056-voice-stabilization-v2.json"
+    "apps/server/src/index.ts",
+    "apps/server/test/server.test.ts",
+    "implementation/checkpoint.json"
   ],
   "validation": [
     {
@@ -282,8 +283,8 @@
     "LS-DEC-038 adds an explicitly selected Mac-local development fallback using Ollama Qwen3.5 2B Q4_K_M plus native MLX VoxCPM2 4-bit TTS and compact English Moonshine Tiny STT; no automatic failover or NeMo-equivalent streaming partials are claimed."
   ],
   "blockers": [],
-  "nextAction": "Operator physical voice audition at localhost:3910 (ai5090 selected). Bounded automated stabilization run finished with explicit latency/RTF and Mac starvation failures; preserve the next measured experiment in the v2 receipt. Do not resume unrelated slices.",
-  "updatedAt": "2026-09-11T08:20:50.157Z",
+  "nextAction": "LS-S062 preview/diff administration repair is implemented; preserve LS-S056 physical/performance gates and continue with the next dependency-ready authorized administration slice after this revision is committed.",
+  "updatedAt": "2026-09-11T09:00:00.000Z",
   "updatedBy": "Codex",
   "notes": "Revision 2 voice stabilization: original 60-second-deadline regression, three GPU long browser replies, and final 30-minute GPU/Mac synthetic conversation/recovery runs passed their named functional checks. Both profiles fail observed latency targets; Mac retains up to 8.36-second starvation. GPU qAizVX had 29 whole transcripts, 19 completed voiced replies, nine interruptions and three reconnects with zero starvation; Mac RsEmQ3 had 29 whole transcripts, 17 completed voiced replies, eleven interruptions and three reconnects. Each ends one active turn deliberately at the time limit. No failed turns or late fenced audio in either final run. Mac sampling-boundary cancellation released actual compute in about 105-106 ms with byte-identical original/recovery PCM. Windows startup no-op preserved container start times; SSH exhaustion now leaves the local backend alive. Historical failed tests, host diagnostics, commits and LS-S052 receipt are preserved. Exact identities, exclusions and the next bounded performance experiment are in implementation/evidence/LS-S056-voice-stabilization-v2.json. Physical audibility/AEC/identity remain unverified; no production claim, push, Mac reboot or unrelated feature work."
 }
