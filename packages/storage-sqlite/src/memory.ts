@@ -58,6 +58,9 @@ export class MemoryRepository {
     const existing = this.get(assistantId, id); if (!existing) return undefined;
     const previousRevision = typeof existing.lifecycle.revision === "number" ? existing.lifecycle.revision : 1;
     if (expectedRevision !== undefined && expectedRevision !== previousRevision) throw new Error("memory revision conflict");
+    const currentStatus = typeof existing.lifecycle.status === "string" ? existing.lifecycle.status : "candidate";
+    const validTransition = currentStatus === "candidate" ? ["active", "invalidated", "contradicted", "superseded"].includes(status) : currentStatus === "active" ? ["invalidated", "contradicted", "superseded"].includes(status) : false;
+    if (!validTransition) throw new Error("invalid memory lifecycle transition");
     const lifecycle = { ...existing.lifecycle, status, revision: previousRevision + 1, changedBy: actor, ...(reason ? { reason } : {}) };
     if (this.database) {
       this.database.transaction((tx) => { tx.run("UPDATE memories SET lifecycle_json = ? WHERE assistant_id = ? AND id = ?", JSON.stringify(lifecycle), assistantId, id); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, previousRevision + 1, "lifecycleChanged", JSON.stringify(lifecycle), new Date().toISOString()); });
