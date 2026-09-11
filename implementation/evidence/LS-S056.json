@@ -1,8 +1,8 @@
 {
   "slice": "LS-S056",
-  "status": "implementationCompleteVerificationPending",
+  "status": "verified",
   "claimClass": "real-provider-development-smoke",
-  "revision": "f8279de",
+  "revision": "72d429f459d4daa36ef5af9ffabedb903f29acf4",
   "checks": [
     {
       "command": "npm --prefix orchestration run runtime:check:mac",
@@ -42,7 +42,12 @@
     {
       "command": "live browser and authenticated runtime profile checks at http://127.0.0.1:3910",
       "result": "pass",
-      "evidence": "The browser exposed Mac-local and ai5090 selection, kept Mac-local active when all required ai5090 transports were unavailable, and displayed mac-local, qwen3.5:2b-q4_K_M, real after a streamed REAL_MODEL_CONFIRMED response. Browser TTS completed 34 scheduled PCM frames; final audible quality remains a Human observation."
+      "evidence": "The browser exposed Mac-local and ai5090 selection, kept Mac-local active when all required ai5090 transports were unavailable, and displayed mac-local, qwen3.5:2b-q4_K_M, real after a streamed REAL_MODEL_CONFIRMED response. Browser TTS completed 34 scheduled PCM frames."
+    },
+    {
+      "command": "operator-confirmed browser physical voice journey",
+      "result": "pass",
+      "evidence": "The operator confirmed browser microphone capture and audible Assistant playback in the localhost conversation surface. This records physical-device/Human confirmation only for the exercised journey; it does not claim perceptual rubric, performance, production, or provider qualification."
     }
   ],
   "implemented": [
@@ -56,7 +61,6 @@
     "truthful provider readiness and failure messaging"
   ],
   "excluded": [
-    "physical microphone and audible-playback Human acceptance",
     "perceptual acceptance",
     "performance qualification",
     "production deployment"
