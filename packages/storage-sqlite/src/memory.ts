@@ -63,9 +63,9 @@ export class MemoryRepository {
     if (!validTransition) throw new Error("invalid memory lifecycle transition");
     const lifecycle = { ...existing.lifecycle, status, revision: previousRevision + 1, changedBy: actor, ...(reason ? { reason } : {}) };
     if (this.database) {
-      this.database.transaction((tx) => { tx.run("UPDATE memories SET lifecycle_json = ? WHERE assistant_id = ? AND id = ?", JSON.stringify(lifecycle), assistantId, id); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, previousRevision + 1, "lifecycleChanged", JSON.stringify(lifecycle), new Date().toISOString()); });
+      this.database.transaction((tx) => { const eventRevision = tx.get<{ revision: number }>("SELECT COALESCE(MAX(revision), 0) + 1 AS revision FROM memory_lifecycle_events WHERE memory_id = ? AND assistant_id = ?", id, assistantId)?.revision ?? 1; tx.run("UPDATE memories SET lifecycle_json = ? WHERE assistant_id = ? AND id = ?", JSON.stringify(lifecycle), assistantId, id); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, eventRevision, "lifecycleChanged", JSON.stringify(lifecycle), new Date().toISOString()); });
       return this.get(assistantId, id);
     }
-    const updated = { ...existing, lifecycle }; this.records.set(id, updated); const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision: previousRevision + 1, eventType: "lifecycleChanged", payload: structuredClone(lifecycle), occurredAt: new Date().toISOString() }); this.events.set(id, events); return structuredClone(updated);
+    const updated = { ...existing, lifecycle }; this.records.set(id, updated); const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision: (events.at(-1)?.revision ?? 0) + 1, eventType: "lifecycleChanged", payload: structuredClone(lifecycle), occurredAt: new Date().toISOString() }); this.events.set(id, events); return structuredClone(updated);
   }
 }
