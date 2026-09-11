@@ -18,6 +18,14 @@ export class MemoryRepository {
     } else { if (this.records.has(copy.id)) throw new Error("memory is immutable"); this.records.set(copy.id, copy); this.events.set(copy.id, [{ memoryId: copy.id, assistantId: copy.assistantId, revision: 1, eventType: "created", payload: structuredClone(copy.lifecycle), occurredAt: copy.createdAt }]); }
     return structuredClone(copy);
   }
+  saveMany(records: MemoryRecord[]): void {
+    if (this.database) {
+      this.database.transaction((tx) => { for (const record of records) { const copy = structuredClone(record); tx.run("INSERT INTO memories (id, assistant_id, content, provenance_json, lifecycle_json, created_at) VALUES (?, ?, ?, ?, ?, ?)", copy.id, copy.assistantId, copy.content, JSON.stringify(copy.provenance), JSON.stringify(copy.lifecycle), copy.createdAt); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", copy.id, copy.assistantId, 1, "created", JSON.stringify(copy.lifecycle), copy.createdAt); } });
+      return;
+    }
+    const seen = new Set<string>(); for (const record of records) { if (seen.has(record.id) || this.records.has(record.id)) throw new Error("memory is immutable"); seen.add(record.id); }
+    for (const record of records) this.save(record);
+  }
   get(assistantId: string, id: string): MemoryRecord | undefined {
     if (this.database) { const row = this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? AND id = ?").get(assistantId, id) as MemoryRow | undefined; return row ? fromRow(row) : undefined; }
     const record = this.records.get(id); return record?.assistantId === assistantId ? structuredClone(record) : undefined;

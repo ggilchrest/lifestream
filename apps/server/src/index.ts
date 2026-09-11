@@ -71,7 +71,7 @@ class AssistantAdminApi {
         if (!records.length || records.length > 1000) return { status: 422, body: { code: "invalid_memory_import", message: "1 to 1000 memories are required" } };
         try {
           const validated: MemoryRecord[] = records.map((value) => { const record = asObject(value); const allowed = ["id", "assistantId", "content", "provenance", "lifecycle", "createdAt"]; if (!record || Object.keys(record).some((key) => !allowed.includes(key)) || record.assistantId !== assistantId || typeof record.id !== "string" || typeof record.content !== "string" || !record.content.trim() || record.content.length > 4_000 || !asObject(record.provenance) || !asObject(record.lifecycle) || typeof record.createdAt !== "string") throw new Error("memory import contains an invalid or foreign record"); return record as unknown as MemoryRecord; });
-          for (const record of validated) this.memories.save(record);
+          this.memories.saveMany(validated);
         } catch (error) { return { status: 422, body: { code: "invalid_memory_import", message: error instanceof Error ? error.message : "memory import failed" } }; }
         return { status: 201, body: { assistantId, imported: records.length, dataScope: "assistant-memories" } };
       }
