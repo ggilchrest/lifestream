@@ -107,6 +107,7 @@ test("fixture Assistant administration persists revisions and requires authority
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/revisions`, { method: "POST", headers: auth, body: JSON.stringify({ corePersona: "not-an-object" }) })).status, 422);
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/revisions`, { method: "POST", headers: auth, body: JSON.stringify({ corePersona: { values: [] } }) })).status, 422);
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/revisions`, { method: "POST", headers: auth, body: JSON.stringify({ adaptivePersonaPolicy: "not-an-object" }) })).status, 422);
+  assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/revisions`, { method: "POST", headers: auth, body: JSON.stringify({ adaptivePersonaPolicy: { dimensions: [{ key: "Warmth", valueType: "number", minimum: 1, maximum: 0 }] } }) })).status, 422);
   assert.equal((await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/revisions`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Stale revision", expectedRevision: 1 }) })).status, 409);
 });
 
