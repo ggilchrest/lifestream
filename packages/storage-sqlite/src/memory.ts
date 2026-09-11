@@ -37,6 +37,13 @@ export class MemoryRepository {
     }
     const record = this.records.get(id); return record?.assistantId === assistantId ? structuredClone(this.events.get(id) ?? []) : [];
   }
+  proposeCorrection(assistantId: string, id: string, proposedContent: string, actor: string): MemoryLifecycleEvent | undefined {
+    const existing = this.get(assistantId, id); if (!existing) return undefined;
+    const history = this.history(assistantId, id); const revision = (history.at(-1)?.revision ?? 0) + 1; const occurredAt = new Date().toISOString(); const payload = { proposedContent, status: "needsReview", actor };
+    if (this.database) { this.database.transaction((tx) => tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, revision, "correctionProposed", JSON.stringify(payload), occurredAt)); }
+    else { const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt }); this.events.set(id, events); }
+    return { memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt };
+  }
   transition(assistantId: string, id: string, status: string, actor: string, reason?: string): MemoryRecord | undefined {
     const allowed = new Set(["candidate", "active", "superseded", "invalidated", "retracted"]);
     if (!allowed.has(status)) throw new Error("unsupported memory lifecycle status");
