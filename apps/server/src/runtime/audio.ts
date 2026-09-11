@@ -97,13 +97,19 @@ export class AudioSession {
     send(this.socket, { type: "turnStarted", interactionTraceId: traceId });
     const audio = async function* () { for (const frame of frames) yield { type: "frame" as const, audioInputId: request.audioInputId, frame }; yield { type: "end" as const, audioInputId: request.audioInputId, nextSequence: frames.length, sampleCount: frames.reduce((total, frame) => total + frame.sampleCount, 0) }; }();
     try {
-      let committed = false;
+      let transcript: string | undefined;
       for await (const stt of this.deps.stt.transcribe({ deadlineAt: new Date(Math.min(Date.parse(deadlineAt), Date.now() + 30_000)).toISOString(), now: () => new Date().toISOString() }, audio, this.controller.signal)) {
         if (stt.kind === "terminal" && stt.outcome !== "succeeded") throw new Error(`Speech recognition ${stt.outcome}; check the selected STT service and retry this turn.`);
-        if (stt.kind !== "data" || stt.payload.type !== "committed" || committed) continue;
-        committed = true;
+        if (stt.kind !== "data" || stt.payload.type !== "committed" || transcript !== undefined) continue;
+        transcript = stt.payload.text;
         send(this.socket, { type: "transcript", interactionTraceId: traceId, state: "committed", text: stt.payload.text });
-        const prompt = buildCanonicalPrompt({ assistantId: this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: request.endpointId, userInput: stt.payload.text, deadlineAt, executionMode: "live", voiceMode: true });
+      }
+      // Finish recognition and its transport/deadline before starting the
+      // independently bounded inference/speech phases. Never emit a completed
+      // answer and only then discover a failed recognition terminal.
+      if (transcript === undefined || !transcript.trim()) throw new Error("speech input did not produce a committed transcript");
+      if (controller.signal.aborted) throw new Error("audio turn interrupted");
+        const prompt = buildCanonicalPrompt({ assistantId: this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: request.endpointId, userInput: transcript, deadlineAt, executionMode: "live", voiceMode: true });
         let answer = "";
         const segmenter = new SpeechSafeSegmenter(360);
         const queue = new SpeechQueue(controller.signal);
@@ -148,8 +154,6 @@ export class AudioSession {
         try { for await (const speech of bufferedStream(synthesis(),controller.signal,64,()=>{if(!controller.signal.aborted){internalFailure=true;controller.abort();}})) {await pacer.admit(speech.frame.sampleCount,speech.frame.format.sampleRateHz,controller.signal);send(this.socket,{type:"audio",interactionTraceId:traceId,chunk:{segmentId:speech.segmentId,frame:speech.frame}});} await generation; }
         catch (error) { internalFailure ||= !controller.signal.aborted; controller.abort(); queue.close(error); await generation.catch(() => {}); throw error; }
         response(this.socket, traceId, this.sequence++, { type: "terminal", state: "completed", finalResponse: null, error: null });
-      }
-      if (!committed) throw new Error("speech input did not produce a committed transcript");
     } catch (error) {
       const interrupted = this.controller.signal.aborted && !timedOut && !internalFailure;
       response(this.socket, traceId, this.sequence++, { type: "terminal", state: interrupted ? "interrupted" : "failed", finalResponse: null, error: problem(interrupted ? "audio_interrupted" : timedOut ? "audio_deadline_exceeded" : "audio_turn_failed", timedOut ? "Voice turn exceeded its 180 second limit; you can try another turn." : error instanceof Error ? error.message : "audio turn failed", traceId, !interrupted) });

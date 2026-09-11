@@ -7,6 +7,20 @@ const frame = (value: number) => { const bytes = Buffer.alloc(4800 * 2); for (le
 
 test("PCM level diagnostic measures energy only, not speech qualification", () => { assert.equal(hasAudioEnergy(frame(0).dataBase64), false); assert.equal(hasAudioEnergy(frame(1200).dataBase64), true); });
 
+test('recognition finishes and releases its transport before inference and playback', async () => {
+  const events:any[]=[]; let released=false;
+  const socket={readyState:1,send:(value:string)=>events.push(JSON.parse(value)),close:()=>undefined};
+  const stt={async *transcribe(){try{yield {kind:'data',payload:{type:'committed',text:'Hello.'}};yield {kind:'terminal',outcome:'succeeded'};}finally{released=true;}}};
+  const inference={async *generate(){assert.equal(released,true,'STT must not retain its socket/deadline across TTS');yield {kind:'text',text:'Ready.'};}};
+  const tts={async *synthesize(){yield {kind:'data',segmentId:randomUUID(),frame:frame(1200)};yield {kind:'terminal',outcome:'succeeded'};}};
+  const sessionId=randomUUID(),audioInputId=randomUUID(),session=new AudioSession(socket,{stt:stt as never,inference:inference as never,tts:tts as never},sessionId);
+  await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,expectedSessionRevision:1,endpointId:randomUUID(),audioInputId,format:frame(0).format}}));
+  await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(0)}));
+  await session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));
+  assert.equal(events.at(-1).event.payload.state,'completed');
+  assert.equal(events.filter(e=>e.event?.payload.type==='terminal').length,1);
+});
+
 test('STT terminal failure is visible and does not poison the next turn', async () => {
   const events:any[]=[]; let attempts=0;
   const socket={readyState:1,send:(value:string)=>events.push(JSON.parse(value)),close:()=>undefined};
