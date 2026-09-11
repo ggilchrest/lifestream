@@ -64,6 +64,7 @@ class AssistantAdminApi {
     if (!profiles.length) return { status: 404, body: { code: "not_found", message: "assistant not found" } };
     if (parts[5] === "memories") {
       if (method === "GET" && parts.length === 6) return { status: 200, body: { assistantId, memories: this.memories.list(assistantId) } };
+      if (method === "GET" && parts.length === 8 && parts[7] === "history") { const memoryId = parts[6]; return memoryId ? { status: 200, body: { assistantId, memoryId, history: this.memories.history(assistantId, memoryId) } } : { status: 422, body: { code: "invalid_request", message: "memory id required" } }; }
       if (method === "POST" && parts.length === 8 && parts[7] === "lifecycle") {
         const raw = asObject(body); const status = typeof raw?.status === "string" ? raw.status : ""; const memoryId = parts[6];
         if (!memoryId || !status) return { status: 422, body: { code: "invalid_memory_transition", message: "memory id and lifecycle status are required" } };
