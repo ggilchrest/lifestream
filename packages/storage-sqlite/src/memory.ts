@@ -52,11 +52,12 @@ export class MemoryRepository {
     else { const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt }); this.events.set(id, events); }
     return { memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt };
   }
-  transition(assistantId: string, id: string, status: string, actor: string, reason?: string): MemoryRecord | undefined {
+  transition(assistantId: string, id: string, status: string, actor: string, reason?: string, expectedRevision?: number): MemoryRecord | undefined {
     const allowed = new Set(["candidate", "active", "superseded", "invalidated", "retracted"]);
     if (!allowed.has(status)) throw new Error("unsupported memory lifecycle status");
     const existing = this.get(assistantId, id); if (!existing) return undefined;
     const previousRevision = typeof existing.lifecycle.revision === "number" ? existing.lifecycle.revision : 1;
+    if (expectedRevision !== undefined && expectedRevision !== previousRevision) throw new Error("memory revision conflict");
     const lifecycle = { ...existing.lifecycle, status, revision: previousRevision + 1, changedBy: actor, ...(reason ? { reason } : {}) };
     if (this.database) {
       this.database.transaction((tx) => { tx.run("UPDATE memories SET lifecycle_json = ? WHERE assistant_id = ? AND id = ?", JSON.stringify(lifecycle), assistantId, id); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, previousRevision + 1, "lifecycleChanged", JSON.stringify(lifecycle), new Date().toISOString()); });
