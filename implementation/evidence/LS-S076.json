@@ -13,7 +13,6 @@
     "Effective-context inspector that reports included and omitted candidate references with limitations and no hidden-thought claim."
   ],
   "remaining": [
-    "Complete reset-to-known-good and rollback controls.",
     "Complete authorized influence cross-check against an actual prepared inference request and rendered two-subject journey.",
     "Human acceptance of the complete S076 journey remains distinct from this implementation evidence."
   ],

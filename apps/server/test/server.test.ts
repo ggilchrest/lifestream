@@ -26,6 +26,20 @@ test('readiness refreshes after a provider outage and recovery; liveness does no
   const up = await fetch(`${base}/health/ready`); assert.equal(up.status, 200); assert.equal((await up.json() as any).status, 'ready');
 });
 
+test("relationship configuration reset and rollback create reviewable drafts", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "lifestream-relationship-reset-")); t.after(async () => rm(root, { recursive: true, force: true }));
+  const app = createLifestreamServer({ config: config(root) }); await app.start(); t.after(() => app.shutdown()); const base = `http://127.0.0.1:${app.address().port}`; const auth = { "content-type": "application/json", "x-lifestream-fixture-session": "relationship-reset", "x-lifestream-fixture-principal": "human", origin: base };
+  const created = await (await fetch(`${base}/api/admin/v1/assistants`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Reset Fixture" }) })).json() as { assistantId: string };
+  const relationship = await (await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/relationships`, { method: "POST", headers: auth, body: JSON.stringify({ userId: "human" }) })).json() as { relationship: { relationshipId: string } };
+  const path = `${base}/api/admin/v1/assistants/${created.assistantId}/relationships/${relationship.relationship.relationshipId}`;
+  const first = await (await fetch(`${path}/configurations`, { method: "POST", headers: auth, body: JSON.stringify({ preset: "balanced" }) })).json() as { configuration: { configurationId: string; revision: number } };
+  await fetch(`${path}/configurations/${first.configuration.configurationId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ expectedRevision: first.configuration.revision }) });
+  const second = await (await fetch(`${path}/configurations`, { method: "POST", headers: auth, body: JSON.stringify({ preset: "coaching" }) })).json() as { configuration: { configurationId: string; revision: number } };
+  await fetch(`${path}/configurations/${second.configuration.configurationId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ expectedRevision: second.configuration.revision }) });
+  const rollback = await fetch(`${path}/configurations/${first.configuration.configurationId}/rollback`, { method: "POST", headers: auth, body: JSON.stringify({ expectedRevision: first.configuration.revision }) }); assert.equal(rollback.status, 201); const rollbackBody = await rollback.json() as { rollbackOf: string; previewOnly: boolean; configuration: { status: string; preset: string } }; assert.equal(rollbackBody.rollbackOf, first.configuration.configurationId); assert.equal(rollbackBody.previewOnly, true); assert.equal(rollbackBody.configuration.status, "draft"); assert.equal(rollbackBody.configuration.preset, "balanced");
+  const reset = await fetch(`${path}/configurations`, { method: "POST", headers: auth, body: JSON.stringify({ action: "reset" }) }); assert.equal(reset.status, 201); const resetBody = await reset.json() as { resetTo: string; configuration: { status: string; preset: string } }; assert.equal(resetBody.resetTo, second.configuration.configurationId); assert.equal(resetBody.configuration.status, "draft"); assert.equal(resetBody.configuration.preset, "coaching");
+});
+
 test("relationship configuration and effective-context inspection stay scoped and revision checked", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-relationship-config-")); t.after(async () => rm(root, { recursive: true, force: true }));
   const app = createLifestreamServer({ config: config(root) }); await app.start(); t.after(() => app.shutdown()); const base = `http://127.0.0.1:${app.address().port}`; const auth = { "content-type": "application/json", "x-lifestream-fixture-session": "relationship-config", "x-lifestream-fixture-principal": "human", origin: base };
