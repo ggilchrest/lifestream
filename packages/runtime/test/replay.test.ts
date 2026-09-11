@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { createReplayManifest, replayTrace, ReplayBlockedError, type ReplayEvent } from "../src/replay/replay.ts";
+import { createLabExperiment, createReplayManifest, replayTrace, runLabComparison, ReplayBlockedError, type ReplayEvent } from "../src/replay/replay.ts";
 
 const source: ReplayEvent[] = [{ id: "event-1", traceId: "trace-1", sequence: 0, eventType: "interaction.received", payload: { text: "hello" } }];
 
@@ -19,4 +19,15 @@ test("missing artifacts block replay and pinned fixture output can be compared",
   assert.throws(() => createReplayManifest({ replayId: "r", sourceTraceId: "t", artifactRefs: [], providerRefs: ["fixture:x"] }), ReplayBlockedError);
   const result = await replayTrace(source, createReplayManifest({ replayId: "r", sourceTraceId: "t", artifactRefs: ["a"], providerRefs: ["fixture:x"] }), { run: async (event) => ({ ...event.payload, replayed: true }) });
   assert.equal(result.comparison.equal, false);
+});
+
+test("Lab requires two isolated representations and excludes held-out scenarios", async () => {
+  const experiment = createLabExperiment({ experimentId: "lab-1", sourceRelationshipId: "relationship-1", sourceConfigurationRevision: "configuration-2", representations: ["recordOriented", "conventionOriented"], promptVariants: ["baseline", "candidate"], controlVariants: ["default"], scenarioIds: ["s1", "held-out"], heldOutScenarioIds: ["held-out"], criteria: [{ id: "fit", description: "appropriate communication", weight: 1 }], repeatedRuns: 2, datasetRef: "fixture:dataset-1", sourceSnapshotRef: "fixture:snapshot-1", providerRefs: ["fixture:inference"], compilerVersion: "fixture-compiler-v1", cacheNamespace: "lab-1-cache", grantNamespace: "lab-1-grants" });
+  const comparison = await runLabComparison(experiment, ["s1", "held-out"], async (scenarioId, representation, variant, repeat) => ({ output: { scenarioId, representation, variant, repeat }, latencyMs: 1, tokenCount: 3 }));
+  assert.equal(comparison.results.length, 12); assert.deepEqual(comparison.heldOutExcluded, ["held-out"]); assert.equal(comparison.variability["recordOriented:candidate"], 2); assert.equal(comparison.limitations.length, 3);
+});
+
+test("Lab rejects live providers and underdeclared criteria", () => {
+  assert.throws(() => createReplayManifest({ replayId: "lab", sourceTraceId: "t", artifactRefs: ["a"], providerRefs: ["live:inference"] }), ReplayBlockedError);
+  assert.throws(() => createLabExperiment({ experimentId: "lab-2", sourceRelationshipId: "r", sourceConfigurationRevision: "c", representations: ["recordOriented", "conventionOriented"], promptVariants: [], controlVariants: [], scenarioIds: ["s"], heldOutScenarioIds: [], criteria: [], repeatedRuns: 2, datasetRef: "d", sourceSnapshotRef: "s", providerRefs: ["fixture:x"], compilerVersion: "v", cacheNamespace: "c", grantNamespace: "g" }), ReplayBlockedError);
 });
