@@ -1,0 +1,34 @@
+{
+  "slice": "LS-S071",
+  "status": "implemented",
+  "claimClass": "fixture-and-source-grounded-runtime-implementation",
+  "revision": "WORKTREE",
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/inference.test.ts apps/server/test/server.test.ts",
+      "result": "pass",
+      "evidence": "Fourteen focused tests passed, including host-owned runtime self-context in the trusted interaction-state section and the authenticated typed-text route manifest; the audio call site supplies the active-session projection."
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "171 public tests passed, including existing inference, audio, cancellation, provider, storage and security coverage."
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm test:browser-surface; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass",
+      "evidence": "Strict typecheck, ESLint, 9 browser-surface tests, workspace structure validation and whitespace validation passed."
+    }
+  ],
+  "implemented": [
+    "typed RuntimeSelfContext with explicit runtime, modality, delivery, endpoint, audience, permission and limitation states",
+    "runtime-owned self-context projection in the trusted interaction-state section with a pinned manifest source reference",
+    "authenticated server-owned projection for typed text and active-session projection for audio turns",
+    "truthful unknown audience and permission fallback when prompt construction has no host context"
+  ],
+  "excluded": [
+    "real-provider or perceptual acceptance",
+    "physical microphone or speaker claims",
+    "personal data, relationship records, training, live effects and production acceptance"
+  ]
+}

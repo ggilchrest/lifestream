@@ -109,7 +109,7 @@ export class AudioSession {
       // answer and only then discover a failed recognition terminal.
       if (transcript === undefined || !transcript.trim()) throw new Error("speech input did not produce a committed transcript");
       if (controller.signal.aborted) throw new Error("audio turn interrupted");
-        const prompt = buildCanonicalPrompt({ assistantId: this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: request.endpointId, userInput: transcript, deadlineAt, executionMode: "live", voiceMode: true });
+        const prompt = buildCanonicalPrompt({ assistantId: this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: request.endpointId, userInput: transcript, deadlineAt, executionMode: "live", voiceMode: true, runtimeSelfContext: { sourceRevision: "runtime-self-context:v1", runtimeStatus: "ready", inputModalities: { text: "active", microphone: "activeForSession", visual: "notConfigured" }, outputModalities: { text: "active", speechGeneration: "healthy", speechDelivery: "active", presentation: "notConfigured" }, endpointScope: "sessionEndpoint", audienceScope: "authenticatedSession", permissionState: "authenticatedSession", limitations: ["Received audio proves a session input, not physical microphone permission beyond the submitted frames.", "Server delivery is not evidence of physical audibility.", "Visual input is not configured."] } });
         let answer = "";
         const segmenter = new SpeechSafeSegmenter(360);
         const queue = new SpeechQueue(controller.signal);
