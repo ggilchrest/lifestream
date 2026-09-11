@@ -1,9 +1,11 @@
 import { createHash } from "node:crypto";
 import type { InferenceRequest, InferenceSection, InputManifest } from "./port.js";
+import type { PreparedRelationshipContext } from "../context/builder.js";
 
 const kinds = ["policy", "corePersona", "adaptivePersona", "interactionState", "preparedMemory", "worldContext", "capabilityState", "conversation", "userInput"] as const;
 const digest = (content: string) => createHash("sha256").update(content, "utf8").digest("hex");
 const tokens = (content: string) => content.trim() ? content.trim().split(/\s+/u).length : 0;
+const formatPreparedRelationshipContext = (context: PreparedRelationshipContext): string => { const relevant = [...context.relevantContext].sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id)); return [`Prepared relationship context [profile=${context.profileRevision};relationship=${context.relationshipRevision};configuration=${context.configurationRevision}]`, `Approved baseline: ${context.approvedBaseline.join(" | ") || "none"}`, `Critical corrections: ${context.criticalCorrections.join(" | ") || "none"}`, `Relevant context: ${relevant.map((source) => `${source.id}=${source.content}`).join(" | ") || "none"}`, `Limitations: ${context.limitations.join(" | ") || "none"}`].join("\n"); };
 
 export type RuntimeSelfContext = {
   sourceRevision: string;
@@ -16,7 +18,7 @@ export type RuntimeSelfContext = {
   limitations: readonly string[];
 };
 
-export type PromptInput = { assistantId: string; sessionId: string; interactionId: string; endpointId: string | null; userInput: string; conversation?: string; memory?: string; world?: string; capabilities?: string; deadlineAt?: string; executionMode?: "live" | "replay"; voiceMode?: boolean; runtimeSelfContext?: RuntimeSelfContext };
+export type PromptInput = { assistantId: string; sessionId: string; interactionId: string; endpointId: string | null; userInput: string; conversation?: string; memory?: string; preparedRelationshipContext?: PreparedRelationshipContext; world?: string; capabilities?: string; deadlineAt?: string; executionMode?: "live" | "replay"; voiceMode?: boolean; runtimeSelfContext?: RuntimeSelfContext };
 
 const voicePolicy = " Respond for spoken conversation. Start with a concise complete sentence that addresses the request. Use natural plain language, without emoji, markdown decoration, headings, tables, code fences, internal control tags or stage directions in speech. Ordinary replies should usually be one to three sentences; honor requests for detail. Present complex code, commands, links and tables visually with an accurate brief spoken explanation. Preserve uncertainty; never claim actions or lookups that have not occurred.";
 
@@ -28,7 +30,7 @@ export function buildCanonicalPrompt(input: PromptInput): InferenceRequest {
     ["corePersona", "A user-authored Assistant with provider-neutral identity and bounded behavior.", true, "assistant-profile:generic-v1"],
     ["adaptivePersona", "No adaptive changes are active for this interaction.", true, "adaptive-policy:v1"],
     ["interactionState", `assistant=${input.assistantId};session=${input.sessionId};interaction=${input.interactionId};endpoint=${input.endpointId ?? "none"};${selfContextContent}`, true, "runtime-self-context:v1"],
-    ["preparedMemory", input.memory ?? "No prepared memory is available.", false, "memory:prepared-v1"],
+    ["preparedMemory", input.preparedRelationshipContext ? formatPreparedRelationshipContext(input.preparedRelationshipContext) : (input.memory ?? "No prepared memory is available."), Boolean(input.preparedRelationshipContext), input.preparedRelationshipContext ? "relationship-context:prepared-v1" : "memory:prepared-v1"],
     ["worldContext", input.world ?? "No world context is available.", false, "world:prepared-v1"],
     ["capabilityState", input.capabilities ?? "Only bounded read-only capability selection is available.", false, "capability:snapshot-v1"],
     ["conversation", input.conversation ?? "No prior conversation turns are supplied.", false, "conversation:session-v1"],

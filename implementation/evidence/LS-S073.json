@@ -1,0 +1,19 @@
+{
+  "slice": "LS-S073",
+  "status": "implemented",
+  "claimClass": "fixture-and-source-grounded-runtime-implementation",
+  "revision": "WORKTREE",
+  "checks": [
+    { "command": "pnpm test", "result": "pass", "evidence": "173 public tests passed, including deterministic prepared relationship context ordering and mandatory baseline/correction projection." },
+    { "command": "pnpm typecheck && pnpm lint && pnpm build && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, lint, build, workspace structure and whitespace validation passed." }
+  ],
+  "implemented": [
+    "Provider-neutral prepared relationship context formatter with pinned profile, relationship and configuration revisions.",
+    "Mandatory approved baseline and critical corrections are retained ahead of bounded relevant context with explicit limitations.",
+    "Canonical prompt marks the prepared relationship projection trusted with a distinct source reference while preserving optional memory fallback."
+  ],
+  "excluded": [
+    "Real authentication, personal-data import, perceptual quality, physical device behavior, production deployment and Human acceptance.",
+    "Automatic relationship mapping, authority grant inference, model-callable administration and new database/provider routes."
+  ]
+}
