@@ -2,7 +2,7 @@
   "slice": "LS-S079",
   "status": "inProgress",
   "claimClass": "fixture-and-source-grounded-runtime-implementation",
-  "revision": "working-tree",
+  "revision": "818e5ec0e7d2658df9ee53b072098766903f98f7",
   "checks": [
     { "command": "training readiness runtime tests", "result": "pass", "evidence": "Dataset manifests require purpose-specific consent and distinct train, validation and test membership; fixture-only exports reject sensitive records." },
     { "command": "adapter eligibility and revocation tests", "result": "pass", "evidence": "Routing requires approved status, private authenticated Assistant/subject scope, exact base-model/tokenizer/template identity and dataset digest; revoked dependencies fall back and invalidate caches." },
