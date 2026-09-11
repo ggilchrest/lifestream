@@ -64,6 +64,12 @@ class AssistantAdminApi {
     if (!profiles.length) return { status: 404, body: { code: "not_found", message: "assistant not found" } };
     if (parts[5] === "memories") {
       if (method === "GET" && parts.length === 6) return { status: 200, body: { assistantId, memories: this.memories.list(assistantId) } };
+      if (method === "POST" && parts.length === 8 && parts[7] === "lifecycle") {
+        const raw = asObject(body); const status = typeof raw?.status === "string" ? raw.status : ""; const memoryId = parts[6];
+        if (!memoryId || !status) return { status: 422, body: { code: "invalid_memory_transition", message: "memory id and lifecycle status are required" } };
+        try { const memory = this.memories.transition(assistantId, memoryId, status, actor, typeof raw?.reason === "string" ? raw.reason : undefined); return memory ? { status: 200, body: { memory, historyAppended: true } } : { status: 404, body: { code: "not_found", message: "memory not found" } }; }
+        catch (error) { return { status: 422, body: { code: "invalid_memory_transition", message: error instanceof Error ? error.message : "invalid memory transition" } }; }
+      }
       if (method !== "POST" || parts.length !== 6) return { status: 404, body: { code: "not_found", message: "memory operation not found" } };
       const raw = asObject(body); const content = typeof raw?.content === "string" ? raw.content.trim() : "";
       if (!content || content.length > 4_000) return { status: 422, body: { code: "invalid_memory", message: "content must be between 1 and 4000 characters" } };
