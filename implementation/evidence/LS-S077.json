@@ -1,0 +1,24 @@
+{
+  "slice": "LS-S077",
+  "status": "inProgress",
+  "claimClass": "fixture-and-source-grounded-runtime-implementation",
+  "revision": "0c78c78",
+  "checks": [
+    { "command": "dreaming insight lens tests", "result": "pass", "evidence": "Five bounded lenses preserve source-family identity, expose insufficient independent evidence, and require support, counterevidence, uncertainty, intervention, benefit, cost, risk, validation and inverse fields." },
+    { "command": "feedback lane tests", "result": "pass", "evidence": "Explicit reaffirmation/correction are classified as evidence-affecting; helpfulness/style remain communication feedback; salience remains a separate lane; retrieval and repetition do not create support." },
+    { "command": "insight rejection test", "result": "pass", "evidence": "Rejecting a proposed insight returns a cloned rejected proposal, preserves the original object, and rejects a stale second decision." },
+    { "command": "relationship insight server integration test", "result": "pass", "evidence": "Authenticated relationship-scoped insight generation returns five lenses, identifies same-source-family counterevidence, records distinct feedback and rejects an insight without changing active state." },
+    { "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build && pnpm test:browser-surface && node scripts/workspace.mjs check && git diff --check", "result": "pass", "evidence": "Strict typecheck, 187 workspace tests, lint, build, 11 browser-surface tests, workspace structure and whitespace validation passed." },
+    { "command": "live authenticated S077 control-panel journey", "result": "observed", "evidence": "The local browser rendered the authenticated fixture relationship panel, ran the five insight lenses, displayed explicit uncertainty and reversible review fields, and reported that no active state changed." }
+  ],
+  "implemented": [
+    "Provider-independent deterministic insight lenses for evidence quality, communication fit, context use, structure/compression and training opportunity.",
+    "Distinct attributed feedback classification for evidence, communication and salience, with derivative/repetition safeguards.",
+    "Authenticated relationship-scoped insight generation, feedback recording and accepted/rejected review decisions; insight decisions do not directly mutate active relationship state.",
+    "Rendered control-panel workflow for running, inspecting and reviewing insight proposals."
+  ],
+  "remaining": [
+    "Human acceptance of the complete S077 workflow remains distinct from fixture and source-grounded implementation evidence."
+  ],
+  "excluded": ["Production authentication, personal-data import/training, learned-quality, live provider selection, live effects, deployment, publication and PWCE internals."]
+}
