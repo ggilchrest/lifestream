@@ -1,0 +1,253 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S056",
+  "status": "inProgress",
+  "claim": "Bounded two-profile voice usability repair; incomplete responsiveness and Human acceptance are not promoted.",
+  "implementationRevision": "2f32b7c0b39e68a183033e4821516c3da4b6c509",
+  "diagnosticRevision": "d0fbc78645d9fb9d5edeb33e5aaf0474e4581817",
+  "specificationRevision": "c28e0cbb1ed0f477a5557759aebec7ef98e11c1a",
+  "compositionRevision": "475ca8194bd969f0e8359c9a0f4a8f3f50c865e3",
+  "automatedChecks": {
+    "runtimeTests": 165,
+    "browserTests": 8,
+    "pythonLifecycleTests": 6,
+    "failurePreservationTests": 1,
+    "specTests": 46,
+    "compositionTests": 97,
+    "typecheckBuildLintStructureWhitespace": "pass",
+    "preflight": "Only historical invalid immutable LS-S052 prerequisite receipt remains; preserved unchanged.",
+    "windowsRecoveryCases": 11
+  },
+  "privateArtifactRoot": "/Users/gg/.cache/lifestream/voice-stabilization",
+  "originalRegression": {
+    "definition": "Unchanged six-sentence text, 60000 ms total synthesis deadline, 45000 ms per segment; not 60 seconds of decoded audio.",
+    "failedArtifact": "ai5090-original-x5euTG",
+    "passedArtifact": "ai5090-original-1H9a5p",
+    "samples": 714240,
+    "audioSeconds": 14.88,
+    "elapsedMs": 13900,
+    "content": "All six sentences recovered by real NeMo without style preamble.",
+    "monolithicContentArtifact": "speech-content-u5xXmz",
+    "monolithicContent": "Preserved direct-model 12-second recording recovered all six sentences, WER 0. Duration did not prove truncation."
+  },
+  "gpuLongBrowser": [
+    {
+      "artifact": "browser-voice-LJyh0D",
+      "audioSeconds": 72.64,
+      "firstPcmMs": 4032.607,
+      "maxStarvationSeconds": 0
+    },
+    {
+      "artifact": "browser-voice-cvAhtE",
+      "audioSeconds": 81.44,
+      "firstPcmMs": 426.2435,
+      "maxStarvationSeconds": 0
+    },
+    {
+      "artifact": "browser-voice-dg7zme",
+      "audioSeconds": 91.36,
+      "firstPcmMs": 390.2866,
+      "maxStarvationSeconds": 0
+    }
+  ],
+  "lateGpuCancellation": {
+    "artifact": "browser-voice-pftd2L",
+    "outcome": "passed",
+    "playbackBeforeCancellationSeconds": 65,
+    "pcmBeforeCancellationSeconds": 66.82,
+    "cancelToLastBrowserStopMs": 0.9,
+    "lateScheduledAudio": 0,
+    "maxStarvationSeconds": 0,
+    "samePageRecoverySeconds": 2.72,
+    "recoveryFirstPcmMs": 157.845,
+    "coldFirstPcmMs": 33262.78,
+    "coldResponsiveness": "failed"
+  },
+  "vad": {
+    "artifact": "vad-continuity-dvfPuV",
+    "experiment": "20 frame alignments after 600 seconds of negative audio, then repeated speech and 60-second idle periods through pinned real browser ONNX model.",
+    "controlMaxFalseInternalGapMs": 1056,
+    "utteranceOnlyResetMaxFalseInternalGapMs": 1056,
+    "idleResetMaxFalseInternalGapMs": 544,
+    "idleReset": "63 consecutive frames below probability 0.2, without dropping PCM or changing user onset sensitivity.",
+    "endpointSilenceMs": 800,
+    "balancedBargeQualificationMs": 150,
+    "productionLifecycleNoiseAndShortWords": [
+      "browser-vad-rfqEIb",
+      "browser-vad-q6YA7b",
+      "browser-vad-QYvvPE",
+      "browser-vad-CPxJKq",
+      "browser-vad-xKrusY",
+      "browser-vad-vFI4gf",
+      "browser-vad-PCLwxS",
+      "browser-vad-PkNZwG"
+    ]
+  },
+  "mixedRuns": {
+    "macLocal": {
+      "artifact": "browser-soak-RsEmQ3",
+      "outcome": "passed",
+      "claim": "Specified synthetic conversation and cancellation stability, not latency or physical acceptance",
+      "minutes": 30.1464226757,
+      "wholeTranscripts": 29,
+      "completedVoicedReplies": 17,
+      "interruptedReplies": 11,
+      "activeAtDeliberateEndStop": 1,
+      "failedTurns": 0,
+      "reconnections": 3,
+      "negativeInputMinutes": 10,
+      "negativeTurns": 0,
+      "lateScheduledAudio": 0,
+      "maxStarvationSeconds": 8.3625,
+      "starvationTarget": "failed",
+      "observedLatencyMs": {
+        "samples": 28,
+        "p50": 10993.33,
+        "p95": 16226.43,
+        "max": 16235.63,
+        "claim": "Repeated counting fixture, cold and warm; fails responsiveness targets"
+      },
+      "browserHeapBytes": {
+        "min": 7787902,
+        "peak": 16466263,
+        "last": 9729537
+      },
+      "interruptMessageToLastSourceStopMs": {
+        "max": 0.4,
+        "excludes": "VAD qualification and physical acoustic latency"
+      }
+    },
+    "ai5090": {
+      "artifact": "browser-soak-qAizVX",
+      "outcome": "passed",
+      "minutes": 30.14811698265,
+      "wholeTranscripts": 29,
+      "completedVoicedReplies": 19,
+      "interruptedReplies": 9,
+      "activeAtDeliberateEndStop": 1,
+      "failedTurns": 0,
+      "reconnections": 3,
+      "negativeInputMinutes": 10,
+      "negativeTurns": 0,
+      "lateScheduledAudio": 0,
+      "maxStarvationSeconds": 0,
+      "observedLatencyMs": {
+        "samples": 29,
+        "p50": 7003.43,
+        "p95": 10815.93,
+        "max": 37386.63,
+        "claim": "Repeated counting fixture, cold and warm; fails responsiveness targets, not a production benchmark"
+      },
+      "browserHeapBytes": {
+        "min": 7544487,
+        "peak": 16641987,
+        "last": 10967979
+      },
+      "interruptMessageToLastSourceStopMs": {
+        "max": 0.3,
+        "excludes": "VAD qualification and physical acoustic latency"
+      }
+    },
+    "preservedFailures": [
+      "browser-soak-9Axdah",
+      "browser-soak-ACEFcI",
+      "browser-soak-AO4Bqk",
+      "browser-soak-Irhgtb",
+      "browser-soak-iJ3BMz",
+      "browser-soak-biVIWz",
+      "browser-soak-7wxRHq"
+    ]
+  },
+  "hostRecovery": {
+    "authority": "Operator granted exclusive host ownership and non-production Windows/WSL/service restarts, excluding Mac reboot.",
+    "windowsRebootUtc": "2026-09-11T07:59:02.500Z",
+    "wslBootId": "012620b9-c205-4b4b-9c9a-9b6b05b72598",
+    "startupReceipt": "C:\\AI-Stack\\run\\voice-startup-20260911042709853.json",
+    "startupScriptSha256": "c7fd0a747ce5d877056f1100341763b60f59288c155db17ce9a147000660d12d",
+    "findings": "Two guest failures followed Weston crashes and offline virtual swap-disk I/O errors. No CUDA OOM established. Windows reboot and sequential service restoration completed; recurrence cause remains unproven.",
+    "finalNoOp": {
+      "outcome": "passed",
+      "voiceStartBeforeAndAfter": "2026-09-11T08:32:22.215916136Z",
+      "inferenceStartBeforeAndAfter": "2026-09-11T08:02:45.091564241Z"
+    },
+    "launcherRepair": "Network-route outage caused SSH retry exhaustion and incorrect Mac-local backend shutdown; supervisor now retains backend, never changes selected profile, and bounds retries independently. Connectivity returned without another OS restart.",
+    "startupRepair": "Readiness failure alone no longer replaces a matching running model. Explicit image/state inspection controls recovery; uncertain metadata fails safely. Earlier accidental restart and failed test preserved."
+  },
+  "exclusions": [
+    "Physical microphone, physical audibility and acoustic echo acceptance",
+    "Human naturalness or stable identity approval",
+    "Interactive-grade latency/throughput, especially cold startup and Mac sentence-batch synthesis",
+    "Permanent production provider selection, publication, push or unrelated feature slices",
+    "Non-fixture memory/world/capability/renderer integration",
+    "A single monolithic 60-second decoded model utterance"
+  ],
+  "browserBackendRevision": "9a51bb7b827013097d8f0fcdac6d508416569878",
+  "macComputeCancellation": {
+    "artifact": "transport-mac-local-5L4h6y",
+    "outcome": "passed",
+    "mechanism": "Check cancellation/deadline around pinned MLX feat_decoder.sample; restore method on exit. No decoder or numerical parameter changes; CUDA path unchanged.",
+    "beforePcm": {
+      "cancelToTerminalMs": 1.408,
+      "cleanupMs": 106.019
+    },
+    "afterPcm": {
+      "cancelToTerminalMs": 1.523,
+      "cleanupMs": 104.801
+    },
+    "recovery": {
+      "audioSeconds": 10.881,
+      "firstPcmMs": 1255.326,
+      "effectiveRtf": 0.712711
+    },
+    "originalAndRecoveryPcmSha256": "15a64a4d930937c9ae274225a2e03c6b5ecb897a4fc6fe27b08545e2d9be430d"
+  },
+  "browserFixtureIsolation": {
+    "jitterArtifact": "browser-voice-dUfq9M",
+    "cancelRecoveryArtifact": "browser-voice-wGHjGu",
+    "fixtureTransport": true,
+    "packetIntervalsMs": [
+      70,
+      90,
+      60,
+      100
+    ],
+    "sourcesEnded": 41,
+    "maxGapMs": 10.667,
+    "maxLookaheadMs": 362,
+    "claim": "Known private PCM through actual browser scheduler; not real-provider acceptance"
+  },
+  "gpuBusyHealth": {
+    "artifact": "gpu-busy-health-CL2MTR",
+    "outcome": "passed",
+    "probes": 30,
+    "busyProbes": 8,
+    "maxRoundTripMs": 27.653208
+  },
+  "runDisposition": "stopped",
+  "result": "partially repaired, remaining criterion failed",
+  "stopReason": "Bounded automated stabilization matrix completed; latency/throughput and Mac starvation targets still fail. Physical audibility, AEC and voice identity require operator audition; unrelated slices remain paused.",
+  "completedAt": "2026-09-11T09:50:02Z",
+  "deployedSidecars": {
+    "mac": {
+      "sourceRevision": "2f32b7c0b39e68a183033e4821516c3da4b6c509",
+      "runtime": "mlx-audio@0.5.3",
+      "modelRevision": "dc9e5c187858da5f4a13dc4c247e297339216381"
+    },
+    "ai5090": {
+      "image": "lifestream/voxcpm2:voice-stabilization-v2-admission",
+      "imageDigest": "sha256:94445bfdb108ffe2cd8640264fe1d3c65d31b0a510fdcd2bb788d5e301c20582",
+      "device": "RTX 3080 physical GPU 1 / logical cuda:0",
+      "exclusion": "The later MLX-only cancellation hook does not alter or replace this CUDA image."
+    }
+  },
+  "finalBrowser": {
+    "url": "http://127.0.0.1:3910/control/conversation.html",
+    "selectedProfile": "ai5090",
+    "capture": "stopped",
+    "inference": "healthy",
+    "stt": "healthy",
+    "tts": "healthy",
+    "temporary3911": "stopped"
+  },
+  "nextBoundedExperiment": "Measure first speakable clause versus first provider PCM on the same three ordinary questions, with current description conditioning versus a fixed existing synthetic reference. Attribute inference/segmentation/conditioning delay before tuning; no provider replacement or deadline waiver."
+}

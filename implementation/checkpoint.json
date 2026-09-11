@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "d0fbc78645d9fb9d5edeb33e5aaf0474e4581817",
+  "baseRevision": "2f32b7c0b39e68a183033e4821516c3da4b6c509",
   "currentRevision": "WORKTREE",
   "activeSlice": "LS-S056",
   "sliceStatus": "inProgress",
@@ -137,12 +137,8 @@
     "scripts/voice-stabilization-corpus.json"
   ],
   "changedFiles": [
-    "packages/providers-voxcpm/sidecar/voxcpm_sidecar.py",
-    "packages/providers-voxcpm/VOICE-CONTROLS.md",
-    "scripts/sidecar-http.test.py",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S056-voice-stabilization-v2.json",
-    "scripts/check-voice-transport.mjs"
+    "implementation/evidence/LS-S056-voice-stabilization-v2.json"
   ],
   "validation": [
     {
@@ -274,6 +270,11 @@
       "command": "pnpm test; pnpm test:browser-surface; pnpm lint; pnpm typecheck; pnpm build",
       "result": "pass",
       "evidence": "165 runtime tests and 8 browser tests pass. Twenty phase-offset VAD repetitions reproduce failure in control modes and pass the unchanged endpoint with idle reset. Final real mixed runs remain pending."
+    },
+    {
+      "command": "pnpm test; pnpm test:browser-surface; ../runtime/mac-local/venv/bin/python scripts/sidecar-http.test.py; node scripts/soak-browser-voice.mjs (each explicit profile and synthetic capture environment)",
+      "result": "pass",
+      "evidence": "165 runtime, 8 browser, 6 Python lifecycle, 1 failure-preservation, 46 spec and 97 composition tests; 11 Windows recovery cases. Real 30-minute conversation/recovery checks passed separately from failed performance targets. Exact results in LS-S056-voice-stabilization-v2.json."
     }
   ],
   "decisions": [
@@ -281,8 +282,8 @@
     "LS-DEC-038 adds an explicitly selected Mac-local development fallback using Ollama Qwen3.5 2B Q4_K_M plus native MLX VoxCPM2 4-bit TTS and compact English Moonshine Tiny STT; no automatic failover or NeMo-equivalent streaming partials are claimed."
   ],
   "blockers": [],
-  "nextAction": "Finish current bounded mixed browser runs, record measured targets without waiver, and leave the verified local browser for operator audition. No unrelated slices.",
+  "nextAction": "Operator physical voice audition at localhost:3910 (ai5090 selected). Bounded automated stabilization run finished with explicit latency/RTF and Mac starvation failures; preserve the next measured experiment in the v2 receipt. Do not resume unrelated slices.",
   "updatedAt": "2026-09-11T08:20:50.157Z",
   "updatedBy": "Codex",
-  "notes": "Revision 2 bounded voice stabilization remains active. Runtime 9a51bb7 includes recognition cleanup and idle VAD reset; original failures, long GPU successes, host recovery and responsiveness failures remain separately preserved. Current Mac biVIWz and GPU qAizVX mixed tests exercise unchanged runtime after composition launcher 475ca81 fixed remote SSH exhaustion killing the local backend. Irhgtb retained 26 whole transcripts before that launcher shutdown; iJ3BMz failed STT during the same network-route outage. Windows connectivity recovered without another restart. No Mac reboot, provider change, target waiver, push or unrelated slice. Additional deterministic jitter/cancellation playback diagnostics remain fixture-only; they do not replace real-provider acceptance. Mac biVIWz failed after repeated interruptions because non-yielding MLX sentence generation retained admission beyond the three bounded 5-second waits. Add cooperative cancellation at the pinned MLX feature-sampling method boundary; do not change decoder, model settings, queue limits or GPU service during qAizVX."
+  "notes": "Revision 2 voice stabilization: original 60-second-deadline regression, three GPU long browser replies, and final 30-minute GPU/Mac synthetic conversation/recovery runs passed their named functional checks. Both profiles fail observed latency targets; Mac retains up to 8.36-second starvation. GPU qAizVX had 29 whole transcripts, 19 completed voiced replies, nine interruptions and three reconnects with zero starvation; Mac RsEmQ3 had 29 whole transcripts, 17 completed voiced replies, eleven interruptions and three reconnects. Each ends one active turn deliberately at the time limit. No failed turns or late fenced audio in either final run. Mac sampling-boundary cancellation released actual compute in about 105-106 ms with byte-identical original/recovery PCM. Windows startup no-op preserved container start times; SSH exhaustion now leaves the local backend alive. Historical failed tests, host diagnostics, commits and LS-S052 receipt are preserved. Exact identities, exclusions and the next bounded performance experiment are in implementation/evidence/LS-S056-voice-stabilization-v2.json. Physical audibility/AEC/identity remain unverified; no production claim, push, Mac reboot or unrelated feature work."
 }
