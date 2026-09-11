@@ -34,7 +34,8 @@ try{
   const vad=await page.evaluate(async()=>{
     const {SileroV5}=await import('/control/vad-bundle.js');
     ort.env.wasm.numThreads=1;ort.env.wasm.wasmPaths='/control/';
-    const model=await SileroV5.new(ort,async()=>{const r=await fetch('/control/silero_vad_v5.onnx');return r.arrayBuffer();});
+    const {withSileroContext}=await import('/control/vad-context.js');
+    const model=withSileroContext(await SileroV5.new(ort,async()=>{const r=await fetch('/control/silero_vad_v5.onnx');return r.arrayBuffer();}));
     let maximum=0;const start=performance.now();
     try{for(let i=0;i<100;i++){const {isSpeech}=await model.process(new Float32Array(512));maximum=Math.max(maximum,isSpeech);}}
     finally{await model.release();}

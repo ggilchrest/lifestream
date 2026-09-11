@@ -49,6 +49,16 @@ export class NemoSpeechProvider implements SpeechToTextProvider {
     let wake: (() => void) | undefined;
     let socket: NemoSocket | undefined;
     let socketClosed = false;
+    let timedOut = false;
+    let rejectOpen: ((error: Error) => void) | undefined;
+    const stop = (): void => {
+      socketClosed=true;
+      try { socket?.close(); } catch { /* Connecting transport can already be closed. */ }
+      rejectOpen?.(new Error("speech transport stopped"));wake?.();wake=undefined;
+    };
+    const remainingMs=Date.parse(request.deadlineAt)-Date.parse(request.now());
+    const timer=setTimeout(()=>{timedOut=true;stop();},Math.max(1,Math.min(2_147_483_647,remainingMs)));
+    signal?.addEventListener("abort",stop,{once:true});
     const push = (message: NemoMessage): void => {
       if (queue.length >= MAX_PENDING_MESSAGES) { socket?.close(); return; }
       queue.push(message); wake?.(); wake = undefined;
@@ -60,8 +70,10 @@ export class NemoSpeechProvider implements SpeechToTextProvider {
       socket = this.options.webSocketFactory(socketUrl(this.options.baseUrl));
       socket.onmessage = (event) => { try { push(JSON.parse(event.data) as NemoMessage); } catch { fail(); } };
       socket.onerror = fail;
-      socket.onclose = () => { socketClosed = true; wake?.(); wake = undefined; };
-      await new Promise<void>((resolve, reject) => { socket!.onopen = resolve; const originalError = socket!.onerror; socket!.onerror = () => { originalError?.(); reject(new Error("provider unavailable")); }; });
+      socket.onclose = () => { socketClosed = true; rejectOpen?.(new Error("provider closed before opening"));wake?.(); wake = undefined; };
+      await new Promise<void>((resolve, reject) => { rejectOpen=reject;socket!.onopen = resolve; const originalError = socket!.onerror; socket!.onerror = () => { originalError?.(); reject(new Error("provider unavailable")); }; });
+      rejectOpen=undefined;
+      if(signal?.aborted||timedOut)throw new Error("speech transport stopped");
       socket.send(JSON.stringify({ type: "session.update", session: { sample_rate: EXPECTED_RATE, language: this.options.language ?? "en-US", endpointing_ms: this.options.endpointingMs ?? 1200 } }));
       for await (const item of audio) {
         if (signal?.aborted) { socket.close(); yield { kind: "terminal", sequence: eventSequence, outcome: "cancelled", inputSamples }; return; }
@@ -76,6 +88,7 @@ export class NemoSpeechProvider implements SpeechToTextProvider {
         if (signal?.aborted) { socket.close(); yield { kind: "terminal", sequence: eventSequence, outcome: "cancelled", inputSamples }; return; }
         if (socketClosed && queue.length === 0) throw new Error("provider stream closed");
         const message = queue.shift() ?? await new Promise<NemoMessage>((resolve) => { wake = () => resolve(queue.shift() ?? { type: "error" }); });
+        if(signal?.aborted||timedOut)throw new Error("speech transport stopped");
         if (message.type === "conversation.item.input_audio_transcription.delta") {
           yield { kind: "data", sequence: eventSequence++, payload: { type: "partial", utteranceId: `${inputId ?? "audio"}:${eventSequence}`, text: message.delta ?? message.text ?? "", startSample: 0, endSample: inputSamples, speakerRef: null, confidence: 0 } };
         } else if (message.type === "conversation.item.input_audio_transcription.completed") {
@@ -87,7 +100,11 @@ export class NemoSpeechProvider implements SpeechToTextProvider {
       yield { kind: "terminal", sequence: eventSequence, outcome: "succeeded", inputSamples };
     } catch {
       socket?.close();
-      yield { kind: "terminal", sequence: eventSequence, outcome: signal?.aborted ? "cancelled" : "failed", inputSamples };
+      yield { kind: "terminal", sequence: eventSequence, outcome: signal?.aborted ? "cancelled" : timedOut ? "timedOut" : "failed", inputSamples };
+    } finally {
+      clearTimeout(timer);signal?.removeEventListener("abort",stop);rejectOpen=undefined;wake=undefined;
+      if(socket){socket.onopen=null;socket.onmessage=null;socket.onerror=null;socket.onclose=null;try{socket.close();}catch{ /* Already closed. */ }}
+      queue.length=0;
     }
   }
 }

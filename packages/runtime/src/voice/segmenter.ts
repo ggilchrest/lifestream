@@ -31,11 +31,13 @@ export function projectSpeech(raw: string): string {
     .replace(/`[^`]*(?:`|$)/gu, " code shown on screen ")
     .replace(/\[\[[\s\S]*?(?:\]\]|$)/gu, "")
     .replace(/!?\[([^\]]*)\]\([^)]*\)/gu, "$1")
-    .replace(/<[^>]*(?:>|$)/gu, "")
+    .replace(/<!--[\s\S]*?(?:-->|$)/gu, "")
+    .replace(/<\/?[a-z][^>]*(?:>|$)/giu, "")
     .replace(/https?:\/\/\S+/gu, "link shown on screen")
     .replace(/^\s*(?:#{1,6}\s+|[-*+]\s+|\d+\.\s+)/gmu, "")
-    .replace(/[*_~]/gu, "")
-    .replace(/[\p{Extended_Pictographic}\p{Emoji_Modifier}\u200d\ufe0f\u20e3]/gu, "")
+    .replace(/(?<![\p{L}\p{N}])_+([^_]+)_+(?![\p{L}\p{N}])/gu, "$1")
+    .replace(/[*~]/gu, "")
+    .replace(/[\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}\u200d\ufe0f\u20e3]/gu, "")
     .replace(/\s+/gu, " ").trim();
 }
 function findBoundary(text: string, maxChars: number): number {
@@ -69,7 +71,7 @@ function findBoundary(text: string, maxChars: number): number {
         index = close + hidden[1]!.length + 2; continue;
       }
     }
-    if (character === "<") angle = true;
+    if (character === "<" && (/^<(?:\/?[a-z]|!)/iu.test(text.slice(index)) || index === text.length-1)) angle = true;
     if (angle) { if (character === ">") angle = false; continue; }
     if (character === "[") bracket++;
     if (character === "]") bracket = Math.max(0, bracket - 1);
@@ -80,6 +82,9 @@ function findBoundary(text: string, maxChars: number): number {
     if (/[.!?;]/u.test(character) && !inAddress) {
       if (character === "." && (/\d\.$/u.test(token) || /^(?:Dr|Mr|Mrs|Ms|Prof|St|vs|etc|e\.g|i\.e)\.$/iu.test(token) || /^[A-Z]\.$/u.test(token))) continue;
       const following = text[index + 1];
+      // A delta ending in a dot might continue as a filename or abbreviation.
+      // Wait for one character of lookahead; flush handles actual response EOF.
+      if (!following && character === ".") return 0;
       if (following && !/[\s"'”’*_]/u.test(following)) continue;
       return index + 1;
     }

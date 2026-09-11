@@ -28,12 +28,13 @@ export class VoiceEvidence {
       record.firstPcmMs??=elapsedMs;
       if(record.lastPcmMs!==null)record.maxPacketGapMs=Math.max(record.maxPacketGapMs,elapsedMs-record.lastPcmMs);
       record.lastPcmMs=elapsedMs;record.samples+=frame.sampleCount;record.frames++;
+      record.sampleRateHz=frame.format?.sampleRateHz??48000;
     }
     if(event.kind==='terminal'){record.outcome=event.outcome;record.terminal=event;record.completedMs=elapsedMs;record.wallElapsedMs=Date.now()-record.startedWall;}
     this.finish('inProgress');
   }
   finish(outcome,error) {
-    const report={outcome,error:error?{name:error.name,message:error.message}:null,elapsedMs:performance.now()-this.started,cases:this.cases.map(({started,...record})=>({...record,elapsedMs:record.completedMs??performance.now()-started,audioSeconds:record.samples/48000,rtf:record.samples?(record.completedMs??performance.now()-started)/1000/(record.samples/48000):null,firstPcmMs:record.firstPcmMs}))};
+    const report={outcome,error:error?{name:error.name,message:error.message}:null,elapsedMs:performance.now()-this.started,cases:this.cases.map(({started,...record})=>({...record,elapsedMs:record.completedMs??performance.now()-started,audioSeconds:record.samples/(record.sampleRateHz??48000),rtf:record.samples?(record.completedMs??performance.now()-started)/1000/(record.samples/(record.sampleRateHz??48000)):null,firstPcmMs:record.firstPcmMs}))};
     writeFileSync(join(this.directory,'result.json'),JSON.stringify(report,null,2)+'\n',{mode:0o600});
     return report;
   }

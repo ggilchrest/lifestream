@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { setTimeout as delay } from "node:timers/promises";
 const PROTOCOL_VERSION = "voxcpm.loopback.v1" as const;
 type ProtocolRequest = { protocolVersion: typeof PROTOCOL_VERSION; requestId: string; correlationId: string; interactionId: string; deadlineAt: string; voiceBundleKey: string; voiceBundleRevision: number; text: string; delivery: Record<string, unknown>; format: { encoding: "pcm_s16le"; sampleRateHz: 48000; channels: 1 } };
 type ProtocolEvent = { kind: "preAudio"; sequence: 0; requestId: string; correlationId: string; voiceBundleRevision: number; requestedDelivery: Record<string, unknown>; appliedDelivery: Record<string, unknown>; degradedDimensions: string[]; mappingRevision: string; effectiveSynthesis: Record<string, unknown>; format: ProtocolRequest["format"]; runtimeRevision: string; modelRevision: string } | { kind: "data"; sequence: number; sampleOffset: number; sampleCount: number; dataBase64: string; format: ProtocolRequest["format"] } | { kind: "terminal"; sequence: number; outcome: "completed" | "cancelled" | "deadlineExceeded" | "retryableProviderFailure" | "nonRetryableProviderFailure" | "malformedRequest" | "unsupportedRequest" | "providerUnavailable"; outputSamples: number; frameCount: number; errorCode?: string };
@@ -27,6 +28,9 @@ export class VoxCpmProvider implements TextToSpeechProvider {
   capabilities(): TtsCapabilities { return { contractVersion: "2.0.0", supportedDimensions: ["urgency", "deliveryMode", "pace", "energy"], degradableDimensions: ["affect", "urgency", "deliveryMode", "pace", "energy"], supportsStreaming: true, maxOutputSamples: 48_000 * 60 }; }
 
   async *synthesize(request: TtsRequest, signal?: AbortSignal): AsyncIterable<TtsEvent> {
+    yield* this.synthesizeAttempt(request,signal,0);
+  }
+  private async *synthesizeAttempt(request: TtsRequest, signal: AbortSignal | undefined, attempt: number): AsyncIterable<TtsEvent> {
     const body: ProtocolRequest = { protocolVersion: PROTOCOL_VERSION, requestId: `${request.delivery.interactionId}:${request.segmentId}`, correlationId: request.decision.decisionId, interactionId: request.delivery.interactionId, deadlineAt: request.deadlineAt, voiceBundleKey: this.options.voiceBundleKey, voiceBundleRevision: this.options.voiceBundleRevision, text: request.text, delivery: request.delivery, format: { encoding: "pcm_s16le", sampleRateHz: 48000, channels: 1 } };
     let nextSequence = 0, nextOffset = 0, frames = 0;
     let degraded: string[] = [];
@@ -74,6 +78,15 @@ export class VoxCpmProvider implements TextToSpeechProvider {
           } else {
             const terminalOnly = event.sequence === 0 && event.outcome !== "completed" && event.outputSamples === 0 && event.frameCount === 0;
             if ((!preAudioSeen && !terminalOnly) || event.outputSamples !== nextOffset || event.frameCount !== frames) throw new Error("protocol terminal counts invalid");
+            // A rejected admission has produced no audio/effect to duplicate.
+            // Retry at most twice within the original absolute deadline, so
+            // non-preemptible sentence cleanup need not lose the next turn.
+            if(terminalOnly&&event.outcome==="providerUnavailable"&&attempt<2&&Date.parse(request.deadlineAt)-Date.now()>100){
+              this.options.onDiagnostic?.({requestId:body.requestId,code:"busy_admission_retry"});
+              await reader!.cancel();reader!.releaseLock();reader=undefined;
+              await delay(100,undefined,{signal:controller.signal});
+              yield* this.synthesizeAttempt(request,signal,attempt+1);return;
+            }
             terminalSeen = true;
             if (event.outcome !== "completed") this.options.onDiagnostic?.({ requestId: body.requestId, code: `remote:${event.outcome}` });
           }

@@ -1,9 +1,10 @@
 import {SileroV5} from './vad-bundle.js';
+import {withSileroContext} from './vad-context.js';
 export class VadStream {
   static async create(onFrame,onError){
     ort.env.wasm.numThreads=1;ort.env.wasm.wasmPaths='/control/';
     const model=await SileroV5.new(ort,async()=>{const response=await fetch('/control/silero_vad_v5.onnx');if(!response.ok)throw new Error('Local speech detector model unavailable');return response.arrayBuffer();});
-    return new VadStream(model,onFrame,onError);
+    return new VadStream(withSileroContext(model),onFrame,onError);
   }
   constructor(model,onFrame,onError){this.model=model;this.onFrame=onFrame;this.onError=onError;this.pending=new Float32Array(0);this.frames=[];this.running=false;this.closed=false;}
   push(chunk){

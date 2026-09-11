@@ -6,7 +6,7 @@ export class PcmPacer {
   private cursor=0;
   async admit(samples:number,rate:number,signal:AbortSignal):Promise<void>{
     signal.throwIfAborted();
-    if(!Number.isInteger(samples)||samples<1||samples>rate)throw new Error('PCM packet exceeds one second');
+    if(![16000,24000,48000].includes(rate)||!Number.isInteger(samples)||samples<1||samples>rate)throw new Error('Invalid PCM rate or packet exceeds one second');
     const wait=this.cursor-performance.now()-1500;
     if(wait>0)await delay(wait,undefined,{signal});
     signal.throwIfAborted();

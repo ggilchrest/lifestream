@@ -10,6 +10,23 @@ class FakeSocket {
   send(data: string | ArrayBuffer): void { this.sent.push(data); if (typeof data === "string" && data.includes("input_audio_buffer.commit")) { queueMicrotask(() => this.onmessage?.({ data: JSON.stringify({ type: "conversation.item.input_audio_transcription.delta", delta: "hello" }) })); queueMicrotask(() => this.onmessage?.({ data: JSON.stringify({ type: "conversation.item.input_audio_transcription.completed", transcript: "hello." }) })); } }
   close(): void { this.onclose?.(); }
 }
+test("NeMo cancellation and deadlines settle both unopened and silent sockets",async()=>{
+  for(const open of [false,true])for(const cancel of [false,true]){
+    const socket=new FakeSocket();socket.send=data=>socket.sent.push(data);
+    const controller=new AbortController();
+    const provider=new NemoSpeechProvider({baseUrl:'http://stt.invalid',model:'test',webSocketFactory:()=>{if(open)queueMicrotask(()=>socket.onopen?.());return socket;}});
+    const timer=cancel?setTimeout(()=>controller.abort(),10):undefined;
+    try{const events=[];for await(const event of provider.transcribe({deadlineAt:new Date(Date.now()+25).toISOString(),now:()=>new Date().toISOString()},audio(),controller.signal))events.push(event);
+      assert.equal(events.at(-1)?.outcome,cancel?'cancelled':'timedOut');assert.equal(socket.onmessage,null);assert.equal(socket.onclose,null);
+    }finally{clearTimeout(timer);}
+  }
+});
+test("abandoning a partial transcript closes and detaches the NeMo transport",async()=>{
+  const socket=new FakeSocket();let closed=0;socket.close=()=>{closed++;socket.onclose?.();};
+  const provider=new NemoSpeechProvider({baseUrl:'http://stt.invalid',model:'test',webSocketFactory:()=>{queueMicrotask(()=>socket.onopen?.());return socket;}});
+  for await(const event of provider.transcribe({deadlineAt:new Date(Date.now()+1000).toISOString(),now:()=>new Date().toISOString()},audio())){assert.equal(event.kind,'data');break;}
+  assert.ok(closed>0);assert.equal(socket.onmessage,null);
+});
 
 test("NeMo adapter maps realtime partial and committed events without claiming turn authority", async () => {
   const socket = new FakeSocket();

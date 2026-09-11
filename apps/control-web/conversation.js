@@ -1,6 +1,6 @@
 import {VadStream} from './vad-stream.js';
 let vadStream=null,captureContext=null;
-import {SpeechGate} from './speech-gate.js';
+import {SpeechGate,PRE_ROLL_FRAMES,END_SILENCE_SECONDS} from './speech-gate.js';
 const speechGate=new SpeechGate(50);let voicePreRoll=[];
 const fixtureHeaders={"content-type":"application/json","x-lifestream-fixture-session":"browser-conversation","x-lifestream-fixture-principal":"human"};
 const $=id=>document.getElementById(id);let stream=null,audioContext=null,analyser=null,captureProcessor=null,captureChunks=[],levelFrame=0,requestController=null,ttsCursor=0,audioSocket=null,voiceSessionId=null,voiceInputId=null,voiceSequence=0,voiceOffset=0,voicePending=new Float32Array(0),voiceSpeaking=false,voiceSilenceFrames=0,voiceTurnInFlight=false,voicePendingTurns=0,bargeInSent=false,activeTraceId=null,voiceAnswer=null,activeVoiceTurn=null,voiceTurns=new Map(),activeProfile="unavailable",playingSources=new Set(),playbackTraceId=null,ttsTestRunning=false;const interruptedTraces=new Set();
@@ -154,7 +154,7 @@ const captureVoiceChunk=(chunk,probability)=>{
   const inputRate=16000;
   let input=chunk;
   if(!voiceSpeaking){
-    voicePreRoll.push(chunk);while(voicePreRoll.length>Math.ceil(inputRate*.28/chunk.length))voicePreRoll.shift();
+    voicePreRoll.push(chunk);while(voicePreRoll.length>PRE_ROLL_FRAMES)voicePreRoll.shift();
     if(!speechGate.update(probability,chunk.length/inputRate*1000,playingSources.size>0))return;
     input=new Float32Array(voicePreRoll.reduce((sum,c)=>sum+c.length,0));let offset=0;for(const c of voicePreRoll){input.set(c,offset);offset+=c.length;}voicePreRoll=[];speechGate.reset();
     if((activeTraceId||playingSources.size)&&!bargeInSent){const interrupted=activeTraceId||playbackTraceId;if(interrupted){interruptedTraces.add(interrupted);if(interruptedTraces.size>128)interruptedTraces.delete(interruptedTraces.values().next().value);audioSocket?.send(JSON.stringify({type:"interrupt",interactionTraceId:interrupted,reason:"barge-in speech detected"}));}stopPlayback();bargeInSent=true;setVoiceState("barge-in captured");}
@@ -163,7 +163,7 @@ const captureVoiceChunk=(chunk,probability)=>{
   if(probability>=speechGate.negativeThreshold)voiceSilenceFrames=0;else voiceSilenceFrames++;
   const converted=resample16k(input,inputRate),merged=new Float32Array(voicePending.length+converted.length);merged.set(voicePending);merged.set(converted,voicePending.length);voicePending=merged;
   while(voicePending.length>=4800){sendVoiceFrame(voicePending.slice(0,4800));voicePending=voicePending.slice(4800);}
-  if(voiceSilenceFrames*chunk.length/inputRate>=.448||voiceOffset+voicePending.length>=16000*20){commitVoiceTurn();speechGate.reset();voicePreRoll=[];}
+  if(voiceSilenceFrames*chunk.length/inputRate>=END_SILENCE_SECONDS||voiceOffset+voicePending.length>=16000*20){commitVoiceTurn();speechGate.reset();voicePreRoll=[];}
 };
 async function ttsTest(){
   if(ttsTestRunning)return;

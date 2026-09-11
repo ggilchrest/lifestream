@@ -4,6 +4,7 @@ import {VoiceEvidence} from './voice-evidence.mjs';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const evidence=new VoiceEvidence('browser-soak');
 const seconds=Number(process.env.VOICE_SOAK_SECONDS||1800),negative=Number(process.env.VOICE_NEGATIVE_SECONDS||600);
+const expectedTranscript=process.env.VOICE_EXPECT_TRANSCRIPT?new RegExp(process.env.VOICE_EXPECT_TRANSCRIPT,'iu'):null;
 if(!process.env.VOICE_FIXTURE_PCM)throw new Error('Provide private synthetic speech PCM (mono 48 kHz)');
 const pcm=readFileSync(process.env.VOICE_FIXTURE_PCM);if(pcm.length>48000*2*30)throw new Error('Fixture exceeds 30 seconds');
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--autoplay-policy=no-user-gesture-required']});
@@ -62,10 +63,11 @@ try{
     if(errors.length||state.capture!=='Capture: running')throw new Error(JSON.stringify({errors,state}));
     const failed=metrics.turns.filter(turn=>turn.state==='failed');if(failed.length)throw new Error(JSON.stringify(failed));
     if(metrics.lateScheduled)throw new Error('Late fenced audio was scheduled');
+    if(expectedTranscript)for(const turn of metrics.turns)if(turn.transcript&&!expectedTranscript.test(turn.transcript))throw new Error(`Unexpected fixture transcript: ${turn.transcript}`);
     if(elapsed<negative&&state.turns)throw new Error('Synthetic negative input produced an authoritative turn');
     if(elapsed>negative+150&&state.turns===lastCount&&state.turns===0)throw new Error('Synthetic speech did not become a turn');
     lastCount=state.turns;
-    if(elapsed>=nextReconnect){await page.locator('#stop-capture').click();await page.locator('#connect').click();await page.waitForFunction(()=>document.querySelector('#capture').textContent==='Capture: running',null,{timeout:15000});record.reconnections=(record.reconnections||0)+1;nextReconnect+=300;}
+    if(elapsed>=nextReconnect&&await page.locator('#voice-state').textContent()==='Voice state: listening'){await page.locator('#stop-capture').click();await page.locator('#connect').click();await page.waitForFunction(()=>document.querySelector('#capture').textContent==='Capture: running',null,{timeout:15000});record.reconnections=(record.reconnections||0)+1;nextReconnect+=300;}
   }
   await page.locator('#stop-capture').click();
   if(!record.metrics.turns.some(turn=>turn.state==='completed'&&turn.audioFrames>0)||!record.metrics.playback||!record.metrics.interrupts.length||!record.reconnections)throw new Error('Missing complete voiced turn, playback, qualified barge-in, or reconnect');

@@ -14,7 +14,13 @@ test("internal diagnostics distinguish busy and redact arbitrary transport messa
     const provider=new VoxCpmProvider({baseUrl:"http://tts.invalid",voiceBundleKey:"fixture",voiceBundleRevision:1,runtimeRevision:"r",modelRevision:"m",mappingRevision:"map",onDiagnostic:event=>diagnostics.push(event),fetch:async()=>{if(!busy)throw new Error("private request or secret");return response(JSON.stringify({kind:"terminal",sequence:0,outcome:"providerUnavailable",outputSamples:0,frameCount:0})+"\n");}});
     for await(const event of provider.synthesize(request))assert.equal(event.kind,"terminal");
   }
-  assert.deepEqual(diagnostics,[{requestId:"interaction-1:segment-1",code:"remote:providerUnavailable"},{requestId:"interaction-1:segment-1",code:"transport_or_parse_failure"}]);
+  assert.deepEqual(diagnostics,[{requestId:"interaction-1:segment-1",code:"busy_admission_retry"},{requestId:"interaction-1:segment-1",code:"busy_admission_retry"},{requestId:"interaction-1:segment-1",code:"remote:providerUnavailable"},{requestId:"interaction-1:segment-1",code:"transport_or_parse_failure"}]);
+});
+test("busy admission retries have no duplicate audio and preserve the original deadline",async()=>{
+  const deadlines:string[]=[];
+  const provider=new VoxCpmProvider({baseUrl:"http://tts.invalid",voiceBundleKey:"fixture",voiceBundleRevision:1,runtimeRevision:"19b6bf7590025418821a86dcb817504e0ad7e5df",modelRevision:"hf-snapshot",mappingRevision:"voxcpm2-map-1",fetch:async(_url,init)=>{deadlines.push(JSON.parse(String(init?.body)).deadlineAt);return response(deadlines.length<3?JSON.stringify({kind:"terminal",sequence:0,outcome:"providerUnavailable",outputSamples:0,frameCount:0})+'\n':stream());}});
+  const events=[];for await(const event of provider.synthesize(request))events.push(event);
+  assert.deepEqual(events.map(e=>e.kind),['preAudio','data','terminal']);assert.deepEqual(deadlines,[request.deadlineAt,request.deadlineAt,request.deadlineAt]);
 });
 
 test("negotiated voice controls remain available while the single worker is busy", async () => {
