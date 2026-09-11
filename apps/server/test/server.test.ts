@@ -26,6 +26,19 @@ test('readiness refreshes after a provider outage and recovery; liveness does no
   const up = await fetch(`${base}/health/ready`); assert.equal(up.status, 200); assert.equal((await up.json() as any).status, 'ready');
 });
 
+test("relationship configuration and effective-context inspection stay scoped and revision checked", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "lifestream-relationship-config-")); t.after(async () => rm(root, { recursive: true, force: true }));
+  const app = createLifestreamServer({ config: config(root) }); await app.start(); t.after(() => app.shutdown()); const base = `http://127.0.0.1:${app.address().port}`; const auth = { "content-type": "application/json", "x-lifestream-fixture-session": "relationship-config", "x-lifestream-fixture-principal": "human", origin: base };
+  const created = await (await fetch(`${base}/api/admin/v1/assistants`, { method: "POST", headers: auth, body: JSON.stringify({ displayName: "Configuration Fixture" }) })).json() as { assistantId: string };
+  const relationship = await (await fetch(`${base}/api/admin/v1/assistants/${created.assistantId}/relationships`, { method: "POST", headers: auth, body: JSON.stringify({ userId: "human" }) })).json() as { relationship: { relationshipId: string } };
+  const path = `${base}/api/admin/v1/assistants/${created.assistantId}/relationships/${relationship.relationship.relationshipId}`;
+  const draftResponse = await fetch(`${path}/configurations`, { method: "POST", headers: auth, body: JSON.stringify({ preset: "concise", controls: { verbosity: 0.15 } }) }); assert.equal(draftResponse.status, 201); const draft = await draftResponse.json() as { configuration: { configurationId: string; revision: number; status: string; controls: Record<string, number> } }; assert.equal(draft.configuration.status, "draft"); assert.equal(draft.configuration.controls.verbosity, 0.15);
+  const inspector = await (await fetch(`${path}/effective-context`, { headers: auth })).json() as { activeConfiguration: unknown; limitations: string[] }; assert.equal(inspector.activeConfiguration, null); assert.ok(inspector.limitations.some((item) => item.includes("not causal proof")));
+  assert.equal((await fetch(`${path}/configurations/${draft.configuration.configurationId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ expectedRevision: draft.configuration.revision - 1 }) })).status, 409);
+  assert.equal((await fetch(`${path}/configurations/${draft.configuration.configurationId}/activate`, { method: "POST", headers: auth, body: JSON.stringify({ expectedRevision: draft.configuration.revision }) })).status, 200);
+  const active = await (await fetch(`${path}/effective-context`, { headers: auth })).json() as { activeConfiguration: { preset: string } }; assert.equal(active.activeConfiguration.preset, "concise");
+});
+
 test("fixture package exposes distinct health states, UI, and authenticated authority", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-server-"));
   t.after(async () => rm(root, { recursive: true, force: true }));
