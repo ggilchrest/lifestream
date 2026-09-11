@@ -12,7 +12,7 @@ const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors
 try{
   await page.addInitScript(({base64,negative})=>{
     let context,destination,timer,elapsed=0,replyCount=0,lastBarge=-Infinity,lastAudioTrace;
-    const metrics=window.voiceSoak={turns:[],inputs:[],interrupts:[],stops:[],connections:0,playback:0,lateScheduled:0};const traces=new Map(),fenced=new Set();
+    const metrics=window.voiceSoak={turns:[],inputs:[],interrupts:[],stops:[],connections:0,playback:0,lateScheduled:0,recentCapture:[]};const traces=new Map(),fenced=new Set();let pendingCapture=[];
     const NativeSocket=WebSocket;
     window.WebSocket=class extends NativeSocket{
       constructor(...args){super(...args);metrics.connections++;this.addEventListener('message',event=>{
@@ -24,7 +24,7 @@ try{
         if(message.event?.payload.type==='textDelta')turn.firstTextMs??=performance.now();
         if(message.event?.payload.type==='terminal'){turn.state=message.event.payload.state;turn.error=message.event.payload.error;turn.endMs=performance.now();}
       });}
-      send(value){const message=JSON.parse(value);if(message.type==='interrupt'){metrics.interrupts.push({id:message.interactionTraceId,at:performance.now()});fenced.add(message.interactionTraceId);}return super.send(value);}
+      send(value){const message=JSON.parse(value);if(message.type==='frame'){pendingCapture.push(message.frame);if(pendingCapture.length>100)pendingCapture.shift();}if(message.type==='commitTurn'){metrics.recentCapture.push({at:performance.now(),sampleCount:message.sampleCount,frames:pendingCapture});pendingCapture=[];if(metrics.recentCapture.length>2)metrics.recentCapture.shift();}if(message.type==='interrupt'){metrics.interrupts.push({id:message.interactionTraceId,at:performance.now()});fenced.add(message.interactionTraceId);}return super.send(value);}
     };
     const originalStart=AudioBufferSourceNode.prototype.start,originalStop=AudioBufferSourceNode.prototype.stop;
     AudioBufferSourceNode.prototype.start=function(...args){if(this.context!==context){metrics.playback++;if(fenced.has(lastAudioTrace))metrics.lateScheduled++;const turn=traces.get(lastAudioTrace);if(turn){const when=args[0]??this.context.currentTime;turn.firstScheduledMs??=performance.now()+(when-this.context.currentTime)*1000;if(turn.cursor!==undefined)turn.maxGapSeconds=Math.max(turn.maxGapSeconds||0,when-turn.cursor);turn.cursor=when+(this.buffer?.duration||0);}}return originalStart.apply(this,args);};
@@ -49,6 +49,7 @@ try{
     };
   },{base64:pcm.toString('base64'),negative});
   await page.goto(process.env.VOICE_TEST_URL||'http://127.0.0.1:3910/control/conversation.html');
+  await page.evaluate(async()=>{const {VadStream}=await import('/control/vad-stream.js'),create=VadStream.create;window.voiceSoak.vad=[];VadStream.create=async(onFrame,onError)=>create.call(VadStream,(frame,p)=>{const history=window.voiceSoak.vad;history.push({at:performance.now(),p});if(history.length>2048)history.shift();onFrame(frame,p);},onError);});
   await page.waitForFunction(()=>document.querySelector('#connection').textContent==='Connected');
   if(process.env.VOICE_TEST_PROFILE){await page.locator('#runtime-profile').selectOption(process.env.VOICE_TEST_PROFILE);await page.locator('#apply-profile').click();await page.waitForFunction(profile=>document.querySelector('#active-profile-badge').textContent===profile,process.env.VOICE_TEST_PROFILE);}
   await page.locator('#connect').click();
