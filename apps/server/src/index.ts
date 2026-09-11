@@ -40,7 +40,7 @@ const validateAdminDraft = (value: unknown): Record<string, unknown> => {
   if (!input) throw new Error("administration draft must be an object");
   const walk = (entry: unknown): void => { if (!entry || typeof entry !== "object") return; for (const [key, child] of Object.entries(entry)) { if (forbiddenAdminKey.test(key)) throw new Error("secret-bearing administration fields are not accepted"); walk(child); } };
   walk(input);
-  const supported = ["displayName", "corePersona", "adaptivePersonaPolicy", "voiceProfile", "embodimentProfile", "presentationProfile", "providerProfile", "expectedRevision", "profileId", "expectedActiveRevision", "reason"];
+  const supported = ["displayName", "corePersona", "adaptivePersonaPolicy", "voiceProfile", "embodimentProfile", "presentationProfile", "providerProfile", "expectedRevision", "profileId", "expectedActiveRevision", "reason", "schemaVersion", "assistantId", "revision", "status", "createdAt", "createdBy"];
   if (Object.keys(input).some((key) => !supported.includes(key))) throw new Error("unsupported administration field");
   if (input.corePersona !== undefined) { const persona = asObject(input.corePersona); const supportedPersona = ["canonicalName", "identityStatement", "values", "prohibitions", "relationshipBoundaries", "styleBoundaries"]; if (!persona || Object.keys(persona).some((key) => !supportedPersona.includes(key))) throw new Error("corePersona must be an object with supported fields"); }
   return input;
