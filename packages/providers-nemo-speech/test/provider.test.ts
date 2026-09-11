@@ -7,7 +7,7 @@ const audio = async function* () { yield { type: "frame" as const, audioInputId:
 
 class FakeSocket {
   onopen: (() => void) | null = null; onmessage: ((event: { data: string }) => void) | null = null; onerror: (() => void) | null = null; onclose: (() => void) | null = null; sent: (string | ArrayBuffer)[] = [];
-  send(data: string | ArrayBuffer): void { this.sent.push(data); if (typeof data === "string" && data.includes("input_audio_buffer.commit")) { queueMicrotask(() => this.onmessage?.({ data: JSON.stringify({ type: "conversation.item.input_audio_transcription.delta", delta: "hello" }) })); queueMicrotask(() => this.onmessage?.({ data: JSON.stringify({ type: "conversation.item.input_audio_transcription.completed", text: "hello." }) })); } }
+  send(data: string | ArrayBuffer): void { this.sent.push(data); if (typeof data === "string" && data.includes("input_audio_buffer.commit")) { queueMicrotask(() => this.onmessage?.({ data: JSON.stringify({ type: "conversation.item.input_audio_transcription.delta", delta: "hello" }) })); queueMicrotask(() => this.onmessage?.({ data: JSON.stringify({ type: "conversation.item.input_audio_transcription.completed", transcript: "hello." }) })); } }
   close(): void { this.onclose?.(); }
 }
 
@@ -17,6 +17,7 @@ test("NeMo adapter maps realtime partial and committed events without claiming t
   const events = []; for await (const event of provider.transcribe({ deadlineAt: "2026-09-08T00:01:00Z", now: () => "2026-09-08T00:00:00Z" }, audio())) events.push(event);
   assert.deepEqual(events.map((event) => event.kind), ["data", "data", "terminal"]);
   assert.equal(events[0]?.payload.type, "partial"); assert.equal(events[1]?.payload.type, "committed"); assert.equal(events.at(-1)?.outcome, "succeeded");
+  assert.equal(events[1]?.payload.text, "hello.");
   assert.equal(typeof socket.sent[0], "string"); assert.match(String(socket.sent[0]), /session\.update/); assert.equal(socket.sent.length, 3);
 });
 
