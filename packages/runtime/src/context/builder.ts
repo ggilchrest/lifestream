@@ -1,6 +1,6 @@
 export type ContextSource = { id: string; content: string; rank: number };
 const estimateTokens = (content: string): number => content.trim() ? content.trim().split(/\s+/u).length : 0;
-export function buildContext(sources: ContextSource[], maxItems = 10, maxTokens = 1200): ContextSource[] {
+export function buildContext(sources: ContextSource[], maxItems = 4, maxTokens = 512): ContextSource[] {
   const selected: ContextSource[] = [];
   let usedTokens = 0;
   for (const source of [...sources].sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id))) {
