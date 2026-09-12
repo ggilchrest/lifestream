@@ -14,6 +14,9 @@ export type RelationalOpportunity = {
 
 export type InitiativeEligibility = {
   enabled: boolean;
+  dispositionEnabled?: boolean;
+  relationshipOptIn?: boolean;
+  authorityAllowed?: boolean;
   endpointAvailable: boolean;
   audienceAllowed: boolean;
   audioOwnerAvailable: boolean;
@@ -41,7 +44,8 @@ export class RelationalInitiativeCoordinator {
     if (this.admitted.has(opportunity.opportunityId) || this.outcomes.has(opportunity.opportunityId) || this.persistence?.outcome(opportunity.opportunityId) != null) return { admitted: false, reason: "duplicate" };
     if (this.admitted.size >= this.maxPending) return { admitted: false, reason: "capacity" };
     if (eligibility.now >= opportunity.expiresAt) return { admitted: false, reason: "expired" };
-    if (!eligibility.enabled) return { admitted: false, reason: "disabled" };
+    if (!eligibility.enabled || eligibility.dispositionEnabled === false) return { admitted: false, reason: "disabled" };
+    if (eligibility.relationshipOptIn === false || eligibility.authorityAllowed === false) return { admitted: false, reason: "audienceDenied" };
     if (!eligibility.endpointAvailable) return { admitted: false, reason: "endpointUnavailable" };
     if (!eligibility.audienceAllowed) return { admitted: false, reason: "audienceDenied" };
     if (!eligibility.audioOwnerAvailable) return { admitted: false, reason: "audioBusy" };
@@ -54,7 +58,8 @@ export class RelationalInitiativeCoordinator {
     const opportunity = this.admitted.get(opportunityId);
     if (!opportunity) return { admitted: false, reason: "duplicate" };
     if (eligibility.now >= opportunity.expiresAt) { this.clear(opportunityId); return { admitted: false, reason: "expired" }; }
-    if (!eligibility.enabled) { this.clear(opportunityId); return { admitted: false, reason: "disabled" }; }
+    if (!eligibility.enabled || eligibility.dispositionEnabled === false) { this.clear(opportunityId); return { admitted: false, reason: "disabled" }; }
+    if (eligibility.relationshipOptIn === false || eligibility.authorityAllowed === false) { this.clear(opportunityId); return { admitted: false, reason: "audienceDenied" }; }
     if (!eligibility.endpointAvailable) { this.clear(opportunityId); return { admitted: false, reason: "endpointUnavailable" }; }
     if (!eligibility.audienceAllowed) { this.clear(opportunityId); return { admitted: false, reason: "audienceDenied" }; }
     if (!eligibility.audioOwnerAvailable) { this.clear(opportunityId); return { admitted: false, reason: "audioBusy" }; }
