@@ -26,7 +26,7 @@ export type InitiativeAdmission =
 export type InitiativeAdmissionRecord = Pick<RelationalOpportunity, "opportunityId" | "assistantId" | "userId" | "relationshipId" | "sessionId" | "endpointId" | "createdAt" | "expiresAt" | "origin" | "urgency" | "kind">;
 export type InitiativeOutcome = "delivered" | "declined" | "cancelled";
 export type InitiativeSnapshot = { admissions: InitiativeAdmissionRecord[]; outcomes: { opportunityId: string; outcome: InitiativeOutcome }[] };
-export type InitiativePersistence = { outcome(opportunityId: string): InitiativeOutcome | null | undefined; record(opportunity: InitiativeAdmissionRecord, outcome?: InitiativeOutcome | null): void };
+export type InitiativePersistence = { outcome(opportunityId: string): InitiativeOutcome | null | undefined; record(opportunity: InitiativeAdmissionRecord, outcome?: InitiativeOutcome | null): void; listPending?(now: number): InitiativeAdmissionRecord[] };
 
 /** Bounded, low-urgency admission; generation and delivery remain ordinary runtime operations. */
 export class RelationalInitiativeCoordinator {
@@ -34,7 +34,7 @@ export class RelationalInitiativeCoordinator {
   private readonly outcomes = new Map<string, InitiativeOutcome>();
   private readonly maxPending: number;
   private readonly persistence: InitiativePersistence | undefined;
-  constructor(maxPending = 8, persistence?: InitiativePersistence) { if (!Number.isInteger(maxPending) || maxPending < 1) throw new Error("invalid initiative capacity"); this.maxPending = maxPending; this.persistence = persistence; }
+  constructor(maxPending = 8, persistence?: InitiativePersistence, now = Date.now()) { if (!Number.isInteger(maxPending) || maxPending < 1) throw new Error("invalid initiative capacity"); this.maxPending = maxPending; this.persistence = persistence; this.restore({ admissions: persistence?.listPending?.(now) ?? [], outcomes: [] }, now); }
 
   admit(opportunity: RelationalOpportunity, eligibility: InitiativeEligibility): InitiativeAdmission {
     if (opportunity.origin !== "relationalOpportunity" || opportunity.urgency !== "low") throw new Error("invalid relational opportunity");
