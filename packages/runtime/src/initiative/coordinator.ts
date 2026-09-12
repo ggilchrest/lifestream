@@ -23,6 +23,7 @@ export type InitiativeEligibility = {
 export type InitiativeAdmission =
   | { admitted: true; opportunity: RelationalOpportunity }
   | { admitted: false; reason: "disabled" | "endpointUnavailable" | "audienceDenied" | "audioBusy" | "expired" | "duplicate" | "capacity" };
+export type InitiativeAdmissionRecord = Pick<RelationalOpportunity, "opportunityId" | "assistantId" | "userId" | "relationshipId" | "sessionId" | "endpointId" | "createdAt" | "expiresAt" | "origin" | "urgency" | "kind">;
 
 /** Bounded, low-urgency admission; generation and delivery remain ordinary runtime operations. */
 export class RelationalInitiativeCoordinator {
@@ -58,4 +59,13 @@ export class RelationalInitiativeCoordinator {
   has(opportunityId: string): boolean { return this.admitted.has(opportunityId); }
   clear(opportunityId: string): void { this.admitted.delete(opportunityId); }
   preemptForUserTurn(): string[] { const ids = [...this.admitted.keys()]; this.admitted.clear(); return ids; }
+  snapshot(): InitiativeAdmissionRecord[] { return [...this.admitted.values()].map((opportunity) => structuredClone(opportunity)); }
+  restore(records: readonly InitiativeAdmissionRecord[], now: number): void {
+    if (records.length > this.maxPending) throw new Error("initiative capacity exceeded");
+    for (const record of records) {
+      if (record.origin !== "relationalOpportunity" || record.urgency !== "low" || now >= record.expiresAt) continue;
+      if (this.admitted.has(record.opportunityId)) continue;
+      this.admitted.set(record.opportunityId, structuredClone(record));
+    }
+  }
 }
