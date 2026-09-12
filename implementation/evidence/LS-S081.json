@@ -2,7 +2,7 @@
   "slice": "LS-S081",
   "status": "inProgress",
   "claimClass": "scenario-and-source-grounded-runtime-implementation",
-  "revision": "working-tree",
+  "revision": "0ff3c7b70f7e221730201516a916053188d633b9",
   "checks": [
     { "command": "joined relationship runtime journey", "result": "pass", "evidence": "The authenticated fixture journey creates and activates an Assistant, creates and approves relationship evidence, activates controls, runs five insight lenses, runs an isolated Lab with held-out exclusion, observes an ordinary relationship-scoped reply, and confirms approved state after restart." },
     { "command": "joined relationship browser-surface test", "result": "pass", "evidence": "The control surface exposes review, settings, prepared-request, insight and Lab controls plus explicit isolation and Human-review boundaries." },
