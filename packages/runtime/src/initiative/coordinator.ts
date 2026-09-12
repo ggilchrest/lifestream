@@ -22,15 +22,18 @@ export type InitiativeEligibility = {
 
 export type InitiativeAdmission =
   | { admitted: true; opportunity: RelationalOpportunity }
-  | { admitted: false; reason: "disabled" | "endpointUnavailable" | "audienceDenied" | "audioBusy" | "expired" | "duplicate" };
+  | { admitted: false; reason: "disabled" | "endpointUnavailable" | "audienceDenied" | "audioBusy" | "expired" | "duplicate" | "capacity" };
 
 /** Bounded, low-urgency admission; generation and delivery remain ordinary runtime operations. */
 export class RelationalInitiativeCoordinator {
   private readonly admitted = new Map<string, RelationalOpportunity>();
+  private readonly maxPending: number;
+  constructor(maxPending = 8) { if (!Number.isInteger(maxPending) || maxPending < 1) throw new Error("invalid initiative capacity"); this.maxPending = maxPending; }
 
   admit(opportunity: RelationalOpportunity, eligibility: InitiativeEligibility): InitiativeAdmission {
     if (opportunity.origin !== "relationalOpportunity" || opportunity.urgency !== "low") throw new Error("invalid relational opportunity");
     if (this.admitted.has(opportunity.opportunityId)) return { admitted: false, reason: "duplicate" };
+    if (this.admitted.size >= this.maxPending) return { admitted: false, reason: "capacity" };
     if (eligibility.now >= opportunity.expiresAt) return { admitted: false, reason: "expired" };
     if (!eligibility.enabled) return { admitted: false, reason: "disabled" };
     if (!eligibility.endpointAvailable) return { admitted: false, reason: "endpointUnavailable" };
@@ -54,4 +57,5 @@ export class RelationalInitiativeCoordinator {
 
   has(opportunityId: string): boolean { return this.admitted.has(opportunityId); }
   clear(opportunityId: string): void { this.admitted.delete(opportunityId); }
+  preemptForUserTurn(): string[] { const ids = [...this.admitted.keys()]; this.admitted.clear(); return ids; }
 }
