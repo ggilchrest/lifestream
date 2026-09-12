@@ -25,6 +25,7 @@ export type InitiativeAdmission =
   | { admitted: false; reason: "disabled" | "endpointUnavailable" | "audienceDenied" | "audioBusy" | "expired" | "duplicate" | "capacity" };
 export type InitiativeAdmissionRecord = Pick<RelationalOpportunity, "opportunityId" | "assistantId" | "userId" | "relationshipId" | "sessionId" | "endpointId" | "createdAt" | "expiresAt" | "origin" | "urgency" | "kind">;
 export type InitiativeOutcome = "delivered" | "declined" | "cancelled";
+export type InitiativeSnapshot = { admissions: InitiativeAdmissionRecord[]; outcomes: { opportunityId: string; outcome: InitiativeOutcome }[] };
 
 /** Bounded, low-urgency admission; generation and delivery remain ordinary runtime operations. */
 export class RelationalInitiativeCoordinator {
@@ -62,11 +63,12 @@ export class RelationalInitiativeCoordinator {
   clear(opportunityId: string): void { this.admitted.delete(opportunityId); }
   recordOutcome(opportunityId: string, outcome: InitiativeOutcome): void { if (!this.admitted.has(opportunityId)) throw new Error("unknown initiative opportunity"); this.admitted.delete(opportunityId); this.outcomes.set(opportunityId, outcome); }
   preemptForUserTurn(): string[] { const ids = [...this.admitted.keys()]; for (const id of ids) this.recordOutcome(id, "cancelled"); return ids; }
-  snapshot(): InitiativeAdmissionRecord[] { return [...this.admitted.values()].map((opportunity) => structuredClone(opportunity)); }
+  snapshot(): InitiativeSnapshot { return { admissions: [...this.admitted.values()].map((opportunity) => structuredClone(opportunity)), outcomes: [...this.outcomes.entries()].map(([opportunityId, outcome]) => ({ opportunityId, outcome })) }; }
   outcome(opportunityId: string): InitiativeOutcome | undefined { return this.outcomes.get(opportunityId); }
-  restore(records: readonly InitiativeAdmissionRecord[], now: number): void {
-    if (records.length > this.maxPending) throw new Error("initiative capacity exceeded");
-    for (const record of records) {
+  restore(snapshot: InitiativeSnapshot, now: number): void {
+    if (snapshot.admissions.length > this.maxPending) throw new Error("initiative capacity exceeded");
+    for (const { opportunityId, outcome } of snapshot.outcomes) this.outcomes.set(opportunityId, outcome);
+    for (const record of snapshot.admissions) {
       if (record.origin !== "relationalOpportunity" || record.urgency !== "low" || now >= record.expiresAt) continue;
       if (this.admitted.has(record.opportunityId)) continue;
       if (this.outcomes.has(record.opportunityId)) continue;
