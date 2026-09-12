@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "types": "./dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }, "./inference": { "types": "./dist/inference/port.d.ts", "import": "./dist/inference/port.js" }, "./inference/fixture": { "types": "./dist/inference/fixture.d.ts", "import": "./dist/inference/fixture.js" }, "./inference/prompt": { "types": "./dist/inference/prompt.d.ts", "import": "./dist/inference/prompt.js" }, "./voice/segmenter": { "types": "./dist/voice/segmenter.d.ts", "import": "./dist/voice/segmenter.js" }, "./voice": { "types": "./dist/voice/ports.d.ts", "import": "./dist/voice/ports.js" } },
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }, "./initiative/coordinator": { "types": "./dist/initiative/coordinator.d.ts", "import": "./dist/initiative/coordinator.js" }, "./inference": { "types": "./dist/inference/port.d.ts", "import": "./dist/inference/port.js" }, "./inference/fixture": { "types": "./dist/inference/fixture.d.ts", "import": "./dist/inference/fixture.js" }, "./inference/prompt": { "types": "./dist/inference/prompt.d.ts", "import": "./dist/inference/prompt.js" }, "./voice/segmenter": { "types": "./dist/voice/segmenter.d.ts", "import": "./dist/voice/segmenter.js" }, "./voice": { "types": "./dist/voice/ports.d.ts", "import": "./dist/voice/ports.js" } },
   "scripts": { "build": "tsc -b", "typecheck": "tsc -b --pretty false" }
 }
