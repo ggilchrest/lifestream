@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lifestream Human Testing Guide</title>
+  <style>
+    :root{color-scheme:light;--ink:#17201d;--muted:#5d6d66;--line:#d7e0dc;--paper:#fff;--wash:#f3f7f5;--accent:#176b50;--accent-2:#dff2e9;--warn:#fff4d6;--warn-line:#d7a927;--code:#edf1ef}*{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1050px;margin:0 auto;padding:28px 20px 72px}header{background:linear-gradient(135deg,#155b45,#207b5d);color:white;border-radius:18px;padding:34px 36px;box-shadow:0 12px 30px #123d2b22}h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1.05;margin:.2rem 0 1rem}h2{margin:0 0 .7rem;font-size:1.55rem}h3{margin:1.1rem 0 .4rem;font-size:1.08rem}p{margin:.55rem 0}header p{max-width:740px;color:#e4f4ed;font-size:1.08rem}.pill{display:inline-block;border:1px solid #ffffff55;border-radius:99px;padding:.25rem .7rem;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase}.notice{margin:20px 0;background:var(--warn);border:1px solid var(--warn-line);border-radius:12px;padding:14px 16px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:18px}.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:0 5px 14px #163d2b0b}.wide{grid-column:1/-1}.step{display:flex;gap:12px;align-items:flex-start;margin:.85rem 0}.num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;text-align:center;font-weight:700;line-height:28px}.checklist{padding:0;list-style:none}.checklist li{margin:.6rem 0;padding-left:1.7rem;position:relative}.checklist li:before{content:"□";position:absolute;left:0;color:var(--accent);font-size:1.2rem;line-height:1.2}code{background:var(--code);padding:.12rem .35rem;border-radius:5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em}pre{background:#15221d;color:#e9f5ef;border-radius:10px;padding:14px;overflow:auto}a{color:var(--accent);font-weight:650}.muted{color:var(--muted)}.result{border-left:4px solid var(--accent);padding:.55rem .8rem;background:var(--accent-2);margin:.8rem 0}.stop{border-left-color:#b04435;background:#fff0ed}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;margin-top:.6rem}th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:.65rem .5rem}th{color:var(--muted);font-size:.84rem;text-transform:uppercase;letter-spacing:.04em}footer{margin-top:20px;color:var(--muted);font-size:.9rem}@media(max-width:720px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}header{padding:26px 22px}main{padding-inline:12px}}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="pill">Local fixture testing</span>
+    <h1>Lifestream human testing guide</h1>
+    <p>Use this guide to exercise the features a person can see and operate in the local Assistant application. Check the expected result after each action and record any mismatch with the exact step, visible message, and screenshot.</p>
+  </header>
+
+  <div class="notice"><strong>Scope boundary:</strong> this environment uses fixture authentication and fixture providers. A passing checklist proves the local user journey only. It does not prove production sign-in, physical microphone quality, acoustic quality, learned behavior, real training, deployment, or production readiness.</div>
+
+  <section class="grid">
+    <article class="card">
+      <h2>1. Start the test environment</h2>
+      <div class="step"><span class="num">1</span><div>From the repository root, build and start the local server.</div></div>
+      <pre>pnpm build
+LIFESTREAM_PROFILE=test PORT=3137 node apps/server/dist/index.js</pre>
+      <div class="step"><span class="num">2</span><div>Open <a href="http://127.0.0.1:3137/control/">Assistant control</a>. Use <a href="http://127.0.0.1:3137/control/conversation.html">Conversation</a> for typed and voice tests. The permissions page is available at <a href="http://127.0.0.1:3137/control/authority.html">Review permissions</a>.</div></div>
+      <ul class="checklist"><li>The control page loads and shows <strong>Development mode</strong>.</li><li>The notice says fixture administration and explains that real sign-in is not configured.</li><li>The health indicator becomes <strong>Ready</strong>.</li></ul>
+    </article>
+
+    <article class="card">
+      <h2>2. Create and manage an Assistant</h2>
+      <ul class="checklist"><li>Click <strong>New Assistant</strong>. An Assistant appears in the rail and the editor shows a draft.</li><li>Change the display name and identity statement; click <strong>Save revision</strong>. A new revision appears in History.</li><li>Click <strong>Preview draft</strong>. Confirm the result says preview only and that no revision is saved or activated.</li><li>Click <strong>Activate revision</strong>. Confirm the status changes to active.</li><li>Click <strong>Export</strong>. Confirm a JSON download is produced.</li><li>Use <strong>Import definition</strong> with a safe exported definition. Confirm it creates a preview/draft path, not an automatic activation.</li><li>Create another revision, activate it, then use <strong>Rollback latest</strong> or the revision rollback controls. Confirm rollback creates a reviewable draft.</li></ul>
+      <p class="result">Expected boundary: drafts and previews never silently change the active Assistant.</p>
+    </article>
+
+    <article class="card wide">
+      <h2>3. Review memory and persona proposals</h2>
+      <div class="table-wrap"><table><thead><tr><th>Surface</th><th>Test</th><th>Expected result</th></tr></thead><tbody>
+        <tr><td>Memory</td><td>Click <strong>Add candidate</strong>, enter a short synthetic fact, then refresh.</td><td>It appears as a candidate and remains inactive until approval.</td></tr>
+        <tr><td>Memory approval</td><td>Click <strong>Approve</strong>, then refresh or search for it.</td><td>Status becomes active and the operation is visible.</td></tr>
+        <tr><td>Correction</td><td>Click <strong>Suggest correction</strong>, enter changed text.</td><td>The correction is proposed for review; the original remains unchanged.</td></tr>
+        <tr><td>Memory search</td><td>Search for a distinctive word.</td><td>Only matching records for the selected Assistant appear.</td></tr>
+        <tr><td>Persona adaptation</td><td>Click <strong>Propose change</strong>, use a small value change and evidence IDs.</td><td>A proposal appears; it is not active until separately reviewed.</td></tr>
+        <tr><td>Adaptation rejection</td><td>Reject a proposal.</td><td>The proposal is rejected without changing the active persona.</td></tr>
+      </tbody></table></div>
+      <p class="result stop">Negative check: do not enter passwords, tokens, API keys, or private personal data. The UI must reject secret-shaped fields and the fixture guide does not authorize real-data import.</p>
+    </article>
+
+    <article class="card wide">
+      <h2>4. Exercise the relationship journey</h2>
+      <p>Complete these actions in order for the selected Assistant. Use synthetic text such as “Prefers concise explanations.”</p>
+      <ol class="checklist"><li>Under <strong>People &amp; Context</strong>, click <strong>Start relationship review</strong>. A relationship appears.</li><li>Click <strong>Add candidate</strong>. Confirm each candidate visibly includes <strong>Status</strong>, <strong>Uncertainty</strong>, <strong>Source</strong>, and <strong>Source Family</strong>.</li><li>Approve one candidate and reject another. Confirm the status and revision update; stale submissions must be rejected.</li><li>Use <strong>Skip bootstrap</strong> and confirm ordinary Assistant use remains available.</li><li>Under <strong>Working Controls</strong>, choose Balanced, Concise, or Coaching. Move several sliders and click <strong>Save draft</strong>.</li><li>Click <strong>Inspect effective context</strong>. Confirm included, omitted, source-revision counts and limitations are shown.</li><li>Click <strong>Activate latest draft</strong>. Confirm activation is explicit. Try <strong>Reset to known good</strong> and <strong>Rollback latest</strong>; each should create a reviewable draft.</li><li>Click <strong>Inspect prepared request</strong>. Confirm a prepared-context manifest is shown and hidden reasoning/private prompt text is not exposed.</li></ol>
+    </article>
+
+    <article class="card">
+      <h2>5. Insights and feedback</h2>
+      <ul class="checklist"><li>Click <strong>Run insight lenses</strong>. Confirm five lenses render: evidence quality, communication fit, context use, structure/compression, and training opportunity.</li><li>Inspect uncertainty, support, counterevidence, intervention, benefit, cost, risk, validation, and inverse fields.</li><li>Click <strong>Record explicit feedback</strong> for a candidate. Try reaffirmation, correction, helpfulness, style, and salience.</li><li>Accept or reject an insight proposal. Confirm active relationship state does not change directly.</li></ul>
+      <p class="result">Expected boundary: retrieval, repetition, style, and salience feedback must not silently become factual evidence.</p>
+    </article>
+
+    <article class="card">
+      <h2>6. Relationship Lab</h2>
+      <ul class="checklist"><li>Click <strong>Prepare Lab</strong>. Confirm two representations, bounded scenarios, declared criteria, held-out scenarios, and repeated runs.</li><li>Click <strong>Run comparison</strong>. Confirm isolated results, variability, held-out exclusion, and limitations render.</li><li>Click <strong>Promote for normal review</strong> or reject it.</li><li>Refresh the relationship and confirm promotion/rejection did not directly activate relationship state.</li></ul>
+      <p class="result stop">Expected boundary: the Lab is synthetic and isolated. It cannot write live memory, send notifications, activate itself, or prove learned quality.</p>
+    </article>
+
+    <article class="card wide">
+      <h2>7. Typed conversation</h2>
+      <p>Open <a href="http://127.0.0.1:3137/control/conversation.html">Conversation</a>. Keep the browser tab on localhost so microphone permissions and fixture authentication work.</p>
+      <ul class="checklist"><li>Confirm the backend/profile status and provider identities are visible.</li><li>Send a short typed message. Confirm the user message and Assistant response render in order.</li><li>Click <strong>Stop response</strong> while a response is generating. Confirm the request stops visibly and the next message still works.</li><li>Try an empty message or malformed control input. Confirm it is rejected with a visible error and no false completion.</li><li>If a relationship is selected by the page flow, confirm the prepared relationship context is present in the request boundary; do not treat inclusion as proof of causation.</li></ul>
+    </article>
+
+    <article class="card wide">
+      <h2>8. Voice, speech, and interruption controls</h2>
+      <p>These steps require a browser with microphone access. Use headphones where possible and do not use private recordings.</p>
+      <ul class="checklist"><li>In Voice settings, choose a tone/preset, seed, pace, and energy. Click <strong>Apply settings</strong> and confirm the status says they apply to the next session.</li><li>Click <strong>Speaker test</strong>. Confirm audio or a truthful failure message is visible.</li><li>Click <strong>TTS test</strong> with the default short text. Confirm ordered playback and a terminal result.</li><li>Click <strong>STT test</strong>. Confirm the transcript or a truthful unavailable/error state.</li><li>Click <strong>Start microphone</strong> and grant permission. Confirm capture state, level meter, device information, and reported browser audio settings.</li><li>Speak a short sentence, pause, and confirm committed speech appears as a user transcript followed by an Assistant response.</li><li>Click <strong>Mute microphone</strong>, speak, then unmute. Confirm capture state changes and muted input does not create a false turn.</li><li>Speak while the Assistant is responding. Confirm barge-in interrupts playback/generation once and the UI reports the interruption.</li><li>Click <strong>Stop capture</strong>. Confirm audio tracks close, capture stops, and a new session can be started.</li><li>Optionally choose a 2–20 second single-speaker reference clip only if you have permission. Confirm the explicit consent checkbox is required; cancel or clear it and verify no clip is sent.</li></ul>
+      <p class="result stop">Do not interpret fixture audio as proof of physical audibility, acoustic echo cancellation, speaker identity, real-provider parity, or production latency.</p>
+    </article>
+
+    <article class="card">
+      <h2>9. Permission and isolation checks</h2>
+      <ul class="checklist"><li>Open <strong>Review permissions</strong>. Confirm the page identifies fixture authority and does not imply production sign-in.</li><li>Open a second private window or use a different fixture principal if available. Attempt to view another Assistant or relationship.</li><li>Confirm the request is denied or returns a non-disclosing not-found result.</li><li>Reload the control page and confirm the selected Assistant and accepted relationship/configuration state remain available.</li></ul>
+    </article>
+
+    <article class="card">
+      <h2>10. What to report</h2>
+      <p>For each failed or surprising step, report:</p>
+      <ul class="checklist"><li>Section and step number.</li><li>URL and selected Assistant.</li><li>Exact visible text or error.</li><li>What you expected and what happened.</li><li>Screenshot, if layout or state is involved.</li><li>Whether the failure was fixture behavior, browser permission, provider availability, or an application defect.</li></ul>
+      <p class="muted">A concise acceptance statement can name the tested scope, for example: “I accept the S080 forgetting/recovery workflow and the S081 joined relationship journey as observed in the local fixture environment.”</p>
+    </article>
+  </section>
+
+  <footer>Guide scope: local fixture-facing features currently served by the control and conversation surfaces. Human acceptance, fixture verification, real-provider evidence, perceptual evidence, performance evidence, and production acceptance remain separate claims.</footer>
+</main>
+</body>
+</html>
