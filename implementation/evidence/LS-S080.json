@@ -2,10 +2,11 @@
   "slice": "LS-S080",
   "status": "inProgress",
   "claimClass": "fixture-and-source-grounded-runtime-implementation",
-  "revision": "working-tree",
+  "revision": "715fcc08ba389407814416b70ed669e1816aecb2",
   "checks": [
     { "command": "memory forgetting test", "result": "pass", "evidence": "Forgetting removes the sensitive payload, retains non-sensitive lifecycle evidence, rejects stale revisions and survives the SQLite owner-local path." },
-    { "command": "derived dependency invalidation tests", "result": "pass", "evidence": "Affected context caches are invalidated selectively; stale/quarantined proposals and revoked replay dependencies are fenced without affecting unrelated state." }
+    { "command": "derived dependency invalidation tests", "result": "pass", "evidence": "Affected context caches are invalidated selectively; stale/quarantined proposals and revoked replay dependencies are fenced without affecting unrelated state." },
+    { "command": "restart/failure isolation tests", "result": "pass", "evidence": "SQLite memory payload removal retains lifecycle evidence and rejects stale retries; unrelated cached context remains available after targeted invalidation." }
   ],
   "implemented": [
     "Owner-local memory forget operation with content removal, lifecycle retention, CAS and explicit external-copy limitation.",

@@ -1,0 +1,17 @@
+{
+  "slice": "LS-S081",
+  "status": "inProgress",
+  "claimClass": "scenario-and-source-grounded-runtime-implementation",
+  "revision": "working-tree",
+  "checks": [
+    { "command": "joined relationship runtime journey", "result": "pass", "evidence": "The authenticated fixture journey creates and activates an Assistant, creates and approves relationship evidence, activates controls, runs five insight lenses, runs an isolated Lab with held-out exclusion, observes an ordinary relationship-scoped reply, and confirms approved state after restart." },
+    { "command": "joined relationship browser-surface test", "result": "pass", "evidence": "The control surface exposes review, settings, prepared-request, insight and Lab controls plus explicit isolation and Human-review boundaries." },
+    { "command": "combined Human acceptance", "result": "notRun", "evidence": "Deferred until S081 completion as explicitly requested by the operator; S080 and S081 will be accepted together." }
+  ],
+  "implemented": [
+    "Joined authenticated relationship acceptance test across administration, evidence, settings, insights, Lab comparison, ordinary reply and restart continuity.",
+    "Browser-surface assertions for the complete relationship administration path and its no-live-training/no-self-activation boundaries."
+  ],
+  "remaining": ["Run the full required validation suite and obtain combined Human acceptance for S080 and S081."],
+  "excluded": ["S082 real training, physical/perceptual voice claims, production authentication/deployment and publication"]
+}
