@@ -3,6 +3,7 @@ import type { Database } from "./database.js";
 export type MemoryRecord = { id: string; assistantId: string; content: string; provenance: Record<string, unknown>; lifecycle: Record<string, unknown>; createdAt: string };
 type MemoryRow = { id: string; assistantId: string; content: string; provenance: string; lifecycle: string; createdAt: string };
 export type MemoryLifecycleEvent = { memoryId: string; assistantId: string; revision: number; eventType: string; payload: Record<string, unknown>; occurredAt: string };
+export type ForgetResult = { memoryId: string; assistantId: string; status: "forgotten"; contentRemoved: true; lifecycleRetained: true; externalCopies: "not-controlled"; revision: number };
 const fromRow = (row: MemoryRow): MemoryRecord => ({ ...row, provenance: JSON.parse(row.provenance), lifecycle: JSON.parse(row.lifecycle) });
 
 export class MemoryRepository {
@@ -67,5 +68,17 @@ export class MemoryRepository {
       return this.get(assistantId, id);
     }
     const updated = { ...existing, lifecycle }; this.records.set(id, updated); const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision: (events.at(-1)?.revision ?? 0) + 1, eventType: "lifecycleChanged", payload: structuredClone(lifecycle), occurredAt: new Date().toISOString() }); this.events.set(id, events); return structuredClone(updated);
+  }
+  forget(assistantId: string, id: string, actor: string, reason = "source forgotten", expectedRevision?: number): ForgetResult | undefined {
+    const existing = this.get(assistantId, id); if (!existing) return undefined;
+    const previousRevision = typeof existing.lifecycle.revision === "number" ? existing.lifecycle.revision : 1;
+    if (expectedRevision !== undefined && expectedRevision !== previousRevision) throw new Error("memory revision conflict");
+    const revision = previousRevision + 1; const occurredAt = new Date().toISOString(); const lifecycle = { ...existing.lifecycle, status: "invalidated", revision, changedBy: actor, reason, forgottenAt: occurredAt, contentRemoved: true };
+    if (this.database) {
+      this.database.transaction((tx) => { tx.run("UPDATE memories SET content = ?, lifecycle_json = ? WHERE assistant_id = ? AND id = ? AND json_extract(lifecycle_json, '$.revision') = ?", "", JSON.stringify(lifecycle), assistantId, id, previousRevision); if ((tx.get<{ changes: number }>("SELECT changes() AS changes")?.changes ?? 0) !== 1) throw new Error("memory revision conflict"); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, revision, "forgotten", JSON.stringify({ status: "invalidated", reason, contentRemoved: true }), occurredAt); });
+    } else {
+      this.records.set(id, { ...existing, content: "", lifecycle }); const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision, eventType: "forgotten", payload: { status: "invalidated", reason, contentRemoved: true }, occurredAt }); this.events.set(id, events);
+    }
+    return { memoryId: id, assistantId, status: "forgotten", contentRemoved: true, lifecycleRetained: true, externalCopies: "not-controlled", revision };
   }
 }

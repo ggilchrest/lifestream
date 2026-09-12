@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { buildInsightProposals, classifyFeedback } from "../src/dreaming/run.ts";
 import { validateInsightProposal } from "../src/dreaming/proposal-validator.ts";
-import { rejectInsightProposal } from "../src/dreaming/apply.ts";
+import { guardDerivedProposal, rejectInsightProposal } from "../src/dreaming/apply.ts";
 
 test("insight lenses preserve source families and disclose insufficient evidence", () => {
   const proposals = buildInsightProposals([{ id: "source-a", content: "A", sourceFamily: "conversation-1", status: "approved" }, { id: "derivative-a", content: "A2", sourceFamily: "conversation-1", status: "approved", independentEvidence: false }], "relationship-1");
@@ -26,3 +26,4 @@ test("rejecting an insight is a non-mutating review transition", () => {
   assert.equal(proposal.status, "proposed");
   assert.throws(() => rejectInsightProposal(rejected, "proposed"), /conflict/);
 });
+test("derived proposals are fenced when a source dependency is no longer current", () => { const proposal = { id: "i", status: "proposed" }; assert.deepEqual(guardDerivedProposal(proposal, { sourceRefs: ["source-1"], currentRefs: ["source-1"], status: "eligible" }), proposal); assert.throws(() => guardDerivedProposal(proposal, { sourceRefs: ["source-1"], currentRefs: [], status: "quarantined" }), /stale or quarantined/); });

@@ -7,11 +7,13 @@ export type ReplayManifest = {
   artifactRefs: string[];
   providerRefs: string[];
   liveRoute: false;
+  revocationRefs?: string[];
 };
 
 export type ReplayEvent = TraceEvent & { eventType?: string; liveEffect?: boolean; sourceEventIds?: string[] };
 export type ReplayComparison = { replayId: string; sourceEventIds: string[]; replayEventIds: string[]; equal: boolean; reason?: string };
 export type ReplayRunnerOptions = { idFactory?: (sourceEventId: string, index: number) => string; run?: (event: ReplayEvent) => Promise<Record<string, unknown>> };
+export type DependencySnapshot = { currentRefs: string[]; revokedRefs: string[] };
 
 export class ReplayBlockedError extends Error { constructor(message: string) { super(message); this.name = "ReplayBlockedError"; } }
 
@@ -43,6 +45,7 @@ export function createReplayManifest(input: Omit<ReplayManifest, "executionMode"
   if (input.providerRefs.some((ref) => ref.startsWith("live:"))) throw new ReplayBlockedError("replay cannot use a live provider route");
   return { ...structuredClone(input), executionMode: "replay", liveRoute: false };
 }
+export function assertCurrentReplayDependencies(manifest: ReplayManifest, snapshot: DependencySnapshot): void { const revoked = new Set(snapshot.revokedRefs); if ((manifest.revocationRefs ?? []).some((ref) => revoked.has(ref)) || (manifest.artifactRefs ?? []).some((ref) => revoked.has(ref))) throw new ReplayBlockedError("replay dependencies are revoked or stale"); if ((manifest.revocationRefs ?? []).some((ref) => !snapshot.currentRefs.includes(ref))) throw new ReplayBlockedError("replay dependencies are not current"); }
 
 export async function replayTrace(events: ReplayEvent[], manifest: ReplayManifest, options: ReplayRunnerOptions = {}): Promise<{ events: ReplayEvent[]; comparison: ReplayComparison }> {
   if (manifest.executionMode !== "replay" || manifest.liveRoute) throw new ReplayBlockedError("replay must be isolated from live effects");

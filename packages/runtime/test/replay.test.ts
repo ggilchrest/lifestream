@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { createLabExperiment, createReplayManifest, replayTrace, runLabComparison, ReplayBlockedError, type ReplayEvent } from "../src/replay/replay.ts";
+import { assertCurrentReplayDependencies, createLabExperiment, createReplayManifest, replayTrace, runLabComparison, ReplayBlockedError, type ReplayEvent } from "../src/replay/replay.ts";
 
 const source: ReplayEvent[] = [{ id: "event-1", traceId: "trace-1", sequence: 0, eventType: "interaction.received", payload: { text: "hello" } }];
 
@@ -31,3 +31,4 @@ test("Lab rejects live providers and underdeclared criteria", () => {
   assert.throws(() => createReplayManifest({ replayId: "lab", sourceTraceId: "t", artifactRefs: ["a"], providerRefs: ["live:inference"] }), ReplayBlockedError);
   assert.throws(() => createLabExperiment({ experimentId: "lab-2", sourceRelationshipId: "r", sourceConfigurationRevision: "c", representations: ["recordOriented", "conventionOriented"], promptVariants: [], controlVariants: [], scenarioIds: ["s"], heldOutScenarioIds: [], criteria: [], repeatedRuns: 2, datasetRef: "d", sourceSnapshotRef: "s", providerRefs: ["fixture:x"], compilerVersion: "v", cacheNamespace: "c", grantNamespace: "g" }), ReplayBlockedError);
 });
+test("replay dependency currency blocks revoked artifacts", () => { const manifest = createReplayManifest({ replayId: "r-current", sourceTraceId: "t", artifactRefs: ["artifact-1"], providerRefs: ["fixture:x"], revocationRefs: ["source-1"] }); assert.doesNotThrow(() => assertCurrentReplayDependencies(manifest, { currentRefs: ["source-1"], revokedRefs: [] })); assert.throws(() => assertCurrentReplayDependencies(manifest, { currentRefs: ["source-1"], revokedRefs: ["source-1"] }), ReplayBlockedError); });

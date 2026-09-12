@@ -1,0 +1,20 @@
+{
+  "slice": "LS-S080",
+  "status": "inProgress",
+  "claimClass": "fixture-and-source-grounded-runtime-implementation",
+  "revision": "working-tree",
+  "checks": [
+    { "command": "memory forgetting test", "result": "pass", "evidence": "Forgetting removes the sensitive payload, retains non-sensitive lifecycle evidence, rejects stale revisions and survives the SQLite owner-local path." },
+    { "command": "derived dependency invalidation tests", "result": "pass", "evidence": "Affected context caches are invalidated selectively; stale/quarantined proposals and revoked replay dependencies are fenced without affecting unrelated state." }
+  ],
+  "implemented": [
+    "Owner-local memory forget operation with content removal, lifecycle retention, CAS and explicit external-copy limitation.",
+    "Dependency-aware context-cache invalidation and stale derived-proposal/replay guards.",
+    "Synthetic tests for forgetting, revocation, quarantine, cache isolation and restart-compatible persistence."
+  ],
+  "remaining": [
+    "Joined S080 resilience evidence and S081 acceptance tests are still in progress.",
+    "Combined Human acceptance for S080 and S081 will be requested only after S081 completion, per operator instruction."
+  ],
+  "excluded": ["cross-provider atomic erase, real personal data, unlearning claims, live effects, production deployment and S082 real training"]
+}
