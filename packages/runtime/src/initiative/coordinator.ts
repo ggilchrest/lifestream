@@ -59,6 +59,13 @@ export class RelationalInitiativeCoordinator {
     return { admitted: true, opportunity: structuredClone(opportunity) };
   }
 
+  completeDelivery(opportunityId: string, eligibility: InitiativeEligibility, outcome: InitiativeOutcome): InitiativeAdmission {
+    const checked = this.recheck(opportunityId, eligibility);
+    if (!checked.admitted) return checked;
+    this.recordOutcome(opportunityId, outcome);
+    return checked;
+  }
+
   has(opportunityId: string): boolean { return this.admitted.has(opportunityId); }
   clear(opportunityId: string): void { this.admitted.delete(opportunityId); }
   recordOutcome(opportunityId: string, outcome: InitiativeOutcome): void { if (!this.admitted.has(opportunityId)) throw new Error("unknown initiative opportunity"); this.admitted.delete(opportunityId); this.outcomes.set(opportunityId, outcome); }
