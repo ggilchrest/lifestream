@@ -24,16 +24,18 @@ export type InitiativeAdmission =
   | { admitted: true; opportunity: RelationalOpportunity }
   | { admitted: false; reason: "disabled" | "endpointUnavailable" | "audienceDenied" | "audioBusy" | "expired" | "duplicate" | "capacity" };
 export type InitiativeAdmissionRecord = Pick<RelationalOpportunity, "opportunityId" | "assistantId" | "userId" | "relationshipId" | "sessionId" | "endpointId" | "createdAt" | "expiresAt" | "origin" | "urgency" | "kind">;
+export type InitiativeOutcome = "delivered" | "declined" | "cancelled";
 
 /** Bounded, low-urgency admission; generation and delivery remain ordinary runtime operations. */
 export class RelationalInitiativeCoordinator {
   private readonly admitted = new Map<string, RelationalOpportunity>();
+  private readonly outcomes = new Map<string, InitiativeOutcome>();
   private readonly maxPending: number;
   constructor(maxPending = 8) { if (!Number.isInteger(maxPending) || maxPending < 1) throw new Error("invalid initiative capacity"); this.maxPending = maxPending; }
 
   admit(opportunity: RelationalOpportunity, eligibility: InitiativeEligibility): InitiativeAdmission {
     if (opportunity.origin !== "relationalOpportunity" || opportunity.urgency !== "low") throw new Error("invalid relational opportunity");
-    if (this.admitted.has(opportunity.opportunityId)) return { admitted: false, reason: "duplicate" };
+    if (this.admitted.has(opportunity.opportunityId) || this.outcomes.has(opportunity.opportunityId)) return { admitted: false, reason: "duplicate" };
     if (this.admitted.size >= this.maxPending) return { admitted: false, reason: "capacity" };
     if (eligibility.now >= opportunity.expiresAt) return { admitted: false, reason: "expired" };
     if (!eligibility.enabled) return { admitted: false, reason: "disabled" };
@@ -58,13 +60,16 @@ export class RelationalInitiativeCoordinator {
 
   has(opportunityId: string): boolean { return this.admitted.has(opportunityId); }
   clear(opportunityId: string): void { this.admitted.delete(opportunityId); }
-  preemptForUserTurn(): string[] { const ids = [...this.admitted.keys()]; this.admitted.clear(); return ids; }
+  recordOutcome(opportunityId: string, outcome: InitiativeOutcome): void { if (!this.admitted.has(opportunityId)) throw new Error("unknown initiative opportunity"); this.admitted.delete(opportunityId); this.outcomes.set(opportunityId, outcome); }
+  preemptForUserTurn(): string[] { const ids = [...this.admitted.keys()]; for (const id of ids) this.recordOutcome(id, "cancelled"); return ids; }
   snapshot(): InitiativeAdmissionRecord[] { return [...this.admitted.values()].map((opportunity) => structuredClone(opportunity)); }
+  outcome(opportunityId: string): InitiativeOutcome | undefined { return this.outcomes.get(opportunityId); }
   restore(records: readonly InitiativeAdmissionRecord[], now: number): void {
     if (records.length > this.maxPending) throw new Error("initiative capacity exceeded");
     for (const record of records) {
       if (record.origin !== "relationalOpportunity" || record.urgency !== "low" || now >= record.expiresAt) continue;
       if (this.admitted.has(record.opportunityId)) continue;
+      if (this.outcomes.has(record.opportunityId)) continue;
       this.admitted.set(record.opportunityId, structuredClone(record));
     }
   }
