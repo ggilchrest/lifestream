@@ -1,12 +1,10 @@
 import { createHash } from "node:crypto";
 import type { InferenceRequest, InferenceSection, InputManifest } from "./port.js";
-import type { PreparedRelationshipContext } from "../context/builder.js";
+import { formatPreparedRelationshipContext, type PreparedRelationshipContext } from "../context/builder.ts";
 
 const kinds = ["policy", "corePersona", "adaptivePersona", "interactionState", "preparedMemory", "worldContext", "capabilityState", "conversation", "userInput"] as const;
 const digest = (content: string) => createHash("sha256").update(content, "utf8").digest("hex");
 const tokens = (content: string) => content.trim() ? content.trim().split(/\s+/u).length : 0;
-const formatPreparedRelationshipContext = (context: PreparedRelationshipContext): string => { const relevant = [...context.relevantContext].sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id)); const controls = context.configurationControls ? Object.entries(context.configurationControls).sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => `${key}=${value}`).join(", ") : "default"; return [`Prepared relationship context [profile=${context.profileRevision};relationship=${context.relationshipRevision};configuration=${context.configurationRevision}]`, `Expression controls: ${controls}`, `Approved baseline: ${context.approvedBaseline.join(" | ") || "none"}`, `Critical corrections: ${context.criticalCorrections.join(" | ") || "none"}`, `Relevant context: ${relevant.map((source) => `${source.id}=${source.content}`).join(" | ") || "none"}`, `Limitations: ${context.limitations.join(" | ") || "none"}`].join("\n"); };
-
 export type RuntimeSelfContext = {
   sourceRevision: string;
   runtimeStatus: "starting" | "ready" | "degraded" | "draining" | "stopped";
