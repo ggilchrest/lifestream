@@ -1,12 +1,13 @@
 {
   "slice": "LS-S074",
-  "status": "implemented",
+  "status": "verified",
   "claimClass": "fixture-and-source-grounded-runtime-implementation",
-  "revision": "WORKTREE",
+  "revision": "43674a94bd353d08b8b55d312fe4e8b1fc32f3bf",
   "checks": [
     { "command": "targeted profile-builder tests", "result": "pass", "evidence": "3 tests passed for attributable inactive candidates, actor binding, path/size/injection rejection and closed egress." },
-    { "command": "pnpm test", "result": "pass", "evidence": "176 public tests passed." }
+    { "command": "pnpm test", "result": "pass", "evidence": "176 public tests passed." },
+    { "command": "Human acceptance of LS-S074", "result": "pass", "evidence": "Operator explicitly accepted the bounded authenticated profile-builder intake and inactive candidate review workflow." }
   ],
   "implemented": ["Bounded export-first source metadata validation for JSON, CSV and NDJSON fixtures.", "Actor-bound extraction with source family/date attribution and inactive candidate state.", "Explicit closed-egress, path-escape, byte-limit, record-count and value-size guards."],
-  "excluded": ["Personal-data import, external egress, automatic admission, live authentication, production deployment and Human acceptance."]
+  "excluded": ["Personal-data import, external egress, automatic admission, live authentication and production deployment."]
 }
