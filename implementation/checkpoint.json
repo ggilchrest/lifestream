@@ -100,9 +100,7 @@
     "implementation/evidence/LS-S052-development-recovery-v3.json",
     "implementation/evidence/LS-S052-qualification-recovery-v3.json"
   ],
-  "changedFiles": [
-    "implementation/checkpoint.json"
-  ],
+  "changedFiles": [],
   "validation": [],
   "decisions": [
     "WSL development isolation remains application-level: host physical GPU index 1 is exposed as provider-local cuda:0 through CUDA_VISIBLE_DEVICES=1; strict container GPU invisibility is not claimed.",
