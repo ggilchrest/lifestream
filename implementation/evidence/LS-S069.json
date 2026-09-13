@@ -1,0 +1,30 @@
+{
+  "slice": "LS-S069",
+  "status": "verified",
+  "claimClass": "technical-core",
+  "caseIds": [
+    "LS-TEST-087"
+  ],
+  "revision": "8470dd2993eb56e635ec12b1ad7e5340bdc5b418",
+  "checks": [
+    {
+      "command": "pnpm build && pnpm typecheck && pnpm lint && pnpm test",
+      "result": "pass",
+      "evidence": "236 tests pass at committed integrated source, including shared profile/import/preview/restart foundations and actual local-auth transport denials."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled-playwright>/index.mjs node --test --experimental-strip-types apps/control-web/test/local-auth.test.mjs",
+      "result": "pass",
+      "evidence": "Actual Chrome setup/session/profile preview-save-activation/account journey and permissions/Skills/proposal checks pass, with synthetic data and fixture inference."
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/local-auth.test.ts apps/server/test/local-auth-http.test.ts apps/server/test/security-administration.test.ts (included in pnpm test)",
+      "result": "pass",
+      "evidence": "Offline password/TOTP vectors and replay, durable Owner/recovery races and database restore, one-use/session/persistent grants and revocation, exact1800-second admin expiry with continuing conversation, pinned Human proposals, inert Skill revisions, and real logout/permission pending-output fences pass. Rendered grants request/approval/revocation/audit, Skill draft/revision/history/activation and proposal review/approval/replay denial are exercised in Chrome."
+    }
+  ],
+  "exclusions": [
+    "Synthetic offline authentication and actual browser/software evidence; no physical authenticator-app setup or Human acceptance.",
+    "No production, shared-provider effects, personal import, training or push. S071 full audience/endpoint proof and joined S080/S081 acceptance remain separately required."
+  ]
+}

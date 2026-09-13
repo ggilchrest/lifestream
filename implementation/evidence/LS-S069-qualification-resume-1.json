@@ -1,0 +1,197 @@
+{
+  "slice": "LS-S069",
+  "status": "verified",
+  "claimClass": "technical-core",
+  "caseIds": [
+    "LS-TEST-087"
+  ],
+  "revision": "8470dd2993eb56e635ec12b1ad7e5340bdc5b418",
+  "checks": [
+    {
+      "command": "pnpm build && pnpm typecheck && pnpm lint && pnpm test",
+      "result": "pass",
+      "evidence": "236 tests pass at committed integrated source, including shared profile/import/preview/restart foundations and actual local-auth transport denials."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled-playwright>/index.mjs node --test --experimental-strip-types apps/control-web/test/local-auth.test.mjs",
+      "result": "pass",
+      "evidence": "Actual Chrome setup/session/profile preview-save-activation/account journey and permissions/Skills/proposal checks pass, with synthetic data and fixture inference."
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/local-auth.test.ts apps/server/test/local-auth-http.test.ts apps/server/test/security-administration.test.ts (included in pnpm test)",
+      "result": "pass",
+      "evidence": "Offline password/TOTP vectors and replay, durable Owner/recovery races and database restore, one-use/session/persistent grants and revocation, exact1800-second admin expiry with continuing conversation, pinned Human proposals, inert Skill revisions, and real logout/permission pending-output fences pass. Rendered grants request/approval/revocation/audit, Skill draft/revision/history/activation and proposal review/approval/replay denial are exercised in Chrome."
+    }
+  ],
+  "exclusions": [
+    "Synthetic offline authentication and actual browser/software evidence; no physical authenticator-app setup or Human acceptance.",
+    "No production, shared-provider effects, personal import, training or push. S071 full audience/endpoint proof and joined S080/S081 acceptance remain separately required."
+  ],
+  "qualification": {
+    "kind": "prospective-qualification",
+    "sourceRepository": "ggilchrest/lifestream",
+    "testedRevision": "8470dd2993eb56e635ec12b1ad7e5340bdc5b418",
+    "supersedes": "implementation/evidence/LS-S069.json",
+    "supersedesSha256": "70d093ade1220fd1671861aa365d79db7c87db56c787127ab23b01be52fe9ba6",
+    "sourceArtifacts": [
+      {
+        "path": "apps/control-web/app.js",
+        "sha256": "8baa25229b1c3d734ccdab65dd5d0034547608214035661087bfec977f92aaef"
+      },
+      {
+        "path": "apps/control-web/auth.js",
+        "sha256": "03c94331538e0036efb0d01ec3f06ec684bc5585aabc4996e25702ab7a5c4a78"
+      },
+      {
+        "path": "apps/control-web/index.html",
+        "sha256": "d0d2ed5186c6744f9f70ca867afd8c3817d8b40aa94aa4518ec17dbdb655f2fa"
+      },
+      {
+        "path": "apps/control-web/security.html",
+        "sha256": "6acec287a09fb8dd02e4c68372806111a9c97d29a9be862eb2fbcb5c7211592a"
+      },
+      {
+        "path": "apps/control-web/security.js",
+        "sha256": "e65958d5388f8e35086723a6e5fa27d4dd507d940faa158f8f8d239f023fcc63"
+      },
+      {
+        "path": "apps/control-web/test/local-auth.test.mjs",
+        "sha256": "bc9966ad34e7ec89b92eed94a0e7ca34da9777a1fe5dc460a339e1dfb8e2f4c4"
+      },
+      {
+        "path": "apps/server/package.json",
+        "sha256": "942611691060847a300756d1157de70575e03f945f3c9d1df4aa68db0d32b5d1"
+      },
+      {
+        "path": "apps/server/src/admin/personalization-capabilities.ts",
+        "sha256": "ce1c1484e0dafe967899276637849de29b6cbc3f043b8d97da8e5ae5cd521318"
+      },
+      {
+        "path": "apps/server/src/admin/security-administration.ts",
+        "sha256": "33e3f3e04e76108a40ffabc42b8a653d4bdf1334dd7e88f303ad4b8f62b1ee02"
+      },
+      {
+        "path": "apps/server/src/auth/local-auth.ts",
+        "sha256": "626d951f58891adafb6af5c4d50ca8864c59c6ef70ec388a333f46222dc6ab6c"
+      },
+      {
+        "path": "apps/server/src/composition/authority.ts",
+        "sha256": "f16877702e1c153bf73c86a5311fc25407cd62000340fc63b2713d99838e467d"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "33312de611bb985b28515ed635f4d6b4a13497ee41dbef19f4df9462fcb3e4ad"
+      },
+      {
+        "path": "apps/server/src/runtime/audio.ts",
+        "sha256": "9377d7369bd140d0d3cc9900496be2d7b7e4e7c5e44238ca427fbcfe5637cbee"
+      },
+      {
+        "path": "apps/server/src/runtime/inference.ts",
+        "sha256": "24e7f03ee8a414b7d12875770511afea4ad3f1be3b6349cbb0b17f8c591cf949"
+      },
+      {
+        "path": "apps/server/test/local-auth-http.test.ts",
+        "sha256": "6745f38396de3cc7c8d56f98152ae0a29849e10ec18c3dd4dbd4a620d5102f22"
+      },
+      {
+        "path": "apps/server/test/local-auth.test.ts",
+        "sha256": "47cacd60c2462bb09cb1ce9efbe3b836b3ce393ec67f24f77f2e932070c0704d"
+      },
+      {
+        "path": "apps/server/test/personalization-capabilities.test.ts",
+        "sha256": "f84e93f4762d42adb110ea2debd5fc4de789c64a3648525e57b5ffd9a4d64fef"
+      },
+      {
+        "path": "apps/server/test/security-administration.test.ts",
+        "sha256": "d0cc90c9019fcd8cdae4e426c27f1baf1526acbf00fae9e28b600e467510615a"
+      },
+      {
+        "path": "apps/server/test/server.test.ts",
+        "sha256": "e9391eba46e94fdb7a8a3e1d1a4641e9c9d60337952df16c388099ec47c81348"
+      },
+      {
+        "path": "package.json",
+        "sha256": "746b5d4e86475827d12b62c0280f3373795bfb28fe26106967e947422b2fe312"
+      },
+      {
+        "path": "packages/contracts/package.json",
+        "sha256": "4cdc826d25d7ede429e829540ee30ef2ab9dd233bd5e071019d3c5821b4b68bf"
+      },
+      {
+        "path": "packages/contracts/src/schemas/assistant-profile.schema.json",
+        "sha256": "ccaa756d700492c18385f736aec41d775aa81a9eda8b0019c444e912ed38b77f"
+      },
+      {
+        "path": "packages/contracts/src/validator.ts",
+        "sha256": "f1e46c11c1c7598645b2d9e56267245a52f8a5c79d6e89fbba178292b491d614"
+      },
+      {
+        "path": "packages/runtime/package.json",
+        "sha256": "e452885a4c6f33dfa93efdad1bf298a536cee18a96dddd9cc4452f0b12e31110"
+      },
+      {
+        "path": "packages/runtime/src/context/builder.ts",
+        "sha256": "13a036b3e0e8b07ded7c2c1b74f3a05031b34a71be1ef1e303344014aa8ac6b7"
+      },
+      {
+        "path": "packages/runtime/src/inference/port.ts",
+        "sha256": "23a42bdb8fa376315557cf43e7efdbae8862ce9920bdd65d0db0c54810d08c6c"
+      },
+      {
+        "path": "packages/runtime/src/inference/prompt.ts",
+        "sha256": "8dac51d36a166f5b6e9a09e3b83e8fb4ad0bda03e6458ee13080979d6e94c6bf"
+      },
+      {
+        "path": "packages/storage-sqlite/src/assistant-profile.ts",
+        "sha256": "09f6fbe7f654d436963e089ade2f61dab8d9328b0c9be9850afa6dfb5334f933"
+      },
+      {
+        "path": "packages/storage-sqlite/src/authority/admission.ts",
+        "sha256": "7ff2fc163ba8684c22e6d126499e65f46a04d292a9d7f4fe5102bddebc518229"
+      },
+      {
+        "path": "packages/storage-sqlite/src/authority/grants.ts",
+        "sha256": "2780d2111985f435785730d33947850fccf47457d32d21b83b432e1b73420a84"
+      },
+      {
+        "path": "packages/storage-sqlite/src/database.ts",
+        "sha256": "062f4f577bae3db54d31c3d54304003982ac0960cb8f7a898d2d261b6d34ab19"
+      },
+      {
+        "path": "packages/storage-sqlite/src/memory.ts",
+        "sha256": "0b593698fbf841521bc6a7c34c4fce8374aa03a1dc80c02652e3d322eb5c2db6"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0017_local_auth.sql",
+        "sha256": "b91d948012b935674c7d250eb62ff827c45f9512dc3dd44106c9a5c5cfb94aa8"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/index.ts",
+        "sha256": "bdb2e82ab7ad9eb4511ce782af07569a03c67b6e77d2dd210331956f5919beb4"
+      },
+      {
+        "path": "pnpm-lock.yaml",
+        "sha256": "d4bd9916327bc94e78292a0159edffc8038f28356a057e13acadfc2e5f72549e"
+      }
+    ],
+    "effectiveSpecification": {
+      "sourceRepository": "ggilchrest/lifestream-specs",
+      "revision": "946cc6989596ce4fc947929c3ed5175768acd795",
+      "artifacts": [
+        {
+          "path": "docs/18-standalone-human-authority.md",
+          "sha256": "5e7254060d15bd6be3ebce5ad4e758c096b683ecbad55a2a90b9c95ccfa44fac"
+        },
+        {
+          "path": "docs/25-assistant-personalization-administration.md",
+          "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+        },
+        {
+          "path": "fixtures/requirement-traceability.json",
+          "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+        }
+      ]
+    }
+  }
+}
