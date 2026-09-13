@@ -1,0 +1,22 @@
+{
+  "slice": "LS-S080",
+  "revision": "db55a4453d92bc4a9ae4daeef85b687c5ea42b94",
+  "observations": [
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "fail",
+      "detail": "19 passed; stale-lineage import expected 201 but correctly returned 422; Lab timed out under concurrent run."
+    },
+    {
+      "command": "node --test apps/control-web/test/relationship-lab.test.mjs",
+      "result": "pass",
+      "detail": "Same Lab source passed alone in 3197 ms."
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "detail": "21 passed after explicit stale-lineage negative and independent import test; no Lab behavior or criterion weakened."
+    }
+  ],
+  "claim": "Historical failure and bounded rerun observations; current qualification separate."
+}

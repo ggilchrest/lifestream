@@ -1,0 +1,446 @@
+{
+  "slice": "LS-S071",
+  "caseIds": [
+    "LS-TEST-089"
+  ],
+  "collectedAt": "2026-09-13T09:42:07.435Z",
+  "checks": [
+    {
+      "id": "typed-speech-available-capture-inactive",
+      "evidenceClass": "development-provider",
+      "result": "pass",
+      "elapsedMs": 821,
+      "evidence": {
+        "output": "GENERATION=healthy;CAPTURE=inactive;DELIVERY=notObserved;VISION=notConfigured",
+        "manifest": {
+          "schemaVersion": "1.0.0",
+          "sections": [
+            {
+              "kind": "policy",
+              "sourceRevision": "v1",
+              "sourceRef": "policy:v1",
+              "contentDigest": "914cddc53bfe855c565313d438afc83b8243c334ea4b606fc8784c7def3d2d11",
+              "redaction": "none",
+              "tokenCount": 132
+            },
+            {
+              "kind": "corePersona",
+              "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "sourceRef": "assistant-profile:edb7a375-91d6-47de-ad30-b7a8fbec8852",
+              "contentDigest": "b24649436b21bceab4e4b54e40138f512353e091b1477e446935e1736a382d4e",
+              "redaction": "none",
+              "tokenCount": 35
+            },
+            {
+              "kind": "adaptivePersona",
+              "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "sourceRef": "assistant-profile:edb7a375-91d6-47de-ad30-b7a8fbec8852",
+              "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+              "redaction": "none",
+              "tokenCount": 1
+            },
+            {
+              "kind": "interactionState",
+              "sourceRevision": "adfd2cba0fde4c537336156f415c855abc9a504eaad6758eaa2db3b1c1365298",
+              "sourceRef": "runtime-self-context:v1",
+              "contentDigest": "5f675ea27256d64f1b6737fe9ba74639b55273b989a095f8738290405a50438a",
+              "redaction": "none",
+              "tokenCount": 91
+            },
+            {
+              "kind": "preparedMemory",
+              "sourceRevision": "v1",
+              "sourceRef": "memory:prepared-v1",
+              "contentDigest": "b0ea49be97d409f3c7fd7a1433cddcd4dbc049be382185003b22547081399061",
+              "redaction": "none",
+              "tokenCount": 5
+            },
+            {
+              "kind": "worldContext",
+              "sourceRevision": "v1",
+              "sourceRef": "world:prepared-v1",
+              "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+              "redaction": "none",
+              "tokenCount": 5
+            },
+            {
+              "kind": "capabilityState",
+              "sourceRevision": "v1",
+              "sourceRef": "capability:snapshot-v1",
+              "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+              "redaction": "none",
+              "tokenCount": 7
+            },
+            {
+              "kind": "conversation",
+              "sourceRevision": "v1",
+              "sourceRef": "conversation:session-v1",
+              "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+              "redaction": "none",
+              "tokenCount": 6
+            },
+            {
+              "kind": "userInput",
+              "sourceRevision": "v1",
+              "sourceRef": "user-input:current-v1",
+              "contentDigest": "1222133d747eba6269656f744d20f3531c1a4c1fcb9aeb64d14adea5c96f7470",
+              "redaction": "none",
+              "tokenCount": 12
+            }
+          ],
+          "tokenizer": "whitespace-v1"
+        },
+        "state": {
+          "kind": "interactionState",
+          "content": "assistant=c3444e4f-ed4c-461f-b0fe-ecbf5344ad89;session=ce641cc4-c2bb-4e01-a373-54f0d585b1af;interaction=cad370ec-f1d6-4a72-9148-817aa8ed9c3a;endpoint=none;origin=userTurn;Runtime self-context [source=adfd2cba0fde4c537336156f415c855abc9a504eaad6758eaa2db3b1c1365298]: status=ready; input.text=active; input.microphone=inactive; input.visual=notConfigured; output.text=active; output.speechGeneration=healthy; output.speechDelivery=notObserved; output.presentation=notConfigured; endpoint=none; endpointRevision=unbound; sessionRevision=0; audience=unknown; permission=authenticatedSession; asOf=2026-09-13T09:42:10.161Z; expiresAt=2026-09-13T10:12:10.044Z; configuration=f88e0bee63d84176091c44f21a55557e3dd243baf6d36b0137df8b7f9b36b1b8; modalityFacts={\"text\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":true,\"authorized\":true},\"microphone\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":false,\"authorized\":true},\"speechGeneration\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":false,\"authorized\":true},\"visual\":{\"implemented\":false,\"configured\":false,\"connected\":false,\"activeForSession\":false,\"authorized\":false}}; limitations=Installed hardware is not evidence of capture. | Received audio establishes only this session input, not physical microphone permission. | Server delivery is not evidence of physical audibility. | Visual input is not configured. | Disclosure scope is user selected; physical audience and speaker identity are unverified. | Conversation access does not grant tool invocation or confirm effects. | Voice controls require the selected provider capability check; presentation is not configured.",
+          "trusted": true,
+          "sourceRevision": "adfd2cba0fde4c537336156f415c855abc9a504eaad6758eaa2db3b1c1365298",
+          "sourceRef": "runtime-self-context:v1",
+          "contentDigest": "5f675ea27256d64f1b6737fe9ba74639b55273b989a095f8738290405a50438a",
+          "redaction": "none",
+          "tokenCount": 91
+        },
+        "profileRef": "assistant-profile:edb7a375-91d6-47de-ad30-b7a8fbec8852",
+        "providers": {
+          "inference": {
+            "id": "inference",
+            "implementation": "@lifestream/providers-sglang",
+            "revision": "319f741cce68d7914884900c138a1fbb70a42f30",
+            "status": "healthy",
+            "fixture": false,
+            "required": true
+          },
+          "memory": {
+            "id": "memory",
+            "implementation": "@lifestream/providers-fixture",
+            "revision": "workspace",
+            "status": "healthy",
+            "fixture": true,
+            "required": true
+          },
+          "stt": {
+            "id": "stt",
+            "implementation": "@lifestream/providers-nemo-speech",
+            "revision": "ebe59e5a817142986528bbbee5dba8db7b38ed50",
+            "status": "healthy",
+            "fixture": false,
+            "required": true
+          },
+          "tts": {
+            "id": "tts",
+            "implementation": "@lifestream/providers-voxcpm",
+            "revision": "workspace",
+            "status": "healthy",
+            "fixture": false,
+            "required": true
+          },
+          "world": {
+            "id": "world",
+            "implementation": "@lifestream/providers-fixture",
+            "revision": "workspace",
+            "status": "healthy",
+            "fixture": true,
+            "required": false
+          },
+          "capability": {
+            "id": "capability",
+            "implementation": "@lifestream/providers-fixture",
+            "revision": "workspace",
+            "status": "healthy",
+            "fixture": true,
+            "required": false
+          },
+          "renderer": {
+            "id": "renderer",
+            "implementation": "@lifestream/providers-fixture",
+            "revision": "workspace",
+            "status": "healthy",
+            "fixture": true,
+            "required": false
+          },
+          "clock": {
+            "id": "clock",
+            "implementation": "node:system",
+            "revision": "v24.14.1",
+            "status": "healthy",
+            "fixture": false,
+            "required": true
+          }
+        }
+      }
+    },
+    {
+      "id": "speech-outage-refresh-preserves-text",
+      "evidenceClass": "development-provider-and-fault-injection",
+      "result": "pass",
+      "elapsedMs": 747,
+      "evidence": {
+        "output": "GENERATION=unavailable;CAPTURE=inactive;DELIVERY=notObserved;VISION=notConfigured",
+        "manifest": {
+          "schemaVersion": "1.0.0",
+          "sections": [
+            {
+              "kind": "policy",
+              "sourceRevision": "v1",
+              "sourceRef": "policy:v1",
+              "contentDigest": "914cddc53bfe855c565313d438afc83b8243c334ea4b606fc8784c7def3d2d11",
+              "redaction": "none",
+              "tokenCount": 132
+            },
+            {
+              "kind": "corePersona",
+              "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "sourceRef": "assistant-profile:edb7a375-91d6-47de-ad30-b7a8fbec8852",
+              "contentDigest": "b24649436b21bceab4e4b54e40138f512353e091b1477e446935e1736a382d4e",
+              "redaction": "none",
+              "tokenCount": 35
+            },
+            {
+              "kind": "adaptivePersona",
+              "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "sourceRef": "assistant-profile:edb7a375-91d6-47de-ad30-b7a8fbec8852",
+              "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+              "redaction": "none",
+              "tokenCount": 1
+            },
+            {
+              "kind": "interactionState",
+              "sourceRevision": "1b5be7da47594ca75030f8956209ad6063f4df86206bfa9e55e032e46d85f3ef",
+              "sourceRef": "runtime-self-context:v1",
+              "contentDigest": "e93dfdbd966ad5e8cd1ec1a691369ddc7eab29668ad416e2234237e357cb7ff3",
+              "redaction": "none",
+              "tokenCount": 91
+            },
+            {
+              "kind": "preparedMemory",
+              "sourceRevision": "v1",
+              "sourceRef": "memory:prepared-v1",
+              "contentDigest": "b0ea49be97d409f3c7fd7a1433cddcd4dbc049be382185003b22547081399061",
+              "redaction": "none",
+              "tokenCount": 5
+            },
+            {
+              "kind": "worldContext",
+              "sourceRevision": "v1",
+              "sourceRef": "world:prepared-v1",
+              "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+              "redaction": "none",
+              "tokenCount": 5
+            },
+            {
+              "kind": "capabilityState",
+              "sourceRevision": "v1",
+              "sourceRef": "capability:snapshot-v1",
+              "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+              "redaction": "none",
+              "tokenCount": 7
+            },
+            {
+              "kind": "conversation",
+              "sourceRevision": "v1",
+              "sourceRef": "conversation:session-v1",
+              "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+              "redaction": "none",
+              "tokenCount": 6
+            },
+            {
+              "kind": "userInput",
+              "sourceRevision": "v1",
+              "sourceRef": "user-input:current-v1",
+              "contentDigest": "1222133d747eba6269656f744d20f3531c1a4c1fcb9aeb64d14adea5c96f7470",
+              "redaction": "none",
+              "tokenCount": 12
+            }
+          ],
+          "tokenizer": "whitespace-v1"
+        },
+        "state": {
+          "kind": "interactionState",
+          "content": "assistant=c3444e4f-ed4c-461f-b0fe-ecbf5344ad89;session=ce641cc4-c2bb-4e01-a373-54f0d585b1af;interaction=81402fad-9a7c-4f76-bae4-c9ad9f576e4b;endpoint=none;origin=userTurn;Runtime self-context [source=1b5be7da47594ca75030f8956209ad6063f4df86206bfa9e55e032e46d85f3ef]: status=degraded; input.text=active; input.microphone=inactive; input.visual=notConfigured; output.text=active; output.speechGeneration=unavailable; output.speechDelivery=notObserved; output.presentation=notConfigured; endpoint=none; endpointRevision=unbound; sessionRevision=0; audience=unknown; permission=authenticatedSession; asOf=2026-09-13T09:42:10.970Z; expiresAt=2026-09-13T10:12:10.044Z; configuration=f88e0bee63d84176091c44f21a55557e3dd243baf6d36b0137df8b7f9b36b1b8; modalityFacts={\"text\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":true,\"authorized\":true},\"microphone\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":false,\"authorized\":true},\"speechGeneration\":{\"implemented\":true,\"configured\":true,\"connected\":false,\"activeForSession\":false,\"authorized\":true},\"visual\":{\"implemented\":false,\"configured\":false,\"connected\":false,\"activeForSession\":false,\"authorized\":false}}; limitations=Installed hardware is not evidence of capture. | Received audio establishes only this session input, not physical microphone permission. | Server delivery is not evidence of physical audibility. | Visual input is not configured. | Disclosure scope is user selected; physical audience and speaker identity are unverified. | Conversation access does not grant tool invocation or confirm effects. | Voice controls require the selected provider capability check; presentation is not configured.",
+          "trusted": true,
+          "sourceRevision": "1b5be7da47594ca75030f8956209ad6063f4df86206bfa9e55e032e46d85f3ef",
+          "sourceRef": "runtime-self-context:v1",
+          "contentDigest": "e93dfdbd966ad5e8cd1ec1a691369ddc7eab29668ad416e2234237e357cb7ff3",
+          "redaction": "none",
+          "tokenCount": 91
+        },
+        "profileRef": "assistant-profile:edb7a375-91d6-47de-ad30-b7a8fbec8852"
+      }
+    },
+    {
+      "id": "authorized-session-inspection-and-observed-scope-changes",
+      "evidenceClass": "development-provider-and-real-authentication",
+      "result": "pass",
+      "elapsedMs": 1006,
+      "evidence": {
+        "outcomes": [
+          {
+            "mode": "text",
+            "audience": "authenticatedSession",
+            "output": "AUDIENCE=authenticatedSession;ENDPOINT=sessionEndpoint",
+            "state": {
+              "kind": "interactionState",
+              "content": "assistant=c3444e4f-ed4c-461f-b0fe-ecbf5344ad89;session=ce641cc4-c2bb-4e01-a373-54f0d585b1af;interaction=f3af0119-33f7-40a5-869a-ad1f92e61cd0;endpoint=accb8278-45e8-4ac3-994e-a8d871561e97;origin=userTurn;Runtime self-context [source=d51ef9064e922db48168b3d90d3aa754891825645f44893758cdf5c719e83840]: status=ready; input.text=active; input.microphone=inactive; input.visual=notConfigured; output.text=active; output.speechGeneration=healthy; output.speechDelivery=notObserved; output.presentation=notConfigured; endpoint=sessionEndpoint; endpointRevision=1; sessionRevision=1; audience=authenticatedSession; permission=authenticatedSession; asOf=2026-09-13T09:42:11.619Z; expiresAt=2026-09-13T10:12:10.044Z; configuration=f88e0bee63d84176091c44f21a55557e3dd243baf6d36b0137df8b7f9b36b1b8; modalityFacts={\"text\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":true,\"authorized\":true},\"microphone\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":false,\"authorized\":true},\"speechGeneration\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":false,\"authorized\":true},\"visual\":{\"implemented\":false,\"configured\":false,\"connected\":false,\"activeForSession\":false,\"authorized\":false}}; limitations=Installed hardware is not evidence of capture. | Received audio establishes only this session input, not physical microphone permission. | Server delivery is not evidence of physical audibility. | Visual input is not configured. | Disclosure scope is user selected; physical audience and speaker identity are unverified. | Conversation access does not grant tool invocation or confirm effects. | Voice controls require the selected provider capability check; presentation is not configured.",
+              "trusted": true,
+              "sourceRevision": "d51ef9064e922db48168b3d90d3aa754891825645f44893758cdf5c719e83840",
+              "sourceRef": "runtime-self-context:v1",
+              "contentDigest": "d8a00a30c2c59adb8f3b901a69c530ee53a0715932e80e2e744ac2f12c7f05c9",
+              "redaction": "none",
+              "tokenCount": 91
+            }
+          },
+          {
+            "mode": "text",
+            "audience": "unknown",
+            "output": "AUDIENCE=unknown;ENDPOINT=sessionEndpoint",
+            "state": {
+              "kind": "interactionState",
+              "content": "assistant=c3444e4f-ed4c-461f-b0fe-ecbf5344ad89;session=ce641cc4-c2bb-4e01-a373-54f0d585b1af;interaction=deae0272-01f0-45d4-843b-7df4ac154021;endpoint=accb8278-45e8-4ac3-994e-a8d871561e97;origin=userTurn;Runtime self-context [source=97f9b960a96631e0dfe7908c11351a73363a11f2977d53927cf66aba6142df94]: status=ready; input.text=active; input.microphone=inactive; input.visual=notConfigured; output.text=active; output.speechGeneration=healthy; output.speechDelivery=notObserved; output.presentation=notConfigured; endpoint=sessionEndpoint; endpointRevision=2; sessionRevision=2; audience=unknown; permission=authenticatedSession; asOf=2026-09-13T09:42:11.993Z; expiresAt=2026-09-13T10:12:10.044Z; configuration=f88e0bee63d84176091c44f21a55557e3dd243baf6d36b0137df8b7f9b36b1b8; modalityFacts={\"text\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":true,\"authorized\":true},\"microphone\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":false,\"authorized\":true},\"speechGeneration\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":false,\"authorized\":true},\"visual\":{\"implemented\":false,\"configured\":false,\"connected\":false,\"activeForSession\":false,\"authorized\":false}}; limitations=Installed hardware is not evidence of capture. | Received audio establishes only this session input, not physical microphone permission. | Server delivery is not evidence of physical audibility. | Visual input is not configured. | Disclosure scope is user selected; physical audience and speaker identity are unverified. | Conversation access does not grant tool invocation or confirm effects. | Voice controls require the selected provider capability check; presentation is not configured.",
+              "trusted": true,
+              "sourceRevision": "97f9b960a96631e0dfe7908c11351a73363a11f2977d53927cf66aba6142df94",
+              "sourceRef": "runtime-self-context:v1",
+              "contentDigest": "093b6073cdabe118d12c383fc745b74ce521fa85ed1f0268e35fb0e1d9c28d19",
+              "redaction": "none",
+              "tokenCount": 91
+            }
+          },
+          {
+            "mode": "none",
+            "audience": "unknown",
+            "output": "AUDIENCE=unknown;ENDPOINT=none",
+            "state": {
+              "kind": "interactionState",
+              "content": "assistant=c3444e4f-ed4c-461f-b0fe-ecbf5344ad89;session=ce641cc4-c2bb-4e01-a373-54f0d585b1af;interaction=b07cdbb0-9ba2-4a39-afeb-e8f52469bf8a;endpoint=none;origin=userTurn;Runtime self-context [source=21380ffc2c0c2646b31167a8bd11ba9aedee97da67739788ba7d8ffdb4ec4e55]: status=ready; input.text=active; input.microphone=inactive; input.visual=notConfigured; output.text=active; output.speechGeneration=healthy; output.speechDelivery=notObserved; output.presentation=notConfigured; endpoint=none; endpointRevision=unbound; sessionRevision=3; audience=unknown; permission=authenticatedSession; asOf=2026-09-13T09:42:12.322Z; expiresAt=2026-09-13T10:12:10.044Z; configuration=f88e0bee63d84176091c44f21a55557e3dd243baf6d36b0137df8b7f9b36b1b8; modalityFacts={\"text\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":true,\"authorized\":true},\"microphone\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":false,\"authorized\":true},\"speechGeneration\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":false,\"authorized\":true},\"visual\":{\"implemented\":false,\"configured\":false,\"connected\":false,\"activeForSession\":false,\"authorized\":false}}; limitations=Installed hardware is not evidence of capture. | Received audio establishes only this session input, not physical microphone permission. | Server delivery is not evidence of physical audibility. | Visual input is not configured. | Disclosure scope is user selected; physical audience and speaker identity are unverified. | Conversation access does not grant tool invocation or confirm effects. | Voice controls require the selected provider capability check; presentation is not configured.",
+              "trusted": true,
+              "sourceRevision": "21380ffc2c0c2646b31167a8bd11ba9aedee97da67739788ba7d8ffdb4ec4e55",
+              "sourceRef": "runtime-self-context:v1",
+              "contentDigest": "ed3813037cc33189a8a79052ed7ec1aafabd12b81cc1fb8b9eee307f2994b7e0",
+              "redaction": "none",
+              "tokenCount": 91
+            }
+          }
+        ],
+        "inspection": "authenticated-session-only; no relationship payload",
+        "physicalAudience": "unverified"
+      }
+    },
+    {
+      "id": "actual-synthetic-audio-route",
+      "evidenceClass": "development-provider",
+      "result": "pass",
+      "elapsedMs": 6891,
+      "evidence": {
+        "authenticatedAudioFence": "logout-after-real-provider-chunk; zero late text or PCM",
+        "transcript": "Reply with exactly audio runtime ready.",
+        "output": "audio runtime ready",
+        "state": {
+          "kind": "interactionState",
+          "content": "assistant=c3444e4f-ed4c-461f-b0fe-ecbf5344ad89;session=ce641cc4-c2bb-4e01-a373-54f0d585b1af;interaction=35eaf945-2a42-43d5-bd04-cf7130d8b187;endpoint=1f8ce95a-b889-441b-b509-a3cec686b1e7;origin=userTurn;Runtime self-context [source=37fb815c57d87ad8ca795a3937b99be568c04d340879452d2724d8ff6840d032]: status=ready; input.text=active; input.microphone=activeForSession; input.visual=notConfigured; output.text=active; output.speechGeneration=healthy; output.speechDelivery=notObserved; output.presentation=notConfigured; endpoint=sessionEndpoint; endpointRevision=1; sessionRevision=4; audience=authenticatedSession; permission=authenticatedSession; asOf=2026-09-13T09:42:16.446Z; expiresAt=2026-09-13T10:12:10.044Z; configuration=f88e0bee63d84176091c44f21a55557e3dd243baf6d36b0137df8b7f9b36b1b8; modalityFacts={\"text\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":true,\"authorized\":true},\"microphone\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":true,\"authorized\":true},\"speechGeneration\":{\"implemented\":true,\"configured\":true,\"connected\":true,\"activeForSession\":false,\"authorized\":true},\"visual\":{\"implemented\":false,\"configured\":false,\"connected\":false,\"activeForSession\":false,\"authorized\":false}}; limitations=Installed hardware is not evidence of capture. | Received audio establishes only this session input, not physical microphone permission. | Server delivery is not evidence of physical audibility. | Visual input is not configured. | Disclosure scope is user selected; physical audience and speaker identity are unverified. | Conversation access does not grant tool invocation or confirm effects. | Voice controls require the selected provider capability check; presentation is not configured.",
+          "trusted": true,
+          "sourceRevision": "37fb815c57d87ad8ca795a3937b99be568c04d340879452d2724d8ff6840d032",
+          "sourceRef": "runtime-self-context:v1",
+          "contentDigest": "90ba3f1ce93b3a25d182b1555e3efa7aabf4c976aa6401f0040be35fe03f1e6a",
+          "redaction": "none",
+          "tokenCount": 91
+        },
+        "manifest": {
+          "schemaVersion": "1.0.0",
+          "sections": [
+            {
+              "kind": "policy",
+              "sourceRevision": "v1",
+              "sourceRef": "policy:spoken-v1",
+              "contentDigest": "4b6ead5df86325251052fa675aed6200b1b2160fd4a1af3ea056c07033aafca0",
+              "redaction": "none",
+              "tokenCount": 204
+            },
+            {
+              "kind": "corePersona",
+              "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "sourceRef": "assistant-profile:edb7a375-91d6-47de-ad30-b7a8fbec8852",
+              "contentDigest": "b24649436b21bceab4e4b54e40138f512353e091b1477e446935e1736a382d4e",
+              "redaction": "none",
+              "tokenCount": 35
+            },
+            {
+              "kind": "adaptivePersona",
+              "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "sourceRef": "assistant-profile:edb7a375-91d6-47de-ad30-b7a8fbec8852",
+              "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+              "redaction": "none",
+              "tokenCount": 1
+            },
+            {
+              "kind": "interactionState",
+              "sourceRevision": "37fb815c57d87ad8ca795a3937b99be568c04d340879452d2724d8ff6840d032",
+              "sourceRef": "runtime-self-context:v1",
+              "contentDigest": "90ba3f1ce93b3a25d182b1555e3efa7aabf4c976aa6401f0040be35fe03f1e6a",
+              "redaction": "none",
+              "tokenCount": 91
+            },
+            {
+              "kind": "preparedMemory",
+              "sourceRevision": "v1",
+              "sourceRef": "memory:prepared-v1",
+              "contentDigest": "b0ea49be97d409f3c7fd7a1433cddcd4dbc049be382185003b22547081399061",
+              "redaction": "none",
+              "tokenCount": 5
+            },
+            {
+              "kind": "worldContext",
+              "sourceRevision": "v1",
+              "sourceRef": "world:prepared-v1",
+              "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+              "redaction": "none",
+              "tokenCount": 5
+            },
+            {
+              "kind": "capabilityState",
+              "sourceRevision": "v1",
+              "sourceRef": "capability:snapshot-v1",
+              "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+              "redaction": "none",
+              "tokenCount": 7
+            },
+            {
+              "kind": "conversation",
+              "sourceRevision": "v1",
+              "sourceRef": "conversation:session-v1",
+              "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+              "redaction": "none",
+              "tokenCount": 6
+            },
+            {
+              "kind": "userInput",
+              "sourceRevision": "v1",
+              "sourceRef": "user-input:current-v1",
+              "contentDigest": "5ceb10b6f606f612f94cfb62ad6fecf891f5b6910c8f1025e0de5876f1d3f57f",
+              "redaction": "none",
+              "tokenCount": 6
+            }
+          ],
+          "tokenizer": "whitespace-v1"
+        },
+        "inputSamples": 51200,
+        "audioFrames": 30,
+        "terminal": "completed",
+        "playback": false
+      }
+    }
+  ],
+  "exclusions": [
+    "Human acceptance",
+    "physical microphone/camera capture",
+    "physical audibility",
+    "perceptual voice quality",
+    "production"
+  ],
+  "sourceRevision": "db55a4453d92bc4a9ae4daeef85b687c5ea42b94",
+  "scriptSha256": "4105cf502b115096bbdc682ee2c162a09d3a51bc49c4c09e3820c117e933cbb7",
+  "sourceWorktreeStatus": [],
+  "selectedProfile": "ai5090",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "effectiveConfigurationDigest": "0a0bd0c8bb5b9e1ac8f440eacc0874768a8043a509a54cf05ccdf0828a5fdd1b",
+  "result": "pass",
+  "acceptance": "prospective evidence only; exact committed inputs and deterministic race tests must be qualified separately"
+}
