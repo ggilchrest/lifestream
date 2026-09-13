@@ -4,13 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { Database } from "../src/database.ts";
+import { loadMigrations } from "../src/migrations/index.ts";
 
 test("SQLite database migrates, persists, and rejects changed history", () => {
   const directory = mkdtempSync(join(tmpdir(), "lifestream-sqlite-")); const path = join(directory, "state.db");
   const first = new Database({ path }); assert.equal(first.connection.prepare("PRAGMA journal_mode").get()?.journal_mode, "wal");
-  assert.equal(first.migrate().length, 15); assert.equal(first.migrate().length, 15);
+  assert.equal(first.migrate().length, loadMigrations().length); assert.equal(first.migrate().length, loadMigrations().length);
   assert.ok(first.connection.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'capability_snapshots'").get()); first.close();
-  const second = new Database({ path }); assert.equal(second.migrate().length, 15); second.close();
+  const second = new Database({ path }); assert.equal(second.migrate().length, loadMigrations().length); second.close();
   const changed = new Database({ path, migrations: [{ id: 1, name: "initial", sql: "SELECT 1", digest: "changed" }] });
   assert.throws(() => changed.migrate(), /digest mismatch/); changed.close(); rmSync(directory, { recursive: true, force: true });
 });
@@ -30,7 +31,7 @@ test("sparse migration ledger upgrades without rewriting existing data", () => {
   seed.connection.exec("DELETE FROM schema_migrations WHERE id > 1");
   seed.close();
   const upgraded = new Database({ path }); const records = upgraded.migrate();
-  assert.equal(records.length, 15); assert.equal(records[0]?.id, migration?.id);
+  assert.equal(records.length, loadMigrations().length); assert.equal(records[0]?.id, migration?.id);
   assert.deepEqual(upgraded.connection.prepare("SELECT value FROM preserved").all().map((row) => ({ ...row })), [{ value: "keep-me" }]);
   upgraded.close(); rmSync(directory, { recursive: true, force: true });
 });
