@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { Database } from "./database.ts";
 
 export const PROFILE_BUILDER_LIMITS = Object.freeze({ files: 8, fileBytes: 65_536, totalBytes: 262_144, records: 256, valueCharacters: 4_000, tokens: 16_384, durationMs: 2_000, providerCalls: 0, concurrentJobs: 2 });
-export type ProfileFormat = "notes-v1" | "profile-v1" | "conversation-v1" | "conversation-ndjson-v1";
+export type ProfileFormat = "canonical-user-profile-v1" | "notes-v1" | "profile-v1" | "conversation-v1" | "conversation-ndjson-v1";
 export type EvidenceBasis = "userDeclaration" | "observation" | "quoted" | "assistantGenerated" | "modelInference";
 export type ProfileSource = { sourceId: string; format: ProfileFormat; path: string; byteLength: number; sha256: string; sourceFamily: string; observedAt: string | null; authoredBy: "user" | "assistant" | "unknown" };
 export type ProfileUpload = { name: string; format: ProfileFormat; content: string; observedAt?: string | null; authoredBy: "user" | "assistant" | "unknown"; ownedBySubject: true };
@@ -36,7 +36,7 @@ export function inventoryUploads(userId: string, uploads: ProfileUpload[]): Prof
     ensure(upload && !Object.keys(upload).some(key => !["name", "format", "content", "observedAt", "authoredBy", "ownedBySubject"].includes(key)), "Unknown upload controls are not accepted");
     ensure(upload?.ownedBySubject === true, "Explicit subject-owned input confirmation is required; third-party material is excluded");
     ensure(upload && safeProfileName(upload.name), "Selected filenames must be plain safe names; directories, paths, archives and credential-like files are excluded");
-    ensure(["notes-v1", "profile-v1", "conversation-v1", "conversation-ndjson-v1"].includes(upload.format), "Unsupported input format/version; only declared UTF-8 notes and structured profile/conversation v1 are accepted");
+    ensure(["notes-v1", "profile-v1", "conversation-v1", "conversation-ndjson-v1", "canonical-user-profile-v1"].includes(upload.format), "Unsupported input format/version; only declared UTF-8 notes and structured profile/conversation v1 are accepted");
     ensure(typeof upload.content === "string" && !upload.content.includes("\0") && !upload.content.includes("\ufffd"), "Input must be valid UTF-8 text without binary data");
     ensure(!/-----BEGIN [A-Z ]*PRIVATE KEY-----|(?:^|\n)\s*(?:AWS_SECRET_ACCESS_KEY|API_KEY|PASSWORD|ACCESS_TOKEN|SECRET_KEY)\s*[:=]\s*\S+/miu.test(upload.content), "Credential-like payloads and private keys are excluded from intake");
     const byteLength = Buffer.byteLength(upload.content); bytes += byteLength;

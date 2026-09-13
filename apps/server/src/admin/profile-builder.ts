@@ -1,7 +1,10 @@
+import { createContractValidator } from "@lifestream/contracts";
 import { setImmediate } from "node:timers/promises";
 import { PROFILE_BUILDER_LIMITS, ProfileBuilderError, ProfileBuilderRepository, type ExtractedRecord, type ProfileUpload, type ProfileCandidate, type EvidenceBasis } from "@lifestream/storage-sqlite";
 
+const canonicalValidator = createContractValidator();
 export const PROFILE_FORMATS = Object.freeze([
+  { format: "canonical-user-profile-v1", version: "1.0.0", parser: "canonical-user-profile", description: "Canonical UserProfile v1 scalar declarations for the authenticated subject; scopes and consent are not imported or activated" },
   { format: "notes-v1", version: "1", parser: "utf8-lines", description: "UTF-8 personally authored notes; each nonempty line is an attributed candidate" },
   { format: "profile-v1", version: "1.0.0", parser: "bounded-json-profile", description: "Explicit self-subject profile records: key, value, basis, eventAt and sensitivity" },
   { format: "conversation-v1", version: "1.0.0", parser: "bounded-json-conversation", description: "Explicit self-subject conversation messages: role, content and createdAt" },
@@ -13,7 +16,7 @@ const value = (input: unknown, max: number): string => { if (typeof input !== "s
 const date = (input: unknown): string | null => { if (input === undefined || input === null) return null; if (typeof input !== "string" || !/Z$/u.test(input) || !Number.isFinite(Date.parse(input))) throw new ProfileBuilderError("Original event date must be UTC or unknown"); return input; };
 const parseJSON = (content: string): unknown => { try { return JSON.parse(content); } catch { throw new ProfileBuilderError("Malformed selected JSON; no content was admitted"); } };
 const basisFor = (basis: EvidenceBasis, upload: ProfileUpload): EvidenceBasis => basis === "userDeclaration" && upload.authoredBy !== "user" ? upload.authoredBy === "assistant" ? "assistantGenerated" : "observation" : basis;
-export function extractProfileUpload(upload: ProfileUpload): ExtractedRecord[] {
+export function extractProfileUpload(upload: ProfileUpload, expectedUserId?: string): ExtractedRecord[] {
   const make = (key: unknown, text: unknown, evidenceBasis: EvidenceBasis, eventAt: unknown, locator: string, sensitivity: unknown = "personal"): ExtractedRecord => {
     if (typeof key === "string" && /^(?:password|api[-_]?key|access[-_]?token|private[-_]?key|credential|secret)$/iu.test(key)) throw new ProfileBuilderError("Credential-like records are excluded from intake");
     if (sensitivity !== "personal" && sensitivity !== "sensitive") throw new ProfileBuilderError("Unsupported sensitivity value");
@@ -25,7 +28,14 @@ export function extractProfileUpload(upload: ProfileUpload): ExtractedRecord[] {
     return make(`conversation-${index + 1}`, row.content, row.role === "assistant" ? "assistantGenerated" : row.role === "quoted" ? "quoted" : "userDeclaration", row.createdAt, `message:${index + 1}`);
   };
   let records: ExtractedRecord[];
-  if (upload.format === "notes-v1") records = upload.content.split(/\r?\n/u).map((line, index) => ({ line: line.trim(), index })).filter(({ line }) => line).map(({ line, index }) => make(`note-${index + 1}`, line, line.startsWith(">") ? "quoted" : "userDeclaration", upload.observedAt, `line:${index + 1}`));
+  if (upload.format === "canonical-user-profile-v1") {
+    const root = object(parseJSON(upload.content));
+    if (!canonicalValidator.validate("https://lifestream.dev/contracts/user-profile/1.0.0", root).valid) throw new ProfileBuilderError("Canonical UserProfile 1.0.0 schema validation failed");
+    if (!expectedUserId || root.userId !== expectedUserId) throw new ProfileBuilderError("Canonical profile subject differs from the authenticated target", 403);
+    if (root.status === "revoked" || root.revokedAt !== null) throw new ProfileBuilderError("Revoked canonical profiles cannot seed new context");
+    records = (root.declarations as unknown[]).map((item,index) => { const declaration=object(item); if (!["string","number","boolean"].includes(typeof declaration.value)) throw new ProfileBuilderError("Canonical intake supports bounded scalar declarations only"); return make(declaration.key,String(declaration.value),"userDeclaration",root.validFrom,`declaration:${index+1}`,declaration.sensitivity === "sensitive" ? "sensitive" : "personal"); });
+  }
+  else if (upload.format === "notes-v1") records = upload.content.split(/\r?\n/u).map((line, index) => ({ line: line.trim(), index })).filter(({ line }) => line).map(({ line, index }) => make(`note-${index + 1}`, line, line.startsWith(">") ? "quoted" : "userDeclaration", upload.observedAt, `line:${index + 1}`));
   else if (upload.format === "conversation-ndjson-v1") records = upload.content.split(/\r?\n/u).filter((line) => line.trim()).map((line, index) => message(parseJSON(line), index));
   else {
     const root = object(parseJSON(upload.content));
@@ -61,7 +71,7 @@ export class ProfileBuilderAdmin {
       let tokens = 0;
       for (let index = 0; index < uploads.length; index++) {
         const source = job.sources[index]!;
-        for (const record of extractProfileUpload(uploads[index]!)) {
+        for (const record of extractProfileUpload(uploads[index]!, job.userId)) {
           tokens += record.value.length;
           if (records.length >= PROFILE_BUILDER_LIMITS.records || tokens > PROFILE_BUILDER_LIMITS.tokens || Date.now() - startedAt > PROFILE_BUILDER_LIMITS.durationMs) throw new ProfileBuilderError("Extraction exceeded declared count, token or time limits");
           records.push({ source, record });

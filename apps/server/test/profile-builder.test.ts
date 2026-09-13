@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -51,7 +52,7 @@ test("LS-TEST-101 authenticated HTTP intake executes snapshot, extraction, granu
   const relationPath = `/api/admin/v1/assistants/${assistant.assistantId}/relationships/${relationship.relationshipId}`; const path = relationPath + "/profile-builder";
   assert.equal((await fetch(base + path)).status, 401);
   assert.equal((await fetch(base + path, { headers: { ...auth(), "x-lifestream-fixture-principal": "outsider" } })).status, 404);
-  assert.equal((await request(path)).body.formats.length, 4);
+  assert.equal((await request(path)).body.formats.length, 5);
   const observedRequests: InferenceRequest[] = []; const originalGenerate = FixtureInferenceProvider.prototype.generate;
   t.mock.method(FixtureInferenceProvider.prototype, "generate", async function* (this: FixtureInferenceProvider, input: InferenceRequest, providerContext: ProviderCallContext) { observedRequests.push(structuredClone(input)); yield* originalGenerate.call(this, input, providerContext); });
   const observePrompt = async () => { const reply = await fetch(base + "/api/runtime/v1/messages", { method: "POST", headers: auth(), body: JSON.stringify({ assistantId: assistant.assistantId, relationshipId: relationship.relationshipId, userInput: "Give clear explanations of caching." }) }); assert.equal(reply.status, 200); await reply.text(); const observed = observedRequests.at(-1); assert.ok(observed); return JSON.stringify(observed.sections); };
@@ -80,4 +81,16 @@ test("LS-TEST-101 explicit resume executes the pinned local snapshot after worke
   assert.equal(admin.handle("POST", [job.jobId, "resume"], scope.userId, scope, { expectedRevision: job.revision }, () => {}).status, 202);
   for (let i = 0; i < 100 && recovered.getJob(job.jobId)?.status === "extracting"; i++) await setTimeout(10);
   assert.equal(recovered.getJob(job.jobId)?.status, "review"); assert.equal(recovered.getCandidates(job.jobId)[0]?.status, "inactive"); assert.equal(recovered.getCandidates(job.jobId)[0]?.value, "A bounded statement.");
+});
+
+test("canonical UserProfile intake validates its version and subject while leaving scopes and training inactive", async () => {
+  const userId=randomUUID(),assistantId=randomUUID(),relationshipId=randomUUID();
+  const canonical={schemaVersion:"1.0.0",profileId:randomUUID(),userId,deploymentId:randomUUID(),revision:1,status:"active",subjectRef:`principal:${userId}`,declarations:[{key:"learning",value:"Synthetic Python novice",sensitivity:"personal"}],assistantScopes:[{assistantId,purposes:["personalization","sharing","training"],audiences:["authenticatedSession"],allowedKeys:["learning"]}],consentRefs:["synthetic-imported-consent-claim"],sourceRefs:[],createdAt:"2026-09-13T00:00:00Z",validFrom:"2026-09-13T00:00:00Z",revokedAt:null};
+  const file:ProfileUpload={name:"profile.json",format:"canonical-user-profile-v1",content:JSON.stringify(canonical),authoredBy:"user",ownedBySubject:true};
+  const extracted=extractProfileUpload(file,userId);assert.equal(extracted[0]?.value,"Synthetic Python novice");assert.equal(extracted[0]?.eventAt,canonical.validFrom);
+  assert.throws(()=>extractProfileUpload(file,randomUUID()),/subject differs/);assert.throws(()=>extractProfileUpload(file),/subject differs/);
+  assert.throws(()=>extractProfileUpload({...file,content:JSON.stringify({...canonical,revision:0})},userId),/schema validation/);
+  assert.throws(()=>extractProfileUpload({...file,content:JSON.stringify({...canonical,status:"revoked",revokedAt:canonical.createdAt})},userId),/Revoked/);
+  assert.throws(()=>extractProfileUpload({...file,content:JSON.stringify({...canonical,declarations:[{key:"learning",value:{nested:"unsupported"},sensitivity:"personal"}]})},userId),/scalar/);
+  const repo=new ProfileBuilderRepository(),admin=new ProfileBuilderAdmin(repo);try{const scope={userId,assistantId,relationshipId,revision:1};const first=admin.handle('POST',[],userId,scope,{files:[file]},()=>{throw new Error('no implicit admission');});assert.equal(first.status,201);const job=first.body.job as ProfileBuilderJob;assert.equal(admin.handle('POST',[job.jobId,'snapshot'],userId,scope,{files:[file],expectedRevision:job.revision},()=>{}).status,200);const pinned=repo.getJob(job.jobId)!;assert.equal(admin.handle('POST',[job.jobId,'extract'],userId,scope,{expectedRevision:pinned.revision},()=>{}).status,202);for(let i=0;i<100&&repo.getJob(job.jobId)?.status==='extracting';i++)await setTimeout(5);const candidate=repo.getCandidates(job.jobId)[0]!;assert.equal(candidate.status,'inactive');assert.equal(candidate.subjectId,userId);assert.equal(candidate.approvedUse,null);assert.equal(repo.getJob(job.jobId)?.collectionAccess,'closed');}finally{admin.close();repo.database.close();}
 });

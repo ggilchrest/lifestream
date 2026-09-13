@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "0951822af695501070e362727a71ff505b58a21c",
-  "currentRevision": "0951822af695501070e362727a71ff505b58a21c",
+  "currentRevision": "35862015bd2e881f7b0002a3bc8954dc3966e8f8",
   "activeSlice": "LS-S074",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -95,10 +95,16 @@
     "implementation/evidence/LS-S063-qualification-resume-2.json",
     "implementation/evidence/LS-S063-current-qualification.json",
     "implementation/evidence/LS-S069-qualification-resume-3.json",
-    "implementation/evidence/LS-S069-current-qualification.json"
+    "implementation/evidence/LS-S069-current-qualification.json",
+    "implementation/evidence/LS-S074-qualification-resume-2.json",
+    "implementation/evidence/LS-S062-qualification-resume-6.json",
+    "implementation/evidence/LS-S069-qualification-resume-4.json"
   ],
   "changedFiles": [
-    "implementation/checkpoint.json"
+    "apps/control-web/profile-builder.js",
+    "apps/server/src/admin/profile-builder.ts",
+    "apps/server/test/profile-builder.test.ts",
+    "packages/storage-sqlite/src/profile-builder.ts"
   ],
   "validation": [],
   "decisions": [
