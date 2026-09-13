@@ -7,8 +7,9 @@ import type { AudioFrame, SpeechToTextProvider } from "@lifestream/runtime/voice
 import type { VoxCpmProvider } from "@lifestream/providers-voxcpm";
 import { defaultVoiceSettings, parseVoiceSettings, type VoiceSettings } from "./voice-settings.ts";
 import { SpeechQueue } from "./speech-queue.ts";
+import type { HostRuntimeInput } from "./inference.ts";
 
-type AudioRequest = { schemaVersion: "1.0.0"; requestId: string; correlationId: string; sessionId: string; expectedSessionRevision: number; endpointId: string; audioInputId: string; format: AudioFrame["format"]; voiceSettings?: VoiceSettings };
+type AudioRequest = { schemaVersion: "1.0.0"; requestId: string; correlationId: string; sessionId: string; expectedSessionRevision: number; endpointId: string; audioInputId: string; format: AudioFrame["format"]; voiceSettings?: VoiceSettings; assistantId?: string; relationshipId?: string };
 type AudioClientMessage = { type: "start"; request: AudioRequest } | { type: "frame"; audioInputId: string; frame: AudioFrame } | { type: "commitTurn"; audioInputId: string; nextSequence: number; sampleCount: number } | { type: "interrupt"; interactionTraceId: string; reason: string } | { type: "stop"; audioInputId: string };
 type AudioSocket = Pick<WebSocket, "send" | "close"> & { readyState: number };
 const OPEN = 1;
@@ -20,7 +21,7 @@ export const hasAudioEnergy = (dataBase64: string, threshold = 0.015): boolean =
 
 export const VOICE_TURN_DEADLINE_MS = 180_000;
 export const SPEECH_SEGMENT_DEADLINE_MS = 45_000;
-export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider };
+export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
 
 export class AudioSession {
   private readonly socket: AudioSocket;
@@ -36,11 +37,13 @@ export class AudioSession {
   private starting = false;
   private voiceSettings: VoiceSettings = { ...defaultVoiceSettings };
   private sequence = 0;
-  private readonly identity = { assistantId: randomUUID(), environmentId: randomUUID(), conversationId: randomUUID() };
+  private currentInput: HostRuntimeInput | undefined;
+  private readonly identity: { assistantId: string; environmentId: string; conversationId: string } = { assistantId: randomUUID(), environmentId: randomUUID(), conversationId: randomUUID() };
 
   constructor(socket: AudioSocket, deps: AudioDependencies, sessionId: string) { this.socket = socket; this.deps = deps; this.sessionId = sessionId; }
 
   close(): void { this.closed = true; this.frames = []; this.voiceSettings = { ...defaultVoiceSettings }; this.request = undefined; this.controller?.abort(); this.socket.close(1001, "audio session closed"); }
+  invalidateIfStale(): void { if (this.currentInput && !this.currentInput.isCurrent()) { this.controller?.abort(); if (this.interactionTraceId) send(this.socket, { type: "stopPlayback", interactionTraceId: this.interactionTraceId, reason: "runtime_input_stale" }); } }
 
   async message(raw: string): Promise<void> {
     if (this.closed) return;
@@ -81,6 +84,7 @@ export class AudioSession {
     }
     if (this.closed) return;
     this.voiceSettings = settings;
+    if (this.deps.prepare) { try { const prepared = this.deps.prepare({ ...(request.assistantId ? { assistantId: request.assistantId } : {}), ...(request.relationshipId ? { relationshipId: request.relationshipId } : {}), endpointId: request.endpointId, userInput: "" }); this.identity.assistantId = prepared.assistantId; } catch { this.close(); return; } }
     this.request = request;
     send(this.socket, { type: "accepted", identity: { ...this.identity, sessionId: request.sessionId, endpointId: request.endpointId, interactionTraceId: request.correlationId }, audioInputId: request.audioInputId });
   }
@@ -109,7 +113,8 @@ export class AudioSession {
       // answer and only then discover a failed recognition terminal.
       if (transcript === undefined || !transcript.trim()) throw new Error("speech input did not produce a committed transcript");
       if (controller.signal.aborted) throw new Error("audio turn interrupted");
-        const prompt = buildCanonicalPrompt({ assistantId: this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: request.endpointId, userInput: transcript, deadlineAt, executionMode: "live", voiceMode: true, runtimeSelfContext: { sourceRevision: "runtime-self-context:v1", runtimeStatus: "ready", inputModalities: { text: "active", microphone: "activeForSession", visual: "notConfigured" }, outputModalities: { text: "active", speechGeneration: "healthy", speechDelivery: "active", presentation: "notConfigured" }, endpointScope: "sessionEndpoint", audienceScope: "authenticatedSession", permissionState: "authenticatedSession", limitations: ["Received audio proves a session input, not physical microphone permission beyond the submitted frames.", "Server delivery is not evidence of physical audibility.", "Visual input is not configured."] } });
+        this.currentInput = this.deps.prepare?.({ ...(request.assistantId ? { assistantId: request.assistantId } : {}), ...(request.relationshipId ? { relationshipId: request.relationshipId } : {}), endpointId: request.endpointId, userInput: transcript });
+        const prompt = buildCanonicalPrompt({ assistantId: this.currentInput?.assistantId ?? this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: request.endpointId, userInput: transcript, deadlineAt, executionMode: "live", voiceMode: true, ...(this.currentInput ? { runtimeSelfContext: this.currentInput.runtimeSelfContext, ...(this.currentInput.profileProjection ? { profileProjection: this.currentInput.profileProjection } : {}), ...(this.currentInput.preparedRelationshipContext ? { preparedRelationshipContext: this.currentInput.preparedRelationshipContext } : {}) } : {}) });
         let answer = "";
         const segmenter = new SpeechSafeSegmenter(360);
         const queue = new SpeechQueue(controller.signal);
@@ -137,6 +142,7 @@ export class AudioSession {
         };
         const generation = (async () => {
         for await (const chunk of this.deps.inference.generate(prompt, { signal: controller.signal })) {
+          this.invalidateIfStale();
           if (controller.signal.aborted) throw new Error("audio turn interrupted");
           if (chunk.kind === "text" && chunk.text) { answer += chunk.text; if (answer.length > 16_384) throw new Error("voice response text limit exceeded"); response(this.socket, traceId, this.sequence++, { type: "textDelta", text: chunk.text }); for (const segment of segmenter.push(chunk.text)) await queue.put(segment.text); }
           if (chunk.kind === "capabilityRequest" && chunk.capability?.effect === "read-only") response(this.socket, traceId, this.sequence++, { type: "capabilityStatus", result: { capabilityName: chunk.capability.name, state: "selected", effect: "read-only", outcome: "notDispatched" } });
@@ -151,13 +157,13 @@ export class AudioSession {
         // inference fails. Keep both activities bounded and settle both.
         void generation.catch(() => {});
         const synthesis=async function*(){for await(const text of queue)yield* speak(text);};
-        try { for await (const speech of bufferedStream(synthesis(),controller.signal,64,()=>{if(!controller.signal.aborted){internalFailure=true;controller.abort();}})) {await pacer.admit(speech.frame.sampleCount,speech.frame.format.sampleRateHz,controller.signal);send(this.socket,{type:"audio",interactionTraceId:traceId,chunk:{segmentId:speech.segmentId,frame:speech.frame}});} await generation; }
+        try { for await (const speech of bufferedStream(synthesis(),controller.signal,64,()=>{if(!controller.signal.aborted){internalFailure=true;controller.abort();}})) {await pacer.admit(speech.frame.sampleCount,speech.frame.format.sampleRateHz,controller.signal);this.invalidateIfStale();if(controller.signal.aborted)throw new Error("audio context changed");send(this.socket,{type:"audio",interactionTraceId:traceId,chunk:{segmentId:speech.segmentId,frame:speech.frame}});} await generation; }
         catch (error) { internalFailure ||= !controller.signal.aborted; controller.abort(); queue.close(error); await generation.catch(() => {}); throw error; }
         response(this.socket, traceId, this.sequence++, { type: "terminal", state: "completed", finalResponse: null, error: null });
     } catch (error) {
       const interrupted = this.controller.signal.aborted && !timedOut && !internalFailure;
       response(this.socket, traceId, this.sequence++, { type: "terminal", state: interrupted ? "interrupted" : "failed", finalResponse: null, error: problem(interrupted ? "audio_interrupted" : timedOut ? "audio_deadline_exceeded" : "audio_turn_failed", timedOut ? "Voice turn exceeded its 180 second limit; you can try another turn." : error instanceof Error ? error.message : "audio turn failed", traceId, !interrupted) });
-    } finally { clearTimeout(timer); this.controller = undefined; this.interactionTraceId = undefined; }
+    } finally { clearTimeout(timer); this.controller = undefined; this.interactionTraceId = undefined; this.currentInput = undefined; }
   }
 }
 import {PcmPacer} from './pcm-pacer.ts';

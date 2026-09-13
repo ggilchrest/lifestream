@@ -7,6 +7,20 @@ const frame = (value: number) => { const bytes = Buffer.alloc(4800 * 2); for (le
 
 test("PCM level diagnostic measures energy only, not speech qualification", () => { assert.equal(hasAudioEnergy(frame(0).dataBase64), false); assert.equal(hasAudioEnergy(frame(1200).dataBase64), true); });
 
+test("audio uses the host's active profile and state, and fences a stale reply before text or PCM", async () => {
+  const events: any[] = []; const requests: any[] = []; let current = true;
+  const socket = { readyState: 1, send: (value: string) => events.push(JSON.parse(value)), close: () => undefined };
+  const stt = { async *transcribe() { yield { kind: "data", payload: { type: "committed", text: "synthetic input" } }; } };
+  const inference = { async *generate(request: unknown) { requests.push(request); current = false; yield { kind: "text", text: "STALE_PRIVATE_SPEECH" }; } };
+  const tts = { async *synthesize() { yield { kind: "data", segmentId: randomUUID(), frame: frame(1200) }; yield { kind: "terminal", outcome: "succeeded" }; } };
+  const prepare = () => ({ assistantId: "synthetic-assistant", runtimeSelfContext: { sourceRevision: "host-state-2", runtimeStatus: "ready" as const, inputModalities: { text: "active" as const, microphone: "activeForSession" as const, visual: "notConfigured" as const }, outputModalities: { text: "active" as const, speechGeneration: "healthy" as const, speechDelivery: "notObserved" as const, presentation: "notConfigured" as const }, endpointScope: "sessionEndpoint" as const, audienceScope: "authenticatedSession" as const, permissionState: "authenticatedSession" as const, limitations: ["No physical audibility observation."] }, profileProjection: { sourceRef: "assistant-profile:synthetic", sourceRevision: "3", corePersona: "Synthetic active core", adaptivePersona: "No active adaptation" }, isCurrent: () => current });
+  const sessionId = randomUUID(), audioInputId = randomUUID(); const session = new AudioSession(socket, { stt: stt as never, inference: inference as never, tts: tts as never, prepare }, sessionId);
+  await session.message(JSON.stringify({ type: "start", request: { schemaVersion: "1.0.0", requestId: randomUUID(), correlationId: randomUUID(), sessionId, expectedSessionRevision: 1, endpointId: randomUUID(), audioInputId, format: frame(0).format } }));
+  await session.message(JSON.stringify({ type: "frame", audioInputId, frame: frame(0) })); await session.message(JSON.stringify({ type: "commitTurn", audioInputId, nextSequence: 1, sampleCount: 4800 }));
+  assert.equal(requests[0].scope.assistantId, "synthetic-assistant"); assert.equal(requests[0].sections.find((section: any) => section.kind === "corePersona").sourceRevision, "3"); assert.match(requests[0].sections.find((section: any) => section.kind === "interactionState").content, /speechDelivery=notObserved/u);
+  assert.ok(events.some((event) => event.type === "stopPlayback")); assert.equal(events.filter((event) => event.type === "audio").length, 0); assert.doesNotMatch(JSON.stringify(events), /STALE_PRIVATE_SPEECH/u); assert.equal(events.at(-1).event.payload.state, "interrupted");
+});
+
 test('recognition finishes and releases its transport before inference and playback', async () => {
   const events:any[]=[]; let released=false;
   const socket={readyState:1,send:(value:string)=>events.push(JSON.parse(value)),close:()=>undefined};
