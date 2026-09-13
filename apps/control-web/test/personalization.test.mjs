@@ -59,6 +59,8 @@ test('authenticated personalization applies reviewed correction, reverses adapta
   const exported = (await api(`${base}/memories/export`)).body; assert.equal(exported.dataScope, 'assistant-memories');
   assert.equal((await api(`${otherBase}/memories/import`, exported)).status, 422);
   const newRecord = { ...corrected, id: randomUUID(), content: 'Synthetic imported reminder', lifecycle: { status: 'active', revision: 7, changedBy: 'imported-assertion' } };
+  assert.equal((await api(`${base}/memories/import`, { ...exported, memories: [newRecord] })).status, 422, 'revoked correction lineage cannot be reimported');
+  newRecord.provenance = { source: 'synthetic-independent-import' };
   assert.equal((await api(`${base}/memories/import`, { ...exported, memories: [newRecord] })).status, 201);
   const importedRecord=(await api(`${base}/memories`)).body.memories.find(item=>item.id===newRecord.id); assert.equal(importedRecord.lifecycle.status,'candidate'); assert.equal(importedRecord.lifecycle.revision,1); assert.equal(importedRecord.provenance.importedLifecycle.status,'active'); assert.equal(importedRecord.provenance.source,'authenticated-file-import');
   assert.equal((await api(`${base}/memories/import`, { ...exported, memories: [{ ...newRecord, id: randomUUID(), provenance: { grant: 'attempted-import-authority' } }] })).status, 422);

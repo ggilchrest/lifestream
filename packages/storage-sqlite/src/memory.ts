@@ -52,7 +52,7 @@ export class MemoryRepository {
     const record = this.records.get(id); return record?.assistantId === assistantId ? structuredClone(this.events.get(id) ?? []) : [];
   }
   proposeCorrection(assistantId: string, id: string, proposedContent: string, actor: string): MemoryLifecycleEvent | undefined {
-    const existing = this.get(assistantId, id); if (!existing) return undefined;
+    const existing = this.get(assistantId, id); if (!existing || existing.lifecycle.contentRemoved || !["active","candidate"].includes(String(existing.lifecycle.status))) return undefined;
     const occurredAt = new Date().toISOString(); const payload = { proposedContent, status: "needsReview", actor };
     const revision = this.database ? this.database.transaction((tx) => { const nextRevision = tx.get<{ revision: number }>("SELECT COALESCE(MAX(revision), 0) + 1 AS revision FROM memory_lifecycle_events WHERE memory_id = ? AND assistant_id = ?", id, assistantId)?.revision ?? 1; tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, nextRevision, "correctionProposed", JSON.stringify(payload), occurredAt); return nextRevision; }) : (this.events.get(id)?.at(-1)?.revision ?? 0) + 1;
     if (!this.database) { const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt }); this.events.set(id, events); }
@@ -98,12 +98,18 @@ export class MemoryRepository {
     const existing = this.get(assistantId, id); if (!existing) return undefined;
     const previousRevision = typeof existing.lifecycle.revision === "number" ? existing.lifecycle.revision : 1;
     if (expectedRevision !== undefined && expectedRevision !== previousRevision) throw new Error("memory revision conflict");
-    const revision = previousRevision + 1; const occurredAt = new Date().toISOString(); const lifecycle = { ...existing.lifecycle, status: "invalidated", revision, changedBy: actor, reason, forgottenAt: occurredAt, contentRemoved: true };
-    if (this.database) {
-      this.database.transaction((tx) => { tx.run("UPDATE memories SET content = ?, lifecycle_json = ? WHERE assistant_id = ? AND id = ? AND json_extract(lifecycle_json, '$.revision') = ?", "", JSON.stringify(lifecycle), assistantId, id, previousRevision); if ((tx.get<{ changes: number }>("SELECT changes() AS changes")?.changes ?? 0) !== 1) throw new Error("memory revision conflict"); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, revision, "forgotten", JSON.stringify({ status: "invalidated", reason, contentRemoved: true }), occurredAt); });
-    } else {
-      this.records.set(id, { ...existing, content: "", lifecycle }); const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision, eventType: "forgotten", payload: { status: "invalidated", reason, contentRemoved: true }, occurredAt }); this.events.set(id, events);
-    }
+    const revision = previousRevision + 1; const occurredAt = new Date().toISOString(); void reason;
+    const lifecycle = { status: "invalidated", revision, changedBy: actor, reason: "owner-local forget", forgottenAt: occurredAt, contentRemoved: true };
+    const provenance = { actor: existing.provenance.actor ?? actor, payloadRemoved: true };
+    const journalRevision = (this.history(assistantId,id).at(-1)?.revision ?? 0) + 1;
+    const payload = { status: "invalidated", contentRemoved: true };
+    if (this.database) this.database.transaction(tx => {
+      tx.run("UPDATE memories SET content='', provenance_json=?, lifecycle_json=? WHERE assistant_id=? AND id=? AND json_extract(lifecycle_json,'$.revision')=?",JSON.stringify(provenance),JSON.stringify(lifecycle),assistantId,id,previousRevision);
+      if(tx.get<{changes:number}>("SELECT changes() AS changes")?.changes!==1)throw new Error("memory revision conflict");
+      tx.run("UPDATE memory_lifecycle_events SET payload_json=? WHERE assistant_id=? AND memory_id=?",JSON.stringify({payloadRemoved:true}),assistantId,id);
+      tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",id,assistantId,journalRevision,"forgotten",JSON.stringify(payload),occurredAt);
+    });
+    else {this.records.set(id,{...existing,content:"",provenance,lifecycle});this.events.set(id,[...(this.events.get(id)??[]).map(event=>({...event,payload:{payloadRemoved:true}})),{memoryId:id,assistantId,revision:journalRevision,eventType:"forgotten",payload,occurredAt}]);}
     return { memoryId: id, assistantId, status: "forgotten", contentRemoved: true, lifecycleRetained: true, externalCopies: "not-controlled", revision };
   }
 }

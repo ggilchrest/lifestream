@@ -14,3 +14,7 @@
 .relationship-readiness select, .relationship-readiness input:not([type=checkbox]), .relationship-readiness pre { width: 100%; min-width: 0; max-width: 100%; }
 .relationship-readiness pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .relationship-readiness .record-card, .relationship-readiness label { min-width: 0; }
+.relationship-recovery { min-width: 0; overflow-wrap: anywhere; }
+.relationship-recovery select, .relationship-recovery pre { min-width: 0; max-width: 100%; width: 100%; }
+.relationship-recovery pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.relationship-recovery .record-card { min-width: 0; }

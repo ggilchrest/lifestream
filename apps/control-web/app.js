@@ -44,3 +44,5 @@ import('./relationship-tuning.js').then(({installRelationshipTuning})=>installRe
 
 const relationshipReadiness=document.createElement("section");relationshipReadiness.className="memory-tools relationship-readiness";document.querySelector(".editor").append(relationshipReadiness);
 import("./relationship-readiness.js").then(({installRelationshipReadiness})=>installRelationshipReadiness({anchor:relationshipReadiness,api,context:()=>current?{assistantId:current.assistantId,relationship}:null,show})).catch(error=>show(error.message,true));
+const relationshipRecovery=document.createElement('section');relationshipRecovery.className='memory-tools relationship-recovery';document.querySelector('.editor').append(relationshipRecovery);
+import('./relationship-recovery.js').then(({installRelationshipRecovery})=>installRelationshipRecovery({anchor:relationshipRecovery,api,context:()=>current?{assistantId:current.assistantId,relationship}:null,refreshRelationship:refreshRelationships,show})).catch(error=>show(error.message,true));

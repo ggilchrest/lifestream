@@ -57,7 +57,8 @@ export class ProfileBuilderAdmin {
   private readonly active = new Set<string>();
   private closed = false;
   readonly repository: ProfileBuilderRepository;
-  constructor(repository: ProfileBuilderRepository) { this.repository = repository; }
+  private readonly sourceAllowed:(userId:string,relationshipId:string,value:string,digest:string)=>boolean;
+  constructor(repository: ProfileBuilderRepository, sourceAllowed:(userId:string,relationshipId:string,value:string,digest:string)=>boolean=()=>true) { this.repository = repository;this.sourceAllowed=sourceAllowed; }
   close(): void { this.closed = true; for (const id of this.active) { const job = this.repository.getJob(id); if (job?.status === "extracting") this.repository.cancel(id, job.revision); } }
   private async extract(jobId: string, revision: number, uploads: ProfileUpload[]): Promise<void> {
     this.active.add(jobId);
@@ -72,6 +73,7 @@ export class ProfileBuilderAdmin {
       for (let index = 0; index < uploads.length; index++) {
         const source = job.sources[index]!;
         for (const record of extractProfileUpload(uploads[index]!, job.userId)) {
+          if(!this.sourceAllowed(job.userId,job.relationshipId,record.value,source.sha256)){this.repository.cancel(job.jobId,revision);return;}
           tokens += record.value.length;
           if (records.length >= PROFILE_BUILDER_LIMITS.records || tokens > PROFILE_BUILDER_LIMITS.tokens || Date.now() - startedAt > PROFILE_BUILDER_LIMITS.durationMs) throw new ProfileBuilderError("Extraction exceeded declared count, token or time limits");
           records.push({ source, record });

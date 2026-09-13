@@ -9,7 +9,7 @@ export type RelationshipRecord = {
   category?: RecordCategory; assertedBy?: string; createdAt?: string; eventAt?: string | null; sensitivity?: "personal" | "sensitive";
   sourceFamilies?: string[]; derivedFrom?: string[]; supersededBy?: string[]; annotations?: { text: string; actor: string; at: string }[];
   conflicts?: { recordId: string; status: "retained" | "resolved" }[]; salience?: "normal" | "operatorPinned";
-  audience?: "authenticatedSession" | "ownerOnly"; suppressed?: boolean; trainingExcluded?: boolean;
+  audience?: "authenticatedSession" | "ownerOnly"; suppressed?: boolean; trainingExcluded?: boolean; processingRevoked?: boolean;
   history?: { operation: string; actor: string; at: string; revision: number; relatedIds: string[] }[];
 };
 export class RecordOperationError extends Error { status: number; constructor(message: string, status = 422) { super(message); this.status = status; } }
