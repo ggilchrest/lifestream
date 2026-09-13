@@ -1,0 +1,1259 @@
+{
+  "slice": "LS-S073",
+  "caseIds": [
+    "LS-TEST-092",
+    "LS-TEST-093",
+    "LS-TEST-094",
+    "LS-TEST-096",
+    "LS-TEST-100"
+  ],
+  "collectedAt": "2026-09-13T07:32:45.527Z",
+  "checks": [
+    {
+      "id": "LS-TEST-092-baseline-cold-warm-no-recall",
+      "result": "pass",
+      "evidence": {
+        "results": [
+          {
+            "cold": {
+              "output": "A cache stores copies of frequently accessed data in faster, closer-to-the-CPU memory so that subsequent requests can retrieve it quickly without hitting the slower primary storage.",
+              "manifest": {
+                "schemaVersion": "1.0.0",
+                "sections": [
+                  {
+                    "kind": "policy",
+                    "sourceRevision": "v1",
+                    "sourceRef": "policy:v1",
+                    "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                    "redaction": "none",
+                    "tokenCount": 79
+                  },
+                  {
+                    "kind": "corePersona",
+                    "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                    "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                    "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+                    "redaction": "none",
+                    "tokenCount": 27
+                  },
+                  {
+                    "kind": "adaptivePersona",
+                    "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                    "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                    "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                    "redaction": "none",
+                    "tokenCount": 1
+                  },
+                  {
+                    "kind": "interactionState",
+                    "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+                    "sourceRef": "runtime-self-context:v1",
+                    "contentDigest": "93868c0d44c55411cb2d7a524595c1265ba24a3a98d2f60c06ccff987ceb862d",
+                    "redaction": "none",
+                    "tokenCount": 91
+                  },
+                  {
+                    "kind": "preparedMemory",
+                    "sourceRevision": "compiler:record-oriented:5;sources:75c760074488e88034ebd30a833d36ed65fd25829c9d02b49201a46888b16b4f;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:3;configuration:default:1",
+                    "sourceRef": "relationship-context:prepared-v1",
+                    "contentDigest": "9b6b145070e9f2043c9c7568853a589de85eecfe2155e0c23a964e8cbc4b40c0",
+                    "redaction": "none",
+                    "tokenCount": 172
+                  },
+                  {
+                    "kind": "worldContext",
+                    "sourceRevision": "v1",
+                    "sourceRef": "world:prepared-v1",
+                    "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                    "redaction": "none",
+                    "tokenCount": 5
+                  },
+                  {
+                    "kind": "capabilityState",
+                    "sourceRevision": "v1",
+                    "sourceRef": "capability:snapshot-v1",
+                    "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                    "redaction": "none",
+                    "tokenCount": 7
+                  },
+                  {
+                    "kind": "conversation",
+                    "sourceRevision": "v1",
+                    "sourceRef": "conversation:session-v1",
+                    "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                    "redaction": "none",
+                    "tokenCount": 6
+                  },
+                  {
+                    "kind": "userInput",
+                    "sourceRevision": "v1",
+                    "sourceRef": "user-input:current-v1",
+                    "contentDigest": "55541dab02244a3fe6f34d87e57eacf44d98b7a7f73028fbd2c749ccfa698169",
+                    "redaction": "none",
+                    "tokenCount": 5
+                  }
+                ],
+                "tokenizer": "whitespace-v1"
+              },
+              "memory": {
+                "kind": "preparedMemory",
+                "content": "Prepared relationship context [profile=a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship=1e87eef4-549d-414f-855d-ad1264476b69:3;configuration=default:1]\nExpression controls: callbackFrequency=0.2, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in one concise sentence.\nCritical corrections: none\nRelevant context: none\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+                "trusted": false,
+                "sourceRevision": "compiler:record-oriented:5;sources:75c760074488e88034ebd30a833d36ed65fd25829c9d02b49201a46888b16b4f;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:3;configuration:default:1",
+                "sourceRef": "relationship-context:prepared-v1",
+                "contentDigest": "9b6b145070e9f2043c9c7568853a589de85eecfe2155e0c23a964e8cbc4b40c0",
+                "redaction": "none",
+                "tokenCount": 172
+              },
+              "sourcePayloadReads": 1,
+              "loopbackAuthenticationAndPreparationMs": 2.236750000000029
+            },
+            "warm": {
+              "output": "A cache is a small, fast storage area that holds copies of recently or frequently accessed data, so that future requests for the same data can be served much faster than if they had to be retrieved from a slower, more permanent source like a database or the network.",
+              "manifest": {
+                "schemaVersion": "1.0.0",
+                "sections": [
+                  {
+                    "kind": "policy",
+                    "sourceRevision": "v1",
+                    "sourceRef": "policy:v1",
+                    "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                    "redaction": "none",
+                    "tokenCount": 79
+                  },
+                  {
+                    "kind": "corePersona",
+                    "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                    "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                    "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+                    "redaction": "none",
+                    "tokenCount": 27
+                  },
+                  {
+                    "kind": "adaptivePersona",
+                    "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                    "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                    "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                    "redaction": "none",
+                    "tokenCount": 1
+                  },
+                  {
+                    "kind": "interactionState",
+                    "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+                    "sourceRef": "runtime-self-context:v1",
+                    "contentDigest": "2bebd9bc5be825178e7d6eccbede31a110583e1cb8d790731f20929687685d61",
+                    "redaction": "none",
+                    "tokenCount": 91
+                  },
+                  {
+                    "kind": "preparedMemory",
+                    "sourceRevision": "compiler:record-oriented:5;sources:75c760074488e88034ebd30a833d36ed65fd25829c9d02b49201a46888b16b4f;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:3;configuration:default:1",
+                    "sourceRef": "relationship-context:prepared-v1",
+                    "contentDigest": "9b6b145070e9f2043c9c7568853a589de85eecfe2155e0c23a964e8cbc4b40c0",
+                    "redaction": "none",
+                    "tokenCount": 172
+                  },
+                  {
+                    "kind": "worldContext",
+                    "sourceRevision": "v1",
+                    "sourceRef": "world:prepared-v1",
+                    "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                    "redaction": "none",
+                    "tokenCount": 5
+                  },
+                  {
+                    "kind": "capabilityState",
+                    "sourceRevision": "v1",
+                    "sourceRef": "capability:snapshot-v1",
+                    "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                    "redaction": "none",
+                    "tokenCount": 7
+                  },
+                  {
+                    "kind": "conversation",
+                    "sourceRevision": "v1",
+                    "sourceRef": "conversation:session-v1",
+                    "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                    "redaction": "none",
+                    "tokenCount": 6
+                  },
+                  {
+                    "kind": "userInput",
+                    "sourceRevision": "v1",
+                    "sourceRef": "user-input:current-v1",
+                    "contentDigest": "55541dab02244a3fe6f34d87e57eacf44d98b7a7f73028fbd2c749ccfa698169",
+                    "redaction": "none",
+                    "tokenCount": 5
+                  }
+                ],
+                "tokenizer": "whitespace-v1"
+              },
+              "memory": {
+                "kind": "preparedMemory",
+                "content": "Prepared relationship context [profile=a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship=1e87eef4-549d-414f-855d-ad1264476b69:3;configuration=default:1]\nExpression controls: callbackFrequency=0.2, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in one concise sentence.\nCritical corrections: none\nRelevant context: none\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+                "trusted": false,
+                "sourceRevision": "compiler:record-oriented:5;sources:75c760074488e88034ebd30a833d36ed65fd25829c9d02b49201a46888b16b4f;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:3;configuration:default:1",
+                "sourceRef": "relationship-context:prepared-v1",
+                "contentDigest": "9b6b145070e9f2043c9c7568853a589de85eecfe2155e0c23a964e8cbc4b40c0",
+                "redaction": "none",
+                "tokenCount": 172
+              },
+              "sourcePayloadReads": 0,
+              "loopbackAuthenticationAndPreparationMs": 3.1094999999995707
+            }
+          },
+          {
+            "cold": {
+              "output": "1. A cache stores copies of frequently accessed data in faster memory, allowing subsequent requests for that data to be served quickly without hitting slower primary storage.\n2. When data is requested, the system checks the cache first; if found, it returns the data immediately, but if not found, it retrieves the data from primary storage and saves a copy in the cache for future use.\n3. Cache systems use policies such as Least Recently Used (LRU) or Time-to-Live (TTL) to manage limited space by evicting stale or less frequently used items when capacity limits are reached.",
+              "manifest": {
+                "schemaVersion": "1.0.0",
+                "sections": [
+                  {
+                    "kind": "policy",
+                    "sourceRevision": "v1",
+                    "sourceRef": "policy:v1",
+                    "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                    "redaction": "none",
+                    "tokenCount": 79
+                  },
+                  {
+                    "kind": "corePersona",
+                    "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                    "sourceRef": "assistant-profile:7d956651-e379-485c-bc8e-9f75a1e370c5",
+                    "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+                    "redaction": "none",
+                    "tokenCount": 27
+                  },
+                  {
+                    "kind": "adaptivePersona",
+                    "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                    "sourceRef": "assistant-profile:7d956651-e379-485c-bc8e-9f75a1e370c5",
+                    "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                    "redaction": "none",
+                    "tokenCount": 1
+                  },
+                  {
+                    "kind": "interactionState",
+                    "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+                    "sourceRef": "runtime-self-context:v1",
+                    "contentDigest": "9e07e8bd7915225dc920bd4316bc94713449e509cf3afc89e37c3cdf069c2c91",
+                    "redaction": "none",
+                    "tokenCount": 91
+                  },
+                  {
+                    "kind": "preparedMemory",
+                    "sourceRevision": "compiler:record-oriented:5;sources:b21c402b20d00494bcb948d75ba2ce36f887217d6d4485450ab751287e55daa2;profile:7d956651-e379-485c-bc8e-9f75a1e370c5:1;user-profile:unmapped;relationship:87657a32-b6dc-4ca0-a39b-37c40daa478b:3;configuration:default:1",
+                    "sourceRef": "relationship-context:prepared-v1",
+                    "contentDigest": "75ca4571ccb7ee5e3ab1141e1ceae7576a0b7c729ffa3500548bbfa7b7fa458a",
+                    "redaction": "none",
+                    "tokenCount": 173
+                  },
+                  {
+                    "kind": "worldContext",
+                    "sourceRevision": "v1",
+                    "sourceRef": "world:prepared-v1",
+                    "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                    "redaction": "none",
+                    "tokenCount": 5
+                  },
+                  {
+                    "kind": "capabilityState",
+                    "sourceRevision": "v1",
+                    "sourceRef": "capability:snapshot-v1",
+                    "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                    "redaction": "none",
+                    "tokenCount": 7
+                  },
+                  {
+                    "kind": "conversation",
+                    "sourceRevision": "v1",
+                    "sourceRef": "conversation:session-v1",
+                    "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                    "redaction": "none",
+                    "tokenCount": 6
+                  },
+                  {
+                    "kind": "userInput",
+                    "sourceRevision": "v1",
+                    "sourceRef": "user-input:current-v1",
+                    "contentDigest": "55541dab02244a3fe6f34d87e57eacf44d98b7a7f73028fbd2c749ccfa698169",
+                    "redaction": "none",
+                    "tokenCount": 5
+                  }
+                ],
+                "tokenizer": "whitespace-v1"
+              },
+              "memory": {
+                "kind": "preparedMemory",
+                "content": "Prepared relationship context [profile=7d956651-e379-485c-bc8e-9f75a1e370c5:1;user-profile:unmapped;relationship=87657a32-b6dc-4ca0-a39b-37c40daa478b:3;configuration=default:1]\nExpression controls: callbackFrequency=0.2, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in exactly three numbered items.\nCritical corrections: none\nRelevant context: none\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+                "trusted": false,
+                "sourceRevision": "compiler:record-oriented:5;sources:b21c402b20d00494bcb948d75ba2ce36f887217d6d4485450ab751287e55daa2;profile:7d956651-e379-485c-bc8e-9f75a1e370c5:1;user-profile:unmapped;relationship:87657a32-b6dc-4ca0-a39b-37c40daa478b:3;configuration:default:1",
+                "sourceRef": "relationship-context:prepared-v1",
+                "contentDigest": "75ca4571ccb7ee5e3ab1141e1ceae7576a0b7c729ffa3500548bbfa7b7fa458a",
+                "redaction": "none",
+                "tokenCount": 173
+              },
+              "sourcePayloadReads": 1,
+              "loopbackAuthenticationAndPreparationMs": 3.0197909999997137
+            },
+            "warm": {
+              "output": "1. A cache is a small, fast storage layer that holds copies of recently or frequently used data so the system doesn't have to fetch it from a slower source every time. When a request comes in, the cache checks if it has a valid copy; if so, it returns it immediately (a hit), otherwise it fetches the data from the origin (a miss), stores the copy, and then serves it.\n\n2. Cache entries are managed by an eviction policy that decides what to remove when space runs out, such as Least Recently Used (LRU) or Least Frequently Used (LFU). Each entry also typically has a Time-To-Live (TTL) or validation mechanism that ensures stale data is refreshed or invalidated before it causes correctness issues.\n\n3. In practice, caching improves performance and reduces load on the underlying system, but it introduces complexity around consistency. You need to balance the benefits of speed against the cost of managing cache invalidation, memory usage, and ensuring that users or clients receive up-to-date data when it matters.",
+              "manifest": {
+                "schemaVersion": "1.0.0",
+                "sections": [
+                  {
+                    "kind": "policy",
+                    "sourceRevision": "v1",
+                    "sourceRef": "policy:v1",
+                    "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                    "redaction": "none",
+                    "tokenCount": 79
+                  },
+                  {
+                    "kind": "corePersona",
+                    "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                    "sourceRef": "assistant-profile:7d956651-e379-485c-bc8e-9f75a1e370c5",
+                    "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+                    "redaction": "none",
+                    "tokenCount": 27
+                  },
+                  {
+                    "kind": "adaptivePersona",
+                    "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                    "sourceRef": "assistant-profile:7d956651-e379-485c-bc8e-9f75a1e370c5",
+                    "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                    "redaction": "none",
+                    "tokenCount": 1
+                  },
+                  {
+                    "kind": "interactionState",
+                    "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+                    "sourceRef": "runtime-self-context:v1",
+                    "contentDigest": "f25230040b44f575e8644b551e9d50ce10ad9e54e0a14a240b39900775ed4d63",
+                    "redaction": "none",
+                    "tokenCount": 91
+                  },
+                  {
+                    "kind": "preparedMemory",
+                    "sourceRevision": "compiler:record-oriented:5;sources:b21c402b20d00494bcb948d75ba2ce36f887217d6d4485450ab751287e55daa2;profile:7d956651-e379-485c-bc8e-9f75a1e370c5:1;user-profile:unmapped;relationship:87657a32-b6dc-4ca0-a39b-37c40daa478b:3;configuration:default:1",
+                    "sourceRef": "relationship-context:prepared-v1",
+                    "contentDigest": "75ca4571ccb7ee5e3ab1141e1ceae7576a0b7c729ffa3500548bbfa7b7fa458a",
+                    "redaction": "none",
+                    "tokenCount": 173
+                  },
+                  {
+                    "kind": "worldContext",
+                    "sourceRevision": "v1",
+                    "sourceRef": "world:prepared-v1",
+                    "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                    "redaction": "none",
+                    "tokenCount": 5
+                  },
+                  {
+                    "kind": "capabilityState",
+                    "sourceRevision": "v1",
+                    "sourceRef": "capability:snapshot-v1",
+                    "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                    "redaction": "none",
+                    "tokenCount": 7
+                  },
+                  {
+                    "kind": "conversation",
+                    "sourceRevision": "v1",
+                    "sourceRef": "conversation:session-v1",
+                    "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                    "redaction": "none",
+                    "tokenCount": 6
+                  },
+                  {
+                    "kind": "userInput",
+                    "sourceRevision": "v1",
+                    "sourceRef": "user-input:current-v1",
+                    "contentDigest": "55541dab02244a3fe6f34d87e57eacf44d98b7a7f73028fbd2c749ccfa698169",
+                    "redaction": "none",
+                    "tokenCount": 5
+                  }
+                ],
+                "tokenizer": "whitespace-v1"
+              },
+              "memory": {
+                "kind": "preparedMemory",
+                "content": "Prepared relationship context [profile=7d956651-e379-485c-bc8e-9f75a1e370c5:1;user-profile:unmapped;relationship=87657a32-b6dc-4ca0-a39b-37c40daa478b:3;configuration=default:1]\nExpression controls: callbackFrequency=0.2, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in exactly three numbered items.\nCritical corrections: none\nRelevant context: none\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+                "trusted": false,
+                "sourceRevision": "compiler:record-oriented:5;sources:b21c402b20d00494bcb948d75ba2ce36f887217d6d4485450ab751287e55daa2;profile:7d956651-e379-485c-bc8e-9f75a1e370c5:1;user-profile:unmapped;relationship:87657a32-b6dc-4ca0-a39b-37c40daa478b:3;configuration:default:1",
+                "sourceRef": "relationship-context:prepared-v1",
+                "contentDigest": "75ca4571ccb7ee5e3ab1141e1ceae7576a0b7c729ffa3500548bbfa7b7fa458a",
+                "redaction": "none",
+                "tokenCount": 173
+              },
+              "sourcePayloadReads": 0,
+              "loopbackAuthenticationAndPreparationMs": 1.9431670000003578
+            }
+          }
+        ],
+        "recallCalls": 0,
+        "interpretation": "payload reads count existing local composition, not an optional recall tool; timing includes loopback and authentication"
+      }
+    },
+    {
+      "id": "LS-TEST-093-current-request-precedence",
+      "result": "pass",
+      "evidence": {
+        "output": "1. A cache is a data storage layer that keeps copies of recently accessed information.\n2. It prioritizes speed over raw capacity to reduce latency.\n3. The system checks this storage before querying primary databases.\n4. This mechanism significantly accelerates overall retrieval processes.",
+        "manifest": {
+          "schemaVersion": "1.0.0",
+          "sections": [
+            {
+              "kind": "policy",
+              "sourceRevision": "v1",
+              "sourceRef": "policy:v1",
+              "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+              "redaction": "none",
+              "tokenCount": 79
+            },
+            {
+              "kind": "corePersona",
+              "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+              "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+              "redaction": "none",
+              "tokenCount": 27
+            },
+            {
+              "kind": "adaptivePersona",
+              "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+              "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+              "redaction": "none",
+              "tokenCount": 1
+            },
+            {
+              "kind": "interactionState",
+              "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+              "sourceRef": "runtime-self-context:v1",
+              "contentDigest": "494161035ee5c2033abe20d196fb9029375ea80be98e32328297d0bc4e241510",
+              "redaction": "none",
+              "tokenCount": 91
+            },
+            {
+              "kind": "preparedMemory",
+              "sourceRevision": "compiler:record-oriented:5;sources:75c760074488e88034ebd30a833d36ed65fd25829c9d02b49201a46888b16b4f;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:3;configuration:default:1",
+              "sourceRef": "relationship-context:prepared-v1",
+              "contentDigest": "9b6b145070e9f2043c9c7568853a589de85eecfe2155e0c23a964e8cbc4b40c0",
+              "redaction": "none",
+              "tokenCount": 172
+            },
+            {
+              "kind": "worldContext",
+              "sourceRevision": "v1",
+              "sourceRef": "world:prepared-v1",
+              "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+              "redaction": "none",
+              "tokenCount": 5
+            },
+            {
+              "kind": "capabilityState",
+              "sourceRevision": "v1",
+              "sourceRef": "capability:snapshot-v1",
+              "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+              "redaction": "none",
+              "tokenCount": 7
+            },
+            {
+              "kind": "conversation",
+              "sourceRevision": "v1",
+              "sourceRef": "conversation:session-v1",
+              "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+              "redaction": "none",
+              "tokenCount": 6
+            },
+            {
+              "kind": "userInput",
+              "sourceRevision": "v1",
+              "sourceRef": "user-input:current-v1",
+              "contentDigest": "56898a02d559ecebe9fef4d04ad78e01c47804f437bc777cb163ddaf79c457a5",
+              "redaction": "none",
+              "tokenCount": 12
+            }
+          ],
+          "tokenizer": "whitespace-v1"
+        },
+        "memory": {
+          "kind": "preparedMemory",
+          "content": "Prepared relationship context [profile=a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship=1e87eef4-549d-414f-855d-ad1264476b69:3;configuration=default:1]\nExpression controls: callbackFrequency=0.2, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in one concise sentence.\nCritical corrections: none\nRelevant context: none\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+          "trusted": false,
+          "sourceRevision": "compiler:record-oriented:5;sources:75c760074488e88034ebd30a833d36ed65fd25829c9d02b49201a46888b16b4f;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:3;configuration:default:1",
+          "sourceRef": "relationship-context:prepared-v1",
+          "contentDigest": "9b6b145070e9f2043c9c7568853a589de85eecfe2155e0c23a964e8cbc4b40c0",
+          "redaction": "none",
+          "tokenCount": 172
+        },
+        "sourcePayloadReads": 1,
+        "loopbackAuthenticationAndPreparationMs": 2.2992919999996957,
+        "claimBoundary": "Current-request format precedence in a bounded four-sentence task. The earlier four-example workload exceeded the unchanged 10-second deadline twice; that availability/latency limitation remains recorded separately."
+      }
+    },
+    {
+      "id": "LS-TEST-094-relevance-and-disabled-callbacks",
+      "result": "pass",
+      "evidence": {
+        "relevant": {
+          "output": "A Python generator is a function that yields values one at a time instead of returning a full list, allowing it to pause and resume processing efficiently for large or infinite datasets.",
+          "manifest": {
+            "schemaVersion": "1.0.0",
+            "sections": [
+              {
+                "kind": "policy",
+                "sourceRevision": "v1",
+                "sourceRef": "policy:v1",
+                "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                "redaction": "none",
+                "tokenCount": 79
+              },
+              {
+                "kind": "corePersona",
+                "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+                "redaction": "none",
+                "tokenCount": 27
+              },
+              {
+                "kind": "adaptivePersona",
+                "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                "redaction": "none",
+                "tokenCount": 1
+              },
+              {
+                "kind": "interactionState",
+                "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+                "sourceRef": "runtime-self-context:v1",
+                "contentDigest": "6fa52cbe07e762387c27552ed7d822007e056bf28c1e5b9538c570e17a9b1f1e",
+                "redaction": "none",
+                "tokenCount": 91
+              },
+              {
+                "kind": "preparedMemory",
+                "sourceRevision": "compiler:record-oriented:5;sources:36be9cbadeac2053170b62ede460cc138142b591e59a870312e0c3c1795b4211;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:default:1",
+                "sourceRef": "relationship-context:prepared-v1",
+                "contentDigest": "17cc60361d24c0ab80b95f3e6855b1a8b1d22dc718c2c6f9a5560ac527e99fc9",
+                "redaction": "none",
+                "tokenCount": 178
+              },
+              {
+                "kind": "worldContext",
+                "sourceRevision": "v1",
+                "sourceRef": "world:prepared-v1",
+                "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                "redaction": "none",
+                "tokenCount": 5
+              },
+              {
+                "kind": "capabilityState",
+                "sourceRevision": "v1",
+                "sourceRef": "capability:snapshot-v1",
+                "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                "redaction": "none",
+                "tokenCount": 7
+              },
+              {
+                "kind": "conversation",
+                "sourceRevision": "v1",
+                "sourceRef": "conversation:session-v1",
+                "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                "redaction": "none",
+                "tokenCount": 6
+              },
+              {
+                "kind": "userInput",
+                "sourceRevision": "v1",
+                "sourceRef": "user-input:current-v1",
+                "contentDigest": "85320bc44ae7a8ee0028e2af4bf1aef3bbca6f072773799525543a187b5308bf",
+                "redaction": "none",
+                "tokenCount": 3
+              }
+            ],
+            "tokenizer": "whitespace-v1"
+          },
+          "memory": {
+            "kind": "preparedMemory",
+            "content": "Prepared relationship context [profile=a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship=1e87eef4-549d-414f-855d-ad1264476b69:9;configuration=default:1]\nExpression controls: callbackFrequency=0.2, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in one concise sentence.\nCritical corrections: none\nRelevant context: a3dbf414-4384-4a05-8067-6855c2b785da=For Python explanations, use beginner Python terminology.\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+            "trusted": false,
+            "sourceRevision": "compiler:record-oriented:5;sources:36be9cbadeac2053170b62ede460cc138142b591e59a870312e0c3c1795b4211;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:default:1",
+            "sourceRef": "relationship-context:prepared-v1",
+            "contentDigest": "17cc60361d24c0ab80b95f3e6855b1a8b1d22dc718c2c6f9a5560ac527e99fc9",
+            "redaction": "none",
+            "tokenCount": 178
+          },
+          "sourcePayloadReads": 1,
+          "loopbackAuthenticationAndPreparationMs": 1.1255419999997684
+        },
+        "current": [
+          {
+            "output": "Using \"Moon Orchard\" as the synthetic project label, a concrete cache example might look like:\n\n```json\n{\n  \"key\": \"moon_orchard/user_preferences\",\n  \"value\": { \"theme\": \"dark\", \"notifications\": true },\n  \"ttl\": 3600\n}\n```",
+            "manifest": {
+              "schemaVersion": "1.0.0",
+              "sections": [
+                {
+                  "kind": "policy",
+                  "sourceRevision": "v1",
+                  "sourceRef": "policy:v1",
+                  "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                  "redaction": "none",
+                  "tokenCount": 79
+                },
+                {
+                  "kind": "corePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                  "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+                  "redaction": "none",
+                  "tokenCount": 27
+                },
+                {
+                  "kind": "adaptivePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                  "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                  "redaction": "none",
+                  "tokenCount": 1
+                },
+                {
+                  "kind": "interactionState",
+                  "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+                  "sourceRef": "runtime-self-context:v1",
+                  "contentDigest": "55a826622fb858b6d4901a1a225dac1b474daa8482085d808bf11eb6b783c8d0",
+                  "redaction": "none",
+                  "tokenCount": 91
+                },
+                {
+                  "kind": "preparedMemory",
+                  "sourceRevision": "compiler:record-oriented:5;sources:36be9cbadeac2053170b62ede460cc138142b591e59a870312e0c3c1795b4211;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:default:1",
+                  "sourceRef": "relationship-context:prepared-v1",
+                  "contentDigest": "e95117ea0da53a14b5e200e653c463c37456a3843edb30aaa665503b0d5cdf9d",
+                  "redaction": "none",
+                  "tokenCount": 181
+                },
+                {
+                  "kind": "worldContext",
+                  "sourceRevision": "v1",
+                  "sourceRef": "world:prepared-v1",
+                  "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                  "redaction": "none",
+                  "tokenCount": 5
+                },
+                {
+                  "kind": "capabilityState",
+                  "sourceRevision": "v1",
+                  "sourceRef": "capability:snapshot-v1",
+                  "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                  "redaction": "none",
+                  "tokenCount": 7
+                },
+                {
+                  "kind": "conversation",
+                  "sourceRevision": "v1",
+                  "sourceRef": "conversation:session-v1",
+                  "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                  "redaction": "none",
+                  "tokenCount": 6
+                },
+                {
+                  "kind": "userInput",
+                  "sourceRevision": "v1",
+                  "sourceRef": "user-input:current-v1",
+                  "contentDigest": "c18d8f6b0be9ede7afabc824b0c2394dca0ade27ba6084dbc28233fbbe0ab27a",
+                  "redaction": "none",
+                  "tokenCount": 5
+                }
+              ],
+              "tokenizer": "whitespace-v1"
+            },
+            "memory": {
+              "kind": "preparedMemory",
+              "content": "Prepared relationship context [profile=a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship=1e87eef4-549d-414f-855d-ad1264476b69:9;configuration=default:1]\nExpression controls: callbackFrequency=0.2, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in one concise sentence.\nCritical corrections: none\nRelevant context: a0197a23-e0e5-4530-8eb3-6bd75554da55=For cache examples, use the synthetic project label Moon Orchard.\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+              "trusted": false,
+              "sourceRevision": "compiler:record-oriented:5;sources:36be9cbadeac2053170b62ede460cc138142b591e59a870312e0c3c1795b4211;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:default:1",
+              "sourceRef": "relationship-context:prepared-v1",
+              "contentDigest": "e95117ea0da53a14b5e200e653c463c37456a3843edb30aaa665503b0d5cdf9d",
+              "redaction": "none",
+              "tokenCount": 181
+            },
+            "sourcePayloadReads": 1,
+            "loopbackAuthenticationAndPreparationMs": 2.882333000001381
+          },
+          {
+            "output": "Here is a concrete cache example using the project label Moon Orchard: a user requests the `GET /projects/moon-orchard/config` endpoint, which triggers a database lookup to fetch the latest configuration JSON; the response is then stored in Redis under the key `moon_orchard:config` with a 60-second TTL, so the next identical request within that window serves the cached JSON directly without hitting the database.",
+            "manifest": {
+              "schemaVersion": "1.0.0",
+              "sections": [
+                {
+                  "kind": "policy",
+                  "sourceRevision": "v1",
+                  "sourceRef": "policy:v1",
+                  "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                  "redaction": "none",
+                  "tokenCount": 79
+                },
+                {
+                  "kind": "corePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                  "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+                  "redaction": "none",
+                  "tokenCount": 27
+                },
+                {
+                  "kind": "adaptivePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                  "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                  "redaction": "none",
+                  "tokenCount": 1
+                },
+                {
+                  "kind": "interactionState",
+                  "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+                  "sourceRef": "runtime-self-context:v1",
+                  "contentDigest": "301f1f1eaaa65a041d5f7043a3aff0478fe18b927f3a442b3c3d82d25852a140",
+                  "redaction": "none",
+                  "tokenCount": 91
+                },
+                {
+                  "kind": "preparedMemory",
+                  "sourceRevision": "compiler:record-oriented:5;sources:36be9cbadeac2053170b62ede460cc138142b591e59a870312e0c3c1795b4211;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:default:1",
+                  "sourceRef": "relationship-context:prepared-v1",
+                  "contentDigest": "e95117ea0da53a14b5e200e653c463c37456a3843edb30aaa665503b0d5cdf9d",
+                  "redaction": "none",
+                  "tokenCount": 181
+                },
+                {
+                  "kind": "worldContext",
+                  "sourceRevision": "v1",
+                  "sourceRef": "world:prepared-v1",
+                  "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                  "redaction": "none",
+                  "tokenCount": 5
+                },
+                {
+                  "kind": "capabilityState",
+                  "sourceRevision": "v1",
+                  "sourceRef": "capability:snapshot-v1",
+                  "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                  "redaction": "none",
+                  "tokenCount": 7
+                },
+                {
+                  "kind": "conversation",
+                  "sourceRevision": "v1",
+                  "sourceRef": "conversation:session-v1",
+                  "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                  "redaction": "none",
+                  "tokenCount": 6
+                },
+                {
+                  "kind": "userInput",
+                  "sourceRevision": "v1",
+                  "sourceRef": "user-input:current-v1",
+                  "contentDigest": "c18d8f6b0be9ede7afabc824b0c2394dca0ade27ba6084dbc28233fbbe0ab27a",
+                  "redaction": "none",
+                  "tokenCount": 5
+                }
+              ],
+              "tokenizer": "whitespace-v1"
+            },
+            "memory": {
+              "kind": "preparedMemory",
+              "content": "Prepared relationship context [profile=a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship=1e87eef4-549d-414f-855d-ad1264476b69:9;configuration=default:1]\nExpression controls: callbackFrequency=0.2, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in one concise sentence.\nCritical corrections: none\nRelevant context: a0197a23-e0e5-4530-8eb3-6bd75554da55=For cache examples, use the synthetic project label Moon Orchard.\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+              "trusted": false,
+              "sourceRevision": "compiler:record-oriented:5;sources:36be9cbadeac2053170b62ede460cc138142b591e59a870312e0c3c1795b4211;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:default:1",
+              "sourceRef": "relationship-context:prepared-v1",
+              "contentDigest": "e95117ea0da53a14b5e200e653c463c37456a3843edb30aaa665503b0d5cdf9d",
+              "redaction": "none",
+              "tokenCount": 181
+            },
+            "sourcePayloadReads": 0,
+            "loopbackAuthenticationAndPreparationMs": 2.8128749999996217
+          }
+        ],
+        "disabled": [
+          {
+            "output": "Here is a Python example using `functools.lru_cache`:\n\n```python\nfrom functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef fibonacci(n):\n    if n < 2:\n        return n\n    return fibonacci(n - 1) + fibonacci(n - 2)\n\nprint(fibonacci(10))  # Outputs 55\n```",
+            "manifest": {
+              "schemaVersion": "1.0.0",
+              "sections": [
+                {
+                  "kind": "policy",
+                  "sourceRevision": "v1",
+                  "sourceRef": "policy:v1",
+                  "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                  "redaction": "none",
+                  "tokenCount": 79
+                },
+                {
+                  "kind": "corePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                  "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+                  "redaction": "none",
+                  "tokenCount": 27
+                },
+                {
+                  "kind": "adaptivePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                  "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                  "redaction": "none",
+                  "tokenCount": 1
+                },
+                {
+                  "kind": "interactionState",
+                  "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+                  "sourceRef": "runtime-self-context:v1",
+                  "contentDigest": "fa730e251ca26be00a9b02b1e3726d4f4a09849dcf74b8ee53f0eaadf2a36f04",
+                  "redaction": "none",
+                  "tokenCount": 91
+                },
+                {
+                  "kind": "preparedMemory",
+                  "sourceRevision": "compiler:record-oriented:5;sources:36be9cbadeac2053170b62ede460cc138142b591e59a870312e0c3c1795b4211;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:4b64dcc6-7081-4325-8631-d7c643ebba36:1",
+                  "sourceRef": "relationship-context:prepared-v1",
+                  "contentDigest": "d8ed5e7a477ab548d313ebc95308498e35caaf29dcfdbe1c3c48b7d714b3d56e",
+                  "redaction": "none",
+                  "tokenCount": 172
+                },
+                {
+                  "kind": "worldContext",
+                  "sourceRevision": "v1",
+                  "sourceRef": "world:prepared-v1",
+                  "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                  "redaction": "none",
+                  "tokenCount": 5
+                },
+                {
+                  "kind": "capabilityState",
+                  "sourceRevision": "v1",
+                  "sourceRef": "capability:snapshot-v1",
+                  "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                  "redaction": "none",
+                  "tokenCount": 7
+                },
+                {
+                  "kind": "conversation",
+                  "sourceRevision": "v1",
+                  "sourceRef": "conversation:session-v1",
+                  "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                  "redaction": "none",
+                  "tokenCount": 6
+                },
+                {
+                  "kind": "userInput",
+                  "sourceRevision": "v1",
+                  "sourceRef": "user-input:current-v1",
+                  "contentDigest": "c18d8f6b0be9ede7afabc824b0c2394dca0ade27ba6084dbc28233fbbe0ab27a",
+                  "redaction": "none",
+                  "tokenCount": 5
+                }
+              ],
+              "tokenizer": "whitespace-v1"
+            },
+            "memory": {
+              "kind": "preparedMemory",
+              "content": "Prepared relationship context [profile=a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship=1e87eef4-549d-414f-855d-ad1264476b69:9;configuration=4b64dcc6-7081-4325-8631-d7c643ebba36:1]\nExpression controls: callbackFrequency=0, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in one concise sentence.\nCritical corrections: none\nRelevant context: none\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+              "trusted": false,
+              "sourceRevision": "compiler:record-oriented:5;sources:36be9cbadeac2053170b62ede460cc138142b591e59a870312e0c3c1795b4211;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:4b64dcc6-7081-4325-8631-d7c643ebba36:1",
+              "sourceRef": "relationship-context:prepared-v1",
+              "contentDigest": "d8ed5e7a477ab548d313ebc95308498e35caaf29dcfdbe1c3c48b7d714b3d56e",
+              "redaction": "none",
+              "tokenCount": 172
+            },
+            "sourcePayloadReads": 1,
+            "loopbackAuthenticationAndPreparationMs": 0.9444579999999405
+          },
+          {
+            "output": "Here is a simple Python function that demonstrates memoization (a form of caching):\n\n```python\ndef fib(n, cache={}):\n    if n in cache:\n        return cache[n]\n    if n <= 1:\n        return n\n    cache[n] = fib(n - 1, cache) + fib(n - 2, cache)\n    return cache[n]\n```\n\nWhen you call `fib(5)`, it calculates and stores intermediate results in the `cache` dictionary. Subsequent calls for the same values retrieve them instantly instead of recalculating.",
+            "manifest": {
+              "schemaVersion": "1.0.0",
+              "sections": [
+                {
+                  "kind": "policy",
+                  "sourceRevision": "v1",
+                  "sourceRef": "policy:v1",
+                  "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                  "redaction": "none",
+                  "tokenCount": 79
+                },
+                {
+                  "kind": "corePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                  "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+                  "redaction": "none",
+                  "tokenCount": 27
+                },
+                {
+                  "kind": "adaptivePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                  "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                  "redaction": "none",
+                  "tokenCount": 1
+                },
+                {
+                  "kind": "interactionState",
+                  "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+                  "sourceRef": "runtime-self-context:v1",
+                  "contentDigest": "3d2e0dbe908bb73cf06b35118883d137ab6e646f6959c23829174c604c25498d",
+                  "redaction": "none",
+                  "tokenCount": 91
+                },
+                {
+                  "kind": "preparedMemory",
+                  "sourceRevision": "compiler:record-oriented:5;sources:36be9cbadeac2053170b62ede460cc138142b591e59a870312e0c3c1795b4211;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:4b64dcc6-7081-4325-8631-d7c643ebba36:1",
+                  "sourceRef": "relationship-context:prepared-v1",
+                  "contentDigest": "d8ed5e7a477ab548d313ebc95308498e35caaf29dcfdbe1c3c48b7d714b3d56e",
+                  "redaction": "none",
+                  "tokenCount": 172
+                },
+                {
+                  "kind": "worldContext",
+                  "sourceRevision": "v1",
+                  "sourceRef": "world:prepared-v1",
+                  "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                  "redaction": "none",
+                  "tokenCount": 5
+                },
+                {
+                  "kind": "capabilityState",
+                  "sourceRevision": "v1",
+                  "sourceRef": "capability:snapshot-v1",
+                  "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                  "redaction": "none",
+                  "tokenCount": 7
+                },
+                {
+                  "kind": "conversation",
+                  "sourceRevision": "v1",
+                  "sourceRef": "conversation:session-v1",
+                  "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                  "redaction": "none",
+                  "tokenCount": 6
+                },
+                {
+                  "kind": "userInput",
+                  "sourceRevision": "v1",
+                  "sourceRef": "user-input:current-v1",
+                  "contentDigest": "c18d8f6b0be9ede7afabc824b0c2394dca0ade27ba6084dbc28233fbbe0ab27a",
+                  "redaction": "none",
+                  "tokenCount": 5
+                }
+              ],
+              "tokenizer": "whitespace-v1"
+            },
+            "memory": {
+              "kind": "preparedMemory",
+              "content": "Prepared relationship context [profile=a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship=1e87eef4-549d-414f-855d-ad1264476b69:9;configuration=4b64dcc6-7081-4325-8631-d7c643ebba36:1]\nExpression controls: callbackFrequency=0, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in one concise sentence.\nCritical corrections: none\nRelevant context: none\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+              "trusted": false,
+              "sourceRevision": "compiler:record-oriented:5;sources:36be9cbadeac2053170b62ede460cc138142b591e59a870312e0c3c1795b4211;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:4b64dcc6-7081-4325-8631-d7c643ebba36:1",
+              "sourceRef": "relationship-context:prepared-v1",
+              "contentDigest": "d8ed5e7a477ab548d313ebc95308498e35caaf29dcfdbe1c3c48b7d714b3d56e",
+              "redaction": "none",
+              "tokenCount": 172
+            },
+            "sourcePayloadReads": 0,
+            "loopbackAuthenticationAndPreparationMs": 1.0658750000002328
+          }
+        ],
+        "callbackDefinition": "exact mention of synthetic project label Moon Orchard",
+        "observedCallbackCounts": {
+          "current": 2,
+          "disabled": 0
+        },
+        "distinctOutputCounts": {
+          "current": 2,
+          "disabled": 2
+        }
+      }
+    },
+    {
+      "id": "LS-TEST-096-correction-real-reply-and-pending-fence",
+      "result": "pass",
+      "evidence": {
+        "before": {
+          "output": "The synthetic project codename is Cedar Harbor.",
+          "manifest": {
+            "schemaVersion": "1.0.0",
+            "sections": [
+              {
+                "kind": "policy",
+                "sourceRevision": "v1",
+                "sourceRef": "policy:v1",
+                "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                "redaction": "none",
+                "tokenCount": 79
+              },
+              {
+                "kind": "corePersona",
+                "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+                "redaction": "none",
+                "tokenCount": 27
+              },
+              {
+                "kind": "adaptivePersona",
+                "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                "redaction": "none",
+                "tokenCount": 1
+              },
+              {
+                "kind": "interactionState",
+                "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+                "sourceRef": "runtime-self-context:v1",
+                "contentDigest": "7511275f452cbc2db3e2b312359580c490aa36372bcd188f9714e252ea90732d",
+                "redaction": "none",
+                "tokenCount": 91
+              },
+              {
+                "kind": "preparedMemory",
+                "sourceRevision": "compiler:record-oriented:5;sources:487546f8a958f5bda47b1c42519162451e2da85bcf937ecbef481a285ea05457;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:3f8edc6b-3cb3-4390-8e98-57ba5177c075:2",
+                "sourceRef": "relationship-context:prepared-v1",
+                "contentDigest": "6dfeed47d04d618b8e860d6f6713df54d9cbbbeddd7081b71c8329ed8e7c7028",
+                "redaction": "none",
+                "tokenCount": 197
+              },
+              {
+                "kind": "worldContext",
+                "sourceRevision": "v1",
+                "sourceRef": "world:prepared-v1",
+                "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                "redaction": "none",
+                "tokenCount": 5
+              },
+              {
+                "kind": "capabilityState",
+                "sourceRevision": "v1",
+                "sourceRef": "capability:snapshot-v1",
+                "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                "redaction": "none",
+                "tokenCount": 7
+              },
+              {
+                "kind": "conversation",
+                "sourceRevision": "v1",
+                "sourceRef": "conversation:session-v1",
+                "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                "redaction": "none",
+                "tokenCount": 6
+              },
+              {
+                "kind": "userInput",
+                "sourceRevision": "v1",
+                "sourceRef": "user-input:current-v1",
+                "contentDigest": "932a263997c8341d6dcb2d357198169b4ef2e71a4d45dcde16ef3532595829d6",
+                "redaction": "none",
+                "tokenCount": 6
+              }
+            ],
+            "tokenizer": "whitespace-v1"
+          },
+          "memory": {
+            "kind": "preparedMemory",
+            "content": "Prepared relationship context [profile=a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship=1e87eef4-549d-414f-855d-ad1264476b69:9;configuration=3f8edc6b-3cb3-4390-8e98-57ba5177c075:2]\nExpression controls: callbackFrequency=1, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in one concise sentence.\nCritical corrections: none\nRelevant context: 21b3a8ac-7462-484c-86d7-9e7ee8831ecf=The synthetic project codename is Cedar Harbor. | a0197a23-e0e5-4530-8eb3-6bd75554da55=For cache examples, use the synthetic project label Moon Orchard. | d5177f5b-a06a-48d1-92e7-dcbd438864a6=The unrelated synthetic hobby is clockwork gardening.\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+            "trusted": false,
+            "sourceRevision": "compiler:record-oriented:5;sources:487546f8a958f5bda47b1c42519162451e2da85bcf937ecbef481a285ea05457;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:3f8edc6b-3cb3-4390-8e98-57ba5177c075:2",
+            "sourceRef": "relationship-context:prepared-v1",
+            "contentDigest": "6dfeed47d04d618b8e860d6f6713df54d9cbbbeddd7081b71c8329ed8e7c7028",
+            "redaction": "none",
+            "tokenCount": 197
+          },
+          "sourcePayloadReads": 1,
+          "loopbackAuthenticationAndPreparationMs": 1.3489580000023125
+        },
+        "after": {
+          "output": "The synthetic project codename is Aurora Lantern.",
+          "manifest": {
+            "schemaVersion": "1.0.0",
+            "sections": [
+              {
+                "kind": "policy",
+                "sourceRevision": "v1",
+                "sourceRef": "policy:v1",
+                "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                "redaction": "none",
+                "tokenCount": 79
+              },
+              {
+                "kind": "corePersona",
+                "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                "contentDigest": "ae63786d3d5a910ba15b8aaa27cdba171b89ef25d1cecc5011651ba11ea05a8f",
+                "redaction": "none",
+                "tokenCount": 27
+              },
+              {
+                "kind": "adaptivePersona",
+                "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "sourceRef": "assistant-profile:a06d2148-a073-4031-97cf-f6acdee0c9d0",
+                "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                "redaction": "none",
+                "tokenCount": 1
+              },
+              {
+                "kind": "interactionState",
+                "sourceRevision": "53de19ebc26d9e4a054ca5cb7a22305bbf85ab1ce9099c2ce76edef74ffba60d",
+                "sourceRef": "runtime-self-context:v1",
+                "contentDigest": "95b73ae751a2deb4967d0e149823f96d3641cc142869d04b4cea6f09f2cf0b2d",
+                "redaction": "none",
+                "tokenCount": 91
+              },
+              {
+                "kind": "preparedMemory",
+                "sourceRevision": "compiler:record-oriented:5;sources:25757eac25c23e8b5acfa1b1e7754d41085d1af4b932ca5e5519dc1c8a3265ff;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:3f8edc6b-3cb3-4390-8e98-57ba5177c075:2",
+                "sourceRef": "relationship-context:prepared-v1",
+                "contentDigest": "7d4a92e105437f648b59c1744698d2cbf281a2826807012346c8ca90f39487b0",
+                "redaction": "none",
+                "tokenCount": 195
+              },
+              {
+                "kind": "worldContext",
+                "sourceRevision": "v1",
+                "sourceRef": "world:prepared-v1",
+                "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                "redaction": "none",
+                "tokenCount": 5
+              },
+              {
+                "kind": "capabilityState",
+                "sourceRevision": "v1",
+                "sourceRef": "capability:snapshot-v1",
+                "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                "redaction": "none",
+                "tokenCount": 7
+              },
+              {
+                "kind": "conversation",
+                "sourceRevision": "v1",
+                "sourceRef": "conversation:session-v1",
+                "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                "redaction": "none",
+                "tokenCount": 6
+              },
+              {
+                "kind": "userInput",
+                "sourceRevision": "v1",
+                "sourceRef": "user-input:current-v1",
+                "contentDigest": "932a263997c8341d6dcb2d357198169b4ef2e71a4d45dcde16ef3532595829d6",
+                "redaction": "none",
+                "tokenCount": 6
+              }
+            ],
+            "tokenizer": "whitespace-v1"
+          },
+          "memory": {
+            "kind": "preparedMemory",
+            "content": "Prepared relationship context [profile=a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship=1e87eef4-549d-414f-855d-ad1264476b69:9;configuration=3f8edc6b-3cb3-4390-8e98-57ba5177c075:2]\nExpression controls: callbackFrequency=1, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0.5, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Use a moderate task-appropriate setting. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: When no format is requested, answer in one concise sentence.\nCritical corrections: The synthetic project codename is Aurora Lantern.\nRelevant context: a0197a23-e0e5-4530-8eb3-6bd75554da55=For cache examples, use the synthetic project label Moon Orchard. | d5177f5b-a06a-48d1-92e7-dcbd438864a6=The unrelated synthetic hobby is clockwork gardening.\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+            "trusted": false,
+            "sourceRevision": "compiler:record-oriented:5;sources:25757eac25c23e8b5acfa1b1e7754d41085d1af4b932ca5e5519dc1c8a3265ff;profile:a06d2148-a073-4031-97cf-f6acdee0c9d0:1;user-profile:unmapped;relationship:1e87eef4-549d-414f-855d-ad1264476b69:9;configuration:3f8edc6b-3cb3-4390-8e98-57ba5177c075:2",
+            "sourceRef": "relationship-context:prepared-v1",
+            "contentDigest": "7d4a92e105437f648b59c1744698d2cbf281a2826807012346c8ca90f39487b0",
+            "redaction": "none",
+            "tokenCount": 195
+          },
+          "sourcePayloadReads": 1,
+          "loopbackAuthenticationAndPreparationMs": 1.5160420000029262
+        },
+        "pendingOutput": "fenced before held real provider chunk",
+        "staleApplyStatus": 409
+      }
+    },
+    {
+      "id": "LS-TEST-100-audience-transition-and-safe-ordinary-fallback",
+      "result": "fail",
+      "error": "The input did not match the regular expression /don.t|not|unknown|unavailable|could you|provide|need|cannot|can.t|haven.t/iu. Input:\n\n'The synthetic project codename is the **Synthetic Context Assistant**.'\n"
+    }
+  ],
+  "exclusions": [
+    "Human fit acceptance",
+    "physical capture/playback",
+    "real personal data",
+    "training/adapters",
+    "production or shared service changes"
+  ],
+  "sourceRevision": "b31fe8432a537fdd22f4553ccbb91bca718ebcbe",
+  "scriptSha256": "e668051f19cb1d04244c6e7a3e1aaa1eecdb30f4c2d06d9ac52db0e5aa381a96",
+  "sourceWorktreeStatus": [],
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "effectiveConfigurationDigest": "29a0bbe73b21693446f7700bc68bbb3cefd40124ba851c6a80f87b62e9c4181e",
+  "providers": {
+    "inference": {
+      "id": "inference",
+      "implementation": "@lifestream/providers-sglang",
+      "revision": "319f741cce68d7914884900c138a1fbb70a42f30",
+      "status": "healthy",
+      "fixture": false,
+      "required": true
+    },
+    "memory": {
+      "id": "memory",
+      "implementation": "@lifestream/providers-fixture",
+      "revision": "workspace",
+      "status": "healthy",
+      "fixture": true,
+      "required": true
+    },
+    "stt": {
+      "id": "stt",
+      "implementation": "@lifestream/providers-nemo-speech",
+      "revision": "ebe59e5a817142986528bbbee5dba8db7b38ed50",
+      "status": "healthy",
+      "fixture": false,
+      "required": true
+    },
+    "tts": {
+      "id": "tts",
+      "implementation": "@lifestream/providers-voxcpm",
+      "revision": "workspace",
+      "status": "healthy",
+      "fixture": false,
+      "required": true
+    },
+    "world": {
+      "id": "world",
+      "implementation": "@lifestream/providers-fixture",
+      "revision": "workspace",
+      "status": "healthy",
+      "fixture": true,
+      "required": false
+    },
+    "capability": {
+      "id": "capability",
+      "implementation": "@lifestream/providers-fixture",
+      "revision": "workspace",
+      "status": "healthy",
+      "fixture": true,
+      "required": false
+    },
+    "renderer": {
+      "id": "renderer",
+      "implementation": "@lifestream/providers-fixture",
+      "revision": "workspace",
+      "status": "healthy",
+      "fixture": true,
+      "required": false
+    },
+    "clock": {
+      "id": "clock",
+      "implementation": "node:system",
+      "revision": "v24.14.1",
+      "status": "healthy",
+      "fixture": false,
+      "required": true
+    }
+  },
+  "result": "fail"
+}
