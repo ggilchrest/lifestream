@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Database } from "./database.js";
 
 export type MemoryRecord = { id: string; assistantId: string; content: string; provenance: Record<string, unknown>; lifecycle: Record<string, unknown>; createdAt: string };
@@ -52,6 +53,26 @@ export class MemoryRepository {
     const revision = this.database ? this.database.transaction((tx) => { const nextRevision = tx.get<{ revision: number }>("SELECT COALESCE(MAX(revision), 0) + 1 AS revision FROM memory_lifecycle_events WHERE memory_id = ? AND assistant_id = ?", id, assistantId)?.revision ?? 1; tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, nextRevision, "correctionProposed", JSON.stringify(payload), occurredAt); return nextRevision; }) : (this.events.get(id)?.at(-1)?.revision ?? 0) + 1;
     if (!this.database) { const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt }); this.events.set(id, events); }
     return { memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt };
+  }
+  applyCorrection(assistantId: string, id: string, proposalRevision: number, expectedRevision: number, actor: string): MemoryRecord {
+    const existing = this.get(assistantId, id), history = this.history(assistantId, id);
+    const proposal = history.filter(event => event.eventType === "correctionProposed").at(-1);
+    if (!existing || existing.lifecycle.revision !== expectedRevision || !["active", "candidate"].includes(String(existing.lifecycle.status)) || proposal?.revision !== proposalRevision || typeof proposal.payload.proposedContent !== "string") throw new Error("correction revision conflict");
+    const now = new Date().toISOString(), nextId = randomUUID();
+    const corrected: MemoryRecord = { ...structuredClone(existing), id: nextId, content: proposal.payload.proposedContent, provenance: { ...existing.provenance, actor, correctionOf: id, correctionProposalRevision: proposalRevision, sourceRevision: expectedRevision }, lifecycle: { ...existing.lifecycle, status: existing.lifecycle.status, revision: 1, changedBy: actor, supersedes: id }, createdAt: now };
+    const retired = { ...existing.lifecycle, status: "superseded", revision: expectedRevision + 1, supersededBy: nextId, changedBy: actor };
+    const event: MemoryLifecycleEvent = { memoryId: id, assistantId, revision: (history.at(-1)?.revision ?? 0) + 1, eventType: "correctionApplied", payload: { correctionId: nextId, proposalRevision, actor }, occurredAt: now };
+    if (this.database) this.database.transaction(tx => {
+      const currentEvent = tx.get<{ revision: number }>("SELECT MAX(revision) AS revision FROM memory_lifecycle_events WHERE memory_id=? AND assistant_id=?", id, assistantId);
+      if (currentEvent?.revision !== event.revision - 1) throw new Error("correction revision conflict");
+      tx.run("UPDATE memories SET lifecycle_json=? WHERE id=? AND assistant_id=? AND json_extract(lifecycle_json,'$.revision')=?", JSON.stringify(retired), id, assistantId, expectedRevision);
+      if (tx.get<{ changes: number }>("SELECT changes() AS changes")?.changes !== 1) throw new Error("correction revision conflict");
+      tx.run("INSERT INTO memories VALUES (?,?,?,?,?,?)", corrected.id, assistantId, corrected.content, JSON.stringify(corrected.provenance), JSON.stringify(corrected.lifecycle), now);
+      tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?,?,?,?,?,?)", id, assistantId, event.revision, event.eventType, JSON.stringify(event.payload), now);
+      tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?,?,?,?,?,?)", corrected.id, assistantId, 1, "created", JSON.stringify(corrected.lifecycle), now);
+    });
+    else { this.records.set(id, { ...existing, lifecycle: retired }); this.save(corrected); this.events.set(id, [...history, event]); }
+    return structuredClone(corrected);
   }
   transition(assistantId: string, id: string, status: string, actor: string, reason?: string, expectedRevision?: number): MemoryRecord | undefined {
     const allowed = new Set(["candidate", "active", "superseded", "invalidated", "contradicted"]);
