@@ -21,7 +21,7 @@ export type RelationshipContextRecord = { id: string; content: string; revision:
 export type ContextOmission = { id: string; revision: number; reason: string };
 export type ContextSelection = { id: string; revision: number; sourceFamily: string; lane: RelationshipContextRecord["use"]; byteContribution: number };
 export type CompiledRelationshipContext = PreparedRelationshipContext & { compilerRevision: string; representationRevision: string; builtAt: string; freshUntil: string; sourceRevisions: readonly string[]; selections: readonly ContextSelection[]; omissions: readonly ContextOmission[]; budget: { maximumBytes: number; usedBytes: number; estimator: "utf8-bytes-upper-bound" }; preparationCount: 1 };
-export const RELATIONSHIP_COMPILER_REVISION = "record-oriented:3";
+export const RELATIONSHIP_COMPILER_REVISION = "record-oriented:4";
 const bytes = (value: string) => new TextEncoder().encode(value).length;
 const terms = (value: string) => new Set((value.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? []).filter(word => !["the", "and", "that", "this", "with", "for", "are", "was", "user", "prefers", "please", "about", "explain"].includes(word)));
 export function compileRelationshipContext(input: { records: readonly RelationshipContextRecord[]; userInput: string; audienceScope: "authenticatedSession" | "unknown"; profileRevision: string; relationshipRevision: string; configurationRevision: string; controls?: Readonly<Record<string, number>>; now?: number }): CompiledRelationshipContext {

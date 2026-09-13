@@ -1,0 +1,15 @@
+{
+  "slice": "LS-S076",
+  "collectedAt": "2026-09-13T07:04:12.665Z",
+  "checks": [],
+  "exclusions": [
+    "No personal data, physical output, Human fit acceptance, training, deployment, production or provider service changes"
+  ],
+  "sourceRevision": "62c9425ee2ad9f0acfd54fb4d9efa8e6d6ec55c6",
+  "scriptSha256": "a66fab25cd133caa484a624a9067760c9b737e974735569994ff4f8948b81cc3",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "sourceWorktreeStatus": "",
+  "result": "fail",
+  "blocker": "Bounded rendered/provider check failed; no credentials logged.",
+  "failureEvidence": "(node:6829) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n✖ rendered tuning previews named versions, inspects actual replies and rolls back without widening scope (21264.43975ms)\nℹ {\"label\":\"detailed-active\",\"status\":\"Request stopped: deadline_exceeded. Partial output is not a completed reply.\",\"partialReplyCharacters\":3195,\"metadata\":\"Compiler record-oriented:3 · Representation record-oriented:1 · Configuration b89f03f9-f34c-4f5a-9206-4a4ec7feeae4:21 supplied records · 0 omissions · 1695/8192 UTF-8 bytes (token upper bound, not model tokenizer measurement)Included fdbf4e12-e640-4804-ac0f-c8f43deee5bd r2 · relevant · 112 bytesCurrent explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. Selection and byte contributions are observed inputs, not causal proof of reply behavior. Inclusion and observed reply are not causal proof; no hidden reasoning is exposed.\"}\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 23717.116\n\n✖ failing tests:\n\ntest at apps/control-web/test/relationship-tuning.test.mjs:11:1\n✖ rendered tuning previews named versions, inspects actual replies and rolls back without widening scope (21264.43975ms)\n  page.waitForFunction: Timeout 15000ms exceeded.\n      at waitText (/Users/gg/Development/Agentic/Tifa/lifestream/apps/control-web/test/relationship-tuning.test.mjs:13:405)\n      at observe (/Users/gg/Development/Agentic/Tifa/lifestream/apps/control-web/test/relationship-tuning.test.mjs:18:189)\n      at async TestContext.<anonymous> (/Users/gg/Development/Agentic/Tifa/lifestream/apps/control-web/test/relationship-tuning.test.mjs:20:174) {\n    name: 'TimeoutError',\n    log: []\n  }\n"
+}
