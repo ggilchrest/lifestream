@@ -1,6 +1,6 @@
 // This module accepts only explicitly selected browser File objects. It has no
 // directory picker, connector, provider, execution or automatic admission path.
-export function installProfileBuilder({ anchor, api, context, show, onAdmitted }) {
+export function installProfileBuilder({ anchor, api: transport, context, show, onAdmitted }) {
   const section = document.createElement('section'); section.className = 'memory-tools profile-builder';
   section.innerHTML = `<div class="section-head"><div><p class="eyebrow">PEOPLE &amp; CONTEXT</p><h3>Build Context From Selected Files</h3></div></div>
     <p class="muted">Inventory your selected files, pin a local snapshot, then review each extracted claim. Nothing enters ordinary conversation until you explicitly approve and admit it. All imported text stays untrusted.</p>
@@ -17,7 +17,10 @@ export function installProfileBuilder({ anchor, api, context, show, onAdmitted }
   anchor.after(section);
   const get = (id) => section.querySelector(`#${id}`);
   const escape = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  let selected = null, job = null, candidates = [], scopeKey = null;
+  let selected = null, job = null, candidates = [], scopeKey = null, epoch = 0;
+  const api=async(...args)=>{const ticket=epoch,key=context()?.relationship?.relationshipId,result=await transport(...args);if(ticket!==epoch||key!==context()?.relationship?.relationshipId)throw new Error('Import scope changed; refresh the selected relationship.');return result;};
+  const clear=()=>{epoch++;selected=null;job=null;candidates=[];scopeKey=null;get('builder-files').value='';get('builder-candidates').replaceChildren();get('builder-status').replaceChildren();get('builder-jobs').innerHTML='<option value="">Refresh this relationship’s jobs</option>';for(const id of ['builder-snapshot','builder-extract','builder-resume','builder-cancel','builder-approve','builder-reject','builder-admit'])get(id).disabled=true;};
+  window.addEventListener('lifestream-assistant',clear);window.addEventListener('lifestream-auth',clear);
   const path = () => { const current = context(); if (!current?.assistantId || !current?.relationship) throw new Error('Start an owned Assistant relationship review first.'); const key = `${current.assistantId}/${current.relationship.relationshipId}`; if (scopeKey !== key) { if (scopeKey !== null) get('builder-files').value = ''; scopeKey = key; job = null; candidates = []; selected = null; } return `/api/admin/v1/assistants/${current.assistantId}/relationships/${current.relationship.relationshipId}/profile-builder`; };
   const render = (body) => {
     job = body.job; candidates = body.candidates || [];
