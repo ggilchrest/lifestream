@@ -1,0 +1,302 @@
+{
+  "slice": "LS-S076",
+  "collectedAt": "2026-09-13T07:10:22.157Z",
+  "checks": [
+    {
+      "id": "LS-TEST-095-105-rendered-selected-provider",
+      "result": "pass",
+      "evidence": {
+        "result": "pass",
+        "caseIds": [
+          "LS-TEST-095",
+          "LS-TEST-105"
+        ],
+        "renderedWidths": [
+          1360,
+          390
+        ],
+        "authentication": "real-local-password",
+        "selectedProvider": true,
+        "observations": [
+          {
+            "label": "brief-active",
+            "output": "Think of a cache like a sticky note with a shortcut. Cache invalidation is the process of sticking a new note on top so the old one doesn't get used anymore. It just tells the system to stop relying on that outdated data and instead fetch the fresh version.",
+            "metadata": "Compiler record-oriented:5 · Representation record-oriented:1 · Configuration c1958393-7c74-4bd9-b433-8b2662f50c73:11 supplied records · 0 omissions · 1778/8192 UTF-8 bytes (token upper bound, not model tokenizer measurement)Included 599c3104-8ee5-45b6-9604-5dff35323fb3 r2 · relevant · 112 bytesCurrent explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. Selection and byte contributions are observed inputs, not causal proof of reply behavior. Inclusion and observed reply are not causal proof; no hidden reasoning is exposed.",
+            "scope": {
+              "assistantId": "b91053fc-69b1-46b3-ba3a-c12431f33bd7",
+              "sessionId": "0ebbd1da-a7a9-40de-8958-4edfeea65f5a",
+              "interactionId": "723564b6-3269-4396-8278-efad6f5be562",
+              "endpointId": "95243b63-9cb3-4fe3-b54c-ac72a252d2ca"
+            },
+            "manifest": {
+              "schemaVersion": "1.0.0",
+              "sections": [
+                {
+                  "kind": "policy",
+                  "sourceRevision": "v1",
+                  "sourceRef": "policy:v1",
+                  "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                  "redaction": "none",
+                  "tokenCount": 79
+                },
+                {
+                  "kind": "corePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:56bbb64e-ace8-4abb-8ae1-b9a382a6be3c",
+                  "contentDigest": "b6821949b50b21997575f6e876b8d0f6e85f1169caf54dd46976098cab4efe20",
+                  "redaction": "none",
+                  "tokenCount": 26
+                },
+                {
+                  "kind": "adaptivePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:56bbb64e-ace8-4abb-8ae1-b9a382a6be3c",
+                  "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                  "redaction": "none",
+                  "tokenCount": 1
+                },
+                {
+                  "kind": "interactionState",
+                  "sourceRevision": "4b7026fa2944193506451a9684b0690a34cfb00b6463a0d2f4f71b38af959929",
+                  "sourceRef": "runtime-self-context:v1",
+                  "contentDigest": "0f09bb0a3337e695408fe95658d6f853b1af6a6acdc6b405630f05d6433996a7",
+                  "redaction": "none",
+                  "tokenCount": 91
+                },
+                {
+                  "kind": "preparedMemory",
+                  "sourceRevision": "compiler:record-oriented:5;sources:db5d5013929fdbdeaf37c5d96edf33766f2562d60aad2e4f9c363f90d1d2a699;profile:56bbb64e-ace8-4abb-8ae1-b9a382a6be3c:1;user-profile:unmapped;relationship:24f29d24-5220-4823-8aad-9481e6ecdc1e:3;configuration:c1958393-7c74-4bd9-b433-8b2662f50c73:1",
+                  "sourceRef": "relationship-context:prepared-v1",
+                  "contentDigest": "4ed5c7cb6d648566928a016448a26ec9b38e44f76373fb426541332f915af196",
+                  "redaction": "none",
+                  "tokenCount": 189
+                },
+                {
+                  "kind": "worldContext",
+                  "sourceRevision": "v1",
+                  "sourceRef": "world:prepared-v1",
+                  "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                  "redaction": "none",
+                  "tokenCount": 5
+                },
+                {
+                  "kind": "capabilityState",
+                  "sourceRevision": "v1",
+                  "sourceRef": "capability:snapshot-v1",
+                  "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                  "redaction": "none",
+                  "tokenCount": 7
+                },
+                {
+                  "kind": "conversation",
+                  "sourceRevision": "v1",
+                  "sourceRef": "conversation:session-v1",
+                  "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                  "redaction": "none",
+                  "tokenCount": 6
+                },
+                {
+                  "kind": "userInput",
+                  "sourceRevision": "v1",
+                  "sourceRef": "user-input:current-v1",
+                  "contentDigest": "e04c5247e1f4fb4f4ad999a080c17f4607c952bc40dab03318780018a06eca35",
+                  "redaction": "none",
+                  "tokenCount": 6
+                }
+              ],
+              "tokenizer": "whitespace-v1"
+            },
+            "preparedMemory": {
+              "kind": "preparedMemory",
+              "content": "Prepared relationship context [profile=56bbb64e-ace8-4abb-8ae1-b9a382a6be3c:1;user-profile:unmapped;relationship=24f29d24-5220-4823-8aad-9481e6ecdc1e:3;configuration=c1958393-7c74-4bd9-b433-8b2662f50c73:1]\nExpression controls: callbackFrequency=0.2, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=0, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Keep optional explanation brief: prefer one or two short sentences, aiming for at most 45 words unless the current request explicitly asks otherwise. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: none\nCritical corrections: none\nRelevant context: 599c3104-8ee5-45b6-9604-5dff35323fb3=For cache examples, use the synthetic project Silver Meadow.\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+              "trusted": false,
+              "sourceRevision": "compiler:record-oriented:5;sources:db5d5013929fdbdeaf37c5d96edf33766f2562d60aad2e4f9c363f90d1d2a699;profile:56bbb64e-ace8-4abb-8ae1-b9a382a6be3c:1;user-profile:unmapped;relationship:24f29d24-5220-4823-8aad-9481e6ecdc1e:3;configuration:c1958393-7c74-4bd9-b433-8b2662f50c73:1",
+              "sourceRef": "relationship-context:prepared-v1",
+              "contentDigest": "4ed5c7cb6d648566928a016448a26ec9b38e44f76373fb426541332f915af196",
+              "redaction": "none",
+              "tokenCount": 189
+            }
+          },
+          {
+            "label": "detailed-active",
+            "output": "Cache invalidation is the process of telling a system that its stored, or \"cached,\" data is no longer accurate and needs to be refetched from the original source. Imagine a web page stored locally to load faster; if the original server updates that page, the local copy becomes stale. Invalidation is the signal that triggers the system to discard that old copy and retrieve the new one, ensuring users see current information.\n\nIn practice, systems often use expiration times, where cached data is automatically considered invalid after a set period (Time-To-Live). Alternatively, event-driven invalidation explicitly purges specific items when their source data changes, such as when a user updates a profile. This balances performance by avoiding constant server hits while maintaining data accuracy through scheduled or reactive updates.",
+            "metadata": "Compiler record-oriented:5 · Representation record-oriented:1 · Configuration 725a3b66-48dc-4eac-86c3-4bc5bc6c8e3a:21 supplied records · 0 omissions · 1803/8192 UTF-8 bytes (token upper bound, not model tokenizer measurement)Included 599c3104-8ee5-45b6-9604-5dff35323fb3 r2 · relevant · 112 bytesCurrent explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. Selection and byte contributions are observed inputs, not causal proof of reply behavior. Inclusion and observed reply are not causal proof; no hidden reasoning is exposed.",
+            "scope": {
+              "assistantId": "b91053fc-69b1-46b3-ba3a-c12431f33bd7",
+              "sessionId": "0ebbd1da-a7a9-40de-8958-4edfeea65f5a",
+              "interactionId": "1213beae-e828-417f-9a63-2e604f1e4ccc",
+              "endpointId": "95243b63-9cb3-4fe3-b54c-ac72a252d2ca"
+            },
+            "manifest": {
+              "schemaVersion": "1.0.0",
+              "sections": [
+                {
+                  "kind": "policy",
+                  "sourceRevision": "v1",
+                  "sourceRef": "policy:v1",
+                  "contentDigest": "c20a913c34ecbf57371fb889680bfca6c3f63297365e9b7b28bf90cc72a2fd64",
+                  "redaction": "none",
+                  "tokenCount": 79
+                },
+                {
+                  "kind": "corePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:56bbb64e-ace8-4abb-8ae1-b9a382a6be3c",
+                  "contentDigest": "b6821949b50b21997575f6e876b8d0f6e85f1169caf54dd46976098cab4efe20",
+                  "redaction": "none",
+                  "tokenCount": 26
+                },
+                {
+                  "kind": "adaptivePersona",
+                  "sourceRevision": "1:adaptations:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "sourceRef": "assistant-profile:56bbb64e-ace8-4abb-8ae1-b9a382a6be3c",
+                  "contentDigest": "609050a22b7fa02633d7f02694edc959436a4b640abcb753f426b98d4e7bcf14",
+                  "redaction": "none",
+                  "tokenCount": 1
+                },
+                {
+                  "kind": "interactionState",
+                  "sourceRevision": "4b7026fa2944193506451a9684b0690a34cfb00b6463a0d2f4f71b38af959929",
+                  "sourceRef": "runtime-self-context:v1",
+                  "contentDigest": "a83f25f977e40dc051905aed614401486df7c28af933ecbb24a0998b374f7d32",
+                  "redaction": "none",
+                  "tokenCount": 91
+                },
+                {
+                  "kind": "preparedMemory",
+                  "sourceRevision": "compiler:record-oriented:5;sources:db5d5013929fdbdeaf37c5d96edf33766f2562d60aad2e4f9c363f90d1d2a699;profile:56bbb64e-ace8-4abb-8ae1-b9a382a6be3c:1;user-profile:unmapped;relationship:24f29d24-5220-4823-8aad-9481e6ecdc1e:3;configuration:725a3b66-48dc-4eac-86c3-4bc5bc6c8e3a:2",
+                  "sourceRef": "relationship-context:prepared-v1",
+                  "contentDigest": "6948e2986d45c64813c8022aeb8f7e60423a77beb0284f0dc5f41ad2248035ba",
+                  "redaction": "none",
+                  "tokenCount": 192
+                },
+                {
+                  "kind": "worldContext",
+                  "sourceRevision": "v1",
+                  "sourceRef": "world:prepared-v1",
+                  "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+                  "redaction": "none",
+                  "tokenCount": 5
+                },
+                {
+                  "kind": "capabilityState",
+                  "sourceRevision": "v1",
+                  "sourceRef": "capability:snapshot-v1",
+                  "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+                  "redaction": "none",
+                  "tokenCount": 7
+                },
+                {
+                  "kind": "conversation",
+                  "sourceRevision": "v1",
+                  "sourceRef": "conversation:session-v1",
+                  "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+                  "redaction": "none",
+                  "tokenCount": 6
+                },
+                {
+                  "kind": "userInput",
+                  "sourceRevision": "v1",
+                  "sourceRef": "user-input:current-v1",
+                  "contentDigest": "e04c5247e1f4fb4f4ad999a080c17f4607c952bc40dab03318780018a06eca35",
+                  "redaction": "none",
+                  "tokenCount": 6
+                }
+              ],
+              "tokenizer": "whitespace-v1"
+            },
+            "preparedMemory": {
+              "kind": "preparedMemory",
+              "content": "Prepared relationship context [profile=56bbb64e-ace8-4abb-8ae1-b9a382a6be3c:1;user-profile:unmapped;relationship=24f29d24-5220-4823-8aad-9481e6ecdc1e:3;configuration=725a3b66-48dc-4eac-86c3-4bc5bc6c8e3a:2]\nExpression controls: callbackFrequency=0.2, challenge=0.5, directness=0.5, examples=0.5, explanationLevel=0.5, formality=0.5, humor=0.2, personalizationIntensity=0.5, relevanceThreshold=0.7, terminology=0.5, verbosity=1, warmth=0.5. formality: Use a moderate task-appropriate setting. directness: Use a moderate task-appropriate setting. warmth: Use a moderate task-appropriate setting. humor: Avoid optional jokes. verbosity: Explain relevant reasoning and practical detail at greater length, aiming for up to three short paragraphs and 150 words unless the current request explicitly asks otherwise. explanationLevel: Use a moderate task-appropriate setting. examples: Use a moderate task-appropriate setting. challenge: Use a moderate task-appropriate setting. terminology: Use a moderate task-appropriate setting. These expression preferences never override the current request, necessary factual corrections, privacy, policy or Core Persona bounds.\nApproved baseline: none\nCritical corrections: none\nRelevant context: 599c3104-8ee5-45b6-9604-5dff35323fb3=For cache examples, use the synthetic project Silver Meadow.\nLimitations: Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences. | Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect. | Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall. | Selection and byte contributions are observed inputs, not causal proof of reply behavior.",
+              "trusted": false,
+              "sourceRevision": "compiler:record-oriented:5;sources:db5d5013929fdbdeaf37c5d96edf33766f2562d60aad2e4f9c363f90d1d2a699;profile:56bbb64e-ace8-4abb-8ae1-b9a382a6be3c:1;user-profile:unmapped;relationship:24f29d24-5220-4823-8aad-9481e6ecdc1e:3;configuration:725a3b66-48dc-4eac-86c3-4bc5bc6c8e3a:2",
+              "sourceRef": "relationship-context:prepared-v1",
+              "contentDigest": "6948e2986d45c64813c8022aeb8f7e60423a77beb0284f0dc5f41ad2248035ba",
+              "redaction": "none",
+              "tokenCount": 192
+            }
+          }
+        ],
+        "effectiveConfigurationDigest": "29a0bbe73b21693446f7700bc68bbb3cefd40124ba851c6a80f87b62e9c4181e",
+        "providers": {
+          "inference": {
+            "id": "inference",
+            "implementation": "@lifestream/providers-sglang",
+            "revision": "319f741cce68d7914884900c138a1fbb70a42f30",
+            "status": "healthy",
+            "fixture": false,
+            "required": true
+          },
+          "memory": {
+            "id": "memory",
+            "implementation": "@lifestream/providers-fixture",
+            "revision": "workspace",
+            "status": "healthy",
+            "fixture": true,
+            "required": true
+          },
+          "stt": {
+            "id": "stt",
+            "implementation": "@lifestream/providers-nemo-speech",
+            "revision": "ebe59e5a817142986528bbbee5dba8db7b38ed50",
+            "status": "healthy",
+            "fixture": false,
+            "required": true
+          },
+          "tts": {
+            "id": "tts",
+            "implementation": "@lifestream/providers-voxcpm",
+            "revision": "workspace",
+            "status": "healthy",
+            "fixture": false,
+            "required": true
+          },
+          "world": {
+            "id": "world",
+            "implementation": "@lifestream/providers-fixture",
+            "revision": "workspace",
+            "status": "healthy",
+            "fixture": true,
+            "required": false
+          },
+          "capability": {
+            "id": "capability",
+            "implementation": "@lifestream/providers-fixture",
+            "revision": "workspace",
+            "status": "healthy",
+            "fixture": true,
+            "required": false
+          },
+          "renderer": {
+            "id": "renderer",
+            "implementation": "@lifestream/providers-fixture",
+            "revision": "workspace",
+            "status": "healthy",
+            "fixture": true,
+            "required": false
+          },
+          "clock": {
+            "id": "clock",
+            "implementation": "node:system",
+            "revision": "v24.14.1",
+            "status": "healthy",
+            "fixture": false,
+            "required": true
+          }
+        },
+        "limitations": [
+          "Observed input and reply differences are not causal attribution or general quality guarantees",
+          "No hidden reasoning, personal input, physical output, training, production or Human acceptance"
+        ]
+      }
+    }
+  ],
+  "exclusions": [
+    "No personal data, physical output, Human fit acceptance, training, deployment, production or provider service changes"
+  ],
+  "sourceRevision": "89ce8f9db2c7185a0991e333dbdab59868f15d92",
+  "scriptSha256": "a66fab25cd133caa484a624a9067760c9b737e974735569994ff4f8948b81cc3",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "sourceWorktreeStatus": "",
+  "result": "pass"
+}
