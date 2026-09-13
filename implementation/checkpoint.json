@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
-  "branch": "main",
-  "baseRevision": "5bd57d8956e5a182075fd0e31ecd66eca29f36f2",
-  "currentRevision": "5bd57d8956e5a182075fd0e31ecd66eca29f36f2",
-  "activeSlice": "LS-S001",
-  "sliceStatus": "inProgress",
+  "branch": "codex/recovery-builder",
+  "baseRevision": "9f9bf5c6cb3390d178ad0b197e742eb375cd15e1",
+  "currentRevision": "a1e98b878dcfd829bde1dfe3e2eb8895abe81cc7",
+  "activeSlice": "LS-S074",
+  "sliceStatus": "implemented",
   "completedSlices": [
     "LS-S001",
     "LS-S002",
@@ -68,15 +68,25 @@
     "LS-S072"
   ],
   "allowedFiles": [
-    "scripts/workspace.mjs",
-    "scripts/workspace.test.mjs",
+    "apps/server/src/admin/profile-builder.ts",
+    "apps/server/test/profile-builder.test.ts",
+    "apps/server/src/index.ts",
+    "packages/storage-sqlite/src/profile-builder.ts",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/test/profile-builder.test.ts",
+    "apps/control-web/profile-builder.js",
+    "apps/control-web/app.js",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S072-qualification-recovery-v2.json",
-    "implementation/evidence/LS-S072-current-qualification.json"
+    "implementation/evidence/LS-S074-qualification-recovery-v2.json",
+    "implementation/evidence/LS-S074-current-qualification.json",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/src/migrations/0018_profile_builder.sql",
+    "apps/server/test/server.test.ts",
+    "packages/storage-sqlite/test/database.test.ts",
+    "packages/storage-sqlite/test/skills.test.ts",
+    "packages/storage-sqlite/test/rehearsal.test.ts"
   ],
-  "changedFiles": [
-    "implementation/checkpoint.json"
-  ],
+  "changedFiles": [],
   "validation": [
     {
       "command": "node --test --experimental-strip-types scripts/candidate-manifest.test.mjs",
@@ -151,7 +161,7 @@
     {
       "command": "Assistant TTS test in Codex in-app browser",
       "result": "pass",
-      "evidence": "Actual button click returned: Events: TTS succeeded (37 frames) — browser playback finished. No microphone was captured in this automated browser check; physical audibility remains operator-owned."
+      "evidence": "Actual button click returned: Events: TTS succeeded (37 frames) \u2014 browser playback finished. No microphone was captured in this automated browser check; physical audibility remains operator-owned."
     },
     {
       "command": "npm --prefix .private run validate; node scripts/workspace.mjs check; git diff --check",
@@ -237,6 +247,16 @@
       "command": "prerequisiteErrors LS-S072 with consuming S074 claim",
       "result": "pass",
       "evidence": "Committed sanitized reference verifies private source, per-run structural receipt, original receipt bytes, effective inputs and open LS-TEST-091 runtime/security obligations."
+    },
+    {
+      "command": "pnpm typecheck; pnpm build; pnpm lint; pnpm test:browser-surface; npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "S074 isolated worktree: strict types/build/lint; 13 static browser-surface tests; 53 private tests and canonical structural validation. Profile Builder rendered real-auth acceptance remains pending combined review."
+    },
+    {
+      "command": "pnpm test at f2077f285bd5c113e265b5f6fd6909792d099866",
+      "result": "pass",
+      "evidence": "224 public tests passed, including 12 bounded intake/storage/HTTP/parser tests. Exact source/spec digests and technical-only claim are selected by LS-S074-current-qualification.json; rendered real-auth integration and new Human acceptance remain pending."
     }
   ],
   "decisions": [
@@ -246,8 +266,8 @@
     "2026-09-13 replacement recovery v2 executes the bounded core batch through S081. Prior planning-only holds are historical. S083/S084 remain later adopted scope. Scoped local commits only; no push/deployment/live configuration/import/training or Human acceptance."
   ],
   "blockers": [],
-  "nextAction": "S052 prospective development qualification, then complete the existing dependency path through S081; structural S072 does not close runtime/security.",
-  "updatedAt": "2026-09-13T04:08:09.998408Z",
+  "nextAction": "Operator paused at the clean S074 stopping point. Do not begin another owner or merge branches. On explicit resumption, integrate real local authentication and run the rendered S074/S075 flow before the combined S080/S081 review.",
+  "updatedAt": "2026-09-13T04:24:43.585079Z",
   "updatedBy": "Codex",
-  "notes": "Revision 2 voice stabilization: original 60-second-deadline regression, three GPU long browser replies, and final 30-minute GPU/Mac synthetic conversation/recovery runs passed their named functional checks. Both profiles fail observed latency targets; Mac retains up to 8.36-second starvation. GPU qAizVX had 29 whole transcripts, 19 completed voiced replies, nine interruptions and three reconnects with zero starvation; Mac RsEmQ3 had 29 whole transcripts, 17 completed voiced replies, eleven interruptions and three reconnects. Each ends one active turn deliberately at the time limit. No failed turns or late fenced audio in either final run. Mac sampling-boundary cancellation released actual compute in about 105-106 ms with byte-identical original/recovery PCM. Windows startup no-op preserved container start times; SSH exhaustion now leaves the local backend alive. Historical failed tests, host diagnostics, commits and LS-S052 receipt are preserved. Exact identities, exclusions and the next bounded performance experiment are in implementation/evidence/LS-S056-voice-stabilization-v2.json. Physical audibility/AEC/identity remain unverified; no production claim, push, Mac reboot or unrelated feature work. Documentation-only scope reconciliation at public HEAD b45937b44740b23f269d9f6a064f8b5a423fadd1 preserves prior implementation fields, completed list and runtime validation history. No new active slice or runtime evidence is created. Current continuation disposition is stopped by operator instruction; legacy WORKTREE/base/scope fields describe the prior LS-S063 work and must be reconciled on implementation resumption. Specification validation is separate from runtime acceptance. Reconciled 2026-09-12 against local public HEAD 6e58d3e and LS-S081 packet. The checkpoint now records exact packet scope, current source revision, no public worktree changes, and explicit evidence blockers. Metadata-only checkpoint commits are accepted only when the revision delta contains checkpoint/evidence paths; legacy receipts require a prospective qualification successor bound to preserved bytes. Historical receipts and operator approvals remain unchanged. Tooling reconciliation is committed at b7a709a; checkpoint metadata follows that source revision. Current active owner is bootstrap S001 evidence-tooling maintenance with exact three-file scope; historical receipt remains unchanged. S081 milestone remains unqualified as recorded in the private matrix."
+  "notes": "Revision 2 voice stabilization: original 60-second-deadline regression, three GPU long browser replies, and final 30-minute GPU/Mac synthetic conversation/recovery runs passed their named functional checks. Both profiles fail observed latency targets; Mac retains up to 8.36-second starvation. GPU qAizVX had 29 whole transcripts, 19 completed voiced replies, nine interruptions and three reconnects with zero starvation; Mac RsEmQ3 had 29 whole transcripts, 17 completed voiced replies, eleven interruptions and three reconnects. Each ends one active turn deliberately at the time limit. No failed turns or late fenced audio in either final run. Mac sampling-boundary cancellation released actual compute in about 105-106 ms with byte-identical original/recovery PCM. Windows startup no-op preserved container start times; SSH exhaustion now leaves the local backend alive. Historical failed tests, host diagnostics, commits and LS-S052 receipt are preserved. Exact identities, exclusions and the next bounded performance experiment are in implementation/evidence/LS-S056-voice-stabilization-v2.json. Physical audibility/AEC/identity remain unverified; no production claim, push, Mac reboot or unrelated feature work. Documentation-only scope reconciliation at public HEAD b45937b44740b23f269d9f6a064f8b5a423fadd1 preserves prior implementation fields, completed list and runtime validation history. No new active slice or runtime evidence is created. Current continuation disposition is stopped by operator instruction; legacy WORKTREE/base/scope fields describe the prior LS-S063 work and must be reconciled on implementation resumption. Specification validation is separate from runtime acceptance. Reconciled 2026-09-12 against local public HEAD 6e58d3e and LS-S081 packet. The checkpoint now records exact packet scope, current source revision, no public worktree changes, and explicit evidence blockers. Metadata-only checkpoint commits are accepted only when the revision delta contains checkpoint/evidence paths; legacy receipts require a prospective qualification successor bound to preserved bytes. Historical receipts and operator approvals remain unchanged. Tooling reconciliation is committed at b7a709a; checkpoint metadata follows that source revision. Current active owner is bootstrap S001 evidence-tooling maintenance with exact three-file scope; historical receipt remains unchanged. S081 milestone remains unqualified as recorded in the private matrix. Recovery v2 isolated S074 execution uses synthetic selected uploads only. No private export, provider calls, live configuration or Human acceptance. Operator pause at next clean stop received during S074 evidence finalization. This isolated worktree completed only its in-flight S074 source, technical qualification and checkpoint. No next owner, main merge, push, deployment or live configuration change. Later S075/S080/S081 integration and Human review remain open."
 }
