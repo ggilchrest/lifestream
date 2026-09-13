@@ -2,9 +2,9 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "0c9c2ff509dd0066da900108548f260ae122aea9",
-  "currentRevision": "0c9c2ff509dd0066da900108548f260ae122aea9",
-  "activeSlice": "LS-S075",
+  "baseRevision": "1c71f8e3c0fd9b8b1e6ca336fbe8046e7fc27333",
+  "currentRevision": "1c71f8e3c0fd9b8b1e6ca336fbe8046e7fc27333",
+  "activeSlice": "LS-S076",
   "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
@@ -73,45 +73,40 @@
     "LS-S073"
   ],
   "allowedFiles": [
-    "apps/server/src/index.ts",
     "apps/control-web/app.js",
     "apps/control-web/index.html",
-    "apps/control-web/test/approval-ui.test.mjs",
+    "apps/server/src/index.ts",
+    "packages/runtime/src/context/builder.ts",
     "apps/server/test/server.test.ts",
-    "packages/storage-sqlite/src/memory.ts",
-    "packages/storage-sqlite/test/memory.test.ts",
+    "apps/control-web/test/approval-ui.test.mjs",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S075.json",
-    "apps/server/src/admin/user-profile.ts",
-    "apps/server/src/admin/relationship-records.ts",
-    "apps/control-web/relationship-admin.js",
-    "apps/control-web/user-profile.js",
-    "apps/control-web/profile-builder.js",
-    "apps/control-web/test/relationship-administration.test.mjs",
-    "apps/server/test/relationship-administration.test.ts",
-    "packages/storage-sqlite/src/migrations/0019_user_profiles.sql",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/test/database.test.ts",
-    "packages/storage-sqlite/test/profile-builder.test.ts",
-    "packages/storage-sqlite/test/rehearsal.test.ts",
-    "packages/storage-sqlite/test/skills.test.ts",
-    "implementation/evidence/LS-S075-qualification-resume-1.json",
-    "implementation/evidence/LS-S075-current-qualification.json",
+    "implementation/evidence/LS-S076.json",
+    "apps/server/src/admin/relationship-controls.ts",
+    "packages/runtime/src/context/controls.ts",
+    "packages/runtime/test/context.test.ts",
+    "apps/server/src/runtime/inference.ts",
+    "apps/server/test/inference.test.ts",
+    "apps/server/test/relationship-controls.test.ts",
+    "apps/control-web/relationship-tuning.js",
+    "apps/control-web/test/relationship-tuning.test.mjs",
     "apps/control-web/styles.css",
-    "scripts/qualify-s075-development.mjs",
-    "implementation/evidence/LS-S075-development-resume-1.json"
+    "scripts/qualify-s076-development.mjs",
+    "implementation/evidence/LS-S076-development-resume-1.json",
+    "implementation/evidence/LS-S076-qualification-resume-1.json",
+    "implementation/evidence/LS-S076-current-qualification.json",
+    "apps/control-web/test/relationship-acceptance.test.mjs"
   ],
   "changedFiles": [],
   "validation": [
     {
       "command": "pnpm build && pnpm typecheck && pnpm lint && pnpm test",
       "result": "pass",
-      "evidence": "252 source checks pass, including explicit UserProfile subsets, all supported record operations, authentication isolation and restart."
+      "evidence": "253 source checks pass, including supported/disabled control inventory, concurrent draft rejection, injected SQLite activation rollback, actual authenticated stream inspection and admin-expiry separation."
     },
     {
       "command": "PLAYWRIGHT_MODULE=<bundled-playwright>/index.mjs pnpm test:browser-surface",
       "result": "pass",
-      "evidence": "16 checks pass. Expanded S075 targeted browser journey also passes with actual setup, selected-file review/admission/reimport, record correction/annotation/pinning/mention restriction, desktop/mobile, export, restart, skipped second Assistant and other-principal denial."
+      "evidence": "17 checks pass; actual Chrome named tuning, preview/activation, rendered reply/metadata, 30-second full-prompt expiry, desktop/mobile reset/rollback and cross-relationship denial."
     }
   ],
   "decisions": [
@@ -122,7 +117,7 @@
   ],
   "blockers": [],
   "nextAction": "Resumed bounded recovery: finish this owner, qualify applicable technical cases, then continue the existing dependency path through S081.",
-  "updatedAt": "2026-09-13T06:23:19.719097Z",
+  "updatedAt": "2026-09-13T06:41:43.544206Z",
   "updatedBy": "Codex",
   "notes": "Current recovery is active under the replacement v2 operator authorization. Historical dispositions remain in prior commits. This owner refreshes current technical evidence; Human acceptance remains pending."
 }

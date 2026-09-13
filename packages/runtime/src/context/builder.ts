@@ -1,3 +1,5 @@
+import { describeRelationshipControls } from "./controls.ts";
+export { relationshipControlDefaults, relationshipControlInventory } from "./controls.ts";
 export type ContextSource = { id: string; content: string; rank: number };
 const estimateTokens = (content: string): number => content.trim() ? content.trim().split(/\s+/u).length : 0;
 export function buildContext(sources: ContextSource[], maxItems = 4, maxTokens = 512): ContextSource[] {
@@ -13,13 +15,13 @@ export function buildContext(sources: ContextSource[], maxItems = 4, maxTokens =
   return selected;
 }
 export type PreparedRelationshipContext = { profileRevision: string; relationshipRevision: string; configurationRevision: string; configurationControls?: Readonly<Record<string, number>>; approvedBaseline: readonly string[]; criticalCorrections: readonly string[]; relevantContext: readonly ContextSource[]; limitations: readonly string[] };
-export function formatPreparedRelationshipContext(context: PreparedRelationshipContext): string { const relevant = "compilerRevision" in context ? [...context.relevantContext] : buildContext([...context.relevantContext]); const controls = context.configurationControls ? Object.entries(context.configurationControls).sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => `${key}=${value}`).join(", ") : "default"; return [`Prepared relationship context [profile=${context.profileRevision};relationship=${context.relationshipRevision};configuration=${context.configurationRevision}]`, `Expression controls: ${controls}`, `Approved baseline: ${context.approvedBaseline.join(" | ") || "none"}`, `Critical corrections: ${context.criticalCorrections.join(" | ") || "none"}`, `Relevant context: ${relevant.map((source) => `${source.id}=${source.content}`).join(" | ") || "none"}`, `Limitations: ${context.limitations.join(" | ") || "none"}`].join("\n"); }
+export function formatPreparedRelationshipContext(context: PreparedRelationshipContext): string { const relevant = "compilerRevision" in context ? [...context.relevantContext] : buildContext([...context.relevantContext]); const controls = context.configurationControls ? Object.entries(context.configurationControls).sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => `${key}=${value}`).join(", ") : "default"; return [`Prepared relationship context [profile=${context.profileRevision};relationship=${context.relationshipRevision};configuration=${context.configurationRevision}]`, `Expression controls: ${controls}. ${describeRelationshipControls(context.configurationControls ?? {})}`, `Approved baseline: ${context.approvedBaseline.join(" | ") || "none"}`, `Critical corrections: ${context.criticalCorrections.join(" | ") || "none"}`, `Relevant context: ${relevant.map((source) => `${source.id}=${source.content}`).join(" | ") || "none"}`, `Limitations: ${context.limitations.join(" | ") || "none"}`].join("\n"); }
 
 export type RelationshipContextRecord = { id: string; content: string; revision: number; sourceFamily: string; status: string; use: "baseline" | "correction" | "relevant"; personalization: boolean; mention: boolean; uncertainty?: string };
 export type ContextOmission = { id: string; revision: number; reason: string };
 export type ContextSelection = { id: string; revision: number; sourceFamily: string; lane: RelationshipContextRecord["use"]; byteContribution: number };
 export type CompiledRelationshipContext = PreparedRelationshipContext & { compilerRevision: string; representationRevision: string; builtAt: string; freshUntil: string; sourceRevisions: readonly string[]; selections: readonly ContextSelection[]; omissions: readonly ContextOmission[]; budget: { maximumBytes: number; usedBytes: number; estimator: "utf8-bytes-upper-bound" }; preparationCount: 1 };
-export const RELATIONSHIP_COMPILER_REVISION = "record-oriented:2";
+export const RELATIONSHIP_COMPILER_REVISION = "record-oriented:3";
 const bytes = (value: string) => new TextEncoder().encode(value).length;
 const terms = (value: string) => new Set((value.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? []).filter(word => !["the", "and", "that", "this", "with", "for", "are", "was", "user", "prefers", "please", "about", "explain"].includes(word)));
 export function compileRelationshipContext(input: { records: readonly RelationshipContextRecord[]; userInput: string; audienceScope: "authenticatedSession" | "unknown"; profileRevision: string; relationshipRevision: string; configurationRevision: string; controls?: Readonly<Record<string, number>>; now?: number }): CompiledRelationshipContext {
@@ -36,10 +38,11 @@ export function compileRelationshipContext(input: { records: readonly Relationsh
     else if (record.content.length > 4000) reason = "record exceeds bounded projection";
     if (reason) omitted.push({ id: record.id, revision: record.revision, reason }); else eligible.push(record);
   }
+  const payloadCapacity = maximumBytes - bytes(formatPreparedRelationshipContext(view)) - 128;
   let used = 0;
   const take = (record: RelationshipContextRecord): boolean => {
     const size = bytes(record.content) + bytes(record.id) + 16;
-    if (used + size > maximumBytes - 2048) return false;
+    if (used + size > payloadCapacity) return false;
     used += size; selected.push({ id: record.id, revision: record.revision, sourceFamily: record.sourceFamily, lane: record.use, byteContribution: size }); return true;
   };
   const mandatory = eligible.filter(record => record.use !== "relevant");

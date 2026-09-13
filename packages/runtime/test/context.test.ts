@@ -12,7 +12,7 @@ test("one compiled view preserves mandatory lanes, bounded relevant allocation a
   const view = compileRelationshipContext({...base,records});
   assert.deepEqual(view.approvedBaseline,[records[0]!.content]); assert.deepEqual(view.criticalCorrections,[records[1]!.content]); assert.deepEqual(view.relevantContext.map(item=>item.id),['relevant']); assert.equal(view.preparationCount,1);
   assert.ok(view.omissions.some(item=>item.id==='hobby'&&item.reason==='no current-task relevance')); assert.doesNotMatch(formatPreparedRelationshipContext(view),/UNAPPROVED_PRIVATE_VALUE|rare clocks/);
-  assert.ok(view.budget.usedBytes <= view.budget.maximumBytes); assert.equal(view.compilerRevision,'record-oriented:2'); assert.deepEqual(compileRelationshipContext({...base,records}),view);
+  assert.ok(view.budget.usedBytes <= view.budget.maximumBytes); assert.equal(view.compilerRevision,'record-oriented:3'); assert.deepEqual(compileRelationshipContext({...base,records}),view);
   const disabled=compileRelationshipContext({...base,records,controls:{callbackFrequency:0}}); assert.equal(disabled.relevantContext.length,0); assert.equal(disabled.criticalCorrections.length,1); assert.equal(disabled.approvedBaseline.length,1);
   const unknown=compileRelationshipContext({...base,records,audienceScope:'unknown'}); assert.deepEqual(unknown.selections,[]); assert.doesNotMatch(formatPreparedRelationshipContext(unknown),/project uses Python|rare clocks|introductory/);
   assert.throws(()=>compileRelationshipContext({...base,records:[record('a','x'.repeat(3900),'correction'),record('b','y'.repeat(3900),'correction')]}),/Mandatory relationship boundaries/);

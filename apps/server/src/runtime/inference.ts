@@ -5,7 +5,7 @@ import type { InferenceProvider } from "@lifestream/runtime/inference";
 
 type Body = Record<string, unknown>;
 export type InferenceRuntimeIdentity = { profile: string; implementation: string; model: string; revision: string; fixture: boolean };
-export type HostRuntimeInput = { endpointId?: string | null; assistantId: string; runtimeSelfContext: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection; preparedRelationshipContext?: NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]>; isCurrent: () => boolean };
+export type HostRuntimeInput = { inspection?: { fullPromptPreview: boolean }; endpointId?: string | null; assistantId: string; runtimeSelfContext: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection; preparedRelationshipContext?: NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]>; isCurrent: () => boolean };
 const writeEvent = (response: ServerResponse, event: string, data: unknown) => response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 
 export async function streamMessage(response: ServerResponse, provider: InferenceProvider | undefined, body: Body, sessionId: string, aborted: AbortSignal, providerIdentity?: InferenceRuntimeIdentity, runtimeSelfContext?: RuntimeSelfContext, hostInput?: HostRuntimeInput): Promise<void> {
@@ -15,6 +15,11 @@ export async function streamMessage(response: ServerResponse, provider: Inferenc
 
   const controller = new AbortController(); const onAbort = () => controller.abort(aborted.reason); aborted.addEventListener("abort", onAbort, { once: true }); if (aborted.aborted) controller.abort(aborted.reason); const deadline = setTimeout(() => controller.abort(new Error("deadline")), Math.max(1, Date.parse(request.deadlineAt) - Date.now()));
   response.writeHead(200, { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", connection: "keep-alive" }); writeEvent(response, "interaction.started", { interactionId, sessionId, assistantId, ...(providerIdentity ? { provider: providerIdentity } : {}) }); writeEvent(response, "input.manifest", request.manifest);
+  if (hostInput?.inspection && hostInput.isCurrent()) {
+    const view=hostInput.preparedRelationshipContext as import("@lifestream/runtime/context").CompiledRelationshipContext | undefined;
+    writeEvent(response,"input.inspection",{scope:request.scope,compilerRevision:view?.compilerRevision??null,representationRevision:view?.representationRevision??null,configurationRevision:view?.configurationRevision??null,sourceRevisions:view?.sourceRevisions??[],selections:view?.selections??[],omissions:view?.omissions??[],budget:view?.budget??null,limitations:[...(view?.limitations??[]),"Inclusion and observed reply are not causal proof; no hidden reasoning is exposed."],retention:"this response only; no server inspection archive"});
+    if(hostInput.inspection.fullPromptPreview)writeEvent(response,"input.prompt-preview",{sections:request.sections,expiresAt:new Date(Date.now()+30000).toISOString(),retention:"volatile explicit preview; clear on scope change or after 30 seconds"});
+  }
   const requestedCapability = body.readOnlyCapability && typeof body.readOnlyCapability === "object" && !Array.isArray(body.readOnlyCapability) ? body.readOnlyCapability as Record<string, unknown> : undefined;
   if (requestedCapability && typeof requestedCapability.name === "string" && requestedCapability.name && requestedCapability.input && typeof requestedCapability.input === "object" && !Array.isArray(requestedCapability.input)) writeEvent(response, "capability.read-only", { name: requestedCapability.name, input: requestedCapability.input, effect: "read-only" });
   const abortCode = () => controller.signal.reason instanceof Error && controller.signal.reason.message === "deadline" ? "deadline_exceeded" : "cancelled";
