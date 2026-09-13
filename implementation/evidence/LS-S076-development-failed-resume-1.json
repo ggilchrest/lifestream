@@ -1,0 +1,15 @@
+{
+  "slice": "LS-S076",
+  "collectedAt": "2026-09-13T07:00:18.607Z",
+  "checks": [],
+  "exclusions": [
+    "No personal data, physical output, Human fit acceptance, training, deployment, production or provider service changes"
+  ],
+  "sourceRevision": "a59aacde548c8fb8cff573d33c378d29cf90c047",
+  "scriptSha256": "a66fab25cd133caa484a624a9067760c9b737e974735569994ff4f8948b81cc3",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "sourceWorktreeStatus": "",
+  "result": "fail",
+  "blocker": "Bounded rendered/provider check failed; no credentials logged.",
+  "failureEvidence": "(node:5146) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n✖ rendered tuning previews named versions, inspects actual replies and rolls back without widening scope (25618.404375ms)\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 28081.950333\n\n✖ failing tests:\n\ntest at apps/control-web/test/relationship-tuning.test.mjs:11:1\n✖ rendered tuning previews named versions, inspects actual replies and rolls back without widening scope (25618.404375ms)\n  page.waitForFunction: Timeout 15000ms exceeded.\n      at waitText (/Users/gg/Development/Agentic/Tifa/lifestream/apps/control-web/test/relationship-tuning.test.mjs:13:405)\n      at observe (/Users/gg/Development/Agentic/Tifa/lifestream/apps/control-web/test/relationship-tuning.test.mjs:18:185)\n      at async TestContext.<anonymous> (/Users/gg/Development/Agentic/Tifa/lifestream/apps/control-web/test/relationship-tuning.test.mjs:20:174) {\n    name: 'TimeoutError',\n    log: []\n  }\n"
+}
