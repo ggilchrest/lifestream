@@ -2,9 +2,9 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-auth",
-  "baseRevision": "f90108026a9d9607cfbeb6fe657aaa183e666a64",
-  "currentRevision": "52087cf6527dce3578c714527f008f84519a3d4a",
-  "activeSlice": "LS-S062",
+  "baseRevision": "5bd96ef08a988b02f543d949a4312f87492499be",
+  "currentRevision": "55bf8e7e2c29442ebe063741428fed4dfaaeb61d",
+  "activeSlice": "LS-S069",
   "sliceStatus": "implemented",
   "completedSlices": [
     "LS-S001",
@@ -67,27 +67,94 @@
     "LS-S079"
   ],
   "allowedFiles": [
+    "apps/server/src/auth/local-auth.ts",
+    "apps/server/src/admin/security-administration.ts",
     "apps/server/src/admin/personalization-capabilities.ts",
-    "apps/server/test/personalization-capabilities.test.ts",
     "apps/server/src/index.ts",
+    "apps/server/src/composition/authority.ts",
+    "apps/server/test/local-auth.test.ts",
+    "apps/server/test/local-auth-http.test.ts",
+    "apps/server/test/security-administration.test.ts",
+    "apps/server/test/server.test.ts",
+    "apps/control-web/auth.js",
+    "apps/control-web/security.js",
+    "apps/control-web/security.html",
+    "apps/control-web/app.js",
+    "apps/control-web/index.html",
+    "apps/control-web/test/local-auth.test.mjs",
+    "packages/storage-sqlite/src/authority/grants.ts",
+    "packages/storage-sqlite/src/migrations/0017_local_auth.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/test/database.test.ts",
+    "docs/local-authentication.md",
+    "scripts/start-isolated-auth.mjs",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S062-recovery-technical.json",
-    "package.json"
+    "implementation/evidence/LS-S069-recovery-technical.json",
+    "package.json",
+    "packages/runtime/package.json",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/src/authority/admission.ts",
+    "apps/server/package.json",
+    "pnpm-lock.yaml",
+    "packages/contracts/package.json",
+    "apps/control-web/test/approval-ui.test.mjs",
+    "packages/storage-sqlite/test/rehearsal.test.ts",
+    "packages/storage-sqlite/test/skills.test.ts"
   ],
   "changedFiles": [
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S062-recovery-technical.json"
+    "implementation/evidence/LS-S069-recovery-technical.json"
   ],
   "validation": [
     {
-      "command": "node --test --experimental-strip-types apps/server/test/personalization-capabilities.test.ts apps/server/test/server.test.ts",
+      "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "20 tests passed at committed source; temporary synthetic fixture APIs and storage. No browser or real-auth claim."
+      "evidence": "Strict TypeScript project checks passed for the committed source contents."
     },
     {
-      "command": "pnpm typecheck; pnpm lint; pnpm build",
+      "command": "pnpm lint",
       "result": "pass",
-      "evidence": "Strict typecheck, lint and built migration packaging passed."
+      "evidence": "Repository ESLint checks passed for the committed source contents."
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "evidence": "All workspace projects built; built runtime includes existing public schemas and SQLite migrations."
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "228 tests passed, zero failures or skips, rerun at committed source 55bf8e7e2c29442ebe063741428fed4dfaaeb61d. Includes 12 focused authentication, actual HTTP and governed administration tests."
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "13 surface tests passed; one explicit browser test skipped without PLAYWRIGHT_MODULE. The same browser test was run separately with Chrome and passed without skips."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled-playwright>/index.mjs node --test --experimental-strip-types apps/control-web/test/local-auth.test.mjs",
+      "result": "pass",
+      "evidence": "One actual Chrome test passed without skips at committed source: local setup, sign-in, profile preview/save/activation, sign-out/session restoration and Owner account provisioning; narrow mobile viewport and browser error check. Real local authentication with synthetic temporary accounts and fixture inference."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "Independent canonical specification validation passed: 52 suite tests and 527 structural vectors. This validates specification structure, not product or Human acceptance."
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "evidence": "Public workspace structure and checkpoint shape passed."
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "evidence": "No whitespace errors in scoped changes."
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S069",
+      "result": "fail",
+      "evidence": "The isolated baseline resolver reports: A prerequisite is not recorded as verified. S062 has only an explicitly bounded technical-foundation receipt; its full rendered acceptance is not recorded complete. The recovery authorization permits the existing technical dependency work; this receipt does not fabricate a preflight pass or add S062/S069 to completedSlices."
     }
   ],
   "decisions": [
@@ -97,8 +164,8 @@
     "Recovery v2 executes the existing owners through S081 with a combined Human-review stop. This isolated worktree owns S062/S069; later scope, Human acceptance and publication remain separate."
   ],
   "blockers": [],
-  "nextAction": "Continue to existing S069 with the definition-administration technical subset; full rendered acceptance remains pending.",
-  "updatedAt": "2026-09-13T01:00:00Z",
+  "nextAction": "Paused by operator after locally committed LS-S069 implementation and bounded technical verification. Resume only on a new continuation instruction; remaining rendered administration, joined source qualification and LS-S063 obligations are recorded in the S069 receipt. S063 has not begun.",
+  "updatedAt": "2026-09-13T04:25:49Z",
   "updatedBy": "Codex",
-  "notes": "Revision 2 voice stabilization: original 60-second-deadline regression, three GPU long browser replies, and final 30-minute GPU/Mac synthetic conversation/recovery runs passed their named functional checks. Both profiles fail observed latency targets; Mac retains up to 8.36-second starvation. GPU qAizVX had 29 whole transcripts, 19 completed voiced replies, nine interruptions and three reconnects with zero starvation; Mac RsEmQ3 had 29 whole transcripts, 17 completed voiced replies, eleven interruptions and three reconnects. Each ends one active turn deliberately at the time limit. No failed turns or late fenced audio in either final run. Mac sampling-boundary cancellation released actual compute in about 105-106 ms with byte-identical original/recovery PCM. Windows startup no-op preserved container start times; SSH exhaustion now leaves the local backend alive. Historical failed tests, host diagnostics, commits and LS-S052 receipt are preserved. Exact identities, exclusions and the next bounded performance experiment are in implementation/evidence/LS-S056-voice-stabilization-v2.json. Physical audibility/AEC/identity remain unverified; no production claim, push, Mac reboot or unrelated feature work. Documentation-only scope reconciliation at public HEAD b45937b44740b23f269d9f6a064f8b5a423fadd1 preserves prior implementation fields, completed list and runtime validation history. No new active slice or runtime evidence is created. Current continuation disposition is stopped by operator instruction; legacy WORKTREE/base/scope fields describe the prior LS-S063 work and must be reconciled on implementation resumption. Specification validation is separate from runtime acceptance. Reconciled 2026-09-12 against local public HEAD 6e58d3e and LS-S081 packet. The checkpoint now records exact packet scope, current source revision, no public worktree changes, and explicit evidence blockers. Metadata-only checkpoint commits are accepted only when the revision delta contains checkpoint/evidence paths; legacy receipts require a prospective qualification successor bound to preserved bytes. Historical receipts and operator approvals remain unchanged. Tooling reconciliation is committed at b7a709a; checkpoint metadata follows that source revision."
+  "notes": "Current S069 disposition is implementationCompleteVerificationPending (checkpoint schema value implemented), paused by operator at a clean stopping point. Public source 55bf8e7e2c29442ebe063741428fed4dfaaeb61d and private packet 26881b66503a0209cb60a3c39d01b67ca1c99e25 are committed separately. The S069 receipt preserves exact technical claims and unfinished verification. CompletedSlices is retained as historical metadata and is not new evidence; neither S062 nor S069 was added. Historical evidence and earlier checkpoint history remain preserved in Git. No main-worktree merge, publication, live configuration, personal import, training, production or Human acceptance. S083/S084 remain later adopted scope."
 }
