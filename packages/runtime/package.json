@@ -67,6 +67,10 @@
     "./replay": {
       "types": "./dist/replay/replay.d.ts",
       "import": "./dist/replay/replay.js"
+    },
+    "./training": {
+      "types": "./dist/ports/training.d.ts",
+      "import": "./dist/ports/training.js"
     }
   },
   "scripts": {

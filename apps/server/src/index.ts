@@ -1,3 +1,4 @@
+import {readinessView,applyReadiness,routeReadiness,exportReadiness,type RelationshipReadiness} from "./admin/relationship-readiness.ts";
 import { prepareRelationshipLab, executeRelationshipLab, assertLabPromotion, type RelationshipLab, type LabRuntime, type LabSnapshot } from "./admin/relationship-lab.ts";
 import { analyzeRelationship, insightRefs, reviewInsight, type RelationshipFeedback, type RelationshipInsight, type InsightJob } from "./admin/relationship-insights.ts";
 import { UserProfileAdministration } from "./admin/user-profile.ts";
@@ -46,7 +47,7 @@ const ensureStorage = async (config: RuntimeConfig) => { if (config.storage.data
 const uiRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../control-web");
 type AdminResult = { status: number; body: Record<string, unknown> };
 type RelationshipCandidate = RelationshipRecord;
-type RelationshipView = { deploymentId?: string; relationshipId: string; assistantId: string; userId: string; revision: number; status: "active" | "skipped"; candidates: RelationshipCandidate[]; feedback?: RelationshipFeedback[]; insights?: RelationshipInsight[]; insightJob?: InsightJob; lab?: RelationshipLab; labHistory?: RelationshipLab[] };
+type RelationshipView = { readiness?:RelationshipReadiness; deploymentId?: string; relationshipId: string; assistantId: string; userId: string; revision: number; status: "active" | "skipped"; candidates: RelationshipCandidate[]; feedback?: RelationshipFeedback[]; insights?: RelationshipInsight[]; insightJob?: InsightJob; lab?: RelationshipLab; labHistory?: RelationshipLab[] };
 type RelationshipConfiguration = { representation?: "recordOriented"|"conventionOriented"; derivedLabId?: string; derivedInsightId?: string; name?: string; basisActiveConfigurationId?: string | null; restoredFrom?: string; configurationId: string; relationshipId: string; revision: number; status: "draft" | "active" | "superseded"; preset: "balanced" | "concise" | "coaching"; controls: Record<string, number>; createdAt: string; createdBy: string; supersedes?: string | undefined };
 const relationshipPresets: Record<RelationshipConfiguration["preset"], Record<string, number>> = { balanced: { ...relationshipControlDefaults }, concise: { ...relationshipControlDefaults, directness: 0.7, verbosity: 0.2, explanationLevel: 0.3, examples: 0.2, callbackFrequency: 0.1 }, coaching: { ...relationshipControlDefaults, warmth: 0.7, explanationLevel: 0.8, examples: 0.8, challenge: 0.7, verbosity: 0.7 } };
 const validateRelationshipControls = (value: unknown): Record<string, number> => { const input = asObject(value); if(!input)throw new Error("relationship controls require a supported object"); const controls = { ...relationshipControlDefaults }; for (const [key, raw] of Object.entries(input)) { if (!(key in relationshipControlDefaults) || typeof raw !== "number" || !Number.isFinite(raw) || raw < 0 || raw > 1) throw new Error("relationship controls must use supported values between 0 and 1"); controls[key] = raw; } return controls; };
@@ -156,6 +157,20 @@ class AssistantAdminApi {
       const relationshipId = parts[6]; const relationship = relationshipId ? this.relationships.get(relationshipId) : undefined;
       if (!relationship || relationship.assistantId !== assistantId || relationship.userId !== actor) return { status: 404, body: { code: "not_found", message: "relationship not found" } };
       if (!relationshipId) return { status: 404, body: { code: "not_found", message: "relationship not found" } };
+      if(parts[7]==="readiness"){
+        try {
+          if(method==="GET"&&parts.length===8)return {status:200,body:readinessView(relationship)};
+          if(method==="GET"&&parts.length===10&&parts[8]==="datasets")return {status:200,body:{dataset:exportReadiness(relationship,parts[9]!)}};
+          if(method==="POST"&&parts.length===9){const raw=asObject(body)??{};
+            if(parts[8]==="route"||parts[8]==="simulate-route")return {status:200,body:routeReadiness(relationship,String(raw.artifactId),String(raw.artifactRevision),runtimeContext?.audienceScope==="authenticatedSession"?"private":"unknown",parts[8]==="simulate-route"&&raw.syntheticOnly===true)};
+            const key=typeof raw.idempotencyKey==="string"?raw.idempotencyKey:"",operation=`readiness:${parts[8]}`;if(!key||key.length>200)return {status:422,body:{code:"invalid_idempotency_key"}};
+            const replay=this.idempotentReplay(key,relationshipId,operation);if(replay)return replay;
+            const applied=applyReadiness(relationship,parts[8]!,raw),next={...relationship,...applied.owner},result={status:200,body:applied.result};
+            this.database.transaction(tx=>{tx.run("UPDATE assistant_relationships SET payload_json=? WHERE relationship_id=?",JSON.stringify(next),relationshipId);tx.run("INSERT INTO assistant_relationship_idempotency (idempotency_key,relationship_id,operation,response_json) VALUES (?,?,?,?)",key,relationshipId,operation,JSON.stringify(result));});this.relationships.set(relationshipId,next);this.preparedCache.invalidateDependencies([relationshipId]);return result;
+          }
+        }catch(error){return {status:409,body:{code:"readiness_rejected",message:error instanceof Error?error.message:"Readiness operation rejected"}};}
+        return {status:404,body:{code:"not_found"}};
+      }
       if (parts[7] === "records" && method === "GET" && parts.length === 8) return { status: 200, body: { relationship: structuredClone(relationship), overview: recordOverview(relationship.candidates), identity: this.userProfiles.identity(actor), contract: relationship.deploymentId ? {schemaVersion:"1.0.0",relationshipId,assistantId,userId:actor,deploymentId:relationship.deploymentId,revision:relationship.revision,lifecycle:relationship.status==="active"?"active":"draft",recordRefs:relationship.candidates.map(item=>`relationship-record:${item.candidateId}:${item.revision}`),configurationRevision:[...this.relationshipConfigurations.values()].find(item=>item.relationshipId===relationshipId&&item.status==="active")?.revision??1,profileSubsetRefs:this.userProfiles.records(actor,assistantId).map(item=>`${item.id}:${item.revision}`),consentRefs:[],sourceBoundary:[`authenticated-principal:${actor}`]} : null, legacyMapping:relationship.deploymentId?"explicit":"unmapped historical or fixture scope", activeConfiguration: [...this.relationshipConfigurations.values()].find(item=>item.relationshipId===relationshipId&&item.status==="active") ?? null } };
       if (parts[7] === "export" && method === "GET" && parts.length === 8) return { status: 200, body: { scope: { assistantId, userId: actor, relationshipId }, relationship: structuredClone(relationship), grantsIncluded: false, externalCopiesRevocable: false } };
       if (parts[7] === "records" && parts[9] === "operations" && parts.length === 10 && method === "POST") {

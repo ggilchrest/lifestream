@@ -2,5 +2,11 @@
   "name": "@lifestream/providers-fixture",
   "private": true,
   "type": "module",
-  "scripts": { "build": "tsc -b", "typecheck": "tsc -b --pretty false" }
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@lifestream/runtime": "workspace:*"
+  }
 }

@@ -69,7 +69,11 @@ importers:
 
   packages/contracts: {}
 
-  packages/providers-fixture: {}
+  packages/providers-fixture:
+    dependencies:
+      '@lifestream/runtime':
+        specifier: workspace:*
+        version: link:../runtime
 
   packages/providers-moonshine:
     dependencies:

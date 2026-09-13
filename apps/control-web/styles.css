@@ -9,3 +9,8 @@
 
 .relationship-lab,.relationship-lab details,.relationship-lab .record-card { min-width:0; max-width:100%; overflow-wrap:anywhere; }
 .relationship-lab pre { max-width:100%; white-space:pre-wrap; overflow-wrap:anywhere; overflow:auto; }
+
+.relationship-readiness { min-width: 0; overflow-wrap: anywhere; }
+.relationship-readiness select, .relationship-readiness input:not([type=checkbox]), .relationship-readiness pre { width: 100%; min-width: 0; max-width: 100%; }
+.relationship-readiness pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.relationship-readiness .record-card, .relationship-readiness label { min-width: 0; }

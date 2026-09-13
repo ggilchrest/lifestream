@@ -41,3 +41,6 @@ import('./relationship-admin.js').then(({installRelationshipAdministration})=>in
 import('./user-profile.js').then(({installUserProfile})=>installUserProfile({anchor:relationshipTools,api,context:()=>current?{assistantId:current.assistantId}:null,show})).catch(error=>show(error.message,true));
 
 import('./relationship-tuning.js').then(({installRelationshipTuning})=>installRelationshipTuning({anchor:relationshipConfigTools,api,context:()=>current?{assistantId:current.assistantId,relationship}:null,show})).catch(error=>show(error.message,true));
+
+const relationshipReadiness=document.createElement("section");relationshipReadiness.className="memory-tools relationship-readiness";document.querySelector(".editor").append(relationshipReadiness);
+import("./relationship-readiness.js").then(({installRelationshipReadiness})=>installRelationshipReadiness({anchor:relationshipReadiness,api,context:()=>current?{assistantId:current.assistantId,relationship}:null,show})).catch(error=>show(error.message,true));

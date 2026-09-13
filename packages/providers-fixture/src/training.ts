@@ -1,10 +1,14 @@
-type DatasetRecord = { recordId: string; sourceId: string; sourceRevision: string; sourceFamily: string; subjectId: string; relationshipId: string; sensitivity: "ordinary" | "sensitive"; purpose: "evaluation" | "training"; consent: "approved" | "excluded"; contentDigest: string; split: "train" | "validation" | "test"; transformed: "none" | "redacted" | "normalized"; dependencyIds: string[] };
-type DatasetManifest = { datasetId: string; revision: number; digest: string; records: DatasetRecord[]; exclusions: string[]; syntheticGenerator: string; createdAt: string; exportPolicy: "fixture-only" | "approved-runtime"; status: "prepared" | "quarantined" | "revoked" };
-type AdapterManifest = { artifactId: string; artifactRevision: string; baseModel: string; baseModelRevision: string; tokenizer: string; chatTemplate: string; datasetDigest: string; datasetLineage: string[]; approvedSubjectId: string; approvedAssistantId: string; approvedAudience: "private" | "shared" | "unknown"; revocationDependency: string; status: "candidate" | "approved" | "quarantined" | "revoked" };
-type AdapterRouteRequest = { assistantId: string; subjectId: string; audience: "private" | "shared" | "unknown"; baseModel: string; baseModelRevision: string; tokenizer: string; chatTemplate: string; datasetDigest: string; revokedDependencies?: string[] };
-type AdapterRoute = { route: "adapter" | "fallback"; artifactId?: string; reason: string; cacheInvalidated: boolean; liveEffects: false };
-const buildDatasetManifest = (input: Omit<DatasetManifest, "status">): DatasetManifest => { if (!input.records.some((record) => record.split === "train") || !input.records.some((record) => record.split === "validation") || !input.records.some((record) => record.split === "test")) throw new Error("dataset requires train/validation/test splits"); return { ...structuredClone(input), status: "prepared" }; };
-const routeAdapter = (manifest: AdapterManifest, request: AdapterRouteRequest): AdapterRoute => { const reason = manifest.status !== "approved" ? `adapter status is ${manifest.status}` : request.audience !== "private" || manifest.approvedAudience !== "private" ? "private adapter requires a private audience" : manifest.approvedAssistantId !== request.assistantId || manifest.approvedSubjectId !== request.subjectId ? "authenticated scope does not match" : manifest.baseModel !== request.baseModel || manifest.baseModelRevision !== request.baseModelRevision || manifest.tokenizer !== request.tokenizer || manifest.chatTemplate !== request.chatTemplate ? "runtime compatibility does not match" : manifest.datasetDigest !== request.datasetDigest ? "dataset digest does not match" : (request.revokedDependencies ?? []).some((dependency) => manifest.datasetLineage.includes(dependency) || dependency === manifest.revocationDependency) ? "adapter dependency is revoked" : ""; return reason ? { route: "fallback", reason, cacheInvalidated: true, liveEffects: false } : { route: "adapter", artifactId: manifest.artifactId, reason: "approved fixture manifest matched", cacheInvalidated: true, liveEffects: false }; };
-
-export type FixtureTrainingProvider = { prepareDataset(input: Omit<DatasetManifest, "status">): DatasetManifest; route(manifest: AdapterManifest, request: AdapterRouteRequest): AdapterRoute };
-export const fixtureTrainingProvider: FixtureTrainingProvider = { prepareDataset: buildDatasetManifest, route: routeAdapter };
+import {buildDatasetManifest,routeAdapter,type AdapterManifest,type AdapterRouteRequest,type AdapterRoute} from '@lifestream/runtime/training';
+// Contract simulator only: no model loading, weight mutation or training dispatch.
+export const fixtureTrainingProvider={prepareDataset:buildDatasetManifest,route:routeAdapter};
+export class FixtureAdapterSession {
+ readonly caches={kv:new Map<string,string>(),prefix:new Map<string,string>(),response:new Map<string,string>()};
+ private pending=new Set<AbortController>();private identity='';
+ route(manifest:AdapterManifest,request:AdapterRouteRequest):AdapterRoute {
+  const result=routeAdapter(manifest,request),next=JSON.stringify([request.subjectId,request.assistantId,request.audience,result.route,result.artifactId,result.artifactRevision,request.datasetDigest,request.baseModelRevision,request.activeDependencies,request.revokedDependencies??[]]);
+  if(next!==this.identity||result.route==='fallback'){this.invalidate();this.identity=next;}return result;
+ }
+ begin():AbortController{const controller=new AbortController();this.pending.add(controller);controller.signal.addEventListener('abort',()=>this.pending.delete(controller),{once:true});return controller;}
+ complete(controller:AbortController):void{this.pending.delete(controller);}
+ invalidate():void{for(const cache of Object.values(this.caches))cache.clear();for(const controller of this.pending)controller.abort('Adapter route or dependency changed');this.pending.clear();}
+}
