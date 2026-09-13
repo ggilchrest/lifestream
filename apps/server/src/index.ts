@@ -12,6 +12,7 @@ import { createProviderRegistry, type ProviderInstanceHealth, type ProviderRegis
 import type { Profile, RuntimeConfig } from "./config/schema.js";
 import { streamMessage, type HostRuntimeInput } from "./runtime/inference.ts";
 import { buildCanonicalPrompt, type RuntimeSelfContext, type AssistantPersonaProjection } from "@lifestream/runtime/inference/prompt";
+import { readSessionEndpoint, reviseSessionEndpoint } from "./runtime/session-context.ts";
 import { AudioSession } from "./runtime/audio.ts";
 import { synthesizePreview } from "./runtime/preview-speech.ts";
 import { RelationalInitiativeCoordinator } from "@lifestream/runtime/initiative/coordinator";
@@ -85,9 +86,9 @@ class AssistantAdminApi {
   private idempotentReplay(key: string, relationshipId: string, operation: string): AdminResult | undefined { const row = this.database.connection.prepare("SELECT relationship_id AS relationshipId, operation, response_json AS responseJson FROM assistant_relationship_idempotency WHERE idempotency_key = ?").get(key) as { relationshipId: string; operation: string; responseJson: string } | undefined; if (!row) return undefined; if (row.relationshipId !== relationshipId || row.operation !== operation) return { status: 409, body: { code: "idempotency_key_conflict", message: "idempotency key was already used for another relationship operation" } }; return JSON.parse(row.responseJson) as AdminResult; }
   private persistIdempotent(key: string, relationshipId: string, operation: string, result: AdminResult): void { this.database.transaction((tx) => tx.run("INSERT INTO assistant_relationship_idempotency (idempotency_key, relationship_id, operation, response_json) VALUES (?, ?, ?, ?)", key, relationshipId, operation, JSON.stringify(result))); }
   close(): void { this.profileBuilder.close(); }
-  getActivePersona(assistantId: string, actor: string): AssistantPersonaProjection | undefined {
+  getActivePersona(assistantId: string, actor: string, authorizedAssistant = false): AssistantPersonaProjection | undefined {
     const profiles = this.profiles.list(assistantId);
-    if (!profiles.some((profile) => profile.createdBy === actor)) return undefined;
+    if (!authorizedAssistant && !profiles.some((profile) => profile.createdBy === actor)) return undefined;
     const active = profiles.find((profile) => profile.status === "active"); if (!active) return undefined;
     const policy = asObject(active.adaptivePersonaPolicy); const dimensions = Array.isArray(policy?.dimensions) ? policy.dimensions : [];
     const allowed = new Set(dimensions.map((dimension) => asObject(dimension)?.key));
@@ -277,6 +278,17 @@ export class LifestreamServer {
       if (method !== "GET" && result.status < 400) { this.localAuth.touch(context); this.invalidateRuntimeInputs(); }
       return json(response, result.status, result.body);
     }
+    if (path === "/api/runtime/v1/session-context") {
+      const context = this.requestContext(request, false); if (!context) throw new AuthenticationError();
+      if (method === "POST") {
+        if (this.localAuth) this.localAuth.csrf(context as LocalContext, String(request.headers["x-lifestream-csrf"] ?? ""));
+        const body = asObject(await readBody(request)); if (!body) return json(response, 422, { code: "invalid_request" });
+        try { reviseSessionEndpoint(this.database, context.sessionId, body, !!this.providers.stt && !!this.providers.tts); this.invalidateRuntimeInputs(); }
+        catch (error) { return json(response, 409, { code: "session_context_conflict", message: error instanceof Error ? error.message : "Session context changed" }); }
+      } else if (method !== "GET") return json(response, 405, { code: "method_not_allowed" });
+      const session = readSessionEndpoint(this.database, context.sessionId);
+      return json(response, 200, { revision: session.revision, endpoint: session.endpoint, runtimeSelfContext: this.runtimeSelfContext("inactive", session.endpoint ? "sessionEndpoint" : "none", context), limitations: ["Logical endpoint and user-selected disclosure scope only; no physical capture, audience verification or tool grant."] });
+    }
     if (this.localAuth && method !== "GET" && path === "/api/runtime/v1/profile") throw new AuthenticationError(409, "select_authenticated_provider_profile_at_launch");
     if (request.method === "POST" && path === "/api/runtime/v1/messages") return this.handleRuntime(request, response);
     if (request.method === "POST" && path === "/api/runtime/v1/tts") return this.handleTts(request, response);
@@ -367,15 +379,18 @@ export class LifestreamServer {
       return json(response, 500, { code: "profile_switch_failed", message: error instanceof Error ? error.message : "profile switch failed", activeProfile: this.config.profile });
     } finally { this.profileSwitching = false; }
   }
-  private runtimeSelfContext(microphone: RuntimeSelfContext["inputModalities"]["microphone"], endpoint: RuntimeSelfContext["endpointScope"]): RuntimeSelfContext {
+  private runtimeSelfContext(microphone: RuntimeSelfContext["inputModalities"]["microphone"], endpoint: RuntimeSelfContext["endpointScope"], context?: AuthContext): RuntimeSelfContext {
+    const session = context ? readSessionEndpoint(this.database, context.sessionId) : { revision: 0, endpoint: null };
     const speechGeneration = this.providers.tts ? this.providers.providers.tts?.status ?? "unavailable" : "unavailable";
-    const state = { runtimeStatus: this.health.status as RuntimeSelfContext["runtimeStatus"], inputModalities: { text: "active" as const, microphone, visual: "notConfigured" as const }, outputModalities: { text: "active" as const, speechGeneration, speechDelivery: "notObserved" as const, presentation: "notConfigured" as const }, endpointScope: endpoint, audienceScope: "authenticatedSession" as const, permissionState: "authenticatedSession" as const, limitations: ["Installed hardware is not evidence of capture.", "Received audio establishes only this session input, not physical microphone permission.", "Server delivery is not evidence of physical audibility.", "Visual input is not configured."] };
+    const facts = (configured: boolean, connected: boolean, activeForSession: boolean) => ({ implemented: true, configured, connected, activeForSession, authorized: !!context });
+    const modalityFacts = { text: facts(true, true, true), microphone: facts(!!this.providers.stt, this.providers.providers.stt?.status === "healthy", microphone === "activeForSession"), speechGeneration: facts(!!this.providers.tts, speechGeneration === "healthy", false), visual: { implemented: false, configured: false, connected: false, activeForSession: false, authorized: false } };
+    const state = { configurationRevision: redactedDigest(this.config), modalityFacts, runtimeStatus: this.health.status as RuntimeSelfContext["runtimeStatus"], inputModalities: { text: "active" as const, microphone, visual: "notConfigured" as const }, outputModalities: { text: "active" as const, speechGeneration, speechDelivery: "notObserved" as const, presentation: "notConfigured" as const }, endpointScope: session.endpoint ? "sessionEndpoint" as const : endpoint, audienceScope: session.endpoint?.privacyClass === "personal" ? "authenticatedSession" as const : "unknown" as const, sessionRevision: session.revision, endpointRevision: session.endpoint?.configurationRevision ?? null, permissionState: "authenticatedSession" as const, limitations: ["Installed hardware is not evidence of capture.", "Received audio establishes only this session input, not physical microphone permission.", "Server delivery is not evidence of physical audibility.", "Visual input is not configured.", "Disclosure scope is user selected; physical audience and speaker identity are unverified.", "Conversation access does not grant tool invocation or confirm effects.", "Voice controls require the selected provider capability check; presentation is not configured."] };
     return { ...state, sourceRevision: createHash("sha256").update(JSON.stringify(state)).digest("hex") };
   }
   private prepareRuntimeInput(body: Record<string, unknown>, context: AuthContext, microphone: RuntimeSelfContext["inputModalities"]["microphone"], endpoint: RuntimeSelfContext["endpointScope"], authorizationCurrent?: () => boolean): HostRuntimeInput {
     const assistantId = typeof body.assistantId === "string" && body.assistantId ? body.assistantId : "assistant-neutral";
     const relationshipId = typeof body.relationshipId === "string" && body.relationshipId ? body.relationshipId : undefined;
-    const snapshot = () => { const profileProjection = this.admin.getActivePersona(assistantId, context.principalId); const prepared = relationshipId ? this.admin.getPreparedRelationshipContext(assistantId, relationshipId, context.principalId) : undefined; if (relationshipId && !prepared) throw new Error("relationship scope unavailable"); return { assistantId, runtimeSelfContext: this.runtimeSelfContext(microphone, endpoint), ...(profileProjection ? { profileProjection } : {}), ...(prepared ? { preparedRelationshipContext: prepared as NonNullable<HostRuntimeInput["preparedRelationshipContext"]> } : {}) }; };
+    const snapshot = () => { const profileProjection = this.admin.getActivePersona(assistantId, context.principalId, !!authorizationCurrent); const prepared = relationshipId ? this.admin.getPreparedRelationshipContext(assistantId, relationshipId, context.principalId) : undefined; if (relationshipId && !prepared) throw new Error("relationship scope unavailable"); return { assistantId, endpointId: readSessionEndpoint(this.database, context.sessionId).endpoint?.endpointId ?? null, runtimeSelfContext: this.runtimeSelfContext(microphone, endpoint, context), ...(profileProjection ? { profileProjection } : {}), ...(prepared ? { preparedRelationshipContext: prepared as NonNullable<HostRuntimeInput["preparedRelationshipContext"]> } : {}) }; };
     if (authorizationCurrent && !authorizationCurrent()) throw new Error("runtime scope unavailable");
     const prepared = snapshot(); const fingerprint = JSON.stringify(prepared);
     return { ...prepared, isCurrent: () => { try { return (authorizationCurrent ? authorizationCurrent() : Date.parse(context.expiresAt) > Date.now()) && !["draining", "stopped"].includes(this.state) && fingerprint === JSON.stringify(snapshot()); } catch { return false; } } };
@@ -389,6 +404,7 @@ export class LifestreamServer {
     // Typed text does not establish a negotiated physical/logical endpoint.
     body.endpointId = null;
     let prepared: HostRuntimeInput; try { prepared = this.prepareRuntimeInput(body, context, "inactive", "none", () => this.runtimeAuthorized(request, body.assistantId)); } catch { return json(response, 404, { code: "relationship_not_found", message: "relationship context is unavailable for this authenticated subject" }); }
+    body.endpointId = prepared.endpointId ?? null;
     if (prepared.preparedRelationshipContext) body.preparedRelationshipContext = prepared.preparedRelationshipContext;
     const disconnected = new AbortController(); response.once("close", () => { if (!response.writableEnded) disconnected.abort(); });
     const fence = { current: prepared.isCurrent, abort: () => disconnected.abort() }; this.runtimeFences.add(fence);

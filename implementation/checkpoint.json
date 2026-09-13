@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "8ec13ce3f96f936ab867773dfa0d9149dd0a285c",
-  "currentRevision": "8ec13ce3f96f936ab867773dfa0d9149dd0a285c",
+  "currentRevision": "a441df3f5d4c080e8694cd2f881b714d6a4f03a0",
   "activeSlice": "LS-S071",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -88,10 +88,26 @@
     "scripts/qualify-s071-development.mjs",
     "implementation/evidence/LS-S071-development-recovery-v2.json",
     "implementation/evidence/LS-S071-qualification-recovery-v2.json",
-    "implementation/evidence/LS-S071-current-qualification.json"
+    "implementation/evidence/LS-S071-current-qualification.json",
+    "apps/server/src/runtime/session-context.ts",
+    "packages/runtime/package.json",
+    "apps/server/test/local-auth-http.test.ts",
+    "implementation/evidence/LS-S071-development-resume-1.json",
+    "implementation/evidence/LS-S071-qualification-resume-1.json",
+    "implementation/evidence/LS-S052-development-resume-2.json",
+    "implementation/evidence/LS-S052-qualification-resume-2.json",
+    "implementation/evidence/LS-S052-current-qualification.json"
   ],
   "changedFiles": [
-    "implementation/checkpoint.json"
+    "apps/server/src/index.ts",
+    "apps/server/src/runtime/audio.ts",
+    "apps/server/src/runtime/inference.ts",
+    "apps/server/test/local-auth-http.test.ts",
+    "implementation/checkpoint.json",
+    "packages/runtime/package.json",
+    "packages/runtime/src/inference/prompt.ts",
+    "scripts/qualify-s071-development.mjs",
+    "apps/server/src/runtime/session-context.ts"
   ],
   "validation": [],
   "decisions": [

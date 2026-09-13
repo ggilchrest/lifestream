@@ -43,6 +43,10 @@
     "./skills": {
       "types": "./dist/skills/skill.d.ts",
       "import": "./dist/skills/skill.js"
+    },
+    "./endpoints/registry": {
+      "types": "./dist/endpoints/registry.d.ts",
+      "import": "./dist/endpoints/registry.js"
     }
   },
   "scripts": {
