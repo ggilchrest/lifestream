@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/user-profile/1.0.0",
+  "title": "UserProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "profileId", "userId", "deploymentId", "revision", "status", "subjectRef", "declarations", "assistantScopes", "consentRefs", "createdAt", "validFrom", "revokedAt"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "profileId": { "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID" },
+    "userId": { "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID" },
+    "deploymentId": { "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "status": { "enum": ["draft", "active", "revoked", "superseded"] },
+    "subjectRef": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "declarations": { "type": "array", "items": { "$ref": "#/$defs/declaration" } },
+    "assistantScopes": { "type": "array", "items": { "$ref": "#/$defs/assistantScope" } },
+    "consentRefs": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 300 } },
+    "sourceRefs": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 300 } },
+    "createdAt": { "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time" },
+    "validFrom": { "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time" },
+    "revokedAt": { "anyOf": [{ "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time" }, { "type": "null" }] }
+  },
+  "$defs": {
+    "declaration": { "type": "object", "additionalProperties": false, "required": ["key", "value", "sensitivity"], "properties": { "key": { "type": "string", "minLength": 1, "maxLength": 100 }, "value": {}, "sensitivity": { "enum": ["ordinary", "personal", "sensitive"] } } },
+    "assistantScope": { "type": "object", "additionalProperties": false, "required": ["assistantId", "purposes", "audiences", "allowedKeys"], "properties": { "assistantId": { "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID" }, "purposes": { "type": "array", "items": { "enum": ["conversation", "personalization", "mention", "sharing", "training"] } }, "audiences": { "type": "array", "items": { "enum": ["owner", "assistant", "authenticatedSession"] } }, "allowedKeys": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 100 } } } }
+  }
+}

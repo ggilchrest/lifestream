@@ -10,5 +10,45 @@
     "reviewer": "ggilchrest",
     "reviewedAt": "2026-09-06T22:38:00Z",
     "evidence": "User-authorized batch-mode handoff change, evidence-scope amendment, and publication of ggilchrest/lifestream-specs commit fdd60a171990d59d13ff69c2763adc65d55f6477."
-  }
+  },
+  "additionalExports": [
+    {
+      "slice": "LS-S072",
+      "owner": "ggilchrest/lifestream-specs",
+      "revision": "4cc5587cd8010dcd9b15db6f78e895da0c14d035",
+      "authorization": "Exact machine-only inventory approved by operator in recovery-v2 task, 2026-09-13. Local ingestion only.",
+      "artifacts": [
+        {
+          "path": "contracts/user-profile.schema.json",
+          "schemaId": "https://lifestream.dev/contracts/user-profile/1.0.0",
+          "sha256": "5ac0acc2877cc7d7e44aa2903e597a69548704ee781e846d3054aa974da5c313",
+          "publicPath": "packages/contracts/src/schemas/user-profile.schema.json"
+        },
+        {
+          "path": "contracts/relationship.schema.json",
+          "schemaId": "https://lifestream.dev/contracts/relationship/1.0.0",
+          "sha256": "6bbcad685c176fc5926ada52eced6c9f777570f903444945b6700e4b5d692e9a",
+          "publicPath": "packages/contracts/src/schemas/relationship.schema.json"
+        },
+        {
+          "path": "contracts/relationship-administration.schema.json",
+          "schemaId": "https://lifestream.dev/contracts/relationship-administration/1.0.0",
+          "sha256": "507ec9020ebd0cd9ab02c238cff658317c866cc5f3e769bd0b652277a6f875bb",
+          "publicPath": "packages/contracts/src/schemas/relationship-administration.schema.json"
+        },
+        {
+          "path": "contracts/prepared-context-2.0.0.schema.json",
+          "schemaId": "https://lifestream.dev/contracts/prepared-context/2.0.0",
+          "sha256": "427c61df6800246775fb5e6e5b443eb67c3aec4be5bbfe75aba54fa580a48024",
+          "publicPath": "packages/contracts/src/schemas/prepared-context-2.0.0.schema.json"
+        },
+        {
+          "path": "contracts/protocol-common.schema.json",
+          "schemaId": "https://lifestream.dev/contracts/protocol-common/1.0.0",
+          "sha256": "d7bdc15c51875828b6b72dbbdf7b849856afdc9b2b66c0fbff479e84ba60b0d6",
+          "publicPath": "packages/contracts/src/schemas/protocol-common.schema.json"
+        }
+      ]
+    }
+  ]
 }

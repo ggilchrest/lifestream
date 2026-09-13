@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/relationship-administration/1.0.0",
+  "title": "RelationshipAdministration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "operation", "relationshipId", "actorRef", "purpose", "expectedRevision", "idempotencyKey", "payload"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" }, "operation": { "enum": ["preview", "validate", "activate", "revoke", "forget", "export"] }, "relationshipId": { "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID" }, "actorRef": { "type": "string", "minLength": 1, "maxLength": 300 }, "purpose": { "enum": ["conversation", "personalization", "mention", "sharing", "training", "forgetting", "administration"] }, "expectedRevision": { "type": "integer", "minimum": 1 }, "idempotencyKey": { "type": "string", "minLength": 1, "maxLength": 300 }, "payload": { "type": "object", "additionalProperties": false, "required": ["consentRefs", "profileSubsetRefs", "sourceBoundary"], "properties": { "consentRefs": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 300 } }, "profileSubsetRefs": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 300 } }, "sourceBoundary": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 300 } } } }
+  }
+}

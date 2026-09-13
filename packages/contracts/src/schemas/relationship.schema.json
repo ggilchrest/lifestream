@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/relationship/1.0.0",
+  "title": "Relationship",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "relationshipId", "assistantId", "userId", "deploymentId", "revision", "lifecycle", "recordRefs", "configurationRevision", "profileSubsetRefs", "consentRefs", "sourceBoundary"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" }, "relationshipId": { "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID" }, "assistantId": { "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID" }, "userId": { "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID" }, "deploymentId": { "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID" }, "revision": { "type": "integer", "minimum": 1 }, "lifecycle": { "enum": ["draft", "active", "revoked", "superseded"] }, "recordRefs": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 300 } }, "configurationRevision": { "type": "integer", "minimum": 1 }, "profileSubsetRefs": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 300 } }, "consentRefs": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 300 } }, "sourceBoundary": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 300 } }
+  }
+}
