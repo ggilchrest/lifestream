@@ -2,9 +2,9 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "1761450661ff35c3cb2e6ba359480866725c821e",
-  "currentRevision": "1761450661ff35c3cb2e6ba359480866725c821e",
-  "activeSlice": "LS-S002",
+  "baseRevision": "ab57724a7355b31f3884cd8e21265e6ed3cb6181",
+  "currentRevision": "ab57724a7355b31f3884cd8e21265e6ed3cb6181",
+  "activeSlice": "LS-S052",
   "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
@@ -68,40 +68,42 @@
     "LS-S072"
   ],
   "allowedFiles": [
-    "packages/contracts/src/schemas/user-profile.schema.json",
-    "packages/contracts/src/schemas/relationship.schema.json",
-    "packages/contracts/src/schemas/relationship-administration.schema.json",
-    "packages/contracts/src/schemas/prepared-context-2.0.0.schema.json",
-    "spec-lock.json",
-    "packages/contracts/test/contract-validation.test.ts",
-    "implementation/checkpoint.json"
+    "package.json",
+    "pnpm-lock.yaml",
+    "apps/server/package.json",
+    "apps/server/src/index.ts",
+    "apps/server/src/runtime/inference.ts",
+    "apps/server/src/composition/providers.ts",
+    "apps/server/src/config/schema.ts",
+    "apps/server/src/config/loader.ts",
+    "apps/server/src/config/profiles/local-dev.json",
+    "apps/server/test/server.test.ts",
+    "packages/runtime/package.json",
+    "packages/runtime/src/index.ts",
+    "packages/runtime/src/inference/port.ts",
+    "packages/runtime/src/inference/prompt.ts",
+    "packages/runtime/src/inference/fixture.ts",
+    "packages/runtime/test/inference.test.ts",
+    "packages/providers-sglang/package.json",
+    "packages/providers-sglang/src/index.ts",
+    "packages/providers-sglang/src/provider.ts",
+    "packages/providers-sglang/provider-manifest.json",
+    "packages/providers-sglang/test/provider.test.ts",
+    "packages/providers-sglang/tsconfig.json",
+    "implementation/checkpoint.json",
+    "implementation/evidence/LS-S052.json",
+    "scripts/qualify-s052-development.mjs",
+    "implementation/evidence/LS-S052-development-recovery-v2.json",
+    "implementation/evidence/LS-S052-qualification-recovery-v2.json",
+    "implementation/evidence/LS-S052-current-qualification.json",
+    "apps/server/test/inference.test.ts",
+    "implementation/evidence/LS-S052-development-recovery-v3.json",
+    "implementation/evidence/LS-S052-qualification-recovery-v3.json"
   ],
   "changedFiles": [
-    "packages/contracts/src/schemas/user-profile.schema.json",
-    "packages/contracts/src/schemas/relationship.schema.json",
-    "packages/contracts/src/schemas/relationship-administration.schema.json",
-    "packages/contracts/src/schemas/prepared-context-2.0.0.schema.json",
-    "spec-lock.json",
-    "packages/contracts/test/contract-validation.test.ts",
     "implementation/checkpoint.json"
   ],
-  "validation": [
-    {
-      "command": "node --test --experimental-strip-types packages/contracts/test/contract-validation.test.ts tests/contract-coverage.test.ts",
-      "result": "pass",
-      "evidence": "All20 exported schema roots compile under strict AJV, both PreparedContext versions remain, exact five-artifact ID/digest inventory matches including unchanged protocol-common; three tests pass."
-    },
-    {
-      "command": "pnpm typecheck && pnpm lint && pnpm build && pnpm test",
-      "result": "pass",
-      "evidence": "Types, lint, build and222 regression tests pass. First sandbox-only attempt could not bind localhost (EPERM); isolated-listener rerun passed with required sandbox permission."
-    },
-    {
-      "command": "node --test scripts/workspace.test.mjs && node scripts/workspace.mjs check && git diff --check",
-      "result": "pass",
-      "evidence": "43 tooling regressions and workspace/diff checks pass."
-    }
-  ],
+  "validation": [],
   "decisions": [
     "WSL development isolation remains application-level: host physical GPU index 1 is exposed as provider-local cuda:0 through CUDA_VISIBLE_DEVICES=1; strict container GPU invisibility is not claimed.",
     "LS-DEC-038 adds an explicitly selected Mac-local development fallback using Ollama Qwen3.5 2B Q4_K_M plus native MLX VoxCPM2 4-bit TTS and compact English Moonshine Tiny STT; no automatic failover or NeMo-equivalent streaming partials are claimed.",
@@ -109,8 +111,8 @@
     "2026-09-13 replacement recovery v2 executes the bounded core batch through S081. Prior planning-only holds are historical. S083/S084 remain later adopted scope. Scoped local commits only; no push/deployment/live configuration/import/training or Human acceptance."
   ],
   "blockers": [],
-  "nextAction": "Commit exact approved machine import, then return main to S052 affected-input requalification and S071 runtime evidence.",
-  "updatedAt": "2026-09-13T04:23:03.116843Z",
+  "nextAction": "Finish current-input S052 requalification required for in-flight S071; then finish S071 qualification and pause by operator instruction. No S073 or other new owner implementation.",
+  "updatedAt": "2026-09-13T04:25:27.781282+00:00",
   "updatedBy": "Codex",
   "notes": "Revision 2 voice stabilization: original 60-second-deadline regression, three GPU long browser replies, and final 30-minute GPU/Mac synthetic conversation/recovery runs passed their named functional checks. Both profiles fail observed latency targets; Mac retains up to 8.36-second starvation. GPU qAizVX had 29 whole transcripts, 19 completed voiced replies, nine interruptions and three reconnects with zero starvation; Mac RsEmQ3 had 29 whole transcripts, 17 completed voiced replies, eleven interruptions and three reconnects. Each ends one active turn deliberately at the time limit. No failed turns or late fenced audio in either final run. Mac sampling-boundary cancellation released actual compute in about 105-106 ms with byte-identical original/recovery PCM. Windows startup no-op preserved container start times; SSH exhaustion now leaves the local backend alive. Historical failed tests, host diagnostics, commits and LS-S052 receipt are preserved. Exact identities, exclusions and the next bounded performance experiment are in implementation/evidence/LS-S056-voice-stabilization-v2.json. Physical audibility/AEC/identity remain unverified; no production claim, push, Mac reboot or unrelated feature work. Documentation-only scope reconciliation at public HEAD b45937b44740b23f269d9f6a064f8b5a423fadd1 preserves prior implementation fields, completed list and runtime validation history. No new active slice or runtime evidence is created. Current continuation disposition is stopped by operator instruction; legacy WORKTREE/base/scope fields describe the prior LS-S063 work and must be reconciled on implementation resumption. Specification validation is separate from runtime acceptance. Reconciled 2026-09-12 against local public HEAD 6e58d3e and LS-S081 packet. The checkpoint now records exact packet scope, current source revision, no public worktree changes, and explicit evidence blockers. Metadata-only checkpoint commits are accepted only when the revision delta contains checkpoint/evidence paths; legacy receipts require a prospective qualification successor bound to preserved bytes. Historical receipts and operator approvals remain unchanged. Tooling reconciliation is committed at b7a709a; checkpoint metadata follows that source revision. Current active owner is bootstrap S001 evidence-tooling maintenance with exact three-file scope; historical receipt remains unchanged. S081 milestone remains unqualified as recorded in the private matrix. Current owner S052 executes the replacement recovery v2; all earlier planning holds and S001 selection in this history are superseded for this bounded batch. At S052 technical qualification, the current validation list contains only the two executed S052 recovery checks. Earlier mixed-owner validation history (including voice failures and historical S052 metadata failures) remains preserved in checkpoint commit d546af97aacd34e8fd240bfea35f973e46a49c6f and the unchanged immutable receipts; it is not relabeled."
 }
