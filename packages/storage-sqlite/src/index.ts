@@ -5,3 +5,5 @@ export { MemoryRepository } from "./memory.js";
 export type { MemoryLifecycleEvent, MemoryRecord } from "./memory.js";
 export { InitiativeLedgerRepository } from "./initiative.js";
 export type { InitiativeLedgerRecord } from "./initiative.js";
+export { GrantRepository } from "./authority/grants.js";
+export { AdmissionRepository } from "./authority/admission.js";

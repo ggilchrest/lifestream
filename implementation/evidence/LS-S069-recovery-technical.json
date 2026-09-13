@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S069",
+  "status": "implementationCompleteVerificationPending",
+  "revision": "55bf8e7e2c29442ebe063741428fed4dfaaeb61d",
+  "testedRevision": "55bf8e7e2c29442ebe063741428fed4dfaaeb61d",
+  "sourceRepository": "ggilchrest/lifestream",
+  "claimClass": "local-authentication-and-scoped-administration-technical-subset",
+  "caseIds": [
+    "LS-TEST-087"
+  ],
+  "specificationInputs": {
+    "revision": "26881b66503a0209cb60a3c39d01b67ca1c99e25",
+    "sha256": {
+      "authorityRequirements": "5e7254060d15bd6be3ebce5ad4e758c096b683ecbad55a2a90b9c95ccfa44fac",
+      "administrationRequirements": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337",
+      "acceptanceCatalog": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b",
+      "selectedPacket": "59853e45a0a995d47d9fe6aa3b114ae24d6a421369c14016c28774d9f6eb1509"
+    }
+  },
+  "checks": [
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "evidence": "Strict TypeScript project checks passed for the committed source contents."
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "evidence": "Repository ESLint checks passed for the committed source contents."
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "evidence": "All workspace projects built; built runtime includes existing public schemas and SQLite migrations."
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "228 tests passed, zero failures or skips, rerun at committed source 55bf8e7e2c29442ebe063741428fed4dfaaeb61d. Includes 12 focused authentication, actual HTTP and governed administration tests."
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "13 surface tests passed; one explicit browser test skipped without PLAYWRIGHT_MODULE. The same browser test was run separately with Chrome and passed without skips."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled-playwright>/index.mjs node --test --experimental-strip-types apps/control-web/test/local-auth.test.mjs",
+      "result": "pass",
+      "evidence": "One actual Chrome test passed without skips at committed source: local setup, sign-in, profile preview/save/activation, sign-out/session restoration and Owner account provisioning; narrow mobile viewport and browser error check. Real local authentication with synthetic temporary accounts and fixture inference."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "Independent canonical specification validation passed: 52 suite tests and 527 structural vectors. This validates specification structure, not product or Human acceptance."
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "evidence": "Public workspace structure and checkpoint shape passed."
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "evidence": "No whitespace errors in scoped changes."
+    }
+  ],
+  "admissionDiagnostics": [
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S069",
+      "result": "fail",
+      "evidence": "The isolated baseline resolver reports: A prerequisite is not recorded as verified. S062 has only an explicitly bounded technical-foundation receipt; its full rendered acceptance is not recorded complete. The recovery authorization permits the existing technical dependency work; this receipt does not fabricate a preflight pass or add S062/S069 to completedSlices."
+    }
+  ],
+  "verifiedBoundaries": [
+    "One installer-authorized Owner, password verifier storage and durable throttling; encrypted standard offline TOTP enrollment, RFC vectors, replay fencing and concurrent enrollment rejection.",
+    "Single-use recovery without either lost factor, remaining-code preservation, session revocation, interrupted enrollment/recovery restart and older application database restore fencing.",
+    "HttpOnly SameSite cookies, real HTTP authentication, same-origin mutation and CSRF enforcement, exact 1800-second administrative idle expiry with continuing conversation authentication.",
+    "Explicit per-Assistant administration permission; Owner provisioning does not imply foreign relationship reads or another Human capability grants.",
+    "Existing authority grant store and admission path with one-use atomic consumption, session duration, persistent expiry and revocation; existing Skill contract/current store with append-only revisions and activation.",
+    "Inert operation-bound proposals with current target revision, session, scope and permission rechecks; stale target changes, wrong digest, missing Human confirmation, replay and revoked permissions reject execution."
+  ],
+  "remainingVerification": [
+    "Complete rendered grant, Skill and operation-proposal administration workflows; the committed browser check covers setup, session, profile lifecycle and account provisioning only.",
+    "Requalify shared administration and runtime source after integrating this isolated branch with the other existing slice implementations. In particular, connect local session invalidation to the joined runtime per-chunk fencing before joined recovery acceptance.",
+    "LS-S062 complete rendered technical case and LS-S063 existing personalization/import/export/restart obligations remain for their owning slices; this pause starts no LS-S063 work.",
+    "Physical authenticator application setup, Human acceptance and the combined S080/S081 Human review remain pending."
+  ],
+  "environment": {
+    "authentication": "actual local password and optional offline TOTP",
+    "data": "synthetic accounts in temporary isolated directories",
+    "inference": "test fixture profile",
+    "tools": "synthetic test capabilities only",
+    "browser": "installed Chrome through bundled Playwright"
+  },
+  "exclusions": [
+    "No deployment, push, live configuration change, personal-data import, training, real-provider qualification, production or Human acceptance.",
+    "Independent current authentication-safety state is required for application-database restore fencing; loss or rollback of that safety state is outside this technical claim."
+  ],
+  "disposition": "Paused at the operator-requested clean stopping point. Source is locally committed; this is bounded evidence with outstanding verification, not a selected prerequisite qualification or completed Human claim."
+}

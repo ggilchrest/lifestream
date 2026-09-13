@@ -26,6 +26,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@lifestream/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@lifestream/providers-moonshine':
         specifier: workspace:*
         version: link:../../packages/providers-moonshine
