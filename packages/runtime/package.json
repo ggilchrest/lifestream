@@ -63,6 +63,10 @@
     "./dreaming/proposal-validator": {
       "types": "./dist/dreaming/proposal-validator.d.ts",
       "import": "./dist/dreaming/proposal-validator.js"
+    },
+    "./replay": {
+      "types": "./dist/replay/replay.d.ts",
+      "import": "./dist/replay/replay.js"
     }
   },
   "scripts": {

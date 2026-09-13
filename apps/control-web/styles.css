@@ -6,3 +6,6 @@
 #relationship-results{overflow-wrap:anywhere}#relationship-results .relationship-candidate-main{display:block;min-width:0}#relationship-results .relationship-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-width:0}#relationship-results .relationship-fields span{min-width:0}#relationship-results .relationship-candidate{flex-wrap:wrap}@media(max-width:720px){#relationship-results .relationship-candidate{display:block}#relationship-results .revision>div{min-width:0}}
 
 .relationship-config-tools{overflow-wrap:anywhere}.relationship-config-tools small{display:block;font-weight:400;font-size:12px}.relationship-config-tools input[type=checkbox]{display:inline-block;width:auto}.relationship-config-tools pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}.relationship-config-tools .observed-reply{white-space:pre-wrap;padding:12px;border-left:3px solid var(--green)}.relationship-config-tools label{min-width:0}.relationship-config-tools select{max-width:100%}
+
+.relationship-lab,.relationship-lab details,.relationship-lab .record-card { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+.relationship-lab pre { max-width:100%; white-space:pre-wrap; overflow-wrap:anywhere; overflow:auto; }

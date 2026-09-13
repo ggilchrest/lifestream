@@ -12,7 +12,7 @@ test("one compiled view preserves mandatory lanes, bounded relevant allocation a
   const view = compileRelationshipContext({...base,records});
   assert.deepEqual(view.approvedBaseline,[records[0]!.content]); assert.deepEqual(view.criticalCorrections,[records[1]!.content]); assert.deepEqual(view.relevantContext.map(item=>item.id),['relevant']); assert.equal(view.preparationCount,1);
   assert.ok(view.omissions.some(item=>item.id==='hobby'&&item.reason==='no current-task relevance')); assert.doesNotMatch(formatPreparedRelationshipContext(view),/UNAPPROVED_PRIVATE_VALUE|rare clocks/);
-  assert.ok(view.budget.usedBytes <= view.budget.maximumBytes); assert.equal(view.compilerRevision,'record-oriented:5'); assert.deepEqual(compileRelationshipContext({...base,records}),view);
+  assert.ok(view.budget.usedBytes <= view.budget.maximumBytes); assert.equal(view.compilerRevision,'relationship-context:6'); assert.deepEqual(compileRelationshipContext({...base,records}),view);
   const disabled=compileRelationshipContext({...base,records,controls:{callbackFrequency:0}}); assert.equal(disabled.relevantContext.length,0); assert.equal(disabled.criticalCorrections.length,1); assert.equal(disabled.approvedBaseline.length,1);
   const unknown=compileRelationshipContext({...base,records,audienceScope:'unknown'}); assert.deepEqual(unknown.selections,[]); assert.doesNotMatch(formatPreparedRelationshipContext(unknown),/project uses Python|rare clocks|introductory/);
   assert.throws(()=>compileRelationshipContext({...base,records:[record('a','x'.repeat(3900),'correction'),record('b','y'.repeat(3900),'correction')]}),/Mandatory relationship boundaries/);
@@ -21,4 +21,9 @@ test("one compiled view preserves mandatory lanes, bounded relevant allocation a
 test("cached prepared views are bounded, isolated copies and revoke payload immediately", () => {
   const cache = new ContextCache<{value:string}>(2); cache.set('one',{value:'original'},['source-one']); const read=cache.get('one')!; read.value='mutated'; assert.equal(cache.get('one')?.value,'original');
   cache.set('two',{value:'second'}); cache.set('three',{value:'third'}); assert.equal(cache.get('one'),undefined); cache.set('one',{value:'fresh'},['source-one']); assert.deepEqual(cache.invalidateDependencies(['source-one']),['one']); assert.equal(cache.get('one'),undefined); assert.equal(cache.get('three')?.value,'third');
+});
+
+test('convention compiler groups duplicate approved conventions with all source links and keeps direct corrections separate',async()=>{
+ const {compileRelationshipContext}=await import('../src/context/builder.ts');const record={id:'one',content:'Use short answers',revision:1,sourceFamily:'family',status:'approved',use:'baseline' as const,personalization:true,mention:true};const input={records:[record,{...record,id:'two'},{...record,id:'correction',content:'The current code is Azure Birch.',use:'correction' as const},{...record,id:'hidden',content:'WITHHELD',mention:false}],userInput:'What is the current code?',audienceScope:'authenticatedSession' as const,profileRevision:'p:1',relationshipRevision:'r:1',configurationRevision:'c:1'};
+ const records=compileRelationshipContext({...input,representation:'recordOriented'}),conventions=compileRelationshipContext({...input,representation:'conventionOriented'});assert.notEqual(formatPreparedRelationshipContext(records),formatPreparedRelationshipContext(conventions));assert.equal(conventions.compiledConventions?.find(c=>c.lane==='baseline')?.sources.length,2);assert.equal(conventions.compiledConventions?.find(c=>c.lane==='correction')?.text,'The current code is Azure Birch.');assert.doesNotMatch(formatPreparedRelationshipContext(conventions),/WITHHELD/u);assert.ok(conventions.budget.usedBytes<=8192);
 });

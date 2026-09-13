@@ -2,9 +2,9 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "ca4d20dc3a40baf6f7e7a253d4032f3afef637fa",
-  "currentRevision": "ca4d20dc3a40baf6f7e7a253d4032f3afef637fa",
-  "activeSlice": "LS-S077",
+  "baseRevision": "1e2a15c87490fe959bee7342c3545d1917ecb181",
+  "currentRevision": "1e2a15c87490fe959bee7342c3545d1917ecb181",
+  "activeSlice": "LS-S078",
   "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
@@ -73,42 +73,44 @@
     "LS-S073"
   ],
   "allowedFiles": [
-    "packages/runtime/src/dreaming/run.ts",
-    "packages/runtime/src/dreaming/proposal-validator.ts",
-    "packages/runtime/src/dreaming/conflict.ts",
-    "packages/runtime/src/dreaming/apply.ts",
-    "packages/runtime/test/dreaming.test.ts",
+    "packages/runtime/src/replay/replay.ts",
+    "packages/runtime/src/context/builder.ts",
+    "packages/runtime/src/context/cache.ts",
+    "packages/runtime/test/replay.test.ts",
     "apps/control-web/app.js",
     "apps/server/src/index.ts",
     "apps/server/test/server.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S077.json",
-    "apps/server/src/admin/relationship-insights.ts",
-    "apps/server/test/relationship-insights.test.ts",
-    "apps/control-web/relationship-insights.js",
-    "apps/control-web/test/relationship-insights.test.mjs",
-    "apps/control-web/test/approval-ui.test.mjs",
-    "apps/control-web/styles.css",
+    "implementation/evidence/LS-S078.json",
     "packages/runtime/package.json",
-    "tests/relationship-acceptance.test.ts",
-    "implementation/evidence/LS-S077-qualification-resume-1.json",
-    "implementation/evidence/LS-S077-current-qualification.json",
+    "packages/runtime/src/context/controls.ts",
+    "packages/runtime/test/context.test.ts",
+    "apps/server/src/admin/relationship-lab.ts",
+    "apps/server/test/relationship-lab.test.ts",
+    "apps/control-web/relationship-lab.js",
+    "apps/control-web/relationship-tuning.js",
+    "apps/control-web/test/relationship-lab.test.mjs",
+    "apps/control-web/test/relationship-tuning.test.mjs",
+    "apps/control-web/test/approval-ui.test.mjs",
     "apps/control-web/test/relationship-acceptance.test.mjs",
-    "implementation/evidence/LS-S076-qualification-resume-2.json",
-    "implementation/evidence/LS-S076-development-resume-2.json",
-    "implementation/evidence/LS-S076-current-qualification.json"
+    "tests/relationship-acceptance.test.ts",
+    "scripts/qualify-s078-development.mjs",
+    "implementation/evidence/LS-S078-current-qualification.json",
+    "implementation/evidence/LS-S078-qualification-resume-1.json",
+    "implementation/evidence/LS-S078-development-resume-1.json",
+    "apps/control-web/styles.css"
   ],
   "changedFiles": [],
   "validation": [
     {
       "command": "pnpm build && pnpm typecheck && pnpm lint && pnpm test",
       "result": "pass",
-      "evidence": "256 source tests pass including bounded source-grounded findings, explicit counterevidence, pinned Dreaming review, inactive configuration proposals, reversal, cancellation, stale source and restart."
+      "evidence": "259 source tests pass, including two actual compilers, completed-result accounting, repeated output variability, source-separated held-out execution, explicit consent, zero dispatch on capability requests, cancellation, background failure and same-path restart/resume."
     },
     {
       "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
       "result": "pass",
-      "evidence": "18 browser tests pass including real-authenticated rendered insight review and explicit configuration activation/reversal at desktop and mobile widths."
+      "evidence": "19 browser tests pass; actual rendered Lab executes and inspects representations, rejects one experiment, promotes a separate held-out-qualified candidate as an inactive draft, explicitly activates and rolls back at desktop/mobile widths."
     }
   ],
   "decisions": [
@@ -119,7 +121,7 @@
   ],
   "blockers": [],
   "nextAction": "Resumed bounded recovery: finish this owner, qualify applicable technical cases, then continue the existing dependency path through S081.",
-  "updatedAt": "2026-09-13T07:43:30.325471Z",
+  "updatedAt": "2026-09-13T07:56:51.700511Z",
   "updatedBy": "Codex",
   "notes": "Current recovery is active under the replacement v2 operator authorization. Historical dispositions remain in prior commits. This owner refreshes current technical evidence; Human acceptance remains pending."
 }
