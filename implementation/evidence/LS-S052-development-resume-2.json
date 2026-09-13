@@ -1,0 +1,289 @@
+{
+  "slice": "LS-S052",
+  "caseIds": [
+    "LS-TEST-069"
+  ],
+  "collectedAt": "2026-09-13T05:17:02.983Z",
+  "sourceRevision": "16e22f30cb72ec76158b47fd2da68d67d3fecae1",
+  "claim": "prospective-development-runtime; Human, production, physical I/O and real authentication excluded",
+  "checks": [
+    {
+      "id": "pinned-config",
+      "evidenceClass": "configuration",
+      "result": "pass",
+      "elapsedMs": 0,
+      "evidence": {
+        "model": "qwen3.8-27b-local",
+        "modelPath": "RadixArk/Qwen3.8-27B-NVFP4",
+        "modelRevision": "319f741cce68d7914884900c138a1fbb70a42f30",
+        "runtimeVersion": "0.0.0.dev1+g5f55db35e",
+        "image": "sha256:616a3e97f45191af975896cfa644279096cb31bd408a071c2e99ca7209c3cafe",
+        "context": 65536,
+        "quantization": "NVFP4"
+      }
+    },
+    {
+      "id": "observed-provider-identity",
+      "evidenceClass": "development-provider",
+      "result": "pass",
+      "elapsedMs": 5067,
+      "evidence": {
+        "endpoint": "http://127.0.0.1:43000",
+        "health": 200,
+        "model": {
+          "id": "qwen3.8-27b-local",
+          "max_model_len": 65536
+        },
+        "container": {
+          "imageId": "sha256:616a3e97f45191af975896cfa644279096cb31bd408a071c2e99ca7209c3cafe",
+          "running": "true"
+        },
+        "deployed": {
+          "runtimeVersion": "0.0.0.dev1+g5f55db35e",
+          "--model-path": "RadixArk/Qwen3.8-27B-NVFP4",
+          "--served-model-name": "qwen3.8-27b-local",
+          "--context-length": "65536",
+          "--revision": "319f741cce68d7914884900c138a1fbb70a42f30"
+        },
+        "modelRevisionEvidence": "read-only running container argument and runtime package inspection; model listing alone is insufficient"
+      }
+    },
+    {
+      "id": "typed-real-stream-manifest-correlation-readonly",
+      "evidenceClass": "development-provider",
+      "result": "pass",
+      "elapsedMs": 663,
+      "evidence": {
+        "manifest": {
+          "schemaVersion": "1.0.0",
+          "sections": [
+            {
+              "kind": "policy",
+              "sourceRevision": "v1",
+              "sourceRef": "policy:v1",
+              "contentDigest": "98e86d24d159c780d0ae1a5f41a38860de82785ed6a59adb77752e324245d366",
+              "redaction": "none",
+              "tokenCount": 12
+            },
+            {
+              "kind": "corePersona",
+              "sourceRevision": "v1",
+              "sourceRef": "assistant-profile:unselected-v1",
+              "contentDigest": "2392d6723fb4bcc48b8617ab658e9fb4b550ce264163bac33d3319fc7ba56e8b",
+              "redaction": "none",
+              "tokenCount": 13
+            },
+            {
+              "kind": "adaptivePersona",
+              "sourceRevision": "v1",
+              "sourceRef": "adaptive-policy:unselected-v1",
+              "contentDigest": "4cb15e0fa85fdadb281ee5c4a6bdddb0db0420e9ffb540f12540c4bba28b3425",
+              "redaction": "none",
+              "tokenCount": 8
+            },
+            {
+              "kind": "interactionState",
+              "sourceRevision": "31984c9d1aae551c1311a3dbb166439a800e5a3feae55b165acbacbe28e3106a",
+              "sourceRef": "runtime-self-context:v1",
+              "contentDigest": "9f38af8e33da2caaf0e3ec935ea68db8928cc87bcf2bfe62b2bd3749bc6dcab0",
+              "redaction": "none",
+              "tokenCount": 91
+            },
+            {
+              "kind": "preparedMemory",
+              "sourceRevision": "v1",
+              "sourceRef": "memory:prepared-v1",
+              "contentDigest": "b0ea49be97d409f3c7fd7a1433cddcd4dbc049be382185003b22547081399061",
+              "redaction": "none",
+              "tokenCount": 5
+            },
+            {
+              "kind": "worldContext",
+              "sourceRevision": "v1",
+              "sourceRef": "world:prepared-v1",
+              "contentDigest": "b2e10dff6787049fefba88c7747c094de76c9ef23a2dfb15cd79c36618762124",
+              "redaction": "none",
+              "tokenCount": 5
+            },
+            {
+              "kind": "capabilityState",
+              "sourceRevision": "v1",
+              "sourceRef": "capability:snapshot-v1",
+              "contentDigest": "b125f732476a648cd04ce4d9b427929dc40bfe582fb374c397e292eb99aa4c53",
+              "redaction": "none",
+              "tokenCount": 7
+            },
+            {
+              "kind": "conversation",
+              "sourceRevision": "v1",
+              "sourceRef": "conversation:session-v1",
+              "contentDigest": "c174966781598215c49a246d09e37d5812f652fc9a538a7a4168c07a5c24b2d5",
+              "redaction": "none",
+              "tokenCount": 6
+            },
+            {
+              "kind": "userInput",
+              "sourceRevision": "v1",
+              "sourceRef": "user-input:current-v1",
+              "contentDigest": "6d472dd2dc21ea0b27c710f1c53b54e6a316a5103729099e61b558ee601bc326",
+              "redaction": "none",
+              "tokenCount": 4
+            }
+          ],
+          "tokenizer": "whitespace-v1"
+        },
+        "scope": {
+          "assistantId": "s052-synthetic-assistant",
+          "sessionId": "s052-synthetic-session",
+          "interactionId": "969f3d85-e947-474e-94f7-63c81907a9f2",
+          "endpointId": null
+        },
+        "provider": {
+          "profile": "local-dev",
+          "implementation": "@lifestream/providers-sglang",
+          "model": "qwen3.8-27b-local",
+          "revision": "319f741cce68d7914884900c138a1fbb70a42f30",
+          "fixture": false
+        },
+        "output": "\n\nREADY",
+        "deltaCount": 2,
+        "terminal": "interaction.completed",
+        "capability": {
+          "name": "capability.read-only.status",
+          "input": {
+            "scope": "s052-synthetic"
+          },
+          "effect": "read-only"
+        },
+        "capabilityClaim": "selection only; no tool dispatch",
+        "authentication": "synthetic fixture session; S069 remains separate"
+      }
+    },
+    {
+      "id": "real-call-cancellation",
+      "evidenceClass": "development-provider",
+      "result": "pass",
+      "elapsedMs": 102,
+      "evidence": {
+        "terminal": "cancelled",
+        "textChunks": 0
+      }
+    },
+    {
+      "id": "real-response-byte-limit",
+      "evidenceClass": "development-provider",
+      "result": "pass",
+      "elapsedMs": 905,
+      "evidence": {
+        "limitBytes": 2,
+        "terminal": "response_limit",
+        "emittedBytes": 2
+      }
+    },
+    {
+      "id": "fixture-parity",
+      "evidenceClass": "fixture",
+      "result": "pass",
+      "elapsedMs": 0,
+      "evidence": {
+        "kinds": [
+          "text",
+          "done"
+        ],
+        "orderedManifest": [
+          "policy",
+          "corePersona",
+          "adaptivePersona",
+          "interactionState",
+          "preparedMemory",
+          "worldContext",
+          "capabilityState",
+          "conversation",
+          "userInput"
+        ]
+      }
+    },
+    {
+      "id": "runtime-deadline",
+      "evidenceClass": "fault-injection",
+      "result": "pass",
+      "elapsedMs": 10006,
+      "evidence": {
+        "elapsedMs": 10004,
+        "terminal": "interaction.error",
+        "providerAborted": true,
+        "claim": "runtime-owned deadline with injected stalled provider; no shared provider outage"
+      }
+    },
+    {
+      "id": "outage-fails-without-fabricated-answer",
+      "evidenceClass": "fault-injection",
+      "result": "pass",
+      "elapsedMs": 2,
+      "evidence": {
+        "terminal": "inference_unavailable",
+        "textChunks": 0,
+        "sharedProviderChanged": false
+      }
+    },
+    {
+      "id": "replay-zero-provider-calls",
+      "evidenceClass": "fault-injection",
+      "result": "pass",
+      "elapsedMs": 0,
+      "evidence": {
+        "calls": 0,
+        "terminal": "replay_live_provider_forbidden"
+      }
+    },
+    {
+      "id": "invalid-canonical-input-rejected-before-provider",
+      "evidenceClass": "fault-injection",
+      "result": "pass",
+      "elapsedMs": 0,
+      "evidence": [
+        {
+          "mutation": "reorder",
+          "providerCalls": 0,
+          "terminals": [
+            "invalid_canonical_request"
+          ]
+        },
+        {
+          "mutation": "missingDigest",
+          "providerCalls": 0,
+          "terminals": [
+            "invalid_canonical_request"
+          ]
+        },
+        {
+          "mutation": "untrustedPolicy",
+          "providerCalls": 0,
+          "terminals": [
+            "invalid_canonical_request"
+          ]
+        }
+      ]
+    }
+  ],
+  "exclusions": [
+    "production qualification",
+    "physical input or playback",
+    "Human quality acceptance",
+    "real local authentication (S069)",
+    "service lifecycle or model/configuration changes"
+  ],
+  "sourceWorktreeStatus": [],
+  "scriptSha256": "c3dec10a7a142c162a43ad9ffbae076d3721fc9aa8c9345ea5de51461105fe90",
+  "buildArtifactDigests": {
+    "packages/providers-sglang/dist/provider.js": "459b9676f235f2eddccd160148c608b9d52653be1ce098db92b5afbad8ded746",
+    "packages/runtime/dist/inference/prompt.js": "8520b88d5bd0eff4c00fd68a0c5b82b0c9b1f9f9935b0dcd02ee59ccb19a3fa2",
+    "packages/runtime/dist/context/builder.js": "021fd342a1e05c121599a0602b32f88e3c43b48eb00c307d34d41ff6057c6a6e"
+  },
+  "configFileSha256": "2fec0edfd70f92efa0b47dca0ff12a97610a9b5dd36b78b9e8e6704a5fd48284",
+  "compositionRevision": "f394a251b7852ab01d907efa5dc43636c0599ec9",
+  "accessHelperSha256": "a64f012c99fd62274141d5d9e2205f8ef7473bffbed53de95e7a28d3db0aeb60",
+  "effectiveConfigurationDigest": "7840ccc05136fbd237e32bf5bddd593907fcd336890c49686e67e47072162043",
+  "result": "pass",
+  "acceptance": "candidate-evidence-requires-committed-harness-and-qualified-requirement-inputs"
+}
