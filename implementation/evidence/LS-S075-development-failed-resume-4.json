@@ -1,0 +1,15 @@
+{
+  "slice": "LS-S075",
+  "collectedAt": "2026-09-13T09:47:09.965Z",
+  "checks": [],
+  "exclusions": [
+    "No personal data, physical output, Human fit acceptance, training, deployment, production or provider service changes"
+  ],
+  "sourceRevision": "b74358aed81bcc8b20aea5c840180f9914ce41c3",
+  "scriptSha256": "78404c670db0e0db9091c5b4d0b160a6d0ce080211692c54408ecf6d8430f5ef",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "sourceWorktreeStatus": "M implementation/checkpoint.json",
+  "result": "fail",
+  "blocker": "Bounded rendered/provider check failed; no credentials logged.",
+  "failureEvidence": "(node:27901) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u2716 rendered real-authenticated People and Relationships workflow reviews selected files and manages record lifecycle at desktop and mobile widths (32226.927334ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 34545.811167\n\n\u2716 failing tests:\n\ntest at apps/control-web/test/relationship-administration.test.mjs:10:1\n\u2716 rendered real-authenticated People and Relationships workflow reviews selected files and manages record lifecycle at desktop and mobile widths (32226.927334ms)\n  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Green Finch/u. Input:\n  \n  '```python\\n' +\n    'import random\\n' +\n    'from dataclasses import dataclass\\n' +\n    '\\n' +\n    '@dataclass\\n' +\n    'class Finch:\\n' +\n    '    name: str\\n' +\n    '    age: int\\n' +\n    '\\n' +\n    '    def sing(self):\\n' +\n    '        return f\"{self.name} chirps at {random.randint(1, 100)}%\"\\n' +\n    '\\n' +\n    'def create_flock():\\n' +\n    '    return [Finch(\"Aria\", 2), Finch(\"Brio\", 3), Finch(\"Cleo\", 1)]\\n' +\n    '\\n' +\n    'if __name__ == \"__main__\":\\n' +\n    '    for bird in create_flock():\\n' +\n    '        print(bird.sing())\\n' +\n    '```'\n  \n      at TestContext.<anonymous> (file:///Users/gg/Development/Agentic/Tifa/lifestream/apps/control-web/test/relationship-administration.test.mjs:25:204)\n      at async Test.run (node:internal/test_runner/test:1125:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: '```python\\nimport random\\nfrom dataclasses import dataclass\\n\\n@dataclass\\nclass Finch:\\n    name: str\\n    age: int\\n\\n    def sing(self):\\n        return f\"{self.name} chirps at {random.randint(1, 100)}%\"\\n\\ndef create_flock():\\n    return [Finch(\"Aria\", 2), Finch(\"Brio\", 3), Finch(\"Cleo\", 1)]\\n\\nif __name__ == \"__main__\":\\n    for bird in create_flock():\\n        print(bird.sing())\\n```',\n    expected: /Green Finch/u,\n    operator: 'match',\n    diff: 'simple'\n  }\n"
+}
