@@ -47,6 +47,14 @@
     "./endpoints/registry": {
       "types": "./dist/endpoints/registry.d.ts",
       "import": "./dist/endpoints/registry.js"
+    },
+    "./context": {
+      "types": "./dist/context/builder.d.ts",
+      "import": "./dist/context/builder.js"
+    },
+    "./context/cache": {
+      "types": "./dist/context/cache.d.ts",
+      "import": "./dist/context/cache.js"
     }
   },
   "scripts": {

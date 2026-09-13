@@ -45,6 +45,7 @@ test("LS-TEST-101 authenticated HTTP intake executes snapshot, extraction, granu
   let app = createLifestreamServer({ config }); await app.start(); let base = `http://127.0.0.1:${app.address().port}`; t.after(() => app.shutdown());
   const auth = () => ({ "content-type": "application/json", "x-lifestream-fixture-session": "synthetic-builder", "x-lifestream-fixture-principal": "synthetic-user", origin: base });
   const request = async (path: string, body?: unknown) => { const response = await fetch(base + path, { headers: auth(), ...(body ? { method: "POST", body: JSON.stringify(body) } : {}) }); return { status: response.status, body: await response.json() as Record<string, any> }; };
+  assert.equal((await request("/api/runtime/v1/session-context", {expectedRevision:0,mode:"text",audienceScope:"authenticatedSession"})).status,200);
   const assistant = (await request("/api/admin/v1/assistants", { displayName: "Synthetic Builder Assistant" })).body;
   const relationship = (await request(`/api/admin/v1/assistants/${assistant.assistantId}/relationships`, { userId: "synthetic-user" })).body.relationship;
   const relationPath = `/api/admin/v1/assistants/${assistant.assistantId}/relationships/${relationship.relationshipId}`; const path = relationPath + "/profile-builder";
@@ -53,7 +54,7 @@ test("LS-TEST-101 authenticated HTTP intake executes snapshot, extraction, granu
   assert.equal((await request(path)).body.formats.length, 4);
   const observedRequests: InferenceRequest[] = []; const originalGenerate = FixtureInferenceProvider.prototype.generate;
   t.mock.method(FixtureInferenceProvider.prototype, "generate", async function* (this: FixtureInferenceProvider, input: InferenceRequest, providerContext: ProviderCallContext) { observedRequests.push(structuredClone(input)); yield* originalGenerate.call(this, input, providerContext); });
-  const observePrompt = async () => { const reply = await fetch(base + "/api/runtime/v1/messages", { method: "POST", headers: auth(), body: JSON.stringify({ assistantId: assistant.assistantId, relationshipId: relationship.relationshipId, userInput: "Please explain this clearly." }) }); assert.equal(reply.status, 200); await reply.text(); const observed = observedRequests.at(-1); assert.ok(observed); return JSON.stringify(observed.sections); };
+  const observePrompt = async () => { const reply = await fetch(base + "/api/runtime/v1/messages", { method: "POST", headers: auth(), body: JSON.stringify({ assistantId: assistant.assistantId, relationshipId: relationship.relationshipId, userInput: "Give clear explanations of caching." }) }); assert.equal(reply.status, 200); await reply.text(); const observed = observedRequests.at(-1); assert.ok(observed); return JSON.stringify(observed.sections); };
   const files = [upload()]; let response = await request(path, { files }); assert.equal(response.status, 201); let job = response.body.job as ProfileBuilderJob;
   response = await request(`${path}/${job.jobId}/snapshot`, { expectedRevision: job.revision, files }); assert.equal(response.status, 200); job = response.body.job;
   response = await request(`${path}/${job.jobId}/extract`, { expectedRevision: job.revision }); assert.equal(response.status, 202);

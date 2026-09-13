@@ -36,6 +36,10 @@ export class MemoryRepository {
     if (this.database) return (this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? ORDER BY id").all(assistantId) as MemoryRow[]).map(fromRow);
     return [...this.records.values()].filter((record) => record.assistantId === assistantId).map((record) => structuredClone(record));
   }
+  contextRecords(assistantId: string, actor: string): MemoryRecord[] {
+    if (this.database) return (this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(lifecycle_json,'$.status')='active' AND (EXISTS (SELECT 1 FROM memory_lifecycle_events e WHERE e.assistant_id=memories.assistant_id AND e.memory_id=memories.id AND e.event_type='lifecycleChanged' AND json_extract(e.payload_json,'$.status')='active') OR EXISTS (SELECT 1 FROM memory_lifecycle_events e WHERE e.assistant_id=memories.assistant_id AND e.event_type='correctionApplied' AND json_extract(e.payload_json,'$.correctionId')=memories.id)) ORDER BY id LIMIT 257").all(assistantId, actor) as MemoryRow[]).map(fromRow);
+    return this.list(assistantId).filter(record => record.provenance.actor === actor && record.lifecycle.status === "active" && (this.history(assistantId,record.id).some(event=>event.eventType==="lifecycleChanged"&&event.payload.status==="active") || [...this.events.values()].some(events=>events.some(event=>event.assistantId===assistantId&&event.eventType==="correctionApplied"&&event.payload.correctionId===record.id)))).slice(0,257);
+  }
   search(assistantId: string, query: string, limit = 20): MemoryRecord[] {
     const normalized = query.trim().toLocaleLowerCase();
     if (!normalized) return [];

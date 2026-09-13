@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "b691f138b19c61f3e89caa2f6cd15f42fa35c73f",
-  "currentRevision": "b691f138b19c61f3e89caa2f6cd15f42fa35c73f",
+  "currentRevision": "5a32fbe664b5052b57923d80bcd1d2998557dded",
   "activeSlice": "LS-S073",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -83,10 +83,30 @@
     "apps/server/test/inference.test.ts",
     "apps/server/test/audio.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S073.json"
+    "implementation/evidence/LS-S073.json",
+    "apps/server/src/index.ts",
+    "packages/runtime/package.json",
+    "packages/storage-sqlite/src/memory.ts",
+    "apps/server/test/server.test.ts",
+    "apps/server/test/profile-builder.test.ts",
+    "tests/relationship-acceptance.test.ts",
+    "scripts/qualify-s073-development.mjs",
+    "implementation/evidence/LS-S073-development-resume-1.json",
+    "implementation/evidence/LS-S073-qualification-resume-1.json",
+    "implementation/evidence/LS-S073-current-qualification.json"
   ],
   "changedFiles": [
-    "implementation/checkpoint.json"
+    "apps/server/src/index.ts",
+    "apps/server/test/inference.test.ts",
+    "apps/server/test/profile-builder.test.ts",
+    "implementation/checkpoint.json",
+    "packages/runtime/package.json",
+    "packages/runtime/src/context/builder.ts",
+    "packages/runtime/src/context/cache.ts",
+    "packages/runtime/src/inference/prompt.ts",
+    "packages/runtime/test/context.test.ts",
+    "packages/storage-sqlite/src/memory.ts",
+    "scripts/qualify-s073-development.mjs"
   ],
   "validation": [],
   "decisions": [
