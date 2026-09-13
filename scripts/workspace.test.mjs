@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { validateCheckpoint, preflightErrors, repositoryMatches, safePath } from "./workspace.mjs";
+import { validateCheckpoint, preflightErrors, repositoryMatches, safePath, metadataOnlyDelta, validQualification, sha256 } from "./workspace.mjs";
 
 const checkpoint = () => ({
   schemaVersion: "1.0.0", repository: "ggilchrest/lifestream", branch: "codex/s001", baseRevision: "d".repeat(40), currentRevision: "WORKTREE",
@@ -52,4 +52,16 @@ test("preflight reports unrecorded worktree changes and a stale WORKTREE base", 
   assert.match(inspect({ publicChanges: ["README.md"] }).join("\n"), /checkpoint.changedFiles/);
   const value = checkpoint(); value.baseRevision = "e".repeat(40);
   assert.match(inspect({ checkpoint: value }).join("\n"), /WORKTREE checkpoint base/);
+});
+test("metadata-only checkpoint commits are distinguishable from source changes", () => {
+  assert.equal(metadataOnlyDelta(["implementation/checkpoint.json", "implementation/evidence/LS-S052-qualification.json"]), true);
+  assert.equal(metadataOnlyDelta(["implementation/checkpoint.json", "packages/runtime/src/inference/prompt.ts"]), false);
+  assert.equal(metadataOnlyDelta([]), false);
+});
+test("prospective receipt qualification binds to the preserved legacy bytes", () => {
+  const legacy = Buffer.from('{"slice":"LS-S052"}');
+  const good = { kind: "prospective-qualification", supersedes: "implementation/evidence/LS-S052.json", supersedesSha256: sha256(legacy), sourceRepository: "ggilchrest/lifestream", testedRevision: "a".repeat(40) };
+  assert.equal(validQualification(good, "LS-S052", legacy), true);
+  assert.equal(validQualification({ ...good, supersedesSha256: "0".repeat(64) }, "LS-S052", legacy), false);
+  assert.equal(validQualification({ ...good, sourceRepository: "ggilchrest/lifestream-specs" }, "LS-S052", legacy), false);
 });

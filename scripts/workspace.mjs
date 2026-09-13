@@ -9,6 +9,18 @@ const commit = (value) => typeof value === "string" && /^[a-f0-9]{40}$/.test(val
 const nonempty = (value) => typeof value === "string" && value.trim().length > 0;
 const utc = (value) => nonempty(value) && /Z$/.test(value) && Number.isFinite(Date.parse(value));
 const same = (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+export const metadataOnlyPath = (path) => path === "implementation/checkpoint.json" || path.startsWith("implementation/evidence/");
+export const metadataOnlyDelta = (paths) => paths.length > 0 && paths.every(metadataOnlyPath);
+const receiptFile = (id) => "implementation/evidence/" + id + ".json";
+const successorFile = (id) => "implementation/evidence/" + id + "-qualification.json";
+const validReceipt = (receipt, id) => receipt?.slice === id && receipt.status === "verified" && commit(receipt.revision) && Array.isArray(receipt.checks) && receipt.checks.length > 0 && receipt.checks.every((check) => check?.result === "pass" && nonempty(check.command) && nonempty(check.evidence));
+export const validQualification = (qualification, id, legacyBytes) => qualification?.kind === "prospective-qualification" && qualification.supersedes === receiptFile(id) && qualification.supersedesSha256 === sha256(legacyBytes) && qualification.sourceRepository === "ggilchrest/lifestream" && commit(qualification.testedRevision);
+export function receiptCandidates(root, id) {
+  const candidates = [{ path: receiptFile(id), successor: false }];
+  const successor = join(root, successorFile(id));
+  if (existsSync(successor)) candidates.push({ path: successorFile(id), successor: true });
+  return candidates;
+}
 export const safePath = (path) => typeof path === "string" && /^[A-Za-z0-9_.\/-]+$/.test(path) && !path.startsWith("/") && !path.endsWith("/") && !path.split("/").some((part) => ["", ".", "..", ".git", ".private"].includes(part));
 const strings = (value) => Array.isArray(value) && value.every(nonempty) && new Set(value).size === value.length;
 const readJSON = (path) => JSON.parse(readFileSync(path, "utf8"));
@@ -35,12 +47,12 @@ export function validateCheckpoint(checkpoint) {
   return errors;
 }
 
-export function preflightErrors({ checkpoint, slice, packet, publicBranch, publicRevision, publicChanges = [] }) {
+export function preflightErrors({ checkpoint, slice, packet, publicBranch, publicRevision, publicChanges = [], metadataOnlyRevisionAdvance = false }) {
   const errors = [...validateCheckpoint(checkpoint)];
   if (errors.length) return errors;
   if (checkpoint.activeSlice !== slice || !["notStarted", "inProgress"].includes(checkpoint.sliceStatus) || checkpoint.blockers.length) errors.push("Checkpoint does not select this slice as current unblocked work.");
   if (checkpoint.branch !== publicBranch) errors.push("Public branch does not match the checkpoint.");
-  if (checkpoint.currentRevision !== "WORKTREE" && checkpoint.currentRevision !== publicRevision) errors.push("Public revision does not match the checkpoint.");
+  if (checkpoint.currentRevision !== "WORKTREE" && checkpoint.currentRevision !== publicRevision && !metadataOnlyRevisionAdvance) errors.push("Public revision does not match the checkpoint.");
   if (checkpoint.currentRevision === "WORKTREE" && checkpoint.baseRevision !== publicRevision) errors.push("WORKTREE checkpoint base is not the current public HEAD.");
   if (!same(checkpoint.changedFiles, publicChanges)) errors.push("Actual public changes differ from checkpoint.changedFiles.");
   if (!packet || packet.slice !== slice) errors.push("Missing packet scope aid for the requested slice.");
@@ -76,21 +88,39 @@ export async function preflight(root, slice) {
     ...git(root, "diff", "--name-only", "HEAD").split("\n"),
     ...git(root, "ls-files", "--others", "--exclude-standard").split("\n")
   ].filter(Boolean));
-  errors.push(...preflightErrors({ checkpoint, slice, packet, publicBranch: git(root, "rev-parse", "--abbrev-ref", "HEAD"), publicRevision: git(root, "rev-parse", "HEAD"), publicChanges: [...publicChanges] }));
+  let metadataOnlyRevisionAdvance = false;
+  if (checkpoint.currentRevision !== "WORKTREE" && checkpoint.currentRevision !== git(root, "rev-parse", "HEAD")) {
+    try {
+      const delta = git(root, "diff", "--name-only", checkpoint.currentRevision, "HEAD").split("\n").filter(Boolean);
+      metadataOnlyRevisionAdvance = metadataOnlyDelta(delta);
+    } catch { metadataOnlyRevisionAdvance = false; }
+  }
+  errors.push(...preflightErrors({ checkpoint, slice, packet, publicBranch: git(root, "rev-parse", "--abbrev-ref", "HEAD"), publicRevision: git(root, "rev-parse", "HEAD"), publicChanges: [...publicChanges], metadataOnlyRevisionAdvance }));
   if (errors.length) return errors;
   try { git(root, "cat-file", "-e", checkpoint.baseRevision + "^{commit}"); }
   catch { errors.push("Checkpoint base revision is not available in the public repository."); }
   // Verified receipts demonstrate dependency checks at a revision; their shape is not correctness proof.
   for (const id of packet.prerequisites) {
-    try {
-      const receipt = readJSON(join(root, "implementation/evidence", id + ".json"));
-      if (receipt.slice !== id || receipt.status !== "verified" || !commit(receipt.revision) || !Array.isArray(receipt.checks) || !receipt.checks.length || receipt.checks.some((check) => check.result !== "pass" || !nonempty(check.command) || !nonempty(check.evidence))) throw new Error("invalid receipt");
-      git(root, "cat-file", "-e", receipt.revision + "^{commit}");
-      git(root, "merge-base", "--is-ancestor", receipt.revision, "HEAD");
-      const receiptPath = "implementation/evidence/" + id + ".json";
-      if (git(root, "show", "HEAD:" + receiptPath) !== readFileSync(join(root, receiptPath), "utf8").trim()) throw new Error("receipt is not committed at HEAD");
-      if (git(root, "status", "--porcelain", "--", "implementation/evidence/" + id + ".json")) throw new Error("uncommitted receipt");
-    } catch { errors.push("Missing/invalid immutable prerequisite receipt: " + id); }
+    let accepted = false;
+    for (const candidate of receiptCandidates(root, id)) {
+      try {
+        const fullPath = join(root, candidate.path);
+        const receipt = readJSON(fullPath);
+        if (!validReceipt(receipt, id)) throw new Error("invalid receipt");
+        if (candidate.successor) {
+          const qualification = receipt.qualification;
+          const legacyPath = join(root, receiptFile(id));
+          const legacyBytes = readFileSync(legacyPath);
+          if (!validQualification(qualification, id, legacyBytes)) throw new Error("invalid qualification");
+        }
+        git(root, "cat-file", "-e", receipt.revision + "^{commit}");
+        git(root, "merge-base", "--is-ancestor", receipt.revision, "HEAD");
+        if (git(root, "show", "HEAD:" + candidate.path) !== readFileSync(fullPath, "utf8").trim()) throw new Error("receipt is not committed at HEAD");
+        if (git(root, "status", "--porcelain", "--", candidate.path)) throw new Error("uncommitted receipt");
+        accepted = true; break;
+      } catch { /* try the next deterministic candidate */ }
+    }
+    if (!accepted) errors.push("Missing/invalid immutable prerequisite receipt: " + id);
   }
   if (errors.length) return errors;
   const { loadSlice, validatePacket } = await import(new URL("../.private/scripts/validate-handoff.mjs", import.meta.url));
