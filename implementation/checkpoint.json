@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "1c71f8e3c0fd9b8b1e6ca336fbe8046e7fc27333",
-  "currentRevision": "62c9425ee2ad9f0acfd54fb4d9efa8e6d6ec55c6",
+  "currentRevision": "0e5ce1630511fff8d05ff81672f5fd5375bf15fb",
   "activeSlice": "LS-S076",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -96,7 +96,8 @@
     "implementation/evidence/LS-S076-current-qualification.json",
     "apps/control-web/test/relationship-acceptance.test.mjs",
     "implementation/evidence/LS-S076-development-failed-resume-1.json",
-    "implementation/evidence/LS-S076-development-failed-resume-2.json"
+    "implementation/evidence/LS-S076-development-failed-resume-2.json",
+    "implementation/evidence/LS-S076-development-failed-resume-3.json"
   ],
   "changedFiles": [],
   "validation": [
