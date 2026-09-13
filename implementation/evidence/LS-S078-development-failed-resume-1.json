@@ -1,0 +1,15 @@
+{
+  "slice": "LS-S078",
+  "collectedAt": "2026-09-13T08:17:04.663Z",
+  "checks": [],
+  "exclusions": [
+    "No personal data, physical output, Human fit acceptance, training, deployment, production or provider service changes"
+  ],
+  "sourceRevision": "382436829a7dc507294797d8bbff6573efcfed60",
+  "scriptSha256": "a75479412b7372c2958b037aea6fb3df6cbb3abdd790306c244dc2116c1152ee",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "sourceWorktreeStatus": "",
+  "result": "fail",
+  "blocker": "Bounded rendered/provider check failed; no credentials logged.",
+  "failureEvidence": "(node:59010) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n✖ rendered Lab executes both representations, rejects a candidate and reviews a separate held-out promotion with rollback (6783.098084ms)\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 9332.527792\n\n✖ failing tests:\n\ntest at apps/control-web/test/relationship-lab.test.mjs:11:1\n✖ rendered Lab executes both representations, rejects a candidate and reviews a separate held-out promotion with rollback (6783.098084ms)\n  TypeError: Cannot read properties of undefined (reading 'status')\n      at run (file:///Users/gg/Development/Agentic/Tifa/lifestream/apps/control-web/test/relationship-lab.test.mjs:20:386)\n      at async TestContext.<anonymous> (file:///Users/gg/Development/Agentic/Tifa/lifestream/apps/control-web/test/relationship-lab.test.mjs:21:41)\n      at async Test.run (node:internal/test_runner/test:1125:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)\n"
+}
