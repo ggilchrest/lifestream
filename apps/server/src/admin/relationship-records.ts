@@ -28,7 +28,7 @@ export function applyRecordOperation(records: RelationshipRecord[], id: string, 
     candidateId: randomUUID(), content, source: "reviewed-record-derivation", sourceFamily: sources[0]!.sourceFamily,
     sourceFamilies: [...new Set(sources.flatMap(item => item.sourceFamilies ?? [item.sourceFamily]))], uncertainty: sources.some(item => item.uncertainty === "high") ? "high" : target.uncertainty,
     status: target.status === "approved" ? "approved" : "pending", revision: 1, contextUse: operation === "correct" ? "correction" : target.contextUse ?? "relevant",
-    category: target.category ?? "declaration", assertedBy: actor, createdAt: now, eventAt: target.eventAt ?? null, evidenceBasis: target.evidenceBasis ?? "userDeclaration", sensitivity: sources.some(item => item.sensitivity === "sensitive") ? "sensitive" : "personal",
+    category: target.category ?? "declaration", assertedBy: actor, createdAt: now, eventAt: target.eventAt ?? null, evidenceBasis: operation === "correct" ? "userDeclaration" : target.evidenceBasis ?? "userDeclaration", sensitivity: sources.some(item => item.sensitivity === "sensitive") ? "sensitive" : "personal",
     derivedFrom: sources.map(item => item.candidateId), approvedUse: target.approvedUse ? structuredClone(target.approvedUse) : null,
     suppressed: target.suppressed ?? false, audience: target.audience ?? "authenticatedSession", trainingExcluded: true,
     history: [{ operation, actor, at: now, revision: 1, relatedIds: sources.map(item => item.candidateId) }]
@@ -70,5 +70,18 @@ export function applyRecordOperation(records: RelationshipRecord[], id: string, 
 }
 export function recordOverview(records: RelationshipRecord[]) {
   const visible = records.filter(item => item.status !== "forgotten"), active = visible.filter(item => item.status === "approved");
-  return { total: records.length, categories: Object.fromEntries(recordCategories.map(category => [category, visible.filter(item => (item.category ?? "declaration") === category).length])), verifiedSharedEvents: 0, verifiedEventsLimitation: "This view contains authored/imported records; no verified event producer is connected.", activeRecords: active.length, pendingReview: visible.filter(item => item.status === "pending").length, retainedConflicts: visible.filter(item => item.conflicts?.some(conflict => conflict.status === "retained")).length, sourceFamilies: new Set(visible.flatMap(item => item.sourceFamilies ?? [item.sourceFamily])).size, sourceDiversityLimitation: "Attributed source families are not independent verification.", highUncertainty: visible.filter(item => item.uncertainty === "high").length, latestRecordAt: visible.map(item => item.createdAt ?? item.builder?.reviewedAt ?? "").sort().at(-1) || null, coverage: "Available authored and imported context only; no claim of complete personal understanding." };
+  return { total: records.length, categories: Object.fromEntries(recordCategories.map(category => [category, visible.filter(item => (item.category ?? "declaration") === category).length])), verifiedSharedEvents: 0, verifiedEventsLimitation: "This view contains authored/imported records; no verified event producer is connected.", activeRecords: active.length, pendingReview: visible.filter(item => item.status === "pending").length, retainedConflicts: visible.filter(item => hasRetainedRecordConflict(item)).length, sourceFamilies: new Set(visible.flatMap(item => item.sourceFamilies ?? [item.sourceFamily])).size, sourceDiversityLimitation: "Attributed source families are not independent verification.", highUncertainty: visible.filter(item => item.uncertainty === "high").length, latestRecordAt: visible.map(item => item.createdAt ?? item.builder?.reviewedAt ?? "").sort().at(-1) || null, coverage: "Available authored and imported context only; no claim of complete personal understanding." };
+}
+
+export function hasRetainedRecordConflict(record: RelationshipRecord): boolean {
+  return !!record.conflicts?.some(conflict => conflict.status === "retained") || !!record.builder?.conflicts.length;
+}
+export function recordContextContent(record: RelationshipRecord): string {
+  // Qualify the evidence before the shared compiler; no new source or support is created.
+  if (record.contextUse === "correction" && record.evidenceBasis === "userDeclaration") return record.content;
+  const qualifiers: string[] = [];
+  if (record.category === "episode") qualifiers.push("Authored/imported account; not a verified shared event");
+  if (record.evidenceBasis === "modelInference") qualifiers.push("Unverified hypothesis");
+  if (record.builder) qualifiers.push(`Imported ${record.evidenceBasis ?? "observation"}; attributed source, not independent verification`);
+  return qualifiers.length ? `[${qualifiers.join("; ")}] ${record.content}` : record.content;
 }
