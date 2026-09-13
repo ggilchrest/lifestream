@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "a1b34a9deb982dc52ed08847a40c0511fd274801",
-  "currentRevision": "a1b34a9deb982dc52ed08847a40c0511fd274801",
+  "currentRevision": "a41d21ce995c13d402bcd20d8593aa782a13001b",
   "activeSlice": "LS-S063",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -93,10 +93,12 @@
     "implementation/evidence/LS-S062-qualification-resume-3.json",
     "implementation/evidence/LS-S062-current-qualification.json",
     "implementation/evidence/LS-S069-qualification-resume-2.json",
-    "implementation/evidence/LS-S069-current-qualification.json"
+    "implementation/evidence/LS-S069-current-qualification.json",
+    "implementation/evidence/LS-S063-qualification-resume-3.json"
   ],
   "changedFiles": [
-    "implementation/checkpoint.json"
+    "apps/control-web/test/personalization.test.mjs",
+    "apps/server/src/index.ts"
   ],
   "validation": [],
   "decisions": [
