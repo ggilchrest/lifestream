@@ -73,3 +73,16 @@ test("real-authenticated ordinary turns use one scoped view, reviewed correction
   const forged={id:randomUUID(),assistantId:one,content:'UNREVIEWED_IMPORTED_CONTEXT',provenance:{actor:session.session.principalId,source:'forged-approval'},lifecycle:{status:'active',revision:1},createdAt:new Date().toISOString()};assert.equal((await post(path+'/memories/import',{dataScope:'assistant-memories',assistantId:one,memories:[forged]})).status,201);assert.doesNotMatch((await turn(one,'UNREVIEWED_IMPORTED_CONTEXT')).content,/UNREVIEWED_IMPORTED_CONTEXT/,'claimed imported lifecycle is not a native approval event');
   assert.equal((await post('/api/runtime/v1/session-context',{expectedRevision:1,mode:'text',audienceScope:'unknown'})).status,200);const withheld=await turn(one);assert.doesNotMatch(withheld.content,/two short sentences|project language is Python/);assert.match(withheld.content,/audience scope is unknown/);
 });
+
+ test("typed deadline and caller cancellation retain distinct terminal reasons", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  for (const mode of ["deadline", "cancel"] as const) {
+    const outer = new AbortController(); let output = "";
+    const response = { destroyed: false, writeHead() {}, write(value: string) { output += value; }, end() {} } as unknown as import("node:http").ServerResponse;
+    const provider: InferenceProvider = { async *generate(_request, context) { await new Promise<void>(resolve => context.signal.addEventListener("abort", () => resolve(), { once: true })); yield { kind: "text", text: "LATE_OUTPUT" }; } };
+    const pending = streamMessage(response, provider, { userInput: "synthetic" }, "session", outer.signal);
+    if (mode === "deadline") t.mock.timers.tick(10001); else outer.abort();
+    await pending;
+    assert.match(output, mode === "deadline" ? /deadline_exceeded/u : /cancelled/u); assert.doesNotMatch(output, /runtime_input_stale|LATE_OUTPUT|interaction.completed/u);
+  }
+ });

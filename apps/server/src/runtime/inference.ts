@@ -17,18 +17,20 @@ export async function streamMessage(response: ServerResponse, provider: Inferenc
   response.writeHead(200, { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", connection: "keep-alive" }); writeEvent(response, "interaction.started", { interactionId, sessionId, assistantId, ...(providerIdentity ? { provider: providerIdentity } : {}) }); writeEvent(response, "input.manifest", request.manifest);
   const requestedCapability = body.readOnlyCapability && typeof body.readOnlyCapability === "object" && !Array.isArray(body.readOnlyCapability) ? body.readOnlyCapability as Record<string, unknown> : undefined;
   if (requestedCapability && typeof requestedCapability.name === "string" && requestedCapability.name && requestedCapability.input && typeof requestedCapability.input === "object" && !Array.isArray(requestedCapability.input)) writeEvent(response, "capability.read-only", { name: requestedCapability.name, input: requestedCapability.input, effect: "read-only" });
+  const abortCode = () => controller.signal.reason instanceof Error && controller.signal.reason.message === "deadline" ? "deadline_exceeded" : "cancelled";
   let terminal = false;
   try {
     for await (const chunk of provider.generate(request, { signal: controller.signal })) {
       if (response.destroyed) break;
-      if (controller.signal.aborted || hostInput && !hostInput.isCurrent()) { terminal = true; controller.abort(); writeEvent(response, "interaction.error", { code: "runtime_input_stale", message: "The interaction context changed. Please retry with the current scope." }); break; }
+      if (hostInput && !hostInput.isCurrent()) { terminal = true; controller.abort(); writeEvent(response, "interaction.error", { code: "runtime_input_stale", message: "The interaction context changed. Please retry with the current scope." }); break; }
+      if (controller.signal.aborted) { terminal = true; writeEvent(response, "interaction.error", { code: abortCode(), message: "Inference stopped before completion." }); break; }
       if (chunk.kind === "text") writeEvent(response, "message.delta", { interactionId, text: chunk.text ?? "" });
       else if (chunk.kind === "capabilityRequest") writeEvent(response, "capability.read-only", chunk.capability);
       else if (chunk.kind === "error") { terminal = true; writeEvent(response, "interaction.error", chunk.error); break; }
       else if (chunk.kind === "done") { terminal = true; writeEvent(response, "interaction.completed", { interactionId, ...(providerIdentity ? { provider: providerIdentity } : {}) }); break; }
     }
-    if (!terminal && !response.destroyed) writeEvent(response, "interaction.error", { code: controller.signal.aborted ? "cancelled" : "missing_provider_terminal", message: "Inference ended without a successful terminal." });
+    if (!terminal && !response.destroyed) writeEvent(response, "interaction.error", { code: controller.signal.aborted ? abortCode() : "missing_provider_terminal", message: "Inference ended without a successful terminal." });
   } catch {
-    if (!terminal && !response.destroyed) writeEvent(response, "interaction.error", { code: controller.signal.aborted ? "cancelled" : "inference_unavailable", message: "Inference could not complete." });
+    if (!terminal && !response.destroyed) writeEvent(response, "interaction.error", { code: controller.signal.aborted ? abortCode() : "inference_unavailable", message: "Inference could not complete." });
   } finally { clearTimeout(deadline); controller.abort(); aborted.removeEventListener("abort", onAbort); response.end(); }
 }
