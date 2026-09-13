@@ -1,0 +1,120 @@
+{
+  "slice": "LS-S063",
+  "status": "verified",
+  "claimClass": "technical-core",
+  "caseIds": [
+    "LS-TEST-081"
+  ],
+  "revision": "00d73b3ce23a03526d19a679d756d6a95f83b9fa",
+  "checks": [
+    {
+      "command": "pnpm build; pnpm typecheck; pnpm lint; pnpm test",
+      "result": "pass",
+      "evidence": "249 source tests pass, including candidate admission/correction journals, import boundaries, restart and real local authentication."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled-playwright>/index.mjs pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "15 checks pass. The actual Chrome personalization journey imports a falsely active revision and verifies it becomes a new inactive candidate while its original lifecycle remains labeled source provenance; correction, reversal, conflict, suppression, scope and restart checks also pass."
+    }
+  ],
+  "exclusions": [
+    "Technical API/storage and actual authenticated browser qualification with isolated synthetic identities/data. No physical, perceptual, Human or production acceptance.",
+    "Append-only corrections retain original history. Suppression is distinct from erasure. Joined forgetting, private relationship records and real-provider ordinary context behavior remain under their existing S073/S075/S080 owners."
+  ],
+  "qualification": {
+    "kind": "prospective-qualification",
+    "sourceRepository": "ggilchrest/lifestream",
+    "testedRevision": "00d73b3ce23a03526d19a679d756d6a95f83b9fa",
+    "supersedes": "implementation/evidence/LS-S063.json",
+    "supersedesSha256": "d52f63e07284db601d36f650d627dfd57729df7833207c77e9f53383af3cca67",
+    "sourceArtifacts": [
+      {
+        "path": "apps/control-web/app.js",
+        "sha256": "313daa1866c57b1d02f32f3f1243a20006e5e14bfb05f6becbbf496d53b2a0e6"
+      },
+      {
+        "path": "apps/control-web/auth.js",
+        "sha256": "03c94331538e0036efb0d01ec3f06ec684bc5585aabc4996e25702ab7a5c4a78"
+      },
+      {
+        "path": "apps/control-web/security.js",
+        "sha256": "e65958d5388f8e35086723a6e5fa27d4dd507d940faa158f8f8d239f023fcc63"
+      },
+      {
+        "path": "apps/control-web/test/local-auth.test.mjs",
+        "sha256": "bc9966ad34e7ec89b92eed94a0e7ca34da9777a1fe5dc460a339e1dfb8e2f4c4"
+      },
+      {
+        "path": "apps/control-web/test/personalization.test.mjs",
+        "sha256": "8c5b28446e1c803e6370be77bf8c92fe59d6e51e8b0d7f39075bc9116d3550cd"
+      },
+      {
+        "path": "apps/server/src/admin/personalization-capabilities.ts",
+        "sha256": "ce1c1484e0dafe967899276637849de29b6cbc3f043b8d97da8e5ae5cd521318"
+      },
+      {
+        "path": "apps/server/src/admin/security-administration.ts",
+        "sha256": "33e3f3e04e76108a40ffabc42b8a653d4bdf1334dd7e88f303ad4b8f62b1ee02"
+      },
+      {
+        "path": "apps/server/src/auth/local-auth.ts",
+        "sha256": "626d951f58891adafb6af5c4d50ca8864c59c6ef70ec388a333f46222dc6ab6c"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "f002ddb0a697a0214af397adea5cb85912fa62343f92067370a52ab263f573bb"
+      },
+      {
+        "path": "apps/server/test/personalization-capabilities.test.ts",
+        "sha256": "f84e93f4762d42adb110ea2debd5fc4de789c64a3648525e57b5ffd9a4d64fef"
+      },
+      {
+        "path": "apps/server/test/server.test.ts",
+        "sha256": "981186118893806a6e8d1f0be6794074cf33b4897099c88d2753feef987f1b05"
+      },
+      {
+        "path": "package.json",
+        "sha256": "746b5d4e86475827d12b62c0280f3373795bfb28fe26106967e947422b2fe312"
+      },
+      {
+        "path": "packages/contracts/src/schemas/assistant-profile.schema.json",
+        "sha256": "ccaa756d700492c18385f736aec41d775aa81a9eda8b0019c444e912ed38b77f"
+      },
+      {
+        "path": "packages/contracts/src/validator.ts",
+        "sha256": "f1e46c11c1c7598645b2d9e56267245a52f8a5c79d6e89fbba178292b491d614"
+      },
+      {
+        "path": "packages/storage-sqlite/src/assistant-profile.ts",
+        "sha256": "09f6fbe7f654d436963e089ade2f61dab8d9328b0c9be9850afa6dfb5334f933"
+      },
+      {
+        "path": "packages/storage-sqlite/src/database.ts",
+        "sha256": "062f4f577bae3db54d31c3d54304003982ac0960cb8f7a898d2d261b6d34ab19"
+      },
+      {
+        "path": "packages/storage-sqlite/src/memory.ts",
+        "sha256": "c28939b0294a0a4bfeb4ad5599d40c1d24b2d71ebd84107451b4d4d2db70db69"
+      },
+      {
+        "path": "packages/storage-sqlite/test/memory.test.ts",
+        "sha256": "b668b3f0777c6c59b06ff4410ac58966e64eb2cddce7d0961760eef6f5f61503"
+      }
+    ],
+    "effectiveSpecification": {
+      "sourceRepository": "ggilchrest/lifestream-specs",
+      "revision": "c3e9c68010bb34172c98a7c67ad987ec1cbe4d00",
+      "artifacts": [
+        {
+          "path": "docs/25-assistant-personalization-administration.md",
+          "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+        },
+        {
+          "path": "fixtures/requirement-traceability.json",
+          "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+        }
+      ]
+    }
+  }
+}
