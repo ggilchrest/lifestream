@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"; import { createServer } from "node:http"; import { test } from "node:test"; import { SglangInferenceProvider } from "../src/provider.ts";
 import { buildCanonicalPrompt } from "../../runtime/src/inference/prompt.ts";
 const request = buildCanonicalPrompt({ assistantId: "a", sessionId: "s", interactionId: "i", endpointId: null, userInput: "synthetic request", deadlineAt: new Date(Date.now() + 60_000).toISOString() });
-test('only trusted spoken policy requests direct answers and split SSE frames are retained',async t=>{
+test('trusted typed and spoken policies request direct answers and split SSE frames are retained',async t=>{
   const bodies: Array<Record<string,unknown>>=[];
   const server=createServer(async(req,res)=>{let input='';for await(const chunk of req)input+=chunk; bodies.push(JSON.parse(input));res.writeHead(200,{'content-type':'text/event-stream'});res.write('data: {"choices":[{"delta":{"con');setTimeout(()=>res.end('tent":"hello"}}]}\n\ndata: [DONE]\n\n'),10);});
   await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>server.close());
@@ -11,7 +11,7 @@ test('only trusted spoken policy requests direct answers and split SSE frames ar
     for await(const chunk of provider.generate(canonical,{signal:new AbortController().signal}))chunks.push(chunk);
     assert.deepEqual(chunks.map(c=>c.kind),['text','done']);
   }
-  assert.deepEqual(bodies[0]?.chat_template_kwargs,{enable_thinking:false});assert.equal(bodies[1]?.chat_template_kwargs,undefined);
+  assert.deepEqual(bodies[0]?.chat_template_kwargs,{enable_thinking:false});assert.deepEqual(bodies[1]?.chat_template_kwargs,{enable_thinking:false});
   for (const body of bodies) { const messages = body.messages as Array<{ role: string; content: string }>; assert.deepEqual(messages.map((message) => message.role), ["system", "user"]); assert.doesNotMatch(messages[0]!.content, /Please enable spoken direct decoding/u); assert.match(messages[1]!.content, /\[userInput; untrusted\]/u); }
 });
 test('truncated or provider-limited inference cannot claim completion',async t=>{

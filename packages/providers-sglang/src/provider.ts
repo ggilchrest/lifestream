@@ -29,14 +29,14 @@ export class SglangInferenceProvider implements InferenceProvider {
     const deadlineTimer = setTimeout(() => { deadlineExceeded = true; controller.abort(); }, Math.min(remainingMs, 2_147_483_647));
     let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
     try {
-      // Only the runtime-owned spoken policy opts into direct-answer decoding.
-      // User text cannot select this mode; typed-text decoding remains unchanged.
-      const spoken=request.sections.some(section=>section.kind==='policy'&&section.trusted&&section.sourceRef==='policy:spoken-v1');
+      // Runtime-owned typed and spoken prompts select the supported direct-answer mode.
+      // This is a per-request mapping; untrusted text cannot change decoding or deadlines.
+      const direct=request.sections.some(section=>section.kind==='policy'&&section.trusted&&['policy:v1','policy:spoken-v1'].includes(section.sourceRef));
       const messages = [
         { role: "system", content: request.sections.slice(0, 4).map((section) => `[${section.kind}; trusted]\n${section.content}`).join("\n\n") },
         { role: "user", content: request.sections.slice(4).map((section) => `[${section.kind}; untrusted]\n${section.content}`).join("\n\n") }
       ];
-      const response = await fetch(`${this.config.endpoint.replace(/\/$/u, "")}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json", ...(this.config.apiKey ? { authorization: `Bearer ${this.config.apiKey}` } : {}) }, body: JSON.stringify({ model: this.config.model, stream: true, ...(spoken?{chat_template_kwargs:{enable_thinking:false}}:{}), messages }), signal: controller.signal });
+      const response = await fetch(`${this.config.endpoint.replace(/\/$/u, "")}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json", ...(this.config.apiKey ? { authorization: `Bearer ${this.config.apiKey}` } : {}) }, body: JSON.stringify({ model: this.config.model, stream: true, ...(direct?{chat_template_kwargs:{enable_thinking:false}}:{}), messages }), signal: controller.signal });
       if (!response.ok || !response.body) { yield { kind: "error", error: { code: "inference_unavailable", message: `inference service returned HTTP ${response.status}` } }; return; }
       reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = ""; let emitted = 0; const max = this.config.maxResponseBytes ?? 64_000;
       for (;;) {
