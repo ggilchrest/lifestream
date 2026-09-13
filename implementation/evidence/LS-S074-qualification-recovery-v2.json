@@ -1,0 +1,201 @@
+{
+  "slice": "LS-S074",
+  "status": "verified",
+  "claimClass": "technical-core",
+  "revision": "f2077f285bd5c113e265b5f6fd6909792d099866",
+  "caseIds": [
+    "LS-TEST-101"
+  ],
+  "recordedAt": "2026-09-13T04:24:23.094423Z",
+  "checks": [
+    {
+      "command": "pnpm typecheck && pnpm build",
+      "result": "pass",
+      "evidence": "Strict typecheck and build passed at the committed source. Storage migration SQL was staged locally from packages/storage-sqlite/src/migrations into its dist/migrations before tests; shared build-script correction remains on the separate authentication branch."
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "224 public tests passed at the committed source in 3063 ms, including actual temporary-loopback fixture-authenticated selected-upload, inventory, pinned snapshot, async local parser, inactive review, corrected/rejected candidates, atomic per-item admission, captured canonical inference request, and restart/requery."
+    },
+    {
+      "command": "pnpm lint && pnpm test:browser-surface && node --check apps/control-web/profile-builder.js && git diff --check",
+      "result": "pass",
+      "evidence": "Lint, JavaScript syntax and whitespace checks passed; 13 existing static browser-surface tests passed. These are not rendered-browser execution."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "53 private specification tests and canonical catalog/manifest/structural validation passed; private payloads are excluded from this public receipt."
+    }
+  ],
+  "qualification": {
+    "kind": "prospective-qualification",
+    "sourceRepository": "ggilchrest/lifestream",
+    "testedRevision": "f2077f285bd5c113e265b5f6fd6909792d099866",
+    "supersedes": "implementation/evidence/LS-S074.json",
+    "supersedesSha256": "6dd971f285b83b774a39eae0925dd5b75967584ec7368a28abfbf5aec8228756",
+    "sourceArtifacts": [
+      {
+        "path": "apps/control-web/app.js",
+        "sha256": "953de6132f74a0c1cd83c92593f23b4712e1b7937374e025b8e6477d05eb0d60"
+      },
+      {
+        "path": "apps/control-web/profile-builder.js",
+        "sha256": "4304abd0e7476bdf5c75b911dd5bee7e2d4345764dd1801dc61f823d211e4e09"
+      },
+      {
+        "path": "apps/server/src/admin/profile-builder.ts",
+        "sha256": "5ef3b531f32dc3eb3a516a224759c91c576860c8c64a6f70dfe30f86e4ab00e1"
+      },
+      {
+        "path": "apps/server/src/config/loader.ts",
+        "sha256": "80bc89ebe5ae03d9568558c1c3cfff2a3ef52f90694540b0b7509e419db1913f"
+      },
+      {
+        "path": "apps/server/src/config/schema.ts",
+        "sha256": "3632d3c163ac97ec5fc03f094ff31dc41574a9477e1aac6bfb3fc96c72476a5a"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "070e16a99791eaeae8f9e05dbe9a5f3f63bd9add52c9d26bd55f0c78c4628bbd"
+      },
+      {
+        "path": "apps/server/src/runtime/inference.ts",
+        "sha256": "bee4cb71c4df6f737e24a5640ce3f894f8231ee880bb816f70dbaacbd43bc1a6"
+      },
+      {
+        "path": "apps/server/test/profile-builder.test.ts",
+        "sha256": "baa20982e3897b498914612b97b5d37b8d9676e794a670290f036683406a1a80"
+      },
+      {
+        "path": "apps/server/test/server.test.ts",
+        "sha256": "1ca0e9a614a9470d8efb70b4d8ec5a882c1b4fbe50a9acb3245ce1448444d0bc"
+      },
+      {
+        "path": "apps/server/tsconfig.json",
+        "sha256": "6e28105c8f46c77c6c42bf38de3a5a08d832943711b31fafd4d7f893366b6c49"
+      },
+      {
+        "path": "package.json",
+        "sha256": "db8505f6110bff0dc525756856666453ee2bb15f91a9776cfdbaf537679ef0c6"
+      },
+      {
+        "path": "packages/runtime/src/context/builder.ts",
+        "sha256": "13a036b3e0e8b07ded7c2c1b74f3a05031b34a71be1ef1e303344014aa8ac6b7"
+      },
+      {
+        "path": "packages/runtime/src/inference/fixture.ts",
+        "sha256": "318a3b2cfc9bd9a332a1d4328cfc48253c475f39ad23bc435261a0d60589f41a"
+      },
+      {
+        "path": "packages/runtime/src/inference/prompt.ts",
+        "sha256": "b956b8a6aea383cfe229ac7c53539506bec5f82027c05782a6a7ce1a294c6443"
+      },
+      {
+        "path": "packages/storage-sqlite/src/database.ts",
+        "sha256": "062f4f577bae3db54d31c3d54304003982ac0960cb8f7a898d2d261b6d34ab19"
+      },
+      {
+        "path": "packages/storage-sqlite/src/index.ts",
+        "sha256": "da2f1f16ea3d4de2d11bc94d62a1f9cff0a15d311c1787caa725f5184d773141"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0018_profile_builder.sql",
+        "sha256": "fc566fe34c0ebc260cf7278145f607a06f8590f86cb0aeeb804514f08c65fed3"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/index.ts",
+        "sha256": "3690536c6fa8046450a48a0fe205483dbf8df6ea5cfe81bb8064ded7fb061e4a"
+      },
+      {
+        "path": "packages/storage-sqlite/src/profile-builder.ts",
+        "sha256": "758b78fed6581316f67d5d257b1e86f13cf10f180743255706e676f79116deed"
+      },
+      {
+        "path": "packages/storage-sqlite/test/database.test.ts",
+        "sha256": "d19dd78d77c13fd948937d7c1542623f56653bc040af67f550aefa48c341781b"
+      },
+      {
+        "path": "packages/storage-sqlite/test/profile-builder.test.ts",
+        "sha256": "9b4d5e036d56519cdd944df92518dcf3b2eecec090d64f3a1f351b45d06e225f"
+      },
+      {
+        "path": "packages/storage-sqlite/test/rehearsal.test.ts",
+        "sha256": "39a99ed66c7feead82a69f0474bb7c09aa1a378416e37ca31f52bc2b349b6d9f"
+      },
+      {
+        "path": "packages/storage-sqlite/test/skills.test.ts",
+        "sha256": "5ffe7ab059ccfde687f99c3465abd2e54d9e70c7302a4917151986da6442876b"
+      },
+      {
+        "path": "pnpm-lock.yaml",
+        "sha256": "09f580784bb312df9cdc52d6f6ce07fa3f0c398b107b5f2d69043155f6f73453"
+      },
+      {
+        "path": "tsconfig.base.json",
+        "sha256": "de570aee4bb82624f4e35c998ef8282545b9f4b561bbdd97ff331dc6942b8dfb"
+      }
+    ],
+    "effectiveSpecification": {
+      "sourceRepository": "ggilchrest/lifestream-specs",
+      "revision": "9ed59fbb4b3ad91f3693823b9b3de0d7adb87b3d",
+      "artifacts": [
+        {
+          "path": "docs/26-assistant-context-and-relationship-administration.md",
+          "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+        },
+        {
+          "path": "docs/04-memory-and-dreaming.md",
+          "sha256": "6705718a8071eee52a70878f306ec52381a3caac5c4bee517f208f6452defe5f"
+        },
+        {
+          "path": "docs/12-security-and-trust.md",
+          "sha256": "67a3b094f28d0697db9e720501376616425f85ff3240c8ecd813e07f6d8c4e0b"
+        },
+        {
+          "path": "docs/13-deployment-and-configuration.md",
+          "sha256": "ce961b2b6377b953b50eaa3d4e03e107892dab18163bbd9de5d94b47d7d77328"
+        },
+        {
+          "path": "fixtures/requirement-traceability.json",
+          "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+        }
+      ]
+    }
+  },
+  "profile": {
+    "name": "test",
+    "authentication": "fixture-context; real local authentication integration is separate LS-S069 work",
+    "inference": "existing fixture provider, observed actual prepared request; no selected development provider called",
+    "extraction": "bounded-local-v1, local deterministic parsers; zero provider calls and closed egress"
+  },
+  "implemented": [
+    "Declared selected-file UTF-8 notes, structured profile, JSON conversation and NDJSON conversation formats; explicit scope and unsupported input reporting.",
+    "SQLite inventory, immutable content-digest snapshot, durable job revisions, bounded asynchronous extraction and explicit cancel/resume/restart disposition.",
+    "Inactive candidates preserve subject, evidence basis, event/source dates, sensitivity, source digest/locator, source-family correlation, uncertainty, conflicts, extraction version and explicit use scope.",
+    "Renamed unchanged imports reuse candidates; changed provenance creates a new inactive review difference without independent support.",
+    "Granular/grouped revision-checked correction and rejection, explicit approval/use selection, transactional owner-record/admission marker persistence, and resumable per-item outcomes.",
+    "Existing administration route and a selected-file control utility; approved imports default to relevant context and never imply baseline conventions, direct corrections, tools or training authority."
+  ],
+  "limits": {
+    "files": 8,
+    "fileBytes": 65536,
+    "totalBytes": 262144,
+    "records": 256,
+    "textUnits": 16384,
+    "durationMs": 2000,
+    "providerCalls": 0,
+    "concurrentJobs": 2
+  },
+  "remaining": [
+    "Real-local-authentication and rendered browser integration must run after the independent branches are integrated.",
+    "S075 owns the full record administration and LS-MEM-082 rendered/use acceptance; this receipt proves the scoped S074 intake and admission plumbing only.",
+    "S080 must include the builder job/candidate/snapshot tables in its joined forget/restore invalidation graph.",
+    "Human acceptance remains pending for the new behavior; historical narrower S074 Human acceptance is preserved unchanged."
+  ],
+  "excluded": [
+    "No actual personal-data import, private machine-schema export, archive or directory scanning, live connector, cloud extraction, training, deployment, publication or configuration activation.",
+    "No real-provider model suitability, physical I/O, production or new Human acceptance claim."
+  ]
+}

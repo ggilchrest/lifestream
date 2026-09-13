@@ -7,3 +7,5 @@ export { InitiativeLedgerRepository } from "./initiative.js";
 export type { InitiativeLedgerRecord } from "./initiative.js";
 export { GrantRepository } from "./authority/grants.js";
 export { AdmissionRepository } from "./authority/admission.js";
+export { PROFILE_BUILDER_LIMITS, ProfileBuilderError, ProfileBuilderRepository, inventoryUploads, safeProfileName, profileDigest } from "./profile-builder.js";
+export type { ProfileBuilderJob, ProfileCandidate, ProfileUpload, ProfileSource, ProfileFormat, ExtractedRecord, EvidenceBasis, ApprovedUse } from "./profile-builder.js";
