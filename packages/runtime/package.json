@@ -55,6 +55,14 @@
     "./context/cache": {
       "types": "./dist/context/cache.d.ts",
       "import": "./dist/context/cache.js"
+    },
+    "./dreaming/apply": {
+      "types": "./dist/dreaming/apply.d.ts",
+      "import": "./dist/dreaming/apply.js"
+    },
+    "./dreaming/proposal-validator": {
+      "types": "./dist/dreaming/proposal-validator.d.ts",
+      "import": "./dist/dreaming/proposal-validator.js"
     }
   },
   "scripts": {
