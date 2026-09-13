@@ -1,6 +1,6 @@
 {
   "kind": "current-qualification",
   "slice": "LS-S052",
-  "path": "implementation/evidence/LS-S052-qualification-recovery-v3.json",
-  "sha256": "f50edd5cdc52130a0d192edfd95b4862fcad3b8f2b369985e1206fbbc804470e"
+  "path": "implementation/evidence/LS-S052-qualification-resume-1.json",
+  "sha256": "2f45851fc5362be5ff1905717e6f9f3450073a777a579ef992cd314e2ec6aa15"
 }
