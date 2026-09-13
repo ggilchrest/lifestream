@@ -1,0 +1,25 @@
+{
+  "slice": "LS-S062",
+  "status": "verified",
+  "claimClass": "technical-core",
+  "caseIds": [
+    "LS-TEST-080"
+  ],
+  "revision": "877b585377a4eab87a9511c10f3fc47629c2a793",
+  "checks": [
+    {
+      "command": "pnpm build && pnpm typecheck && pnpm lint",
+      "result": "pass",
+      "evidence": "Integrated shared administration foundation builds and passes strict types/lint."
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/personalization-capabilities.test.ts apps/server/test/server.test.ts",
+      "result": "pass",
+      "evidence": "20 tests pass at committed merged source: two neutral Assistants share API; capability inventory; validated file drafts; preview without saved revisions or memory writes; rejected secrets/stale/unauthorized activation; atomic revision lifecycle, import/export and restart."
+    }
+  ],
+  "exclusions": [
+    "Contract/API foundation uses the existing fixture authority profile; selected real local authentication is required separately under S069.",
+    "No Human, physical, perceptual, production, or full S075 rendered relationship acceptance."
+  ]
+}
