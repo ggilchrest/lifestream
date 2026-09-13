@@ -2,10 +2,10 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "30f334e024b9ba00fe04b1d7b84babb19916ad6f",
-  "currentRevision": "b7a709aa9673a3a2d82038f83585485fd37080a8",
-  "activeSlice": "LS-S081",
-  "sliceStatus": "blocked",
+  "baseRevision": "5bd57d8956e5a182075fd0e31ecd66eca29f36f2",
+  "currentRevision": "5bd57d8956e5a182075fd0e31ecd66eca29f36f2",
+  "activeSlice": "LS-S001",
+  "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
     "LS-S002",
@@ -64,15 +64,19 @@
     "LS-S076",
     "LS-S077",
     "LS-S078",
-    "LS-S079"
+    "LS-S079",
+    "LS-S072"
   ],
   "allowedFiles": [
-    "tests/relationship-acceptance.test.ts",
-    "apps/control-web/test/relationship-acceptance.test.mjs",
+    "scripts/workspace.mjs",
+    "scripts/workspace.test.mjs",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S081.json"
+    "implementation/evidence/LS-S072-qualification-recovery-v2.json",
+    "implementation/evidence/LS-S072-current-qualification.json"
   ],
-  "changedFiles": [],
+  "changedFiles": [
+    "implementation/checkpoint.json"
+  ],
   "validation": [
     {
       "command": "node --test --experimental-strip-types scripts/candidate-manifest.test.mjs",
@@ -223,22 +227,27 @@
       "command": "node scripts/workspace.test.mjs",
       "result": "pass",
       "evidence": "14 deterministic checkpoint/preflight, metadata-only revision, and successor-qualification tests passed during 2026-09-12 reconciliation."
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "evidence": "43 tests pass, including temporary independent repositories, current-proof integrity, private S072 structural-only claims and strict checkpoint ancestry."
+    },
+    {
+      "command": "prerequisiteErrors LS-S072 with consuming S074 claim",
+      "result": "pass",
+      "evidence": "Committed sanitized reference verifies private source, per-run structural receipt, original receipt bytes, effective inputs and open LS-TEST-091 runtime/security obligations."
     }
   ],
   "decisions": [
     "WSL development isolation remains application-level: host physical GPU index 1 is exposed as provider-local cuda:0 through CUDA_VISIBLE_DEVICES=1; strict container GPU invisibility is not claimed.",
     "LS-DEC-038 adds an explicitly selected Mac-local development fallback using Ollama Qwen3.5 2B Q4_K_M plus native MLX VoxCPM2 4-bit TTS and compact English Moonshine Tiny STT; no automatic failover or NeMo-equivalent streaming partials are claimed.",
-    "2026-09-11: LS-DEC-040 expanded scope adopted in the independent specification repository; this pass is documentation/planning only. No new implementation, scenario acceptance, provider/model choice or execution permission is implied. Canonical specification adoption commit: 30f8605a8a94f7ab6a45a832885008551ec91411."
+    "2026-09-11: LS-DEC-040 expanded scope adopted in the independent specification repository; this pass is documentation/planning only. No new implementation, scenario acceptance, provider/model choice or execution permission is implied. Canonical specification adoption commit: 30f8605a8a94f7ab6a45a832885008551ec91411.",
+    "2026-09-13 replacement recovery v2 executes the bounded core batch through S081. Prior planning-only holds are historical. S083/S084 remain later adopted scope. Scoped local commits only; no push/deployment/live configuration/import/training or Human acceptance."
   ],
-  "blockers": [
-    "LS-S071 prerequisite is implemented only at WORKTREE and lacks revision-bound acceptance evidence for LS-TEST-089.",
-    "LS-S073 prerequisite is implemented only at WORKTREE and lacks revision-bound acceptance evidence for LS-TEST-092/093/094/096/100.",
-    "LS-S080 remains inProgress; LS-TEST-102/104 and the combined S080/S081 Human review are outstanding.",
-    "LS-S075 is fixture-authenticated evidence only; real protected administration remains owned by LS-S069.",
-    "LS-S078 historical receipt contains an observed browser check; preserve it and obtain a prospective all-pass qualification before treating it as an immutable prerequisite."
-  ],
-  "nextAction": "Repair or qualify the listed prerequisite evidence in owner order, then run LS-S081 acceptance LS-TEST-106; keep S081 as the bounded final milestone and do not widen its four-file acceptance scope.",
-  "updatedAt": "2026-09-12T16:35:00Z",
+  "blockers": [],
+  "nextAction": "S052 prospective development qualification, then complete the existing dependency path through S081; structural S072 does not close runtime/security.",
+  "updatedAt": "2026-09-13T04:08:09.998408Z",
   "updatedBy": "Codex",
-  "notes": "Revision 2 voice stabilization: original 60-second-deadline regression, three GPU long browser replies, and final 30-minute GPU/Mac synthetic conversation/recovery runs passed their named functional checks. Both profiles fail observed latency targets; Mac retains up to 8.36-second starvation. GPU qAizVX had 29 whole transcripts, 19 completed voiced replies, nine interruptions and three reconnects with zero starvation; Mac RsEmQ3 had 29 whole transcripts, 17 completed voiced replies, eleven interruptions and three reconnects. Each ends one active turn deliberately at the time limit. No failed turns or late fenced audio in either final run. Mac sampling-boundary cancellation released actual compute in about 105-106 ms with byte-identical original/recovery PCM. Windows startup no-op preserved container start times; SSH exhaustion now leaves the local backend alive. Historical failed tests, host diagnostics, commits and LS-S052 receipt are preserved. Exact identities, exclusions and the next bounded performance experiment are in implementation/evidence/LS-S056-voice-stabilization-v2.json. Physical audibility/AEC/identity remain unverified; no production claim, push, Mac reboot or unrelated feature work. Documentation-only scope reconciliation at public HEAD b45937b44740b23f269d9f6a064f8b5a423fadd1 preserves prior implementation fields, completed list and runtime validation history. No new active slice or runtime evidence is created. Current continuation disposition is stopped by operator instruction; legacy WORKTREE/base/scope fields describe the prior LS-S063 work and must be reconciled on implementation resumption. Specification validation is separate from runtime acceptance. Reconciled 2026-09-12 against local public HEAD 6e58d3e and LS-S081 packet. The checkpoint now records exact packet scope, current source revision, no public worktree changes, and explicit evidence blockers. Metadata-only checkpoint commits are accepted only when the revision delta contains checkpoint/evidence paths; legacy receipts require a prospective qualification successor bound to preserved bytes. Historical receipts and operator approvals remain unchanged. Tooling reconciliation is committed at b7a709a; checkpoint metadata follows that source revision."
+  "notes": "Revision 2 voice stabilization: original 60-second-deadline regression, three GPU long browser replies, and final 30-minute GPU/Mac synthetic conversation/recovery runs passed their named functional checks. Both profiles fail observed latency targets; Mac retains up to 8.36-second starvation. GPU qAizVX had 29 whole transcripts, 19 completed voiced replies, nine interruptions and three reconnects with zero starvation; Mac RsEmQ3 had 29 whole transcripts, 17 completed voiced replies, eleven interruptions and three reconnects. Each ends one active turn deliberately at the time limit. No failed turns or late fenced audio in either final run. Mac sampling-boundary cancellation released actual compute in about 105-106 ms with byte-identical original/recovery PCM. Windows startup no-op preserved container start times; SSH exhaustion now leaves the local backend alive. Historical failed tests, host diagnostics, commits and LS-S052 receipt are preserved. Exact identities, exclusions and the next bounded performance experiment are in implementation/evidence/LS-S056-voice-stabilization-v2.json. Physical audibility/AEC/identity remain unverified; no production claim, push, Mac reboot or unrelated feature work. Documentation-only scope reconciliation at public HEAD b45937b44740b23f269d9f6a064f8b5a423fadd1 preserves prior implementation fields, completed list and runtime validation history. No new active slice or runtime evidence is created. Current continuation disposition is stopped by operator instruction; legacy WORKTREE/base/scope fields describe the prior LS-S063 work and must be reconciled on implementation resumption. Specification validation is separate from runtime acceptance. Reconciled 2026-09-12 against local public HEAD 6e58d3e and LS-S081 packet. The checkpoint now records exact packet scope, current source revision, no public worktree changes, and explicit evidence blockers. Metadata-only checkpoint commits are accepted only when the revision delta contains checkpoint/evidence paths; legacy receipts require a prospective qualification successor bound to preserved bytes. Historical receipts and operator approvals remain unchanged. Tooling reconciliation is committed at b7a709a; checkpoint metadata follows that source revision. Current active owner is bootstrap S001 evidence-tooling maintenance with exact three-file scope; historical receipt remains unchanged. S081 milestone remains unqualified as recorded in the private matrix."
 }
