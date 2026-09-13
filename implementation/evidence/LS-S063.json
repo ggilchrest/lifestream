@@ -1,0 +1,25 @@
+{
+  "slice": "LS-S063",
+  "status": "verified",
+  "claimClass": "technical-core",
+  "caseIds": [
+    "LS-TEST-081"
+  ],
+  "revision": "e42dec757d1b1702f8723a30b13252e0ce62e4c6",
+  "checks": [
+    {
+      "command": "pnpm build && pnpm typecheck && pnpm lint && pnpm test",
+      "result": "pass",
+      "evidence": "237 tests pass, including SQLite correction CAS, supersession, provenance, candidate quarantine and restart, plus real local authentication and pending-output permission fences."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled-playwright>/index.mjs pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "15 checks pass, including actual Chrome authentication/security and two-Assistant personalization: selection isolation, reviewed correction, adaptation approval/reversal and stale-policy refusal, conflict/suppression, scoped import/export, inert profile preview and same-database restart retrieval."
+    }
+  ],
+  "exclusions": [
+    "Technical API/storage and actual authenticated browser qualification with isolated synthetic identities/data. No physical, perceptual, Human or production acceptance.",
+    "Append-only corrections retain original history. Suppression is distinct from erasure. Joined forgetting, private relationship records and real-provider ordinary context behavior remain under their existing S073/S075/S080 owners."
+  ]
+}
