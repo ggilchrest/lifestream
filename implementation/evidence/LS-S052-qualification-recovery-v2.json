@@ -1,0 +1,336 @@
+{
+  "slice": "LS-S052",
+  "status": "verified",
+  "claimClass": "development-runtime",
+  "caseIds": [
+    "LS-TEST-069"
+  ],
+  "revision": "d546af97aacd34e8fd240bfea35f973e46a49c6f",
+  "checks": [
+    {
+      "command": "node --experimental-strip-types scripts/qualify-s052-development.mjs",
+      "result": "pass",
+      "evidence": "All 10 prospective checks passed at the named committed revision: exact running provider/model/runtime/image, real typed stream and manifest/correlation, harmless read-only selection, real cancellation/byte limit, injected deadline/outage, fixture parity, replay and malformed-request zero-call rejection."
+    },
+    {
+      "command": "pnpm build; pnpm typecheck; pnpm lint; pnpm test; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass",
+      "evidence": "218 regression tests passed; build, strict types, lint, structural and whitespace checks passed before the tested source checkpoint. Unit fault-injection and real-provider claims remain distinct."
+    }
+  ],
+  "qualification": {
+    "kind": "prospective-qualification",
+    "sourceRepository": "ggilchrest/lifestream",
+    "testedRevision": "d546af97aacd34e8fd240bfea35f973e46a49c6f",
+    "supersedes": "implementation/evidence/LS-S052.json",
+    "supersedesSha256": "2b2ccefd560ac4d9393c6dd05928a9bccb38904905c560f4587e01b187e31bab",
+    "sourceArtifacts": [
+      {
+        "path": "apps/server/package.json",
+        "sha256": "0b8ed50a234220f623ee13477b2809844fd9e85f5bcff783e715711b58bba87f"
+      },
+      {
+        "path": "apps/server/src/admin/profile-builder.ts",
+        "sha256": "416ab50d5f4a7615da88acf622f0712b2696a30cb1b1d146f58374c610b973da"
+      },
+      {
+        "path": "apps/server/src/authority/api.ts",
+        "sha256": "e7c7434e7a4df88d3a141c2fcbbc010572fb79260a1944b5a0e62936c99d965b"
+      },
+      {
+        "path": "apps/server/src/composition/authority.ts",
+        "sha256": "93c9b3a8e85716d31086ae7a2d3523be4474a80d179ecd62db45ca24f2e59a85"
+      },
+      {
+        "path": "apps/server/src/composition/providers.ts",
+        "sha256": "b4eceae999005ea500cd957d0423e152a1e7058b8ff817886b8575c3ceee3d93"
+      },
+      {
+        "path": "apps/server/src/config/index.ts",
+        "sha256": "3eba7d69076e2b098203db00e09554314ac22da01d040eddeaec1d001e883d23"
+      },
+      {
+        "path": "apps/server/src/config/loader.ts",
+        "sha256": "80bc89ebe5ae03d9568558c1c3cfff2a3ef52f90694540b0b7509e419db1913f"
+      },
+      {
+        "path": "apps/server/src/config/profiles/ai5090.json",
+        "sha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd"
+      },
+      {
+        "path": "apps/server/src/config/profiles/local-dev.json",
+        "sha256": "2fec0edfd70f92efa0b47dca0ff12a97610a9b5dd36b78b9e8e6704a5fd48284"
+      },
+      {
+        "path": "apps/server/src/config/profiles/mac-local.json",
+        "sha256": "7e49c9ef0f8ae212aaabe0e69ed4b42224104dceaf412586c59767163765ade8"
+      },
+      {
+        "path": "apps/server/src/config/profiles/test.json",
+        "sha256": "ffa8ad88059d29cb5bc587a5281211bbd79159ad19828f757955ff76e1aa329d"
+      },
+      {
+        "path": "apps/server/src/config/schema.ts",
+        "sha256": "3632d3c163ac97ec5fc03f094ff31dc41574a9477e1aac6bfb3fc96c72476a5a"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "d094d26898f1a73fc635c394013afb2dc2fb784fa90dad8f027f5a84edf95505"
+      },
+      {
+        "path": "apps/server/src/runtime/audio.ts",
+        "sha256": "b706f0b1822a1f42663d030d3111785380e599c39bee18dd9b24eb6f8d1c042c"
+      },
+      {
+        "path": "apps/server/src/runtime/buffered-stream.ts",
+        "sha256": "0a473760bcdcfb5a2d07a37074d7306b666de0706504d5cfa9a67700dd4816a4"
+      },
+      {
+        "path": "apps/server/src/runtime/inference.ts",
+        "sha256": "c02b49f62a8b85ae3314ff9e71d526338cf507e94482a4e26c097d9b627a4a94"
+      },
+      {
+        "path": "apps/server/src/runtime/pcm-pacer.ts",
+        "sha256": "ae8697e1344d2bdec4f24d65fc6ddac581cf5eb92fd34f68d91a04fcdee83870"
+      },
+      {
+        "path": "apps/server/src/runtime/preview-speech.ts",
+        "sha256": "b17c58091e5e6c234f2986e0857ec96533b83a80402b5ddd2dce0b506bf6f2b0"
+      },
+      {
+        "path": "apps/server/src/runtime/speech-queue.ts",
+        "sha256": "a8be1024010147ac874a08104b8a0ac28d263ab2bbcf394adf311782311c6c66"
+      },
+      {
+        "path": "apps/server/src/runtime/voice-assets.ts",
+        "sha256": "e41ba346d51730af8cd37b6347184c85e8cc8c80a334aa6c63b0d759ff248fa6"
+      },
+      {
+        "path": "apps/server/src/runtime/voice-settings.ts",
+        "sha256": "23b529b086e71c6c57742259ae715cb48fe1ae2779005a1a70ec43e9cdd893ca"
+      },
+      {
+        "path": "apps/server/test/inference.test.ts",
+        "sha256": "c4bef45071e834253ac560b1580630d0d852aa0bd0ac7c82d581713a0d77dcd8"
+      },
+      {
+        "path": "apps/server/test/server.test.ts",
+        "sha256": "383e423966a038a240d5cd6b88b012bbf37061348ac175457e54c55d9917239e"
+      },
+      {
+        "path": "package.json",
+        "sha256": "db8505f6110bff0dc525756856666453ee2bb15f91a9776cfdbaf537679ef0c6"
+      },
+      {
+        "path": "packages/providers-sglang/package.json",
+        "sha256": "72df3dd6ddeb1beca85c31556f5aa4c08da7820d9cb1b583a224e95326716a27"
+      },
+      {
+        "path": "packages/providers-sglang/src/index.ts",
+        "sha256": "73f1c0c74b67d9d1665422bff9608fd18b8ac8931f467916abb1044609504a6f"
+      },
+      {
+        "path": "packages/providers-sglang/src/provider.ts",
+        "sha256": "e61474d370efae6a7465604dbf073d97eccdea8ed971b55eee8e86563eb8428e"
+      },
+      {
+        "path": "packages/providers-sglang/test/provider.test.ts",
+        "sha256": "6965aa159572d474799e8ba0c51e476a6af220e97445ee0b19f20179463f9770"
+      },
+      {
+        "path": "packages/runtime/package.json",
+        "sha256": "bd48d5eee1496566e46f58f56c706fb9b93e11ca7d9f7fc3787d5d48a7de8828"
+      },
+      {
+        "path": "packages/runtime/src/context/builder.ts",
+        "sha256": "13a036b3e0e8b07ded7c2c1b74f3a05031b34a71be1ef1e303344014aa8ac6b7"
+      },
+      {
+        "path": "packages/runtime/src/context/cache.ts",
+        "sha256": "c571fbcf586e4978a08bd412eaba875b002307060446633ab3fdf4db92d02845"
+      },
+      {
+        "path": "packages/runtime/src/context/pwce-mapping.ts",
+        "sha256": "bb3bac24c4f0d4756264c238afa8165e25d99ef7bf24c5f43b3d466faf65b0ac"
+      },
+      {
+        "path": "packages/runtime/src/inference/fixture.ts",
+        "sha256": "318a3b2cfc9bd9a332a1d4328cfc48253c475f39ad23bc435261a0d60589f41a"
+      },
+      {
+        "path": "packages/runtime/src/inference/port.ts",
+        "sha256": "23a42bdb8fa376315557cf43e7efdbae8862ce9920bdd65d0db0c54810d08c6c"
+      },
+      {
+        "path": "packages/runtime/src/inference/prompt.ts",
+        "sha256": "dc2517edacdd83510bf1d989bce76ca15d466083a52316553f872e59d141140f"
+      },
+      {
+        "path": "packages/runtime/test/inference.test.ts",
+        "sha256": "a73ec098bb46bacbac4b57f4202ab6d98fdd70fbdc83bb747622410e381ef6e7"
+      },
+      {
+        "path": "packages/storage-sqlite/package.json",
+        "sha256": "5e7ba2af29d59fbc464b0255ede77965f62b24e5c38fc311ef019429e0a3da03"
+      },
+      {
+        "path": "packages/storage-sqlite/src/assistant-profile.ts",
+        "sha256": "09f6fbe7f654d436963e089ade2f61dab8d9328b0c9be9850afa6dfb5334f933"
+      },
+      {
+        "path": "packages/storage-sqlite/src/authority/admission.ts",
+        "sha256": "8c9566ea5ed8b33af18f01fe33d8d3d8661f16094c8c99d0359ebe6411edd8bc"
+      },
+      {
+        "path": "packages/storage-sqlite/src/authority/grants.ts",
+        "sha256": "dc12c905bb166ac43137598f34aab21255f386e9a12d50388e960710fb74e524"
+      },
+      {
+        "path": "packages/storage-sqlite/src/database.ts",
+        "sha256": "062f4f577bae3db54d31c3d54304003982ac0960cb8f7a898d2d261b6d34ab19"
+      },
+      {
+        "path": "packages/storage-sqlite/src/dreaming-repository.ts",
+        "sha256": "acb096d1647a61e5a4de07de41592bd2e37f134b2119f97a05ef3070216f85fd"
+      },
+      {
+        "path": "packages/storage-sqlite/src/index.ts",
+        "sha256": "000f4cb42bbfa60fdd90a77ab5b803ded4dd8e6d426d95846641d30324b65348"
+      },
+      {
+        "path": "packages/storage-sqlite/src/initiative.ts",
+        "sha256": "f004fe9d6777b3d06f79a4113295a81423ddd647bb12ea5a823a7d0daf6a720f"
+      },
+      {
+        "path": "packages/storage-sqlite/src/memory.ts",
+        "sha256": "0b593698fbf841521bc6a7c34c4fce8374aa03a1dc80c02652e3d322eb5c2db6"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0001_initial.sql",
+        "sha256": "c39546513a91210ca574e1ba07adc7bb9dda7556d73a44fa41f1b610f350e5b7"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0002_assistant_profiles.sql",
+        "sha256": "e488fff17c6ae546ae9437be39d137b2bfe18ddb8733dc70cd1a20a8c7eaad45"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0003_adaptations.sql",
+        "sha256": "4025d10a7ebc811f259198a0627437d64532607255735b9a4c11157ee0d0d184"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0004_memory.sql",
+        "sha256": "b3e22bb7440270150bf33f96ec5aada9fdbbd23bb0e1ef6f6b5d092a43a74091"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0005_prepared_context.sql",
+        "sha256": "15ca162de41d3f037803b72190decb61471c08d5261abda43c5363cc0d2a6a9e"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0006_dreaming.sql",
+        "sha256": "faefaa520704df7e2ade511bc486fcb427fd03d52ea9650f57ecb0eeb68ba9af"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0007_sessions.sql",
+        "sha256": "0509b1b60d31a1fff6ed17fc6653269af20e3da780490541a2da158e6fc7ddae"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0008_trace_outbox.sql",
+        "sha256": "db9111c22c2c6fe18203ad687120e48dd7ab3067704e25c3f24c019f64c01254"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0009_human_authority.sql",
+        "sha256": "3d678ff0c1a5075482733ccf815771b00606378997deb6c0af59ee80753ff1a4"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0011_capability_cache.sql",
+        "sha256": "6fcc1cc8966d9ca11c4a1687025d465bd31dc5a244788a807de798727925f18c"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0012_skills_proposals.sql",
+        "sha256": "0b5141d550d408514fd2b2f99e059a256acc8ab42f3c30fbc00fe4fcfd160e5d"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0013_endpoints.sql",
+        "sha256": "5867146bc62e8f47998751c524e7cf19e3e6c5c14402a9b62c35ad5af43dbebf"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0014_memory_lifecycle.sql",
+        "sha256": "4295c805034ca26e5428e081a173a4bc1c057cae73d8de1632a1909e80b3202b"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0015_adaptation_lifecycle.sql",
+        "sha256": "1964ed7f6e2ef0f22f944d0e3ecf234e657417766bbfce9e7f7b7330d7fd1d71"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0016_initiative_ledger.sql",
+        "sha256": "a1b926f2b550619ee3978f1cb864508ab1834b5f71a52b5570c6914dcc7bcd53"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/index.ts",
+        "sha256": "e190b80e9dedaf89aef64458a204e6a4cd6ec2840c7e20ce99ea0fa23e6cd8c3"
+      },
+      {
+        "path": "packages/storage-sqlite/src/profile-builder.ts",
+        "sha256": "6c419c60e013a29050679d529ee51120e29a2af200944f949e34262c7e0cb739"
+      },
+      {
+        "path": "packages/storage-sqlite/src/rehearsal.ts",
+        "sha256": "7c6041f2d8501106a0da5895d6fe6d33067d2354ff15a2f30fc2f09a544207cb"
+      },
+      {
+        "path": "packages/storage-sqlite/src/transaction.ts",
+        "sha256": "067a3fb847e6a89ac2db3a5ee698078c384c948c7762a91458917e26b638bc2f"
+      },
+      {
+        "path": "pnpm-lock.yaml",
+        "sha256": "09f580784bb312df9cdc52d6f6ce07fa3f0c398b107b5f2d69043155f6f73453"
+      },
+      {
+        "path": "scripts/qualify-s052-development.mjs",
+        "sha256": "c3dec10a7a142c162a43ad9ffbae076d3721fc9aa8c9345ea5de51461105fe90"
+      }
+    ],
+    "effectiveSpecification": {
+      "sourceRepository": "ggilchrest/lifestream-specs",
+      "revision": "3b804bf4e420919a01ab62d3c30905a7803a3b24",
+      "artifacts": [
+        {
+          "path": "docs/05-runtime-and-cognition.md",
+          "sha256": "edda0379c414e53b680289e36ff94dfe479b441b5bb97e705e3384ca354d00ef"
+        },
+        {
+          "path": "docs/11-provider-interfaces.md",
+          "sha256": "0cb8f5b86bf7b4d94e565d256a5928092adf3e29a61607c3c84df4a4cf56c44d"
+        },
+        {
+          "path": "docs/16-decision-register.md",
+          "sha256": "06cade6dddd416b089ab699c3aede41f30b3f2699f0b6b75dc7423864ef4753b"
+        },
+        {
+          "path": "docs/24-reference-speech-hardware-and-inference.md",
+          "sha256": "277dbda4e553f9f529f3c927e49b8365dc33a7823da666f6f95e9eaf86b91cff"
+        },
+        {
+          "path": "docs/26-assistant-context-and-relationship-administration.md",
+          "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+        },
+        {
+          "path": "fixtures/requirement-traceability.json",
+          "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+        }
+      ]
+    }
+  },
+  "evidence": {
+    "path": "implementation/evidence/LS-S052-development-recovery-v2.json",
+    "sha256": "8d4b8c47fb4a26e749070e27213eb1fee2ce7a245e60b517a7a5167ccd4d4484"
+  },
+  "exclusions": [
+    "production qualification",
+    "physical input or playback",
+    "Human quality acceptance",
+    "real local authentication (S069)",
+    "service lifecycle or model/configuration changes"
+  ],
+  "recordedAt": "2026-09-13T04:14:30.595828Z"
+}

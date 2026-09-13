@@ -5,7 +5,7 @@
   "baseRevision": "2cf080fda78fbe68a07d7c0a7511485cd0f1047f",
   "currentRevision": "2cf080fda78fbe68a07d7c0a7511485cd0f1047f",
   "activeSlice": "LS-S052",
-  "sliceStatus": "inProgress",
+  "sliceStatus": "verified",
   "completedSlices": [
     "LS-S001",
     "LS-S002",
@@ -99,173 +99,21 @@
     "apps/server/test/inference.test.ts"
   ],
   "changedFiles": [
-    "implementation/checkpoint.json"
+    "implementation/checkpoint.json",
+    "implementation/evidence/LS-S052-current-qualification.json",
+    "implementation/evidence/LS-S052-development-recovery-v2.json",
+    "implementation/evidence/LS-S052-qualification-recovery-v2.json"
   ],
   "validation": [
-    {
-      "command": "node --test --experimental-strip-types scripts/candidate-manifest.test.mjs",
-      "result": "pass",
-      "evidence": "Three deterministic bounded-candidate and LS-S048 reconciliation tests passed on 2026-09-08."
-    },
-    {
-      "command": "node scripts/workspace.mjs check",
-      "result": "pass",
-      "evidence": "Public workspace structural validation passed on 2026-09-08."
-    },
-    {
-      "command": "pnpm typecheck && pnpm test && pnpm lint && pnpm build && node scripts/workspace.mjs check && git diff --check",
-      "result": "pass",
-      "evidence": "Full workspace typecheck, 119 tests, lint, build, structural validation, and whitespace validation passed on 2026-09-09; server tests required loopback socket permission."
-    },
-    {
-      "command": "built local-dev server health and bounded SIGTERM shutdown",
-      "result": "pass",
-      "evidence": "Temporary localhost run reported ready health, complete migration inventory, healthy required providers, acceptingInteractions true, live endpoint success, and clean SIGTERM exit."
-    },
-    {
-      "command": "npm --prefix orchestration run runtime:check:mac",
-      "result": "pass",
-      "evidence": "Pinned Ollama returned exactly LOCAL_READY; native MLX Vox produced 130568 48 kHz PCM samples, and pinned native MLX Moonshine transcribed the derived 43522-sample 16 kHz input as exactly 'Local speech is ready.' with exact identities."
-    },
-    {
-      "command": "temporary-storage Lifestream mac-local server smoke",
-      "result": "pass",
-      "evidence": "Server reported mac-local ready with required Ollama, Moonshine, and Vox healthy and non-fixture, acceptingInteractions true, and streamed exactly MAC_PROFILE_READY through the canonical route."
-    },
-    {
-      "command": "corepack pnpm test",
-      "result": "pass",
-      "evidence": "All 125 public Lifestream tests passed on 2026-09-10, including the bounded Moonshine adapter and exact three-provider Mac health probes."
-    },
-    {
-      "command": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm build && node scripts/workspace.mjs check && git diff --check",
-      "result": "pass",
-      "evidence": "Strict typecheck, lint, build, workspace structure, and whitespace validation passed on 2026-09-10."
-    },
-    {
-      "command": "corepack pnpm test; focused server/profile tests; two consecutive Mac-local real-provider checks",
-      "result": "pass",
-      "evidence": "All 129 public tests passed before the added ready-profile swap regression; the final focused suite passed 15/15, strict typecheck/lint/build passed, and both repeated Vox-to-Moonshine checks recovered exactly 'Local speech is ready.' after the TTS stability repair."
-    },
-    {
-      "command": "node --test --experimental-strip-types apps/server/test/config.test.ts",
-      "result": "pass",
-      "evidence": "All 3 configuration tests passed after removing the duplicate, identical ai5090 STT profile key."
-    },
-    {
-      "command": "pnpm typecheck; pnpm test; pnpm lint; pnpm build; pnpm test:browser-surface; python3 scripts/sidecar-http.test.py",
-      "result": "pass",
-      "evidence": "Voice recovery follow-up: 134 public tests, two browser-surface tests, and both sidecar connection-close subcases passed; strict typecheck, lint and build passed. Live final-build verification is recorded in LS-S056-voice-recovery.json."
-    },
-    {
-      "command": "pnpm test && pnpm lint && pnpm typecheck",
-      "result": "pass",
-      "evidence": "135 tests passed, including body-timeout cancellation, abandoned TTS reader cleanup, repeated barge-in and deadline-to-next-turn recovery. Lint and strict typecheck passed."
-    },
-    {
-      "command": "pnpm build; pnpm test:browser-surface; python3 scripts/sidecar-http.test.py",
-      "result": "pass",
-      "evidence": "Build passed; 2 browser-surface tests passed; both sidecars close health responses and accept subsequent clients."
-    },
-    {
-      "command": "node scripts/check-live-voice.mjs",
-      "result": "pass",
-      "evidence": "Five turns on one real-provider socket: interrupted, interrupted, explicit audio_deadline_exceeded after 30 seconds, completed, completed. All five transcribed; post-conversation real TTS succeeded with non-silent PCM. The long reply is NOT claimed as successful full-answer acceptance."
-    },
-    {
-      "command": "Assistant TTS test in Codex in-app browser",
-      "result": "pass",
-      "evidence": "Actual button click returned: Events: TTS succeeded (37 frames) \u2014 browser playback finished. No microphone was captured in this automated browser check; physical audibility remains operator-owned."
-    },
-    {
-      "command": "npm --prefix .private run validate; node scripts/workspace.mjs check; git diff --check",
-      "result": "pass",
-      "evidence": "46 private tests and canonical validation passed; public structural and whitespace checks passed."
-    },
-    {
-      "command": "node scripts/workspace.mjs preflight LS-S056",
-      "result": "fail",
-      "evidence": "Existing immutable prerequisite receipt LS-S052.json has revision WORKTREE and historical blocked entries despite later passing real-provider checks. Preserved unchanged; packet and active checkpoint scopes were reconciled. This pre-existing metadata defect is not a new runtime failure."
-    },
-    {
-      "command": "pnpm test; pnpm test:browser-surface; pnpm typecheck; pnpm lint; pnpm build; python3 scripts/sidecar-http.test.py; npm --prefix .private run validate",
-      "result": "pass",
-      "evidence": "Voice-control follow-up: 140 public tests, 4 browser-surface tests, 2 Python tests, 46 private tests, canonical validation, lint, typecheck and build passed. See LS-S056-voice-controls.json for real-provider and actual browser checks; no new Human acceptance."
-    },
-    {
-      "command": "node scripts/workspace.mjs preflight LS-S056",
-      "result": "fail",
-      "evidence": "With scope and changed files reconciled while inProgress, only the pre-existing invalid immutable LS-S052 prerequisite receipt remains. It is preserved unchanged; structural checks pass."
-    },
-    {
-      "command": "pnpm test; pnpm test:browser-surface; pnpm typecheck; pnpm lint; pnpm build; Python sidecar tests; private specification validation",
-      "result": "pass",
-      "evidence": "Corrective voice follow-up: 142 public tests, 6 browser-surface tests, 3 Python tests, 46 private tests and canonical validation passed; lint, typecheck and build passed. Exact real Mac and remote failure evidence is in LS-S056-voice-parity.json."
-    },
-    {
-      "command": "node scripts/check-ai5090-voice.mjs",
-      "result": "fail",
-      "evidence": "Actual installed map-2 CUDA sidecar acknowledged the first description request, then timed out with zero audio frames. Its worker was observed in overlay/ext4 filesystem read waits. Remote parity is not accepted; reference/continuation/content checks were not reached."
-    },
-    {
-      "command": "pnpm test; pnpm typecheck; pnpm lint; pnpm build; pnpm test:browser-surface; npm --prefix .private run validate",
-      "result": "pass",
-      "evidence": "Final preview segmentation follow-up: 144 public tests, 6 browser-surface tests, 46 private tests and canonical validation, typecheck, lint and build passed. New helper preserves bounded segments, ordered aggregate output, and stops on failed segments."
-    },
-    {
-      "command": "node scripts/check-voice-parity.mjs; actual browser six-sentence Preview draft voice",
-      "result": "pass",
-      "evidence": "Final Mac-local segmented synthesis produced 522288 samples and exact six-sentence Moonshine transcript in 22512 ms. Browser separately completed 151 frames of playback. No human microphone or perceptual acceptance."
-    },
-    {
-      "command": "node scripts/check-ai5090-voice.mjs; node scripts/check-ai5090-voice.mjs --long-only",
-      "result": "fail",
-      "evidence": "Description/reference/continuation each succeeded once in approximately 5 seconds; later continuation timed out again. Final independent segmented long-preview test timedOut after 56 frames/215040 samples. Inference health recovered; reliable real voice acceptance remains blockedEnvironment."
-    },
-    {
-      "command": "pnpm test; pnpm test:browser-surface; pnpm typecheck; pnpm build; pnpm lint; node scripts/workspace.mjs check",
-      "result": "pass",
-      "evidence": "164 runtime and 7 browser tests pass including fresh readiness outage/recovery and STT terminal recovery. Browser cancellation helper adds opt-in late render-fence and same-page recovery assertions; its real-provider run is pending."
-    },
-    {
-      "command": "pnpm test; pnpm test:browser-surface; pnpm lint; pnpm typecheck; pnpm build",
-      "result": "pass",
-      "evidence": "165 runtime tests and 8 browser tests pass. Twenty phase-offset VAD repetitions reproduce failure in control modes and pass the unchanged endpoint with idle reset. Final real mixed runs remain pending."
-    },
-    {
-      "command": "pnpm test; pnpm test:browser-surface; ../runtime/mac-local/venv/bin/python scripts/sidecar-http.test.py; node scripts/soak-browser-voice.mjs (each explicit profile and synthetic capture environment)",
-      "result": "pass",
-      "evidence": "165 runtime, 8 browser, 6 Python lifecycle, 1 failure-preservation, 46 spec and 97 composition tests; 11 Windows recovery cases. Real 30-minute conversation/recovery checks passed separately from failed performance targets. Exact results in LS-S056-voice-stabilization-v2.json."
-    },
-    {
-      "command": "node --test --experimental-strip-types apps/server/test/server.test.ts; pnpm test; pnpm typecheck; pnpm lint; pnpm test:browser-surface; npm --prefix .private run validate; git diff --check",
-      "result": "pass",
-      "evidence": "S063 administration coverage passes with 10 server tests and 170 public tests, including cross-Assistant isolation, preview memory non-mutation, restart memory continuity, scoped import/export, lifecycle/history, correction review, adaptation reversal, and revision-checked activation. Browser surface, strict typecheck, lint, private specification validation and whitespace checks also pass on 2026-09-11."
-    },
-    {
-      "command": "npm --prefix .private ci; npm --prefix .private run validate; node --test scripts/workspace.test.mjs; node scripts/workspace.mjs check; git diff --check",
-      "result": "pass",
-      "evidence": "2026-09-11 documentation-only scope adoption: 50 existing specification tests, 362 requirements, 74 registered slices, 118 specified-not-executed cases, 67 packets; 12 public bootstrap tests and workspace structure passed. Private/public whitespace checks passed. No runtime acceptance cases executed; historical implementation evidence and progress fields preserved."
-    },
-    {
-      "command": "node scripts/workspace.test.mjs",
-      "result": "pass",
-      "evidence": "14 deterministic checkpoint/preflight, metadata-only revision, and successor-qualification tests passed during 2026-09-12 reconciliation."
-    },
-    {
-      "command": "node --test scripts/workspace.test.mjs",
-      "result": "pass",
-      "evidence": "43 tests pass, including temporary independent repositories, current-proof integrity, private S072 structural-only claims and strict checkpoint ancestry."
-    },
-    {
-      "command": "prerequisiteErrors LS-S072 with consuming S074 claim",
-      "result": "pass",
-      "evidence": "Committed sanitized reference verifies private source, per-run structural receipt, original receipt bytes, effective inputs and open LS-TEST-091 runtime/security obligations."
-    },
     {
       "command": "pnpm build; pnpm typecheck; pnpm lint; pnpm test; npm --prefix .private run validate; node scripts/workspace.mjs preflight LS-S052; git diff --check",
       "result": "pass",
       "evidence": "S052 recovery source: 218 unit/integration regressions, strict build/typecheck/lint, private structural validation and scoped preflight pass. Real-provider prospective harness remains pending at committed source."
+    },
+    {
+      "command": "node --experimental-strip-types scripts/qualify-s052-development.mjs",
+      "result": "pass",
+      "evidence": "All 10 current development-runtime checks passed from d546af97aacd34e8fd240bfea35f973e46a49c6f with the approved exact SGLang image/model/runtime and temporary synthetic state."
     }
   ],
   "decisions": [
@@ -275,8 +123,8 @@
     "2026-09-13 replacement recovery v2 executes the bounded core batch through S081. Prior planning-only holds are historical. S083/S084 remain later adopted scope. Scoped local commits only; no push/deployment/live configuration/import/training or Human acceptance."
   ],
   "blockers": [],
-  "nextAction": "Execute prospective S052 qualification from committed source; preserve the original receipt.",
+  "nextAction": "S052 development runtime qualified; enter S071 self-context and then S073 prepared relationship communication.",
   "updatedAt": "2026-09-13T04:13:05.190744Z",
   "updatedBy": "Codex",
-  "notes": "Revision 2 voice stabilization: original 60-second-deadline regression, three GPU long browser replies, and final 30-minute GPU/Mac synthetic conversation/recovery runs passed their named functional checks. Both profiles fail observed latency targets; Mac retains up to 8.36-second starvation. GPU qAizVX had 29 whole transcripts, 19 completed voiced replies, nine interruptions and three reconnects with zero starvation; Mac RsEmQ3 had 29 whole transcripts, 17 completed voiced replies, eleven interruptions and three reconnects. Each ends one active turn deliberately at the time limit. No failed turns or late fenced audio in either final run. Mac sampling-boundary cancellation released actual compute in about 105-106 ms with byte-identical original/recovery PCM. Windows startup no-op preserved container start times; SSH exhaustion now leaves the local backend alive. Historical failed tests, host diagnostics, commits and LS-S052 receipt are preserved. Exact identities, exclusions and the next bounded performance experiment are in implementation/evidence/LS-S056-voice-stabilization-v2.json. Physical audibility/AEC/identity remain unverified; no production claim, push, Mac reboot or unrelated feature work. Documentation-only scope reconciliation at public HEAD b45937b44740b23f269d9f6a064f8b5a423fadd1 preserves prior implementation fields, completed list and runtime validation history. No new active slice or runtime evidence is created. Current continuation disposition is stopped by operator instruction; legacy WORKTREE/base/scope fields describe the prior LS-S063 work and must be reconciled on implementation resumption. Specification validation is separate from runtime acceptance. Reconciled 2026-09-12 against local public HEAD 6e58d3e and LS-S081 packet. The checkpoint now records exact packet scope, current source revision, no public worktree changes, and explicit evidence blockers. Metadata-only checkpoint commits are accepted only when the revision delta contains checkpoint/evidence paths; legacy receipts require a prospective qualification successor bound to preserved bytes. Historical receipts and operator approvals remain unchanged. Tooling reconciliation is committed at b7a709a; checkpoint metadata follows that source revision. Current active owner is bootstrap S001 evidence-tooling maintenance with exact three-file scope; historical receipt remains unchanged. S081 milestone remains unqualified as recorded in the private matrix. Current owner S052 executes the replacement recovery v2; all earlier planning holds and S001 selection in this history are superseded for this bounded batch."
+  "notes": "Revision 2 voice stabilization: original 60-second-deadline regression, three GPU long browser replies, and final 30-minute GPU/Mac synthetic conversation/recovery runs passed their named functional checks. Both profiles fail observed latency targets; Mac retains up to 8.36-second starvation. GPU qAizVX had 29 whole transcripts, 19 completed voiced replies, nine interruptions and three reconnects with zero starvation; Mac RsEmQ3 had 29 whole transcripts, 17 completed voiced replies, eleven interruptions and three reconnects. Each ends one active turn deliberately at the time limit. No failed turns or late fenced audio in either final run. Mac sampling-boundary cancellation released actual compute in about 105-106 ms with byte-identical original/recovery PCM. Windows startup no-op preserved container start times; SSH exhaustion now leaves the local backend alive. Historical failed tests, host diagnostics, commits and LS-S052 receipt are preserved. Exact identities, exclusions and the next bounded performance experiment are in implementation/evidence/LS-S056-voice-stabilization-v2.json. Physical audibility/AEC/identity remain unverified; no production claim, push, Mac reboot or unrelated feature work. Documentation-only scope reconciliation at public HEAD b45937b44740b23f269d9f6a064f8b5a423fadd1 preserves prior implementation fields, completed list and runtime validation history. No new active slice or runtime evidence is created. Current continuation disposition is stopped by operator instruction; legacy WORKTREE/base/scope fields describe the prior LS-S063 work and must be reconciled on implementation resumption. Specification validation is separate from runtime acceptance. Reconciled 2026-09-12 against local public HEAD 6e58d3e and LS-S081 packet. The checkpoint now records exact packet scope, current source revision, no public worktree changes, and explicit evidence blockers. Metadata-only checkpoint commits are accepted only when the revision delta contains checkpoint/evidence paths; legacy receipts require a prospective qualification successor bound to preserved bytes. Historical receipts and operator approvals remain unchanged. Tooling reconciliation is committed at b7a709a; checkpoint metadata follows that source revision. Current active owner is bootstrap S001 evidence-tooling maintenance with exact three-file scope; historical receipt remains unchanged. S081 milestone remains unqualified as recorded in the private matrix. Current owner S052 executes the replacement recovery v2; all earlier planning holds and S001 selection in this history are superseded for this bounded batch. At S052 technical qualification, the current validation list contains only the two executed S052 recovery checks. Earlier mixed-owner validation history (including voice failures and historical S052 metadata failures) remains preserved in checkpoint commit d546af97aacd34e8fd240bfea35f973e46a49c6f and the unchanged immutable receipts; it is not relabeled."
 }
