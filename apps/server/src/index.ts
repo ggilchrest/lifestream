@@ -16,6 +16,8 @@ import { AudioSession } from "./runtime/audio.ts";
 import { synthesizePreview } from "./runtime/preview-speech.ts";
 import { RelationalInitiativeCoordinator } from "@lifestream/runtime/initiative/coordinator";
 
+import { administrationCapabilities } from "./admin/personalization-capabilities.ts";
+
 export type HealthState = "starting" | "ready" | "degraded" | "draining" | "stopped";
 export type ServerOptions = { config: RuntimeConfig; host?: string; port?: number; shutdownDeadlineMs?: number; controlUiDirectory?: string; profileLoader?: (profile: Profile) => RuntimeConfig };
 type Json = Record<string, unknown>;
@@ -88,6 +90,7 @@ class AssistantAdminApi {
   }
   getPreparedRelationshipContext(assistantId: string, relationshipId: string, actor: string): Record<string, unknown> | undefined { const relationship = this.relationships.get(relationshipId); if (!relationship || relationship.assistantId !== assistantId || relationship.userId !== actor) return undefined; const configurations = [...this.relationshipConfigurations.values()].filter((item) => item.relationshipId === relationshipId); const active = configurations.find((item) => item.status === "active"); const approved = relationship.candidates.filter((item) => item.status === "approved"); return { profileRevision: "assistant-profile:current", relationshipRevision: String(relationship.revision), configurationRevision: String(active?.revision ?? "default"), ...(active ? { configurationControls: active.controls } : {}), approvedBaseline: approved.map((item) => item.content), criticalCorrections: [], relevantContext: approved.map((item, index) => ({ id: item.candidateId, content: item.content, rank: index })), limitations: ["Relationship context is bounded to approved records.", "Inclusion is not causal proof of reply behavior."] }; }
   handle(method: string, path: string, actor: string, body: unknown = {}): AdminResult {
+    if (method === "GET" && path === "/api/admin/v1/capabilities") return { status: 200, body: { capabilities: administrationCapabilities(), grantsAuthority: false } };
     const parts = path.split("/").filter(Boolean);
     if (parts[0] !== "api" || parts[1] !== "admin" || parts[2] !== "v1" || parts[3] !== "assistants") return { status: 404, body: { code: "not_found", message: "not found" } };
     let input: Record<string, unknown> = {};
