@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
-  "branch": "codex/recovery-human-review",
+  "branch": "main",
   "baseRevision": "6dc2b8f5ce9c0629eb729c0842ea88bea14280c1",
-  "currentRevision": "d5130144c40e9e4beffc7eed0e6dbfec1a056063",
+  "currentRevision": "8b04f00844655abf81bae7054137d361dea6bac4",
   "activeSlice": "LS-S081",
   "sliceStatus": "blocked",
   "completedSlices": [
@@ -137,7 +137,7 @@
   "blockers": [
     "LS-TEST-106 selected-provider joined qualification: exact SYNPRJ_Q7M4 became SynPRJ_Q7M4 in a Lab output; a later joined run stopped waiting for the skipped-Assistant ordinary reply. Independent isolation passed but does not replace the joined criterion."
   ],
-  "nextAction": "Investigate the preserved selected-provider literal/completion failures and requalify the full joined S081 journey without weakening criteria or changing live model/configuration. Human guide is prepared at docs/human-testing-guide.html; acceptance remains pending.",
+  "nextAction": "Investigate the preserved selected-provider literal/completion failures and requalify the full joined S081 journey without weakening criteria or changing live model/configuration. Human guide is prepared at docs/human-testing-guide.html; acceptance remains pending. Requalification must use isolated committed source while the unrelated voice-sidecar edits remain dirty in the original checkout.",
   "updatedAt": "2026-09-14T02:56:49.224355Z",
   "updatedBy": "Codex",
   "notes": "Requested literal test adjustment is implemented and locally committed. Fixture browser and selected-provider rerun pass; first provider attempt hit the unchanged deadline before admission. Historical Green Finch failure and its selector remain preserved pending formal qualification refresh. Implementation status means verification/qualification pending, not full S075 or S081 acceptance. Unrelated voice-sidecar dirty paths were not edited or staged. No push, live configuration change or Human acceptance."
