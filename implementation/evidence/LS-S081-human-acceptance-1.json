@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "combined-human-acceptance",
+  "slices": [
+    "LS-S080",
+    "LS-S081"
+  ],
+  "status": "accepted",
+  "claimClass": "human-acceptance",
+  "recordedAt": "2026-09-14T15:02:06.234809Z",
+  "source": {
+    "fileName": "lifestream-human-review (1).json",
+    "sha256": "b64bd4dfa2e8e91296cd16e1810105c84f9431e2c845e448692b648fe8d3e82e",
+    "exportedAt": "2026-09-14T14:59:03.050Z",
+    "kind": "lifestream-combined-human-review",
+    "originalPreserved": true,
+    "privateArchive": "roadmap/HUMAN-REVIEW-2026-09-14-ACCEPTED.json",
+    "repositoryAcceptanceUpdatedInOriginalExport": false
+  },
+  "operatorConfirmation": "done. testing passes",
+  "reviewer": "operator identified in the preserved private export",
+  "stepResults": {
+    "start": "pass",
+    "profile": "pass",
+    "intake": "pass",
+    "records": "pass",
+    "controls": "pass",
+    "insights": "pass",
+    "lab": "pass",
+    "readiness": "pass",
+    "privacy": "pass",
+    "restart": "pass",
+    "decision": "pass"
+  },
+  "decision": "accepted",
+  "repositoryAcceptanceRecorded": true,
+  "observedPublicRevision": "a2054ce853c98ade32078bc8d1e6748dbfb857ce",
+  "revisionAssociation": "Repository revision observed when the operator submitted acceptance; the export itself does not pin a source revision or include raw provider traces.",
+  "reviewHistory": {
+    "earlierPartialReviewPreserved": true,
+    "carriedForwardFeedback": [
+      "Record labels, formatting and superseded-state visibility",
+      "Insight perspective labels and field formatting"
+    ],
+    "disposition": "Earlier comments are retained verbatim in the private exports. The operator now explicitly accepts the combined review; no new needs-changes result or decision exclusion was submitted.",
+    "controlRoomImplementation": "f4e8a6a192e21c7104de94a0209c3e96228e903b"
+  },
+  "technicalQualification": {
+    "status": "unchanged",
+    "caseId": "LS-TEST-106",
+    "currentSelector": "implementation/evidence/LS-S081-current-qualification.json",
+    "boundary": "This records the completed Human review. It does not rewrite historical automated failures or create a fresh revision-bound joined selected-provider certification."
+  },
+  "exclusions": [
+    "No blanket production, physical/perceptual, performance, training or later-scope acceptance.",
+    "S083/S084 remain later adopted scope.",
+    "No push, deployment, provider configuration change or new runtime test is performed by recording this review."
+  ]
+}

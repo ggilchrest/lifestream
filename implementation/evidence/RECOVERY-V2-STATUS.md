@@ -1,3 +1,11 @@
+# Combined Human review accepted — 2026-09-14
+
+The operator submitted all eleven guide steps as passed and an explicit accepted decision, then confirmed: “done. testing passes”. Combined **S080/S081 Human acceptance is recorded** in [the acceptance receipt](LS-S081-human-acceptance-1.json). The original export and earlier partial review are preserved in the independent private repository. Earlier UI comments remain review history; the final decision contains no additional exclusions or needs-changes results.
+
+The Human-review waiting condition is closed. Historical automated selected-provider failures and their selector remain unchanged. A new revision-bound joined certification is still distinct from this Human decision; no rerun or blanket technical/production acceptance is invented. The sections below are retained chronological snapshots, including their then-pending Human status.
+
+---
+
 # Control room usability correction — 2026-09-14
 
 The operator passed Human steps 1–6 with feedback, then paused further testing because the interface was difficult to use. The control room has been redesigned with separate navigation, labeled record tables, contextual operation dialogs, explicit configuration review, five selectable insight perspectives, and grouped Lab/privacy workflows. The updated guide preserves existing note keys and records steps 7–11 as pending.

@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "scope": "Recovery v2 existing dependency path through LS-S081",
   "technicalCoreStatus": "blockedEnvironment",
-  "humanAcceptance": "pending",
+  "humanAcceptance": "accepted",
   "sourceRevision": "d9d88d9aff10e6c2aa9386a1ae4103b156c4fd75",
   "selectedProfile": {
     "path": "apps/server/src/config/profiles/ai5090.json",
@@ -865,7 +865,13 @@
             "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
           }
         }
-      ]
+      ],
+      "humanReview": {
+        "status": "accepted",
+        "path": "implementation/evidence/LS-S081-human-acceptance-1.json",
+        "sha256": "da1af86717e882270e27f5fc53b5d8582d1e0c6a1e558e29ebeacaff29cd8a3a",
+        "scope": "Operator combined S080/S081 review; technical proof status unchanged."
+      }
     },
     {
       "caseId": "LS-TEST-103",
@@ -988,7 +994,13 @@
             "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
           }
         }
-      ]
+      ],
+      "humanReview": {
+        "status": "accepted",
+        "path": "implementation/evidence/LS-S081-human-acceptance-1.json",
+        "sha256": "da1af86717e882270e27f5fc53b5d8582d1e0c6a1e558e29ebeacaff29cd8a3a",
+        "scope": "Operator combined S080/S081 review; technical proof status unchanged."
+      }
     },
     {
       "caseId": "LS-TEST-105",
@@ -1077,7 +1089,13 @@
           ],
           "reuse": null
         }
-      ]
+      ],
+      "humanReview": {
+        "status": "accepted",
+        "path": "implementation/evidence/LS-S081-human-acceptance-1.json",
+        "sha256": "da1af86717e882270e27f5fc53b5d8582d1e0c6a1e558e29ebeacaff29cd8a3a",
+        "scope": "Operator combined S080/S081 review; technical proof status unchanged."
+      }
     }
   ],
   "structuralContractBoundary": {
@@ -1094,23 +1112,33 @@
   },
   "guide": {
     "path": "docs/human-testing-guide.html",
-    "acceptanceReady": false
+    "acceptanceReady": false,
+    "humanAcceptance": "accepted",
+    "acceptanceReadyMeaning": "Readiness of complete technical qualification; Human acceptance is now separately recorded as accepted."
   },
   "unresolved": {
     "caseId": "LS-TEST-106",
     "classification": "joined selected-provider reply-completion failure",
     "requirement": "Complete the full joined rendered selected-provider journey under the operator-amended Lab capitalization criterion.",
     "source": "apps/control-web/test/relationship-joined.test.mjs",
-    "independentWork": "All prior independent prework is complete. Operator capitalization acceptance, matcher update, fixture verification, guide and source-bound evidence amendment are recorded.",
+    "independentWork": "Human review completed: all eleven steps passed and explicit combined acceptance recorded. Remaining work concerns separate revision-bound selected-provider qualification.",
     "recommendedNextStep": "Diagnose and requalify joined skipped-Assistant reply completion. Capitalization-only Lab output differences are accepted and no longer block this core. Keep model, live configuration, deadlines, identity and privacy criteria unchanged."
   },
   "exclusions": [
-    "No full joined selected-provider qualification or Human acceptance. Earlier Green Finch, literal timeout and joined failures remain preserved.",
+    "No fresh full joined selected-provider qualification. Human acceptance is recorded separately; earlier Green Finch, literal timeout and joined failures remain preserved.",
     "No private input, physical capture/playback, training, learned-quality, production, performance certification, deployment, pushes or provider service/configuration change.",
     "S083/S084 remain later adopted scope; S082/S065 and S056/S070 retain separate training and product gates."
   ],
   "operatorAcceptance": {
     "path": "implementation/evidence/LS-S081-case-acceptance-1.json",
     "sha256": "332a6ba68429a882d5c66c52e00ec97ae60e6eadac1aed2a4e162a7693c2354d"
-  }
+  },
+  "humanAcceptanceEvidence": {
+    "path": "implementation/evidence/LS-S081-human-acceptance-1.json",
+    "sha256": "da1af86717e882270e27f5fc53b5d8582d1e0c6a1e558e29ebeacaff29cd8a3a",
+    "exportedAt": "2026-09-14T14:59:03.050Z",
+    "allStepsPassed": true
+  },
+  "updatedAt": "2026-09-14T15:02:06.234809Z",
+  "sourceRevisionScope": "Retained technical-qualification baseline. The separately linked Human receipt records the later operator review."
 }
