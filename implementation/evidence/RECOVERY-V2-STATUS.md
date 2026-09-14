@@ -1,3 +1,13 @@
+# Current operator acceptance amendment
+
+The operator accepts the observed `SYNPRJ_Q7M4` → `SynPRJ_Q7M4` Lab output as passing the application criterion, assigning capitalization compliance to separate model-quality work. The backend was **ai5090**, SGLang, `RadixArk/Qwen3.8-27B-NVFP4` served as `qwen3.8-27b-local`; no Mac-local fallback occurred. See the [explicit acceptance disposition](LS-S081-case-acceptance-1.json).
+
+The S081 Lab reply matcher now accepts capitalization-only differences while requiring the complete identifier and rejecting unpersonalized leakage regardless of case. Stored/prepared inputs and the selected model/configuration are unchanged. The full joined fixture browser journey and matcher positive/negative cases pass. Original failure reports remain intact; this is an operator criterion amendment, not a fabricated rerun.
+
+**The sole remaining S081 qualification blocker is the separate joined reply-completion failure.** Combined Human acceptance remains pending. The guide and current case index reflect this distinction. The earlier status snapshot below predates the operator amendment.
+
+---
+
 # Recovery v2 current technical status
 
 ## Current result — 2026-09-14 UTC

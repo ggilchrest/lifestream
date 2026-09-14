@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
-  "branch": "main",
-  "baseRevision": "6dc2b8f5ce9c0629eb729c0842ea88bea14280c1",
-  "currentRevision": "8b04f00844655abf81bae7054137d361dea6bac4",
+  "branch": "codex/recovery-human-review",
+  "baseRevision": "e9a280392e9c438dd89ed254d125903b08a6042b",
+  "currentRevision": "d9d88d9aff10e6c2aa9386a1ae4103b156c4fd75",
   "activeSlice": "LS-S081",
   "sliceStatus": "blocked",
   "completedSlices": [
@@ -91,54 +91,37 @@
     "implementation/evidence/LS-S081-development-review-2.json",
     "apps/control-web/test/relationship-isolation-continuation.test.mjs",
     "scripts/qualify-s081-continuation-development.mjs",
-    "implementation/evidence/LS-S081-continuation-review-1.json"
+    "implementation/evidence/LS-S081-continuation-review-1.json",
+    "implementation/evidence/LS-S081-case-acceptance-1.json",
+    "implementation/evidence/LS-S081-qualification-case-acceptance-1.json"
   ],
   "changedFiles": [
-    "implementation/checkpoint.json"
+    "implementation/checkpoint.json",
+    "implementation/evidence/LS-S081-current-qualification.json",
+    "implementation/evidence/RECOVERY-V2-CASE-INDEX.json",
+    "implementation/evidence/RECOVERY-V2-STATUS.md",
+    "implementation/evidence/LS-S081-case-acceptance-1.json",
+    "implementation/evidence/LS-S081-qualification-case-acceptance-1.json"
   ],
   "validation": [
     {
-      "command": "pnpm build; pnpm test; pnpm lint; pnpm test:browser-surface; node --test scripts/workspace.test.mjs",
+      "command": "targeted identifier matcher; joined fixture browser test; ESLint; git diff --check",
       "result": "pass",
-      "evidence": "267 source, 23 rendered/browser and 43 evidence-tooling tests pass; fixture results remain separate."
-    },
-    {
-      "command": "node scripts/qualify-s081-development.mjs",
-      "result": "fail",
-      "evidence": "implementation/evidence/LS-S081-development-failed-review-1.json and LS-S081-development-review-2.json preserve joined selected-provider failures."
-    },
-    {
-      "command": "node scripts/qualify-s081-continuation-development.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S081-continuation-review-1.json; independent Skip reply and cross-account isolation only."
-    },
-    {
-      "command": "local HTML browser verification and isolated launcher stop/restart",
-      "result": "pass",
-      "evidence": "Eleven guide steps, desktop/390px layout, progress persistence, synthetic download, JSON export and no default Human acceptance; selected providers ready with fresh real-auth review state."
-    },
-    {
-      "command": "current S081 prerequisiteQualifications validation",
-      "result": "pass",
-      "evidence": "All eight explicit current prerequisite proofs admitted, including paired S080 objective 102/104; S081 itself remains blocked."
-    },
-    {
-      "command": "node scripts/workspace.mjs check; git diff --check",
-      "result": "pass",
-      "evidence": "Workspace structure and scoped whitespace checks pass. Execution preflight deliberately refuses the active blocked S081 checkpoint."
+      "evidence": "Capitalization variations accepted, missing/wrong/embedded identifiers rejected, and full joined fixture journey passes. No selected-provider rerun claimed."
     }
   ],
   "decisions": [
     "WSL development isolation remains application-level: host physical GPU index 1 is exposed as provider-local cuda:0 through CUDA_VISIBLE_DEVICES=1; strict container GPU invisibility is not claimed.",
     "LS-DEC-038 adds an explicitly selected Mac-local development fallback using Ollama Qwen3.5 2B Q4_K_M plus native MLX VoxCPM2 4-bit TTS and compact English Moonshine Tiny STT; no automatic failover or NeMo-equivalent streaming partials are claimed.",
     "2026-09-11: LS-DEC-040 expanded scope adopted in the independent specification repository; this pass is documentation/planning only. No new implementation, scenario acceptance, provider/model choice or execution permission is implied. Canonical specification adoption commit: 30f8605a8a94f7ab6a45a832885008551ec91411.",
-    "2026-09-13 replacement recovery v2 executes the bounded core batch through S081. Prior planning-only holds are historical. S083/S084 remain later adopted scope. Scoped local commits only; no push/deployment/live configuration/import/training or Human acceptance."
+    "2026-09-13 replacement recovery v2 executes the bounded core batch through S081. Prior planning-only holds are historical. S083/S084 remain later adopted scope. Scoped local commits only; no push/deployment/live configuration/import/training or Human acceptance.",
+    "Operator accepts SYNPRJ_Q7M4 to SynPRJ_Q7M4 Lab reply variance as application-level pass; capitalization model quality handled separately."
   ],
   "blockers": [
-    "LS-TEST-106 selected-provider joined qualification: exact SYNPRJ_Q7M4 became SynPRJ_Q7M4 in a Lab output; a later joined run stopped waiting for the skipped-Assistant ordinary reply. Independent isolation passed but does not replace the joined criterion."
+    "LS-TEST-106 joined selected-provider skipped-Assistant reply did not reach observed completion. Capitalization-only Lab variance has been explicitly accepted by the operator and is no longer a core blocker."
   ],
-  "nextAction": "Investigate the preserved selected-provider literal/completion failures and requalify the full joined S081 journey without weakening criteria or changing live model/configuration. Human guide is prepared at docs/human-testing-guide.html; acceptance remains pending. Requalification must use isolated committed source while the unrelated voice-sidecar edits remain dirty in the original checkout.",
-  "updatedAt": "2026-09-14T02:56:49.224355Z",
+  "nextAction": "Diagnose and requalify joined reply completion using the amended Lab capitalization criterion; preserve selected model/configuration/deadlines and all identity/privacy checks. Human acceptance remains pending.",
+  "updatedAt": "2026-09-14T03:18:59.887760Z",
   "updatedBy": "Codex",
-  "notes": "Requested literal test adjustment is implemented and locally committed. Fixture browser and selected-provider rerun pass; first provider attempt hit the unchanged deadline before admission. Historical Green Finch failure and its selector remain preserved pending formal qualification refresh. Implementation status means verification/qualification pending, not full S075 or S081 acceptance. Unrelated voice-sidecar dirty paths were not edited or staged. No push, live configuration change or Human acceptance."
+  "notes": "Operator accepted capitalization-only Lab model variance. Backend ai5090 confirmed; Mac-local not used. Original reports retained. No provider rerun/configuration change or Human acceptance in this amendment."
 }

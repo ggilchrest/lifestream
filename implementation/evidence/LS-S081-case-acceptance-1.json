@@ -1,0 +1,54 @@
+{
+  "slice": "LS-S081",
+  "caseIds": [
+    "LS-TEST-106"
+  ],
+  "evidenceClass": "operator-accepted-model-variance",
+  "sourceRevision": "d9d88d9aff10e6c2aa9386a1ae4103b156c4fd75",
+  "originalExecution": {
+    "path": "implementation/evidence/LS-S081-development-failed-review-1.json",
+    "sha256": "4591265974d621d664cc288e78cce9eb1d3eaf93b716f4ac03277ab6d7271f70",
+    "resultUnderOriginalCriterion": "fail"
+  },
+  "operatorDecision": {
+    "authority": "Explicit operator instruction in the current task",
+    "acceptedDifference": "Required SYNPRJ_Q7M4; observed SynPRJ_Q7M4. Capitalization-only differences are accepted as passing the Lab application criterion.",
+    "disposition": "passUnderAmendedCriterion",
+    "followUpOwner": "Separate model-quality investigation; provider/model selection outside this recovery scope.",
+    "scope": "S081 Lab model replies only; stored/input values and unrelated criteria unchanged."
+  },
+  "criterion": {
+    "completeIdentifierRequired": true,
+    "capitalizationIgnored": true,
+    "wrongCharactersAccepted": false,
+    "missingIdentifierAccepted": false,
+    "unpersonalizedLeakageAccepted": false
+  },
+  "backend": {
+    "profile": "ai5090",
+    "runtime": "SGLang",
+    "model": "RadixArk/Qwen3.8-27B-NVFP4",
+    "servedModelName": "qwen3.8-27b-local",
+    "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+    "macLocalFallback": false
+  },
+  "validation": [
+    {
+      "check": "matcher positive and negative cases",
+      "result": "pass",
+      "evidence": "SYNPRJ_Q7M4, SynPRJ_Q7M4 and synprj_q7m4 accepted; changed digit, truncated, prefixed/suffixed and absent identifiers rejected."
+    },
+    {
+      "check": "node --test apps/control-web/test/relationship-joined.test.mjs with bundled Playwright",
+      "result": "pass",
+      "evidence": "Full joined rendered fixture journey passed. No selected-provider rerun is claimed by this amendment."
+    },
+    {
+      "check": "targeted ESLint and git diff --check",
+      "result": "pass"
+    }
+  ],
+  "remainingBlocker": "The separate joined skipped-Assistant reply-completion failure remains unresolved; independent passing isolation does not replace joined evidence.",
+  "humanAcceptance": "pending",
+  "runtimeOrProviderConfigurationChanged": false
+}

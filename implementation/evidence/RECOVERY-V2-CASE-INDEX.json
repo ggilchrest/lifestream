@@ -3,7 +3,7 @@
   "scope": "Recovery v2 existing dependency path through LS-S081",
   "technicalCoreStatus": "blockedEnvironment",
   "humanAcceptance": "pending",
-  "sourceRevision": "6dc2b8f5ce9c0629eb729c0842ea88bea14280c1",
+  "sourceRevision": "d9d88d9aff10e6c2aa9386a1ae4103b156c4fd75",
   "selectedProfile": {
     "path": "apps/server/src/config/profiles/ai5090.json",
     "sha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd"
@@ -1038,14 +1038,14 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S081-qualification-review-1.json",
-          "sha256": "dc1a97cb5e9bfdcd4520e41f8eeae2ecb606ee7f7f7d56f134f71aad23dfdf3d",
+          "path": "implementation/evidence/LS-S081-qualification-case-acceptance-1.json",
+          "sha256": "8af7e9b44db2b1a66afe8189112243a2248546d5296b75942c5f577a06ffe194",
           "ownerSlice": "LS-S081",
           "status": "blockedEnvironment",
-          "testedRevision": "6dc2b8f5ce9c0629eb729c0842ea88bea14280c1",
+          "testedRevision": "d9d88d9aff10e6c2aa9386a1ae4103b156c4fd75",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "4034a2e5f4ded199b321f4903ec80a8dd2170a8e",
             "artifacts": [
               {
                 "path": "docs/14-acceptance-strategy.md",
@@ -1098,15 +1098,19 @@
   },
   "unresolved": {
     "caseId": "LS-TEST-106",
-    "classification": "selected-provider exact-literal behavior and joined completion failure",
-    "requirement": "One complete joined rendered selected-provider journey satisfies the unchanged declared output and completion criteria.",
+    "classification": "joined selected-provider reply-completion failure",
+    "requirement": "Complete the full joined rendered selected-provider journey under the operator-amended Lab capitalization criterion.",
     "source": "apps/control-web/test/relationship-joined.test.mjs",
-    "independentWork": "Complete: producer evidence refresh, rendered disclosure UI, joined fixture journey, independent selected-provider isolation continuation, isolated review launcher and HTML guide.",
-    "recommendedNextStep": "Investigate selected-provider exact-case compliance across Lab representations and the interrupted joined Skip reply; preserve the model, deadlines and criteria, then requalify the full joined journey. No further acceptance can be inferred from isolated successes."
+    "independentWork": "All prior independent prework is complete. Operator capitalization acceptance, matcher update, fixture verification, guide and source-bound evidence amendment are recorded.",
+    "recommendedNextStep": "Diagnose and requalify joined skipped-Assistant reply completion. Capitalization-only Lab output differences are accepted and no longer block this core. Keep model, live configuration, deadlines, identity and privacy criteria unchanged."
   },
   "exclusions": [
     "No full joined selected-provider qualification or Human acceptance. Earlier Green Finch, literal timeout and joined failures remain preserved.",
     "No private input, physical capture/playback, training, learned-quality, production, performance certification, deployment, pushes or provider service/configuration change.",
     "S083/S084 remain later adopted scope; S082/S065 and S056/S070 retain separate training and product gates."
-  ]
+  ],
+  "operatorAcceptance": {
+    "path": "implementation/evidence/LS-S081-case-acceptance-1.json",
+    "sha256": "332a6ba68429a882d5c66c52e00ec97ae60e6eadac1aed2a4e162a7693c2354d"
+  }
 }
