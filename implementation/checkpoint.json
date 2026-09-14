@@ -3,9 +3,9 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "40e5a0fcbac9a9791632db348055a66f4e96c562",
+  "currentRevision": "f687beef1d5001af76df5090dd969561cd612226",
   "activeSlice": "LS-S084",
-  "sliceStatus": "blocked",
+  "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
     "LS-S002",
@@ -117,12 +117,21 @@
     "packages/performance/test/benchmark.test.ts",
     "packages/contracts/src/schemas/understanding-api.schema.json",
     "implementation/evidence/S083-S084-PREPARATION-1.json",
-    "implementation/evidence/LS-S073-development-extension-regression-1.json"
+    "implementation/evidence/LS-S073-development-extension-regression-1.json",
+    "implementation/evidence/S083-S084-SCHEMA-EXPORT-1.json",
+    "apps/server/src/relationship-extensions.ts",
+    "apps/server/test/relationship-extensions.test.ts",
+    "packages/contracts/src/schemas/relational-initiative.schema.json",
+    "packages/contracts/src/schemas/initiative-api.schema.json"
   ],
   "changedFiles": [
+    "packages/contracts/src/schemas/relational-initiative.schema.json",
+    "packages/contracts/src/schemas/initiative-api.schema.json",
+    "packages/contracts/src/schemas/personal-understanding.schema.json",
+    "packages/contracts/src/schemas/understanding-api.schema.json",
+    "packages/contracts/test/contract-validation.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S083-S084-PREPARATION-1.json",
-    "implementation/evidence/LS-S073-development-extension-regression-1.json"
+    "implementation/evidence/S083-S084-SCHEMA-EXPORT-1.json"
   ],
   "validation": [
     {
@@ -154,13 +163,12 @@
     "Operator accepts SYNPRJ_Q7M4 to SynPRJ_Q7M4 Lab reply variance as application-level pass; capitalization model quality handled separately.",
     "2026-09-14: operator explicitly accepts combined S080/S081 Human review; all eleven guide steps passed. Record implementation/evidence/LS-S081-human-acceptance-1.json. Prior no-Human-acceptance/pending wording is superseded for this explicit Human decision only.",
     "2026-09-14: operator directs identifier-output compliance failures to nonblocking model-quality tracking and model selection after development. Prepared input, privacy and application completion remain hard requirements.",
-    "2026-09-14: operator explicitly authorizes S083 and S084 implementation and verification: Continue with both. Earlier recovery stop is satisfied and superseded for these slices. Separate private machine export, live configuration, physical effects, provider selection, training and Human acceptance boundaries remain."
+    "2026-09-14: operator explicitly authorizes S083 and S084 implementation and verification: Continue with both. Earlier recovery stop is satisfied and superseded for these slices. Separate private machine export, live configuration, physical effects, provider selection, training and Human acceptance boundaries remain.",
+    "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
-  "blockers": [
-    "blockedDecision: exact four-file private machine export approval is pending; BOOTSTRAP.md requires named artifacts before public ingestion. Inventory /private/tmp/lifestream-s083-s084-export-inventory.json. Independent preparation and current regressions are committed; full new-feature integration remains."
-  ],
-  "nextAction": "On exact inventory approval, verify unchanged hashes, ingest only those four schemas and continue S083/S084 versioned runtime/admin integration and complete verification. No repeated slice authorization is needed.",
-  "updatedAt": "2026-09-14T20:37:46.604586Z",
+  "blockers": [],
+  "nextAction": "Continue authorized S083/S084 protected configuration, runtime and browser integration; exact schema export approved.",
+  "updatedAt": "2026-09-14T21:37:02.201573Z",
   "updatedBy": "Codex",
-  "notes": "S083 source foundation is committed/pushed at 9b53633. S084 internal selection/work-admission and benchmark tooling are implemented; the complete versioned vertical features remain pending exact private schema export approval and integration. Preflight identified stale broad predecessor source hashes after the authorized initiative repair; preserve older qualifications and issue source-bound successors with affected verification before new conformance claims."
+  "notes": "Exact export decision resolved. Existing preparation evidence remains historical. Full S083/S084 integration and affected successor qualifications remain in progress."
 }

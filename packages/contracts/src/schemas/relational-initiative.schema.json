@@ -1,0 +1,832 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/relational-initiative/1.0.0",
+  "title": "Relational Initiative - private draft, LS-S083 planned",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/RelationalInitiativeConfiguration"
+    },
+    {
+      "$ref": "#/$defs/RelationalOpportunity"
+    },
+    {
+      "$ref": "#/$defs/RelationalInitiativeOutcome"
+    }
+  ],
+  "$defs": {
+    "RelationalInitiativeConfiguration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "assistantId",
+        "userId",
+        "relationshipId",
+        "deploymentId",
+        "configurationId",
+        "revision",
+        "parentConfigurationRevision",
+        "lifecycle",
+        "preset",
+        "proactiveness",
+        "dimensions",
+        "allowedContexts",
+        "endpointIds",
+        "allowedModalities",
+        "allowedKinds",
+        "consentRefs",
+        "tuning",
+        "adaptation"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "configuration"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "userId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "relationshipId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deploymentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "parentConfigurationRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "lifecycle": {
+          "enum": [
+            "draft",
+            "active",
+            "superseded"
+          ]
+        },
+        "preset": {
+          "enum": [
+            "reactive",
+            "reserved",
+            "friendly",
+            "engaged",
+            "highlyEngaged",
+            "custom"
+          ]
+        },
+        "proactiveness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "initiative",
+            "warmth",
+            "curiosity",
+            "followThrough",
+            "persistence"
+          ],
+          "properties": {
+            "initiative": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            "warmth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            "curiosity": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            "followThrough": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            "persistence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            }
+          }
+        },
+        "allowedContexts": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "privateAvailable",
+              "shared"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "endpointIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "allowedModalities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "text",
+              "speech",
+              "presentation"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "allowedKinds": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "arrivalReturn",
+              "availableCheckIn",
+              "groundedFollowUp"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "consentRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "tuning": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "openingsPerHour",
+            "openingsPerDay",
+            "minimumGapSeconds",
+            "checkInIntervalSeconds",
+            "arrivalDwellSeconds",
+            "meaningfulAbsenceSeconds",
+            "arrivalTtlSeconds",
+            "checkInTtlSeconds",
+            "followUpTtlSeconds",
+            "pendingPerRelationship",
+            "pendingPerRuntime",
+            "generationCallsPerOpportunity",
+            "concurrentSocialCalls",
+            "generationMaxTokens",
+            "generationDeadlineSeconds",
+            "inferenceCallsPerRelationshipHour",
+            "inferenceCallsPerRuntimeHour",
+            "automaticRetries",
+            "dedupRetentionSeconds"
+          ],
+          "properties": {
+            "openingsPerHour": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            },
+            "openingsPerDay": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 48
+            },
+            "minimumGapSeconds": {
+              "type": "integer",
+              "minimum": 120,
+              "maximum": 7200
+            },
+            "checkInIntervalSeconds": {
+              "anyOf": [
+                {
+                  "const": 0
+                },
+                {
+                  "type": "integer",
+                  "minimum": 300,
+                  "maximum": 7200
+                }
+              ]
+            },
+            "arrivalDwellSeconds": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 60
+            },
+            "meaningfulAbsenceSeconds": {
+              "type": "integer",
+              "minimum": 300,
+              "maximum": 7200
+            },
+            "arrivalTtlSeconds": {
+              "type": "integer",
+              "minimum": 30,
+              "maximum": 600
+            },
+            "checkInTtlSeconds": {
+              "type": "integer",
+              "minimum": 30,
+              "maximum": 600
+            },
+            "followUpTtlSeconds": {
+              "type": "integer",
+              "minimum": 30,
+              "maximum": 600
+            },
+            "pendingPerRelationship": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8
+            },
+            "pendingPerRuntime": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            },
+            "generationCallsPerOpportunity": {
+              "const": 1
+            },
+            "concurrentSocialCalls": {
+              "const": 1
+            },
+            "generationMaxTokens": {
+              "type": "integer",
+              "minimum": 32,
+              "maximum": 256
+            },
+            "generationDeadlineSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 15
+            },
+            "inferenceCallsPerRelationshipHour": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 24
+            },
+            "inferenceCallsPerRuntimeHour": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 48
+            },
+            "automaticRetries": {
+              "const": 0
+            },
+            "dedupRetentionSeconds": {
+              "const": 86400
+            }
+          }
+        },
+        "adaptation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "maximumDeferralSeconds"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "maximumDeferralSeconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "dimensions": {
+                "properties": {
+                  "initiative": {
+                    "maximum": 3,
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "tuning": {
+                "properties": {
+                  "openingsPerHour": {
+                    "const": 0
+                  },
+                  "openingsPerDay": {
+                    "const": 0
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "allowedModalities": {
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "consentRefs": {
+                "minItems": 1,
+                "type": "array"
+              },
+              "endpointIds": {
+                "minItems": 1,
+                "type": "array"
+              },
+              "allowedContexts": {
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "RelationalOpportunity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "assistantId",
+        "userId",
+        "relationshipId",
+        "deploymentId",
+        "opportunityId",
+        "correlationId",
+        "conversationId",
+        "sessionId",
+        "endpointId",
+        "configurationId",
+        "configurationRevision",
+        "policyRevision",
+        "kind",
+        "category",
+        "urgency",
+        "sourceKind",
+        "sourceRefs",
+        "executionMode",
+        "observedAt",
+        "receivedAt",
+        "expiresAt",
+        "dedupKey",
+        "topicKey"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "opportunity"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "userId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "relationshipId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deploymentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "opportunityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "conversationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "endpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "configurationRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "policyRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "kind": {
+          "enum": [
+            "arrivalReturn",
+            "availableCheckIn",
+            "groundedFollowUp"
+          ]
+        },
+        "category": {
+          "const": "social"
+        },
+        "urgency": {
+          "const": "low"
+        },
+        "sourceKind": {
+          "enum": [
+            "simulatedBrowser",
+            "qualifiedProvider",
+            "runtimeContext"
+          ]
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "observedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "receivedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "dedupKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "topicKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "sourceKind": {
+                "const": "simulatedBrowser"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "executionMode": {
+                "enum": [
+                  "simulation",
+                  "replay"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "sourceKind": {
+                "const": "runtimeContext"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "availableCheckIn",
+                  "groundedFollowUp"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RelationalInitiativeOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "assistantId",
+        "userId",
+        "relationshipId",
+        "deploymentId",
+        "opportunityId",
+        "correlationId",
+        "configurationId",
+        "configurationRevision",
+        "policyRevision",
+        "state",
+        "occurredAt",
+        "reasonCodes",
+        "sourceRefs",
+        "preparedViewId",
+        "interactionId",
+        "lastDeliveryStage",
+        "deliveryReceiptRef",
+        "acknowledgmentKind",
+        "response"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "outcome"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "userId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "relationshipId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deploymentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "opportunityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "configurationRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "policyRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "state": {
+          "enum": [
+            "pending",
+            "eligible",
+            "generated",
+            "queued",
+            "emitted",
+            "acknowledged",
+            "suppressed",
+            "expired",
+            "failed",
+            "cancelled",
+            "unknown"
+          ]
+        },
+        "occurredAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "reasonCodes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "eligible",
+              "defaultReactive",
+              "reserved",
+              "notOptedIn",
+              "contextRestricted",
+              "quiet",
+              "focused",
+              "unavailable",
+              "identityUnqualified",
+              "audienceChanged",
+              "privacyInsufficient",
+              "staleSource",
+              "expired",
+              "duplicate",
+              "unansweredTopic",
+              "insufficientAbsence",
+              "insufficientDwell",
+              "openingBudget",
+              "cooldown",
+              "queueLimit",
+              "inferenceBudget",
+              "noCandidate",
+              "generationFailed",
+              "configurationChanged",
+              "consentRevoked",
+              "leaseLost",
+              "endpointUnavailable",
+              "userTurn",
+              "dismissed",
+              "unsupportedExpression",
+              "outputFailed",
+              "cancelled",
+              "ackTimeout",
+              "restartExpired",
+              "admissionUnavailable",
+              "simulationOnly",
+              "invalidScope",
+              "invalidTransition",
+              "deliveryEmitted",
+              "endpointAccepted",
+              "playbackCompleted",
+              "responseObserved"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "preparedViewId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "interactionId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lastDeliveryStage": {
+          "enum": [
+            "none",
+            "generated",
+            "queued",
+            "emitted",
+            "acknowledged"
+          ]
+        },
+        "deliveryReceiptRef": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "acknowledgmentKind": {
+          "enum": [
+            null,
+            "endpointAccepted",
+            "playbackCompleted"
+          ]
+        },
+        "response": {
+          "enum": [
+            "notObserved",
+            "replied",
+            "dismissed",
+            "noResponse"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "acknowledged"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "lastDeliveryStage": {
+                "const": "acknowledged"
+              },
+              "deliveryReceiptRef": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "acknowledgmentKind": {
+                "enum": [
+                  "endpointAccepted",
+                  "playbackCompleted"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "generated",
+                  "queued",
+                  "emitted",
+                  "acknowledged"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "preparedViewId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "interactionId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  }
+}

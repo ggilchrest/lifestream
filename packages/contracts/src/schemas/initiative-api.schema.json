@@ -1,0 +1,1028 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/initiative-api/1.0.0",
+  "title": "Initiative administration and bounded ingress",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Request"
+    },
+    {
+      "$ref": "#/$defs/Response"
+    },
+    {
+      "$ref": "#/$defs/Error"
+    }
+  ],
+  "$defs": {
+    "Settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preset",
+        "proactiveness",
+        "dimensions",
+        "allowedContexts",
+        "endpointIds",
+        "allowedModalities",
+        "allowedKinds",
+        "consentRefs",
+        "tuning",
+        "adaptation"
+      ],
+      "properties": {
+        "preset": {
+          "enum": [
+            "reactive",
+            "reserved",
+            "friendly",
+            "engaged",
+            "highlyEngaged",
+            "custom"
+          ]
+        },
+        "proactiveness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "initiative",
+            "warmth",
+            "curiosity",
+            "followThrough",
+            "persistence"
+          ],
+          "properties": {
+            "initiative": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            "warmth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            "curiosity": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            "followThrough": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            "persistence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            }
+          }
+        },
+        "allowedContexts": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "privateAvailable",
+              "shared"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "endpointIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "allowedModalities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "text",
+              "speech",
+              "presentation"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "allowedKinds": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "arrivalReturn",
+              "availableCheckIn",
+              "groundedFollowUp"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "consentRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "tuning": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "openingsPerHour",
+            "openingsPerDay",
+            "minimumGapSeconds",
+            "checkInIntervalSeconds",
+            "arrivalDwellSeconds",
+            "meaningfulAbsenceSeconds",
+            "arrivalTtlSeconds",
+            "checkInTtlSeconds",
+            "followUpTtlSeconds",
+            "pendingPerRelationship",
+            "pendingPerRuntime",
+            "generationCallsPerOpportunity",
+            "concurrentSocialCalls",
+            "generationMaxTokens",
+            "generationDeadlineSeconds",
+            "inferenceCallsPerRelationshipHour",
+            "inferenceCallsPerRuntimeHour",
+            "automaticRetries",
+            "dedupRetentionSeconds"
+          ],
+          "properties": {
+            "openingsPerHour": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            },
+            "openingsPerDay": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 48
+            },
+            "minimumGapSeconds": {
+              "type": "integer",
+              "minimum": 120,
+              "maximum": 7200
+            },
+            "checkInIntervalSeconds": {
+              "anyOf": [
+                {
+                  "const": 0
+                },
+                {
+                  "type": "integer",
+                  "minimum": 300,
+                  "maximum": 7200
+                }
+              ]
+            },
+            "arrivalDwellSeconds": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 60
+            },
+            "meaningfulAbsenceSeconds": {
+              "type": "integer",
+              "minimum": 300,
+              "maximum": 7200
+            },
+            "arrivalTtlSeconds": {
+              "type": "integer",
+              "minimum": 30,
+              "maximum": 600
+            },
+            "checkInTtlSeconds": {
+              "type": "integer",
+              "minimum": 30,
+              "maximum": 600
+            },
+            "followUpTtlSeconds": {
+              "type": "integer",
+              "minimum": 30,
+              "maximum": 600
+            },
+            "pendingPerRelationship": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8
+            },
+            "pendingPerRuntime": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            },
+            "generationCallsPerOpportunity": {
+              "const": 1
+            },
+            "concurrentSocialCalls": {
+              "const": 1
+            },
+            "generationMaxTokens": {
+              "type": "integer",
+              "minimum": 32,
+              "maximum": 256
+            },
+            "generationDeadlineSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 15
+            },
+            "inferenceCallsPerRelationshipHour": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 24
+            },
+            "inferenceCallsPerRuntimeHour": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 48
+            },
+            "automaticRetries": {
+              "const": 0
+            },
+            "dedupRetentionSeconds": {
+              "const": 86400
+            }
+          }
+        },
+        "adaptation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "maximumDeferralSeconds"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "maximumDeferralSeconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "dimensions": {
+                "properties": {
+                  "initiative": {
+                    "maximum": 3,
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "tuning": {
+                "properties": {
+                  "openingsPerHour": {
+                    "const": 0
+                  },
+                  "openingsPerDay": {
+                    "const": 0
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "allowedModalities": {
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "consentRefs": {
+                "minItems": 1,
+                "type": "array"
+              },
+              "endpointIds": {
+                "minItems": 1,
+                "type": "array"
+              },
+              "allowedContexts": {
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "Delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "opportunityId",
+        "sessionId",
+        "interactionId",
+        "modality",
+        "text",
+        "expiresAt",
+        "captureEnabled"
+      ],
+      "properties": {
+        "opportunityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "interactionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "modality": {
+          "enum": [
+            "text",
+            "speech"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8000
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "captureEnabled": {
+          "const": false
+        }
+      }
+    },
+    "InspectRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "inspect"
+        }
+      }
+    },
+    "DraftRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "expectedActiveConfigurationId",
+        "settings"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "draft"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "expectedActiveConfigurationId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "settings": {
+          "$ref": "#/$defs/Settings"
+        }
+      }
+    },
+    "PreviewRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "configurationId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "preview"
+        },
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        }
+      }
+    },
+    "ActivateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "configurationId",
+        "expectedRevision",
+        "confirmed"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "activate"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "confirmed": {
+          "const": true
+        }
+      }
+    },
+    "RollbackRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "configurationId",
+        "expectedRevision"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "rollback"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      }
+    },
+    "TemporaryModeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "sessionId",
+        "mode",
+        "endsAt",
+        "dimensions"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "temporaryMode"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "mode": {
+          "enum": [
+            "quiet",
+            "companionship",
+            "clear"
+          ]
+        },
+        "endsAt": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dimensions": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "initiative",
+                "warmth",
+                "curiosity",
+                "followThrough",
+                "persistence"
+              ],
+              "properties": {
+                "initiative": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 11
+                },
+                "warmth": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 11
+                },
+                "curiosity": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 11
+                },
+                "followThrough": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 11
+                },
+                "persistence": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 11
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SimulationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "sessionId",
+        "sourceEventId",
+        "kind",
+        "topicRef"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "simulate"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sourceEventId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "kind": {
+          "enum": [
+            "arrivalReturn",
+            "availableCheckIn",
+            "groundedFollowUp"
+          ]
+        },
+        "topicRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "OutputReadinessRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "sessionId",
+        "modality",
+        "ready"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "outputReadiness"
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "modality": {
+          "enum": [
+            "text",
+            "speech"
+          ]
+        },
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    },
+    "AcknowledgmentRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "sessionId",
+        "opportunityId",
+        "kind",
+        "receiptId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "acknowledge"
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "opportunityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "kind": {
+          "enum": [
+            "endpointAccepted",
+            "playbackCompleted"
+          ]
+        },
+        "receiptId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        }
+      }
+    },
+    "DismissRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "sessionId",
+        "opportunityId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "dismiss"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "opportunityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        }
+      }
+    },
+    "CancelRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "sessionId",
+        "opportunityId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "cancel"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "opportunityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        }
+      }
+    },
+    "ComparisonRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "configurationId",
+        "scenario"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "compare"
+        },
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "scenario": {
+          "const": "initiative-gradient-v1"
+        }
+      }
+    },
+    "Request": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/InspectRequest"
+        },
+        {
+          "$ref": "#/$defs/DraftRequest"
+        },
+        {
+          "$ref": "#/$defs/PreviewRequest"
+        },
+        {
+          "$ref": "#/$defs/ActivateRequest"
+        },
+        {
+          "$ref": "#/$defs/RollbackRequest"
+        },
+        {
+          "$ref": "#/$defs/TemporaryModeRequest"
+        },
+        {
+          "$ref": "#/$defs/SimulationRequest"
+        },
+        {
+          "$ref": "#/$defs/OutputReadinessRequest"
+        },
+        {
+          "$ref": "#/$defs/AcknowledgmentRequest"
+        },
+        {
+          "$ref": "#/$defs/DismissRequest"
+        },
+        {
+          "$ref": "#/$defs/CancelRequest"
+        },
+        {
+          "$ref": "#/$defs/ComparisonRequest"
+        }
+      ]
+    },
+    "Explanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "summary",
+        "sourceRefs"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          },
+          "maxItems": 32,
+          "uniqueItems": true
+        }
+      }
+    },
+    "Response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "relationshipId",
+        "operation",
+        "activeConfigurationId",
+        "records",
+        "explanations",
+        "activeStateChanged",
+        "executionMode",
+        "nextCursor",
+        "delivery"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "relationshipId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "operation": {
+          "enum": [
+            "inspect",
+            "draft",
+            "preview",
+            "activate",
+            "rollback",
+            "temporaryMode",
+            "simulate",
+            "outputReadiness",
+            "acknowledge",
+            "dismiss",
+            "cancel",
+            "compare"
+          ]
+        },
+        "activeConfigurationId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "records": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "https://lifestream.dev/contracts/relational-initiative/1.0.0#/$defs/RelationalInitiativeConfiguration"
+              },
+              {
+                "$ref": "https://lifestream.dev/contracts/relational-initiative/1.0.0#/$defs/RelationalOpportunity"
+              },
+              {
+                "$ref": "https://lifestream.dev/contracts/relational-initiative/1.0.0#/$defs/RelationalInitiativeOutcome"
+              }
+            ]
+          }
+        },
+        "explanations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Explanation"
+          },
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "activeStateChanged": {
+          "type": "boolean"
+        },
+        "executionMode": {
+          "enum": [
+            "simulation",
+            "live",
+            "replay"
+          ]
+        },
+        "nextCursor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "delivery": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Delivery"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "code",
+        "message",
+        "retryable",
+        "correlationId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        }
+      }
+    }
+  }
+}

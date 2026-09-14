@@ -1,0 +1,1025 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/understanding-api/1.0.0",
+  "title": "Understanding administration and bounded ingress",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Request"
+    },
+    {
+      "$ref": "#/$defs/Response"
+    },
+    {
+      "$ref": "#/$defs/Error"
+    }
+  ],
+  "$defs": {
+    "Settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "researchMode",
+        "researchDepth",
+        "approvedTopicRefs",
+        "policyRefs",
+        "excludedSourceRefs",
+        "excludedTopicRefs",
+        "spoilerPolicy",
+        "progressBoundaryRef",
+        "explorationShare",
+        "budget"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "researchMode": {
+          "enum": [
+            "off",
+            "providedOnly",
+            "approvedTopics"
+          ]
+        },
+        "researchDepth": {
+          "enum": [
+            "brief",
+            "deep"
+          ]
+        },
+        "approvedTopicRefs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "policyRefs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "excludedSourceRefs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "excludedTopicRefs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "spoilerPolicy": {
+          "enum": [
+            "avoid",
+            "throughKnownProgress",
+            "allow"
+          ]
+        },
+        "progressBoundaryRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "explorationShare": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.5
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "jobsPerDay",
+            "pendingJobsPerRuntime",
+            "concurrentJobs",
+            "externalRequestsPerJob",
+            "documentsPerJob",
+            "inputBytesPerJob",
+            "sourceTokensPerJob",
+            "jobDeadlineSeconds",
+            "fetchDeadlineSeconds",
+            "analysisCallsPerJob",
+            "outputTokensPerCall",
+            "automaticRetries",
+            "workerCpuChunkMs",
+            "workerMemoryMiB",
+            "pendingJobTtlSeconds",
+            "briefFreshnessSeconds",
+            "enrichmentTokens",
+            "selectedItems",
+            "optionalSelectionDeadlineMs"
+          ],
+          "properties": {
+            "jobsPerDay": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32
+            },
+            "pendingJobsPerRuntime": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            },
+            "concurrentJobs": {
+              "const": 1
+            },
+            "externalRequestsPerJob": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "documentsPerJob": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "inputBytesPerJob": {
+              "type": "integer",
+              "minimum": 65536,
+              "maximum": 8388608
+            },
+            "sourceTokensPerJob": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 32000
+            },
+            "jobDeadlineSeconds": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 300
+            },
+            "fetchDeadlineSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            },
+            "analysisCallsPerJob": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "outputTokensPerCall": {
+              "type": "integer",
+              "minimum": 128,
+              "maximum": 4096
+            },
+            "automaticRetries": {
+              "const": 0
+            },
+            "workerCpuChunkMs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "workerMemoryMiB": {
+              "type": "integer",
+              "minimum": 64,
+              "maximum": 512
+            },
+            "pendingJobTtlSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 86400
+            },
+            "briefFreshnessSeconds": {
+              "type": "integer",
+              "minimum": 3600,
+              "maximum": 604800
+            },
+            "enrichmentTokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1024
+            },
+            "selectedItems": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "optionalSelectionDeadlineMs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "researchMode": {
+                "const": "approvedTopics"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "approvedTopicRefs": {
+                "type": "array",
+                "minItems": 1
+              },
+              "policyRefs": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "spoilerPolicy": {
+                "const": "throughKnownProgress"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "progressBoundaryRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SuppliedSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceRef",
+        "sourceFamily",
+        "sourceRevision",
+        "topicRef",
+        "policyRef",
+        "retrievedAt",
+        "reliability",
+        "reliabilityBasis",
+        "content",
+        "claims",
+        "aliasClaims",
+        "knowledgeGaps"
+      ],
+      "properties": {
+        "sourceRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "sourceFamily": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "topicRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "policyRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "retrievedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "reliability": {
+          "enum": [
+            "high",
+            "medium",
+            "low",
+            "unknown"
+          ]
+        },
+        "reliabilityBasis": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536
+        },
+        "claims": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "claimId",
+              "text",
+              "sourceRefs",
+              "qualifier",
+              "versionScope",
+              "spoilerClass",
+              "contradictionRefs"
+            ],
+            "properties": {
+              "claimId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "sourceRefs": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                }
+              },
+              "qualifier": {
+                "enum": [
+                  "attributed",
+                  "corroborated",
+                  "uncertain",
+                  "contradicted"
+                ]
+              },
+              "versionScope": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "spoilerClass": {
+                "enum": [
+                  "none",
+                  "withinDeclaredProgress",
+                  "beyondDeclaredProgress",
+                  "unknown"
+                ]
+              },
+              "contradictionRefs": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 32,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                }
+              }
+            }
+          }
+        },
+        "aliasClaims": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "claimId",
+              "text",
+              "sourceRefs",
+              "qualifier",
+              "versionScope",
+              "spoilerClass",
+              "contradictionRefs"
+            ],
+            "properties": {
+              "claimId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "sourceRefs": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                }
+              },
+              "qualifier": {
+                "enum": [
+                  "attributed",
+                  "corroborated",
+                  "uncertain",
+                  "contradicted"
+                ]
+              },
+              "versionScope": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "spoilerClass": {
+                "enum": [
+                  "none",
+                  "withinDeclaredProgress",
+                  "beyondDeclaredProgress",
+                  "unknown"
+                ]
+              },
+              "contradictionRefs": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 32,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                }
+              }
+            }
+          }
+        },
+        "knowledgeGaps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "maxItems": 16,
+          "uniqueItems": true
+        }
+      }
+    },
+    "InspectRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "inspect"
+        }
+      }
+    },
+    "DraftRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "expectedActiveConfigurationId",
+        "settings"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "draft"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "expectedActiveConfigurationId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "settings": {
+          "$ref": "#/$defs/Settings"
+        }
+      }
+    },
+    "PreviewRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "configurationId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "preview"
+        },
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        }
+      }
+    },
+    "ActivateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "configurationId",
+        "expectedRevision",
+        "confirmed"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "activate"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "confirmed": {
+          "const": true
+        }
+      }
+    },
+    "RollbackRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "configurationId",
+        "expectedRevision"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "rollback"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      }
+    },
+    "PrepareRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "topicRef",
+        "evidenceRefs",
+        "sources",
+        "purpose"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "prepare"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "topicRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          },
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SuppliedSource"
+          },
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "purpose": {
+          "enum": [
+            "topicResearch",
+            "hypothesisAnalysis",
+            "briefRebuild"
+          ]
+        }
+      }
+    },
+    "CancelRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "workId",
+        "expectedRevision"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "cancel"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "workId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      }
+    },
+    "DispositionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "recordId",
+        "expectedRevision",
+        "decision",
+        "reason"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "disposition"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "recordId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "decision": {
+          "enum": [
+            "reviewHypothesis",
+            "rejectHypothesis",
+            "suppressCandidate",
+            "forgetTopic",
+            "excludeSource"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "FeedbackRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "idempotencyKey",
+        "topicRef",
+        "evidenceRef",
+        "kind",
+        "scope",
+        "until"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "feedback"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "topicRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "evidenceRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "kind": {
+          "enum": [
+            "dislike",
+            "temporaryFatigue",
+            "poorTiming",
+            "noProjectCapacity",
+            "alreadySatisfied",
+            "interestWithoutPurchaseIntent",
+            "uncertain"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "until": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ComparisonRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "configurationId",
+        "scenario"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "compare"
+        },
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "scenario": {
+          "const": "understanding-demonstrations-v1"
+        }
+      }
+    },
+    "Request": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/InspectRequest"
+        },
+        {
+          "$ref": "#/$defs/DraftRequest"
+        },
+        {
+          "$ref": "#/$defs/PreviewRequest"
+        },
+        {
+          "$ref": "#/$defs/ActivateRequest"
+        },
+        {
+          "$ref": "#/$defs/RollbackRequest"
+        },
+        {
+          "$ref": "#/$defs/PrepareRequest"
+        },
+        {
+          "$ref": "#/$defs/CancelRequest"
+        },
+        {
+          "$ref": "#/$defs/DispositionRequest"
+        },
+        {
+          "$ref": "#/$defs/FeedbackRequest"
+        },
+        {
+          "$ref": "#/$defs/ComparisonRequest"
+        }
+      ]
+    },
+    "Explanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "summary",
+        "sourceRefs"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          },
+          "maxItems": 32,
+          "uniqueItems": true
+        }
+      }
+    },
+    "Response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "relationshipId",
+        "operation",
+        "activeConfigurationId",
+        "records",
+        "explanations",
+        "activeStateChanged",
+        "executionMode",
+        "nextCursor"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "relationshipId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "operation": {
+          "enum": [
+            "inspect",
+            "draft",
+            "preview",
+            "activate",
+            "rollback",
+            "prepare",
+            "cancel",
+            "disposition",
+            "feedback",
+            "compare"
+          ]
+        },
+        "activeConfigurationId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "records": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "https://lifestream.dev/contracts/personal-understanding/1.0.0#/$defs/UnderstandingConfiguration"
+              },
+              {
+                "$ref": "https://lifestream.dev/contracts/personal-understanding/1.0.0#/$defs/PreferenceHypothesis"
+              },
+              {
+                "$ref": "https://lifestream.dev/contracts/personal-understanding/1.0.0#/$defs/TopicBrief"
+              },
+              {
+                "$ref": "https://lifestream.dev/contracts/personal-understanding/1.0.0#/$defs/UnderstandingWork"
+              },
+              {
+                "$ref": "https://lifestream.dev/contracts/personal-understanding/1.0.0#/$defs/UnderstandingCandidate"
+              }
+            ]
+          }
+        },
+        "explanations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Explanation"
+          },
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "activeStateChanged": {
+          "type": "boolean"
+        },
+        "executionMode": {
+          "enum": [
+            "simulation",
+            "live",
+            "replay"
+          ]
+        },
+        "nextCursor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "code",
+        "message",
+        "retryable",
+        "correlationId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        }
+      }
+    }
+  }
+}
