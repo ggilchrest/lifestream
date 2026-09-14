@@ -1,0 +1,139 @@
+{
+  "slice": "LS-S072",
+  "status": "verified",
+  "claimClass": "structural-contract",
+  "caseIds": [
+    "LS-TEST-091"
+  ],
+  "revision": "2863bcb14621c427baa4b234c5b5d989fc63c756",
+  "checks": [
+    {
+      "command": "pnpm validate",
+      "result": "pass",
+      "evidence": "53 validator tests and 527 structural vectors pass at the current private specification revision. No runtime or model-compliance claim."
+    }
+  ],
+  "qualification": {
+    "kind": "prospective-qualification",
+    "sourceRepository": "ggilchrest/lifestream-specs",
+    "testedRevision": "2863bcb14621c427baa4b234c5b5d989fc63c756",
+    "supersedes": "implementation/evidence/LS-S072.json",
+    "supersedesSha256": "f66b2678ac961b38e38bdc0e4ab561c91c7e601d74a2f40574775ec11ae903d8",
+    "sourceArtifacts": [
+      {
+        "path": "contracts/user-profile.schema.json",
+        "sha256": "5ac0acc2877cc7d7e44aa2903e597a69548704ee781e846d3054aa974da5c313"
+      },
+      {
+        "path": "contracts/relationship.schema.json",
+        "sha256": "6bbcad685c176fc5926ada52eced6c9f777570f903444945b6700e4b5d692e9a"
+      },
+      {
+        "path": "contracts/relationship-administration.schema.json",
+        "sha256": "507ec9020ebd0cd9ab02c238cff658317c866cc5f3e769bd0b652277a6f875bb"
+      },
+      {
+        "path": "contracts/prepared-context-2.0.0.schema.json",
+        "sha256": "427c61df6800246775fb5e6e5b443eb67c3aec4be5bbfe75aba54fa580a48024"
+      },
+      {
+        "path": "contracts/protocol-common.schema.json",
+        "sha256": "d7bdc15c51875828b6b72dbbdf7b849856afdc9b2b66c0fbff479e84ba60b0d6"
+      },
+      {
+        "path": "contracts/contract-catalog.json",
+        "sha256": "3030d1db104f760be8304ee2b66a380233345e924030ba7e849a7a0a1904d109"
+      },
+      {
+        "path": "contracts/contract-manifest.json",
+        "sha256": "2ace519ded34d99b8d3396011e92056e361ebd60af66f9e58dc5705dab20b902"
+      },
+      {
+        "path": "fixtures/validation-vectors.json",
+        "sha256": "e9998a27c8f45bd027c226d8a8d3c3d45e82ea257eed4dbfa14b743f93ffbd56"
+      },
+      {
+        "path": "fixtures/contract-closure-vectors.json",
+        "sha256": "76be71979252b59bbd7594a6f41b18e312a6db1a2e5aba547fe58af7204be91f"
+      },
+      {
+        "path": "fixtures/requirement-traceability.json",
+        "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+      },
+      {
+        "path": "scripts/validate-specs.mjs",
+        "sha256": "2e5d0ddb78b1688e1848591ee658e62d057d5f1cdbc77d76e795027f404cd1c0"
+      },
+      {
+        "path": "scripts/validate-handoff.mjs",
+        "sha256": "a911648eb2330d58192048561a4f490ebe09ef46f90ea6732c9c641d99b171bd"
+      },
+      {
+        "path": "scripts/validate-handoff.test.mjs",
+        "sha256": "6ec2c9a3be220b9ced37eaa5f9545840cb6662b82bbcf3f1928cfacc3b65c1dd"
+      },
+      {
+        "path": "package-lock.json",
+        "sha256": "80fc8651fd9b655c38a834e73c6776aae0db21fbe9331385bed19b60efe5a94c"
+      },
+      {
+        "path": "implementation/evidence/LS-S072-export-inventory.json",
+        "sha256": "70fb87ab83f72aa9893ffaf588cf2a86f8a1ec4a18298a4770286fe386b5e66d"
+      }
+    ],
+    "effectiveSpecification": {
+      "sourceRepository": "ggilchrest/lifestream-specs",
+      "revision": "2863bcb14621c427baa4b234c5b5d989fc63c756",
+      "artifacts": [
+        {
+          "path": "docs/26-assistant-context-and-relationship-administration.md",
+          "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
+        },
+        {
+          "path": "fixtures/requirement-traceability.json",
+          "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+        },
+        {
+          "path": "contracts/user-profile.schema.json",
+          "sha256": "5ac0acc2877cc7d7e44aa2903e597a69548704ee781e846d3054aa974da5c313"
+        },
+        {
+          "path": "contracts/relationship.schema.json",
+          "sha256": "6bbcad685c176fc5926ada52eced6c9f777570f903444945b6700e4b5d692e9a"
+        },
+        {
+          "path": "contracts/relationship-administration.schema.json",
+          "sha256": "507ec9020ebd0cd9ab02c238cff658317c866cc5f3e769bd0b652277a6f875bb"
+        },
+        {
+          "path": "contracts/prepared-context-2.0.0.schema.json",
+          "sha256": "427c61df6800246775fb5e6e5b443eb67c3aec4be5bbfe75aba54fa580a48024"
+        }
+      ]
+    },
+    "openObligations": [
+      {
+        "caseId": "LS-TEST-091",
+        "claimClass": "runtime-security",
+        "owningSlices": [
+          "LS-S069",
+          "LS-S073",
+          "LS-S075",
+          "LS-S076",
+          "LS-S078",
+          "LS-S079",
+          "LS-S080",
+          "LS-S081"
+        ]
+      }
+    ],
+    "sourceReceipt": {
+      "path": "implementation/evidence/LS-S072-structural-certification-1.json",
+      "sha256": "c9b162dfa5ba725bd3936bfd5d1cc46eb3015faab78d437f93528e63709e785f"
+    }
+  },
+  "priorQualification": {
+    "path": "implementation/evidence/LS-S072-qualification-recovery-v2.json",
+    "sha256": "3b9eb7dec7dead37c8188098fe18dd1faf6293eb21f358126b81f908f7bfc138"
+  }
+}

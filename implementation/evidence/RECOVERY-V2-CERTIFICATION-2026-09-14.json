@@ -1,0 +1,51 @@
+{
+  "sourceRevision": "370219cbc6bf33d3d2a3344932308ebc0df97467",
+  "effectiveSpecificationRevision": "2863bcb14621c427baa4b234c5b5d989fc63c756",
+  "collectedAt": "2026-09-14T15:24:36.556943Z",
+  "claimClass": "source-and-rendered-regression",
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "evidence": "Completed successfully at the recorded source revision.",
+      "logSha256": "9513b734924b23c79334fcccc868c9940745da0ee5767d7476bc76c037a37dde"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "evidence": "Completed successfully at the recorded source revision.",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "evidence": "Completed successfully at the recorded source revision.",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "267 tests passed; no skips or failures.",
+      "logSha256": "f76d90a99a84a1b776b6ba94419dc85360947de926d52d13bb06b9be344fc2b8"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "24 tests passed; no skips or failures.",
+      "logSha256": "ce80fb1e3d6f87f7ad2b25aa0a467dff784e1c6ccedcb897e19bfc07a4ddc928"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "evidence": "45 tests passed; no skips or failures.",
+      "logSha256": "1ea0d71713125964be7f2e1dcc50c0080686043784bac33312614ace16f1a4b2"
+    }
+  ],
+  "scope": "Existing bounded recovery through S081; synthetic data, real local authentication and fixture browser inference. Selected-provider results are separate owner reports.",
+  "sourceWorktreeChanges": [],
+  "sourceWorktreeExplanation": "All tested implementation and test code was committed; the post-policy source worktree was clean. Original checkout voice edits and accepted review database were excluded.",
+  "exclusions": [
+    "Does not itself prove selected-provider behavior, training, physical/perceptual/performance or production acceptance.",
+    "Combined Human acceptance remains independently recorded in LS-S081-human-acceptance-1.json."
+  ]
+}
