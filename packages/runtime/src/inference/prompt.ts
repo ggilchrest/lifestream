@@ -4,7 +4,7 @@ import { formatPreparedRelationshipContext, type PreparedRelationshipContext } f
 
 const kinds = ["policy", "corePersona", "adaptivePersona", "interactionState", "preparedMemory", "worldContext", "capabilityState", "conversation", "userInput"] as const;
 const digest = (content: string) => createHash("sha256").update(content, "utf8").digest("hex");
-const tokens = (content: string) => content.trim() ? content.trim().split(/\s+/u).length : 0;
+const tokens = (content: string) => new TextEncoder().encode(content).byteLength;
 export type RuntimeSelfContext = {
   sourceRevision: string;
   asOf?: string;
@@ -44,6 +44,6 @@ export function buildCanonicalPrompt(input: PromptInput): InferenceRequest {
   ] as const;
   const sections: InferenceSection[] = values.map(([kind, content, trusted, sourceRef]) => ({ kind, content, trusted, sourceRevision: kind === "interactionState" ? selfContext.sourceRevision : (kind === "corePersona" || kind === "adaptivePersona") && input.profileProjection ? input.profileProjection.sourceRevision : kind === "preparedMemory" && input.preparedRelationshipContext ? `compiler:${"compilerRevision" in input.preparedRelationshipContext ? input.preparedRelationshipContext.compilerRevision : "legacy"};sources:${digest(JSON.stringify("sourceRevisions" in input.preparedRelationshipContext ? input.preparedRelationshipContext.sourceRevisions : []))};profile:${input.preparedRelationshipContext.profileRevision};relationship:${input.preparedRelationshipContext.relationshipRevision};configuration:${input.preparedRelationshipContext.configurationRevision}` : "v1", sourceRef, contentDigest: digest(content), redaction: "none", tokenCount: tokens(content) }));
   if (sections.map((section) => section.kind).join(",") !== kinds.join(",")) throw new Error("canonical prompt section order mismatch");
-  const manifest: InputManifest = { schemaVersion: "1.0.0", sections: sections.map(({ kind, sourceRevision, sourceRef, contentDigest, redaction, tokenCount }) => ({ kind, sourceRevision, sourceRef, contentDigest, redaction, tokenCount })), tokenizer: "whitespace-v1" };
+  const manifest: InputManifest = { schemaVersion: "1.0.0", sections: sections.map(({ kind, sourceRevision, sourceRef, contentDigest, redaction, tokenCount }) => ({ kind, sourceRevision, sourceRef, contentDigest, redaction, tokenCount })), tokenizer: "estimate:utf8-bytes-upper-bound-v1" };
   return { sections, manifest, deadlineAt: input.deadlineAt ?? new Date(Date.now() + 10_000).toISOString(), executionMode: input.executionMode ?? "live", scope: { assistantId: input.assistantId, sessionId: input.sessionId, interactionId: input.interactionId, endpointId: input.endpointId } };
 }

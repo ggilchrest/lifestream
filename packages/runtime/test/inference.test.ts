@@ -19,3 +19,14 @@ test("inference uses the canonical four-item prepared-context budget", () => { c
 test("relational opportunities carry explicit origin without fabricated user speech", () => { const request = buildCanonicalPrompt({ assistantId: "a", sessionId: "s", interactionId: "i", endpointId: "endpoint", origin: "relationalOpportunity" }); const state = request.sections.find((item) => item.kind === "interactionState"); const input = request.sections.find((item) => item.kind === "userInput"); assert.match(state?.content ?? "", /origin=relationalOpportunity/); assert.equal(input?.content, ""); assert.equal(input?.sourceRef, "user-input:empty-v1"); });
 test("fixture inference has deterministic section output", async () => { const request = buildCanonicalPrompt({ assistantId: "a", sessionId: "s", interactionId: "i", endpointId: null, userInput: "hello" }); const a = []; for await (const c of new FixtureInferenceProvider().generate(request, context)) a.push(c); assert.equal(a[0].text, "Fixture response: hello"); assert.deepEqual(request.sections.map((section) => section.kind), ["policy", "corePersona", "adaptivePersona", "interactionState", "preparedMemory", "worldContext", "capabilityState", "conversation", "userInput"]); assert.equal(request.manifest.sections.length, 9); });
 test("replay fixture inference produces no live output", async () => { const request = buildCanonicalPrompt({ assistantId: "a", sessionId: "s", interactionId: "i", endpointId: null, userInput: "hello", executionMode: "replay" }); const chunks = []; for await (const chunk of new FixtureInferenceProvider().generate(request, context)) chunks.push(chunk); assert.deepEqual(chunks, []); });
+
+
+test("LS-TEST-134: actual canonical request labels conservative counts and bounds legacy optional Unicode context", () => {
+  const view = { approvedBaseline: ["Keep the established approved baseline."], criticalCorrections: ["The current subject is Python."], relevantContext: [{ id: "long", content: "Python " + "界".repeat(200), rank: 0 }, { id: "short", content: "Python examples should show the result.", rank: 1 }], profileRevision: "p:1", relationshipRevision: "r:1", configurationRevision: "c:1", limitations: [] };
+  const request = buildCanonicalPrompt({ assistantId: "a", sessionId: "s", interactionId: "i", endpointId: null, userInput: "Explain Python", preparedRelationshipContext: view });
+  const memory = request.sections.find(section => section.kind === "preparedMemory")!;
+  assert.match(memory.content, /established approved baseline/); assert.match(memory.content, /current subject is Python/); assert.match(memory.content, /examples should show/);
+  assert.doesNotMatch(memory.content, /界/);
+  assert.equal(memory.tokenCount, Buffer.byteLength(memory.content));
+  assert.equal(request.manifest.tokenizer, "estimate:utf8-bytes-upper-bound-v1");
+});

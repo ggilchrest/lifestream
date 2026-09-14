@@ -1,13 +1,15 @@
 import { describeRelationshipControls } from "./controls.ts";
 export { relationshipControlDefaults, relationshipControlInventory } from "./controls.ts";
 export type ContextSource = { id: string; content: string; rank: number };
-const estimateTokens = (content: string): number => content.trim() ? content.trim().split(/\s+/u).length : 0;
+// Conservative estimate for byte-based tokenization; the serving tokenizer is not measured here.
+const estimateTokens = (content: string): number => new TextEncoder().encode(content).byteLength;
 export function buildContext(sources: ContextSource[], maxItems = 4, maxTokens = 512): ContextSource[] {
+  if (!Number.isInteger(maxItems) || maxItems < 0 || maxItems > 8 || !Number.isInteger(maxTokens) || maxTokens < 0 || maxTokens > 1024) throw new Error("invalid bounded context allocation");
   const selected: ContextSource[] = [];
   let usedTokens = 0;
   for (const source of [...sources].sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id))) {
     if (selected.length >= maxItems) break;
-    const sourceTokens = estimateTokens(source.content);
+    const sourceTokens = estimateTokens(`${source.id}=${source.content}`) + 16;
     if (usedTokens + sourceTokens > maxTokens) continue;
     selected.push({ ...source });
     usedTokens += sourceTokens;

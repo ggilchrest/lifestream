@@ -3,8 +3,8 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "activeSlice": "LS-S083",
+  "currentRevision": "9b536330511c5974ffc5b6f770bbc8bf2be77f7a",
+  "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
@@ -75,67 +75,75 @@
     "LS-S081"
   ],
   "allowedFiles": [
-    "packages/contracts/src/schemas/relational-initiative.schema.json",
+    "packages/contracts/src/schemas/personal-understanding.schema.json",
     "packages/contracts/test/contract-validation.test.ts",
-    "packages/runtime/src/initiative/coordinator.ts",
-    "packages/runtime/test/initiative.test.ts",
+    "packages/runtime/src/understanding/coordinator.ts",
+    "packages/runtime/src/understanding/selection.ts",
+    "packages/runtime/test/understanding.test.ts",
     "packages/runtime/src/context/builder.ts",
     "packages/runtime/src/context/cache.ts",
     "packages/runtime/src/inference/prompt.ts",
-    "packages/runtime/src/inference/port.ts",
-    "packages/runtime/test/inference.test.ts",
-    "packages/runtime/src/interaction/loop.ts",
-    "packages/runtime/src/endpoints/handoff.ts",
-    "packages/runtime/test/endpoints-handoff.test.ts",
-    "packages/runtime/src/session/session.ts",
-    "packages/runtime/src/replay/replay.ts",
-    "packages/storage-sqlite/src/initiative.ts",
-    "packages/storage-sqlite/test/initiative.test.ts",
+    "packages/runtime/test/context.test.ts",
+    "packages/runtime/src/dreaming/run.ts",
+    "packages/runtime/src/dreaming/proposal-validator.ts",
+    "packages/runtime/src/dreaming/apply.ts",
+    "packages/runtime/src/dreaming/reverse.ts",
+    "packages/runtime/test/dreaming.test.ts",
+    "packages/runtime/src/capabilities/ports.ts",
+    "packages/runtime/src/capabilities/resolver.ts",
+    "packages/runtime/test/capabilities.test.ts",
+    "packages/storage-sqlite/src/understanding.ts",
+    "packages/storage-sqlite/test/understanding.test.ts",
+    "packages/storage-sqlite/src/memory.ts",
+    "packages/storage-sqlite/src/dreaming-repository.ts",
+    "packages/storage-sqlite/test/memory.test.ts",
+    "packages/performance/src/benchmark.ts",
+    "packages/performance/test/understanding.test.ts",
     "apps/server/src/index.ts",
-    "apps/server/src/runtime/inference.ts",
-    "apps/server/src/runtime/audio.ts",
-    "apps/server/test/initiative.test.ts",
+    "apps/server/test/understanding.test.ts",
     "apps/server/test/server.test.ts",
-    "apps/server/test/audio.test.ts",
     "apps/control-web/app.js",
     "apps/control-web/index.html",
-    "apps/control-web/conversation.js",
-    "apps/control-web/conversation.html",
     "apps/control-web/styles.css",
-    "apps/control-web/test/initiative.test.mjs",
-    "apps/control-web/test/approval-ui.test.mjs",
-    "apps/control-web/test/conversation-ui.test.mjs",
+    "apps/control-web/test/understanding.test.mjs",
     "docs/human-testing-guide.html",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S083.json",
-    "packages/runtime/src/endpoints/registry.ts",
-    "packages/runtime/test/endpoints.test.ts",
-    "packages/runtime/test/interaction.test.ts",
-    "packages/runtime/test/context.test.ts",
-    "packages/contracts/src/schemas/initiative-api.schema.json"
+    "implementation/evidence/LS-S084.json",
+    "packages/runtime/src/inference/port.ts",
+    "packages/runtime/test/inference.test.ts",
+    "packages/runtime/test/dreaming-run.test.ts",
+    "packages/runtime/test/dreaming-application.test.ts",
+    "packages/storage-sqlite/src/profile-builder.ts",
+    "packages/performance/test/benchmark.test.ts",
+    "packages/contracts/src/schemas/understanding-api.schema.json"
   ],
   "changedFiles": [
     "implementation/checkpoint.json",
-    "packages/runtime/src/initiative/coordinator.ts",
-    "packages/runtime/test/initiative.test.ts",
-    "packages/storage-sqlite/src/initiative.ts",
-    "packages/storage-sqlite/test/initiative.test.ts"
+    "packages/performance/src/benchmark.ts",
+    "packages/runtime/src/context/builder.ts",
+    "packages/runtime/src/inference/prompt.ts",
+    "packages/runtime/test/context.test.ts",
+    "packages/runtime/test/inference.test.ts",
+    "packages/performance/test/understanding.test.ts",
+    "packages/runtime/src/understanding/coordinator.ts",
+    "packages/runtime/src/understanding/selection.ts",
+    "packages/runtime/test/understanding.test.ts"
   ],
   "validation": [
     {
-      "command": "node scripts/workspace.mjs preflight LS-S083",
+      "command": "pnpm build; pnpm typecheck; pnpm lint; pnpm test",
       "result": "pass",
-      "evidence": "All consumed prerequisites admitted at the unchanged S081 completion baseline."
+      "evidence": "284 source tests passed with no skips. Build/typecheck/lint passed. Existing relationship compiler allocation is preserved; new Discovery selection is independently bounded."
     },
     {
-      "command": "node --test packages/runtime/test/initiative.test.ts packages/storage-sqlite/test/initiative.test.ts",
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
       "result": "pass",
-      "evidence": "17 focused checks: explicit grants, atomic unique admission, cancelled recovery, no re-admission after final denial, durable failure and scoped terminal outcomes."
+      "evidence": "25 browser regressions passed, including full S081 fixture journey and actual assembled identifier input. Intermediate overly broad budget change was repaired; no criterion weakened."
     },
     {
-      "command": "pnpm build; pnpm typecheck; pnpm test; pnpm lint",
+      "command": "pnpm exec tsc --noEmit --strict --target ES2023 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions --skipLibCheck packages/performance/src/benchmark.ts packages/performance/test/understanding.test.ts",
       "result": "pass",
-      "evidence": "272 source tests pass with isolated synthetic loopback listeners. Earlier sandbox-only EPERM run is not application evidence."
+      "evidence": "Strict typecheck covers the existing performance directory, which is outside the root project-reference build."
     }
   ],
   "decisions": [
@@ -149,8 +157,8 @@
     "2026-09-14: operator explicitly authorizes S083 and S084 implementation and verification: Continue with both. Earlier recovery stop is satisfied and superseded for these slices. Separate private machine export, live configuration, physical effects, provider selection, training and Human acceptance boundaries remain."
   ],
   "blockers": [],
-  "nextAction": "Implement and verify authorized S083 and S084; close exact contract exports before public admission. Preserve separate physical, Human and performance evidence gates.",
-  "updatedAt": "2026-09-14T20:14:04.391871Z",
+  "nextAction": "Complete independent S084 bounded-selection and measurement work while exact machine-contract export approval is pending; then join both versioned runtime/admin paths.",
+  "updatedAt": "2026-09-14T20:34:57.765972Z",
   "updatedBy": "Codex",
-  "notes": "S083 foundation repair is implemented and regression-checked. Versioned contracts are closed privately; exact four-file export approval is pending. Complete runtime/admin/output and independent S084 work remain."
+  "notes": "S083 source foundation is committed/pushed at 9b53633. S084 internal selection/work-admission and benchmark tooling are implemented; the complete versioned vertical features remain pending exact private schema export approval and integration. Preflight identified stale broad predecessor source hashes after the authorized initiative repair; preserve older qualifications and issue source-bound successors with affected verification before new conformance claims."
 }
