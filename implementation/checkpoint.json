@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
-  "branch": "codex/recovery-human-review",
+  "branch": "main",
   "baseRevision": "e9a280392e9c438dd89ed254d125903b08a6042b",
-  "currentRevision": "7c25dd509aaa7a23159b3a501a7fe19126225039",
+  "currentRevision": "d01714bb59c0e27c5b7ca05a97d7c98308d80225",
   "activeSlice": "LS-S081",
   "sliceStatus": "blocked",
   "completedSlices": [
