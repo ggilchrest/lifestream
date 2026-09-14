@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "1.0.0",
+  "sourceRevision": "40e5a0fcbac9a9791632db348055a66f4e96c562",
+  "specificationRevision": "6233903111dcbbc16e16740dffe4d24a46eec89c",
+  "collectedAt": "2026-09-14T20:37:46.604586Z",
+  "status": "implementationCompleteVerificationPending",
+  "scope": "S083 admission repair and S084 independent preparation/measurement components; neither complete vertical feature is claimed.",
+  "slices": {
+    "LS-S083": {
+      "implemented": [
+        "Explicit disposition, relationship opt-in and authority checks",
+        "Unique scoped durable admission and immutable terminal outcomes",
+        "Recovery cancels pending openings and retains duplicate protection",
+        "Persistence failure and final-policy denial prevent delivery/re-admission"
+      ],
+      "pending": [
+        "Versioned schema export and protected configuration/runtime integration",
+        "Output-only browser conversation and complete lifecycle/accounting",
+        "Full 108\u2013122 scenario/provider/physical/Human claims"
+      ]
+    },
+    "LS-S084": {
+      "implemented": [
+        "Bounded prepared candidate selection with explicit UTF-8 token upper bound and deadline/current-boundary checks",
+        "Single active optional work coordinator with current revisions, durable-admission/publication ports, foreground cancellation and required shared-provider preemption bound",
+        "Paired 200-turn four-condition benchmark evaluator with raw measurements, percentiles, uncertainty, absolute and added-latency gates",
+        "Canonical prompt labels conservative count estimates; existing compiled relationship context and correction budgets preserved"
+      ],
+      "pending": [
+        "Versioned schema export and joined source/brief/hypothesis/configuration/job/admin lifecycle",
+        "Actual bounded source acquisition and ordinary Discovery conversation path",
+        "Real corpus/background/voice measurement and Human 123\u2013140 acceptance"
+      ]
+    }
+  },
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "testCount": null,
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "testCount": null,
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "testCount": null,
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm exec tsc --noEmit --strict --target ES2023 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions --skipLibCheck packages/performance/src/benchmark.ts packages/performance/test/understanding.test.ts",
+      "result": "pass",
+      "testCount": null,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "testCount": 284,
+      "logSha256": "ebe827a494d3324c751d05c8364d1dd30ffd298ab48bd594a0b3926c9dfce26b"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
+      "result": "pass",
+      "testCount": 25,
+      "logSha256": "2f9a07b953c69acac04ea94817003e04056351ed394baf19f410c8a4d24493b6"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "testCount": 45,
+      "logSha256": "83d33728581bb5ad6454e77d336cfe0407691a14bd22b49171f43315cb04eaba"
+    }
+  ],
+  "selectedProviderRegression": {
+    "path": "implementation/evidence/LS-S073-development-extension-regression-1.json",
+    "sha256": "f64eeae9e6f93533a032a598e6b8be05c0af24efc8dd9b7e2263625597d0a138",
+    "result": "pass",
+    "caseIds": [
+      "LS-TEST-092",
+      "LS-TEST-093",
+      "LS-TEST-094",
+      "LS-TEST-096",
+      "LS-TEST-100"
+    ],
+    "testedRevision": "40e5a0fcbac9a9791632db348055a66f4e96c562",
+    "profileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd"
+  },
+  "sourceArtifacts": [
+    {
+      "path": "packages/performance/src/benchmark.ts",
+      "sha256": "2b47392e42dfd890ea715db823ffab8061df23261ac51a3cf820484028b6420b"
+    },
+    {
+      "path": "packages/performance/test/understanding.test.ts",
+      "sha256": "215123905b0fe5fb2db09ce5078be92b6eb6e35dffd8abe0536487cfa5a13fb8"
+    },
+    {
+      "path": "packages/runtime/src/context/builder.ts",
+      "sha256": "d0d02e8ad2dcb575ff7e712fde117136fdf5238a6fdbb5ee3ab277f5c84f82ef"
+    },
+    {
+      "path": "packages/runtime/src/inference/prompt.ts",
+      "sha256": "98abe7e5aacefce56057e741c4115dec030d7870fff4763e66bcea880874bad4"
+    },
+    {
+      "path": "packages/runtime/src/initiative/coordinator.ts",
+      "sha256": "7c712e48cf3c9c6933c89eeb96adb8dbfb4098bb30db0d3bc9b5a7d6445fbe49"
+    },
+    {
+      "path": "packages/runtime/src/understanding/coordinator.ts",
+      "sha256": "d6af48d6a70b7f0e8fe2b1f22e90bf5dd6fd4675f5d290dfa204d882c0715a9d"
+    },
+    {
+      "path": "packages/runtime/src/understanding/selection.ts",
+      "sha256": "aee866a1cd8fe949e47ed5ad370b00fc39cbad1e0d42dea84ceae670d7a1f1db"
+    },
+    {
+      "path": "packages/runtime/test/context.test.ts",
+      "sha256": "587cba4c501253f2c227df10b2cb09034c66217d30514ab1e8e0b58d48f31b1e"
+    },
+    {
+      "path": "packages/runtime/test/inference.test.ts",
+      "sha256": "110259b2a098b25f1862aebaf8ce0a909755dbbc49d942f91186c4604a4900bd"
+    },
+    {
+      "path": "packages/runtime/test/initiative.test.ts",
+      "sha256": "92b8e56b5d665820c6677422bdf5869200a2bed6eae2c7dcf3fdcee57e418afd"
+    },
+    {
+      "path": "packages/runtime/test/understanding.test.ts",
+      "sha256": "b1feda91cef5b21d2a6c5598de08aee043e8c107609fd5b195e47ac84354c913"
+    },
+    {
+      "path": "packages/storage-sqlite/src/initiative.ts",
+      "sha256": "4c8bf2ba7a5bfe814f6bcaabe57b692ff9edbee091f461c700f647eff7720abf"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative.test.ts",
+      "sha256": "cb371b4e1d26fc6844fad00f67a1d3f3899e0867442db11a57083d9bde6a1893"
+    }
+  ],
+  "waiting": {
+    "classification": "blockedDecision",
+    "operation": "Public ingestion of four exact machine schemas before new versioned boundary integration",
+    "source": "BOOTSTRAP.md exact private artifact export rule and S083/S084 packet export boundaries",
+    "inventorySha256": "daa397a73d9ce7172b199295ec21d2ad067ddea021fca3dd681abc99138ff769",
+    "inventoryPath": "/private/tmp/lifestream-s083-s084-export-inventory.json",
+    "recommendation": "Approve the exact four-file inventory already presented. Private prose/fixtures remain private.",
+    "independentWork": "The implementation-independent admission, prompt estimation, bounded selection, foreground work, measurement tooling and current source/browser/provider regressions are complete for this preparation checkpoint. Complete feature claims still require the listed integration and evidence."
+  },
+  "qualificationNote": "Earlier current-owner qualifications intentionally retain their old source hashes and history. Authorized source edits changed their broad artifact sets; create new exact-source successors after integration and affected verification. This component report does not replace a prerequisite qualification or mark either new slice verified.",
+  "exclusions": [
+    "No private schema/prose/fixture export",
+    "No live configuration, physical presence/capture/output, network research, model selection, training, deployment or new Human acceptance",
+    "No real Discovery latency, acoustic or complete-feature claim from benchmark evaluator tests",
+    "No historical failures rewritten; model identifier observations remain nonblocking and tracked"
+  ]
+}

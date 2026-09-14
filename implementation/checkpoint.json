@@ -3,9 +3,9 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "9b536330511c5974ffc5b6f770bbc8bf2be77f7a",
+  "currentRevision": "40e5a0fcbac9a9791632db348055a66f4e96c562",
   "activeSlice": "LS-S084",
-  "sliceStatus": "inProgress",
+  "sliceStatus": "blocked",
   "completedSlices": [
     "LS-S001",
     "LS-S002",
@@ -115,19 +115,14 @@
     "packages/runtime/test/dreaming-application.test.ts",
     "packages/storage-sqlite/src/profile-builder.ts",
     "packages/performance/test/benchmark.test.ts",
-    "packages/contracts/src/schemas/understanding-api.schema.json"
+    "packages/contracts/src/schemas/understanding-api.schema.json",
+    "implementation/evidence/S083-S084-PREPARATION-1.json",
+    "implementation/evidence/LS-S073-development-extension-regression-1.json"
   ],
   "changedFiles": [
     "implementation/checkpoint.json",
-    "packages/performance/src/benchmark.ts",
-    "packages/runtime/src/context/builder.ts",
-    "packages/runtime/src/inference/prompt.ts",
-    "packages/runtime/test/context.test.ts",
-    "packages/runtime/test/inference.test.ts",
-    "packages/performance/test/understanding.test.ts",
-    "packages/runtime/src/understanding/coordinator.ts",
-    "packages/runtime/src/understanding/selection.ts",
-    "packages/runtime/test/understanding.test.ts"
+    "implementation/evidence/S083-S084-PREPARATION-1.json",
+    "implementation/evidence/LS-S073-development-extension-regression-1.json"
   ],
   "validation": [
     {
@@ -144,6 +139,11 @@
       "command": "pnpm exec tsc --noEmit --strict --target ES2023 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions --skipLibCheck packages/performance/src/benchmark.ts packages/performance/test/understanding.test.ts",
       "result": "pass",
       "evidence": "Strict typecheck covers the existing performance directory, which is outside the root project-reference build."
+    },
+    {
+      "command": "node scripts/qualify-s073-development.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S073-development-extension-regression-1.json; clean committed source 40e5a0fcbac9a9791632db348055a66f4e96c562; all five selected ai5090 context/correction/audience checks pass."
     }
   ],
   "decisions": [
@@ -156,9 +156,11 @@
     "2026-09-14: operator directs identifier-output compliance failures to nonblocking model-quality tracking and model selection after development. Prepared input, privacy and application completion remain hard requirements.",
     "2026-09-14: operator explicitly authorizes S083 and S084 implementation and verification: Continue with both. Earlier recovery stop is satisfied and superseded for these slices. Separate private machine export, live configuration, physical effects, provider selection, training and Human acceptance boundaries remain."
   ],
-  "blockers": [],
-  "nextAction": "Complete independent S084 bounded-selection and measurement work while exact machine-contract export approval is pending; then join both versioned runtime/admin paths.",
-  "updatedAt": "2026-09-14T20:34:57.765972Z",
+  "blockers": [
+    "blockedDecision: exact four-file private machine export approval is pending; BOOTSTRAP.md requires named artifacts before public ingestion. Inventory /private/tmp/lifestream-s083-s084-export-inventory.json. Independent preparation and current regressions are committed; full new-feature integration remains."
+  ],
+  "nextAction": "On exact inventory approval, verify unchanged hashes, ingest only those four schemas and continue S083/S084 versioned runtime/admin integration and complete verification. No repeated slice authorization is needed.",
+  "updatedAt": "2026-09-14T20:37:46.604586Z",
   "updatedBy": "Codex",
   "notes": "S083 source foundation is committed/pushed at 9b53633. S084 internal selection/work-admission and benchmark tooling are implemented; the complete versioned vertical features remain pending exact private schema export approval and integration. Preflight identified stale broad predecessor source hashes after the authorized initiative repair; preserve older qualifications and issue source-bound successors with affected verification before new conformance claims."
 }
