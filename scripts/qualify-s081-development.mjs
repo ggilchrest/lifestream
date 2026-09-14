@@ -1,3 +1,4 @@
+import { persistModelQuality } from './model-quality-observations.mjs';
 // Actual rendered S081 journey against the existing selected development provider.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -20,4 +21,4 @@ try{
  await exec(process.execPath,['--test','apps/control-web/test/relationship-joined.test.mjs'],{cwd:repository,env:{...process.env,LIFESTREAM_INFERENCE_API_KEY:key,LIFESTREAM_S081_PROVIDER:'selected',LIFESTREAM_S081_REPORT:output},timeout:420000,maxBuffer:1024*1024});
  const evidence=JSON.parse(await readFile(output,'utf8'));assert.equal(evidence.result,'pass');assert.equal(evidence.selectedProvider,true);report.checks.push({id:'LS-TEST-106-rendered-selected-provider',result:'pass',evidence});report.result='pass';
 }catch(error){if(root){try{report.joinedEvidence=JSON.parse(await readFile(join(root,'report.json'),'utf8'));}catch{/* Preserve process failure below when no completed journey report exists. */}}report.result='fail';report.blocker=error instanceof assert.AssertionError?error.message:'Bounded rendered/provider check failed; no credentials logged.';report.failureEvidence=typeof error.stdout==='string'?error.stdout.slice(-12000):undefined;process.exitCode=1;}
-finally{tunnel?.kill('SIGTERM');if(root)await rm(root,{recursive:true,force:true});key=undefined;console.log(JSON.stringify(report,null,2));}
+finally{tunnel?.kill('SIGTERM');if(root)await rm(root,{recursive:true,force:true});key=undefined;await persistModelQuality(repository,report);console.log(JSON.stringify(report,null,2));}

@@ -1,0 +1,300 @@
+{
+  "schemaVersion": "1.0.0",
+  "scope": "Nonblocking opaque-identifier model compliance; complete retained observations only",
+  "policy": "Exact and capitalization-only presence are reported separately. Missing or altered complete identifiers remain visible model misses. Privacy, prepared input and application completion remain required.",
+  "aggregate": {
+    "schemaVersion": "1.0.0",
+    "blocking": false,
+    "samples": [
+      {
+        "label": "admitted",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "b4c25aae88349109efb19fb3f134a182fcc16cf5a3adf5ae786e7b045c977fed"
+      },
+      {
+        "label": "admitted-repeat-1",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "26369922359dab352b9e58ca738fd9e372fbf797cd634ba1efb7d15ac8bd8d35"
+      },
+      {
+        "label": "admitted-repeat-2",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "e855ba3c0a78b11ce2fdd522226bbd3325a66ff145cf70c6a3138d16911bfe21"
+      },
+      {
+        "label": "reviewed-correction",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "35c040c190452aa414947fcdb02730594ceb8f6e7a69ea246c1f60afb15d0c57"
+      },
+      {
+        "label": "admitted",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "057672084b27f8bc65ed89b87822842cde139d125ce3b3071ec554d8a3daa63a"
+      },
+      {
+        "label": "admitted-repeat-1",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "c86e5d805a1360d338b39d82199e949c026467d91be376e354bfa9174cb9376b"
+      },
+      {
+        "label": "admitted-repeat-2",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "b06ebfcd440ff37fcdc601090edf8bc14af6de293195a4d27f9717e5116ed546"
+      },
+      {
+        "label": "reviewed-correction",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "31bd45b18a848c86d7f9bff5d78b0bd161f36f4a2f2643f46bebcc0be68a63a6"
+      },
+      {
+        "label": "retained-assertion-failure",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "capitalizationOnly",
+        "assertionEvidenceSha256": "f7955ce87966f63a093002e8efa7cfb949c97882727b84989258f46d4331e2a0"
+      },
+      {
+        "label": "retained-assertion-failure",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "missingCompleteIdentifier",
+        "assertionEvidenceSha256": "78b80de80af11cfe0bf672c426c6f02c429d8bada192d4cbc679850946d3f6c2"
+      }
+    ],
+    "counts": {
+      "exact": 8,
+      "capitalizationOnly": 1,
+      "missingCompleteIdentifier": 1
+    },
+    "total": 10,
+    "identifierPresenceRate": 0.9,
+    "exactMatchRate": 0.8
+  },
+  "runs": [
+    {
+      "id": "LS-S075:8139470c2f756313c09dda0bdffbe1f9649e059e:2026-09-14T02:09:34.029Z",
+      "sourceRevision": "8139470c2f756313c09dda0bdffbe1f9649e059e",
+      "collectedAt": "2026-09-14T02:09:34.029Z",
+      "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+      "applicationResult": "pass",
+      "sources": [
+        {
+          "path": "implementation/evidence/LS-S075-literal-development-2.json",
+          "sha256": "c3696ef811692b7e0e4d72401de66e65c6692a21baad48bdc0ec1e12351831f2"
+        }
+      ],
+      "modelQuality": {
+        "schemaVersion": "1.0.0",
+        "blocking": false,
+        "samples": [
+          {
+            "label": "admitted",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "b4c25aae88349109efb19fb3f134a182fcc16cf5a3adf5ae786e7b045c977fed"
+          },
+          {
+            "label": "admitted-repeat-1",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "26369922359dab352b9e58ca738fd9e372fbf797cd634ba1efb7d15ac8bd8d35"
+          },
+          {
+            "label": "admitted-repeat-2",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "e855ba3c0a78b11ce2fdd522226bbd3325a66ff145cf70c6a3138d16911bfe21"
+          },
+          {
+            "label": "reviewed-correction",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "35c040c190452aa414947fcdb02730594ceb8f6e7a69ea246c1f60afb15d0c57"
+          }
+        ],
+        "counts": {
+          "exact": 4,
+          "capitalizationOnly": 0,
+          "missingCompleteIdentifier": 0
+        },
+        "total": 4,
+        "identifierPresenceRate": 1,
+        "exactMatchRate": 1
+      }
+    },
+    {
+      "id": "LS-S075:4e3e59e463d472c72d2122abcd3f57443999cce7:2026-09-14T02:24:03.526Z",
+      "sourceRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+      "collectedAt": "2026-09-14T02:24:03.526Z",
+      "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+      "applicationResult": "pass",
+      "sources": [
+        {
+          "path": "implementation/evidence/LS-S075-development-review-1.json",
+          "sha256": "284b431b11b5e871c98885c71d25ac8749e32dfbef566e9731461e1c08b79c86"
+        }
+      ],
+      "modelQuality": {
+        "schemaVersion": "1.0.0",
+        "blocking": false,
+        "samples": [
+          {
+            "label": "admitted",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "057672084b27f8bc65ed89b87822842cde139d125ce3b3071ec554d8a3daa63a"
+          },
+          {
+            "label": "admitted-repeat-1",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "c86e5d805a1360d338b39d82199e949c026467d91be376e354bfa9174cb9376b"
+          },
+          {
+            "label": "admitted-repeat-2",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "b06ebfcd440ff37fcdc601090edf8bc14af6de293195a4d27f9717e5116ed546"
+          },
+          {
+            "label": "reviewed-correction",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "31bd45b18a848c86d7f9bff5d78b0bd161f36f4a2f2643f46bebcc0be68a63a6"
+          }
+        ],
+        "counts": {
+          "exact": 4,
+          "capitalizationOnly": 0,
+          "missingCompleteIdentifier": 0
+        },
+        "total": 4,
+        "identifierPresenceRate": 1,
+        "exactMatchRate": 1
+      }
+    },
+    {
+      "id": "LS-S081:d44b567a9a4adab6b95723a6fb80981895b2d50e:2026-09-14T02:39:31.943Z",
+      "sourceRevision": "d44b567a9a4adab6b95723a6fb80981895b2d50e",
+      "collectedAt": "2026-09-14T02:39:31.943Z",
+      "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+      "applicationResult": "fail",
+      "sources": [
+        {
+          "path": "implementation/evidence/LS-S081-development-failed-review-1.json",
+          "sha256": "4591265974d621d664cc288e78cce9eb1d3eaf93b716f4ac03277ab6d7271f70"
+        }
+      ],
+      "modelQuality": {
+        "schemaVersion": "1.0.0",
+        "blocking": false,
+        "samples": [
+          {
+            "label": "retained-assertion-failure",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "capitalizationOnly",
+            "assertionEvidenceSha256": "f7955ce87966f63a093002e8efa7cfb949c97882727b84989258f46d4331e2a0"
+          }
+        ],
+        "counts": {
+          "exact": 0,
+          "capitalizationOnly": 1,
+          "missingCompleteIdentifier": 0
+        },
+        "total": 1,
+        "identifierPresenceRate": 1,
+        "exactMatchRate": 0
+      }
+    },
+    {
+      "id": "LS-S075:0692c57a6d358161079403fe4fcc5d741486c0e3:2026-09-14T15:12:30.174Z",
+      "sourceRevision": "0692c57a6d358161079403fe4fcc5d741486c0e3",
+      "collectedAt": "2026-09-14T15:12:30.174Z",
+      "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+      "applicationResult": "fail",
+      "sources": [
+        {
+          "path": "implementation/evidence/LS-S075-development-certification-1.json",
+          "sha256": "ce9f72249d1c1e17341055feaa4955cca476696282d52e38ca8b61c67b5d68b9"
+        }
+      ],
+      "modelQuality": {
+        "schemaVersion": "1.0.0",
+        "blocking": false,
+        "samples": [
+          {
+            "label": "retained-assertion-failure",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "missingCompleteIdentifier",
+            "assertionEvidenceSha256": "78b80de80af11cfe0bf672c426c6f02c429d8bada192d4cbc679850946d3f6c2"
+          }
+        ],
+        "counts": {
+          "exact": 0,
+          "capitalizationOnly": 0,
+          "missingCompleteIdentifier": 1
+        },
+        "total": 1,
+        "identifierPresenceRate": 0,
+        "exactMatchRate": 0
+      }
+    }
+  ],
+  "incompleteHistory": [
+    {
+      "path": "implementation/evidence/LS-S075-development-certification-1.json",
+      "sha256": "ce9f72249d1c1e17341055feaa4955cca476696282d52e38ca8b61c67b5d68b9",
+      "reason": "The preserved repeated ordinary reply assertion contains a completed Python answer with no complete approved identifier; the count of earlier successful repeated replies is not fully retained.",
+      "coverage": "partial",
+      "retainedRepliesIncludedInDenominator": 1
+    },
+    {
+      "path": "implementation/evidence/LS-S075-development-failed-resume-2.json",
+      "sha256": "622442d5184fd6f5030c9b66aaa6d28eea8ef646ef81e838cb3ad57161d29368",
+      "applicationResult": "fail",
+      "reason": "Legacy failure has no complete retained per-reply observations. Do not invent successes or include it in the reply-rate denominator."
+    },
+    {
+      "path": "implementation/evidence/LS-S075-development-failed-resume-3.json",
+      "sha256": "bea3deb3d7ab8509e5839c5aec9827178f43ecf3da2ff9684001fc8bba5d4275",
+      "applicationResult": "fail",
+      "reason": "Legacy failure has no complete retained per-reply observations. Do not invent successes or include it in the reply-rate denominator."
+    },
+    {
+      "path": "implementation/evidence/LS-S075-development-failed-resume-4.json",
+      "sha256": "4ace027392b389728c53539ae20524051318b5ecee6c3f8659617d18b8cda913",
+      "applicationResult": "fail",
+      "reason": "Legacy failure has no complete retained per-reply observations. Do not invent successes or include it in the reply-rate denominator."
+    },
+    {
+      "path": "implementation/evidence/LS-S075-literal-development-1.json",
+      "sha256": "e4726319f46194142e9d448139642f1b2c6223c6dec01a9f796e7de32f2dda57",
+      "applicationResult": "fail",
+      "reason": "Legacy failure has no complete retained per-reply observations. Do not invent successes or include it in the reply-rate denominator."
+    },
+    {
+      "path": "implementation/evidence/LS-S081-development-failed-review-1.json",
+      "sha256": "4591265974d621d664cc288e78cce9eb1d3eaf93b716f4ac03277ab6d7271f70",
+      "reason": "One observed Lab reply returned SynPRJ_Q7M4; other outputs were not retained individually.",
+      "coverage": "partial",
+      "retainedRepliesIncludedInDenominator": 1
+    },
+    {
+      "path": "implementation/evidence/LS-S081-development-review-2.json",
+      "sha256": "1421f8454f002bd9fa378f62a126bb3e5bc51bd311c48b0418ca698c544257ba",
+      "applicationResult": "fail",
+      "reason": "Legacy failure has no complete retained per-reply observations. Do not invent successes or include it in the reply-rate denominator."
+    }
+  ],
+  "limitations": [
+    "Repeated replies from the same run are correlated; these rates are not an independent statistical estimate.",
+    "Legacy runs may lack individual replies. No whole-history failure rate is inferred from incomplete records.",
+    "Local journal and committed report copies are deduplicated by slice, source revision and collection timestamp."
+  ]
+}

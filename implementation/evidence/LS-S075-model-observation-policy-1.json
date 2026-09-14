@@ -1,0 +1,60 @@
+{
+  "slice": "LS-S075",
+  "relatedSlices": [
+    "LS-S081"
+  ],
+  "collectedAt": "2026-09-14T15:21:17.662782Z",
+  "kind": "operator-model-quality-disposition",
+  "operatorInstruction": "Do not let identifier compliance failures block ongoing development; track ongoing successes and failures for model selection after development.",
+  "applicationBoundary": [
+    "Prepared request must contain the approved exact value when eligible.",
+    "Privacy, rejected/other-owner data exclusion, correction and forgetting remain hard requirements.",
+    "HTTP/stream completion, bounded lifecycle and real authentication remain hard requirements."
+  ],
+  "modelMetric": {
+    "blocking": false,
+    "outcomes": [
+      "exact",
+      "capitalizationOnly",
+      "missingCompleteIdentifier"
+    ],
+    "counting": "Each completed eligible ordinary reply and personalized comparison output is recorded. No inferred success denominator from incomplete historical reports."
+  },
+  "historicalFailure": {
+    "path": "implementation/evidence/LS-S075-development-certification-1.json",
+    "sha256": "ce9f72249d1c1e17341055feaa4955cca476696282d52e38ca8b61c67b5d68b9",
+    "originalResult": "fail",
+    "currentDisposition": "Nonblocking model-quality observation. The original failed execution is preserved, not relabeled as a completed application journey."
+  },
+  "deferredRemediation": "Model selection after development; no model/provider or live configuration change is authorized by this disposition.",
+  "legacyObservedReplies": [
+    {
+      "path": "implementation/evidence/LS-S081-development-failed-review-1.json",
+      "sha256": "4591265974d621d664cc288e78cce9eb1d3eaf93b716f4ac03277ab6d7271f70",
+      "samples": [
+        {
+          "label": "retained-assertion-failure",
+          "identifier": "SYNPRJ_Q7M4",
+          "outcome": "capitalizationOnly",
+          "assertionEvidenceSha256": "f7955ce87966f63a093002e8efa7cfb949c97882727b84989258f46d4331e2a0"
+        }
+      ],
+      "coverage": "partial",
+      "note": "One observed Lab reply returned SynPRJ_Q7M4; other outputs were not retained individually."
+    },
+    {
+      "path": "implementation/evidence/LS-S075-development-certification-1.json",
+      "sha256": "ce9f72249d1c1e17341055feaa4955cca476696282d52e38ca8b61c67b5d68b9",
+      "samples": [
+        {
+          "label": "retained-assertion-failure",
+          "identifier": "SYNPRJ_Q7M4",
+          "outcome": "missingCompleteIdentifier",
+          "assertionEvidenceSha256": "78b80de80af11cfe0bf672c426c6f02c429d8bada192d4cbc679850946d3f6c2"
+        }
+      ],
+      "coverage": "partial",
+      "note": "The preserved repeated ordinary reply assertion contains a completed Python answer with no complete approved identifier; the count of earlier successful repeated replies is not fully retained."
+    }
+  ]
+}
