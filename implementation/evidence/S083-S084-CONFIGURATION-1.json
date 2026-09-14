@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-14T21:57:48.754929Z",
+  "scope": [
+    "LS-S083 configuration review",
+    "LS-S084 configuration review"
+  ],
+  "status": "implementationCompleteVerificationPending",
+  "claim": "Protected configuration and browser workflow component verification only; full slice/runtime conformance remains in progress.",
+  "baseRevision": "0c41a6f",
+  "sourceArtifacts": [
+    {
+      "path": "apps/server/src/relationship-extensions.ts",
+      "sha256": "686ba85034efe9cc087e1d63f958b5723aa2dac6851e53d87c9791aa5ab7c38a"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "8ab4356db5fdadedf7dbbc7298add3e6c5895514a22a2ca34fb2cee58f41c0de"
+    },
+    {
+      "path": "packages/contracts/src/validator.ts",
+      "sha256": "195f0178a14300244acd401b381f068c005607078679f1266360be0d8552410b"
+    },
+    {
+      "path": "apps/server/test/relationship-extensions.test.ts",
+      "sha256": "119ddd2e24a15cee055507cbabc5db7694eacdc8a1b1056a0b9ea997add5513e"
+    },
+    {
+      "path": "apps/control-web/relationship-extensions.js",
+      "sha256": "3e41a273b64c5f40ce8eb7ed3961b3503598bf1e08e7caeab2f2227de0b86546"
+    },
+    {
+      "path": "apps/control-web/app.js",
+      "sha256": "b233b02d850f81cf10e1dfa09a6b22ea1ad4fdbb0f05c149600bb11c22aafdc6"
+    },
+    {
+      "path": "apps/control-web/workspace.js",
+      "sha256": "9833963674fcc3750a1b7010300ee5fa1b4604de312a3293ccfeca851a38af2d"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "0eae0d8d029529ca9f34d5e59aa972922b2769465a4e509f66ae3bdf873ffcd0"
+    },
+    {
+      "path": "apps/control-web/test/relationship-extensions.test.mjs",
+      "sha256": "7a46b038967682fe17a530bebf4fd8b52d08f00b0e23579c9af8c877f40f2cd0"
+    },
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "f2d5078e22cd5f067df4cbb7b242f7e5ff988c34e17caa52ae1a204ce9e46573"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "287 passed; subsequent scope-digest-only refinement covered by the focused protected test",
+      "logSha256": "5dd600e9cce153cbdb70828da4eb4ebddaa7ca00132c870a3c83c24067702e18"
+    },
+    {
+      "command": "node --experimental-strip-types --test apps/server/test/relationship-extensions.test.ts",
+      "result": "2 passed on final source; includes real local password authentication, CSRF and atomic failure rollback",
+      "logSha256": "fbf428beaf1bda60a60061e37b7be621ef6b5d4b6da46f6cc33eef173e369266"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> pnpm test:browser-surface",
+      "result": "25 passed; one pre-existing administration journey timed out under full concurrency",
+      "logSha256": "fa6ae1cb3e038d09704e45df52daece6755b621d7bb6251568e1a7d71778b128"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/relationship-administration.test.mjs",
+      "result": "same assertions and deadlines passed alone",
+      "logSha256": "4b170990177bf70d3e74226a4ce3fde5be9315062e9a103680fc32a684b6ec27"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "26 passed; no skips",
+      "logSha256": "afe11a72777bb050bfce20750710b48092a76cd10d9cc0751f5be5981d5e2003"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "45 passed",
+      "logSha256": "6b20f20b316d9b8bb0657b05ff7f7083d5e08e501b51cae87da9d29b0e58bc35"
+    }
+  ],
+  "behavior": [
+    "Exact exported request/response definitions validate at admission and before transaction commit.",
+    "One existing relationship parent owns activation; extensions carry through normal reply-setting, Lab and insight drafts.",
+    "Schema validation, current scope, confirmation, parent CAS, immutable revision history and canonical scoped retry digests guard mutations.",
+    "Retry record and configuration changes commit atomically; failed writes leave no partial activation.",
+    "New fields are withheld from unchanged legacy response shapes.",
+    "Distinct Initiative and Discovery pages, labeled identifiers, mobile revision cards, collapsed advanced fields, shared-parent disclosure and ordered preview/activation.",
+    "Inspection and preview do not invalidate an ongoing runtime request."
+  ],
+  "exclusions": [
+    "No complete Initiative opportunity/output path.",
+    "No complete Discovery source/job/hypothesis/prepared-context path.",
+    "No new selected-provider qualification or model-quality frequency run.",
+    "No new physical presence, voice/performance or Human acceptance.",
+    "No saved review database changes, live activation, external research or deployment."
+  ],
+  "next": "Continue full S083/S084 runtime integration under existing owning cases; refresh affected exact-source qualifications before conformance."
+}

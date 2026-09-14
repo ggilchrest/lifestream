@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "f687beef1d5001af76df5090dd969561cd612226",
+  "currentRevision": "0c41a6f0b0f4614d975e655c2a3547a56d9cb4ef",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -122,37 +122,73 @@
     "apps/server/src/relationship-extensions.ts",
     "apps/server/test/relationship-extensions.test.ts",
     "packages/contracts/src/schemas/relational-initiative.schema.json",
-    "packages/contracts/src/schemas/initiative-api.schema.json"
+    "packages/contracts/src/schemas/initiative-api.schema.json",
+    "apps/control-web/relationship-extensions.js",
+    "apps/control-web/test/relationship-extensions.test.mjs",
+    "apps/control-web/workspace.js",
+    "apps/control-web/DESIGN.md",
+    "packages/contracts/src/validator.ts",
+    "implementation/evidence/S083-S084-CONFIGURATION-1.json"
   ],
   "changedFiles": [
-    "packages/contracts/src/schemas/relational-initiative.schema.json",
-    "packages/contracts/src/schemas/initiative-api.schema.json",
-    "packages/contracts/src/schemas/personal-understanding.schema.json",
-    "packages/contracts/src/schemas/understanding-api.schema.json",
-    "packages/contracts/test/contract-validation.test.ts",
+    "apps/control-web/DESIGN.md",
+    "apps/control-web/app.js",
+    "apps/control-web/relationship-extensions.js",
+    "apps/control-web/styles.css",
+    "apps/control-web/test/relationship-extensions.test.mjs",
+    "apps/control-web/workspace.js",
+    "apps/server/src/index.ts",
+    "apps/server/src/relationship-extensions.ts",
+    "apps/server/test/relationship-extensions.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S083-S084-SCHEMA-EXPORT-1.json"
+    "implementation/evidence/S083-S084-CONFIGURATION-1.json",
+    "packages/contracts/src/validator.ts"
   ],
   "validation": [
     {
-      "command": "pnpm build; pnpm typecheck; pnpm lint; pnpm test",
+      "command": "pnpm build",
       "result": "pass",
-      "evidence": "284 source tests passed with no skips. Build/typecheck/lint passed. Existing relationship compiler allocation is preserved; new Discovery selection is independently bounded."
+      "evidence": "pass; implementation/evidence/S083-S084-CONFIGURATION-1.json"
     },
     {
-      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
+      "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "25 browser regressions passed, including full S081 fixture journey and actual assembled identifier input. Intermediate overly broad budget change was repaired; no criterion weakened."
+      "evidence": "pass; implementation/evidence/S083-S084-CONFIGURATION-1.json"
     },
     {
-      "command": "pnpm exec tsc --noEmit --strict --target ES2023 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions --skipLibCheck packages/performance/src/benchmark.ts packages/performance/test/understanding.test.ts",
+      "command": "pnpm lint",
       "result": "pass",
-      "evidence": "Strict typecheck covers the existing performance directory, which is outside the root project-reference build."
+      "evidence": "pass; implementation/evidence/S083-S084-CONFIGURATION-1.json"
     },
     {
-      "command": "node scripts/qualify-s073-development.mjs",
+      "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S073-development-extension-regression-1.json; clean committed source 40e5a0fcbac9a9791632db348055a66f4e96c562; all five selected ai5090 context/correction/audience checks pass."
+      "evidence": "287 passed; subsequent scope-digest-only refinement covered by the focused protected test; implementation/evidence/S083-S084-CONFIGURATION-1.json"
+    },
+    {
+      "command": "node --experimental-strip-types --test apps/server/test/relationship-extensions.test.ts",
+      "result": "pass",
+      "evidence": "2 passed on final source; includes real local password authentication, CSRF and atomic failure rollback; implementation/evidence/S083-S084-CONFIGURATION-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> pnpm test:browser-surface",
+      "result": "fail",
+      "evidence": "25 passed; one pre-existing administration journey timed out under full concurrency; implementation/evidence/S083-S084-CONFIGURATION-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/relationship-administration.test.mjs",
+      "result": "pass",
+      "evidence": "same assertions and deadlines passed alone; implementation/evidence/S083-S084-CONFIGURATION-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "26 passed; no skips; implementation/evidence/S083-S084-CONFIGURATION-1.json"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "evidence": "45 passed; implementation/evidence/S083-S084-CONFIGURATION-1.json"
     }
   ],
   "decisions": [
@@ -167,8 +203,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Continue authorized S083/S084 protected configuration, runtime and browser integration; exact schema export approved.",
-  "updatedAt": "2026-09-14T21:37:02.201573Z",
+  "nextAction": "Continue S083 opportunity/output and S084 durable preparation integration; exact schema export and shared-parent configuration review are completed components. Full slice certification remains in progress.",
+  "updatedAt": "2026-09-14T21:57:48.754929Z",
   "updatedBy": "Codex",
-  "notes": "Exact export decision resolved. Existing preparation evidence remains historical. Full S083/S084 integration and affected successor qualifications remain in progress."
+  "notes": "The unconstrained parallel browser run had one timeout; that exact test passed independently and all 26 passed with two browser workers. Historical failure retained in component evidence. No new model quality observations or Human acceptance."
 }

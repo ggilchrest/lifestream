@@ -16,3 +16,29 @@
 .lab-results-table th:first-child{width:15%}.lab-results-table th:nth-child(2){width:20%}.lab-results-table th:nth-child(3){width:17%}.lab-results-table td p:first-child{margin-top:0}.lab-results-table td{font-size:13px}.lab-results-table code{font-size:11px}
 
 .lens-legend li{padding:0;border:0;background:none}.lens-legend button{font-size:12px;padding:9px 12px}.lens-legend{gap:7px}.lens-legend [aria-pressed=true]{box-shadow:inset 0 1px 0 #ffffff60,0 3px 9px #2165a722}
+
+/* Extension review uses the existing control-room surfaces and ordered workflow cards. */
+.relationship-initiative fieldset,.relationship-understanding fieldset{border:0;padding:0;min-width:0;margin:0 0 20px}
+.relationship-initiative legend,.relationship-understanding legend{font-weight:700;font-size:16px;margin-bottom:20px}
+.relationship-initiative .relationship-config-grid>details,.relationship-understanding .relationship-config-grid>details{grid-column:1/-1;margin:0}
+.relationship-initiative .table-scroll,.relationship-understanding .table-scroll{overflow-x:auto;margin:18px 0}
+.extension-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px;line-height:1.6}
+.extension-table th,.extension-table td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+.extension-table thead th{background:#edf4fc;color:#315b85;font-weight:700}
+.extension-table tbody tr:nth-child(even){background:#f5f9ff}
+.extension-table .record-id{min-width:110px;max-width:280px}
+.relationship-initiative .record-fields,.relationship-understanding .record-fields{display:grid;grid-template-columns:180px minmax(0,1fr);gap:10px;margin:18px 0;font-size:13px}
+.record-fields dd{margin:0;overflow-wrap:anywhere}.record-fields dt{font-weight:600;color:var(--muted)}
+.relationship-initiative [data-role=active],.relationship-understanding [data-role=active]{overflow-wrap:anywhere}
+@media(max-width:760px){.extension-table th,.extension-table td{padding:10px 8px}.extension-table .record-id{min-width:70px}.extension-table button{padding:10px;font-size:12px}.relationship-initiative .record-fields,.relationship-understanding .record-fields{grid-template-columns:1fr;gap:4px}.record-fields dd{margin-bottom:8px}}
+@media(max-width:760px){
+ .relationship-initiative [data-role=history] .extension-table thead,.relationship-understanding [data-role=history] .extension-table thead{display:none}
+ [data-role=history] .extension-table,[data-role=history] .extension-table tbody,[data-role=history] .extension-table tr,[data-role=history] .extension-table th,[data-role=history] .extension-table td{display:block;width:100%;min-width:0;max-width:none}
+ [data-role=history] .extension-table tr{border:1px solid var(--line);border-radius:10px;margin:12px 0;padding:8px;box-sizing:border-box}
+ [data-role=history] .extension-table th,[data-role=history] .extension-table td{border:0;padding:6px 8px;box-sizing:border-box}
+ [data-role=history] .extension-table th::before{content:'Revision ';font-weight:400}
+ [data-role=history] .extension-table td:nth-child(2)::before{content:'Status: ';font-weight:600}
+ [data-role=history] .extension-table td:nth-child(3)::before{content:'Configuration ID';display:block;font:600 11px system-ui;color:var(--muted);margin-bottom:4px}
+ [data-role=history] .extension-table button{width:100%;font-size:13px}
+ [data-role=preview] .extension-table{min-width:420px}
+}

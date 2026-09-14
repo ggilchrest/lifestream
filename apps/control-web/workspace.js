@@ -10,6 +10,8 @@ export function installWorkspace() {
     ['intake','Import & review','Inventory selected files, review candidates, then admit your choices.',['.profile-builder'],'Context'],
     ['records','Records','Find, review and maintain the context your Assistant may use.',['#relationship-administration'],'Context'],
     ['settings','Settings & replies','Prepare a configuration, review it, then activate it.',['.relationship-config-tools'],'Context'],
+    ['initiative','Initiative & attention','Review initiative, output scope and limits.',['.relationship-initiative'],'Context'],
+    ['discovery','Understanding & discovery','Review discovery, sources and preparation limits.',['.relationship-understanding'],'Context'],
     ['insights','Insights & feedback','Five perspectives on your records, with evidence and reviewable proposals.',['.relationship-insights'],'Evaluate'],
     ['lab','Relationship Lab','Compare isolated alternatives before promoting a draft for review.',['.relationship-lab'],'Evaluate'],
     ['readiness','Readiness','Inspect eligibility, exclusions and readiness without starting training.',['.relationship-readiness'],'Evaluate'],

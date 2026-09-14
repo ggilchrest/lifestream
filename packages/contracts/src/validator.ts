@@ -50,7 +50,8 @@ export const createContractValidator = (): ContractValidator => {
   }
   return {
     validate(schemaId, value) {
-      const validator = validators.get(schemaId);
+      const rootId = schemaId.split("#")[0]!;
+      const validator = validators.get(schemaId) ?? (validators.has(rootId) ? ajv.getSchema(schemaId) : undefined);
       if (!validator) return { valid: false, errors: [{ instancePath: "", keyword: "schema", message: "unknown schema" }] };
       const valid = validator(value) as boolean;
       return { valid, errors: valid ? [] : normalizeErrors(validator.errors) };
