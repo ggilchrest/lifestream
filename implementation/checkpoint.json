@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "0c41a6f0b0f4614d975e655c2a3547a56d9cb4ef",
+  "currentRevision": "ba05f40dfa9604de4adf8fa261e193f6217d5670",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -131,64 +131,20 @@
     "implementation/evidence/S083-S084-CONFIGURATION-1.json"
   ],
   "changedFiles": [
-    "apps/control-web/DESIGN.md",
-    "apps/control-web/app.js",
     "apps/control-web/relationship-extensions.js",
-    "apps/control-web/styles.css",
     "apps/control-web/test/relationship-extensions.test.mjs",
-    "apps/control-web/workspace.js",
-    "apps/server/src/index.ts",
-    "apps/server/src/relationship-extensions.ts",
-    "apps/server/test/relationship-extensions.test.ts",
-    "implementation/checkpoint.json",
-    "implementation/evidence/S083-S084-CONFIGURATION-1.json",
-    "packages/contracts/src/validator.ts"
+    "implementation/checkpoint.json"
   ],
   "validation": [
     {
-      "command": "pnpm build",
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/relationship-extensions.test.mjs",
       "result": "pass",
-      "evidence": "pass; implementation/evidence/S083-S084-CONFIGURATION-1.json"
+      "evidence": "Current protected workflow and an older runtime returning 404 for new contracts both pass. Log SHA-256 22b2e68181bd86d298e28a162058046681e092b90cb65811de8f9705b91bade1"
     },
     {
-      "command": "pnpm typecheck",
+      "command": "node --check apps/control-web/relationship-extensions.js; git diff --check",
       "result": "pass",
-      "evidence": "pass; implementation/evidence/S083-S084-CONFIGURATION-1.json"
-    },
-    {
-      "command": "pnpm lint",
-      "result": "pass",
-      "evidence": "pass; implementation/evidence/S083-S084-CONFIGURATION-1.json"
-    },
-    {
-      "command": "pnpm test",
-      "result": "pass",
-      "evidence": "287 passed; subsequent scope-digest-only refinement covered by the focused protected test; implementation/evidence/S083-S084-CONFIGURATION-1.json"
-    },
-    {
-      "command": "node --experimental-strip-types --test apps/server/test/relationship-extensions.test.ts",
-      "result": "pass",
-      "evidence": "2 passed on final source; includes real local password authentication, CSRF and atomic failure rollback; implementation/evidence/S083-S084-CONFIGURATION-1.json"
-    },
-    {
-      "command": "PLAYWRIGHT_MODULE=<bundled> pnpm test:browser-surface",
-      "result": "fail",
-      "evidence": "25 passed; one pre-existing administration journey timed out under full concurrency; implementation/evidence/S083-S084-CONFIGURATION-1.json"
-    },
-    {
-      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/relationship-administration.test.mjs",
-      "result": "pass",
-      "evidence": "same assertions and deadlines passed alone; implementation/evidence/S083-S084-CONFIGURATION-1.json"
-    },
-    {
-      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
-      "result": "pass",
-      "evidence": "26 passed; no skips; implementation/evidence/S083-S084-CONFIGURATION-1.json"
-    },
-    {
-      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
-      "result": "pass",
-      "evidence": "45 passed; implementation/evidence/S083-S084-CONFIGURATION-1.json"
+      "evidence": "Syntax and whitespace checks pass."
     }
   ],
   "decisions": [
@@ -204,7 +160,7 @@
   ],
   "blockers": [],
   "nextAction": "Continue S083 opportunity/output and S084 durable preparation integration; exact schema export and shared-parent configuration review are completed components. Full slice certification remains in progress.",
-  "updatedAt": "2026-09-14T21:57:48.754929Z",
+  "updatedAt": "2026-09-14T22:00:11.462355Z",
   "updatedBy": "Codex",
-  "notes": "The unconstrained parallel browser run had one timeout; that exact test passed independently and all 26 passed with two browser workers. Historical failure retained in component evidence. No new model quality observations or Human acceptance."
+  "notes": "Schema approval and shared-parent configuration milestone are published. Component evidence S083-S084-CONFIGURATION-1.json records 287 source and 26 browser passes, including the preserved concurrency timeout and bounded successful recheck. An additional browser compatibility check handles old runtime contract 404 without breaking existing navigation. Full S083 opportunity/output and S084 preparation/application remain inProgress; no environment or Human blocker is asserted. Saved review service and all unrelated dirty artifacts remain untouched."
 }
