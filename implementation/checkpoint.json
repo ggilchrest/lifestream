@@ -2,8 +2,8 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "8139470c2f756313c09dda0bdffbe1f9649e059e",
-  "currentRevision": "8139470c2f756313c09dda0bdffbe1f9649e059e",
+  "baseRevision": "bf97d1622d49182915e1744abaee7d981d9f1bae",
+  "currentRevision": "bf97d1622d49182915e1744abaee7d981d9f1bae",
   "activeSlice": "LS-S075",
   "sliceStatus": "implemented",
   "completedSlices": [
