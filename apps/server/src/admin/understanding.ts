@@ -19,8 +19,8 @@ export class DiscoveryAdministration {
   private readonly tasks=new Map<string,{relationshipId:string;scope:UnderstandingScope;promise:Promise<unknown>}>();
   private closed=false;
   private readonly cleanupTimer:ReturnType<typeof setInterval>;
-  private readonly host:{snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";changed:()=>void};
-  constructor(database:Database,host:{snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";changed:()=>void}){
+  private readonly host:{snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};changed:()=>void};
+  constructor(database:Database,host:{snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};changed:()=>void}){
     this.host=host;this.repository=new UnderstandingRepository(database);this.repository.recover();
     this.cleanupTimer=setInterval(()=>{try{this.repository.cleanupExpired();}catch{/* Expired data remains denied; retry bounded maintenance on the next interval. */}},30000);
     this.cleanupTimer.unref();
@@ -39,6 +39,14 @@ export class DiscoveryAdministration {
     if(!validator.validate(schema+"#/$defs/Request",input).valid)return extensionError(422,"invalid_discovery_request","Unsupported Discovery request.");
     const request=input as Record<string,unknown>,operation=String(request.operation);
     if(this.closed||!authorizationCurrent())return extensionError(403,"discovery_scope_denied","Current relationship authorization is required.");
+    if(operation==="feedback"){
+      try {
+        if(!this.host.feedback)return extensionError(409,"feedback_unavailable","This runtime has no scoped evidence writer.");
+        const result=this.host.feedback(scope,request);this.invalidate(scope.relationshipId);this.host.changed();
+        const response=this.response(scope,operation,[],result.replay?"Existing feedback admission; inspect its current review state in Records. No statement was recreated.":"Explicit scoped feedback is pending review in Records. Previous Discovery projections are withheld until rebuilt under the current evidence boundary.",result.replay?200:201);
+        (response.body.explanations as {sourceRefs:string[]}[])[0]!.sourceRefs=[result.recordRef];return response;
+      }catch(error){return extensionError(409,"feedback_conflict",error instanceof Error?error.message:"Scoped feedback could not be recorded.");}
+    }
     if(operation==="cancel"){
       try {
         const work=this.repository.cancel(scope,String(request.workId),Number(request.expectedRevision),String(request.idempotencyKey),understandingDigest(request));

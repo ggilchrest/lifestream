@@ -1,0 +1,130 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-14T22:57:13.189943Z",
+  "slice": "LS-S084",
+  "status": "inProgress",
+  "claim": "Protected scoped-feedback vertical path through the existing relationship evidence, review, actual prepared input, expiry and forgetting owners; full Discovery and Initiative remain in progress.",
+  "baseRevision": "6d28a6132c1204228093e491ba6ae315bcdc961b",
+  "specificationRevision": "73cdf62badbf40e23c11221693c6ba48a3d2ec40",
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "703f60079a7a9b679e5a4a11f59d581fb561216ec39f83a30ccd47e3bbe15f64"
+    },
+    {
+      "path": "apps/control-web/discovery-workflows.js",
+      "sha256": "aba4a4b22c41b64c2c208f272aa62d9e693ae4917fbf0625d84ebe5851c04468"
+    },
+    {
+      "path": "apps/control-web/relationship-extensions.js",
+      "sha256": "5551507ae807274ea4248756748a71058229b6ebc0f3928885aa5d7043b11c9c"
+    },
+    {
+      "path": "apps/control-web/test/understanding.test.mjs",
+      "sha256": "9ea35037410cb10b3392fe39d4966f107df47ead41ddc36cf804b310fcf11279"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-feedback.ts",
+      "sha256": "640a927aa90aedfca24e9d444e79a6fd223f531812718ecd276ced315440aed8"
+    },
+    {
+      "path": "apps/server/src/admin/relationship-records.ts",
+      "sha256": "3285e95887967a221033e2fd211534103d78e298553734a81368e69b6f6b88b6"
+    },
+    {
+      "path": "apps/server/src/admin/relationship-recovery.ts",
+      "sha256": "38bab385e81b4999748118ff1ed54cac3ebf17c4986afd9b3bcdd2ef35767dd3"
+    },
+    {
+      "path": "apps/server/src/admin/understanding.ts",
+      "sha256": "a43faa7f464c00dc1e917b73e4757b38c2ca03767d8ea711f76f5f56176ac96e"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "a71775584526810e3c4198d957a9e2ef67f6cb7748cb08827a15ac66e0e58a05"
+    },
+    {
+      "path": "apps/server/src/relationship-extensions.ts",
+      "sha256": "19b0f5e745a71f4b0a7c6fe646e5642b8ba08e83ad0fb668ab6b4df4a71d97c2"
+    },
+    {
+      "path": "apps/server/test/understanding.test.ts",
+      "sha256": "27ea25d6200a7afc887a27721e17f1af9da7a6b637465024080e0803accd1a8f"
+    },
+    {
+      "path": "packages/contracts/src/schemas/understanding-api.schema.json",
+      "sha256": "be2a9aa0b77f8a7a65fc7e20c42351077283dffc00184c3e590c450f0d4c2438"
+    },
+    {
+      "path": "packages/runtime/src/context/builder.ts",
+      "sha256": "4bb0fcc43a7fc95845c33b6ad4a209187828002363f50408905b0c065e782097"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "295 passed",
+      "logSha256": "20f65bf399014454431936fd6e905a7c3a9e7121403fceb1b3e14766acf76033"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "27 passed before the final evidence-label layout and generic erase-helper refinement",
+      "logSha256": "11bb93e3cd3bf01079e253de5a7bed235fff960714829f090af46d4d32be9abb"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/understanding.test.mjs",
+      "result": "1 passed on final browser source",
+      "logSha256": "82e4e84fb5a965cc607e4d0b6f11ae296dd45eb1e20458739f18e55d91018746"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "45 passed",
+      "logSha256": "ba8b1761c06df9d9e3f0fdc8850905db4a077a776cd0eebd9cfdd85e103c25d5"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass; specification checks only",
+      "logSha256": "9c06ab09321319a770d227eeef8f808932ff02961f3cf0d592085a984886bbcc"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass; structure only",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "verifiedComponentBehavior": [
+    "Feedback references an exact currently approved relationship-record revision; cross-scope, stale and restricted references are denied",
+    "Typed timing, fatigue, capacity, satisfaction, purchase-intent, uncertainty and dislike values remain distinct and scoped; original evidence is preserved",
+    "One pending declaration is created in the existing relationship owner; no second personal-truth database and no automatic training consent",
+    "Declaration write and canonical request-bound idempotency receipt are atomic; conflicting retries fail and successful retries never recreate a declaration",
+    "Existing Records approval is required before the feedback enters actual prepared input",
+    "Expiry changes dependency currency and cached prepared-input freshness; expired statements no longer enter the actual request",
+    "Owner forgetting and generic record erasure remove both displayed text and typed metadata; old idempotency cannot restore forgotten feedback",
+    "Legacy record response shapes are preserved by omitting internal typed metadata",
+    "Browser feedback form shows exact evidence identity, explicit meaning, context, optional expiry and the existing Records review link; sign-out clears scoped inputs"
+  ],
+  "limitations": [
+    "Synthetic fixture-provider execution only; no selected-provider, voice performance or Human acceptance is claimed",
+    "Hypothesis analysis, tentative review/rejection, contextual candidates, Discovery Lab and complete S083 opportunity/output integration remain pending",
+    "Full corpus/background/voice measurement and exact-source prerequisite successors remain pending; historical qualifications are preserved",
+    "No personal-data import, saved-service restart, live configuration, networking research, provider/model selection or training occurred"
+  ],
+  "schemaExportChanged": false,
+  "modelQualityObservationsChanged": false,
+  "humanAcceptanceClaim": false
+}

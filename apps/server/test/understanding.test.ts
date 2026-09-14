@@ -84,3 +84,44 @@ test("optional Discovery index failure leaves ordinary input selection available
  admin.repository.select=()=>{throw new Error('Synthetic index unavailable');};
  assert.equal(admin.select(scope,'quartz','authenticatedSession',8192).content,'');
 });
+
+test("scoped Discovery feedback uses existing evidence review, expiry and privacy owners",async t=>{
+ const root=await mkdtemp(join(tmpdir(),'ls-discovery-feedback-'));t.after(()=>rm(root,{recursive:true,force:true}));const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'state.sqlite'),artifactDirectory:join(root,'artifacts')};const installerToken=randomUUID();
+ const app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'safety'),installerToken}});await app.start();t.after(()=>app.shutdown());const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={origin:base,'content-type':'application/json'};
+ const send=(path:string,body?:unknown)=>fetch(base+path,{method:body===undefined?'GET':'POST',headers,body:body===undefined?undefined:JSON.stringify(body)});
+ const api=async(path:string,body?:unknown)=>{const response=await send(path,body);return {status:response.status,body:await response.json() as any};};
+ const setup=await send('/api/auth/v1/setup',{username:'owner',password:randomUUID()+randomUUID(),installerToken});headers.cookie=setup.headers.get('set-cookie')!.split(';')[0]!;headers['x-lifestream-csrf']=(await setup.json() as any).session.csrfToken;
+ const assistant=(await api('/api/admin/v1/assistants',{displayName:'Synthetic feedback review'})).body;await api(`/api/admin/v1/assistants/${assistant.assistantId}/activate`,{profileId:assistant.profile.profileId,expectedActiveRevision:null});
+ const relation=(await api(`/api/admin/v1/assistants/${assistant.assistantId}/relationships`,{})).body.relationship,prefix=`/api/admin/v1/assistants/${assistant.assistantId}/relationships/${relation.relationshipId}`;
+ const created=await api(prefix+'/candidates',{idempotencyKey:'declaration',expectedRevision:relation.revision,content:'I enjoy quartz sensor projects.',source:'synthetic-declaration',sourceFamily:'user-declaration',uncertainty:'low',contextUse:'baseline'});assert.equal(created.status,201,JSON.stringify(created));
+ const approved=await api(prefix+`/candidates/${created.body.candidate.candidateId}/decision`,{idempotencyKey:'approve-declaration',expectedRevision:created.body.relationshipRevision,decision:'approved'});assert.equal(approved.status,200);const original=approved.body.candidate;
+ const validator=createContractValidator(),discovery=async(body:Record<string,unknown>)=>{const r=await api(prefix+'/understanding/v1',{schemaVersion:'1.0.0',...body});assert.equal(validator.validate('https://lifestream.dev/contracts/understanding-api/1.0.0',r.body).valid,true,JSON.stringify(r));return r;};
+ const until=new Date(Date.now()+60000).toISOString(),feedback={operation:'feedback',idempotencyKey:'capacity-feedback',topicRef:'topic:quartz',evidenceRef:`relationship-record:${original.candidateId}:${original.revision}`,kind:'noProjectCapacity',scope:'while finishing the synthetic telescope project',until};
+ assert.equal((await discovery({...feedback,evidenceRef:`relationship-record:${randomUUID()}:1`})).status,409);
+ assert.equal((await discovery({...feedback,evidenceRef:`relationship-record:${original.candidateId}:1`})).status,409);
+ const db=new Database({path:config.storage.databasePath});t.after(()=>db.close());db.exec("CREATE TRIGGER reject_feedback BEFORE INSERT ON assistant_relationship_idempotency WHEN NEW.idempotency_key='capacity-feedback' BEGIN SELECT RAISE(ABORT,'synthetic failure'); END;");
+ assert.equal((await discovery(feedback)).status,409);assert.equal((await api(prefix+'/records')).body.relationship.candidates.length,1,'feedback and retry receipt roll back together');db.exec('DROP TRIGGER reject_feedback');
+ const result=await discovery(feedback);assert.equal(result.status,201,JSON.stringify(result));const ref=result.body.explanations[0].sourceRefs[0],id=ref.split(':')[1];
+ assert.equal((await discovery(feedback)).status,200);assert.equal((await discovery({...feedback,kind:'dislike'})).status,409);
+ let records=(await api(prefix+'/records')).body.relationship;const pending=records.candidates.find((record:any)=>record.candidateId===id);assert.equal(pending.status,'pending');assert.equal(pending.discoveryFeedback,undefined,'legacy record payload stays unchanged');assert.equal(pending.trainingExcluded,true);assert.match(pending.content,/no capacity for a project/);assert.match(pending.content,/does not establish dislike/);assert.deepEqual(records.candidates.find((r:any)=>r.candidateId===original.candidateId),original);
+ const stored=JSON.parse((db.connection.prepare('SELECT payload_json FROM assistant_relationships WHERE relationship_id=?').get(relation.relationshipId) as any).payload_json);assert.equal(stored.candidates.find((r:any)=>r.candidateId===id).discoveryFeedback.kind,'noProjectCapacity');
+ await api('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession'});
+ const prompt=async()=>{const response=await send('/api/runtime/v1/messages',{assistantId:assistant.assistantId,relationshipId:relation.relationshipId,userInput:'Explain the current project context.',inspect:true,fullPromptPreview:true});const text=await response.text();assert.match(text,/event: interaction.completed/);return text;};
+ assert.doesNotMatch(await prompt(),/no capacity for a project/,'pending feedback cannot silently become approved truth');
+ assert.equal((await api(prefix+`/candidates/${id}/decision`,{idempotencyKey:'approve-feedback',expectedRevision:records.revision,decision:'approved'})).status,200);
+ const current=await prompt();assert.match(current,/no capacity for a project/);assert.match(current,/while finishing the synthetic telescope project/);assert.match(current,/I enjoy quartz sensor projects/);
+ const originalNow=Date.now();t.mock.method(Date,'now',()=>originalNow+120000);assert.doesNotMatch(await prompt(),/no capacity for a project/,'expired evidence cannot survive a cached prepared view');t.mock.restoreAll();
+ records=(await api(prefix+'/records')).body.relationship;const feedbackRecord=records.candidates.find((r:any)=>r.candidateId===id);
+ const forgotten=await api(prefix+'/privacy',{action:'forget-derived-information',idempotencyKey:'forget-feedback',expectedRevision:records.revision,targets:[{kind:'record',id,revision:feedbackRecord.revision}]});assert.equal(forgotten.status,200,JSON.stringify(forgotten));
+ const erased=JSON.parse((db.connection.prepare('SELECT payload_json FROM assistant_relationships WHERE relationship_id=?').get(relation.relationshipId) as any).payload_json).candidates.find((r:any)=>r.candidateId===id);assert.equal(erased.content,'');assert.equal(erased.discoveryFeedback,undefined);assert.equal((await discovery(feedback)).status,409,'forgotten statement cannot be restored through a historical feedback retry');
+});
+
+
+test("generic record forgetting also erases typed Discovery feedback attribution",async()=>{
+ const {applyRecordOperation}=await import('../src/admin/relationship-records.ts');
+ const {createDiscoveryFeedback}=await import('../src/admin/discovery-feedback.ts');
+ const scope={assistantId:randomUUID(),userId:randomUUID(),relationshipId:randomUUID(),deploymentId:randomUUID()},target={candidateId:randomUUID(),revision:2,status:'approved' as const,content:'I enjoy the synthetic topic.',source:'synthetic',sourceFamily:'synthetic',uncertainty:'low' as const};
+ const record=createDiscoveryFeedback([target],scope,{topicRef:'topic:synthetic',evidenceRef:`relationship-record:${target.candidateId}:2`,kind:'temporaryFatigue',scope:'this week',until:new Date(Date.now()+60000).toISOString()});
+ const result=applyRecordOperation([record],record.candidateId,{operation:'forget',expectedRecordRevision:1},scope.userId).records[0]!;
+ assert.equal(result.content,'');assert.equal(result.discoveryFeedback,undefined);assert.equal(result.status,'forgotten');
+});

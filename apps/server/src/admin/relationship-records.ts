@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 import type { ProfileCandidate } from "@lifestream/storage-sqlite";
 export const recordCategories = ["declaration", "episode", "semantic", "convention", "hypothesis", "procedure", "thread", "commitment"] as const;
 export type RecordCategory = typeof recordCategories[number];
+export type DiscoveryFeedback = {version:1;topicRef:string;evidenceRef:string;kind:"dislike"|"temporaryFatigue"|"poorTiming"|"noProjectCapacity"|"alreadySatisfied"|"interestWithoutPurchaseIntent"|"uncertain";scope:string;until:string|null};
 export type RelationshipRecord = {
+  /** Internal typed attribution; legacy transports retain their existing record shape. */
+  discoveryFeedback?:DiscoveryFeedback;
   candidateId: string; content: string; source: string; sourceFamily: string; uncertainty: "low" | "medium" | "high";
   status: "pending" | "approved" | "rejected" | "superseded" | "forgotten"; revision: number;
   contextUse?: "baseline" | "correction" | "relevant"; builder?: ProfileCandidate; approvedUse?: ProfileCandidate["approvedUse"]; evidenceBasis?: ProfileCandidate["evidenceBasis"];
@@ -64,7 +67,7 @@ export function applyRecordOperation(records: RelationshipRecord[], id: string, 
   } else if (operation === "narrow-audience") { target.audience = "ownerOnly"; history(target);
   } else if (operation === "exclude-training") { target.trainingExcluded = true; history(target);
   } else if (operation === "forget") {
-    target.status = "forgotten"; target.content = ""; target.source = "forgotten"; target.sourceFamily = "forgotten"; target.sourceFamilies = []; target.annotations = []; delete target.builder; target.approvedUse = null; target.suppressed = true; target.trainingExcluded = true; history(target);
+    target.status = "forgotten"; target.content = ""; target.source = "forgotten"; target.sourceFamily = "forgotten"; target.sourceFamilies = []; target.annotations = []; delete target.builder; delete target.discoveryFeedback; target.approvedUse = null; target.suppressed = true; target.trainingExcluded = true; history(target);
   } else throw new RecordOperationError("Unsupported record operation");
   return { records: next, affectedIds: affected.map(item => item.candidateId) };
 }

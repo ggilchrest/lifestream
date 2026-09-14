@@ -1,3 +1,4 @@
+import {createDiscoveryFeedback,feedbackIsCurrent} from "./admin/discovery-feedback.ts";
 import { extensionError } from "./relationship-extensions.ts";
 import { understandingDigest } from "@lifestream/storage-sqlite";
 import { DiscoveryAdministration } from "./admin/understanding.ts";
@@ -102,8 +103,25 @@ class AssistantAdminApi {
       snapshot:scope=>({boundary:this.contextBoundary(scope.assistantId,scope.relationshipId,scope.userId),configuration:[...this.relationshipConfigurations.values()].find(c=>c.relationshipId===scope.relationshipId&&c.status==="active"&&!c.quarantined)}),
       evidenceAllowed:(scope,refs)=>{const relationship=this.resolveRelationship(scope.assistantId,scope.relationshipId,scope.userId);if(!relationship||this.recoveryPending(relationship)||this.recovery.journal.currency!=="current")return false;const records=this.relationshipContextRecords(relationship,scope.userId,scope.assistantId);return refs.every(ref=>records.some(record=>record.id===ref&&record.status==="approved"&&record.personalization&&record.mention));},
       sourceAllowed:(scope,value)=>!this.recovery.journal.forbidden(scope.userId,scope.relationshipId,value),
-      forget:(scope,refs,request)=>this.forgetDiscovery(scope,refs,request),changed:()=>this.preparedCache.clear()
+      forget:(scope,refs,request)=>this.forgetDiscovery(scope,refs,request),feedback:(scope,request)=>this.recordDiscoveryFeedback(scope,request),changed:()=>this.preparedCache.clear()
     });
+  }
+  private recordDiscoveryFeedback(scope:UnderstandingScope,request:Record<string,unknown>):{recordRef:string;replay:boolean} {
+    const relationship=this.resolveRelationship(scope.assistantId,scope.relationshipId,scope.userId);
+    if(!relationship||relationship.collectionStopped||this.recoveryPending(relationship)||this.recovery.journal.currency!=="current")throw new Error("Current evidence collection or privacy state does not permit feedback admission.");
+    const key=String(request.idempotencyKey),binding=`discovery-feedback:${understandingDigest([scope,request])}`;
+    const result=this.database.transaction(tx=>{
+      const prior=tx.get<{relationshipId:string;operation:string;response:string}>("SELECT relationship_id AS relationshipId,operation,response_json AS response FROM assistant_relationship_idempotency WHERE idempotency_key=?",key);
+      if(prior){if(prior.relationshipId!==scope.relationshipId||prior.operation!==binding)throw new Error("Feedback retry identity conflicts with another request.");const response=JSON.parse(prior.response);if(typeof response.recordRef!=="string")throw new Error("Feedback replay was removed by a current privacy decision.");return {recordRef:response.recordRef,replay:true};}
+      const stored=tx.get<{payload:string}>("SELECT payload_json AS payload FROM assistant_relationships WHERE relationship_id=?",scope.relationshipId);
+      if(!stored||JSON.parse(stored.payload).revision!==relationship.revision)throw new Error("Evidence changed; refresh before recording feedback.");
+      const record=createDiscoveryFeedback(relationship.candidates,scope,request);
+      if(this.recovery.denied(scope.userId,scope.relationshipId,record.derivedFrom![0]!)||this.recovery.journal.forbidden(scope.userId,scope.relationshipId,record.content))throw new Error("Current source restrictions deny this feedback.");
+      const next={...relationship,revision:relationship.revision+1,candidates:[...relationship.candidates,record]},recordRef=`relationship-record:${record.candidateId}:${record.revision}`;
+      tx.run("UPDATE assistant_relationships SET payload_json=? WHERE relationship_id=?",JSON.stringify(next),scope.relationshipId);
+      tx.run("INSERT INTO assistant_relationship_idempotency (idempotency_key,relationship_id,operation,response_json) VALUES (?,?,?,?)",key,scope.relationshipId,binding,JSON.stringify({recordRef}));
+      return {recordRef,replay:false};
+    });this.reloadRecovery();return result;
   }
   private forgetDiscovery(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>):"missing"|"applied"|"pending"|"conflict" {
     const key=String(request.idempotencyKey),digest=understandingDigest(request);
@@ -164,11 +182,11 @@ class AssistantAdminApi {
     const relationship = this.resolveRelationship(assistantId, relationshipId, actor);
     const configurations = [...this.relationshipConfigurations.values()].filter(item => item.relationshipId === relationship?.relationshipId && item.status === "active").map(item => [item.configurationId,item.revision]);
     const memory = this.database.connection.prepare("SELECT id,json_extract(lifecycle_json,'$.revision') AS revision FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(lifecycle_json,'$.status')='active' ORDER BY id LIMIT 257").all(assistantId,actor);
-    return createHash("sha256").update(JSON.stringify([this.recovery.epoch(),actor,assistantId,relationship?.relationshipId,relationship?.revision,this.userProfiles.boundary(actor),includeConfigurations?configurations:[],memory])).digest("hex");
+    return createHash("sha256").update(JSON.stringify([this.recovery.epoch(),actor,assistantId,relationship?.relationshipId,relationship?.revision,this.userProfiles.boundary(actor),includeConfigurations?configurations:[],memory,relationship?.candidates.filter(item=>item.discoveryFeedback).map(item=>[item.candidateId,feedbackIsCurrent(item)])])).digest("hex");
   }
   private relationshipContextRecords(relationship:RelationshipView,actor:string,assistantId:string):RelationshipContextRecord[]{
     const memories = this.memories.contextRecords(assistantId,actor).filter(m=>!this.recovery.denied(actor,relationship.relationshipId,m.id,"personalization")); if (memories.length > 256 || relationship.candidates.length > 256) throw new Error("Relationship projection exceeds bounded review capacity");
-    const records: RelationshipContextRecord[] = relationship.status === "skipped" ? [] : relationship.candidates.map(item => ({ id:item.candidateId, content:item.processingRevoked||this.recovery.denied(actor,relationship.relationshipId,item.candidateId)?"":recordContextContent(item), revision:item.revision, sourceFamily:item.sourceFamily, status:item.status, use:item.contextUse ?? "relevant", personalization:!item.processingRevoked&&!this.recovery.denied(actor,relationship.relationshipId,item.candidateId,"personalization")&&item.approvedUse?.personalization !== false && !item.suppressed && item.audience !== "ownerOnly" && !hasRetainedRecordConflict(item), mention:item.approvedUse?.mention !== false, uncertainty:item.uncertainty }));
+    const records: RelationshipContextRecord[] = relationship.status === "skipped" ? [] : relationship.candidates.filter(item=>feedbackIsCurrent(item)).map(item => ({ id:item.candidateId, content:item.processingRevoked||this.recovery.denied(actor,relationship.relationshipId,item.candidateId)?"":recordContextContent(item), revision:item.revision, sourceFamily:item.sourceFamily, status:item.status, use:item.contextUse ?? "relevant", personalization:!item.processingRevoked&&!this.recovery.denied(actor,relationship.relationshipId,item.candidateId,"personalization")&&item.approvedUse?.personalization !== false && !item.suppressed && item.audience !== "ownerOnly" && !hasRetainedRecordConflict(item), mention:item.approvedUse?.mention !== false, uncertainty:item.uncertainty }));
     if (relationship.status !== "skipped") records.push(...memories.map(item => ({ id:item.id,content:item.content,revision:Number(item.lifecycle.revision),sourceFamily:String(item.provenance.source ?? item.id),status:"approved",use:item.provenance.correctionOf ? "correction" as const : "relevant" as const,personalization:true,mention:true })));
     records.push(...this.userProfiles.records(actor, assistantId).filter(r=>!this.recovery.denied(actor,relationship.relationshipId,r.id.split(":")[1]!,"personalization")));
     return records;
@@ -190,6 +208,8 @@ class AssistantAdminApi {
     const cached = this.preparedCache.get(key); if (cached && Date.parse(cached.freshUntil) > Date.now()) return cached;
     const records=this.relationshipContextRecords(relationship,actor,assistantId);
     const view = compileRelationshipContext({ records,userInput:options.userInput ?? "",audienceScope:options.audienceScope ?? "unknown",profileRevision,relationshipRevision:`${relationship.relationshipId}:${relationship.revision}`,configurationRevision:active ? `${active.configurationId}:${active.revision}` : "default:1",controls:active?.controls ?? relationshipControlDefaults,representation:active?.representation??"recordOriented" });
+    const feedbackExpiry=relationship.candidates.filter(item=>feedbackIsCurrent(item)&&item.discoveryFeedback?.until).map(item=>Date.parse(item.discoveryFeedback!.until!));
+    if(feedbackExpiry.length)view.freshUntil=new Date(Math.min(Date.parse(view.freshUntil),...feedbackExpiry)).toISOString();
     if(relationship.deploymentId&&active?.extensions?.understanding){const enrichment=this.discovery.select(relationship as UnderstandingScope,options.userInput??"",options.audienceScope??"unknown",view.budget.maximumBytes-view.budget.usedBytes);if(enrichment.content){view.discoveryContent=enrichment.content;view.budget.usedBytes+=Buffer.byteLength(enrichment.content)+1;view.sourceRevisions=[...view.sourceRevisions,...enrichment.items.map(item=>item.id)];view.selections=[...view.selections,...enrichment.items.map(item=>({id:item.id,revision:1,sourceFamily:"provided-topic-source",lane:"relevant" as const,byteContribution:Buffer.byteLength(item.content)}))];view.freshUntil=new Date(Math.min(Date.parse(view.freshUntil),enrichment.freshUntil)).toISOString();}}
     this.preparedCache.set(key,view,[`user-profile:${actor}`,relationship.relationshipId,...records.map(record=>record.id)]); return view;
   }

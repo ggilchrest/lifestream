@@ -93,5 +93,5 @@ export function legacyConfigurationView(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(legacyConfigurationView);
   if (value === null || typeof value !== "object") return value;
   const record = value as Record<string, unknown>;
-  return Object.fromEntries(Object.entries(record).filter(([key]) => !(key === "extensions" && typeof record.configurationId === "string" && typeof record.relationshipId === "string" && record.controls !== undefined)).map(([key, child]) => [key, legacyConfigurationView(child)]));
+  return Object.fromEntries(Object.entries(record).filter(([key]) => !(key === "extensions" && typeof record.configurationId === "string" && typeof record.relationshipId === "string" && record.controls !== undefined) && !(key === "discoveryFeedback" && typeof record.candidateId === "string" && typeof record.content === "string")).map(([key, child]) => [key, legacyConfigurationView(child)]));
 }

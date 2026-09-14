@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "66fff84c32433294b71097a9f0b112df4acb76e8",
+  "currentRevision": "6d28a6132c1204228093e491ba6ae315bcdc961b",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -140,79 +140,71 @@
     "apps/server/src/admin/recovery-journal.ts",
     "tests/fixtures/extension-settings.ts",
     "apps/control-web/discovery-workflows.js",
-    "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json"
+    "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json",
+    "apps/server/src/admin/discovery-feedback.ts",
+    "apps/server/src/admin/relationship-records.ts",
+    "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
   ],
   "changedFiles": [
     "apps/control-web/DESIGN.md",
     "apps/control-web/discovery-workflows.js",
     "apps/control-web/relationship-extensions.js",
-    "apps/control-web/styles.css",
     "apps/control-web/test/understanding.test.mjs",
-    "apps/server/src/admin/recovery-journal.ts",
+    "apps/server/src/admin/discovery-feedback.ts",
+    "apps/server/src/admin/relationship-records.ts",
     "apps/server/src/admin/relationship-recovery.ts",
     "apps/server/src/admin/understanding.ts",
     "apps/server/src/index.ts",
-    "apps/server/test/relationship-extensions.test.ts",
-    "apps/server/test/server.test.ts",
+    "apps/server/src/relationship-extensions.ts",
     "apps/server/test/understanding.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json",
-    "packages/runtime/package.json",
-    "packages/runtime/src/context/builder.ts",
-    "packages/storage-sqlite/package.json",
-    "packages/storage-sqlite/src/index.ts",
-    "packages/storage-sqlite/src/migrations/0020_understanding.sql",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/src/understanding.ts",
-    "packages/storage-sqlite/test/understanding.test.ts",
-    "pnpm-lock.yaml",
-    "tests/fixtures/extension-settings.ts"
+    "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json"
+      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json"
+      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json"
+      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json"
+      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json"
+      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/understanding.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json"
+      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json"
+      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json"
+      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json"
+      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
     }
   ],
   "decisions": [
@@ -227,8 +219,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Continue full S084 hypotheses, scoped feedback, candidates and Lab integration, actual corpus/provider/voice measurement and exact-source prerequisite successors; complete remaining authorized S083 opportunity/output lifecycle and other dependency-ready project work before requesting Human review.",
-  "updatedAt": "2026-09-14T22:42:32.215644Z",
+  "nextAction": "Complete S084 competing hypotheses, review/rejection, contextual candidates and isolated Lab; qualify actual corpus/provider/voice performance and exact-source dependencies. Continue remaining S083 opportunity/output lifecycle and all other dependency-ready Lifestream/PWCE specification work before stopping for Human review.",
+  "updatedAt": "2026-09-14T22:57:13.189943Z",
   "updatedBy": "Codex",
-  "notes": "Exact approved four-schema export and shared-parent configuration remain published. Supplied-source Discovery now has protected admission, current bounded prepared input, cancellation, logical payload expiry, owner-local source exclusion and database-restore replay protection with separate browser workflows. 293 source and 27 broader browser tests pass; final focused browser covers final layout/lifecycle changes. This is component evidence only. Full S083/S084 and provider/Human claims remain inProgress, not blocked. Saved review runtime/data and unrelated dirty artifacts are preserved."
+  "notes": "Supplied-source preparation remains published. Scoped feedback now creates pending declarations in existing relationship records, preserves meaning and original evidence, requires ordinary review, participates in actual prepared input, expires with dependency/cache fencing and erases typed metadata with normal forgetting. 295 source and 27 browser tests pass; final mobile-label check passes. Full S083/S084, model/provider performance and Human claims remain incomplete. No genuine blocker is asserted while independent implementation work remains. Saved review state, schemas and unrelated dirty artifacts are preserved."
 }
