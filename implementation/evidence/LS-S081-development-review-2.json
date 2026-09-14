@@ -1,0 +1,15 @@
+{
+  "slice": "LS-S081",
+  "collectedAt": "2026-09-14T02:45:39.993Z",
+  "checks": [],
+  "exclusions": [
+    "No personal data, physical output, Human fit acceptance, training, deployment, production or provider service changes"
+  ],
+  "sourceRevision": "2710dcbe248c63ee7088dfc40d3bd5f1bdb6420a",
+  "scriptSha256": "df1635134a7995d03139f60be7ad5f0eb793ffb8ec2426450de5438e979cf871",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "sourceWorktreeStatus": "M docs/human-testing-guide.html\n M implementation/checkpoint.json",
+  "result": "fail",
+  "blocker": "Bounded rendered/provider check failed; no credentials logged.",
+  "failureEvidence": "(node:77894) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n✖ LS-TEST-106 joined authenticated intake, tuning, insights, executed Lab, correction, audience, forgetting and restart (89371.991375ms)\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 92052.131834\n\n✖ failing tests:\n\ntest at apps/control-web/test/relationship-joined.test.mjs:12:1\n✖ LS-TEST-106 joined authenticated intake, tuning, insights, executed Lab, correction, audience, forgetting and restart (89371.991375ms)\n  page.waitForFunction: Timeout 15000ms exceeded.\n      at waitText (/Users/gg/Development/Agentic/Tifa/.recovery-review-worktree/apps/control-web/test/relationship-joined.test.mjs:13:1009)\n      at observe (/Users/gg/Development/Agentic/Tifa/.recovery-review-worktree/apps/control-web/test/relationship-joined.test.mjs:21:175)\n      at async TestContext.<anonymous> (/Users/gg/Development/Agentic/Tifa/.recovery-review-worktree/apps/control-web/test/relationship-joined.test.mjs:64:667) {\n    name: 'TimeoutError',\n    log: []\n  }\n"
+}
