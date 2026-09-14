@@ -1,3 +1,4 @@
+import { followWorkspace } from './workspace-navigation.mjs';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { randomBytes, randomUUID } from 'node:crypto';
@@ -15,7 +16,7 @@ test('authenticated personalization applies reviewed correction, reverses adapta
   const options = { config, localAuth: { stateDirectory: join(root, 'safety'), installerToken } };
   let app = createLifestreamServer(options); await app.start(); t.after(() => app.shutdown());
   const browser = await chromium.launch({ channel: 'chrome', headless: true }); t.after(() => browser.close());
-  const page = await browser.newPage(), errors = []; page.setDefaultTimeout(5000); page.on('pageerror', error => errors.push(error.message));
+  const page = followWorkspace(await browser.newPage()), errors = []; page.setDefaultTimeout(5000); page.on('pageerror', error => errors.push(error.message));
   const api = (path, body) => page.evaluate(async ({ path, body }) => {
     const response = await fetch(path, { method: body === undefined ? 'GET' : 'POST', headers: { 'content-type': 'application/json', 'x-lifestream-csrf': window.lifestreamAuth.session?.csrfToken || '' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
     return { status: response.status, body: await response.json() };

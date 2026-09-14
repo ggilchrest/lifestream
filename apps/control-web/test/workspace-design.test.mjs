@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+import {test} from 'node:test';
+import {randomBytes} from 'node:crypto';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createLifestreamServer} from '../../server/src/index.ts';
+import {loadProfile} from '../../server/src/config/loader.ts';
+
+test('control room navigation, labeled records, modal review, five insight perspectives and mobile pages work without hidden-control shortcuts',{skip:!process.env.PLAYWRIGHT_MODULE,timeout:90000},async t=>{
+ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE);
+ const root=await mkdtemp(join(tmpdir(),'ls-control-room-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};
+ const installerToken=randomBytes(32).toString('hex'),password=randomBytes(32).toString('hex');
+ const app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'safety'),installerToken}});await app.start();t.after(()=>app.shutdown());
+ const browser=await chromium.launch({channel:'chrome',headless:true});t.after(()=>browser.close());
+ const page=await browser.newPage({viewport:{width:1440,height:1040}});page.setDefaultTimeout(7000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(`http://127.0.0.1:${app.address().port}/control/`);await page.waitForFunction(()=>!!window.lifestreamUI);
+ await page.locator('#auth-username').fill('designer');await page.locator('#auth-password').fill(password);await page.locator('#auth-installer-token').fill(installerToken);await page.locator('#auth-setup').click();await page.waitForFunction(()=>!!window.lifestreamAuth.session);
+ const nav=async id=>{const link=page.locator(`[data-destination="${id}"]`);if(!await link.isVisible())await page.locator('.nav-toggle').click();await link.click();await page.waitForFunction(id=>!document.querySelector(`[data-view="${id}"]`).hidden,id);assert.equal(await page.locator('[data-view]:visible').count(),1);};
+ await page.locator('#new-assistant').click();await page.waitForFunction(()=>document.querySelector('#result').textContent.includes('Assistant created'));
+ await page.locator('#display-name').fill('Reference Assistant');await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#result').textContent.includes('saved'));
+ await nav('relationship');await page.locator('#relationship-create').click();await page.waitForFunction(()=>document.querySelector('#relationship-results').textContent.includes('revision 1'));
+ await nav('records');await page.locator('#records-refresh').click();await page.locator('#record-create-panel > summary').click();await page.locator('#record-category').selectOption('convention');await page.locator('#record-lane').selectOption('baseline');await page.locator('#record-content').fill('Use concise plain language.');await page.locator('#record-declare').click();await page.waitForFunction(()=>document.querySelector('#record-list').textContent.includes('Use concise plain language.'));
+ const first=page.locator('.record-table tbody').first();assert.match(await first.locator('.record-id').textContent(),/ID .+/);assert.equal(await page.locator('.record-table th').count(),4);
+ await first.locator('[data-expand]').click();await first.locator('[data-review=approved]').click();await page.waitForFunction(()=>document.querySelector('.record-table .status').textContent==='approved');
+ await first.locator('[data-expand]').click();await first.locator('[data-operation=annotate]').click();assert.equal(await page.locator('dialog[open]').count(),1);await page.locator('#record-operation-text').fill('Synthetic review note.');await page.keyboard.press('Escape');assert.equal(await page.locator('dialog[open]').count(),0);assert.equal(await first.locator('[data-operation=annotate]').evaluate(el=>el===document.activeElement),true);
+ await first.locator('[data-operation=annotate]').click();await page.locator('#record-operation-text').fill('Synthetic review note.');await page.locator('#record-operation-apply').click();await page.waitForFunction(()=>document.querySelector('#record-list').textContent.includes('Synthetic review note.'));assert.equal(await page.locator('dialog[open]').count(),0);
+ await first.locator('[data-expand]').click();await first.locator('[data-operation=correct]').click();await page.locator('#record-operation-text').fill('Use short paragraphs and concrete examples.');await page.locator('#record-operation-apply').click();await page.waitForFunction(()=>document.querySelector('#record-list').textContent.includes('Use short paragraphs and concrete examples.'));
+ assert.equal(await page.locator('[data-status=superseded]').count(),1);assert.notEqual(await page.locator('[data-status=superseded] td').first().evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)');
+ await page.locator('#record-create-panel > summary').click();await page.screenshot({path:'/private/tmp/control-records-desktop.png',fullPage:true});
+ await page.locator('#record-search').fill('short paragraphs');assert.equal(await page.locator('.record-table tbody').count(),1);await page.locator('#record-search').fill('');
+ await nav('insights');await page.locator('#relationship-insights-refresh').click();await page.locator('#insight-feedback-panel > summary').click();await page.locator('#insight-feedback-target').selectOption({index:1});await page.locator('#relationship-feedback-add').click();await page.waitForFunction(()=>document.querySelector('#result').textContent.includes('Explicit attributed feedback recorded'));await page.locator('#insight-feedback-panel > summary').click();await page.locator('#relationship-insights-run').click();await page.waitForFunction(()=>document.querySelectorAll('[data-insight-id]').length===5);
+ assert.equal(await page.locator('.lens-legend li').count(),5);assert.equal(await page.locator('.insight-card .record-id').count(),5);assert.equal(await page.locator('.insight-card dt').filter({hasText:'Counterevidence'}).count(),5);assert.equal(await page.locator('#insight-feedback-panel').evaluate(el=>el.open),false);
+ await page.screenshot({path:'/private/tmp/control-insights-desktop.png',fullPage:true});
+ await page.locator('[data-lens-select=communicationFit]').click();assert.equal(await page.locator('[data-insight-id]:visible').count(),1);const communication=page.locator('[data-insight-id]').filter({has:page.getByRole('heading',{name:'Communication Fit',exact:true})});await communication.locator('[data-insight-decision=accepted]').click();const link=communication.locator('[data-review-configuration]');await link.waitFor();const draftId=await link.getAttribute('data-review-configuration');await link.click();await page.waitForFunction(id=>document.querySelector('#tuning-saved').value===id,draftId);assert.equal(await page.locator('.workflow-step[data-pane=review]').isVisible(),true);
+ await page.locator('.subnav [data-pane=edit]').click();
+ await nav('settings');assert.equal(await page.locator('.workflow-step:visible').count(),1);await page.locator('#relationship-config-save').click();await page.waitForFunction(()=>!document.querySelector('.workflow-step[data-pane=review]').hidden);await page.locator('#tuning-preview').click();await page.waitForFunction(()=>!document.querySelector('#relationship-config-activate').disabled);assert.equal(await page.locator('#relationship-config-activate').isVisible(),true);
+ await page.screenshot({path:'/private/tmp/control-settings-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});
+ for(const id of ['profile','person','relationship','intake','records','settings','insights','lab','readiness','privacy','session','account','memory','adaptations']){await nav(id);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,`${id} must fit the narrow viewport`);}
+ await nav('records');await page.screenshot({path:'/private/tmp/control-records-mobile.png',fullPage:true});
+ await nav('account');await page.locator('#auth-sign-out').click();await page.waitForFunction(()=>!window.lifestreamAuth.session);assert.equal(await page.locator('[data-view]:visible').getAttribute('data-view'),'account');assert.equal(await page.locator('#record-list').textContent(),'');assert.equal(await page.locator('.workspace-notification').isVisible(),false);
+ assert.deepEqual(errors,[]);
+});
