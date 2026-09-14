@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "6dc2b8f5ce9c0629eb729c0842ea88bea14280c1",
-  "currentRevision": "6dc2b8f5ce9c0629eb729c0842ea88bea14280c1",
+  "currentRevision": "d5130144c40e9e4beffc7eed0e6dbfec1a056063",
   "activeSlice": "LS-S081",
   "sliceStatus": "blocked",
   "completedSlices": [
@@ -94,11 +94,7 @@
     "implementation/evidence/LS-S081-continuation-review-1.json"
   ],
   "changedFiles": [
-    "implementation/checkpoint.json",
-    "implementation/evidence/RECOVERY-V2-STATUS.md",
-    "implementation/evidence/LS-S081-current-qualification.json",
-    "implementation/evidence/LS-S081-qualification-review-1.json",
-    "implementation/evidence/RECOVERY-V2-CASE-INDEX.json"
+    "implementation/checkpoint.json"
   ],
   "validation": [
     {
