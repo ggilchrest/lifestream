@@ -42,3 +42,23 @@
  [data-role=history] .extension-table button{width:100%;font-size:13px}
  [data-role=preview] .extension-table{min-width:420px}
 }
+
+/* Discovery uses distinct workflow views and labeled records at narrow widths. */
+.discovery-navigation{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:20px}
+.discovery-navigation button[aria-pressed=true]{background:linear-gradient(135deg,#2874bf,#1563bf);color:white;border-color:#1563bf}
+[data-discovery-panel] [hidden]{display:none!important}
+[data-discovery-panel] form>label{display:grid;gap:6px;margin:16px 0}
+[data-discovery-panel] textarea{width:100%;box-sizing:border-box}
+[data-discovery-panel] .record-id{overflow-wrap:anywhere}
+[data-discovery-panel] span.record-id{display:block}
+[data-discovery-detail]{border-top:2px solid var(--line);margin-top:24px;padding-top:20px}
+@media(max-width:760px){
+ [data-discovery-panel] .extension-table thead{display:none}
+ [data-discovery-panel] .extension-table,[data-discovery-panel] .extension-table tbody,[data-discovery-panel] .extension-table tr,[data-discovery-panel] .extension-table th,[data-discovery-panel] .extension-table td{display:block;width:100%;min-width:0;max-width:none;box-sizing:border-box}
+ [data-discovery-panel] .extension-table tr{border:1px solid var(--line);border-radius:12px;margin:12px 0;padding:8px}
+ [data-discovery-panel] .extension-table th,[data-discovery-panel] .extension-table td{border:0;white-space:normal}
+ [data-discovery-brief-list] td:nth-child(2)::before{content:'Brief ID: ';font-weight:600}
+ [data-discovery-brief-list] td:nth-child(3)::before{content:'Fresh until: ';font-weight:600}
+ [data-discovery-job-list] td:nth-child(2)::before{content:'State: ';font-weight:600}
+ [data-discovery-job-list] td:nth-child(3)::before{content:'Outcome: ';font-weight:600}
+}

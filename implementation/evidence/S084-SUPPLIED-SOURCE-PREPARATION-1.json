@@ -1,0 +1,199 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-14T22:42:32.215644Z",
+  "slice": "LS-S084",
+  "status": "inProgress",
+  "claim": "Supplied-source preparation, actual prepared-input inclusion, protected browser review and owner-local forgetting/recovery component verification. Full slice and selected-provider performance remain pending.",
+  "baseRevision": "66fff84c32433294b71097a9f0b112df4acb76e8",
+  "specificationRevision": "03f152ac4d632cd97af3b21789e145ad87d5ad93",
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "bdac0260cd6c33abb89fc04c040d0afe1ca415275f150229e1bae3c9492717a1"
+    },
+    {
+      "path": "apps/control-web/discovery-workflows.js",
+      "sha256": "238f6ae0ef0c7463fc6d3afba696191e755de10302a2e3c0bd92f21aa7bb955f"
+    },
+    {
+      "path": "apps/control-web/relationship-extensions.js",
+      "sha256": "fdabd11b328736c63a96941c3efbdac751e453364111c6fee0d899d1737c6abb"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "5f3a04ca3979d57fd0c9e4e862d545f46558e1dd18ed8d584361dc0882f4f137"
+    },
+    {
+      "path": "apps/control-web/test/understanding.test.mjs",
+      "sha256": "cce70e961d01f09054360f6a4614f986c54a40bb77bf11c73fe78fe5930689c9"
+    },
+    {
+      "path": "apps/server/src/admin/recovery-journal.ts",
+      "sha256": "48635a8e114368dd03e79f568e49900ec5ca5759407463395b9905cfb9ba4e09"
+    },
+    {
+      "path": "apps/server/src/admin/relationship-recovery.ts",
+      "sha256": "c2bd263d528218478cf2a0706f440572a4956c83c72b5fb8255ddac98ec54fdf"
+    },
+    {
+      "path": "apps/server/src/admin/understanding.ts",
+      "sha256": "f4d90f2661ede4a9e69b2b577e913f184b188600fd930203973c2314c46b7b4c"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "78e89cbcfc098006d6407a524af88c68677c9ac180ec43c3e457e02ec4c14cfc"
+    },
+    {
+      "path": "apps/server/test/relationship-extensions.test.ts",
+      "sha256": "c6a7e9eb3992f97ff5b258883bdf0bef4fd5ebd2589ac755791da71f04de9400"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "8921af990a83a59055f489b1f81168fb6a63c03c9361066a7b5dcded2678d812"
+    },
+    {
+      "path": "apps/server/test/understanding.test.ts",
+      "sha256": "f5470495e2f7611aa7afc16820e50c1cda0f0f749a4dcfdf6a0d61f14607b4d3"
+    },
+    {
+      "path": "packages/contracts/src/schemas/personal-understanding.schema.json",
+      "sha256": "2e6f377f9ecbd1bd662466f2cbb360c2b8e3e608d624e2798850fcc823cf6d2d"
+    },
+    {
+      "path": "packages/contracts/src/schemas/understanding-api.schema.json",
+      "sha256": "be2a9aa0b77f8a7a65fc7e20c42351077283dffc00184c3e590c450f0d4c2438"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "ca1f8fee3a093d94a54d134ef3d4b638b7f07c3f7a3f2e56b3cb71230a79b89f"
+    },
+    {
+      "path": "packages/runtime/src/context/builder.ts",
+      "sha256": "4bb0fcc43a7fc95845c33b6ad4a209187828002363f50408905b0c065e782097"
+    },
+    {
+      "path": "packages/runtime/src/understanding/coordinator.ts",
+      "sha256": "d6af48d6a70b7f0e8fe2b1f22e90bf5dd6fd4675f5d290dfa204d882c0715a9d"
+    },
+    {
+      "path": "packages/runtime/src/understanding/selection.ts",
+      "sha256": "aee866a1cd8fe949e47ed5ad370b00fc39cbad1e0d42dea84ceae670d7a1f1db"
+    },
+    {
+      "path": "packages/storage-sqlite/package.json",
+      "sha256": "c9623ce3f721c00e1318a73fd699e8785a9f1b1abcf391b502de4da41e688130"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "13ad5f3a51476fe5aefe1524cb45964a0b1b6bfa15d253e72f487ef1bc3b89bf"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0020_understanding.sql",
+      "sha256": "17e5c6ecd7d8495cb6a86506828628e47d2727abea8fa1abf0960def3aa1dbfc"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "581392c41580966f10deceed119b2470448e344711b7151393b5b213168ac7c5"
+    },
+    {
+      "path": "packages/storage-sqlite/src/understanding.ts",
+      "sha256": "a81f64db2fce89c8ce430c6d4e0ec047ab0f130ceeb704c897dde3035d1c97c6"
+    },
+    {
+      "path": "packages/storage-sqlite/test/understanding.test.ts",
+      "sha256": "b39511faf1e33d8905395db741dcc00bc1f33cf4adeabc576b50c315f8572194"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "29dee9e0907ae6ff4c5ea86185e03887ac44e93145562329fc62ca85f78c9a7e"
+    },
+    {
+      "path": "tests/fixtures/extension-settings.ts",
+      "sha256": "5098e7de9c8740edc08bbb26eead605805cc523e8aedb6904e4e5220c137fa7a"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "293 passed",
+      "logSha256": "e903e48d4711320f1e1fe2d788e78a0f0c28412164c574cd53cf2960ed3c4d0a"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "27 passed before the final table display and shutdown refinements",
+      "logSha256": "b87006875363f579701f897ebc725705eab5db07e8d88f4d3557ac67dab847a0"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/understanding.test.mjs",
+      "result": "1 passed on final source",
+      "logSha256": "a6234f7af44626500074af79913e001058756042aa135f7cbdb1022c04825fff"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "45 passed",
+      "logSha256": "cae7c7d8abf77f6582dd8fd3ca8604734a2ae1ddaa67721cbc5b3015d2f78064"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass; specification checks only",
+      "logSha256": "cf1b802a92651c46da79dc1b6851f68537c978b6efc4a68a0f10a7a8bc6a9c5e"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass; structure only",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "verifiedComponentBehavior": [
+    "Closed approved schema validation for requests, work records, briefs and responses",
+    "Scoped idempotent admission, atomic work/artifact/index publication, durable cancellation and charged restart outcomes",
+    "Only current authorized attributed source excerpts enter the actual prepared inference input within the existing optional allocation",
+    "Source/claim mismatch is rejected; an explicit current correction withholds optional context",
+    "Source exclusion and topic forgetting reuse the owner-local recovery journal; equivalent source content cannot return under a renamed reference",
+    "Forgetting removes derived payload/index entries and remains effective after restoring an older synthetic database; exact privacy retries still succeed",
+    "Foreground and voice work cancel optional preparation; closing a runtime cannot publish late work or touch its closed database",
+    "Optional index failure withholds enrichment without preventing an ordinary allowed reply",
+    "Separate preparation, brief and job browser views with labeled desktop/mobile records, scope clearing and explicit removal review"
+  ],
+  "limitations": [
+    "Fixture provider and synthetic supplied sources only. No new selected-provider or physical speech qualification is claimed.",
+    "No network research, personal import, deployment, saved review service restart, live configuration or training occurred.",
+    "Lexical source selection and conservative current-correction withholding are an initial baseline; full ambiguity, hypothesis, candidate, feedback and Lab requirements remain pending.",
+    "No 200-pair corpus/voice performance matrix has been executed for this implementation.",
+    "Current broad prerequisite source qualifications changed with the authorized refactor; exact-source successor qualification remains pending, with historical receipts preserved.",
+    "LS-S083 complete opportunity/output lifecycle and both new-scope Human reviews remain pending."
+  ],
+  "resolvedDevelopmentFailures": [
+    {
+      "failure": "UnderstandingWork used executionMode live, which belongs to the API response rather than the common work enum",
+      "resolution": "Use canonical normal work execution mode; approved schema bytes unchanged"
+    },
+    {
+      "failure": "New migration did not tolerate the existing sparse-ledger replay regression",
+      "resolution": "New, previously unapplied migration uses idempotent table/index/trigger creation; existing migrations unchanged"
+    },
+    {
+      "failure": "Browser could not address the nested Spoiler scope select by its exact visible label",
+      "resolution": "Explicit accessible label binding; original exact-label browser assertion now passes"
+    }
+  ],
+  "sourceInventoryUnchanged": true,
+  "humanAcceptanceClaim": false,
+  "selectedProviderClaim": false,
+  "modelQualityObservationCountChanged": false
+}

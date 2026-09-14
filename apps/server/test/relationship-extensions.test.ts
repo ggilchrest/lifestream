@@ -9,10 +9,7 @@ import { loadConfig } from "../src/config/loader.ts";
 import { createContractValidator } from "../../../packages/contracts/src/validator.ts";
 
 // Independently authored synthetic settings; no private fixtures.
-const settings = {
-  initiative: { preset: "reserved", proactiveness: 2, dimensions: { initiative: 2, warmth: 5, curiosity: 3, followThrough: 3, persistence: 0 }, allowedContexts: [], endpointIds: [], allowedModalities: [], allowedKinds: [], consentRefs: [], tuning: { openingsPerHour: 0, openingsPerDay: 0, minimumGapSeconds: 1200, checkInIntervalSeconds: 0, arrivalDwellSeconds: 10, meaningfulAbsenceSeconds: 600, arrivalTtlSeconds: 90, checkInTtlSeconds: 120, followUpTtlSeconds: 300, pendingPerRelationship: 4, pendingPerRuntime: 16, generationCallsPerOpportunity: 1, concurrentSocialCalls: 1, generationMaxTokens: 160, generationDeadlineSeconds: 10, inferenceCallsPerRelationshipHour: 12, inferenceCallsPerRuntimeHour: 24, automaticRetries: 0, dedupRetentionSeconds: 86400 }, adaptation: { enabled: false, maximumDeferralSeconds: 0 } },
-  understanding: { enabled: false, researchMode: "providedOnly", researchDepth: "brief", approvedTopicRefs: [], policyRefs: [], excludedSourceRefs: [], excludedTopicRefs: [], spoilerPolicy: "avoid", progressBoundaryRef: null, explorationShare: 0.2, budget: { jobsPerDay: 8, pendingJobsPerRuntime: 16, concurrentJobs: 1, externalRequestsPerJob: 4, documentsPerJob: 4, inputBytesPerJob: 2097152, sourceTokensPerJob: 16000, jobDeadlineSeconds: 120, fetchDeadlineSeconds: 10, analysisCallsPerJob: 2, outputTokensPerCall: 2048, automaticRetries: 0, workerCpuChunkMs: 50, workerMemoryMiB: 256, pendingJobTtlSeconds: 86400, briefFreshnessSeconds: 86400, enrichmentTokens: 512, selectedItems: 4, optionalSelectionDeadlineMs: 10 } }
-};
+import { extensionSettings as settings } from "../../../tests/fixtures/extension-settings.ts";
 
 test("extension configurations use one parent lifecycle, atomic retries, scope fences and restart persistence", async t => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-extension-settings-"));

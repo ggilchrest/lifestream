@@ -4,6 +4,17 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
-  "scripts": { "build": "tsc -b && mkdir -p dist/migrations && cp src/migrations/*.sql dist/migrations/", "typecheck": "tsc -b --pretty false" }
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b && mkdir -p dist/migrations && cp src/migrations/*.sql dist/migrations/",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@lifestream/contracts": "workspace:*"
+  }
 }

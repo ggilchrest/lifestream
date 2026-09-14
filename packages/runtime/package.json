@@ -71,6 +71,14 @@
     "./training": {
       "types": "./dist/ports/training.d.ts",
       "import": "./dist/ports/training.js"
+    },
+    "./understanding/selection": {
+      "types": "./dist/understanding/selection.d.ts",
+      "import": "./dist/understanding/selection.js"
+    },
+    "./understanding/coordinator": {
+      "types": "./dist/understanding/coordinator.d.ts",
+      "import": "./dist/understanding/coordinator.js"
     }
   },
   "scripts": {

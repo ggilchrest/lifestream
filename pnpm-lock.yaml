@@ -109,7 +109,11 @@ importers:
 
   packages/runtime: {}
 
-  packages/storage-sqlite: {}
+  packages/storage-sqlite:
+    dependencies:
+      '@lifestream/contracts':
+        specifier: workspace:*
+        version: link:../contracts
 
 packages:
 

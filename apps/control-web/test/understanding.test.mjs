@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {test} from 'node:test';
+import {randomBytes} from 'node:crypto';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createLifestreamServer} from '../../server/src/index.ts';
+import {loadProfile} from '../../server/src/config/loader.ts';
+
+test('Discovery preparation, attributed records and removal remain separate and readable',{skip:!process.env.PLAYWRIGHT_MODULE,timeout:90000},async t=>{
+ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE),root=await mkdtemp(join(tmpdir(),'ls-discovery-browser-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};const installerToken=randomBytes(32).toString('hex');
+ const app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'safety'),installerToken}});await app.start();t.after(()=>app.shutdown());
+ const browser=await chromium.launch({channel:'chrome',headless:true});t.after(()=>browser.close());const page=await browser.newPage({viewport:{width:1360,height:960}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto(`http://127.0.0.1:${app.address().port}/control/`);await page.waitForFunction(()=>!!window.lifestreamUI);
+ await page.locator('#auth-username').fill('owner');await page.locator('#auth-password').fill(randomBytes(32).toString('hex'));await page.locator('#auth-installer-token').fill(installerToken);await page.locator('#auth-setup').click();await page.waitForFunction(()=>!!window.lifestreamAuth.session);
+ await page.locator('#new-assistant').click();await page.waitForFunction(()=>document.querySelector('#result').textContent.includes('Assistant created'));
+ const nav=async id=>{const link=page.locator(`[data-destination="${id}"]`);if(!await link.isVisible())await page.locator('.nav-toggle').click();await link.click();};
+ await nav('relationship');await page.locator('#relationship-create').click();await page.waitForFunction(()=>document.querySelector('#relationship-results').textContent.includes('revision 1'));
+ await nav('discovery');const panel=page.locator('.relationship-understanding'),status=panel.locator('[data-role=status]');await panel.locator('[data-action=refresh]').click();await status.filter({hasText:'Settings loaded'}).waitFor();
+ await panel.locator('[data-path=enabled]').check();await panel.getByText('Sources, exclusions & preparation limits',{exact:true}).click();await panel.locator('[data-path=policyRefs]').fill('policy:synthetic-supplied');
+ await panel.getByRole('button',{name:'Save review draft',exact:true}).click();await status.filter({hasText:'Draft saved'}).waitFor();await panel.locator('[data-action=activate]').click();await status.filter({hasText:'Reviewed settings activated'}).waitFor();
+ await panel.getByRole('button',{name:'Prepare sources',exact:true}).click();const form=panel.locator('[data-discovery-form]');
+ await form.getByLabel('Topic reference',{exact:true}).fill('topic:quartz');await form.getByLabel('Source text',{exact:true}).fill('Quartz calibration uses the synthetic marker QTZ_UI_193.');await form.getByLabel('Claim — exact excerpt from this source',{exact:true}).fill('Quartz calibration uses the synthetic marker QTZ_UI_193.');await form.getByLabel('Spoiler scope',{exact:true}).selectOption('none');
+ await form.getByRole('button',{name:'Prepare supplied source',exact:true}).click();await status.filter({hasText:'Preparation'}).waitFor();assert.equal(await panel.locator('[data-discovery-panel=jobs]').isVisible(),true);assert.equal(await form.isVisible(),false);
+ await panel.getByRole('button',{name:'Refresh job history',exact:true}).click();await status.filter({hasText:'Settings loaded'}).waitFor();assert.match(await panel.locator('[data-discovery-job-list]').textContent(),/published/);
+ await panel.getByRole('button',{name:'Settings',exact:true}).click();assert.equal(await panel.locator('[data-role=history] tbody tr').count(),1,'job and brief records must never become configuration rows');
+ await panel.getByRole('button',{name:'Topic briefs',exact:true}).click();await panel.getByRole('button',{name:'Inspect brief',exact:true}).click();const detail=panel.locator('[data-discovery-detail]');assert.match(await detail.textContent(),/QTZ_UI_193/);assert.match(await detail.textContent(),/Reliability/);assert.match(await detail.textContent(),/unknown/);
+ await page.screenshot({path:'/private/tmp/lifestream-discovery-brief-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:'/private/tmp/lifestream-discovery-brief-mobile.png',fullPage:true});
+ const privacy=detail.locator('[data-discovery-privacy]');await privacy.getByLabel('Reason',{exact:true}).fill('Exclude this synthetic test source.');await privacy.getByRole('button',{name:'Review removal',exact:true}).click();assert.match(await detail.locator('[data-discovery-consequence]').textContent(),/topic:quartz/);await detail.getByRole('button',{name:'Confirm removal',exact:true}).click();await status.filter({hasText:'Derived use removed'}).waitFor();assert.match(await panel.locator('[data-discovery-brief-list]').textContent(),/No current prepared briefs/);
+ await nav('account');await page.locator('#auth-sign-out').click();await page.waitForFunction(()=>!window.lifestreamAuth.session);assert.equal(await form.locator('[name=content]').inputValue(),'');assert.deepEqual(errors,[]);
+});
