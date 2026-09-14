@@ -1,0 +1,43 @@
+{
+  "slice": "LS-S075",
+  "claimClass": "rendered-regression",
+  "collectedAt": "2026-09-14T15:37:49.121526Z",
+  "baseRevision": "d376a0f1cd29ca4b19313a84e66a049b8cf2ab41",
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/app.js",
+      "sha256": "d6d0af182127432c4d376f7d79d0fcce07fe9aa70572693e0988f0be04c4f882"
+    },
+    {
+      "path": "apps/control-web/test/assistant-selection.test.mjs",
+      "sha256": "30fe34b13a9dad6f6ab93656fc671a45cb65cead6678884f62c08290b440bade"
+    }
+  ],
+  "problem": "A delayed automatic initial selection or earlier manual selection could overwrite a later explicit Assistant choice. The next action could then target the wrong visible Assistant.",
+  "repair": "Advance a selection version on explicit selection, creation and authentication changes; discard superseded results, clear scoped views immediately, and disable relationship entry actions while loading. Fence memory/adaptation read refreshes as well.",
+  "verification": [
+    {
+      "command": "New delayed-response regression against prior committed app source",
+      "result": "expectedFailure",
+      "evidence": "Late old selection replaced the explicit later choice; expected/actual Assistant titles differed.",
+      "logSha256": "f4d11c0497fefbe950676789a3f851e7aaafb886450cff9e4a1697d1fc38b093"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "25 tests pass, including automatic/manual selection races, next-action target isolation and both joined fixture journeys.",
+      "logSha256": "500c4901f6a7822a7bbd87ed5e8ac90a7641862d8f6fde656bf27cb9d38070df"
+    },
+    {
+      "command": "pnpm build; pnpm typecheck; pnpm test; pnpm lint; pnpm --dir .private validate",
+      "result": "pass",
+      "evidence": "267 source tests, build/typecheck/lint and private specification validation pass."
+    }
+  ],
+  "executionBinding": "Fixture regressions ran on these exact working-tree hashes; selected-provider qualification follows a scoped implementation commit.",
+  "failedJoinedReport": {
+    "path": "implementation/evidence/LS-S081-development-certification-1.json",
+    "sha256": "793d13c410a67d2003ff6038e4c8bbfea616196a4c83117bec028807b9dfcb7b"
+  },
+  "humanAcceptance": "Previously accepted review preserved; no new operator review is fabricated."
+}

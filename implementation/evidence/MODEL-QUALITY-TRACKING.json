@@ -65,16 +65,148 @@
         "identifier": "SYNPRJ_Q7M4",
         "outcome": "missingCompleteIdentifier",
         "assertionEvidenceSha256": "78b80de80af11cfe0bf672c426c6f02c429d8bada192d4cbc679850946d3f6c2"
+      },
+      {
+        "label": "admitted",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "038102c926f9dc2aecfb3aa3389daa4784aa44a8a5e66cd07930cacae4c9b602"
+      },
+      {
+        "label": "admitted-repeat-1",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "1eee123c16edc7d27b64ad0e37f29cef3c86d686e991eeade0ee57b4774a4b3e"
+      },
+      {
+        "label": "admitted-repeat-2",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "7b477f970be9ec0bccacd00f3fa4b1c2fd5378e13d7fdd31b6cc8fc50d6f7626"
+      },
+      {
+        "label": "admitted",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "14cdd03f05f26ef7289d29ffeb65cf37499b3757d108909c9da8462dc0ba47c8"
+      },
+      {
+        "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/recordOriented/current/repeat-0",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "750a7cfde0e3088bf571321390c276db02dde14c613baf354039e173af1201cb"
+      },
+      {
+        "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/recordOriented/current/repeat-1",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "missingCompleteIdentifier",
+        "outputSha256": "2bb6583ae558f0d92c2f28fb6c61b6ff31f36caf9a309250f7ddd765b0a59c92"
+      },
+      {
+        "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/recordOriented/candidate/repeat-0",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "0f1af08405025e81b309d14d596bc413014092be17e65aed32faf2a627e9b56e"
+      },
+      {
+        "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/recordOriented/candidate/repeat-1",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "7ebb1b11f6c74f373c83630f398b32b1e7523e244b4e4925b74e18df54da2dc2"
+      },
+      {
+        "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/conventionOriented/current/repeat-0",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "475810989df92fa29cefd4120e286c6c09c5d6f663c09b159bcfb531ca193524"
+      },
+      {
+        "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/conventionOriented/current/repeat-1",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "4f8aeccc8a250619eda777c7bd62b64467622d1ded0c3a05bad83bb302de0230"
+      },
+      {
+        "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/conventionOriented/candidate/repeat-0",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "8ad285690cddc2a3595b4e3e52a7964c711828afb28791d948422bfe376b9e9b"
+      },
+      {
+        "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/conventionOriented/candidate/repeat-1",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "91b570e4c2495d912aee4fd1ed97e1b16592a47d086319d2ad83765fe0242379"
+      },
+      {
+        "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/recordOriented/current/repeat-0",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "b371def2a8b2ae5b90440c78b6d3779f7c8f709bdeee2719b447967059bfa615"
+      },
+      {
+        "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/recordOriented/current/repeat-1",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "b0cbe5dc5d8bf31fb054ab33e76292222d8aea146ba94598e1a0d520ec82257d"
+      },
+      {
+        "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/recordOriented/candidate/repeat-0",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "2195ac3403ac5147361c41de7d27ded38ee7ac0aebde6e3f7a6b118292d5af9f"
+      },
+      {
+        "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/recordOriented/candidate/repeat-1",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "c1e48a54bf11b21c2217fb6388d7062f3ba65667ecfcd26b4d1d56a9677d08d9"
+      },
+      {
+        "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/conventionOriented/current/repeat-0",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "73f1c8d0e987f05f77254ff92cd4ba4c08d4f4f9c509af6e69a841c4ca999b1d"
+      },
+      {
+        "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/conventionOriented/current/repeat-1",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "10a89a231dfcb6f20618280d86eae3a49266a4ec463972bdcbef129b422aa3fa"
+      },
+      {
+        "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/conventionOriented/candidate/repeat-0",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "cc0ecdb0dfc0bc9a47eaeb5f415eb730058c01a170c9601a79ae614e374cc54c"
+      },
+      {
+        "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/conventionOriented/candidate/repeat-1",
+        "identifier": "SYNPRJ_Q7M4",
+        "outcome": "exact",
+        "outputSha256": "9d1c940de32ea2f6ec9237a329842e25d6c53c739fa4c91039bc034f58f57844"
+      },
+      {
+        "label": "corrected-ordinary-reply",
+        "identifier": "SYNPRJ_R6T8",
+        "outcome": "exact",
+        "outputSha256": "5de2d9fae0aafc200177ecad2d07b6077007cd5a23ccc64211d5cf44dad8fda2"
+      },
+      {
+        "label": "ordinary-conversation-after-lab-failure",
+        "identifier": "SYNPRJ_R6T8",
+        "outcome": "exact",
+        "outputSha256": "6c3f43cd8f8bfc9fe4d21391aba73b26758ccd5cd277cb89566679028afdd36e"
       }
     ],
     "counts": {
-      "exact": 8,
+      "exact": 29,
       "capitalizationOnly": 1,
-      "missingCompleteIdentifier": 1
+      "missingCompleteIdentifier": 2
     },
-    "total": 10,
-    "identifierPresenceRate": 0.9,
-    "exactMatchRate": 0.8
+    "total": 32,
+    "identifierPresenceRate": 0.9375,
+    "exactMatchRate": 0.90625
   },
   "runs": [
     {
@@ -243,6 +375,200 @@
         "total": 1,
         "identifierPresenceRate": 0,
         "exactMatchRate": 0
+      }
+    },
+    {
+      "id": "LS-S075:370219cbc6bf33d3d2a3344932308ebc0df97467:2026-09-14T15:22:55.191Z",
+      "sourceRevision": "370219cbc6bf33d3d2a3344932308ebc0df97467",
+      "collectedAt": "2026-09-14T15:22:55.191Z",
+      "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+      "applicationResult": "pass",
+      "sources": [
+        {
+          "path": "implementation/evidence/LS-S075-development-certification-2.json",
+          "sha256": "ad251891c42a519162ec5ecf626b8b19806fe5625f50714aab0251fcb28ac75a"
+        },
+        {
+          "path": ".lifestream/model-quality/f3beb6fec7922e48dc86d60ecafdb003be808e253910a8bc830e25a0ca014b07.json",
+          "sha256": "f3beb6fec7922e48dc86d60ecafdb003be808e253910a8bc830e25a0ca014b07"
+        }
+      ],
+      "modelQuality": {
+        "schemaVersion": "1.0.0",
+        "blocking": false,
+        "samples": [
+          {
+            "label": "admitted",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "038102c926f9dc2aecfb3aa3389daa4784aa44a8a5e66cd07930cacae4c9b602"
+          },
+          {
+            "label": "admitted-repeat-1",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "1eee123c16edc7d27b64ad0e37f29cef3c86d686e991eeade0ee57b4774a4b3e"
+          },
+          {
+            "label": "admitted-repeat-2",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "7b477f970be9ec0bccacd00f3fa4b1c2fd5378e13d7fdd31b6cc8fc50d6f7626"
+          }
+        ],
+        "counts": {
+          "exact": 3,
+          "capitalizationOnly": 0,
+          "missingCompleteIdentifier": 0
+        },
+        "total": 3,
+        "identifierPresenceRate": 1,
+        "exactMatchRate": 1
+      }
+    },
+    {
+      "id": "LS-S081:d376a0f1cd29ca4b19313a84e66a049b8cf2ab41:2026-09-14T15:27:20.256Z",
+      "sourceRevision": "d376a0f1cd29ca4b19313a84e66a049b8cf2ab41",
+      "collectedAt": "2026-09-14T15:27:20.256Z",
+      "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+      "applicationResult": "fail",
+      "sources": [
+        {
+          "path": "implementation/evidence/LS-S081-development-certification-1.json",
+          "sha256": "793d13c410a67d2003ff6038e4c8bbfea616196a4c83117bec028807b9dfcb7b"
+        },
+        {
+          "path": ".lifestream/model-quality/7975deb02c98a08752eb69a2d31f7b3f93289bb5ebdcab5de140711feb722078.json",
+          "sha256": "7975deb02c98a08752eb69a2d31f7b3f93289bb5ebdcab5de140711feb722078"
+        }
+      ],
+      "modelQuality": {
+        "schemaVersion": "1.0.0",
+        "blocking": false,
+        "samples": [
+          {
+            "label": "admitted",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "14cdd03f05f26ef7289d29ffeb65cf37499b3757d108909c9da8462dc0ba47c8"
+          },
+          {
+            "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/recordOriented/current/repeat-0",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "750a7cfde0e3088bf571321390c276db02dde14c613baf354039e173af1201cb"
+          },
+          {
+            "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/recordOriented/current/repeat-1",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "missingCompleteIdentifier",
+            "outputSha256": "2bb6583ae558f0d92c2f28fb6c61b6ff31f36caf9a309250f7ddd765b0a59c92"
+          },
+          {
+            "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/recordOriented/candidate/repeat-0",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "0f1af08405025e81b309d14d596bc413014092be17e65aed32faf2a627e9b56e"
+          },
+          {
+            "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/recordOriented/candidate/repeat-1",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "7ebb1b11f6c74f373c83630f398b32b1e7523e244b4e4925b74e18df54da2dc2"
+          },
+          {
+            "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/conventionOriented/current/repeat-0",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "475810989df92fa29cefd4120e286c6c09c5d6f663c09b159bcfb531ca193524"
+          },
+          {
+            "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/conventionOriented/current/repeat-1",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "4f8aeccc8a250619eda777c7bd62b64467622d1ded0c3a05bad83bb302de0230"
+          },
+          {
+            "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/conventionOriented/candidate/repeat-0",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "8ad285690cddc2a3595b4e3e52a7964c711828afb28791d948422bfe376b9e9b"
+          },
+          {
+            "label": "Lab 20f4f90c-046a-47e3-b10c-2ab33259572d/conventionOriented/candidate/repeat-1",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "91b570e4c2495d912aee4fd1ed97e1b16592a47d086319d2ad83765fe0242379"
+          },
+          {
+            "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/recordOriented/current/repeat-0",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "b371def2a8b2ae5b90440c78b6d3779f7c8f709bdeee2719b447967059bfa615"
+          },
+          {
+            "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/recordOriented/current/repeat-1",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "b0cbe5dc5d8bf31fb054ab33e76292222d8aea146ba94598e1a0d520ec82257d"
+          },
+          {
+            "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/recordOriented/candidate/repeat-0",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "2195ac3403ac5147361c41de7d27ded38ee7ac0aebde6e3f7a6b118292d5af9f"
+          },
+          {
+            "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/recordOriented/candidate/repeat-1",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "c1e48a54bf11b21c2217fb6388d7062f3ba65667ecfcd26b4d1d56a9677d08d9"
+          },
+          {
+            "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/conventionOriented/current/repeat-0",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "73f1c8d0e987f05f77254ff92cd4ba4c08d4f4f9c509af6e69a841c4ca999b1d"
+          },
+          {
+            "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/conventionOriented/current/repeat-1",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "10a89a231dfcb6f20618280d86eae3a49266a4ec463972bdcbef129b422aa3fa"
+          },
+          {
+            "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/conventionOriented/candidate/repeat-0",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "cc0ecdb0dfc0bc9a47eaeb5f415eb730058c01a170c9601a79ae614e374cc54c"
+          },
+          {
+            "label": "Lab 3abc810c-2dfe-44c7-a33a-52cb8f6dcb6e/conventionOriented/candidate/repeat-1",
+            "identifier": "SYNPRJ_Q7M4",
+            "outcome": "exact",
+            "outputSha256": "9d1c940de32ea2f6ec9237a329842e25d6c53c739fa4c91039bc034f58f57844"
+          },
+          {
+            "label": "corrected-ordinary-reply",
+            "identifier": "SYNPRJ_R6T8",
+            "outcome": "exact",
+            "outputSha256": "5de2d9fae0aafc200177ecad2d07b6077007cd5a23ccc64211d5cf44dad8fda2"
+          },
+          {
+            "label": "ordinary-conversation-after-lab-failure",
+            "identifier": "SYNPRJ_R6T8",
+            "outcome": "exact",
+            "outputSha256": "6c3f43cd8f8bfc9fe4d21391aba73b26758ccd5cd277cb89566679028afdd36e"
+          }
+        ],
+        "counts": {
+          "exact": 18,
+          "capitalizationOnly": 0,
+          "missingCompleteIdentifier": 1
+        },
+        "total": 19,
+        "identifierPresenceRate": 0.9473684210526315,
+        "exactMatchRate": 0.9473684210526315
       }
     }
   ],
