@@ -2,7 +2,8 @@ import {analyzeDiscoveryEvidence,type DiscoveryAnalysisPort,type DiscoveryEviden
 import { recoveryDigest } from "./recovery-journal.ts";
 import { randomUUID } from "node:crypto";
 import { createContractValidator } from "@lifestream/contracts";
-import { UnderstandingRepository, understandingDigest, type Database, type UnderstandingRecord, type UnderstandingScope } from "@lifestream/storage-sqlite";
+import { UnderstandingRepository, understandingDigest, hypothesisFingerprint, type Database, type UnderstandingRecord, type UnderstandingScope } from "@lifestream/storage-sqlite";
+import type {HypothesisRejection} from './recovery-journal.ts';
 import { UnderstandingWorkCoordinator } from "@lifestream/runtime/understanding/coordinator";
 import { selectPreparedEnrichment } from "@lifestream/runtime/understanding/selection";
 import { extensionError, type RelationshipConfiguration } from "../relationship-extensions.ts";
@@ -12,7 +13,7 @@ type Snapshot = { boundary:string; configuration:RelationshipConfiguration|undef
 type Claim = {claimId:string;text:string;sourceRefs:string[];qualifier:string;versionScope:string;spoilerClass:string;contradictionRefs:string[]};
 type Source = {sourceRef:string;sourceFamily:string;sourceRevision:string;topicRef:string;policyRef:string;retrievedAt:string;reliability:string;reliabilityBasis:string;content:string;claims:Claim[];aliasClaims:Claim[];knowledgeGaps:string[]};
 type Settings = {enabled:boolean;researchMode:string;policyRefs:string[];approvedTopicRefs:string[];excludedSourceRefs:string[];excludedTopicRefs:string[];spoilerPolicy:string;progressBoundaryRef:string|null;budget:Record<string,number>};
-type DiscoveryHost={snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};analysis?:()=>DiscoveryAnalysisPort|undefined;evidence?:(scope:UnderstandingScope,refs:string[])=>DiscoveryEvidence[];changed:()=>void};
+type DiscoveryHost={rejectHypothesis?:(scope:UnderstandingScope,target:HypothesisRejection|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};analysis?:()=>DiscoveryAnalysisPort|undefined;evidence?:(scope:UnderstandingScope,refs:string[])=>DiscoveryEvidence[];changed:()=>void};
 const validator=createContractValidator();
 const schema="https://lifestream.dev/contracts/understanding-api/1.0.0";
 export class DiscoveryAdministration {
@@ -48,6 +49,29 @@ export class DiscoveryAdministration {
         const response=this.response(scope,operation,[],result.replay?"Existing feedback admission; inspect its current review state in Records. No statement was recreated.":"Explicit scoped feedback is pending review in Records. Previous Discovery projections are withheld until rebuilt under the current evidence boundary.",result.replay?200:201);
         (response.body.explanations as {sourceRefs:string[]}[])[0]!.sourceRefs=[result.recordRef];return response;
       }catch(error){return extensionError(409,"feedback_conflict",error instanceof Error?error.message:"Scoped feedback could not be recorded.");}
+    }
+    if(operation==='disposition'&&['reviewHypothesis','rejectHypothesis'].includes(String(request.decision))){
+      try{
+        if(request.decision==='reviewHypothesis'){
+          const result=this.repository.reviewHypothesis(scope,String(request.recordId),Number(request.expectedRevision),String(request.idempotencyKey),understandingDigest(request),this.host.snapshot(scope).boundary,authorizationCurrent);
+          this.invalidate(scope.relationshipId);this.host.changed();
+          return this.response(scope,operation,[result.record],result.replay?'Existing review receipt; current hypothesis state returned.':'Reviewed for usefulness only. The hypothesis remains tentative; supporting user evidence is unchanged.');
+        }
+        if(!this.host.rejectHypothesis)throw new Error('Owner-local hypothesis rejection is unavailable');
+        this.repository.assertReviewRetry(scope,String(request.idempotencyKey),understandingDigest(request),String(request.recordId),'rejectHypothesis');
+        let outcome=this.host.rejectHypothesis(scope,undefined,request);
+        if(outcome==='missing'){
+          const record=this.records(scope).find(record=>record.recordType==='hypothesis'&&record.hypothesisId===request.recordId&&record.revision===request.expectedRevision&&['candidate','reviewed'].includes(String(record.status)));
+          if(!record)throw new Error('Select a current hypothesis at its current revision');
+          this.invalidate(scope.relationshipId);
+          outcome=this.host.rejectHypothesis(scope,{deploymentId:scope.deploymentId,hypothesisId:String(record.hypothesisId),expectedRevision:Number(record.revision),fingerprint:hypothesisFingerprint(record)},request);
+        }
+        this.host.changed();
+        if(outcome==='conflict')throw new Error('Hypothesis rejection retry conflict');
+        if(outcome!=='applied')return extensionError(409,'hypothesis_rejection_pending','Rejection intent withholds derived use. Retry the same request to finish cleanup.');
+        const record=this.records(scope).find(record=>record.hypothesisId===request.recordId);
+        return this.response(scope,operation,record?[record]:[],'Hypothesis rejected. Supporting observations and declarations are unchanged; this hypothesis cannot be restored by database rollback.');
+      }catch(error){return extensionError(409,'hypothesis_review_conflict',error instanceof Error?error.message:'Hypothesis review conflict');}
     }
     if(operation==="cancel"){
       try {

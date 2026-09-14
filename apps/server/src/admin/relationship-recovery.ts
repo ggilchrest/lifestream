@@ -1,5 +1,6 @@
 import {randomUUID} from 'node:crypto';
 import {TrainingRegistry} from '@lifestream/runtime/training';
+import {UnderstandingRepository} from '@lifestream/storage-sqlite';
 import {relationshipControlDefaults} from '@lifestream/runtime/context';
 import type {Database,MemoryRepository,ProfileBuilderJob,ProfileCandidate} from '@lifestream/storage-sqlite';
 import type {RelationshipRecord} from './relationship-records.ts';
@@ -46,6 +47,16 @@ export class RelationshipRecovery {
  recover():void{if(this.journal.currency!=='current')return;let complete=true;for(const intent of this.journal.snapshot().intents)try{this.apply(intent);}catch{complete=false;}if(complete)this.db.connection.prepare('UPDATE relationship_recovery_currency SET epoch=? WHERE singleton=1').run(this.journal.snapshot().epoch);}
  apply(intent:RecoveryIntent,propagateProfiles=true):RecoveryReceipt{
   const relationship=this.rows<RecoveryRelationship>('assistant_relationships').find(r=>r.relationshipId===intent.relationshipId&&r.userId===intent.actor&&r.assistantId===intent.assistantId)??{relationshipId:intent.relationshipId,userId:intent.actor,assistantId:intent.assistantId,revision:0,status:'active' as const,candidates:[]};
+  if(intent.hypothesisRejection){
+   const previous=relationship.recoveryReceipts?.find(r=>r.operationId===intent.operationId&&r.status==='completed');if(previous)return previous;
+   const receipt:RecoveryReceipt={operationId:intent.operationId,action:intent.action,status:'completed',artifacts:[{owner:'discovery-hypothesis',id:intent.hypothesisRejection.hypothesisId,disposition:'rejected; underlying evidence retained'}],retryRequired:false,limitations:['Rejection prevents use of this hypothesis and exact-content replay; it does not delete or alter supporting user evidence.','The owner-local journal must remain available when restoring a database backup.']};
+   this.db.transaction(tx=>{
+    new UnderstandingRepository(this.db).applyHypothesisRejection(tx,{assistantId:intent.assistantId,userId:intent.actor,relationshipId:intent.relationshipId,deploymentId:intent.hypothesisRejection!.deploymentId},intent.hypothesisRejection!,intent.idempotencyKey,intent.requestDigest);
+    relationship.revision++;relationship.recoveryReceipts=[...(relationship.recoveryReceipts??[]),receipt];
+    tx.run('UPDATE assistant_relationships SET payload_json=? WHERE relationship_id=?',JSON.stringify(relationship),relationship.relationshipId);
+    tx.run('DELETE FROM prepared_context WHERE assistant_id=?',intent.assistantId);
+   });return receipt;
+  }
   const propagate=(receipt:RecoveryReceipt)=>{if(!propagateProfiles||!intent.profileIds.length||['prohibit-training','stop-collection'].includes(intent.action))return;for(const other of this.rows<RecoveryRelationship>('assistant_relationships'))if(other.userId===intent.actor&&other.relationshipId!==intent.relationshipId&&(other.recoveryReceipts?.some(r=>r.operationId===intent.operationId)||[other.lab,...(other.labHistory??[])].some(l=>l?.sourceSnapshot?.records.some(r=>intent.profileIds.some(id=>r.id.startsWith(`user-profile:${id}:`)))))){const child=this.apply({...intent,relationshipId:other.relationshipId,assistantId:other.assistantId,recordIds:[],memoryIds:[],rootRecordIds:[],rootMemoryIds:[]},false);receipt.artifacts.push(...child.artifacts);}receipt.artifacts=[...new Map(receipt.artifacts.map(a=>[`${a.owner}:${a.id}`,a])).values()];const current=this.rows<RecoveryRelationship>('assistant_relationships').find(r=>r.relationshipId===intent.relationshipId);if(current?.recoveryReceipts?.some(r=>r.operationId===intent.operationId)){current.recoveryReceipts=current.recoveryReceipts.map(r=>r.operationId===intent.operationId?receipt:r);this.db.connection.prepare('UPDATE assistant_relationships SET payload_json=? WHERE relationship_id=?').run(JSON.stringify(current),current.relationshipId);}};
   const prior=relationship.recoveryReceipts?.find(r=>r.operationId===intent.operationId);if(prior?.status==='completed'){propagate(prior);return prior;}
   const erase=intent.action==='forget-derived-information'||intent.action==='delete-source',processing=erase||intent.action==='revoke-processing',personalization=processing||intent.action==='stop-personalization',training=processing||intent.action==='prohibit-training',ids=new Set([...intent.recordIds,...intent.memoryIds,...intent.profileIds]),receipt:RecoveryReceipt={operationId:intent.operationId,action:intent.action,status:'completed',artifacts:[],retryRequired:false,limitations:recoveryLimitations};const outcome=(owner:string,id:string,disposition:string)=>receipt.artifacts.push({owner,id,disposition});

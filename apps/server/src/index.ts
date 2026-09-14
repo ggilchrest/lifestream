@@ -105,7 +105,7 @@ class AssistantAdminApi {
       sourceAllowed:(scope,value)=>!this.recovery.journal.forbidden(scope.userId,scope.relationshipId,value),
       analysis:()=>{const runtime=this.labRuntime();return {provider:runtime.provider,identity:understandingDigest(runtime.identity),preemptionBoundMs:undefined};},
       evidence:(scope,refs)=>{const relationship=this.resolveRelationship(scope.assistantId,scope.relationshipId,scope.userId);if(!relationship||this.recoveryPending(relationship)||this.recovery.journal.currency!=="current")return [];const current=this.relationshipContextRecords(relationship,scope.userId,scope.assistantId);return refs.flatMap(ref=>{const record=current.find(record=>(record.id===ref||relationship.candidates.some(item=>item.candidateId===record.id)&&`relationship-record:${record.id}:${record.revision}`===ref)&&record.status==="approved"&&record.personalization&&record.mention);if(!record)return [];const owner=relationship.candidates.find(item=>item.candidateId===record.id);return [{ref,revision:record.revision,content:record.content,basis:owner?.evidenceBasis??"unknown",sourceFamily:record.sourceFamily,coverage:owner?.builder?"partial" as const:"unknown" as const}];});},
-      forget:(scope,refs,request)=>this.forgetDiscovery(scope,refs,request),feedback:(scope,request)=>this.recordDiscoveryFeedback(scope,request),changed:()=>this.preparedCache.clear()
+      rejectHypothesis:(scope,target,request)=>this.rejectDiscoveryHypothesis(scope,target,request),forget:(scope,refs,request)=>this.forgetDiscovery(scope,refs,request),feedback:(scope,request)=>this.recordDiscoveryFeedback(scope,request),changed:()=>this.preparedCache.clear()
     });
   }
   private recordDiscoveryFeedback(scope:UnderstandingScope,request:Record<string,unknown>):{recordRef:string;replay:boolean} {
@@ -124,6 +124,16 @@ class AssistantAdminApi {
       tx.run("INSERT INTO assistant_relationship_idempotency (idempotency_key,relationship_id,operation,response_json) VALUES (?,?,?,?)",key,scope.relationshipId,binding,JSON.stringify({recordRef}));
       return {recordRef,replay:false};
     });this.reloadRecovery();return result;
+  }
+  private rejectDiscoveryHypothesis(scope:UnderstandingScope,target:import('./admin/recovery-journal.ts').HypothesisRejection|undefined,request:Record<string,unknown>):"missing"|"applied"|"pending"|"conflict" {
+    const key=String(request.idempotencyKey),digest=understandingDigest(request),known=this.recovery.journal.known(key,scope.userId,scope.relationshipId);
+    if(known&&(!known.hypothesisRejection||known.requestDigest!==digest||known.assistantId!==scope.assistantId||known.hypothesisRejection.deploymentId!==scope.deploymentId))return 'conflict';
+    if(!known&&!target)return 'missing';
+    try{
+      const relationship=this.resolveRelationship(scope.assistantId,scope.relationshipId,scope.userId);if(!relationship||(relationship.recoveryReceipts?.length??0)>=256&&!known)throw new Error('Relationship rejection receipt capacity reached');
+      const intent=known??this.recovery.journal.admit({operationId:randomUUID(),idempotencyKey:key,requestDigest:digest,rootRecordIds:[],rootMemoryIds:[],rootProfileIds:[],actor:scope.userId,assistantId:scope.assistantId,relationshipId:scope.relationshipId,action:'revoke-processing',recordIds:[],memoryIds:[],profileIds:[],sourceDigests:[],contentDigests:[],createdAt:new Date().toISOString(),hypothesisRejection:target!});
+      this.preparedCache.clear();this.recovery.apply(intent);this.database.connection.prepare('UPDATE relationship_recovery_currency SET epoch=? WHERE singleton=1').run(this.recovery.journal.revision);this.reloadRecovery();return 'applied';
+    }catch(error){if(this.recovery.journal.known(key,scope.userId,scope.relationshipId))return 'pending';throw new Error(error instanceof Error?error.message:'Hypothesis rejection was not recorded');}
   }
   private forgetDiscovery(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>):"missing"|"applied"|"pending"|"conflict" {
     const key=String(request.idempotencyKey),digest=understandingDigest(request);
@@ -239,7 +249,7 @@ class AssistantAdminApi {
       const relationshipId = parts[6]; const relationship = relationshipId ? this.relationships.get(relationshipId) : undefined;
       if (!relationship || relationship.assistantId !== assistantId || relationship.userId !== actor) return { status: 404, body: { code: "not_found", message: "relationship not found" } };
       if (!relationshipId) return { status: 404, body: { code: "not_found", message: "relationship not found" } };
-      if(this.recoveryPending(relationship)&&parts[7]!=="privacy"&&!(parts[7]==="understanding"&&parts[8]==="v1"&&["forgetTopic","excludeSource"].includes(String(asObject(body)?.decision))))return {status:503,body:{code:"privacy_cleanup_pending",message:"Affected use is withheld. Retry the recorded privacy operation to complete cleanup."}};
+      if(this.recoveryPending(relationship)&&parts[7]!=="privacy"&&!(parts[7]==="understanding"&&parts[8]==="v1"&&["forgetTopic","excludeSource","rejectHypothesis"].includes(String(asObject(body)?.decision))))return {status:503,body:{code:"privacy_cleanup_pending",message:"Affected use is withheld. Retry the recorded privacy operation to complete cleanup."}};
       if ((parts[7] === "initiative" || parts[7] === "understanding") && parts[8] === "v1" && parts.length === 9 && method === "POST") {
         if(parts[7]==="understanding" && !["inspect","draft","preview","activate","rollback"].includes(String(asObject(body)?.operation))) {
           if(!relationship.deploymentId)return extensionError(409,"identity_mapping_required","A current deployment identity is required.");

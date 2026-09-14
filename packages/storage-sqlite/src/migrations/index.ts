@@ -27,7 +27,8 @@ export function loadMigrations(): Migration[] {
     [17, "local_auth", "0017_local_auth.sql"],
     [18, "profile_builder", "0018_profile_builder.sql"],
     [19, "user_profiles", "0019_user_profiles.sql"],
-    [20, "understanding", "0020_understanding.sql"]
+    [20, "understanding", "0020_understanding.sql"],
+    [21, "understanding_review", "0021_understanding_review.sql"]
   ].map(([id, name, file]) => {
     const sql = readFileSync(join(migrationDirectory, file as string), "utf8");
     return { id: id as number, name: name as string, sql, digest: createHash("sha256").update(sql).digest("hex") };

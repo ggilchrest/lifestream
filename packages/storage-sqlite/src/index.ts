@@ -10,5 +10,5 @@ export { AdmissionRepository } from "./authority/admission.js";
 export { PROFILE_BUILDER_LIMITS, ProfileBuilderError, ProfileBuilderRepository, inventoryUploads, safeProfileName, profileDigest } from "./profile-builder.js";
 export type { ProfileBuilderJob, ProfileCandidate, ProfileUpload, ProfileSource, ProfileFormat, ExtractedRecord, EvidenceBasis, ApprovedUse } from "./profile-builder.js";
 
-export { UnderstandingRepository, understandingDigest } from "./understanding.js";
+export { UnderstandingRepository, understandingDigest, hypothesisFingerprint } from "./understanding.js";
 export type { UnderstandingScope, UnderstandingRecord } from "./understanding.js";

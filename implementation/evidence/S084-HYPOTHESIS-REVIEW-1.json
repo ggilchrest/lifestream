@@ -1,0 +1,165 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-14T23:37:09.401128Z",
+  "slice": "LS-S084",
+  "status": "inProgress",
+  "claim": "Protected hypothesis review and hypothesis-only rejection, owner-local restore fencing, and a readable separate inspector; full Discovery and Initiative remain incomplete.",
+  "baseRevision": "6aa5b5eda500b3d578c7137e13cdda55665f5d91",
+  "specificationRevision": "5629141a47309e7c3cbcf03ea356ea614cdc80ac",
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "c5802fa455c17e114ec3b93ce57ceee4b8877f17759ec1595acb11a1c026335a"
+    },
+    {
+      "path": "apps/control-web/discovery-workflows.js",
+      "sha256": "1b6591a9f8912f3fb48641312a2efb781c6541432a3361c82a22790c402e33df"
+    },
+    {
+      "path": "apps/control-web/relationship-extensions.js",
+      "sha256": "939c7ec2b5c7d4248b5abb632d057e148730d0fdf8695ab2b1f6c4f5f4844589"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "dd231e65a223530bc5e2e535bc579186b2bf52d9b2cad73b2af98a4e3347990e"
+    },
+    {
+      "path": "apps/control-web/test/discovery-review.test.mjs",
+      "sha256": "1484bebed51a277ac588fc359a80089dba403c9b11b36ab15dc6f401aa3ccb96"
+    },
+    {
+      "path": "apps/server/src/admin/recovery-journal.ts",
+      "sha256": "748bb4204ddaecabcbdacfad3f54e1a885633a58f72b5bb0144c38a99cca8fb5"
+    },
+    {
+      "path": "apps/server/src/admin/relationship-recovery.ts",
+      "sha256": "864af9a98c33fda477b812025050348bafa37af239797e7719d9727fe60f1ed1"
+    },
+    {
+      "path": "apps/server/src/admin/understanding.ts",
+      "sha256": "d2242f1c4e3592eb5bcc599cca0c962d0f03b0911781d217d80d507df3afc274"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "54e315d421be7d16b6ed3ab9806d828a16d3bb3dd4bfb4ae71de2dfb9716960c"
+    },
+    {
+      "path": "apps/server/test/discovery-review.test.ts",
+      "sha256": "0d75eeae51ffaeb05ce706b364c83731a2dfba9fdff8b3c019faca973bf73f43"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "373bfe19c082a0a399fc9ec8dbb30476507027c6c972bca2937504cdbada3478"
+    },
+    {
+      "path": "packages/contracts/src/schemas/personal-understanding.schema.json",
+      "sha256": "2e6f377f9ecbd1bd662466f2cbb360c2b8e3e608d624e2798850fcc823cf6d2d"
+    },
+    {
+      "path": "packages/contracts/src/schemas/understanding-api.schema.json",
+      "sha256": "be2a9aa0b77f8a7a65fc7e20c42351077283dffc00184c3e590c450f0d4c2438"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "0fc42ad99f91313e0b60f61af92ac1be38564129a1994741650c247608e552f0"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0021_understanding_review.sql",
+      "sha256": "31bb782dae1f92cf4b2365d24923d799fc7b7697b7c6c4b9d2826345fe4ca69d"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "761b1c4e998352ece135bfb0d12a4d053afcbac5e906b9c528cff0f73486dfd1"
+    },
+    {
+      "path": "packages/storage-sqlite/src/understanding.ts",
+      "sha256": "f2bfb1929a8162816ed8b3f9e6ceff134d013f00b5f3fed329e343536968b8e6"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "304 passed",
+      "logSha256": "044ce2e6f447631110190eea8819e9233251abf0cad62c9b0318daca3a038127"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "28 passed before the final desktop-only explanation grid and table-cell layout",
+      "logSha256": "3c57fa05e787e0b07f7d9719123cc6bca21d7ea374540249028b3f359c313103"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/discovery-review.test.mjs",
+      "result": "1 passed on final browser source",
+      "logSha256": "8f4f1dde4f27c23fc318f3bd9dcb20cd00168c76263db491eefa032028ee4b4c"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "45 passed",
+      "logSha256": "d0c81a25a58cc9b31639b9b86f54fa5a12beacf4c6a5a526e47697ce7d36ecad"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass; specification checks only",
+      "logSha256": "fc0b63217f265b1c9c27354fc9bc933975e44584bdad1acdadcd17309d24db28"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass; structure only",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "verifiedComponentBehavior": [
+    "Authenticated review performs a revision-checked candidate-to-reviewed transition; epistemic status remains tentative and supporting evidence is unchanged",
+    "Current-state retries do not duplicate review or change the original operation; conflicting, stale and unauthenticated requests are rejected",
+    "Hypothesis rejection records a payload-free intent in the existing external recovery journal before applying its SQLite state and owner receipt",
+    "A simulated SQLite failure after journal admission withholds derived use; the identical rejection request completes after storage recovery",
+    "Rejection survives restoration of a pre-rejection database; supporting relationship evidence remains byte-for-byte unchanged",
+    "Rejected IDs and identical content with newly generated IDs cannot be published again; publication rechecks tombstones inside its transaction",
+    "Explicit source forgetting removes the derived hypothesis payload; a historical rejection retry cannot recreate it",
+    "Malformed new journal target fields cause unknown recovery currency; rejected state cannot be approved through an old review request",
+    "Hypothesis records have a separate labeled inspector with competing explanations, scope, support, counterevidence, uncertainty and unknown alternatives",
+    "Decision confirmation identifies the exact hypothesis and revision; an error retains its retry identity; updated records stay in view; account-scope clearing removes the details",
+    "Final desktop and mobile captures inspected; explanations compare side by side on desktop and stack with labeled records on mobile"
+  ],
+  "validationAdjustment": {
+    "initialFullSuiteLogSha256": "6c6edd18afe884317654d9da2073421ac225d5498fb61a741108499bd046716d",
+    "finding": "Existing readiness test expected migrations only through 20.",
+    "resolution": "Expected migration IDs now include the new additive migration 21; final full source suite passes."
+  },
+  "screenshots": [
+    {
+      "label": "Final desktop component inspection",
+      "sha256": "8f0014cf477cd589e64e204aedcb148ac83d86373c02e10eea2b1beb9d5721f3"
+    },
+    {
+      "label": "Final mobile component inspection",
+      "sha256": "1c458ccaac1ac9be687b543d3c98c21ca902e2e6d3e7c06e073e8a8f38b88254"
+    }
+  ],
+  "limitations": [
+    "Synthetic hypotheses seed the real authenticated review and restore test; this does not claim real provider reasoning quality.",
+    "The focused browser test verifies the real component and its request/confirmation behavior with a synthetic response port; protected backend behavior is independently covered by the authenticated API test.",
+    "Review audit retains canonical request digests and decision identities; free-text reason prose is not retained.",
+    "Optional live analysis remains withheld pending provider-priority qualification. Contextual candidates, isolated Discovery Lab, complete S083 opportunity/output integration and real performance qualification remain pending.",
+    "Current-source prerequisite successors remain pending; historical receipts are not rewritten.",
+    "No saved review service restart, live configuration, personal-data import, network research, provider selection, training or Human acceptance occurred."
+  ],
+  "schemaExportChanged": false,
+  "modelQualityObservationsChanged": false,
+  "humanAcceptanceClaim": false
+}

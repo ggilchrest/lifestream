@@ -62,3 +62,13 @@
  [data-discovery-job-list] td:nth-child(2)::before{content:'State: ';font-weight:600}
  [data-discovery-job-list] td:nth-child(3)::before{content:'Outcome: ';font-weight:600}
 }
+[data-hypothesis-detail]{border-top:2px solid var(--line);margin-top:24px;padding-top:20px}
+[data-hypothesis-detail] h5{font-size:1rem;margin:20px 0 12px}
+[data-hypothesis-detail] h6{font-size:.875rem;margin:16px 0 10px}
+@media(max-width:760px){
+ [data-hypothesis-list] td:nth-child(2)::before{content:'Hypothesis ID';display:block;font:600 12px system-ui;color:var(--muted);margin-bottom:4px}
+ [data-hypothesis-list] td:nth-child(3)::before{content:'Status: ';font-weight:600}
+}
+.hypothesis-explanations{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media(min-width:761px){[data-hypothesis-list] td.record-id{display:table-cell}}
+@media(max-width:760px){.hypothesis-explanations{grid-template-columns:1fr}}

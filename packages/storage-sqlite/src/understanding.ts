@@ -10,6 +10,11 @@ export const understandingDigest = (value: unknown): string => {
   return createHash("sha256").update(canonical(value)).digest("hex");
 };
 const scopeKey = (scope: UnderstandingScope) => understandingDigest([scope.assistantId,scope.userId,scope.relationshipId,scope.deploymentId]);
+/** Exact-content replay identity excludes generated IDs and configuration changes, not evidence revisions. */
+export function hypothesisFingerprint(record:UnderstandingRecord):string {
+  const explanations=(record.explanations as Record<string,unknown>[]).map(({explanationId:_id,...explanation})=>explanation).sort((a,b)=>understandingDigest(a).localeCompare(understandingDigest(b)));
+  return understandingDigest({topics:[...record.topicRefs as string[]].sort(),explanations,unknown:record.unknownAlternative,uncertainty:record.uncertainty,coverage:record.sourceCoverage,evidence:(record.dependencyRefs as string[]).filter(ref=>ref.startsWith('evidence:')).sort()});
+}
 const valid = (record: UnderstandingRecord, definition: string, scope: UnderstandingScope): void => {
   const result=validator.validate(`https://lifestream.dev/contracts/personal-understanding/1.0.0#/$defs/${definition}`, record);
   if(!result.valid)throw new Error(`Invalid Discovery record: ${result.errors.slice(0,3).map(error=>`${error.instancePath} ${error.message}`).join("; ")}`);
@@ -58,9 +63,43 @@ export class UnderstandingRepository {
   }
   list(scope:UnderstandingScope,boundary:string):UnderstandingRecord[] {
     const time=this.now(),key=scopeKey(scope);
-    const artifacts=this.database.connection.prepare("SELECT payload_json AS payload FROM understanding_artifacts WHERE scope_key=? AND boundary=? AND fresh_until_ms>? ORDER BY rowid DESC LIMIT 64").all(key,boundary,time) as {payload:string}[];
+    const artifacts=this.database.connection.prepare("SELECT payload_json AS payload FROM understanding_artifacts WHERE scope_key=? AND (boundary=? OR kind='hypothesis' AND json_extract(payload_json,'$.status')='rejected') AND fresh_until_ms>? ORDER BY rowid DESC LIMIT 64").all(key,boundary,time) as {payload:string}[];
     const jobs=this.database.connection.prepare("SELECT payload_json AS payload FROM understanding_work WHERE scope_key=? AND expires_ms>? AND payload_json IS NOT NULL ORDER BY created_ms DESC LIMIT 64").all(key,time) as {payload:string}[];
     return [...artifacts,...jobs].map(row=>JSON.parse(row.payload));
+  }
+  reviewHypothesis(scope:UnderstandingScope,id:string,revision:number,retryKey:string,digest:string,boundary:string,current:()=>boolean):{record:UnderstandingRecord;replay:boolean} {
+    return this.database.transaction(tx=>{
+      if(!current())throw new Error('Current review scope is unavailable');
+      const key=scopeKey(scope),retry=understandingDigest(retryKey),known=tx.get<{digest:string;id:string;decision:string}>('SELECT request_digest AS digest,artifact_id AS id,decision FROM understanding_reviews WHERE scope_key=? AND retry_hash=?',key,retry);
+      if(known&&(known.digest!==digest||known.id!==id||known.decision!=='reviewHypothesis'))throw new Error('Hypothesis review retry conflict');
+      const row=tx.get<{payload:string;boundary:string}>('SELECT payload_json AS payload,boundary FROM understanding_artifacts WHERE scope_key=? AND artifact_id=? AND kind=\'hypothesis\' AND fresh_until_ms>?',key,id,this.now());
+      if(!row)throw new Error('Hypothesis is unavailable or expired');
+      const record=JSON.parse(row.payload) as UnderstandingRecord;
+      if(known)return {record,replay:true};
+      if(row.boundary!==boundary||record.revision!==revision||record.status!=='candidate'||this.hypothesisRejected(scope,record))throw new Error('Select a current candidate hypothesis at its current revision');
+      record.status='reviewed';record.revision=revision+1;valid(record,'PreferenceHypothesis',scope);
+      tx.run('UPDATE understanding_artifacts SET revision=?,payload_json=? WHERE artifact_id=?',record.revision,JSON.stringify(record),id);
+      tx.run('INSERT INTO understanding_reviews VALUES (?,?,?,?,?)',key,retry,digest,id,'reviewHypothesis');
+      return {record,replay:false};
+    });
+  }
+  hypothesisRejected(scope:UnderstandingScope,record:UnderstandingRecord):boolean {
+    return !!this.database.connection.prepare('SELECT 1 FROM understanding_hypothesis_rejections WHERE scope_key=? AND (artifact_id=? OR fingerprint=?) LIMIT 1').get(scopeKey(scope),String(record.hypothesisId),hypothesisFingerprint(record));
+  }
+  assertReviewRetry(scope:UnderstandingScope,retryKey:string,digest:string,id:string,decision:string):void {
+    const known=this.database.connection.prepare('SELECT request_digest AS digest,artifact_id AS id,decision FROM understanding_reviews WHERE scope_key=? AND retry_hash=?').get(scopeKey(scope),understandingDigest(retryKey));
+    if(known&&(known.digest!==digest||known.id!==id||known.decision!==decision))throw new Error('Hypothesis review retry conflict');
+  }
+  /** Caller supplies the owner transaction containing the external-journal application receipt. */
+  applyHypothesisRejection(tx:Transaction,scope:UnderstandingScope,target:{hypothesisId:string;fingerprint:string;expectedRevision:number},retryKey:string,digest:string):void {
+    const key=scopeKey(scope),retry=understandingDigest(retryKey),known=tx.get<{digest:string}>('SELECT request_digest AS digest FROM understanding_reviews WHERE scope_key=? AND retry_hash=?',key,retry);
+    if(known&&known.digest!==digest)throw new Error('Hypothesis rejection retry conflict');
+    tx.run('INSERT OR IGNORE INTO understanding_hypothesis_rejections VALUES (?,?,?,?)',key,target.hypothesisId,target.fingerprint,target.expectedRevision+1);
+    const row=tx.get<{payload:string}>('SELECT payload_json AS payload FROM understanding_artifacts WHERE scope_key=? AND artifact_id=? AND kind=\'hypothesis\'',key,target.hypothesisId);
+    if(row){const record=JSON.parse(row.payload) as UnderstandingRecord;if(record.status!=='rejected'){record.status='rejected';record.revision=Math.max(Number(record.revision)+1,target.expectedRevision+1);valid(record,'PreferenceHypothesis',scope);tx.run('UPDATE understanding_artifacts SET revision=?,payload_json=? WHERE artifact_id=?',record.revision,JSON.stringify(record),target.hypothesisId);}}
+    tx.run('INSERT OR IGNORE INTO understanding_reviews VALUES (?,?,?,?,?)',key,retry,digest,target.hypothesisId,'rejectHypothesis');
+    const jobs=tx.all<{payload:string}>(`SELECT payload_json AS payload FROM understanding_work WHERE scope_key=? AND state IN ${pending} AND payload_json IS NOT NULL`,key);
+    for(const row of jobs){const work=JSON.parse(row.payload);work.state='cancelled';work.revision++;work.lastOutcome='cancelled';work.reason='Hypothesis rejection changed the current Discovery boundary; no automatic retry.';tx.run('UPDATE understanding_work SET state=\'cancelled\',payload_json=? WHERE work_id=?',JSON.stringify(work),work.workId);}
   }
   work(scope:UnderstandingScope,id:string):UnderstandingRecord|undefined {
     const row=this.database.connection.prepare("SELECT payload_json AS payload FROM understanding_work WHERE scope_key=? AND work_id=? AND expires_ms>?").get(scopeKey(scope),id,this.now()) as {payload:string|null}|undefined;
@@ -96,10 +135,11 @@ export class UnderstandingRepository {
   }
   publish(scope:UnderstandingScope,id:string,boundary:string,artifacts:UnderstandingRecord[],current:(tx:Transaction)=>boolean):boolean {
     if(!artifacts.length||artifacts.length>8)throw new Error("Invalid publication size");
-    for(const record of artifacts){const definition=record.recordType==="topicBrief"?"TopicBrief":record.recordType==="hypothesis"?"PreferenceHypothesis":undefined;if(!definition)throw new Error("Unsupported derived record type");valid(record,definition,scope);}
+    for(const record of artifacts){const definition=record.recordType==="topicBrief"?"TopicBrief":record.recordType==="hypothesis"?"PreferenceHypothesis":undefined;if(!definition)throw new Error("Unsupported derived record type");valid(record,definition,scope);if(record.recordType==='hypothesis'&&(record.status!=='candidate'||record.revision!==1||this.hypothesisRejected(scope,record)))throw new Error('Rejected or non-candidate hypothesis cannot be published');}
     return this.database.transaction(tx=>{
       const row=tx.get<{payload:string;boundary:string;deadline:number}>(`SELECT payload_json AS payload,boundary,deadline_ms AS deadline FROM understanding_work WHERE scope_key=? AND work_id=? AND state IN ${pending}`,scopeKey(scope),id);
       if(!row?.payload||row.boundary!==boundary||row.deadline<=this.now()||!current(tx))return false;
+      for(const artifact of artifacts)if(artifact.recordType==='hypothesis'&&this.hypothesisRejected(scope,artifact))throw new Error('Rejected hypothesis cannot be published');
       const work=JSON.parse(row.payload);
       for(const artifact of artifacts){const isBrief=artifact.recordType==="topicBrief",id=isBrief?artifact.briefId:artifact.hypothesisId,topic=isBrief?artifact.topicRef:(artifact.topicRefs as string[])[0],expiry=isBrief?Date.parse(String(artifact.freshUntil)):Date.parse(String(artifact.createdAt))+(work.budget.briefFreshnessSeconds as number)*1000;if(expiry<=this.now()||artifact.configurationRef!==work.configurationRef)throw new Error("Stale publication");
         tx.run("INSERT INTO understanding_artifacts VALUES (?,?,?,?,?,?,?,?,?)",id,scopeKey(scope),scope.relationshipId,boundary,artifact.revision,artifact.recordType,topic,expiry,JSON.stringify(artifact));

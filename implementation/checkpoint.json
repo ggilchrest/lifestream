@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "889ab232ff18e4e22557832bb6fefa1d3fee209f",
+  "currentRevision": "6aa5b5eda500b3d578c7137e13cdda55665f5d91",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -150,64 +150,76 @@
     "packages/providers-ollama/test/provider.test.ts",
     "packages/providers-sglang/src/provider.ts",
     "packages/providers-sglang/test/provider.test.ts",
-    "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
+    "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json",
+    "packages/storage-sqlite/src/migrations/0021_understanding_review.sql",
+    "apps/server/test/discovery-review.test.ts",
+    "apps/control-web/test/discovery-review.test.mjs",
+    "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/admin/discovery-analysis.ts",
+    "apps/control-web/DESIGN.md",
+    "apps/control-web/discovery-workflows.js",
+    "apps/control-web/relationship-extensions.js",
+    "apps/control-web/styles.css",
+    "apps/control-web/test/discovery-review.test.mjs",
+    "apps/server/src/admin/recovery-journal.ts",
+    "apps/server/src/admin/relationship-recovery.ts",
     "apps/server/src/admin/understanding.ts",
     "apps/server/src/index.ts",
-    "apps/server/test/discovery-analysis.test.ts",
+    "apps/server/test/discovery-review.test.ts",
+    "apps/server/test/server.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json",
-    "packages/providers-ollama/src/provider.ts",
-    "packages/providers-ollama/test/provider.test.ts",
-    "packages/providers-sglang/src/provider.ts",
-    "packages/providers-sglang/test/provider.test.ts",
-    "packages/runtime/src/inference/port.ts",
-    "packages/runtime/src/inference/prompt.ts",
-    "packages/runtime/src/understanding/coordinator.ts",
+    "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/src/migrations/0021_understanding_review.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
     "packages/storage-sqlite/src/understanding.ts"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
+      "evidence": "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
+      "evidence": "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
+      "evidence": "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
+      "evidence": "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
+      "evidence": "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/discovery-review.test.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
+      "evidence": "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
+      "evidence": "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
+      "evidence": "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json"
     }
   ],
   "decisions": [
@@ -222,8 +234,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Complete S084 competing hypotheses, review/rejection, contextual candidates and isolated Lab; qualify actual corpus/provider/voice performance and exact-source dependencies. Continue remaining S083 opportunity/output lifecycle and all other dependency-ready Lifestream/PWCE specification work before stopping for Human review.",
-  "updatedAt": "2026-09-14T23:17:44.402725Z",
+  "nextAction": "Complete S084 contextual candidates, current-domain/correction precedence, analysis admission UI and isolated Lab; qualify actual corpus/provider/voice performance and exact-source dependencies. Continue remaining S083 opportunity/output lifecycle and other dependency-ready Lifestream/PWCE specification work before stopping for Human review.",
+  "updatedAt": "2026-09-14T23:37:09.401128Z",
   "updatedBy": "Codex",
-  "notes": "Bounded competing-hypothesis analysis is implemented and fixture-verified with host provider-output limits, exact evidence validation, single-call durable admission and current-dependency publication. 303 source, 27 browser and 45 tooling tests pass. Actual optional model analysis remains withheld pending provider-priority qualification. Full S083/S084 and performance/Human claims remain incomplete; independent implementation remains actionable. Saved review state, schema bytes, historical evidence and unrelated dirty artifacts remain preserved."
+  "notes": "Hypothesis review and rejection now use authenticated revision checks, durable request identities and the existing owner-local safety journal. SQLite failure, database rollback and renamed exact-content replay cannot restore rejected hypotheses; original user evidence remains intact. Separate desktop/mobile inspection preserves tentative status and shows alternatives and evidence. 304 source, 28 browser, 1 final layout and 45 tooling tests pass. Full S083/S084, actual provider/voice performance and Human claims remain incomplete; independent implementation remains actionable."
 }
