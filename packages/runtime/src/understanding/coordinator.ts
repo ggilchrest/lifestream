@@ -39,11 +39,11 @@ export class UnderstandingWorkCoordinator {
     if (this.now() >= work.deadlineAt || !work.current()) return stopped("suppressed", "staleBoundary");
     const controller = new AbortController(); this.active = { key: work.key, controller };
     let timer: ReturnType<typeof setTimeout> | undefined, completed = 0;
+    const current = () => !controller.signal.aborted && !this.foreground && this.pressureAllowsWork() && this.now() < work.deadlineAt && work.current();
     try {
       // A failed/duplicate admission remains charged or rejected by the owner; no automatic retry.
       if (!work.admitOnce()) return stopped("suppressed", "duplicateOrBudget");
       timer = setTimeout(() => controller.abort(), Math.max(0, work.deadlineAt - this.now()));
-      const current = () => !controller.signal.aborted && !this.foreground && this.pressureAllowsWork() && this.now() < work.deadlineAt && work.current();
       let result: T | undefined;
       for (const step of work.steps) {
         if (!current()) return stopped("cancelled", "currentBoundaryDenied", completed);
@@ -57,7 +57,9 @@ export class UnderstandingWorkCoordinator {
       if (result === undefined || !work.publish(result)) return stopped("cancelled", "publicationConflict", completed);
       return stopped("published", "publishedCurrentRevision", completed);
     } catch {
-      return stopped(controller.signal.aborted ? "cancelled" : "failed", controller.signal.aborted ? "cancelled" : "workFailed", completed);
+      let cancelled=controller.signal.aborted;
+      try{cancelled ||= !current();}catch{cancelled=true;}
+      return stopped(cancelled ? "cancelled" : "failed", cancelled ? "currentBoundaryDenied" : "workFailed", completed);
     } finally {
       if (timer !== undefined) clearTimeout(timer);
       // An uncooperative port keeps the single slot occupied until it settles, preventing fan-out.

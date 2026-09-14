@@ -56,3 +56,9 @@ test("provider enforces deadline and cancellation before and during streaming wi
     if (mode === "expired" || mode === "alreadyCancelled") assert.equal(calls, before);
   }
 });
+
+test('host generation limit reaches SGLang while invalid bounds make no request',async t=>{
+ let calls=0,limit:unknown;const server=createServer(async(req,res)=>{calls++;let body='';for await(const chunk of req)body+=chunk;limit=JSON.parse(body).max_tokens;res.end('data: [DONE]\n\n');});await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>server.close());const provider=new SglangInferenceProvider({endpoint:`http://127.0.0.1:${(server.address() as {port:number}).port}`,model:'qwen3.8-27b-local'});
+ for await(const _chunk of provider.generate({...request,maximumOutputTokens:160},{signal:new AbortController().signal})){}assert.equal(limit,160);
+ for(const maximumOutputTokens of [0,-1,4097,1.5,NaN]){const output=[];for await(const chunk of provider.generate({...request,maximumOutputTokens},{signal:new AbortController().signal}))output.push(chunk);assert.equal(output[0]?.error?.code,'invalid_canonical_request');}assert.equal(calls,1);
+});

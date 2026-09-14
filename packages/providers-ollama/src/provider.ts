@@ -11,6 +11,7 @@ type OllamaEvent = {
   model?: string;
   message?: { role?: string; content?: string };
   done?: boolean;
+  done_reason?: string;
   error?: string;
 };
 
@@ -27,9 +28,16 @@ export class OllamaInferenceProvider implements InferenceProvider {
       return;
     }
 
+    if(request.maximumOutputTokens!==undefined&&(!Number.isInteger(request.maximumOutputTokens)||request.maximumOutputTokens<1||request.maximumOutputTokens>4096)){yield {kind:"error",error:{code:"invalid_canonical_request",message:"Invalid host generation-token limit"}};return;}
+    if(context.signal.aborted){yield {kind:"error",error:{code:"cancelled",message:"inference cancelled"}};return;}
+    const remainingMs=Date.parse(request.deadlineAt)-Date.now();
+    if(!Number.isFinite(remainingMs)||remainingMs<=0){yield {kind:"error",error:{code:"deadline_exceeded",message:"inference deadline exceeded"}};return;}
     const controller = new AbortController();
     const abort = () => controller.abort(context.signal.reason);
     context.signal.addEventListener("abort", abort, { once: true });
+    let deadlineExceeded=false;
+    const deadlineTimer=setTimeout(()=>{deadlineExceeded=true;controller.abort();},Math.min(remainingMs,2_147_483_647));
+    let reader:ReadableStreamDefaultReader<Uint8Array>|undefined;
     try {
       const response = await fetch(`${this.config.endpoint.replace(/\/$/u, "")}/api/chat`, {
         method: "POST",
@@ -39,7 +47,7 @@ export class OllamaInferenceProvider implements InferenceProvider {
           stream: true,
           think: false,
           messages: [{ role: "user", content: request.sections.map((section) => `[${section.kind}]\n${section.content}`).join("\n\n") }],
-          options: { num_ctx: this.config.contextLength }
+          options: { num_ctx: this.config.contextLength, ...(request.maximumOutputTokens===undefined?{}:{num_predict:request.maximumOutputTokens}) }
         }),
         signal: controller.signal
       });
@@ -48,7 +56,7 @@ export class OllamaInferenceProvider implements InferenceProvider {
         return;
       }
 
-      const reader = response.body.getReader();
+      reader = response.body.getReader();
       const decoder = new TextDecoder();
       const maximumBytes = this.config.maxResponseBytes ?? 64_000;
       let buffer = "";
@@ -71,6 +79,10 @@ export class OllamaInferenceProvider implements InferenceProvider {
             yield { kind: "error", error: { code: "inference_unavailable", message: event.error ? "inference provider reported an error" : "inference provider model identity changed" } };
             return;
           }
+          if(event.done===true&&event.done_reason==='length'){
+            yield {kind:"error",error:{code:"response_limit",message:"inference provider reached its generation limit"}};
+            return;
+          }
           const content = event.message?.content;
           if (typeof content === "string" && content.length > 0) {
             emittedBytes += Buffer.byteLength(content);
@@ -90,13 +102,18 @@ export class OllamaInferenceProvider implements InferenceProvider {
       }
       if (!terminalSeen) yield { kind: "error", error: { code: "malformed_provider_event", message: "inference provider ended without a terminal event" } };
     } catch (error) {
+      if(deadlineExceeded){yield {kind:"error",error:{code:"deadline_exceeded",message:"inference deadline exceeded"}};return;}
       if (context.signal.aborted) {
         yield { kind: "error", error: { code: "cancelled", message: "inference cancelled" } };
         return;
       }
       yield { kind: "error", error: { code: "inference_unavailable", message: error instanceof Error ? error.message.replace(/https?:\/\/\S+/gu, "[redacted-endpoint]") : "inference unavailable" } };
     } finally {
+      clearTimeout(deadlineTimer);
       context.signal.removeEventListener("abort", abort);
+      controller.abort();
+      await reader?.cancel().catch(()=>{});
+      reader?.releaseLock();
     }
   }
 }

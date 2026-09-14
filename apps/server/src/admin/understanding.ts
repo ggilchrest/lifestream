@@ -1,3 +1,4 @@
+import {analyzeDiscoveryEvidence,type DiscoveryAnalysisPort,type DiscoveryEvidence} from "./discovery-analysis.ts";
 import { recoveryDigest } from "./recovery-journal.ts";
 import { randomUUID } from "node:crypto";
 import { createContractValidator } from "@lifestream/contracts";
@@ -11,6 +12,7 @@ type Snapshot = { boundary:string; configuration:RelationshipConfiguration|undef
 type Claim = {claimId:string;text:string;sourceRefs:string[];qualifier:string;versionScope:string;spoilerClass:string;contradictionRefs:string[]};
 type Source = {sourceRef:string;sourceFamily:string;sourceRevision:string;topicRef:string;policyRef:string;retrievedAt:string;reliability:string;reliabilityBasis:string;content:string;claims:Claim[];aliasClaims:Claim[];knowledgeGaps:string[]};
 type Settings = {enabled:boolean;researchMode:string;policyRefs:string[];approvedTopicRefs:string[];excludedSourceRefs:string[];excludedTopicRefs:string[];spoilerPolicy:string;progressBoundaryRef:string|null;budget:Record<string,number>};
+type DiscoveryHost={snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};analysis?:()=>DiscoveryAnalysisPort|undefined;evidence?:(scope:UnderstandingScope,refs:string[])=>DiscoveryEvidence[];changed:()=>void};
 const validator=createContractValidator();
 const schema="https://lifestream.dev/contracts/understanding-api/1.0.0";
 export class DiscoveryAdministration {
@@ -19,8 +21,8 @@ export class DiscoveryAdministration {
   private readonly tasks=new Map<string,{relationshipId:string;scope:UnderstandingScope;promise:Promise<unknown>}>();
   private closed=false;
   private readonly cleanupTimer:ReturnType<typeof setInterval>;
-  private readonly host:{snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};changed:()=>void};
-  constructor(database:Database,host:{snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};changed:()=>void}){
+  private readonly host:DiscoveryHost;
+  constructor(database:Database,host:DiscoveryHost){
     this.host=host;this.repository=new UnderstandingRepository(database);this.repository.recover();
     this.cleanupTimer=setInterval(()=>{try{this.repository.cleanupExpired();}catch{/* Expired data remains denied; retry bounded maintenance on the next interval. */}},30000);
     this.cleanupTimer.unref();
@@ -72,7 +74,7 @@ export class DiscoveryAdministration {
     if(operation!=="prepare")return extensionError(409,"discovery_operation_unavailable","This Discovery operation is not yet implemented.");
     const snapshot=this.host.snapshot(scope),settings=snapshot.configuration?.extensions?.understanding as Settings|undefined;
     if(!settings?.enabled||settings.researchMode==="off")return extensionError(409,"discovery_disabled","Activate an enabled Discovery configuration before preparing sources.");
-    if(request.purpose==="hypothesisAnalysis")return extensionError(409,"provider_priority_unverified","Optional model analysis is withheld until shared-provider cancellation and next-turn latency are qualified. Supplied-source brief preparation remains available.");
+    if(request.purpose==="hypothesisAnalysis")return this.prepareAnalysis(scope,request,snapshot,settings,authorizationCurrent);
     const sources=request.sources as Source[],refs=request.evidenceRefs as string[],topic=String(request.topicRef),budget=settings.budget;
     if(!sources.length)return extensionError(409,"acquisition_unavailable","No configured network acquisition capability is available. Select and supply authorized source material.");
     const current=()=>!this.closed&&process.memoryUsage().heapUsed<budget.workerMemoryMiB!*1024*1024&&authorizationCurrent()&&snapshot.boundary===this.host.snapshot(scope).boundary&&this.host.evidenceAllowed(scope,refs)&&this.host.sourceAllowed(scope,topic)&&sources.every(source=>this.host.sourceAllowed(scope,source.sourceRef)&&this.host.sourceAllowed(scope,source.content));
@@ -113,6 +115,34 @@ export class DiscoveryAdministration {
       this.tasks.set(key,{relationshipId:scope.relationshipId,scope,promise});
       return this.response(scope,operation,[work],"Preparation admitted. Refresh to inspect its observed terminal result.",202);
     }catch(error){return extensionError(409,"discovery_admission_denied",error instanceof Error?error.message:"Discovery admission denied");}
+  }
+  private prepareAnalysis(scope:UnderstandingScope,request:Record<string,unknown>,snapshot:Snapshot,settings:Settings,authorizationCurrent:()=>boolean):Result {
+    const selectedPort=this.host.analysis?.(),port=selectedPort?{...selectedPort}:undefined;
+    if(!port||port.preemptionBoundMs===undefined||!Number.isFinite(port.preemptionBoundMs)||port.preemptionBoundMs<0||port.preemptionBoundMs>10)return extensionError(409,"provider_priority_unverified","Optional model analysis is withheld until shared-provider cancellation and next-turn latency are qualified. Supplied-source preparation remains available.");
+    try {
+      const budget=settings.budget,refs=request.evidenceRefs as string[],topic=String(request.topicRef);
+      if(!refs.length||refs.length>24||!this.host.evidence||budget.analysisCallsPerJob!<1||!settings.policyRefs.length||settings.excludedTopicRefs.includes(topic))throw new Error("Current evidence, topic policy and analysis budget are required");
+      if(settings.researchMode==="approvedTopics"&&!settings.approvedTopicRefs.includes(topic))throw new Error("Topic is not approved");
+      if((request.sources as unknown[]).length)throw new Error("Prepare supplied sources separately; hypothesis analysis consumes scoped personal evidence without acquiring topic material");
+      const evidence=this.host.evidence(scope,refs);if(evidence.length!==refs.length||new Set(refs).size!==refs.length||new Set(evidence.map(item=>item.ref)).size!==refs.length||evidence.some(item=>!refs.includes(item.ref)))throw new Error("Some selected evidence is unavailable");
+      const current=()=>{const livePort=this.host.analysis?.();return !this.closed&&authorizationCurrent()&&snapshot.boundary===this.host.snapshot(scope).boundary&&livePort?.identity===port.identity&&livePort?.preemptionBoundMs===port.preemptionBoundMs&&this.host.evidenceAllowed(scope,refs)&&this.host.sourceAllowed(scope,topic)&&process.memoryUsage().heapUsed<budget.workerMemoryMiB!*1024*1024;};
+      if(!current())throw new Error("Current analysis scope denied");
+      const now=Date.now(),key=randomUUID(),configurationRef=`relationship-configuration:${snapshot.configuration!.configurationId}:${snapshot.configuration!.revision}`;
+      const dependencyRefs=[`snapshot:${snapshot.boundary}`,`analysis-provider:${understandingDigest(port.identity)}`,...evidence.map(e=>`evidence:${e.ref}:${e.revision}`)];
+      const work:UnderstandingRecord={...scope,schemaVersion:"1.0.0",recordType:"work",workId:key,revision:1,topicRef:topic,purpose:"hypothesisAnalysis",state:"queued",executionMode:"normal",idempotencyKey:request.idempotencyKey,configurationRef,policyRefs:settings.policyRefs,dependencyRefs,capabilityInvocationRef:null,admissionReceiptRef:null,createdAt:new Date(now).toISOString(),deadlineAt:new Date(now+budget.jobDeadlineSeconds!*1000).toISOString(),expiresAt:new Date(now+budget.pendingJobTtlSeconds!*1000).toISOString(),budget:structuredClone(budget),producedRefs:[],lastOutcome:"notRun",reason:"Queued bounded competing-hypothesis analysis; canonical user evidence remains unchanged."};
+      const {idempotencyKey:_key,...semantic}=request;
+      const admitted=this.repository.admit(scope,work,understandingDigest(request),understandingDigest([semantic,snapshot.boundary,port.identity]),snapshot.boundary,()=>current());
+      if(admitted.replay)return this.response(scope,"prepare",[admitted.record],"Existing analysis admission; no repeated provider call.");
+      const promise=new Promise<void>(resolve=>setImmediate(resolve)).then(async()=>{
+        if(this.closed)return;
+        const result=await this.coordinator.run({key,deadlineAt:Date.parse(String(work.deadlineAt)),current,admitOnce:()=>this.repository.start(scope,key),sharedInference:true,providerPreemptionBoundMs:port.preemptionBoundMs!,
+          steps:[async signal=>(await analyzeDiscoveryEvidence({scope,topicRef:topic,workId:key,configurationRef,dependencyRefs,evidence,port,maximumOutputTokens:budget.outputTokensPerCall!,maximumInputBytes:Math.min(budget.inputBytesPerJob!,budget.sourceTokensPerJob!),deadlineAt:String(work.deadlineAt),signal,current})).record],
+          publish:record=>this.repository.publish(scope,key,snapshot.boundary,[record],()=>current())});
+        if(!this.closed&&result.state!=="published")this.repository.finish(scope,key,result.state==="failed"?"failed":"cancelled",result.reason);
+        if(!this.closed&&result.state==="published")this.host.changed();
+      }).catch(()=>{if(!this.closed)this.repository.finish(scope,key,"failed","Analysis failed without publication or automatic retry.");}).finally(()=>this.tasks.delete(key));
+      this.tasks.set(key,{relationshipId:scope.relationshipId,scope,promise});return this.response(scope,"prepare",[work],"Analysis admitted. Its explanations remain tentative and require review.",202);
+    }catch(error){return extensionError(409,"analysis_admission_denied",error instanceof Error?error.message:"Analysis admission denied");}
   }
   select(scope:UnderstandingScope,input:string,audience:"authenticatedSession"|"unknown",remainingBytes:number){
     const start=performance.now(),snapshot=this.host.snapshot(scope),settings=snapshot.configuration?.extensions?.understanding as Settings|undefined;

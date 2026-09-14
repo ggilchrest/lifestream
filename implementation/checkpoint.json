@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "6d28a6132c1204228093e491ba6ae315bcdc961b",
+  "currentRevision": "889ab232ff18e4e22557832bb6fefa1d3fee209f",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -143,68 +143,71 @@
     "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json",
     "apps/server/src/admin/discovery-feedback.ts",
     "apps/server/src/admin/relationship-records.ts",
-    "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
+    "implementation/evidence/S084-SCOPED-FEEDBACK-1.json",
+    "apps/server/src/admin/discovery-analysis.ts",
+    "apps/server/test/discovery-analysis.test.ts",
+    "packages/providers-ollama/src/provider.ts",
+    "packages/providers-ollama/test/provider.test.ts",
+    "packages/providers-sglang/src/provider.ts",
+    "packages/providers-sglang/test/provider.test.ts",
+    "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
   ],
   "changedFiles": [
-    "apps/control-web/DESIGN.md",
-    "apps/control-web/discovery-workflows.js",
-    "apps/control-web/relationship-extensions.js",
-    "apps/control-web/test/understanding.test.mjs",
-    "apps/server/src/admin/discovery-feedback.ts",
-    "apps/server/src/admin/relationship-records.ts",
-    "apps/server/src/admin/relationship-recovery.ts",
+    "apps/server/src/admin/discovery-analysis.ts",
     "apps/server/src/admin/understanding.ts",
     "apps/server/src/index.ts",
-    "apps/server/src/relationship-extensions.ts",
-    "apps/server/test/understanding.test.ts",
+    "apps/server/test/discovery-analysis.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
+    "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json",
+    "packages/providers-ollama/src/provider.ts",
+    "packages/providers-ollama/test/provider.test.ts",
+    "packages/providers-sglang/src/provider.ts",
+    "packages/providers-sglang/test/provider.test.ts",
+    "packages/runtime/src/inference/port.ts",
+    "packages/runtime/src/inference/prompt.ts",
+    "packages/runtime/src/understanding/coordinator.ts",
+    "packages/storage-sqlite/src/understanding.ts"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
+      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
+      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
+      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
+      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
-    },
-    {
-      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/understanding.test.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
+      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
+      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
+      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SCOPED-FEEDBACK-1.json"
+      "evidence": "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json"
     }
   ],
   "decisions": [
@@ -220,7 +223,7 @@
   ],
   "blockers": [],
   "nextAction": "Complete S084 competing hypotheses, review/rejection, contextual candidates and isolated Lab; qualify actual corpus/provider/voice performance and exact-source dependencies. Continue remaining S083 opportunity/output lifecycle and all other dependency-ready Lifestream/PWCE specification work before stopping for Human review.",
-  "updatedAt": "2026-09-14T22:57:13.189943Z",
+  "updatedAt": "2026-09-14T23:17:44.402725Z",
   "updatedBy": "Codex",
-  "notes": "Supplied-source preparation remains published. Scoped feedback now creates pending declarations in existing relationship records, preserves meaning and original evidence, requires ordinary review, participates in actual prepared input, expires with dependency/cache fencing and erases typed metadata with normal forgetting. 295 source and 27 browser tests pass; final mobile-label check passes. Full S083/S084, model/provider performance and Human claims remain incomplete. No genuine blocker is asserted while independent implementation work remains. Saved review state, schemas and unrelated dirty artifacts are preserved."
+  "notes": "Bounded competing-hypothesis analysis is implemented and fixture-verified with host provider-output limits, exact evidence validation, single-call durable admission and current-dependency publication. 303 source, 27 browser and 45 tooling tests pass. Actual optional model analysis remains withheld pending provider-priority qualification. Full S083/S084 and performance/Human claims remain incomplete; independent implementation remains actionable. Saved review state, schema bytes, historical evidence and unrelated dirty artifacts remain preserved."
 }

@@ -3,7 +3,7 @@ import { createServer } from "node:http";
 import { test } from "node:test";
 import { OllamaInferenceProvider } from "../src/provider.ts";
 
-const request = { sections: [{ kind: "userInput", content: "hello" }], manifest: { schemaVersion: "1.0.0", sections: [], tokenizer: "test" }, deadlineAt: new Date(Date.now() + 1_000).toISOString(), executionMode: "live" as const, scope: { assistantId: "a", sessionId: "s", interactionId: "i", endpointId: null } };
+const request = { sections: [{ kind: "userInput", content: "hello" }], manifest: { schemaVersion: "1.0.0", sections: [], tokenizer: "test" }, deadlineAt: new Date(Date.now() + 60_000).toISOString(), executionMode: "live" as const, scope: { assistantId: "a", sessionId: "s", interactionId: "i", endpointId: null } };
 
 test("Ollama adapter streams native NDJSON and pins model/context identity", async (t) => {
   const server = createServer(async (incoming, response) => {
@@ -35,6 +35,7 @@ test("Ollama adapter fails closed for replay, drift, malformed streams, and limi
   for (const [body, expected] of [
     ['{"model":"different","done":true}\n', "inference_unavailable"],
     ["not-json\n", "malformed_provider_event"],
+    ['{"done":true,"done_reason":"length"}\n', "response_limit"],
     ['{"model":"qwen3.5:2b-q4_K_M","message":{"content":"too long"},"done":false}\n', "response_limit"]
   ] as const) {
     const provider = new OllamaInferenceProvider({ endpoint: "http://local.invalid", model: "qwen3.5:2b-q4_K_M", contextLength: 32768, maxResponseBytes: 2 });
@@ -46,4 +47,25 @@ test("Ollama adapter fails closed for replay, drift, malformed streams, and limi
       assert.equal(output.at(-1)?.error?.code, expected);
     } finally { globalThis.fetch = original; }
   }
+});
+
+test('host generation limit reaches Ollama without changing selected model or context',async t=>{
+ let calls=0,body:any;const server=createServer(async(req,res)=>{calls++;let text='';for await(const chunk of req)text+=chunk;body=JSON.parse(text);res.end('{"model":"selected-model","done":true}\n');});await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>server.close());const provider=new OllamaInferenceProvider({endpoint:`http://127.0.0.1:${(server.address() as {port:number}).port}`,model:'selected-model',contextLength:32768});
+ for await(const _chunk of provider.generate({...request,maximumOutputTokens:160},{signal:new AbortController().signal})){}assert.equal(body.options.num_predict,160);assert.equal(body.options.num_ctx,32768);assert.equal(body.model,'selected-model');
+ for(const maximumOutputTokens of [0,-1,4097,1.5,NaN]){const output=[];for await(const chunk of provider.generate({...request,maximumOutputTokens},{signal:new AbortController().signal}))output.push(chunk);assert.equal(output[0]?.error?.code,'invalid_canonical_request');}assert.equal(calls,1);
+});
+
+test('Ollama cancels before admission and during a held stream and closes early consumers',async t=>{
+ let calls=0;const server=createServer(async(_req,res)=>{calls++;res.writeHead(200,{'content-type':'application/x-ndjson'});res.write('{"message":{"content":"first"},"done":false}\n');});
+ await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();server.close();});
+ const provider=new OllamaInferenceProvider({endpoint:`http://127.0.0.1:${(server.address() as {port:number}).port}`,model:'selected-model',contextLength:32768});
+ const collect=async(input:any,signal:AbortSignal)=>{const output=[];for await(const chunk of provider.generate(input,{signal}))output.push(chunk);return output;};
+ const aborted=new AbortController();aborted.abort();assert.equal((await collect(request,aborted.signal))[0]?.error?.code,'cancelled');
+ assert.equal((await collect({...request,deadlineAt:new Date(0).toISOString()},new AbortController().signal))[0]?.error?.code,'deadline_exceeded');assert.equal(calls,0);
+ const deadline=await collect({...request,deadlineAt:new Date(Date.now()+100).toISOString()},new AbortController().signal);assert.equal(deadline.at(-1)?.error?.code,'deadline_exceeded');assert.equal(deadline.filter(c=>c.kind==='done').length,0);
+ const controller=new AbortController(),output=[];for await(const chunk of provider.generate({...request,deadlineAt:new Date(Date.now()+5000).toISOString()},{signal:controller.signal})){output.push(chunk);if(chunk.kind==='text')controller.abort();}
+ assert.equal(output.at(-1)?.error?.code,'cancelled');assert.equal(output.filter(c=>c.kind==='done').length,0);
+ for await(const _chunk of provider.generate({...request,deadlineAt:new Date(Date.now()+5000).toISOString()},{signal:new AbortController().signal})){break;}
+ // A cancelled fetch may reuse a pool connection, so inspect provider settlement rather than socket timing.
+ assert.equal(calls,3);
 });

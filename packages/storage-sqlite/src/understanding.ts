@@ -71,7 +71,7 @@ export class UnderstandingRepository {
       const work=this.work(scope,id);
       if(!work||work.state!=="queued"||Date.parse(String(work.deadlineAt))<=this.now())return false;
       work.state="running";work.revision=Number(work.revision)+1;work.admissionReceiptRef=`understanding-admission:${id}`;
-      work.reason="Current dependencies admitted for supplied-source preparation.";
+      work.reason="Current dependencies admitted for bounded Discovery work.";
       valid(work,"UnderstandingWork",scope);
       tx.run("UPDATE understanding_work SET state='running',payload_json=? WHERE work_id=?",JSON.stringify(work),id);
       return true;
@@ -96,21 +96,21 @@ export class UnderstandingRepository {
   }
   publish(scope:UnderstandingScope,id:string,boundary:string,artifacts:UnderstandingRecord[],current:(tx:Transaction)=>boolean):boolean {
     if(!artifacts.length||artifacts.length>8)throw new Error("Invalid publication size");
-    for(const record of artifacts)valid(record,"TopicBrief",scope);
+    for(const record of artifacts){const definition=record.recordType==="topicBrief"?"TopicBrief":record.recordType==="hypothesis"?"PreferenceHypothesis":undefined;if(!definition)throw new Error("Unsupported derived record type");valid(record,definition,scope);}
     return this.database.transaction(tx=>{
       const row=tx.get<{payload:string;boundary:string;deadline:number}>(`SELECT payload_json AS payload,boundary,deadline_ms AS deadline FROM understanding_work WHERE scope_key=? AND work_id=? AND state IN ${pending}`,scopeKey(scope),id);
       if(!row?.payload||row.boundary!==boundary||row.deadline<=this.now()||!current(tx))return false;
       const work=JSON.parse(row.payload);
-      for(const artifact of artifacts){const expiry=Date.parse(String(artifact.freshUntil));if(expiry<=this.now()||artifact.configurationRef!==work.configurationRef)throw new Error("Stale publication");
-        tx.run("INSERT INTO understanding_artifacts VALUES (?,?,?,?,?,?,?,?,?)",artifact.briefId,scopeKey(scope),scope.relationshipId,boundary,artifact.revision,"topicBrief",artifact.topicRef,expiry,JSON.stringify(artifact));
+      for(const artifact of artifacts){const isBrief=artifact.recordType==="topicBrief",id=isBrief?artifact.briefId:artifact.hypothesisId,topic=isBrief?artifact.topicRef:(artifact.topicRefs as string[])[0],expiry=isBrief?Date.parse(String(artifact.freshUntil)):Date.parse(String(artifact.createdAt))+(work.budget.briefFreshnessSeconds as number)*1000;if(expiry<=this.now()||artifact.configurationRef!==work.configurationRef)throw new Error("Stale publication");
+        tx.run("INSERT INTO understanding_artifacts VALUES (?,?,?,?,?,?,?,?,?)",id,scopeKey(scope),scope.relationshipId,boundary,artifact.revision,artifact.recordType,topic,expiry,JSON.stringify(artifact));
         // Each projection is bounded before indexing. Foreground lookup reads at most 32 rows.
-        for(const claim of [...artifact.claims as {text:string;claimId:string;sourceRefs:string[];qualifier:string}[],...artifact.aliasClaims as {text:string;claimId:string;sourceRefs:string[];qualifier:string}[]]){
+        for(const claim of isBrief?[...artifact.claims as {text:string;claimId:string;sourceRefs:string[];qualifier:string}[],...artifact.aliasClaims as {text:string;claimId:string;sourceRefs:string[];qualifier:string}[]]:[]){
           const content=`${artifact.topicRef}: ${claim.text} [${claim.qualifier} source assertion: ${claim.sourceRefs.join(", ")}]`;
           if(Buffer.byteLength(content)>4096)continue;
           tx.run("INSERT INTO understanding_projection(artifact_id,scope_key,boundary,content,fresh_until_ms) VALUES (?,?,?,?,?)",artifact.briefId,scopeKey(scope),boundary,content,expiry);
         }
       }
-      work.state="published";work.admissionReceiptRef=`understanding-admission:${id}`;work.revision++;work.lastOutcome="succeeded";work.reason="Published supplied-source attribution under current dependencies; no network or model analysis.";work.producedRefs=artifacts.map(record=>`topic-brief:${record.briefId}:${record.revision}`);
+      work.state="published";work.admissionReceiptRef=`understanding-admission:${id}`;work.revision++;work.lastOutcome="succeeded";work.reason="Published validated derived records under current pinned dependencies; no source acquisition or user-evidence mutation.";work.producedRefs=artifacts.map(record=>record.recordType==="topicBrief"?`topic-brief:${record.briefId}:${record.revision}`:`hypothesis:${record.hypothesisId}:${record.revision}`);
       valid(work,"UnderstandingWork",scope);
       tx.run("UPDATE understanding_work SET state='published',payload_json=? WHERE work_id=?",JSON.stringify(work),id);
       return true;

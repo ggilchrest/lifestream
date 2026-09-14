@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-14T23:17:44.402725Z",
+  "slice": "LS-S084",
+  "status": "inProgress",
+  "claim": "Bounded model-analysis component with durable admission and current-dependency publication; runtime availability and full Discovery remain incomplete.",
+  "baseRevision": "889ab232ff18e4e22557832bb6fefa1d3fee209f",
+  "specificationRevision": "7614f609068d8732049f64e73753d1bd0d9540d5",
+  "sourceArtifacts": [
+    {
+      "path": "apps/server/src/admin/discovery-analysis.ts",
+      "sha256": "4168cd308d5026bebf2eac300d9d9b50d84777a731287451057fa4f9b3e828f5"
+    },
+    {
+      "path": "apps/server/src/admin/understanding.ts",
+      "sha256": "959dae557f02e9a499a75bc16b12b4d869648e333870a0b2db3757b57bfc0ff2"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "75b2d5da3fba2242d7f74ffa5ab6fbe39b741791611591790be90e785d901485"
+    },
+    {
+      "path": "apps/server/test/discovery-analysis.test.ts",
+      "sha256": "5e8d609dd677de80951c1c60dea0d61512b16088154128d4e700484a9c1762fb"
+    },
+    {
+      "path": "packages/contracts/src/schemas/personal-understanding.schema.json",
+      "sha256": "2e6f377f9ecbd1bd662466f2cbb360c2b8e3e608d624e2798850fcc823cf6d2d"
+    },
+    {
+      "path": "packages/contracts/src/schemas/understanding-api.schema.json",
+      "sha256": "be2a9aa0b77f8a7a65fc7e20c42351077283dffc00184c3e590c450f0d4c2438"
+    },
+    {
+      "path": "packages/providers-ollama/src/provider.ts",
+      "sha256": "db62d32e9206a0fbcf6802987435d3c94539903615673d3ede93545eaafcf571"
+    },
+    {
+      "path": "packages/providers-ollama/test/provider.test.ts",
+      "sha256": "4beb80c8845de4191171618f977fd22481dc7d5a499ee847c77646b13ea81ce5"
+    },
+    {
+      "path": "packages/providers-sglang/src/provider.ts",
+      "sha256": "33a986dc33fa6ae61d4f4d2fcc079c9f7c8e43c37d9a8ab5d0f1f9f3f5759d86"
+    },
+    {
+      "path": "packages/providers-sglang/test/provider.test.ts",
+      "sha256": "55861f87b73fb26347b373294dd5c00507edcfef0b2f2032542710816562d4ed"
+    },
+    {
+      "path": "packages/runtime/src/inference/port.ts",
+      "sha256": "66ce32bbd0b0ad107e44c0c5b6c3a58c8d53d0756a86d93f3c121331f03300a6"
+    },
+    {
+      "path": "packages/runtime/src/inference/prompt.ts",
+      "sha256": "4ba1b0a2687bc5d230ef0b8bde7ec4b000c112ba692ad3667c54be95cca4e9b8"
+    },
+    {
+      "path": "packages/runtime/src/understanding/coordinator.ts",
+      "sha256": "3826ef6da96ab756bc4cf1b0ceaa276535c05314e7c0ce585c691f1800136cf2"
+    },
+    {
+      "path": "packages/storage-sqlite/src/understanding.ts",
+      "sha256": "9ba163e480c64efe937084718f4314e8230ad9d6810ec15a0c3d6a32ad6637dc"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "e2a22759c1ed542f258a938bec41d3f010f37edf0df5b374d732f57fc8c7db71"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "303 passed",
+      "logSha256": "c1c21d67bef1053ae51bbca68d0f33c84e2c22c4200fd91b726d052ad45e7ad6"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "27 passed",
+      "logSha256": "139a5f7a1aa68d8265f0890e255235a497a47b531494c6649bcc49a1653928b3"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "45 passed",
+      "logSha256": "b78eca38aca1f9fa991816f11e0ad79749e34ef3efa7ca7bfef9027e2ce5da57"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass; specification checks only",
+      "logSha256": "8d931e466bcc1fb0a766cfd88708d740c27e9d92cb41a47c4b23e23d715a6b2b"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass; structure only",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "verifiedComponentBehavior": [
+    "One existing-provider call consumes bounded, scoped current evidence through untrusted prepared-memory input; canonical user evidence is not changed",
+    "Distinct competing tentative explanations retain supporting and challenging evidence, semantic traits, boundaries, uncertainty and an explicit unknown alternative",
+    "Unknown evidence, forged fields, duplicate explanations, incomplete output, late output, unavailable capability calls and exceeded budgets are rejected",
+    "Host generation limits reach SGLang max_tokens and Ollama num_predict without selecting a different model or context configuration",
+    "Ollama rejects pre-cancelled and expired calls, cancels held streams and releases early consumers; provider length termination cannot claim successful completion",
+    "Durable admission retains retries and charged terminal jobs; an identical retry never calls the provider again",
+    "Evidence, authorization, provider identity and priority qualification are rechecked; revocation cancels publication and cannot install late hypotheses",
+    "Hypotheses are stored as derived tentative records and are not silently indexed as topic truth",
+    "Ordinary source preparation, approved relationship context, administration and browser flows pass the regression suite"
+  ],
+  "initialFailure": {
+    "command": "pnpm test",
+    "result": "302 passed; 1 failed",
+    "logSha256": "d1786dd875e462a5e026882e3b48e6636185a7683af2c96d271f4a309f2a86f9",
+    "finding": "Withdrawn priority qualification prevented publication but was classified as failed instead of cancelled.",
+    "resolution": "Coordinator now rechecks current authority and resource/deadline state when a worker throws; final full suite passes."
+  },
+  "limitations": [
+    "Positive analysis uses a synthetic inference port only. The actual runtime explicitly withholds optional shared-provider analysis until cancellation and next-turn latency are qualified.",
+    "No actual selected-provider, voice performance, full S083/S084 conformance or Human acceptance is claimed.",
+    "Hypothesis review/rejection, contextual candidates, isolated Discovery Lab and complete Initiative opportunity/output integration remain pending.",
+    "Current-source prerequisite successors for S073/S076/S078/S080 and full corpus/background/provider/voice measurement remain pending; historical receipts are preserved.",
+    "Input and output byte bounds are conservative token estimates; serving-tokenizer and real provider budget measurements remain pending.",
+    "No network research, personal-data import, saved-service restart, live configuration, model/provider selection or training occurred."
+  ],
+  "schemaExportChanged": false,
+  "modelQualityObservationsChanged": false,
+  "humanAcceptanceClaim": false
+}

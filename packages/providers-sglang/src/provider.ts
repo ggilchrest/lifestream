@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 
 const canonicalKinds = ["policy", "corePersona", "adaptivePersona", "interactionState", "preparedMemory", "worldContext", "capabilityState", "conversation", "userInput"];
 const validCanonicalRequest = (request: InferenceRequest): boolean => {
+  if(request.maximumOutputTokens!==undefined&&(!Number.isInteger(request.maximumOutputTokens)||request.maximumOutputTokens<1||request.maximumOutputTokens>4096))return false;
   if (!Array.isArray(request.sections) || request.sections.length !== canonicalKinds.length || request.manifest?.schemaVersion !== "1.0.0" || !request.manifest.tokenizer || request.manifest.sections?.length !== canonicalKinds.length || !Number.isFinite(Date.parse(request.deadlineAt))) return false;
   return request.sections.every((section, index) => {
     if (!section || section.kind !== canonicalKinds[index] || typeof section.content !== "string" || typeof section.sourceRef !== "string" || !section.sourceRef || typeof section.sourceRevision !== "string" || !section.sourceRevision || !["none", "redacted"].includes(section.redaction) || !Number.isInteger(section.tokenCount) || section.tokenCount < 0) return false;
@@ -36,7 +37,7 @@ export class SglangInferenceProvider implements InferenceProvider {
         { role: "system", content: request.sections.slice(0, 4).map((section) => `[${section.kind}; trusted]\n${section.content}`).join("\n\n") },
         { role: "user", content: request.sections.slice(4).map((section) => `[${section.kind}; untrusted]\n${section.content}`).join("\n\n") }
       ];
-      const response = await fetch(`${this.config.endpoint.replace(/\/$/u, "")}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json", ...(this.config.apiKey ? { authorization: `Bearer ${this.config.apiKey}` } : {}) }, body: JSON.stringify({ model: this.config.model, stream: true, ...(direct?{chat_template_kwargs:{enable_thinking:false}}:{}), messages }), signal: controller.signal });
+      const response = await fetch(`${this.config.endpoint.replace(/\/$/u, "")}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json", ...(this.config.apiKey ? { authorization: `Bearer ${this.config.apiKey}` } : {}) }, body: JSON.stringify({ model: this.config.model, stream: true, ...(request.maximumOutputTokens===undefined?{}:{max_tokens:request.maximumOutputTokens}), ...(direct?{chat_template_kwargs:{enable_thinking:false}}:{}), messages }), signal: controller.signal });
       if (!response.ok || !response.body) { yield { kind: "error", error: { code: "inference_unavailable", message: `inference service returned HTTP ${response.status}` } }; return; }
       reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = ""; let emitted = 0; const max = this.config.maxResponseBytes ?? 64_000;
       for (;;) {
