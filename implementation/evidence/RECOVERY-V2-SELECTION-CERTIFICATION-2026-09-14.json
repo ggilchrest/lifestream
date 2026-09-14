@@ -1,0 +1,57 @@
+{
+  "sourceRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
+  "effectiveSpecificationRevision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
+  "collectedAt": "2026-09-14T15:40:54.447705Z",
+  "claimClass": "source-and-rendered-regression",
+  "checks": [
+    {
+      "command": "pnpm build",
+      "testedSourceRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
+      "result": "pass",
+      "evidence": "Completed successfully on the exact selection-repair source hashes, subsequently committed at this revision.",
+      "logSha256": "f5acfcaa6f44004c3bd47d33536efa7402c6e1a780d07419ba224c5ae03f1748"
+    },
+    {
+      "command": "pnpm typecheck",
+      "testedSourceRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
+      "result": "pass",
+      "evidence": "Completed successfully on the exact selection-repair source hashes, subsequently committed at this revision.",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "testedSourceRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
+      "result": "pass",
+      "evidence": "Completed successfully on the exact selection-repair source hashes, subsequently committed at this revision.",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "testedSourceRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
+      "result": "pass",
+      "evidence": "267 tests passed; no skips or failures.",
+      "logSha256": "d793c0ba278e4b705be12498e4f5d4fc8c4d5f216fa47c73ab1b0b2af80f955e"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
+      "testedSourceRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
+      "result": "pass",
+      "evidence": "25 tests passed; no skips or failures.",
+      "logSha256": "500c4901f6a7822a7bbd87ed5e8ac90a7641862d8f6fde656bf27cb9d38070df"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "testedSourceRevision": "370219cbc6bf33d3d2a3344932308ebc0df97467",
+      "result": "pass",
+      "evidence": "45 tests passed; no skips or failures.",
+      "logSha256": "1ea0d71713125964be7f2e1dcc50c0080686043784bac33312614ace16f1a4b2"
+    }
+  ],
+  "scope": "Existing bounded recovery through S081; synthetic data, real local authentication and fixture browser inference. Selected-provider results are separate owner reports.",
+  "sourceWorktreeChanges": [],
+  "sourceWorktreeExplanation": "Selected-provider runs used committed source. Fixture regression source matches the selection-repair hashes committed at this revision; only evidence/checkpoint metadata followed. Original checkout voice edits and accepted review database were excluded.",
+  "exclusions": [
+    "Does not itself prove selected-provider behavior, training, physical/perceptual/performance or production acceptance.",
+    "Combined Human acceptance remains independently recorded in LS-S081-human-acceptance-1.json."
+  ]
+}
