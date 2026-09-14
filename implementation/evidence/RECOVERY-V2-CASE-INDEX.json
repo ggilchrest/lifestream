@@ -1,19 +1,30 @@
 {
   "schemaVersion": "1.0.0",
   "scope": "Recovery v2 existing dependency path through LS-S081",
-  "technicalCoreStatus": "blockedEnvironment",
+  "technicalCoreStatus": "verified",
   "humanAcceptance": "accepted",
-  "sourceRevision": "d9d88d9aff10e6c2aa9386a1ae4103b156c4fd75",
+  "sourceRevision": "60ece410816836d5641153bf6364055a080d7497",
   "selectedProfile": {
     "path": "apps/server/src/config/profiles/ai5090.json",
     "sha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd"
   },
-  "checks": {
-    "sourceTests": 267,
-    "browserTests": 23,
-    "evidenceToolingTests": 43,
-    "browserVerification": "23/23 pass at 3429162; full suite includes the joined fixture journey and independent isolation component."
-  },
+  "checks": [
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S081",
+      "result": "pass",
+      "evidence": "Current required owner qualifications, exact committed artifacts and specification inputs passed admission before this joined run."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs node scripts/qualify-s081-development.mjs",
+      "result": "pass",
+      "evidence": "The full joined authenticated ai5090 browser journey completed, including selected-file admission, ordinary replies, records, controls, insights, actual comparisons/rejection/promotion/rollback, correction/audience/forget fences, failure recovery, restart, skipped Assistant and other-account read denial. Identifier model-quality misses are recorded separately under the operator-directed nonblocking policy."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface; pnpm test; pnpm build; pnpm typecheck; pnpm lint",
+      "result": "pass",
+      "evidence": "25 browser and 267 source tests plus build/typecheck/lint pass on the exact committed selection-repair artifacts. Source proof and execution revisions are linked in the predecessor owner receipt and shared selection certification."
+    }
+  ],
   "cases": [
     {
       "caseId": "LS-TEST-089",
@@ -21,14 +32,14 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S071-qualification-review-2.json",
-          "sha256": "732a398357b702e332539acc799ae9aea47b9c2d72b6a680b44c5f3e451658af",
+          "path": "implementation/evidence/LS-S071-qualification-certification-2.json",
+          "sha256": "220c320cfabc9d415e4cd0407a092dea38f7369b6bc122cddd33a1b4b13ae3ac",
           "ownerSlice": "LS-S071",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/05-runtime-and-cognition.md",
@@ -48,7 +59,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -56,16 +67,17 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S071-development-resume-6.json",
-            "sha256": "72ac2d500ce8248e71384046f667ebf6e2ed946403d72900262c8561c4747e21"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S071-qualification-review-1.json",
-            "sha256": "65a7bcb53dc18c7940f1e7d5167955953c779ea49a3ad946c0251b1abb444805",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S071-development-certification-1.json",
+              "sha256": "c1a9f6a3725fdcb1367e0f4be7663df37966035f1161e166cc489975f76b8847"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
@@ -75,14 +87,14 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S075-qualification-review-2.json",
-          "sha256": "a4677c72aaf587f22899f61d175fc1b06040bd59b54f05976dcd3b2353175e48",
+          "path": "implementation/evidence/LS-S075-qualification-certification-2.json",
+          "sha256": "a3e8a03dc4406f1f13a09cbaa0cad93151872c28984c30c1c578b4d1f17af112",
           "ownerSlice": "LS-S075",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/25-assistant-personalization-administration.md",
@@ -90,7 +102,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -98,16 +110,17 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S075-development-review-1.json",
-            "sha256": "284b431b11b5e871c98885c71d25ac8749e32dfbef566e9731461e1c08b79c86"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S075-qualification-review-1.json",
-            "sha256": "99fa4200debe0c76282cd6a3fe0cf8738ec62b330ed0e226b7fd966d7afa04c9",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S075-development-certification-3.json",
+              "sha256": "46d89eab015c5dac9300340d7c1619ffd5667e78b26f2e574c8c907e192cac16"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
@@ -117,14 +130,14 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S069-qualification-review-2.json",
-          "sha256": "73d84aa83046b83a12fd69e5364cb6c6c803506e59d1e33804438960eaa63a5d",
+          "path": "implementation/evidence/LS-S069-qualification-certification-2.json",
+          "sha256": "1aa5f9d9d9304ff81cd70bf4152899bd4a1a85a479c4183d159bf145323e3ba5",
           "ownerSlice": "LS-S069",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/18-standalone-human-authority.md",
@@ -140,27 +153,27 @@
               }
             ]
           },
-          "runtimeEvidence": [],
-          "reuse": {
-            "path": "implementation/evidence/LS-S069-qualification-review-1.json",
-            "sha256": "4c1911cb6826fdbfd1309bcb9da8c18a47728cc88947b7f84a6d84564571c1e7",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         },
         {
-          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
-          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "path": "implementation/evidence/LS-S073-qualification-certification-2.json",
+          "sha256": "deed08282ce32f69cb2c6ed5442113f7ec5974c20f3d67e2bc1d1b9a7d6d6fde",
           "ownerSlice": "LS-S073",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -168,26 +181,27 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S073-development-resume-9.json",
-            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
-            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S073-development-certification-1.json",
+              "sha256": "a774664379649a107bb60b001dc886a961e4afbca8e8a6f40e48005db2aa2524"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         },
         {
-          "path": "implementation/evidence/LS-S075-qualification-review-2.json",
-          "sha256": "a4677c72aaf587f22899f61d175fc1b06040bd59b54f05976dcd3b2353175e48",
+          "path": "implementation/evidence/LS-S075-qualification-certification-2.json",
+          "sha256": "a3e8a03dc4406f1f13a09cbaa0cad93151872c28984c30c1c578b4d1f17af112",
           "ownerSlice": "LS-S075",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/25-assistant-personalization-administration.md",
@@ -195,7 +209,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -203,26 +217,27 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S075-development-review-1.json",
-            "sha256": "284b431b11b5e871c98885c71d25ac8749e32dfbef566e9731461e1c08b79c86"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S075-qualification-review-1.json",
-            "sha256": "99fa4200debe0c76282cd6a3fe0cf8738ec62b330ed0e226b7fd966d7afa04c9",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S075-development-certification-3.json",
+              "sha256": "46d89eab015c5dac9300340d7c1619ffd5667e78b26f2e574c8c907e192cac16"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         },
         {
-          "path": "implementation/evidence/LS-S076-qualification-review-2.json",
-          "sha256": "ed917a2af7a8cfb877eb5b07c2ef84ddd8b59caba8029cd7622637ae1faf7ba9",
+          "path": "implementation/evidence/LS-S076-qualification-certification-2.json",
+          "sha256": "012fcb3e9de93ac61e28cbab07f6b0f08b6509d4734a73b0ef132aea04a21e51",
           "ownerSlice": "LS-S076",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/25-assistant-personalization-administration.md",
@@ -230,7 +245,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -238,26 +253,27 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S076-development-resume-3.json",
-            "sha256": "e9050d2876b21282c874d555e02fc917245d6e460a36000635335d201c6cea72"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S076-qualification-review-1.json",
-            "sha256": "f21e267e69f347002b4413e682b45c77764f6f6dc4073a1e39b2fbb407686a8c",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S076-development-certification-2.json",
+              "sha256": "011ce36b44c0eb7546932a3b91f5127f3f6b673ced5ed44ee1e6c0ea68c3dbe6"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         },
         {
-          "path": "implementation/evidence/LS-S078-qualification-review-2.json",
-          "sha256": "5d35318fbc8b8cbc68b1c03262c2560af2a0b4a91407297c701593f6e7f3bd24",
+          "path": "implementation/evidence/LS-S078-qualification-certification-2.json",
+          "sha256": "3dbca3870674ee2d7d60d4f7f2ed936898f41a9b006871330ea314212e485dee",
           "ownerSlice": "LS-S078",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/25-assistant-personalization-administration.md",
@@ -265,7 +281,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -273,26 +289,27 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S078-development-resume-4.json",
-            "sha256": "1be0f14691b2be49620dc53d9b5608ca9dd44bebfb21986509101f4e93e3416e"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S078-qualification-review-1.json",
-            "sha256": "452ce89f9cef7431ee64d9f107fa27ff6ddae6ecb08d05e258b9c355c379cf4b",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S078-development-certification-2.json",
+              "sha256": "e41b82f970d69f99207d686f98d741479571de8cdd7e47a8236dd4b87594eb00"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         },
         {
-          "path": "implementation/evidence/LS-S079-qualification-review-2.json",
-          "sha256": "499e45e3c4e2b78203b772e2fbbe17303d0683b8780edaf10c197a422384464d",
+          "path": "implementation/evidence/LS-S079-qualification-certification-2.json",
+          "sha256": "edd68eb94361c044b2be3d4cf1330a146aeebab4b4ac74b293de0da00cf85adc",
           "ownerSlice": "LS-S079",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/11-provider-interfaces.md",
@@ -312,7 +329,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -320,23 +337,23 @@
               }
             ]
           },
-          "runtimeEvidence": [],
-          "reuse": {
-            "path": "implementation/evidence/LS-S079-qualification-review-1.json",
-            "sha256": "c44c50531e44f50a424d10d87fd39db1508a2c8b0e138d9259334a4dced9f0a6",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         },
         {
-          "path": "implementation/evidence/LS-S080-qualification-review-2.json",
-          "sha256": "9f208d1630131ef4369822e599f4bf91709c27ee4feaa0432f1394cdc5e344ee",
+          "path": "implementation/evidence/LS-S080-qualification-certification-2.json",
+          "sha256": "5998285e8fa64015af6b9af279ddbe49635194ff0cfe0c5498bb9f96c1c91c12",
           "ownerSlice": "LS-S080",
-          "status": "implementationCompleteVerificationPending",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "status": "verified",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/04-memory-and-dreaming.md",
@@ -368,7 +385,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -378,20 +395,19 @@
           },
           "runtimeEvidence": [
             {
-              "path": "implementation/evidence/LS-S080-development-resume-1.json",
-              "sha256": "ad38160b1fa693734333a2ff458756efab719c597d8109491b0fc9c16b547587"
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
             },
             {
-              "path": "implementation/evidence/LS-S080-audio-development-resume-1.json",
-              "sha256": "3074cd737816b2c1d59131e6fe04a2c896c4ab0bd664554a028097d5d71b4ad7"
+              "path": "implementation/evidence/LS-S080-development-certification-2.json",
+              "sha256": "bf75c1bdfc6bf696f8c30d26d0a496d69f4dd7c1a8b801546bd0ffb6a7ca4486"
+            },
+            {
+              "path": "implementation/evidence/LS-S080-audio-development-certification-1.json",
+              "sha256": "1a79dd5eadc347ff632c468900ffa8a98aebc2f00e4bec725c12618965550a38"
             }
           ],
-          "reuse": {
-            "path": "implementation/evidence/LS-S080-qualification-review-1.json",
-            "sha256": "5fb6ebf83790ab2ab65a1d4c5262c0574d58431ad3f42299ceea2322abc80d20",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ],
       "boundary": "Runtime/security obligations: local subject authentication, scope mapping, approved UserProfile subsets, request/inspector privacy, Lab/readiness artifacts and recovery. S072 schemas alone do not qualify this case."
@@ -402,18 +418,18 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
-          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "path": "implementation/evidence/LS-S073-qualification-certification-2.json",
+          "sha256": "deed08282ce32f69cb2c6ed5442113f7ec5974c20f3d67e2bc1d1b9a7d6d6fde",
           "ownerSlice": "LS-S073",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -421,16 +437,17 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S073-development-resume-9.json",
-            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
-            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S073-development-certification-1.json",
+              "sha256": "a774664379649a107bb60b001dc886a961e4afbca8e8a6f40e48005db2aa2524"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
@@ -440,18 +457,18 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
-          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "path": "implementation/evidence/LS-S073-qualification-certification-2.json",
+          "sha256": "deed08282ce32f69cb2c6ed5442113f7ec5974c20f3d67e2bc1d1b9a7d6d6fde",
           "ownerSlice": "LS-S073",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -459,16 +476,17 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S073-development-resume-9.json",
-            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
-            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S073-development-certification-1.json",
+              "sha256": "a774664379649a107bb60b001dc886a961e4afbca8e8a6f40e48005db2aa2524"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
@@ -478,18 +496,18 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
-          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "path": "implementation/evidence/LS-S073-qualification-certification-2.json",
+          "sha256": "deed08282ce32f69cb2c6ed5442113f7ec5974c20f3d67e2bc1d1b9a7d6d6fde",
           "ownerSlice": "LS-S073",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -497,16 +515,17 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S073-development-resume-9.json",
-            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
-            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S073-development-certification-1.json",
+              "sha256": "a774664379649a107bb60b001dc886a961e4afbca8e8a6f40e48005db2aa2524"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
@@ -516,14 +535,14 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S076-qualification-review-2.json",
-          "sha256": "ed917a2af7a8cfb877eb5b07c2ef84ddd8b59caba8029cd7622637ae1faf7ba9",
+          "path": "implementation/evidence/LS-S076-qualification-certification-2.json",
+          "sha256": "012fcb3e9de93ac61e28cbab07f6b0f08b6509d4734a73b0ef132aea04a21e51",
           "ownerSlice": "LS-S076",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/25-assistant-personalization-administration.md",
@@ -531,7 +550,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -539,16 +558,17 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S076-development-resume-3.json",
-            "sha256": "e9050d2876b21282c874d555e02fc917245d6e460a36000635335d201c6cea72"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S076-qualification-review-1.json",
-            "sha256": "f21e267e69f347002b4413e682b45c77764f6f6dc4073a1e39b2fbb407686a8c",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S076-development-certification-2.json",
+              "sha256": "011ce36b44c0eb7546932a3b91f5127f3f6b673ced5ed44ee1e6c0ea68c3dbe6"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
@@ -558,18 +578,18 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
-          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "path": "implementation/evidence/LS-S073-qualification-certification-2.json",
+          "sha256": "deed08282ce32f69cb2c6ed5442113f7ec5974c20f3d67e2bc1d1b9a7d6d6fde",
           "ownerSlice": "LS-S073",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -577,16 +597,17 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S073-development-resume-9.json",
-            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
-            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S073-development-certification-1.json",
+              "sha256": "a774664379649a107bb60b001dc886a961e4afbca8e8a6f40e48005db2aa2524"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
@@ -596,14 +617,14 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S077-qualification-review-2.json",
-          "sha256": "d19ba1bd6c4d5cf8e357543bf9865d8978cc5b4cba736d96c66bf09e9cf64032",
+          "path": "implementation/evidence/LS-S077-qualification-certification-2.json",
+          "sha256": "283436d4714efc8edcb6a799060ee14e9ea4353dd081bf791c3f728906dcbc78",
           "ownerSlice": "LS-S077",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/25-assistant-personalization-administration.md",
@@ -611,7 +632,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -619,13 +640,13 @@
               }
             ]
           },
-          "runtimeEvidence": [],
-          "reuse": {
-            "path": "implementation/evidence/LS-S077-qualification-review-1.json",
-            "sha256": "e9cdba37e5e937d16386ff82776b1f31f9f4ac58022524b6dd1e76fac5cda9ab",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
@@ -635,14 +656,14 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S077-qualification-review-2.json",
-          "sha256": "d19ba1bd6c4d5cf8e357543bf9865d8978cc5b4cba736d96c66bf09e9cf64032",
+          "path": "implementation/evidence/LS-S077-qualification-certification-2.json",
+          "sha256": "283436d4714efc8edcb6a799060ee14e9ea4353dd081bf791c3f728906dcbc78",
           "ownerSlice": "LS-S077",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/25-assistant-personalization-administration.md",
@@ -650,7 +671,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -658,13 +679,13 @@
               }
             ]
           },
-          "runtimeEvidence": [],
-          "reuse": {
-            "path": "implementation/evidence/LS-S077-qualification-review-1.json",
-            "sha256": "e9cdba37e5e937d16386ff82776b1f31f9f4ac58022524b6dd1e76fac5cda9ab",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
@@ -674,14 +695,14 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S078-qualification-review-2.json",
-          "sha256": "5d35318fbc8b8cbc68b1c03262c2560af2a0b4a91407297c701593f6e7f3bd24",
+          "path": "implementation/evidence/LS-S078-qualification-certification-2.json",
+          "sha256": "3dbca3870674ee2d7d60d4f7f2ed936898f41a9b006871330ea314212e485dee",
           "ownerSlice": "LS-S078",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/25-assistant-personalization-administration.md",
@@ -689,7 +710,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -697,16 +718,17 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S078-development-resume-4.json",
-            "sha256": "1be0f14691b2be49620dc53d9b5608ca9dd44bebfb21986509101f4e93e3416e"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S078-qualification-review-1.json",
-            "sha256": "452ce89f9cef7431ee64d9f107fa27ff6ddae6ecb08d05e258b9c355c379cf4b",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S078-development-certification-2.json",
+              "sha256": "e41b82f970d69f99207d686f98d741479571de8cdd7e47a8236dd4b87594eb00"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
@@ -716,18 +738,18 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
-          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "path": "implementation/evidence/LS-S073-qualification-certification-2.json",
+          "sha256": "deed08282ce32f69cb2c6ed5442113f7ec5974c20f3d67e2bc1d1b9a7d6d6fde",
           "ownerSlice": "LS-S073",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -735,16 +757,17 @@
               }
             ]
           },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S073-development-resume-9.json",
-            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
-            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            },
+            {
+              "path": "implementation/evidence/LS-S073-development-certification-1.json",
+              "sha256": "a774664379649a107bb60b001dc886a961e4afbca8e8a6f40e48005db2aa2524"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
@@ -754,14 +777,14 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S074-qualification-review-2.json",
-          "sha256": "6e4c29628e9d74df0a723ffa36f2058948158e3cbcdc3fd684edeeaafa53b022",
+          "path": "implementation/evidence/LS-S074-qualification-certification-2.json",
+          "sha256": "1d261eb2441a29404f1dd21458af9502b44e0ff7f62fd08027efb9cede621edc",
           "ownerSlice": "LS-S074",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/04-memory-and-dreaming.md",
@@ -777,7 +800,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -785,30 +808,30 @@
               }
             ]
           },
-          "runtimeEvidence": [],
-          "reuse": {
-            "path": "implementation/evidence/LS-S074-qualification-review-1.json",
-            "sha256": "a5d6ae081ae8cd4d2056064933024418344234eb9195822055283a8ba6e64f82",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
     {
       "caseId": "LS-TEST-102",
-      "status": "implementationCompleteVerificationPending",
+      "status": "verified",
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S080-qualification-review-2.json",
-          "sha256": "9f208d1630131ef4369822e599f4bf91709c27ee4feaa0432f1394cdc5e344ee",
+          "path": "implementation/evidence/LS-S080-qualification-certification-2.json",
+          "sha256": "5998285e8fa64015af6b9af279ddbe49635194ff0cfe0c5498bb9f96c1c91c12",
           "ownerSlice": "LS-S080",
-          "status": "implementationCompleteVerificationPending",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "status": "verified",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/04-memory-and-dreaming.md",
@@ -840,7 +863,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -850,20 +873,19 @@
           },
           "runtimeEvidence": [
             {
-              "path": "implementation/evidence/LS-S080-development-resume-1.json",
-              "sha256": "ad38160b1fa693734333a2ff458756efab719c597d8109491b0fc9c16b547587"
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
             },
             {
-              "path": "implementation/evidence/LS-S080-audio-development-resume-1.json",
-              "sha256": "3074cd737816b2c1d59131e6fe04a2c896c4ab0bd664554a028097d5d71b4ad7"
+              "path": "implementation/evidence/LS-S080-development-certification-2.json",
+              "sha256": "bf75c1bdfc6bf696f8c30d26d0a496d69f4dd7c1a8b801546bd0ffb6a7ca4486"
+            },
+            {
+              "path": "implementation/evidence/LS-S080-audio-development-certification-1.json",
+              "sha256": "1a79dd5eadc347ff632c468900ffa8a98aebc2f00e4bec725c12618965550a38"
             }
           ],
-          "reuse": {
-            "path": "implementation/evidence/LS-S080-qualification-review-1.json",
-            "sha256": "5fb6ebf83790ab2ab65a1d4c5262c0574d58431ad3f42299ceea2322abc80d20",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ],
       "humanReview": {
@@ -879,14 +901,14 @@
       "claimClass": "runtime-contract-readiness",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S079-qualification-review-2.json",
-          "sha256": "499e45e3c4e2b78203b772e2fbbe17303d0683b8780edaf10c197a422384464d",
+          "path": "implementation/evidence/LS-S079-qualification-certification-2.json",
+          "sha256": "edd68eb94361c044b2be3d4cf1330a146aeebab4b4ac74b293de0da00cf85adc",
           "ownerSlice": "LS-S079",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/11-provider-interfaces.md",
@@ -906,7 +928,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -914,30 +936,30 @@
               }
             ]
           },
-          "runtimeEvidence": [],
-          "reuse": {
-            "path": "implementation/evidence/LS-S079-qualification-review-1.json",
-            "sha256": "c44c50531e44f50a424d10d87fd39db1508a2c8b0e138d9259334a4dced9f0a6",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            }
+          ],
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ]
     },
     {
       "caseId": "LS-TEST-104",
-      "status": "implementationCompleteVerificationPending",
+      "status": "verified",
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S080-qualification-review-2.json",
-          "sha256": "9f208d1630131ef4369822e599f4bf91709c27ee4feaa0432f1394cdc5e344ee",
+          "path": "implementation/evidence/LS-S080-qualification-certification-2.json",
+          "sha256": "5998285e8fa64015af6b9af279ddbe49635194ff0cfe0c5498bb9f96c1c91c12",
           "ownerSlice": "LS-S080",
-          "status": "implementationCompleteVerificationPending",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "status": "verified",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/04-memory-and-dreaming.md",
@@ -969,7 +991,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -979,20 +1001,19 @@
           },
           "runtimeEvidence": [
             {
-              "path": "implementation/evidence/LS-S080-development-resume-1.json",
-              "sha256": "ad38160b1fa693734333a2ff458756efab719c597d8109491b0fc9c16b547587"
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
             },
             {
-              "path": "implementation/evidence/LS-S080-audio-development-resume-1.json",
-              "sha256": "3074cd737816b2c1d59131e6fe04a2c896c4ab0bd664554a028097d5d71b4ad7"
+              "path": "implementation/evidence/LS-S080-development-certification-2.json",
+              "sha256": "bf75c1bdfc6bf696f8c30d26d0a496d69f4dd7c1a8b801546bd0ffb6a7ca4486"
+            },
+            {
+              "path": "implementation/evidence/LS-S080-audio-development-certification-1.json",
+              "sha256": "1a79dd5eadc347ff632c468900ffa8a98aebc2f00e4bec725c12618965550a38"
             }
           ],
-          "reuse": {
-            "path": "implementation/evidence/LS-S080-qualification-review-1.json",
-            "sha256": "5fb6ebf83790ab2ab65a1d4c5262c0574d58431ad3f42299ceea2322abc80d20",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
         }
       ],
       "humanReview": {
@@ -1008,14 +1029,14 @@
       "claimClass": "technical-core",
       "proofs": [
         {
-          "path": "implementation/evidence/LS-S076-qualification-review-2.json",
-          "sha256": "ed917a2af7a8cfb877eb5b07c2ef84ddd8b59caba8029cd7622637ae1faf7ba9",
+          "path": "implementation/evidence/LS-S076-qualification-certification-2.json",
+          "sha256": "012fcb3e9de93ac61e28cbab07f6b0f08b6509d4734a73b0ef132aea04a21e51",
           "ownerSlice": "LS-S076",
           "status": "verified",
-          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "testedRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
           "effectiveSpecification": {
             "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "revision": "d8f5176f3721ef77978d615bcf56487b89d546ab",
             "artifacts": [
               {
                 "path": "docs/25-assistant-personalization-administration.md",
@@ -1023,49 +1044,7 @@
               },
               {
                 "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
-              },
-              {
-                "path": "fixtures/requirement-traceability.json",
-                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
-              }
-            ]
-          },
-          "runtimeEvidence": {
-            "path": "implementation/evidence/LS-S076-development-resume-3.json",
-            "sha256": "e9050d2876b21282c874d555e02fc917245d6e460a36000635335d201c6cea72"
-          },
-          "reuse": {
-            "path": "implementation/evidence/LS-S076-qualification-review-1.json",
-            "sha256": "f21e267e69f347002b4413e682b45c77764f6f6dc4073a1e39b2fbb407686a8c",
-            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
-            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
-          }
-        }
-      ]
-    },
-    {
-      "caseId": "LS-TEST-106",
-      "status": "blockedEnvironment",
-      "claimClass": "technical-core",
-      "proofs": [
-        {
-          "path": "implementation/evidence/LS-S081-qualification-case-acceptance-1.json",
-          "sha256": "8af7e9b44db2b1a66afe8189112243a2248546d5296b75942c5f577a06ffe194",
-          "ownerSlice": "LS-S081",
-          "status": "blockedEnvironment",
-          "testedRevision": "d9d88d9aff10e6c2aa9386a1ae4103b156c4fd75",
-          "effectiveSpecification": {
-            "sourceRepository": "ggilchrest/lifestream-specs",
-            "revision": "4034a2e5f4ded199b321f4903ec80a8dd2170a8e",
-            "artifacts": [
-              {
-                "path": "docs/14-acceptance-strategy.md",
-                "sha256": "5eb947437a2fa4c67e969f1ff7406a360b3392f1691d8b995b442a9d8d229259"
-              },
-              {
-                "path": "docs/26-assistant-context-and-relationship-administration.md",
-                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
               },
               {
                 "path": "fixtures/requirement-traceability.json",
@@ -1075,19 +1054,62 @@
           },
           "runtimeEvidence": [
             {
-              "path": "implementation/evidence/LS-S081-development-failed-review-1.json",
-              "sha256": "4591265974d621d664cc288e78cce9eb1d3eaf93b716f4ac03277ab6d7271f70"
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
             },
             {
-              "path": "implementation/evidence/LS-S081-development-review-2.json",
-              "sha256": "1421f8454f002bd9fa378f62a126bb3e5bc51bd311c48b0418ca698c544257ba"
-            },
-            {
-              "path": "implementation/evidence/LS-S081-continuation-review-1.json",
-              "sha256": "b9bb937e042098169e6c05a5781c064d8b63aa5855952cd18d99c2a15015ebf4"
+              "path": "implementation/evidence/LS-S076-development-certification-2.json",
+              "sha256": "011ce36b44c0eb7546932a3b91f5127f3f6b673ced5ed44ee1e6c0ea68c3dbe6"
             }
           ],
-          "reuse": null
+          "reuse": "Fresh source-bound successor after control-room UI redesign; old receipts retained unchanged. Current owner checks evaluated independently; S081 must also satisfy the complete dependency path. Selection race regression fails on old code and passes with this source. Model quality is nonblocking by explicit operator direction."
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-106",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S081-qualification-certification-1.json",
+          "sha256": "99b26eab986772230651c2cb8a546103eb362e306ec5001371110ea21330c995",
+          "ownerSlice": "LS-S081",
+          "status": "verified",
+          "testedRevision": "60ece410816836d5641153bf6364055a080d7497",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "16e80cdf2acac2a1b22eb24c59eb84b12e660ade",
+            "artifacts": [
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/LS-S081-development-certification-2.json",
+              "sha256": "3f1be803e582a8e1e829348c4822022eb3dca7746c4966b18985227ea7497c14"
+            },
+            {
+              "path": "implementation/evidence/LS-S075-selection-race-1.json",
+              "sha256": "ff19df106b179742bce2b33cf3d5e44913a74e1aea5c39936c5685b83051c358"
+            },
+            {
+              "path": "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
+              "sha256": "41253f399fcf98154887ca11fee40cbaca5a85e832e19d5bda45d32d0d1429dc"
+            }
+          ],
+          "reuse": "Joined technical core at the stated runtime and test source. Human review and its guide are separate artifacts; model compliance is observed, nonblocking and not certified as reliable."
         }
       ],
       "humanReview": {
@@ -1112,22 +1134,16 @@
   },
   "guide": {
     "path": "docs/human-testing-guide.html",
-    "acceptanceReady": false,
+    "acceptanceReady": true,
     "humanAcceptance": "accepted",
-    "acceptanceReadyMeaning": "Readiness of complete technical qualification; Human acceptance is now separately recorded as accepted."
+    "acceptanceReadyMeaning": "The bounded technical core has a completed joined certificate; the previously submitted Human review remains accepted.",
+    "sha256": "e372ab3ee8badcf69d2da5f4a655ab8b7da70b8d8694d887bffecff82785436e"
   },
-  "unresolved": {
-    "caseId": "LS-TEST-106",
-    "classification": "joined selected-provider reply-completion failure",
-    "requirement": "Complete the full joined rendered selected-provider journey under the operator-amended Lab capitalization criterion.",
-    "source": "apps/control-web/test/relationship-joined.test.mjs",
-    "independentWork": "Human review completed: all eleven steps passed and explicit combined acceptance recorded. Remaining work concerns separate revision-bound selected-provider qualification.",
-    "recommendedNextStep": "Diagnose and requalify joined skipped-Assistant reply completion. Capitalization-only Lab output differences are accepted and no longer block this core. Keep model, live configuration, deadlines, identity and privacy criteria unchanged."
-  },
+  "unresolved": null,
   "exclusions": [
-    "No fresh full joined selected-provider qualification. Human acceptance is recorded separately; earlier Green Finch, literal timeout and joined failures remain preserved.",
-    "No private input, physical capture/playback, training, learned-quality, production, performance certification, deployment, pushes or provider service/configuration change.",
-    "S083/S084 remain later adopted scope; S082/S065 and S056/S070 retain separate training and product gates."
+    "No physical microphone/acoustic/perceptual/performance, training, learned-quality or production acceptance.",
+    "S083/S084 remain later adopted scope; S082/S065 training and existing S056/S070 product gates remain separate.",
+    "No personal data import, live provider configuration changes or deployment. Scoped public/private commits are pushed only under the operator request."
   ],
   "operatorAcceptance": {
     "path": "implementation/evidence/LS-S081-case-acceptance-1.json",
@@ -1139,6 +1155,14 @@
     "exportedAt": "2026-09-14T14:59:03.050Z",
     "allStepsPassed": true
   },
-  "updatedAt": "2026-09-14T15:02:06.234809Z",
-  "sourceRevisionScope": "Retained technical-qualification baseline. The separately linked Human receipt records the later operator review."
+  "updatedAt": "2026-09-14T15:46:45.394161Z",
+  "sourceRevisionScope": "Joined source/test revision; earlier owner provider executions retain their actual revisions and exact input applicability in each successor.",
+  "operatorModelPolicy": {
+    "path": "implementation/evidence/LS-S075-model-observation-policy-1.json",
+    "sha256": "685411a30fe1795648b0e513e64aba4af534e6d7dc14f22bb1828d72c742e799"
+  },
+  "modelQualityTracking": {
+    "path": "implementation/evidence/MODEL-QUALITY-TRACKING.json",
+    "sha256": "f0ac5077bf628075ac447598202e58a865da87767e053386c217719cf26dedcc"
+  }
 }

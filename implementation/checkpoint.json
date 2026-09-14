@@ -3,9 +3,9 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "f4e8a6a192e21c7104de94a0209c3e96228e903b",
-  "currentRevision": "ddaca6ae4ed25566cee8b079ea14ef510ce6fd51",
+  "currentRevision": "60ece410816836d5641153bf6364055a080d7497",
   "activeSlice": "LS-S081",
-  "sliceStatus": "inProgress",
+  "sliceStatus": "verified",
   "completedSlices": [
     "LS-S001",
     "LS-S002",
@@ -71,7 +71,8 @@
     "LS-S071",
     "LS-S073",
     "LS-S080",
-    "LS-S075"
+    "LS-S075",
+    "LS-S081"
   ],
   "allowedFiles": [
     "tests/relationship-acceptance.test.ts",
@@ -113,16 +114,40 @@
     "scripts/summarize-model-quality.mjs",
     "apps/control-web/test/assistant-selection.test.mjs",
     "implementation/evidence/LS-S081-development-certification-1.json",
-    "implementation/evidence/LS-S075-selection-race-1.json"
+    "implementation/evidence/LS-S075-selection-race-1.json",
+    "implementation/evidence/LS-S081-development-certification-2.json",
+    "implementation/evidence/LS-S081-qualification-certification-1.json"
   ],
   "changedFiles": [
-    "implementation/checkpoint.json"
+    "implementation/evidence/LS-S081-development-certification-2.json",
+    "implementation/evidence/LS-S081-qualification-certification-1.json",
+    "docs/human-testing-guide.html",
+    "implementation/checkpoint.json",
+    "implementation/evidence/LS-S081-current-qualification.json",
+    "implementation/evidence/MODEL-QUALITY-TRACKING.json",
+    "implementation/evidence/RECOVERY-V2-CASE-INDEX.json",
+    "implementation/evidence/RECOVERY-V2-STATUS.md"
   ],
   "validation": [
     {
-      "command": "Delayed-selection regression; complete browser/source validation",
+      "command": "node scripts/workspace.mjs preflight LS-S081",
       "result": "pass",
-      "evidence": "New regression fails on old source and passes on the repair. All 25 browser and 267 source tests pass; build/typecheck/lint/specification validation pass."
+      "evidence": "Current required owner qualifications, exact committed artifacts and specification inputs passed admission before this joined run."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs node scripts/qualify-s081-development.mjs",
+      "result": "pass",
+      "evidence": "The full joined authenticated ai5090 browser journey completed, including selected-file admission, ordinary replies, records, controls, insights, actual comparisons/rejection/promotion/rollback, correction/audience/forget fences, failure recovery, restart, skipped Assistant and other-account read denial. Identifier model-quality misses are recorded separately under the operator-directed nonblocking policy."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface; pnpm test; pnpm build; pnpm typecheck; pnpm lint",
+      "result": "pass",
+      "evidence": "25 browser and 267 source tests plus build/typecheck/lint pass on the exact committed selection-repair artifacts. Source proof and execution revisions are linked in the predecessor owner receipt and shared selection certification."
+    },
+    {
+      "command": "Final case/source/receipt integrity audit and guide browser inspection",
+      "result": "pass",
+      "evidence": "All 18 core case rows link verified current owner proofs; source/receipt hashes match committed revisions. Guide status and 11 review fields render without overflow at 1360px and 390px. Accepted Human export and original dirty artifacts are byte-identical."
     }
   ],
   "decisions": [
@@ -135,8 +160,8 @@
     "2026-09-14: operator directs identifier-output compliance failures to nonblocking model-quality tracking and model selection after development. Prepared input, privacy and application completion remain hard requirements."
   ],
   "blockers": [],
-  "nextAction": "Repeat the full joined selected-provider journey after the qualified Assistant-selection repair; model identifier observations remain nonblocking.",
-  "updatedAt": "2026-09-14T15:40:55.085387Z",
+  "nextAction": "Bounded recovery through S081 is technically verified and combined Human review is accepted. Preserve later adopted S083/S084 scope and separate training/product/production gates. Model-compliance tracking remains active for future qualification runs.",
+  "updatedAt": "2026-09-14T15:46:45.394161Z",
   "updatedBy": "Codex",
-  "notes": "Human acceptance recorded from the exact submitted export and explicit operator confirmation. Earlier partial review and UI feedback retained. Historical selected-provider qualification remains separate and unchanged."
+  "notes": "Full joined selected-provider run passes after repairing the Assistant-selection race. Model misses are preserved and nonblocking. No shared provider configuration or accepted review data changed."
 }

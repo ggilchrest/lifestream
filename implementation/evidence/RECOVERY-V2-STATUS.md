@@ -1,3 +1,13 @@
+# Current recovery certification — 2026-09-14
+
+The full S081/LS-TEST-106 selected-provider journey passes at `60ece410816836d5641153bf6364055a080d7497` on ai5090. All immediate prerequisites have current, digest-bound owner qualifications. Combined Human acceptance remains recorded independently; no repeat operator testing is required for this bounded recovery.
+
+The run discovered and repaired a late Assistant-selection response race under S075. Its delayed-response regression fails against prior code and passes with the fix; 25 browser tests and 267 source tests pass. The complete joined journey now includes the formerly failing separate skipped-Assistant step.
+
+Model identifier response compliance is nonblocking by explicit operator direction. The append-only runtime reports and `MODEL-QUALITY-TRACKING.json` retain exact, capitalization-only and missing-identifier observations, with incomplete historical coverage stated. No provider/model setting was changed. Scoped changes have been pushed under the subsequent explicit operator authorization. S083/S084, real training, physical/perceptual/performance and production gates remain separate.
+
+Earlier chronological snapshots follow; their pending/blocked statuses are historical.
+
 # Combined Human review accepted — 2026-09-14
 
 The operator submitted all eleven guide steps as passed and an explicit accepted decision, then confirmed: “done. testing passes”. Combined **S080/S081 Human acceptance is recorded** in [the acceptance receipt](LS-S081-human-acceptance-1.json). The original export and earlier partial review are preserved in the independent private repository. Earlier UI comments remain review history; the final decision contains no additional exclusions or needs-changes results.

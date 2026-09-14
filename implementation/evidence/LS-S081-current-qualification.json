@@ -1,6 +1,6 @@
 {
   "kind": "current-qualification",
   "slice": "LS-S081",
-  "path": "implementation/evidence/LS-S081-qualification-case-acceptance-1.json",
-  "sha256": "8af7e9b44db2b1a66afe8189112243a2248546d5296b75942c5f577a06ffe194"
+  "path": "implementation/evidence/LS-S081-qualification-certification-1.json",
+  "sha256": "99b26eab986772230651c2cb8a546103eb362e306ec5001371110ea21330c995"
 }
