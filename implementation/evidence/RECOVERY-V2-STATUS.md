@@ -1,5 +1,7 @@
 # Recovery v2 technical status
 
+**Literal-test follow-up:** the operator requested an explicit exact-text test with opaque synthetic identifiers. [Source commit](../../apps/control-web/test/relationship-administration.test.mjs) `8139470c2f756313c09dda0bdffbe1f9649e059e` uses `SYNPRJ_Q7M4`, supplied only through the approved preference. The fixture browser test passed. The [first selected-provider attempt](LS-S075-literal-development-1.json) timed out before admission; the [second attempt](LS-S075-literal-development-2.json) passed three consecutive literal replies and the pre-admission/other-Assistant negatives. Full qualification refresh and S081 remain pending. The snapshot below records the earlier Green Finch failure and is retained as history.
+
 The run stops at a selected-provider qualification failure in **LS-S075 / LS-TEST-090**. It is not ready for combined S080/S081 Human review. All currently independent implementation and qualification work through S080 has been completed; S081 remains behind its failed prerequisite.
 
 Tested implementation: `b74358aed81bcc8b20aea5c840180f9914ce41c3`. S080 implementation commit: `db55a4453d92bc4a9ae4daeef85b687c5ea42b94`. Source-bound qualifications identify their effective private specification commit and artifact hashes; the private metadata commit at collection was `a272ad464c3c3b681454af688d14d2b680ac79ea`. Later receipt/checkpoint commits are not falsely presented as the tested implementation.

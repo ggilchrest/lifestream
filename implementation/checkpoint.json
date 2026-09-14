@@ -2,10 +2,10 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "55772644975008f2094afc04e70237d4426dea5f",
-  "currentRevision": "55772644975008f2094afc04e70237d4426dea5f",
+  "baseRevision": "8139470c2f756313c09dda0bdffbe1f9649e059e",
+  "currentRevision": "8139470c2f756313c09dda0bdffbe1f9649e059e",
   "activeSlice": "LS-S075",
-  "sliceStatus": "blocked",
+  "sliceStatus": "implemented",
   "completedSlices": [
     "LS-S001",
     "LS-S002",
@@ -118,44 +118,31 @@
     "implementation/evidence/LS-S080-development-resume-1.json",
     "implementation/evidence/LS-S080-audio-development-resume-1.json",
     "implementation/evidence/RECOVERY-V2-STATUS.md",
-    "implementation/evidence/LS-S075-qualification-resume-4.json"
+    "implementation/evidence/LS-S075-qualification-resume-4.json",
+    "implementation/evidence/LS-S075-literal-development-1.json",
+    "implementation/evidence/LS-S075-literal-development-2.json"
   ],
   "changedFiles": [],
   "validation": [
     {
-      "command": "pnpm test",
+      "command": "pnpm exec eslint apps/control-web/test/relationship-administration.test.mjs; git diff --check -- apps/control-web/test/relationship-administration.test.mjs",
       "result": "pass",
-      "evidence": "267 source tests at b74358aed81bcc8b20aea5c840180f9914ce41c3."
+      "evidence": "Requested literal test change passed targeted lint and whitespace checks."
     },
     {
-      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs node --test apps/control-web/test/relationship-administration.test.mjs",
       "result": "pass",
-      "evidence": "21 browser tests; real local authentication and rendered administration with fixture inference."
+      "evidence": "Actual rendered real-authentication journey passed using fixture inference; literal matcher separately rejects incorrect case, truncation, extension and superseded identifier."
     },
     {
-      "command": "node --test scripts/workspace.test.mjs",
-      "result": "pass",
-      "evidence": "43 evidence-tooling tests; committed qualification integrity remains independently checked."
-    },
-    {
-      "command": "pnpm build; pnpm typecheck; pnpm lint; node scripts/workspace.mjs check; git diff --check",
-      "result": "pass",
-      "evidence": "Source checks passed; public effective source remains b74358aed81bcc8b20aea5c840180f9914ce41c3."
-    },
-    {
-      "command": "node scripts/qualify-s075-development.mjs",
+      "command": "node scripts/qualify-s075-development.mjs (literal attempt 1)",
       "result": "fail",
-      "evidence": "implementation/evidence/LS-S075-development-failed-resume-4.json: actual prepared request contained admitted Green Finch, but a repeated ordinary selected-provider reply omitted the approved project label."
+      "evidence": "implementation/evidence/LS-S075-literal-development-1.json: unchanged selected-provider deadline exceeded before the reviewed preference was admitted; literal criterion was not reached."
     },
     {
-      "command": "node scripts/qualify-s080-development.mjs; node scripts/qualify-s080-audio-development.mjs",
+      "command": "node scripts/qualify-s075-development.mjs (literal attempt 2)",
       "result": "pass",
-      "evidence": "Selected-provider text/audio forgetting fences and continued synthetic conversation passed; objective 102/104 only, combined Human acceptance pending."
-    },
-    {
-      "command": "LS-S081 / LS-TEST-106 joined rendered acceptance",
-      "result": "blocked",
-      "evidence": "Current S075 prerequisite is not qualified; do not fall back to its preserved older success."
+      "evidence": "implementation/evidence/LS-S075-literal-development-2.json: exact identifier in all three consecutive admitted replies; absent before admission and in other-Assistant reply. No model, sampling or deadline changes."
     }
   ],
   "decisions": [
@@ -164,11 +151,9 @@
     "2026-09-11: LS-DEC-040 expanded scope adopted in the independent specification repository; this pass is documentation/planning only. No new implementation, scenario acceptance, provider/model choice or execution permission is implied. Canonical specification adoption commit: 30f8605a8a94f7ab6a45a832885008551ec91411.",
     "2026-09-13 replacement recovery v2 executes the bounded core batch through S081. Prior planning-only holds are historical. S083/S084 remain later adopted scope. Scoped local commits only; no push/deployment/live configuration/import/training or Human acceptance."
   ],
-  "blockers": [
-    "LS-S075 / LS-TEST-090 selected-provider behavioral qualification failed at b74358aed81bcc8b20aea5c840180f9914ce41c3: approved Green Finch reached the actual prepared request, but a repeated ordinary Python reply omitted it. Real administration and all other independent current producer/S080 checks pass. S081 requires current S075 qualification; no model/configuration substitution or lowered criterion is authorized."
-  ],
-  "nextAction": "Waiting at the observed selected-provider criterion. Review the preserved actual request/output failure and the existing request-policy/provider behavior, resolve LS-TEST-090 within an explicitly reviewed bounded approach, then requalify affected owners and execute S081. Do not repeat broad reconciliation or request Human acceptance before the joined run.",
-  "updatedAt": "2026-09-13T09:57:02.892340Z",
+  "blockers": [],
+  "nextAction": "Refresh S075 current qualification for the operator-requested literal criterion, preserving failed and successful observations and unrelated voice-sidecar edits; execute S081 only after its current prerequisite proof is sufficient.",
+  "updatedAt": "2026-09-14T02:11:29.742409Z",
   "updatedBy": "Codex",
-  "notes": "Run disposition: waiting after independent work and scoped local commits, per latest operator instruction. S080 membership records only objective 102/104 technical prerequisite completion; its immutable qualification remains implementationCompleteVerificationPending for the paired Human review. S075 prior completion is historical and is not current proof. S081 remains unexecuted; S083/S084 remain later adopted scope. No push, deployment, live configuration changes, personal import, training or Human acceptance."
+  "notes": "Requested literal test adjustment is implemented and locally committed. Fixture browser and selected-provider rerun pass; first provider attempt hit the unchanged deadline before admission. Historical Green Finch failure and its selector remain preserved pending formal qualification refresh. Implementation status means verification/qualification pending, not full S075 or S081 acceptance. Unrelated voice-sidecar dirty paths were not edited or staged. No push, live configuration change or Human acceptance."
 }
