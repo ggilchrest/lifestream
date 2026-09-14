@@ -1,0 +1,1112 @@
+{
+  "schemaVersion": "1.0.0",
+  "scope": "Recovery v2 existing dependency path through LS-S081",
+  "technicalCoreStatus": "blockedEnvironment",
+  "humanAcceptance": "pending",
+  "sourceRevision": "6dc2b8f5ce9c0629eb729c0842ea88bea14280c1",
+  "selectedProfile": {
+    "path": "apps/server/src/config/profiles/ai5090.json",
+    "sha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd"
+  },
+  "checks": {
+    "sourceTests": 267,
+    "browserTests": 23,
+    "evidenceToolingTests": 43,
+    "browserVerification": "23/23 pass at 3429162; full suite includes the joined fixture journey and independent isolation component."
+  },
+  "cases": [
+    {
+      "caseId": "LS-TEST-089",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S071-qualification-review-2.json",
+          "sha256": "732a398357b702e332539acc799ae9aea47b9c2d72b6a680b44c5f3e451658af",
+          "ownerSlice": "LS-S071",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/05-runtime-and-cognition.md",
+                "sha256": "edda0379c414e53b680289e36ff94dfe479b441b5bb97e705e3384ca354d00ef"
+              },
+              {
+                "path": "docs/11-provider-interfaces.md",
+                "sha256": "0cb8f5b86bf7b4d94e565d256a5928092adf3e29a61607c3c84df4a4cf56c44d"
+              },
+              {
+                "path": "docs/16-decision-register.md",
+                "sha256": "06cade6dddd416b089ab699c3aede41f30b3f2699f0b6b75dc7423864ef4753b"
+              },
+              {
+                "path": "docs/24-reference-speech-hardware-and-inference.md",
+                "sha256": "277dbda4e553f9f529f3c927e49b8365dc33a7823da666f6f95e9eaf86b91cff"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S071-development-resume-6.json",
+            "sha256": "72ac2d500ce8248e71384046f667ebf6e2ed946403d72900262c8561c4747e21"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S071-qualification-review-1.json",
+            "sha256": "65a7bcb53dc18c7940f1e7d5167955953c779ea49a3ad946c0251b1abb444805",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-090",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S075-qualification-review-2.json",
+          "sha256": "a4677c72aaf587f22899f61d175fc1b06040bd59b54f05976dcd3b2353175e48",
+          "ownerSlice": "LS-S075",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S075-development-review-1.json",
+            "sha256": "284b431b11b5e871c98885c71d25ac8749e32dfbef566e9731461e1c08b79c86"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S075-qualification-review-1.json",
+            "sha256": "99fa4200debe0c76282cd6a3fe0cf8738ec62b330ed0e226b7fd966d7afa04c9",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-091",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S069-qualification-review-2.json",
+          "sha256": "73d84aa83046b83a12fd69e5364cb6c6c803506e59d1e33804438960eaa63a5d",
+          "ownerSlice": "LS-S069",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/18-standalone-human-authority.md",
+                "sha256": "5e7254060d15bd6be3ebce5ad4e758c096b683ecbad55a2a90b9c95ccfa44fac"
+              },
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [],
+          "reuse": {
+            "path": "implementation/evidence/LS-S069-qualification-review-1.json",
+            "sha256": "4c1911cb6826fdbfd1309bcb9da8c18a47728cc88947b7f84a6d84564571c1e7",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        },
+        {
+          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
+          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "ownerSlice": "LS-S073",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S073-development-resume-9.json",
+            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
+            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        },
+        {
+          "path": "implementation/evidence/LS-S075-qualification-review-2.json",
+          "sha256": "a4677c72aaf587f22899f61d175fc1b06040bd59b54f05976dcd3b2353175e48",
+          "ownerSlice": "LS-S075",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S075-development-review-1.json",
+            "sha256": "284b431b11b5e871c98885c71d25ac8749e32dfbef566e9731461e1c08b79c86"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S075-qualification-review-1.json",
+            "sha256": "99fa4200debe0c76282cd6a3fe0cf8738ec62b330ed0e226b7fd966d7afa04c9",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        },
+        {
+          "path": "implementation/evidence/LS-S076-qualification-review-2.json",
+          "sha256": "ed917a2af7a8cfb877eb5b07c2ef84ddd8b59caba8029cd7622637ae1faf7ba9",
+          "ownerSlice": "LS-S076",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S076-development-resume-3.json",
+            "sha256": "e9050d2876b21282c874d555e02fc917245d6e460a36000635335d201c6cea72"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S076-qualification-review-1.json",
+            "sha256": "f21e267e69f347002b4413e682b45c77764f6f6dc4073a1e39b2fbb407686a8c",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        },
+        {
+          "path": "implementation/evidence/LS-S078-qualification-review-2.json",
+          "sha256": "5d35318fbc8b8cbc68b1c03262c2560af2a0b4a91407297c701593f6e7f3bd24",
+          "ownerSlice": "LS-S078",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S078-development-resume-4.json",
+            "sha256": "1be0f14691b2be49620dc53d9b5608ca9dd44bebfb21986509101f4e93e3416e"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S078-qualification-review-1.json",
+            "sha256": "452ce89f9cef7431ee64d9f107fa27ff6ddae6ecb08d05e258b9c355c379cf4b",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        },
+        {
+          "path": "implementation/evidence/LS-S079-qualification-review-2.json",
+          "sha256": "499e45e3c4e2b78203b772e2fbbe17303d0683b8780edaf10c197a422384464d",
+          "ownerSlice": "LS-S079",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/11-provider-interfaces.md",
+                "sha256": "0cb8f5b86bf7b4d94e565d256a5928092adf3e29a61607c3c84df4a4cf56c44d"
+              },
+              {
+                "path": "docs/12-security-and-trust.md",
+                "sha256": "67a3b094f28d0697db9e720501376616425f85ff3240c8ecd813e07f6d8c4e0b"
+              },
+              {
+                "path": "docs/15-compatibility-and-migration.md",
+                "sha256": "96cbe59c7a64f488796bd4bf9305286bcc14a7ec01fe810cf82267e3227f70c4"
+              },
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [],
+          "reuse": {
+            "path": "implementation/evidence/LS-S079-qualification-review-1.json",
+            "sha256": "c44c50531e44f50a424d10d87fd39db1508a2c8b0e138d9259334a4dced9f0a6",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        },
+        {
+          "path": "implementation/evidence/LS-S080-qualification-review-2.json",
+          "sha256": "9f208d1630131ef4369822e599f4bf91709c27ee4feaa0432f1394cdc5e344ee",
+          "ownerSlice": "LS-S080",
+          "status": "implementationCompleteVerificationPending",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/04-memory-and-dreaming.md",
+                "sha256": "6705718a8071eee52a70878f306ec52381a3caac5c4bee517f208f6452defe5f"
+              },
+              {
+                "path": "docs/11-provider-interfaces.md",
+                "sha256": "0cb8f5b86bf7b4d94e565d256a5928092adf3e29a61607c3c84df4a4cf56c44d"
+              },
+              {
+                "path": "docs/12-security-and-trust.md",
+                "sha256": "67a3b094f28d0697db9e720501376616425f85ff3240c8ecd813e07f6d8c4e0b"
+              },
+              {
+                "path": "docs/13-deployment-and-configuration.md",
+                "sha256": "ce961b2b6377b953b50eaa3d4e03e107892dab18163bbd9de5d94b47d7d77328"
+              },
+              {
+                "path": "docs/15-compatibility-and-migration.md",
+                "sha256": "96cbe59c7a64f488796bd4bf9305286bcc14a7ec01fe810cf82267e3227f70c4"
+              },
+              {
+                "path": "docs/21-lifecycle-operation-and-trace-semantics.md",
+                "sha256": "a52d01a5361cd43bee35304402c6819570ea8ba07264c99d0ea4dd5f705c9440"
+              },
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/LS-S080-development-resume-1.json",
+              "sha256": "ad38160b1fa693734333a2ff458756efab719c597d8109491b0fc9c16b547587"
+            },
+            {
+              "path": "implementation/evidence/LS-S080-audio-development-resume-1.json",
+              "sha256": "3074cd737816b2c1d59131e6fe04a2c896c4ab0bd664554a028097d5d71b4ad7"
+            }
+          ],
+          "reuse": {
+            "path": "implementation/evidence/LS-S080-qualification-review-1.json",
+            "sha256": "5fb6ebf83790ab2ab65a1d4c5262c0574d58431ad3f42299ceea2322abc80d20",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ],
+      "boundary": "Runtime/security obligations: local subject authentication, scope mapping, approved UserProfile subsets, request/inspector privacy, Lab/readiness artifacts and recovery. S072 schemas alone do not qualify this case."
+    },
+    {
+      "caseId": "LS-TEST-092",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
+          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "ownerSlice": "LS-S073",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S073-development-resume-9.json",
+            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
+            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-093",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
+          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "ownerSlice": "LS-S073",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S073-development-resume-9.json",
+            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
+            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-094",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
+          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "ownerSlice": "LS-S073",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S073-development-resume-9.json",
+            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
+            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-095",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S076-qualification-review-2.json",
+          "sha256": "ed917a2af7a8cfb877eb5b07c2ef84ddd8b59caba8029cd7622637ae1faf7ba9",
+          "ownerSlice": "LS-S076",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S076-development-resume-3.json",
+            "sha256": "e9050d2876b21282c874d555e02fc917245d6e460a36000635335d201c6cea72"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S076-qualification-review-1.json",
+            "sha256": "f21e267e69f347002b4413e682b45c77764f6f6dc4073a1e39b2fbb407686a8c",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-096",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
+          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "ownerSlice": "LS-S073",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S073-development-resume-9.json",
+            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
+            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-097",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S077-qualification-review-2.json",
+          "sha256": "d19ba1bd6c4d5cf8e357543bf9865d8978cc5b4cba736d96c66bf09e9cf64032",
+          "ownerSlice": "LS-S077",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [],
+          "reuse": {
+            "path": "implementation/evidence/LS-S077-qualification-review-1.json",
+            "sha256": "e9cdba37e5e937d16386ff82776b1f31f9f4ac58022524b6dd1e76fac5cda9ab",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-098",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S077-qualification-review-2.json",
+          "sha256": "d19ba1bd6c4d5cf8e357543bf9865d8978cc5b4cba736d96c66bf09e9cf64032",
+          "ownerSlice": "LS-S077",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [],
+          "reuse": {
+            "path": "implementation/evidence/LS-S077-qualification-review-1.json",
+            "sha256": "e9cdba37e5e937d16386ff82776b1f31f9f4ac58022524b6dd1e76fac5cda9ab",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-099",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S078-qualification-review-2.json",
+          "sha256": "5d35318fbc8b8cbc68b1c03262c2560af2a0b4a91407297c701593f6e7f3bd24",
+          "ownerSlice": "LS-S078",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S078-development-resume-4.json",
+            "sha256": "1be0f14691b2be49620dc53d9b5608ca9dd44bebfb21986509101f4e93e3416e"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S078-qualification-review-1.json",
+            "sha256": "452ce89f9cef7431ee64d9f107fa27ff6ddae6ecb08d05e258b9c355c379cf4b",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-100",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S073-qualification-review-2.json",
+          "sha256": "34516cc1cc7919c83c2a2637b6ffe66d6216f6f7d6bf91ed57acd14778c333d0",
+          "ownerSlice": "LS-S073",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S073-development-resume-9.json",
+            "sha256": "82fbd50c01a34fe6d8c371dbc058e4cf0806c44468fa3c1702d782ffd4ed5766"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S073-qualification-review-1.json",
+            "sha256": "2864292bd1ea827a44211a18093f6e0908b1d8e5683e828043af9de3f5cba8f9",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-101",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S074-qualification-review-2.json",
+          "sha256": "6e4c29628e9d74df0a723ffa36f2058948158e3cbcdc3fd684edeeaafa53b022",
+          "ownerSlice": "LS-S074",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/04-memory-and-dreaming.md",
+                "sha256": "6705718a8071eee52a70878f306ec52381a3caac5c4bee517f208f6452defe5f"
+              },
+              {
+                "path": "docs/12-security-and-trust.md",
+                "sha256": "67a3b094f28d0697db9e720501376616425f85ff3240c8ecd813e07f6d8c4e0b"
+              },
+              {
+                "path": "docs/13-deployment-and-configuration.md",
+                "sha256": "ce961b2b6377b953b50eaa3d4e03e107892dab18163bbd9de5d94b47d7d77328"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [],
+          "reuse": {
+            "path": "implementation/evidence/LS-S074-qualification-review-1.json",
+            "sha256": "a5d6ae081ae8cd4d2056064933024418344234eb9195822055283a8ba6e64f82",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-102",
+      "status": "implementationCompleteVerificationPending",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S080-qualification-review-2.json",
+          "sha256": "9f208d1630131ef4369822e599f4bf91709c27ee4feaa0432f1394cdc5e344ee",
+          "ownerSlice": "LS-S080",
+          "status": "implementationCompleteVerificationPending",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/04-memory-and-dreaming.md",
+                "sha256": "6705718a8071eee52a70878f306ec52381a3caac5c4bee517f208f6452defe5f"
+              },
+              {
+                "path": "docs/11-provider-interfaces.md",
+                "sha256": "0cb8f5b86bf7b4d94e565d256a5928092adf3e29a61607c3c84df4a4cf56c44d"
+              },
+              {
+                "path": "docs/12-security-and-trust.md",
+                "sha256": "67a3b094f28d0697db9e720501376616425f85ff3240c8ecd813e07f6d8c4e0b"
+              },
+              {
+                "path": "docs/13-deployment-and-configuration.md",
+                "sha256": "ce961b2b6377b953b50eaa3d4e03e107892dab18163bbd9de5d94b47d7d77328"
+              },
+              {
+                "path": "docs/15-compatibility-and-migration.md",
+                "sha256": "96cbe59c7a64f488796bd4bf9305286bcc14a7ec01fe810cf82267e3227f70c4"
+              },
+              {
+                "path": "docs/21-lifecycle-operation-and-trace-semantics.md",
+                "sha256": "a52d01a5361cd43bee35304402c6819570ea8ba07264c99d0ea4dd5f705c9440"
+              },
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/LS-S080-development-resume-1.json",
+              "sha256": "ad38160b1fa693734333a2ff458756efab719c597d8109491b0fc9c16b547587"
+            },
+            {
+              "path": "implementation/evidence/LS-S080-audio-development-resume-1.json",
+              "sha256": "3074cd737816b2c1d59131e6fe04a2c896c4ab0bd664554a028097d5d71b4ad7"
+            }
+          ],
+          "reuse": {
+            "path": "implementation/evidence/LS-S080-qualification-review-1.json",
+            "sha256": "5fb6ebf83790ab2ab65a1d4c5262c0574d58431ad3f42299ceea2322abc80d20",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-103",
+      "status": "verified",
+      "claimClass": "runtime-contract-readiness",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S079-qualification-review-2.json",
+          "sha256": "499e45e3c4e2b78203b772e2fbbe17303d0683b8780edaf10c197a422384464d",
+          "ownerSlice": "LS-S079",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/11-provider-interfaces.md",
+                "sha256": "0cb8f5b86bf7b4d94e565d256a5928092adf3e29a61607c3c84df4a4cf56c44d"
+              },
+              {
+                "path": "docs/12-security-and-trust.md",
+                "sha256": "67a3b094f28d0697db9e720501376616425f85ff3240c8ecd813e07f6d8c4e0b"
+              },
+              {
+                "path": "docs/15-compatibility-and-migration.md",
+                "sha256": "96cbe59c7a64f488796bd4bf9305286bcc14a7ec01fe810cf82267e3227f70c4"
+              },
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [],
+          "reuse": {
+            "path": "implementation/evidence/LS-S079-qualification-review-1.json",
+            "sha256": "c44c50531e44f50a424d10d87fd39db1508a2c8b0e138d9259334a4dced9f0a6",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-104",
+      "status": "implementationCompleteVerificationPending",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S080-qualification-review-2.json",
+          "sha256": "9f208d1630131ef4369822e599f4bf91709c27ee4feaa0432f1394cdc5e344ee",
+          "ownerSlice": "LS-S080",
+          "status": "implementationCompleteVerificationPending",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/04-memory-and-dreaming.md",
+                "sha256": "6705718a8071eee52a70878f306ec52381a3caac5c4bee517f208f6452defe5f"
+              },
+              {
+                "path": "docs/11-provider-interfaces.md",
+                "sha256": "0cb8f5b86bf7b4d94e565d256a5928092adf3e29a61607c3c84df4a4cf56c44d"
+              },
+              {
+                "path": "docs/12-security-and-trust.md",
+                "sha256": "67a3b094f28d0697db9e720501376616425f85ff3240c8ecd813e07f6d8c4e0b"
+              },
+              {
+                "path": "docs/13-deployment-and-configuration.md",
+                "sha256": "ce961b2b6377b953b50eaa3d4e03e107892dab18163bbd9de5d94b47d7d77328"
+              },
+              {
+                "path": "docs/15-compatibility-and-migration.md",
+                "sha256": "96cbe59c7a64f488796bd4bf9305286bcc14a7ec01fe810cf82267e3227f70c4"
+              },
+              {
+                "path": "docs/21-lifecycle-operation-and-trace-semantics.md",
+                "sha256": "a52d01a5361cd43bee35304402c6819570ea8ba07264c99d0ea4dd5f705c9440"
+              },
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/LS-S080-development-resume-1.json",
+              "sha256": "ad38160b1fa693734333a2ff458756efab719c597d8109491b0fc9c16b547587"
+            },
+            {
+              "path": "implementation/evidence/LS-S080-audio-development-resume-1.json",
+              "sha256": "3074cd737816b2c1d59131e6fe04a2c896c4ab0bd664554a028097d5d71b4ad7"
+            }
+          ],
+          "reuse": {
+            "path": "implementation/evidence/LS-S080-qualification-review-1.json",
+            "sha256": "5fb6ebf83790ab2ab65a1d4c5262c0574d58431ad3f42299ceea2322abc80d20",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-105",
+      "status": "verified",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S076-qualification-review-2.json",
+          "sha256": "ed917a2af7a8cfb877eb5b07c2ef84ddd8b59caba8029cd7622637ae1faf7ba9",
+          "ownerSlice": "LS-S076",
+          "status": "verified",
+          "testedRevision": "02743688cd11059e6a3e098de8a0301cc12e4cd2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": {
+            "path": "implementation/evidence/LS-S076-development-resume-3.json",
+            "sha256": "e9050d2876b21282c874d555e02fc917245d6e460a36000635335d201c6cea72"
+          },
+          "reuse": {
+            "path": "implementation/evidence/LS-S076-qualification-review-1.json",
+            "sha256": "f21e267e69f347002b4413e682b45c77764f6f6dc4073a1e39b2fbb407686a8c",
+            "testedRevision": "4e3e59e463d472c72d2122abcd3f57443999cce7",
+            "reuseBoundary": "Current server, compiler, storage and selected-provider configuration artifacts remain byte-identical. UI-only changes add explicit session disclosure and clear inspection on disclosure change. Prior runtime observations remain attributed to their recorded original revisions, not represented as newly executed."
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "LS-TEST-106",
+      "status": "blockedEnvironment",
+      "claimClass": "technical-core",
+      "proofs": [
+        {
+          "path": "implementation/evidence/LS-S081-qualification-review-1.json",
+          "sha256": "dc1a97cb5e9bfdcd4520e41f8eeae2ecb606ee7f7f7d56f134f71aad23dfdf3d",
+          "ownerSlice": "LS-S081",
+          "status": "blockedEnvironment",
+          "testedRevision": "6dc2b8f5ce9c0629eb729c0842ea88bea14280c1",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "00ebe729d59f05e41586cdfb8a08539393b3f6b3",
+            "artifacts": [
+              {
+                "path": "docs/14-acceptance-strategy.md",
+                "sha256": "5eb947437a2fa4c67e969f1ff7406a360b3392f1691d8b995b442a9d8d229259"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "3ab5943f0784b33a1e29322f66d3f19a0ba27ad25c34685069b6fee70e97285a"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/LS-S081-development-failed-review-1.json",
+              "sha256": "4591265974d621d664cc288e78cce9eb1d3eaf93b716f4ac03277ab6d7271f70"
+            },
+            {
+              "path": "implementation/evidence/LS-S081-development-review-2.json",
+              "sha256": "1421f8454f002bd9fa378f62a126bb3e5bc51bd311c48b0418ca698c544257ba"
+            },
+            {
+              "path": "implementation/evidence/LS-S081-continuation-review-1.json",
+              "sha256": "b9bb937e042098169e6c05a5781c064d8b63aa5855952cd18d99c2a15015ebf4"
+            }
+          ],
+          "reuse": null
+        }
+      ]
+    }
+  ],
+  "structuralContractBoundary": {
+    "owner": "LS-S072",
+    "case": "LS-TEST-091 structural only",
+    "runtimeQualification": "Separate owner proofs above; no blanket runtime claim.",
+    "approvedMachineExports": [
+      "user-profile.schema.json",
+      "relationship.schema.json",
+      "relationship-administration.schema.json",
+      "prepared-context-2.0.0.schema.json"
+    ],
+    "protocolCommon": "unchanged"
+  },
+  "guide": {
+    "path": "docs/human-testing-guide.html",
+    "acceptanceReady": false
+  },
+  "unresolved": {
+    "caseId": "LS-TEST-106",
+    "classification": "selected-provider exact-literal behavior and joined completion failure",
+    "requirement": "One complete joined rendered selected-provider journey satisfies the unchanged declared output and completion criteria.",
+    "source": "apps/control-web/test/relationship-joined.test.mjs",
+    "independentWork": "Complete: producer evidence refresh, rendered disclosure UI, joined fixture journey, independent selected-provider isolation continuation, isolated review launcher and HTML guide.",
+    "recommendedNextStep": "Investigate selected-provider exact-case compliance across Lab representations and the interrupted joined Skip reply; preserve the model, deadlines and criteria, then requalify the full joined journey. No further acceptance can be inferred from isolated successes."
+  },
+  "exclusions": [
+    "No full joined selected-provider qualification or Human acceptance. Earlier Green Finch, literal timeout and joined failures remain preserved.",
+    "No private input, physical capture/playback, training, learned-quality, production, performance certification, deployment, pushes or provider service/configuration change.",
+    "S083/S084 remain later adopted scope; S082/S065 and S056/S070 retain separate training and product gates."
+  ]
+}

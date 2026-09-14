@@ -1,3 +1,31 @@
+# Recovery v2 current technical status
+
+## Current result — 2026-09-14 UTC
+
+**LS-S081 / LS-TEST-106 is implemented but blocked at selected-provider qualification. Human acceptance remains pending.** The [HTML Human testing guide](../../docs/human-testing-guide.html) and isolated launcher are prepared and verified, but the guide clearly says not to record acceptance yet. The [case index](RECOVERY-V2-CASE-INDEX.json) maps every LS-TEST-089–106 case to current source-bound owner evidence and separates runtime 091 from S072 structural proof.
+
+S075's revised literal test passed a fresh selected-provider run: the approved `SYNPRJ_Q7M4` reached three consecutive ordinary replies, with correct pre-admission, rejected-source and other-Assistant exclusions. Twelve producer qualifications were refreshed. The new S071 session-disclosure UI makes the existing audience boundary operable without developer tools; S076 clears supplied-request inspection on disclosure changes. No server, compiler, model, sampling or deadline changes were made in this continuation.
+
+The final joined browser test now executes authentication, User Profile and file admission, records, settings, source-grounded insight review, Lab rejection and held-out promotion/rollback, correction/audience/forget races, background failure isolation, restart and other-account checks. **23 browser tests, 267 source tests and 43 evidence-tooling tests pass.** Build, lint and private specification validation pass. The passing joined fixture test is not selected-model certification.
+
+### Exact unresolved evidence
+
+- [Joined selected-provider attempt 1](LS-S081-development-failed-review-1.json), source `d44b567`: one personalized Lab response changed the required exact `SYNPRJ_Q7M4` to `SynPRJ_Q7M4`. The literal criterion failed; it was not relaxed to case-insensitive matching.
+- [Joined diagnostic attempt 2](LS-S081-development-review-2.json), source `2710dcb`: reached the separate held-out phase, promotion/rollback, correction, audience fences, injected Lab failure, forgetting and same-path restart, then failed waiting for the separate skipped-Assistant ordinary reply to complete. The preserved process failure identifies the exact assertion; no missing output or failure details are invented.
+- [Independent isolation continuation](LS-S081-continuation-review-1.json), source `0274368`: a fresh synthetic skipped-Assistant reply completed, excluded the other relationship's marker, and returned 404 for another account's private relationship even when Assistant administration was assigned. This closes the available independent checks but does not replace a complete joined run.
+
+A complete successful joined selected-provider journey is still required. Investigate exact-case compliance across Lab representations and completion reliability under the unchanged selected profile, then rerun the full journey. Earlier successes cannot override the explicit current blocked S081 selector. Historical Green Finch and timeout reports remain intact.
+
+### Independent work complete and boundary preserved
+
+The guide has eleven practical steps, downloadable synthetic notes, local progress/notes and JSON export. Desktop and 390-pixel layouts, persistence, downloads and pending-by-default Human disposition were verified. Its launcher creates fresh local-password review state, checks selected-provider health, reuses only its own marked review directory, and passed stop/restart verification. No credentials are printed, no account is automatically enrolled, and startup performs no physical capture or playback.
+
+S080 objective technical 102/104 evidence remains qualified for paired admission, with Human review pending. Existing selected typed/audio and source-removal/restore evidence retains its original revisions. S083/S084 remain later adopted scope; S082/S065 training, S056/S070 physical/perceptual/performance and production gates stay separate. No pushes, deployment, personal-data import, training, shared-provider restart or live configuration changes occurred. Unrelated original worktree artifacts are preserved uncommitted.
+
+---
+
+## Historical snapshots below — not the current disposition
+
 # Recovery v2 technical status
 
 **Literal-test follow-up:** the operator requested an explicit exact-text test with opaque synthetic identifiers. [Source commit](../../apps/control-web/test/relationship-administration.test.mjs) `8139470c2f756313c09dda0bdffbe1f9649e059e` uses `SYNPRJ_Q7M4`, supplied only through the approved preference. The fixture browser test passed. The [first selected-provider attempt](LS-S075-literal-development-1.json) timed out before admission; the [second attempt](LS-S075-literal-development-2.json) passed three consecutive literal replies and the pre-admission/other-Assistant negatives. Full qualification refresh and S081 remain pending. The snapshot below records the earlier Green Finch failure and is retained as history.
