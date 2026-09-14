@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
-  "branch": "codex/recovery-human-review",
+  "branch": "main",
   "baseRevision": "f4e8a6a192e21c7104de94a0209c3e96228e903b",
-  "currentRevision": "f4e8a6a192e21c7104de94a0209c3e96228e903b",
+  "currentRevision": "0eb31d5fa9cb05df44b8ef8a197c9497ec4f31a7",
   "activeSlice": "LS-S081",
   "sliceStatus": "blocked",
   "completedSlices": [
@@ -151,9 +151,7 @@
     "apps/control-web/relationship-recovery.js"
   ],
   "changedFiles": [
-    "implementation/checkpoint.json",
-    "implementation/evidence/LS-S075-control-room-review.json",
-    "implementation/evidence/RECOVERY-V2-STATUS.md"
+    "implementation/checkpoint.json"
   ],
   "validation": [
     {
@@ -194,7 +192,7 @@
     "Combined Human review is pending: steps 1-6 passed with feedback on the previous interface; operator paused steps 7-11 until this UI redesign could be reviewed."
   ],
   "nextAction": "Operator reviews the redesigned control room and continues remaining Human steps when satisfied. Preserve the earlier feedback. Before claiming complete current technical-core qualification, requalify the joined selected-provider completion path at the changed UI revision; do not reuse old receipts as new proof.",
-  "updatedAt": "2026-09-14T05:25:56.248100Z",
+  "updatedAt": "2026-09-14T05:26:35.523118Z",
   "updatedBy": "Codex",
   "notes": "User-requested UI correction is implemented and verified as rendered UI regression at f4e8a6a192e21c7104de94a0209c3e96228e903b. Separate source-bound receipt preserves scope. Existing selected-provider and Human acceptance boundaries remain. S083/S084 are later adopted scope. No push, deployment, provider configuration, personal-data import or training."
 }
