@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
-  "branch": "main",
-  "baseRevision": "e9a280392e9c438dd89ed254d125903b08a6042b",
-  "currentRevision": "d01714bb59c0e27c5b7ca05a97d7c98308d80225",
+  "branch": "codex/recovery-human-review",
+  "baseRevision": "f4e8a6a192e21c7104de94a0209c3e96228e903b",
+  "currentRevision": "f4e8a6a192e21c7104de94a0209c3e96228e903b",
   "activeSlice": "LS-S081",
   "sliceStatus": "blocked",
   "completedSlices": [
@@ -74,35 +74,112 @@
     "LS-S075"
   ],
   "allowedFiles": [
-    "tests/relationship-acceptance.test.ts",
-    "apps/control-web/test/relationship-acceptance.test.mjs",
+    "apps/server/src/index.ts",
+    "apps/control-web/app.js",
+    "apps/control-web/index.html",
+    "apps/control-web/test/approval-ui.test.mjs",
+    "apps/server/test/server.test.ts",
+    "packages/storage-sqlite/src/memory.ts",
+    "packages/storage-sqlite/test/memory.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S081.json",
-    "apps/control-web/test/relationship-joined.test.mjs",
-    "scripts/qualify-s081-development.mjs",
-    "scripts/start-relationship-review.mjs",
-    "docs/human-testing-guide.html",
-    "implementation/evidence/LS-S081-development-review-1.json",
-    "implementation/evidence/LS-S081-qualification-review-1.json",
-    "implementation/evidence/LS-S081-current-qualification.json",
-    "implementation/evidence/RECOVERY-V2-CASE-INDEX.json",
+    "implementation/evidence/LS-S075.json",
+    "apps/server/src/admin/user-profile.ts",
+    "apps/server/src/admin/relationship-records.ts",
+    "apps/control-web/relationship-admin.js",
+    "apps/control-web/user-profile.js",
+    "apps/control-web/profile-builder.js",
+    "apps/control-web/test/relationship-administration.test.mjs",
+    "apps/server/test/relationship-administration.test.ts",
+    "packages/storage-sqlite/src/migrations/0019_user_profiles.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/test/database.test.ts",
+    "packages/storage-sqlite/test/profile-builder.test.ts",
+    "packages/storage-sqlite/test/rehearsal.test.ts",
+    "packages/storage-sqlite/test/skills.test.ts",
+    "implementation/evidence/LS-S075-qualification-resume-1.json",
+    "implementation/evidence/LS-S075-current-qualification.json",
+    "apps/control-web/styles.css",
+    "scripts/qualify-s075-development.mjs",
+    "implementation/evidence/LS-S075-development-resume-1.json",
+    "implementation/evidence/LS-S075-development-resume-2.json",
+    "implementation/evidence/LS-S075-qualification-resume-2.json",
+    "implementation/evidence/LS-S075-development-failed-resume-2.json",
+    "implementation/evidence/LS-S075-development-resume-3.json",
+    "implementation/evidence/LS-S075-qualification-resume-3.json",
+    "implementation/evidence/LS-S074-qualification-resume-7.json",
+    "implementation/evidence/LS-S074-current-qualification.json",
+    "implementation/evidence/LS-S078-qualification-resume-3.json",
+    "implementation/evidence/LS-S078-current-qualification.json",
+    "implementation/evidence/LS-S079-qualification-resume-2.json",
+    "implementation/evidence/LS-S079-current-qualification.json",
+    "implementation/evidence/LS-S078-development-resume-3.json",
+    "implementation/evidence/LS-S075-development-failed-resume-4.json",
+    "implementation/evidence/LS-S080-qualification-resume-1.json",
+    "implementation/evidence/LS-S080-current-qualification.json",
+    "implementation/evidence/LS-S080-development-resume-1.json",
+    "implementation/evidence/LS-S080-audio-development-resume-1.json",
     "implementation/evidence/RECOVERY-V2-STATUS.md",
-    "implementation/evidence/LS-S081-development-failed-review-1.json",
-    "implementation/evidence/LS-S081-development-review-2.json",
+    "implementation/evidence/LS-S075-qualification-resume-4.json",
+    "implementation/evidence/LS-S075-literal-development-1.json",
+    "implementation/evidence/LS-S075-literal-development-2.json",
+    "implementation/evidence/LS-S075-qualification-review-1.json",
+    "implementation/evidence/LS-S075-development-review-1.json",
+    "implementation/evidence/LS-S075-qualification-review-2.json",
+    "apps/control-web/workspace.js",
+    "apps/control-web/workflows.js",
+    "apps/control-web/DESIGN.md",
+    "apps/control-web/test/workspace-navigation.mjs",
+    "apps/control-web/test/workspace-design.test.mjs",
+    "implementation/evidence/LS-S075-control-room-review.json",
+    "apps/control-web/relationship-insights.js",
+    "docs/human-testing-guide.html",
+    "apps/control-web/test/relationship-lab.test.mjs",
+    "apps/control-web/test/local-auth.test.mjs",
+    "apps/control-web/test/relationship-joined.test.mjs",
+    "apps/control-web/test/relationship-acceptance.test.mjs",
     "apps/control-web/test/relationship-isolation-continuation.test.mjs",
-    "scripts/qualify-s081-continuation-development.mjs",
-    "implementation/evidence/LS-S081-continuation-review-1.json",
-    "implementation/evidence/LS-S081-case-acceptance-1.json",
-    "implementation/evidence/LS-S081-qualification-case-acceptance-1.json"
+    "apps/control-web/test/relationship-recovery.test.mjs",
+    "apps/control-web/test/speech-gate.test.mjs",
+    "apps/control-web/test/relationship-tuning.test.mjs",
+    "apps/control-web/test/relationship-readiness.test.mjs",
+    "apps/control-web/test/relationship-insights.test.mjs",
+    "apps/control-web/test/personalization.test.mjs",
+    "apps/control-web/test/conversation-ui.test.mjs",
+    "apps/control-web/test/vad-context.test.mjs",
+    "apps/control-web/relationship-lab.js",
+    "apps/control-web/relationship-readiness.js",
+    "apps/control-web/relationship-recovery.js"
   ],
   "changedFiles": [
-    "implementation/checkpoint.json"
+    "implementation/checkpoint.json",
+    "implementation/evidence/LS-S075-control-room-review.json",
+    "implementation/evidence/RECOVERY-V2-STATUS.md"
   ],
   "validation": [
     {
-      "command": "targeted identifier matcher; joined fixture browser test; ESLint; git diff --check",
+      "command": "PLAYWRIGHT_MODULE=<bundled Playwright> pnpm test:browser-surface",
       "result": "pass",
-      "evidence": "Capitalization variations accepted, missing/wrong/embedded identifiers rejected, and full joined fixture journey passes. No selected-provider rerun claimed."
+      "evidence": "24 tests, 0 failures, 0 skips. Includes real local authentication with synthetic storage, joined fixture journey, dedicated direct navigation/record/dialog/draft-link/mobile verification."
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "267 source regression tests, 0 failures. Runtime/provider source unchanged by this UI correction."
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "evidence": "43 evidence-tooling tests, 0 failures."
+    },
+    {
+      "command": "pnpm build; pnpm typecheck; pnpm lint; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass",
+      "evidence": "Build, type checking, lint, workspace structure and whitespace checks passed."
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "evidence": "53 validator tests; specification and structural checks passed. Not runtime acceptance."
     }
   ],
   "decisions": [
@@ -113,10 +190,11 @@
     "Operator accepts SYNPRJ_Q7M4 to SynPRJ_Q7M4 Lab reply variance as application-level pass; capitalization model quality handled separately."
   ],
   "blockers": [
-    "LS-TEST-106 joined selected-provider skipped-Assistant reply did not reach observed completion. Capitalization-only Lab variance has been explicitly accepted by the operator and is no longer a core blocker."
+    "LS-TEST-106 joined selected-provider skipped-Assistant reply did not reach observed completion in the preserved qualification. No selected-provider rerun was performed during this UI redesign.",
+    "Combined Human review is pending: steps 1-6 passed with feedback on the previous interface; operator paused steps 7-11 until this UI redesign could be reviewed."
   ],
-  "nextAction": "Diagnose and requalify joined reply completion using the amended Lab capitalization criterion; preserve selected model/configuration/deadlines and all identity/privacy checks. Human acceptance remains pending.",
-  "updatedAt": "2026-09-14T03:18:59.887760Z",
+  "nextAction": "Operator reviews the redesigned control room and continues remaining Human steps when satisfied. Preserve the earlier feedback. Before claiming complete current technical-core qualification, requalify the joined selected-provider completion path at the changed UI revision; do not reuse old receipts as new proof.",
+  "updatedAt": "2026-09-14T05:25:56.248100Z",
   "updatedBy": "Codex",
-  "notes": "Operator accepted capitalization-only Lab model variance. Backend ai5090 confirmed; Mac-local not used. Original reports retained. No provider rerun/configuration change or Human acceptance in this amendment."
+  "notes": "User-requested UI correction is implemented and verified as rendered UI regression at f4e8a6a192e21c7104de94a0209c3e96228e903b. Separate source-bound receipt preserves scope. Existing selected-provider and Human acceptance boundaries remain. S083/S084 are later adopted scope. No push, deployment, provider configuration, personal-data import or training."
 }

@@ -1,3 +1,11 @@
+# Control room usability correction — 2026-09-14
+
+The operator passed Human steps 1–6 with feedback, then paused further testing because the interface was difficult to use. The control room has been redesigned with separate navigation, labeled record tables, contextual operation dialogs, explicit configuration review, five selectable insight perspectives, and grouped Lab/privacy workflows. The updated guide preserves existing note keys and records steps 7–11 as pending.
+
+UI regression is verified at `f4e8a6a192e21c7104de94a0209c3e96228e903b`: 24 browser tests, 267 source tests and 43 evidence-tooling tests passed, plus build/typecheck/lint and private structural validation. See [the source-bound UI receipt](LS-S075-control-room-review.json). This is not Human acceptance or a fresh selected-provider qualification. Prior receipts and the joined selected-provider completion blocker remain unchanged; changed UI source requires qualification against its new revision before a full current-core claim.
+
+---
+
 # Current operator acceptance amendment
 
 The operator accepts the observed `SYNPRJ_Q7M4` → `SynPRJ_Q7M4` Lab output as passing the application criterion, assigning capitalization compliance to separate model-quality work. The backend was **ai5090**, SGLang, `RadixArk/Qwen3.8-27B-NVFP4` served as `qwen3.8-27b-local`; no Mac-local fallback occurred. See the [explicit acceptance disposition](LS-S081-case-acceptance-1.json).

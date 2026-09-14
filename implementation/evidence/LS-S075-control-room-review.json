@@ -1,0 +1,189 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "control-room-usability-correction",
+  "slice": "LS-S075",
+  "status": "verified",
+  "claimClass": "rendered-ui-regression",
+  "sourceRevision": "f4e8a6a192e21c7104de94a0209c3e96228e903b",
+  "createdAt": "2026-09-14T05:25:56.248100Z",
+  "owningSlices": {
+    "LS-S074": "Selected-file intake workflow grouping",
+    "LS-S075": "Workspace navigation, theme, record explorer and operations",
+    "LS-S076": "Configuration editing, preview/activation and reply inspection views",
+    "LS-S077": "Named insight perspectives, labeled findings, exact-draft links",
+    "LS-S078": "Lab workflow grouping and comparison table",
+    "LS-S079": "Readiness record identifiers",
+    "LS-S080": "Privacy workflow grouping and source identifiers",
+    "LS-S081": "Joined browser navigation and Human guide"
+  },
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "2cab4fbe3560a1ee9ff16488d06c3d77d870858c0c0ed2d9bb9980dc754e1e81"
+    },
+    {
+      "path": "apps/control-web/app.js",
+      "sha256": "60bff976ea833e48f2be9adfca6e396d38a0c67cc5e6d6308988e6569a6c2961"
+    },
+    {
+      "path": "apps/control-web/index.html",
+      "sha256": "cecf7315d07e4d5698c1c92b9ec29c189cc61eea81b8b2a8e386de25dd7b9675"
+    },
+    {
+      "path": "apps/control-web/relationship-admin.js",
+      "sha256": "e8a859f2bc18b9041894ddaa97a2da7323f50595814bc24238aae73d0542b593"
+    },
+    {
+      "path": "apps/control-web/relationship-insights.js",
+      "sha256": "d58ebdcbc966072ccb277a7d3a251bef1d6d508ef0b99270d7cdd85f4ca5fd0e"
+    },
+    {
+      "path": "apps/control-web/relationship-lab.js",
+      "sha256": "cea86ea799d76adf5cbc762b8cb1513f601dc7aa78d4057d23d734731048fb8a"
+    },
+    {
+      "path": "apps/control-web/relationship-readiness.js",
+      "sha256": "934240e82e10e4897312c0896379d7d213a76a717dbbcfb7625d6f807d1cf2ee"
+    },
+    {
+      "path": "apps/control-web/relationship-recovery.js",
+      "sha256": "2182243c188c1ff4503ce530ec6e6477502c8439bbbbcfd7d7fc6511eb8321b1"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "3c12ba3405e8def9ccbd16a03b13ac74dc26c554d2361dbe2957a377603db6fe"
+    },
+    {
+      "path": "apps/control-web/test/approval-ui.test.mjs",
+      "sha256": "43a0fc690bd0b78f4115c0ac2d27b95b526ee1297876b53c6fbf44137b1bc9bd"
+    },
+    {
+      "path": "apps/control-web/test/local-auth.test.mjs",
+      "sha256": "8e6b7677c6eb8b3cbcb751519909684b43cf0671758f4bcb433283a962096444"
+    },
+    {
+      "path": "apps/control-web/test/personalization.test.mjs",
+      "sha256": "b81fdf43cbe44c89a77e827f5bf200c3e03626aef96b7fcc081339a3489b671e"
+    },
+    {
+      "path": "apps/control-web/test/relationship-administration.test.mjs",
+      "sha256": "7c0d33bc94c1f94ad5c0d39b5df8db348024a4e5e0694240b5d87f362080097e"
+    },
+    {
+      "path": "apps/control-web/test/relationship-insights.test.mjs",
+      "sha256": "35a355e3aec9f24be6727c30a7f2fb4a757a9b6c018de650de8b6754d3a35f92"
+    },
+    {
+      "path": "apps/control-web/test/relationship-isolation-continuation.test.mjs",
+      "sha256": "8086ec710a426d6b6d96e6f7a7f1a04a38edabbe9f8fd8a2306ab575803b5c05"
+    },
+    {
+      "path": "apps/control-web/test/relationship-joined.test.mjs",
+      "sha256": "ea19ce1f2a027f00373f74f686d53d4a61c6522706d91c77c254b292f5ddb9a0"
+    },
+    {
+      "path": "apps/control-web/test/relationship-lab.test.mjs",
+      "sha256": "4468e991b82441c7e71af6eb219516d5e4f5cf13a314b8de97f2a3bf673f4816"
+    },
+    {
+      "path": "apps/control-web/test/relationship-readiness.test.mjs",
+      "sha256": "d83fe41d877aa5dbea756b4727a13a12283ec6a2d907f21c47323d23ba36638b"
+    },
+    {
+      "path": "apps/control-web/test/relationship-recovery.test.mjs",
+      "sha256": "914499b2d344538122cfa6d89b61fb349b185b17d8c9a06ff33601511bbc3a6c"
+    },
+    {
+      "path": "apps/control-web/test/relationship-tuning.test.mjs",
+      "sha256": "a315395846f6a6f6dd56ab6c9d4241c2aef191e2bdce0d0003c4c2eaaaed1dea"
+    },
+    {
+      "path": "apps/control-web/test/workspace-design.test.mjs",
+      "sha256": "d22455397ed61d65167b1d5c6f6a83dac7e71b0930a98f2f36410a306dd7c535"
+    },
+    {
+      "path": "apps/control-web/test/workspace-navigation.mjs",
+      "sha256": "fc5c6a361669a4a835bea294c90b1adfd0551b9c134798adbf33fa96f3e325b9"
+    },
+    {
+      "path": "apps/control-web/workflows.js",
+      "sha256": "0dc858f121727af95e375e9a9b5d5cee520fa7b0959e62a71076cac84617951d"
+    },
+    {
+      "path": "apps/control-web/workspace.js",
+      "sha256": "64147f819d1abec2cb20daa5ef09ef96cd9eeb64d2414c809614f2a1d01828d8"
+    },
+    {
+      "path": "docs/human-testing-guide.html",
+      "sha256": "8dd7eb7b381a616de03d462e8e6a22dc269150945f274c5beea9579e2b358262"
+    }
+  ],
+  "checks": [
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled Playwright> pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "24 tests, 0 failures, 0 skips. Includes real local authentication with synthetic storage, joined fixture journey, dedicated direct navigation/record/dialog/draft-link/mobile verification."
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "267 source regression tests, 0 failures. Runtime/provider source unchanged by this UI correction."
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "evidence": "43 evidence-tooling tests, 0 failures."
+    },
+    {
+      "command": "pnpm build; pnpm typecheck; pnpm lint; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass",
+      "evidence": "Build, type checking, lint, workspace structure and whitespace checks passed."
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "evidence": "53 validator tests; specification and structural checks passed. Not runtime acceptance."
+    }
+  ],
+  "visualReview": {
+    "desktop": "1440 \u00d7 1040",
+    "mobile": "390 \u00d7 844",
+    "observed": [
+      "14 destinations with one active view and a mobile navigation menu",
+      "Records have full IDs, lifecycle labels, source/evidence fields and distinct superseded rows",
+      "Operation dialog with cancellation, Escape, focus return and explicit consequences",
+      "Three settings views keep draft preview directly before activation",
+      "Five named insight perspectives show one labeled finding at a time",
+      "Lab outputs in comparable labeled rows; privacy preview before confirmation",
+      "All fourteen views fit a 390px viewport without page-wide horizontal overflow"
+    ],
+    "reproduce": "apps/control-web/test/workspace-design.test.mjs writes desktop/mobile screenshots to /private/tmp/control-*.png"
+  },
+  "humanReview": {
+    "source": "Operator-provided lifestream-human-review.json; original preserved in Downloads, receipt in independent private roadmap",
+    "completedSteps": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "disposition": "Passed with feedback on prior interface. New design awaits operator review.",
+    "remainingSteps": [
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "combinedAcceptance": "pending"
+  },
+  "limits": [
+    "No selected ai5090 qualification rerun; existing joined selected-provider reply-completion failure remains unresolved.",
+    "Old qualified receipts retain their original revisions and claim boundaries; this UI receipt does not replace provider qualification.",
+    "No model/provider/deadline, backend persistence, live configuration, deployment, import of personal records or training changes.",
+    "Human usability acceptance is not inferred from automated browser tests.",
+    "S083/S084 remain deferred later scope."
+  ]
+}
