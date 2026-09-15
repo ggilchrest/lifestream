@@ -9,3 +9,5 @@ export { PwceTrustedDispatchClient } from './dispatch.js';
 export type { PwceDispatchClientOptions } from './dispatch.js';
 export { PwceCapabilityCatalog, PWCE_LIGHT_CAPABILITY_ID } from './capability-catalog.js';
 export type { PwceCapabilityBinding, PwceCapabilityCatalogOptions, PwceCatalogRecord } from './capability-catalog.js';
+export { PwceAuthorityPreview, pwceLightOperation } from './authority-preview.ts';
+export type { PwceAuthorityPreviewOptions, PwcePreparedAction } from './authority-preview.ts';

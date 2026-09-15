@@ -138,6 +138,21 @@ test('bounded capacity preserves original projections and rejects additional ent
   await assert.rejects(f.catalog.getSnapshot(f.request(), f.context), { code: 'catalog_capacity' });
 });
 
+test('explicit revalidation preserves the original snapshot and rejects changed revision, mode or source bytes', async () => {
+  const f = fixture(), first = (await f.catalog.getSnapshot(f.request(), f.context)).outcome.payload;
+  const request = { ...f.request(), payload: { snapshotId: first.snapshotId, snapshotRevision: first.revision } };
+  const original = await f.catalog.revalidate(request, f.context);
+  assert.equal(original.producerSnapshotRef, f.body.snapshotRef); assert.equal(f.sent.at(-1).snapshotRef, f.body.snapshotRef);
+  const count = f.sent.length;
+  await assert.rejects(f.catalog.revalidate({ ...request, payload: { ...request.payload, snapshotRevision: 2 } }, f.context), {code:'snapshot_unavailable'});
+  await assert.rejects(f.catalog.revalidate({ ...request, executionMode: 'replay' }, f.context), {code:'snapshot_unavailable'});
+  assert.equal(f.sent.length, count);
+  f.body.limitations = ['Changed source'];
+  await assert.rejects(f.catalog.revalidate(request, f.context), {code:'snapshot_identity_changed'});
+  f.body.limitations = [];
+  await assert.rejects(f.catalog.revalidate(request, f.context), {code:'snapshot_unavailable'});
+});
+
 test('cancellation, invalid deadlines and a resolver ignoring cancellation stay bounded', async () => {
   const f = fixture(), controller = new AbortController(); controller.abort();
   await assert.rejects(f.catalog.getSnapshot(f.request(), { ...f.context, signal: controller.signal }), { code: 'cancelled' });

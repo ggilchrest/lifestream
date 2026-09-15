@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-AUTHORITY-PREVIEW-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "a56129035b97091b49d7eb76bbd9c3711d9595be",
+  "specificationRevision": "5cb2c0fe0d51b8b7c62c656f7deaa0a3c8bea196",
+  "producerRevision": "62cb3504466509aa19eb08203cc4464a30da63b6",
+  "recordedAt": "2026-09-15T18:04:33.683Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "packages/providers-pwce/src/authority-preview.ts",
+        "sha256": "099fe8bb2fa0272172b95a83f0963c16d439f25cd7832d8aca41597716f5c4c3"
+      },
+      {
+        "path": "packages/providers-pwce/src/capability-catalog.ts",
+        "sha256": "e87c5dceab2a3318ca2c05b90847ecda2e87b8652ef8cdd5c5975ba1a8862c00"
+      },
+      {
+        "path": "packages/providers-pwce/src/index.ts",
+        "sha256": "2193c0b23a6b5bc048962a58fee5026d74487963051be6c069faaec8e6a115bd"
+      },
+      {
+        "path": "packages/providers-pwce/test/authority-preview.test.ts",
+        "sha256": "6b5bf4aad09a187a0a82d81186a661515bcbd41fd6a5d69ac5792fc128679868"
+      },
+      {
+        "path": "packages/providers-pwce/test/capability-catalog.test.ts",
+        "sha256": "1328d0d66874777352624d5d06938bb1b3422f70d61f9a865aa289670c0dfc5d"
+      },
+      {
+        "path": "scripts/check-pwce-dispatch-process.mjs",
+        "sha256": "44d390943065c32a6ea8644311b792d285ca224513889161592c53cd53f1eb48"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "7baac619066aa037a3d5818fb089d9031ee3f14d2749238cbb112d361eea009a"
+      }
+    ]
+  },
+  "claim": "Canonical non-consuming PWCE external authority preview binds original prepared input, qualified operation and producer snapshot; preserves allowed, denied and approval-required outcomes with scoped, digest-bound evidence; never creates a Human grant, final admission or target effect.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-authority-preview-full.log",
+      "logSha256": "f88942b1231d995c052edd96a0b06ab3ac8eeffe629a32b68df27946e9941a48"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-authority-preview-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-authority-preview-build.log",
+      "logSha256": "e2a22759c1ed542f258a938bec41d3f010f37edf0df5b374d732f57fc8c7db71"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-authority-preview-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-authority-preview-workspace-tests.log",
+      "logSha256": "63963f6240966b85da08ff4d21795610de901fc9138ee7e5a04503887f6ac07e"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "ls-authority-preview-workspace-check.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/authority-preview.test.ts",
+      "result": "pass",
+      "log": "ls-authority-preview-unit.log",
+      "logSha256": "a03c6ef63cc35a1653c0c075d18651365cb4cb1935d250f56d4e27029939f0dc"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "log": "ls-authority-preview-joined.log",
+      "logSha256": "2bc893f40fab27761e040fcabdd854629208a4a89cb45ae7822be6c413d335a1"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "ls-authority-preview-context.log",
+      "logSha256": "bf1b636d377d3cebd7c2b076754caefa985f44250adda4e9ed0b360726f242ea"
+    },
+    {
+      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-authority-preview-catalog-pin.log",
+      "logSha256": "12a961678e4187057f78756f2e2e50550c255bb75fc164a4ae54ed13eb545205"
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-authority-preview-dispatch-pin.log",
+      "logSha256": "7799cc7b7e6b5549e994e5cef2ccba3b115d973b57349f7bf933be0d14482b29"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-authority-preview-private.log",
+      "logSha256": "07d40b3248fd046deca8da1db32bf08b4132e0f1334637853b3725e898314b49"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-authority-preview-preflight.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "counts": {
+    "applicationTests": 710,
+    "newAuthorityUnitTestsIncludedInApplicationTotal": 11,
+    "newCatalogRevalidationTestIncludedInApplicationTotal": 1,
+    "workspaceTests": 43,
+    "joinedAuthorityPreviewChecks": 5,
+    "joinedCatalogChecks": 6,
+    "joinedDispatchChecks": 7,
+    "joinedContextChecks": 19,
+    "joinedRuntimeChecks": 7
+  },
+  "verificationNotes": [
+    "A TypeScript preview-kind narrowing error was corrected before successful typecheck, build and full tests.",
+    "The synthetic joined fixture made zero target calls during authority previews. Its separate existing dispatch cases made two synthetic target calls, unchanged.",
+    "The source response is retained as deterministic JSON, not claimed as a cryptographic producer signature or exact original HTTP whitespace. Evidence access remains bound to the original invocation and current producer custody."
+  ],
+  "exclusions": [
+    "Complete canonical final admission, invocation, result and status mapping",
+    "Canonical external grant-query representation and logical authority/capability invalidations",
+    "Configured PWCE control-plane/runtime activation and durable action-custody restore fencing",
+    "Live physical effects, deployment, provider/model selection and new Human acceptance"
+  ],
+  "continuation": "Continue original producer admission and invocation/result mapping under existing LS-S028; retain external authority semantics without standalone grant fallback.",
+  "localLogArchive": "lifestream/.lifestream/benchmarks/pwce-authority-preview/2026-09-15"
+}

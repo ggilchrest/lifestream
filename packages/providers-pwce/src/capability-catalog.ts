@@ -119,6 +119,25 @@ export class PwceCapabilityCatalog {
     if(!record||this.sourceDigests.get(hash([record.binding,record.producerSnapshotRef]))?.poisoned||!isDeepStrictEqual(record.scope,scope)||!this.options.isCurrent(structuredClone(record.binding),structuredClone(scope)))return undefined;
     return structuredClone(record);
   }
+  /** Revalidate original custody without discovering or replacing its snapshot. */
+  async revalidate(request: Pick<M.AuthorityRequest, 'scope' | 'requestId' | 'correlationId' | 'deadlineAt' | 'executionMode'> & { payload: { snapshotId: string; snapshotRevision: number } }, context: ProviderCallContext): Promise<PwceCatalogRecord> {
+    if (!boundedJson(request) || !isUuid(request.requestId) || !isUuid(request.correlationId)) return fail('invalid_request');
+    const owned = structuredClone(request), call = budget(owned.deadlineAt, context.signal);
+    try {
+      const record = this.retained(owned.payload.snapshotId, owned.scope);
+      if (!record || record.snapshot.revision !== owned.payload.snapshotRevision || record.executionMode !== owned.executionMode) return fail('snapshot_unavailable');
+      this.check(owned.scope, record.binding, context, call);
+      const raw = await call.wait(this.producerSnapshot(record.binding, owned.requestId, owned.correlationId, owned.deadlineAt, call.signal, record.producerSnapshotRef));
+      this.check(owned.scope, record.binding, context, call);
+      if (hash(bodyOf(raw, record.binding, owned.requestId, owned.correlationId)) !== record.producerDigest) {
+        const source = this.sourceDigests.get(hash([record.binding, record.producerSnapshotRef]));
+        if (source) source.poisoned = true;
+        return fail('snapshot_identity_changed');
+      }
+      if (!this.retained(record.snapshot.snapshotId, owned.scope)) return fail('snapshot_unavailable');
+      return record;
+    } finally { call.close(); }
+  }
   private async readSchema(reference:SchemaArtifactRef,inputScope:CapabilityScope,context:CapabilityCallContext):Promise<Uint8Array|undefined>{
     const requested=structuredClone(reference),scope=structuredClone(inputScope),call=budget(context.deadlineAt,context.signal);this.prune();
     try{
