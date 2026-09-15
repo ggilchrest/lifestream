@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "e2ef3733178606e171c6b79c97699f8c4e5208ce",
+  "currentRevision": "11bc7318b1840cff96d86fd898630bc1b820b34a",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -163,65 +163,23 @@
     "apps/server/test/tool-idempotency.test.ts",
     "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json",
     "packages/storage-sqlite/src/migrations/0029_tool_recovery.sql",
-    "implementation/evidence/LS-S028-TOOL-STATUS-1.json"
+    "implementation/evidence/LS-S028-TOOL-STATUS-1.json",
+    "implementation/evidence/LS-S028-PRODUCER-RECONCILIATION-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/admin/security-administration.ts",
-    "apps/server/src/index.ts",
-    "apps/server/test/server.test.ts",
-    "apps/server/test/tool-idempotency.test.ts",
-    "docs/canonical-provider-boundary.md",
-    "docs/local-authentication.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-TOOL-STATUS-1.json",
-    "packages/storage-sqlite/src/index.ts",
-    "packages/storage-sqlite/src/migrations/0029_tool_recovery.sql",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/src/tool-invocations.ts",
-    "packages/storage-sqlite/test/initiative-delivery.test.ts",
-    "packages/storage-sqlite/test/initiative-expression.test.ts",
-    "packages/storage-sqlite/test/tool-invocations.test.ts"
+    "implementation/evidence/LS-S028-PRODUCER-RECONCILIATION-1.json"
   ],
   "validation": [
     {
-      "command": "pnpm build",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-TOOL-STATUS-1.json"
-    },
-    {
-      "command": "pnpm typecheck",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-TOOL-STATUS-1.json"
-    },
-    {
-      "command": "pnpm lint",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-TOOL-STATUS-1.json"
-    },
-    {
-      "command": "pnpm test",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-TOOL-STATUS-1.json"
-    },
-    {
-      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/tool-invocations.test.ts apps/server/test/tool-idempotency.test.ts apps/server/test/security-administration.test.ts",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-TOOL-STATUS-1.json"
-    },
-    {
-      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-TOOL-STATUS-1.json"
-    },
-    {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-TOOL-STATUS-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-RECONCILIATION-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-TOOL-STATUS-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-RECONCILIATION-1.json"
     }
   ],
   "decisions": [
@@ -236,8 +194,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Complete canonical runtime consumer, precise grant/operation and host scope migration; then finish PWCE action/schema publication, trusted authority/invocation/status mapping and joint scenarios. Continue remaining S083/S084 independent development.",
-  "updatedAt": "2026-09-15T11:05:55.717479Z",
+  "nextAction": "Complete the canonical Lifestream authority/capability consumer, precise grant and host scope mapping, PWCE snapshot/precondition binding and gateway-scoped approval transport; run the joint action lifecycle scenarios. Continue remaining S083/S084 independent development.",
+  "updatedAt": "2026-09-15T11:26:23.888373Z",
   "updatedBy": "Codex",
-  "notes": "Original-invocation local status recovery is component verified. Canonical authority/scope/evidence consumers and PWCE action mapping remain in progress; remaining S083/S084 work is authorized."
+  "notes": "PWCE original-target reconciliation is component verified and scoped status checks run through its existing Gateway. Canonical consumers, precise grants/scope, snapshot preconditions and approval transport remain in progress."
 }

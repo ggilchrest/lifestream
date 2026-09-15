@@ -1,0 +1,181 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-PRODUCER-RECONCILIATION-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "11bc7318b1840cff96d86fd898630bc1b820b34a",
+  "sourceBinding": "Lifestream runtime source is unchanged at this revision; this receipt records the exact new producer prerequisite and existing separate-process compatibility checks.",
+  "specificationRevision": "7a3af37f70fa2347feb269d48badf7a1c9737f57",
+  "recordedAt": "2026-09-15T11:26:23.888373Z",
+  "sourceFiles": [],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "bf4248cbbf31764fe1935788ecde7eee61f0c5c8",
+    "sourceFiles": [
+      {
+        "path": "DEVELOPMENT-BATCH-168.md",
+        "sha256": "6f589902ff910b9c6cc0051aa9a6f03abbe04762efec07e767c667a88ad708a6"
+      },
+      {
+        "path": "PV1-T5-CHECKLIST.md",
+        "sha256": "907a832b1f61afb027d56e891dd63a583817989df500c7b75601441749ed87f4"
+      },
+      {
+        "path": "docs/user-docs/feature-map.md",
+        "sha256": "247b5aed1c0d753232e7e88274aa653ed459b8b762f8fee5ae3b9e940b867423"
+      },
+      {
+        "path": "docs/user-docs/manual/inspect-local-context.html",
+        "sha256": "5199e7ce0099a35d7eb9bbf62299f32734c146f07a30946bcc0d5ba387098f5f"
+      },
+      {
+        "path": "docs/user-docs/qa/inspect-local-context.html",
+        "sha256": "5e553f339c32a50a4ae94b70e56f873156e1647ad5837add030ca7af94ca62bd"
+      },
+      {
+        "path": "docs/user-docs/releases/2026-09-15-uncertain-action-status.html",
+        "sha256": "dc3b99873924e69ca904c25ecfb58e482b4560ee04ef8235dc7ae5dc0d3886c4"
+      },
+      {
+        "path": "docs/user-docs/releases/index.html",
+        "sha256": "0e595a839bca2fbc777dc51a79a2fa5a5e4d5d1e46af5f73f658625836349933"
+      },
+      {
+        "path": "scripts/pwce-live-light-smoke.mjs",
+        "sha256": "2f7c913b9133bb4aae58c257a0f30f92d599c4da8cae9a5a3f859474c3e3ca6c"
+      },
+      {
+        "path": "src/actions/action-service.js",
+        "sha256": "cfe96bb97c955dafe1f78b8659aef866c739d7cb72e6218499993a1a3d7fa2ff"
+      },
+      {
+        "path": "src/actions/fixture-target.js",
+        "sha256": "7800cce0b531c950de07aca7bb6f1cdfdf0577365b9ecd0638a78066a6c6a769"
+      },
+      {
+        "path": "src/actions/home-assistant-target.js",
+        "sha256": "61bc1afad3a70ba8b1f644c3f02c77b36f64fc489b9a190d3fb256dda2dcff65"
+      },
+      {
+        "path": "src/adapters/home-assistant-adapter.js",
+        "sha256": "ea840294045950a6285ea452371ada51ba9ed25a431c356827e0e62e36fdcce3"
+      },
+      {
+        "path": "src/gateway/gateway-service.js",
+        "sha256": "98fd2be9083f721962ba35a0b8327f5577a1151672757f05e4f663766ad2ca63"
+      },
+      {
+        "path": "test/action-admission-boundaries.test.js",
+        "sha256": "62a74f2ff050dc0a13c79b082dec379a5e7276ad0682ef1f0cc475969a478d85"
+      },
+      {
+        "path": "test/action-gateway-http.test.js",
+        "sha256": "364dfa2220a2bb0f71f4d3635a47b1e2589ed80413415298c7d99d9e21c53a45"
+      },
+      {
+        "path": "test/action-reconciliation.test.js",
+        "sha256": "22378c65fd1f501c277988bfbaa6b9b0332ae7c9f3a1d0613b715babc4d0f4f2"
+      },
+      {
+        "path": "test/live-integration.test.js",
+        "sha256": "6c0ba3a9d0410d52342d7bd9567d8aeb7a7267cd95cce565118f82999b8e2406"
+      }
+    ],
+    "developmentEvidence": "DEVELOPMENT-BATCH-168.md"
+  },
+  "baselineRegression": {
+    "revision": "4d20039187766ecf4261e9ed6173ad96a9961359",
+    "testsRun": 6,
+    "testsFailed": 6,
+    "failures": [
+      "An admitted but never-dispatched action could be confirmed through target read.",
+      "Malformed target feedback could corrupt reconciliation.",
+      "Late uncertainty overwrote another service owner confirmation.",
+      "Original dispatch history and digest-bound observations were missing.",
+      "A replacement target was contacted for an original attempt.",
+      "A late reply was applied after attempt identity changed."
+    ],
+    "log": "pwce-reconciliation-baseline.log",
+    "logSha256": "47702171ee1b55f9429e794ebed4dfb63e4895d4fd38087eca0d1ff7ffe074f6"
+  },
+  "claims": [
+    "PWCE existing authenticated invocation-status operation now checks uncertain original attempts under current complete gateway owner scope. It never invokes or admits another action.",
+    "Admission pins the configured target identity. Reconciliation requires the same original target/attempt/request binding, and unavailable or unbound historical records remain uncertain. Target reads have a fresh bounded deadline independent of the earlier effect deadline, and propagate cancellation.",
+    "Target feedback must be bounded lossless JSON with consistent status/effect fields. Malformed values and forged host metadata become unknown; provider exceptions do not expose raw errors.",
+    "Original dispatch replies and earlier projections remain separate from append-only digest-bound reconciliation observations. Late uncertainty cannot replace confirmation, and an uncertain read cannot suppress a later successful dispatch reply. Status reads and dispatch retries verify observation integrity.",
+    "The target read does not start for an action that was merely admitted. Scope withdrawal, cancellation, changed attempt and storage failure withhold late output. Two service owners preserve confirmed state; actual file reopening preserves the original reply and recovery history.",
+    "Home Assistant confirmation requires the expected site/source/entity and a state update at or after attempt start, with no future timestamp. Off/unavailable states cannot be misread from old brightness attributes. Only synthetic stubs were used.",
+    "Authenticated loopback HTTP recovery confirms one original synthetic effect with one total target invocation. The existing 19 Lifestream context and 7 runtime process checks remain passing; immutable Gateway bundle pins are unchanged."
+  ],
+  "checks": [
+    {
+      "command": "npm test",
+      "repository": "PWCE",
+      "result": "pass",
+      "log": "pwce-reconciliation-full.log",
+      "logSha256": "5adf052abf30715b89ebf9623574702f0f610a8cb16f1202c82e7eb13e5f133a",
+      "testsPassed": 196
+    },
+    {
+      "command": "node --test test/action-reconciliation.test.js test/action-gateway-http.test.js test/live-integration.test.js",
+      "repository": "PWCE",
+      "result": "pass",
+      "log": "pwce-reconciliation-transport.log",
+      "logSha256": "510de080a32b14612e4a0c074868a9ac8dfc80e2cd550365d482edc7d716fd78",
+      "testsPassed": 26
+    },
+    {
+      "command": "npm run validate",
+      "repository": "PWCE",
+      "result": "pass",
+      "log": "pwce-reconciliation-validate.log",
+      "logSha256": "e31118fd431327a2355113d49120584018feac09e64cf4bcd476ecd7e5ec0cbb"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "repository": "lifestream",
+      "result": "pass",
+      "log": "pwce-reconciliation-ls-process.log",
+      "logSha256": "6cb05c77157ce5b83d351f536cdc7d682e806c3bc7f10101178f80c779b82750"
+    },
+    {
+      "command": "python3 /private/tmp/check-pwce-reconciliation-docs.py",
+      "repository": "PWCE",
+      "result": "pass",
+      "log": "pwce-reconciliation-docs.log",
+      "logSha256": "79b2084f728a974e483f8f66044a7124c1a57a4b1ea27a2813447981a7548e9d"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "repository": "lifestream",
+      "result": "pass",
+      "log": "pwce-reconciliation-private.log",
+      "logSha256": "d953d7a605f25928b07fd1e6b959783c8c6d12d16b5bcb7944bd4454f8a30904"
+    }
+  ],
+  "limits": {
+    "defaultReconciliationTimeoutMs": 5000,
+    "maximumConfiguredTimeoutMs": 30000,
+    "targetFeedbackBytes": 16384,
+    "feedbackNodes": 2048,
+    "feedbackDepth": 24,
+    "changingUncertainObservations": 16,
+    "reservedFinalConfirmation": 1,
+    "automaticRedispatch": false
+  },
+  "regressionCounts": {
+    "producerTestsPassed": 196,
+    "newProducerTests": 20,
+    "focusedTransportTestsPassed": 26,
+    "documentationPagesChecked": 28,
+    "separateProcessContextChecksPassed": 19,
+    "separateProcessRuntimeChecksPassed": 7
+  },
+  "exclusions": [
+    "The canonical Lifestream capability/authority consumer, precise grant/operation terms, host-owned UUID scope, canonical effect-evidence artifacts, PWCE snapshot/precondition binding and gateway-scoped Human approval remain outstanding. Full LS-S028/PV1-T5 action qualification is not claimed.",
+    "StateStore remains a single-writer modular-monolith store, not concurrent independent JSON-file writers. Original target identity is a trusted routing binding, not cryptographic attestation of physical effects.",
+    "Fresh synthetic state confirms the declared state criterion only; no real Home Assistant execution, exclusive-causation proof, saved-service restart, live configuration, personal-data import, training, model/provider selection or Human acceptance occurred.",
+    "Lifestream runtime source and its last 574-test result are unchanged; that full suite was not rerun for this evidence-only update. Historical receipts, unrelated dirty artifacts, four approved schemas and SYNPRJ_Q7M4 observations are preserved."
+  ],
+  "nextAction": "Complete the canonical Lifestream authority/capability consumer, precise grant and host scope mapping, PWCE snapshot/precondition binding and gateway-scoped approval transport; run the joint action lifecycle scenarios. Continue remaining S083/S084 independent development."
+}
