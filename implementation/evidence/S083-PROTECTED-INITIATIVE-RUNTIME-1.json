@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-PROTECTED-INITIATIVE-RUNTIME-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "ca70b8034abb8200083f34d5183f75caec9173c7",
+  "specificationRevision": "7a2416c09fc7387510b5755a1cae342f0d8afd89",
+  "recordedAt": "2026-09-15T01:59:53.169566Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "82376411279fea3b40c1c51cf84dc7b961055f334a197c1ec5fe84151b4d2909"
+    },
+    {
+      "path": "apps/server/src/runtime/initiative-host.ts",
+      "sha256": "9c03e203eb83482348093578712ed5714bc49bac80f52de71c7311420214d4e7"
+    },
+    {
+      "path": "apps/server/test/initiative-host.test.ts",
+      "sha256": "8043069cd90690f97e3fca86144031c6112098d3bb29991d20ab0135958a3bbd"
+    },
+    {
+      "path": "packages/storage-sqlite/src/initiative-delivery.ts",
+      "sha256": "7d7da606227443ee74bcf2fc8c52c7ca75f68b1b2bdd0ab5439e6c0fa23d1e75"
+    }
+  ],
+  "claims": [
+    "Existing initiative/v1 operations now join real local-password authentication, CSRF and Assistant ownership to the current relationship/deployment, actual session conversation/endpoint, effective policy, durable inference gate, shared prompt, delivery ledger and one-use synthetic text response.",
+    "Simulation is disabled by default and can be enabled only by a test-host launch option. Host-bound immutable source snapshots establish subject, occurrence, source expiry, availability, dwell, absence and channel. Client assertions and cross-session references are rejected; unresolved or stale sources make no call.",
+    "Cheap current-policy, readiness, privacy, opening cooldown and inference-budget checks run before preparation/generation. The generator rechecks current source, relationship, configuration, audience and host priority during streaming and before queue/emission. An ordinary authenticated turn aborts an in-flight candidate while preserving its charged, unsettled provider slot.",
+    "Text delivery uses a single HTTP payload prefix issued before recording emission, followed by the resulting metadata. Emission does not claim endpoint acceptance. Receipt/session-bound acknowledgment is separate; this text-only path rejects speech-playback claims. Inspection, idempotent retry and failed partial delivery never replay candidate text. The ledger stores a preparation identifier and actual preparedMemory section digest, not the payload.",
+    "Explicit session quiet, companionship and clear operations are available. Companionship requires current opt-in, endpoint scope, protected bounds and a 5-minute to 8-hour expiry. Temporary settings expire without altering the durable configuration or replaying old work. One effective warmth value feeds shared prepared reply controls for both ordinary and social requests; expiration restores the durable value.",
+    "Dismissal updates only the observed response and is atomic with its idempotency identity. Ordinary scoped replies update the prior opening response and clear the unanswered-topic guard. No silence or dismissal changes the relationship preference payload.",
+    "Protected integration tests exercise real local authentication, no fake user prompt, existing conversation linkage, failed CSRF/scope, no-call denials, unavailable simulation, provider cancellation, source/audience changes, temporary expiry, shared warmth, conservative partial-output accounting and idempotency write failure."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "036768811a8590ccf7c2b03e58ef4e8f72371217f16eb99f01e47efd070ce905"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "f44752c66b37d8eff4abed3578ed95a0b670b2e66eb9db7dfbe2ae80b21a65a4"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "627c4453cab66c268864e7c13a31e696c90b373b2f1308a3fc825ee2c4628d7e"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "41c9eeb512dd2981ecf3918fbd3bc2b32d7ba3d75cdc2100157b8822e45ffe61"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 352,
+    "browserTests": 29,
+    "toolingTests": 45,
+    "joinedProtectedTestsIncludedInSourceSuite": 8,
+    "privateValidatorUnitTests": 53
+  },
+  "limitations": [
+    "This is protected synthetic text API integration. Browser conversation display, Assistant transcript linkage in that UI, the opportunity inspector and gradient Lab remain pending. The existing conversation identifier and shared inference prompt are reused; no separate transcript store was created.",
+    "Output-only speech, audio-lease integration, truthful voiced playback/barge-in handling and qualified physical opportunity ingress remain pending. The speech readiness flag cannot grant text fallback or a speech-playback claim in this component.",
+    "Temporary state and readiness are volatile and end on host restart. Durable ledger recovery is connected at host construction; external older-database-restore protection for Initiative still needs integration. This receipt does not substitute for that restoration proof.",
+    "Reserved nonpersonal acknowledgments, bounded timing adaptation, simulation clock/gradient sequences, current-source prerequisite successors, selected-provider and Human/perceptual qualification remain open. No full S083/S084 acceptance is claimed.",
+    "No saved review service was restarted, and no live activation, deployment, capture, personal-data import, training, model/provider selection or new model-quality observation occurred. S084 and PWCE continuation remain active."
+  ],
+  "qualificationPending": {
+    "slices": [
+      "LS-S071",
+      "LS-S072",
+      "LS-S073",
+      "LS-S076",
+      "LS-S078"
+    ],
+    "reason": "Current-source successor qualifications are required after the joined changes; preserve previous receipts unchanged."
+  }
+}

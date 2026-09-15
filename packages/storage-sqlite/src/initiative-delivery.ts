@@ -31,7 +31,7 @@ export type InitiativeInferenceUsage = { relationshipHour: number; runtimeHour: 
  * recheck current scope, consent/configuration, source, endpoint and lease ownership. */
 export type InitiativeDeliveryAction =
   | { type: "eligible" }
-  | { type: "generated"; preparedViewId: string; interactionId: string }
+  | { type: "generated"; preparedViewId: string; interactionId: string; preparedDigest?:string }
   | { type: "queue"; limits: InitiativeOpeningLimits; current: (tx: Transaction) => boolean }
   | { type: "beginEmission"; receiptId: string; current: (tx: Transaction) => boolean }
   | { type: "emitted"; receiptId: string }
@@ -81,6 +81,10 @@ export class InitiativeDeliveryRepository {
   }
   inferenceUsage(scope:InitiativeScope):InitiativeInferenceUsage {
     return this.database.transaction(tx=>this.inferenceCounts(tx,scope,this.clock(tx)));
+  }
+  /** Cheap pre-generation guard; queue still rechecks atomically before reserving. */
+  openingRestriction(scope:InitiativeScope,limits:InitiativeOpeningLimits):"openingBudget"|"cooldown"|undefined {
+    return this.database.transaction(tx=>{const now=this.clock(tx),counts=tx.get<{hour:number;day:number;last:number|null}>("SELECT coalesce(sum(reserved_ms>?),0) AS hour,count(*) AS day,max(reserved_ms) AS last FROM initiative_delivery WHERE scope_key=? AND budget_state IN ('held','charged') AND reserved_ms>?",now-3_600_000,scopeKey(scope),now-86_400_000)!;return counts.hour>=limits.perHour||counts.day>=limits.perDay?"openingBudget":counts.last!==null&&now-counts.last<limits.minimumGapMs?"cooldown":undefined;});
   }
   /** Persist before the only provider call. A reservation is never refunded: an
    * uncertain crash between this commit and provider invocation must not permit retry.
@@ -134,7 +138,7 @@ export class InitiativeDeliveryRepository {
       return {opportunity:structuredClone(opportunity),outcome,version:1,budget:"none"};
     });
   }
-  transition(scope: InitiativeScope,id: string,expectedVersion: number,action: InitiativeDeliveryAction): InitiativeDeliveryRecord {
+  transition(scope: InitiativeScope,id: string,expectedVersion: number,action: InitiativeDeliveryAction,beforeCommit?: (tx:Transaction)=>void): InitiativeDeliveryRecord {
     return this.database.transaction(tx=>{
       const row=this.row(tx,scope,id),record=decode(row),{opportunity,outcome}=record,key=scopeKey(scope),now=this.clock(tx);
       if(row.version!==expectedVersion)throw new Error("Initiative revision conflict");
@@ -143,7 +147,9 @@ export class InitiativeDeliveryRepository {
       if(action.type!=="finish"&&action.type!=="acknowledge"&&action.type!=="respond"&&action.type!=="emitted"&&Date.parse(opportunity.expiresAt)<=now)throw new Error("Initiative opportunity expired");
       switch(action.type){
         case "eligible": requireState("pending");outcome.state="eligible";outcome.reasonCodes=["eligible"];break;
-        case "generated": requireState("eligible");outcome.state="generated";outcome.lastDeliveryStage="generated";outcome.preparedViewId=action.preparedViewId;outcome.interactionId=action.interactionId;break;
+        case "generated":
+          requireState("eligible");outcome.state="generated";outcome.lastDeliveryStage="generated";outcome.preparedViewId=action.preparedViewId;outcome.interactionId=action.interactionId;
+          if(action.preparedDigest!==undefined){if(!/^[0-9a-f]{64}$/u.test(action.preparedDigest))throw new Error("Invalid Initiative prepared digest");outcome.sourceRefs.push(`prepared-context:${action.preparedViewId}:${action.preparedDigest}`);}break;
         case "queue": {
           requireState("generated");
           if(action.current(tx)!==true)throw new Error("Initiative boundary changed");
@@ -191,6 +197,7 @@ export class InitiativeDeliveryRepository {
       }
       outcome.occurredAt=new Date(now).toISOString();validate(outcome,"RelationalInitiativeOutcome");
       tx.run("UPDATE initiative_delivery SET version=version+1,state=?,outcome_json=?,updated_ms=?,reserved_ms=?,budget_state=?,emission_started=?,receipt_id=? WHERE opportunity_id=? AND scope_key=? AND version=?",outcome.state,JSON.stringify(outcome),now,row.reserved_ms,row.budget_state,row.emission_started,row.receipt_id,id,key,expectedVersion);
+      beforeCommit?.(tx);
       return {opportunity,outcome,version:expectedVersion+1,budget:row.budget_state};
     });
   }
