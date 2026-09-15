@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "5c0079ce141478edbe32f6b821d31d11c774a76b",
+  "currentRevision": "966edf27ba301bf2aae88867fc27792faa8dfb5f",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -171,57 +171,76 @@
     "apps/server/src/admin/discovery-preference.ts",
     "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json",
     "apps/server/test/discovery-selection.test.ts",
-    "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json"
+    "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json",
+    "scripts/benchmark-discovery-local.mjs",
+    "scripts/discovery-benchmark-worker.mjs",
+    "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/admin/discovery-selection.ts",
-    "apps/server/src/admin/discovery-lab-worker.ts",
-    "apps/server/src/admin/understanding.ts",
-    "apps/server/test/discovery-selection.test.ts",
-    "apps/server/test/discovery-lab.test.ts",
-    "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json",
+    "scripts/benchmark-discovery-local.mjs",
+    "scripts/discovery-benchmark-worker.mjs",
+    "packages/performance/src/benchmark.ts",
+    "packages/performance/test/understanding.test.ts",
+    "packages/storage-sqlite/src/understanding.ts",
+    "packages/storage-sqlite/test/understanding.test.ts",
+    "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json",
     "implementation/checkpoint.json"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json"
+      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json"
+      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json"
+      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
     },
     {
       "command": "pnpm test",
-      "result": "fail",
-      "evidence": "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json"
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json"
+      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json"
+      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json"
+      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json"
+      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+    },
+    {
+      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-1.json",
+      "result": "fail",
+      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+    },
+    {
+      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-2.json",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+    },
+    {
+      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-3.json",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
     }
   ],
   "decisions": [
@@ -236,8 +255,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Profile the Discovery lookup deadline miss without loosening criteria; continue S083 reserved noninterrupting presentation transport and older-database restore fencing, existing ai5090 qualification/current prerequisites, S084 semantic Discovery/exploration/qualified analysis/actual-output/performance, and PWCE Personal V1 T5 core mapping. No goal blocker: independent work remains.",
-  "updatedAt": "2026-09-15T05:32:41.521370Z",
+  "nextAction": "Continue S083 reserved noninterrupting presentation transport and older-database restore fencing; refresh current prerequisite and existing ai5090 qualifications. Continue S084 semantic Discovery/exploration/qualified analysis/full provider performance and PWCE Personal V1 T5 core mapping. Preserve deadline history and corpus measurements. No whole-goal blocker: independent work remains.",
+  "updatedAt": "2026-09-15T05:49:36.442789Z",
   "updatedBy": "Codex",
-  "notes": "Discovery total timing and failure diagnostics are verified. Real-clock source run 400/401 failed one ambiguous-pair/enabled expectation after a measured 29.346 ms total / 28.584 ms lookup cutoff; protected API counterpart and 48 browser / 45 tooling tests passed. Exact lookup contributor remains unresolved. Historical failure preserved. Continue independent authorized development; no full regression or slice acceptance."
+  "notes": "Bounded lexical intersection-first retrieval fixes the recorded common-word corpus starvation. Failed baseline preserves 1800 missing enabled details; both successor runs each pass all 1800 enabled inclusions at 100/10000/100000 indexed candidates. Final full suite 405 source, 48 browser and 45 tooling pass. Original contended Lab deadline history remains unresolved; full provider/semantic/performance qualification stays incomplete."
 }

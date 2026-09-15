@@ -1,0 +1,1465 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-LOCAL-CORPUS-BENCHMARK-1",
+  "slice": "LS-S084",
+  "status": "componentVerified",
+  "sourceRevision": "966edf27ba301bf2aae88867fc27792faa8dfb5f",
+  "specificationRevision": "c88ca00c11e96d7db9b59371f585029b397a92db",
+  "recordedAt": "2026-09-15T05:49:36.442789Z",
+  "sourceFiles": [
+    {
+      "path": "scripts/benchmark-discovery-local.mjs",
+      "sha256": "29da7fd9fc8f0b1b5b9815309eeb9082b6b51f97aa74d0461511b0fe2aa6cab6"
+    },
+    {
+      "path": "scripts/discovery-benchmark-worker.mjs",
+      "sha256": "2d16db38040ecc6c52120cec37ed28f509eb839287715f8157ec4fa3227e0a45"
+    },
+    {
+      "path": "packages/performance/src/benchmark.ts",
+      "sha256": "30ecff12b96d697dc7a159e1e7919a85fb13c683e147b2689f8ecbdb2d0b7666"
+    },
+    {
+      "path": "packages/performance/test/understanding.test.ts",
+      "sha256": "dced342981a33efe74e40876b6704c3639ad06db14a10406e002945aa2e57ee5"
+    },
+    {
+      "path": "packages/storage-sqlite/src/understanding.ts",
+      "sha256": "5ef16fdcca1bec01390e02d469d9cd7e17675d820f3fdb7029b6d54383988fef"
+    },
+    {
+      "path": "packages/storage-sqlite/test/understanding.test.ts",
+      "sha256": "f580f1781338e54c780d8d25a561ce339bef47f4ee00cc8947d9ff42b0b29fa7"
+    }
+  ],
+  "claims": [
+    "The real indexed lookup previously took the first 32 broad union matches before applying topical ranking. In a repeatable corpus with shared generic vocabulary, the same relevant candidate at ordinal 73 was therefore absent in all 1800 enabled baseline samples across 100/10000/100000 candidates. All baseline lookups stayed within the deadline: this was a separate inclusion failure, not a deadline explanation.",
+    "The selector now requests the intersection of the existing bounded terms first, then uses the prior union query only when no complete lexical match exists. A maximum of 32 rows proceeds to existing domain/favorite/suppression/deduplication processing. Owner, boundary, expiry, current proposed state, input limits and the 10 ms total deadline remain unchanged. No graph scan, global frequency inference, trained model or schema mutation was added.",
+    "The independent storage regression creates more than 32 common-word candidates through real publication, then verifies the later specific record, partial-word fallback, foreign-owner/current-boundary exclusion and expiry. Three report tests verify at least 200 paired samples, preserved raw observations, latency/inclusion independence, invalid-measurement refusal and explicit missing provider/audio stages.",
+    "The benchmark creates only temporary synthetic databases. Each corpus has exactly N indexed candidates and two parent briefs; direct fixture seeding is not admission or acquisition proof. Real canonical prepared inputs and the actual repository/selector are used for 200 paired inputs per condition, with actual monotonic clocks, thread CPU when supported, resident memory and one synthetic WAL/FTS writer. Raw reports include method, seed, cache policy, hardware/OS/Node/power settings and measured source digests in successor runs.",
+    "Both successor corpus runs passed their local objectives and found the known relevant detail in all 1800 enabled samples each, without deadline misses. The final runner also preserves completed-corpus partial reports on interruption and rejects a writer that exits before readiness. Raw baseline and successor reports remain outside Git; no passing run replaces a failure."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "2a84ec0f094d5f3c82a2e0d54592d72a94fcb34926ed8566541547a99640e355"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "fe34a9256a9cd922fdb9093fb6699ed70a53e3f0044dab45157b4a89b679c445"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "6296847968980a69893ea1dc4c1b9878dc6bc739943d7bd631ea1123b080835a"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "82ed60e6a81bc092e756cb08a2839add5c79fe7e7536da41c12f2515f412d4c6"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-1.json",
+      "result": "fail",
+      "logSha256": "6c14df60e928be1af73c0c9e9a64ee14d1b22b011f6f280647701c5e17d4ed20"
+    },
+    {
+      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-2.json",
+      "result": "pass",
+      "logSha256": "bb26111d13e5ef40c197199424a1ca5e29c8af93aa7c0de456af2e415acc283b"
+    },
+    {
+      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-3.json",
+      "result": "pass",
+      "logSha256": "48d3ec963ef932d8faf22c9d4bf28b14fa53221a0fb5807c33702832b41f470c"
+    }
+  ],
+  "counts": {
+    "sourceTestsPassed": 405,
+    "newSourceTestsPassed": 4,
+    "browserTestsPassed": 48,
+    "toolingTestsPassed": 45,
+    "samplesPerCorpusPerRun": 800,
+    "enabledBaselineMissingDetails": 1800,
+    "enabledSuccessorDetailPasses": 3600
+  },
+  "observations": [
+    {
+      "run": 1,
+      "status": "failedLocalObjectives",
+      "rawArtifact": {
+        "path": ".lifestream/benchmarks/discovery-local/2026-09-15/s084-local-corpus-1.json",
+        "location": "original public checkout, ignored local artifacts",
+        "sha256": "19d751d51b414b724d57cb49e03e05007cb5bc799e55b9009575a059ac2951c1"
+      },
+      "sourceRevision": "966edf27ba301bf2aae88867fc27792faa8dfb5f",
+      "recordedAt": "2026-09-15T05:40:27.551Z",
+      "corpora": [
+        {
+          "indexedCandidates": 100,
+          "samplesPerCondition": 200,
+          "distributions": {
+            "disabled": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.04091700000003584,
+                "p95": 0.08016700000007404,
+                "minimum": 0.03262499999982538,
+                "maximum": 7.354332999999997
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.001374999999825377,
+                "p95": 0.007667000000083135,
+                "minimum": 0.001207999999905951,
+                "maximum": 0.18800000000010186
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.00016699999991942605,
+                "p95": 0.001125000000001819,
+                "minimum": 0.00012499999979809218,
+                "maximum": 0.007750000000214641
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0002500000000509317,
+                "p95": 0.0009589999999661813,
+                "minimum": 0.00020799999992959783,
+                "maximum": 0.016875000000027285
+              }
+            },
+            "warm": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.638541000000032,
+                "p95": 0.7392919999999776,
+                "minimum": 0.5938329999999041,
+                "maximum": 2.588124999999991
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.5991249999999582,
+                "p95": 0.6946670000002086,
+                "minimum": 0.5585840000001099,
+                "maximum": 2.4617920000000595
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.5943749999999,
+                "p95": 0.6871670000000449,
+                "minimum": 0.5543330000000424,
+                "maximum": 2.4029579999998987
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.00204200000007404,
+                "p95": 0.004083999999920707,
+                "minimum": 0.0018749999999272404,
+                "maximum": 0.028416999999990367
+              }
+            },
+            "background": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.6190000000001419,
+                "p95": 0.7418330000000424,
+                "minimum": 0.5604590000000371,
+                "maximum": 2.143916999999874
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.5824170000000777,
+                "p95": 0.6877499999998236,
+                "minimum": 0.5272910000001048,
+                "maximum": 2.095166000000063
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.5780409999999847,
+                "p95": 0.6775829999999132,
+                "minimum": 0.5205419999999776,
+                "maximum": 2.0853329999999914
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0020839999999680003,
+                "p95": 0.0039159999998901185,
+                "minimum": 0.0014590000000680448,
+                "maximum": 0.008042000000159533
+              }
+            },
+            "cold": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.6272910000000138,
+                "p95": 0.73174999999992,
+                "minimum": 0.5609579999998004,
+                "maximum": 0.9612919999999576
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.5891249999999673,
+                "p95": 0.6776250000000346,
+                "minimum": 0.5264170000000377,
+                "maximum": 0.8777090000000953
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.584957999999915,
+                "p95": 0.6675420000001395,
+                "minimum": 0.5216250000000855,
+                "maximum": 0.8565830000000005
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0019159999999374122,
+                "p95": 0.0030420000000503933,
+                "minimum": 0.0014999999998508429,
+                "maximum": 0.0060000000000854925
+              }
+            }
+          },
+          "deadlineMisses": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "expectedDetailFailures": {
+            "disabled": 0,
+            "warm": 200,
+            "background": 200,
+            "cold": 200
+          },
+          "backgroundWriter": "Committed batch counts retained in command log for initial runner",
+          "qualification": "incompleteEvidence"
+        },
+        {
+          "indexedCandidates": 10000,
+          "samplesPerCondition": 200,
+          "distributions": {
+            "disabled": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.03054199999996854,
+                "p95": 0.03758400000015172,
+                "minimum": 0.029374999999845386,
+                "maximum": 0.13654199999996308
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.001125000000001819,
+                "p95": 0.0016250000001036824,
+                "minimum": 0.001040999999986525,
+                "maximum": 0.0485839999998916
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.00016600000003563764,
+                "p95": 0.00020799999992959783,
+                "minimum": 0.00012499999979809218,
+                "maximum": 0.0007500000001527951
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.00012500000002546585,
+                "p95": 0.00016699999991942605,
+                "minimum": 8.299999990413198e-05,
+                "maximum": 0.005708000000140601
+              }
+            },
+            "warm": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.6190000000001419,
+                "p95": 0.7437079999999696,
+                "minimum": 0.5642500000001291,
+                "maximum": 0.8829169999999067
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.5831669999997757,
+                "p95": 0.6977499999998145,
+                "minimum": 0.5298339999999371,
+                "maximum": 0.8477499999999054
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.5790419999998448,
+                "p95": 0.6910419999999249,
+                "minimum": 0.5251659999998992,
+                "maximum": 0.8440000000000509
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0016249999998763087,
+                "p95": 0.003957999999784079,
+                "minimum": 0.001457999999729509,
+                "maximum": 0.025459000000410015
+              }
+            },
+            "background": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.6231670000001941,
+                "p95": 0.7530839999999444,
+                "minimum": 0.5577920000000631,
+                "maximum": 9.458291999999801
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.5867499999999382,
+                "p95": 0.7060419999997976,
+                "minimum": 0.5147499999998217,
+                "maximum": 9.386875000000146
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.5822089999996933,
+                "p95": 0.6990419999997357,
+                "minimum": 0.5121250000001965,
+                "maximum": 9.370832999999948
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0016249999998763087,
+                "p95": 0.0029999999997016857,
+                "minimum": 0.0011249999997744453,
+                "maximum": 0.00858299999981682
+              }
+            },
+            "cold": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.61324999999988,
+                "p95": 0.7270829999997659,
+                "minimum": 0.5662919999999758,
+                "maximum": 0.8188340000001517
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.575416000000132,
+                "p95": 0.6713340000001153,
+                "minimum": 0.5324590000000171,
+                "maximum": 0.7505000000001019
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.5719159999998737,
+                "p95": 0.664209000000028,
+                "minimum": 0.5281249999998181,
+                "maximum": 0.7429169999995793
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0016660000001138542,
+                "p95": 0.003165999999964697,
+                "minimum": 0.0012910000000374566,
+                "maximum": 0.00483299999996234
+              }
+            }
+          },
+          "deadlineMisses": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "expectedDetailFailures": {
+            "disabled": 0,
+            "warm": 200,
+            "background": 200,
+            "cold": 200
+          },
+          "backgroundWriter": "Committed batch counts retained in command log for initial runner",
+          "qualification": "incompleteEvidence"
+        },
+        {
+          "indexedCandidates": 100000,
+          "samplesPerCondition": 200,
+          "distributions": {
+            "disabled": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.027167000000190455,
+                "p95": 0.031833000000005995,
+                "minimum": 0.02454200000011042,
+                "maximum": 0.08933400000023539
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.0010000000002037268,
+                "p95": 0.0013330000001587905,
+                "minimum": 0.0008749999997235136,
+                "maximum": 0.007625000000189175
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.0001250000004802132,
+                "p95": 0.00016700000014679972,
+                "minimum": 8.299999990413198e-05,
+                "maximum": 0.0010419999998703133
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 8.400000024266774e-05,
+                "p95": 0.0001250000004802132,
+                "minimum": 4.199999966658652e-05,
+                "maximum": 0.0007079999995767139
+              }
+            },
+            "warm": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.5661250000002838,
+                "p95": 0.6177079999997659,
+                "minimum": 0.5302499999997963,
+                "maximum": 0.8968750000003638
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.5361249999996289,
+                "p95": 0.5844580000002679,
+                "minimum": 0.5019169999995938,
+                "maximum": 0.8602090000003955
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.5337920000001759,
+                "p95": 0.581625000000713,
+                "minimum": 0.49945800000023155,
+                "maximum": 0.8569159999997282
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0011669999994410318,
+                "p95": 0.0019170000005033216,
+                "minimum": 0.0010409999995317776,
+                "maximum": 0.004958999999871594
+              }
+            },
+            "background": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.5773340000005192,
+                "p95": 0.7176669999998921,
+                "minimum": 0.5233749999997599,
+                "maximum": 2.055540999999721
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.547167000000627,
+                "p95": 0.6742500000000291,
+                "minimum": 0.49195899999995163,
+                "maximum": 2.0226250000005166
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.54424999999992,
+                "p95": 0.6717079999998532,
+                "minimum": 0.4894159999994372,
+                "maximum": 2.0202079999999114
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.001209000000017113,
+                "p95": 0.002207999999882304,
+                "minimum": 0.001042000000779808,
+                "maximum": 0.005167000000255939
+              }
+            },
+            "cold": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.6083339999995587,
+                "p95": 0.7078750000000582,
+                "minimum": 0.5600000000004002,
+                "maximum": 0.7659169999997175
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.5742920000002414,
+                "p95": 0.6604999999999563,
+                "minimum": 0.529207999999926,
+                "maximum": 0.7021670000003724
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.5711250000003929,
+                "p95": 0.6561670000000959,
+                "minimum": 0.5259999999998399,
+                "maximum": 0.6945830000004207
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0015419999999721767,
+                "p95": 0.0029580000000350992,
+                "minimum": 0.0011670000003505265,
+                "maximum": 0.006624999999985448
+              }
+            }
+          },
+          "deadlineMisses": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "expectedDetailFailures": {
+            "disabled": 0,
+            "warm": 200,
+            "background": 200,
+            "cold": 200
+          },
+          "backgroundWriter": "Committed batch counts retained in command log for initial runner",
+          "qualification": "incompleteEvidence"
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "status": "passedLocalObjectives",
+      "rawArtifact": {
+        "path": ".lifestream/benchmarks/discovery-local/2026-09-15/s084-local-corpus-2.json",
+        "location": "original public checkout, ignored local artifacts",
+        "sha256": "f379c12d2cf29e169ecaf42a4acb2aa7c42885dce27783fec10aa6724b2c2e08"
+      },
+      "sourceRevision": "966edf27ba301bf2aae88867fc27792faa8dfb5f",
+      "recordedAt": "2026-09-15T05:43:47.308Z",
+      "corpora": [
+        {
+          "indexedCandidates": 100,
+          "samplesPerCondition": 200,
+          "distributions": {
+            "disabled": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.03966600000012477,
+                "p95": 0.0860419999999067,
+                "minimum": 0.03304100000013932,
+                "maximum": 6.847874999999931
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.0013750000000527507,
+                "p95": 0.008665999999948326,
+                "minimum": 0.0011660000000119908,
+                "maximum": 0.16083400000002257
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.00016699999991942605,
+                "p95": 0.0009999999999763531,
+                "minimum": 0.00012499999979809218,
+                "maximum": 0.00708400000007714
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0002500000000509317,
+                "p95": 0.001042000000097687,
+                "minimum": 0.00020799999992959783,
+                "maximum": 0.01933299999996052
+              }
+            },
+            "warm": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.11716599999999744,
+                "p95": 0.14404100000001563,
+                "minimum": 0.1086249999998472,
+                "maximum": 2.048041999999896
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.080208999999968,
+                "p95": 0.10587499999996908,
+                "minimum": 0.07408299999997325,
+                "maximum": 1.906500000000051
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.07583299999987503,
+                "p95": 0.09708399999999529,
+                "minimum": 0.07008299999984047,
+                "maximum": 1.8535839999999553
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0018749999999272404,
+                "p95": 0.0030839999999443535,
+                "minimum": 0.0017499999999017746,
+                "maximum": 0.026792000000114058
+              }
+            },
+            "background": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.11491700000010496,
+                "p95": 0.16012499999987995,
+                "minimum": 0.09491699999989578,
+                "maximum": 0.4303749999999127
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.07770899999991343,
+                "p95": 0.10837500000002365,
+                "minimum": 0.06324999999992542,
+                "maximum": 0.3173340000000735
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.07295799999997143,
+                "p95": 0.10145799999986593,
+                "minimum": 0.059416000000055647,
+                "maximum": 0.2900830000000951
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0019579999998313724,
+                "p95": 0.004958999999871594,
+                "minimum": 0.001374999999825377,
+                "maximum": 0.008375000000114596
+              }
+            },
+            "cold": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.1429169999998976,
+                "p95": 0.2535000000000309,
+                "minimum": 0.12204099999985374,
+                "maximum": 0.3683330000001206
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.10379199999988487,
+                "p95": 0.18995799999993324,
+                "minimum": 0.08808399999998073,
+                "maximum": 0.2722919999998794
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.0989999999999327,
+                "p95": 0.1801669999999831,
+                "minimum": 0.08429200000000492,
+                "maximum": 0.26033400000005713
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0019579999998313724,
+                "p95": 0.004040999999915584,
+                "minimum": 0.0014999999998508429,
+                "maximum": 0.02312500000016371
+              }
+            }
+          },
+          "deadlineMisses": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "expectedDetailFailures": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "backgroundWriter": [
+            {
+              "stopped": true,
+              "batches": 76
+            }
+          ],
+          "qualification": "incompleteEvidence"
+        },
+        {
+          "indexedCandidates": 10000,
+          "samplesPerCondition": 200,
+          "distributions": {
+            "disabled": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.03104199999984303,
+                "p95": 0.038291999999955806,
+                "minimum": 0.029166999999915788,
+                "maximum": 0.13495899999998073
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.001125000000001819,
+                "p95": 0.0015000000000782165,
+                "minimum": 0.001040999999986525,
+                "maximum": 0.04587500000002365
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.00016599999980826396,
+                "p95": 0.00016700000014679972,
+                "minimum": 0.00012499999979809218,
+                "maximum": 0.0007080000000314612
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.00012499999979809218,
+                "p95": 0.00012500000002546585,
+                "minimum": 8.299999990413198e-05,
+                "maximum": 0.0037500000000818545
+              }
+            },
+            "warm": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.10108300000001691,
+                "p95": 0.11670800000001691,
+                "minimum": 0.09220900000013899,
+                "maximum": 0.2903329999999187
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.06662500000015825,
+                "p95": 0.07816699999989396,
+                "minimum": 0.06170800000018062,
+                "maximum": 0.2476249999999709
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.06283400000006623,
+                "p95": 0.07312500000011823,
+                "minimum": 0.05808400000000802,
+                "maximum": 0.23887500000000728
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0014160000000629225,
+                "p95": 0.0018749999999272404,
+                "minimum": 0.0012500000000272848,
+                "maximum": 0.004458999999997104
+              }
+            },
+            "background": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.10991599999988466,
+                "p95": 0.13858299999992596,
+                "minimum": 0.09375,
+                "maximum": 0.32962499999985084
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.07529199999999037,
+                "p95": 0.10366700000008677,
+                "minimum": 0.060709000000088054,
+                "maximum": 0.24166700000000674
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.07145799999989322,
+                "p95": 0.09975000000008549,
+                "minimum": 0.057332999999971435,
+                "maximum": 0.22504200000003038
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0014590000000680448,
+                "p95": 0.0019579999998313724,
+                "minimum": 0.0012910000000374566,
+                "maximum": 0.006333000000040556
+              }
+            },
+            "cold": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.14254200000004857,
+                "p95": 0.19070899999996982,
+                "minimum": 0.1279589999999189,
+                "maximum": 0.27404100000012477
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.10783300000002782,
+                "p95": 0.15295800000012605,
+                "minimum": 0.09579200000007404,
+                "maximum": 0.2055000000000291
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.10329200000001038,
+                "p95": 0.14599999999995816,
+                "minimum": 0.09162500000002183,
+                "maximum": 0.1957079999999678
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0017920000000231084,
+                "p95": 0.0024170000001504377,
+                "minimum": 0.0013750000000527507,
+                "maximum": 0.004999999999881766
+              }
+            }
+          },
+          "deadlineMisses": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "expectedDetailFailures": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "backgroundWriter": [
+            {
+              "stopped": true,
+              "batches": 57
+            }
+          ],
+          "qualification": "incompleteEvidence"
+        },
+        {
+          "indexedCandidates": 100000,
+          "samplesPerCondition": 200,
+          "distributions": {
+            "disabled": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.04070800000044983,
+                "p95": 0.052375000000211,
+                "minimum": 0.02695800000037707,
+                "maximum": 1.2115420000000086
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.0011669999994410318,
+                "p95": 0.0025829999995039543,
+                "minimum": 0.0009999999992942321,
+                "maximum": 0.011874999999236024
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.00016599999980826396,
+                "p95": 0.000249999999141437,
+                "minimum": 8.299999990413198e-05,
+                "maximum": 0.0013750000007348717
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0001249999995707185,
+                "p95": 0.0002500000000509317,
+                "minimum": 8.299999990413198e-05,
+                "maximum": 0.001584000000548258
+              }
+            },
+            "warm": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.10745800000040617,
+                "p95": 0.12804200000027777,
+                "minimum": 0.09887499999967986,
+                "maximum": 0.3908339999998134
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.07629199999973935,
+                "p95": 0.09233300000050804,
+                "minimum": 0.07033300000057352,
+                "maximum": 0.32791699999961565
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.07366599999932077,
+                "p95": 0.08966699999928096,
+                "minimum": 0.0678330000000642,
+                "maximum": 0.31020799999987503
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0010840000004463946,
+                "p95": 0.0015829999993002275,
+                "minimum": 0.0009999999992942321,
+                "maximum": 0.005000000000109139
+              }
+            },
+            "background": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.11070800000015879,
+                "p95": 0.1520829999999478,
+                "minimum": 0.09416700000019773,
+                "maximum": 0.3325829999994312
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.07908399999996618,
+                "p95": 0.11899999999968713,
+                "minimum": 0.06591600000047038,
+                "maximum": 0.24495800000022427
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.07666599999993196,
+                "p95": 0.11654100000032486,
+                "minimum": 0.06375000000025466,
+                "maximum": 0.23487500000010186
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0010840000004463946,
+                "p95": 0.001457999999729509,
+                "minimum": 0.0009999999992942321,
+                "maximum": 0.00483299999996234
+              }
+            },
+            "cold": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.15487499999926513,
+                "p95": 0.2599580000005517,
+                "minimum": 0.13429100000030303,
+                "maximum": 0.38279099999999744
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.12141700000029232,
+                "p95": 0.2124999999996362,
+                "minimum": 0.10408300000017334,
+                "maximum": 0.29366699999991397
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.11845800000082818,
+                "p95": 0.20650000000023283,
+                "minimum": 0.1014999999997599,
+                "maximum": 0.28487500000028376
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0014159999991534278,
+                "p95": 0.0030419999993682723,
+                "minimum": 0.0011670000003505265,
+                "maximum": 0.00687500000003638
+              }
+            }
+          },
+          "deadlineMisses": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "expectedDetailFailures": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "backgroundWriter": [
+            {
+              "stopped": true,
+              "batches": 54
+            }
+          ],
+          "qualification": "incompleteEvidence"
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "status": "passedLocalObjectives",
+      "rawArtifact": {
+        "path": ".lifestream/benchmarks/discovery-local/2026-09-15/s084-local-corpus-3.json",
+        "location": "original public checkout, ignored local artifacts",
+        "sha256": "0b57159a29d1995e215f0b0ff69ea77ae3e984a39c6dfc7139a4d357c97e32d8"
+      },
+      "sourceRevision": "966edf27ba301bf2aae88867fc27792faa8dfb5f",
+      "recordedAt": "2026-09-15T05:47:16.961Z",
+      "corpora": [
+        {
+          "indexedCandidates": 100,
+          "samplesPerCondition": 200,
+          "distributions": {
+            "disabled": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.03908400000000256,
+                "p95": 0.07937500000002728,
+                "minimum": 0.03287499999987631,
+                "maximum": 7.176791999999978
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.001334000000042579,
+                "p95": 0.007790999999997439,
+                "minimum": 0.001207999999905951,
+                "maximum": 0.16887499999984357
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.00016699999991942605,
+                "p95": 0.001125000000001819,
+                "minimum": 8.299999990413198e-05,
+                "maximum": 0.003208000000086031
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0002500000000509317,
+                "p95": 0.0009999999999763531,
+                "minimum": 0.00020799999992959783,
+                "maximum": 0.017333999999891603
+              }
+            },
+            "warm": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.11604200000010678,
+                "p95": 0.15508299999987685,
+                "minimum": 0.10933300000010604,
+                "maximum": 1.7912089999999807
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.07941699999992125,
+                "p95": 0.10695800000007694,
+                "minimum": 0.07400000000006912,
+                "maximum": 1.693042000000105
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.07504199999993943,
+                "p95": 0.10133300000006784,
+                "minimum": 0.06970799999999144,
+                "maximum": 1.6507919999999103
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.001875000000154614,
+                "p95": 0.003416999999899417,
+                "minimum": 0.0017499999999017746,
+                "maximum": 0.02175000000011096
+              }
+            },
+            "background": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.11354200000005221,
+                "p95": 0.1565410000000611,
+                "minimum": 0.10033400000020265,
+                "maximum": 0.3262090000000626
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.07712500000002365,
+                "p95": 0.10854199999994307,
+                "minimum": 0.06545799999980773,
+                "maximum": 0.22770799999989322
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.07229199999983393,
+                "p95": 0.10208400000010442,
+                "minimum": 0.06137499999999818,
+                "maximum": 0.20900000000006003
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0019159999999374122,
+                "p95": 0.0027919999999994616,
+                "minimum": 0.001334000000042579,
+                "maximum": 0.007749999999987267
+              }
+            },
+            "cold": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.1422499999998763,
+                "p95": 0.24995899999998983,
+                "minimum": 0.11829200000011042,
+                "maximum": 0.3264999999998963
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.10104200000000674,
+                "p95": 0.18120799999996962,
+                "minimum": 0.08412499999985812,
+                "maximum": 0.23008299999992232
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.09529100000008839,
+                "p95": 0.1708339999997861,
+                "minimum": 0.08016699999984667,
+                "maximum": 0.21516599999995378
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0020829999998568383,
+                "p95": 0.00437499999998181,
+                "minimum": 0.0016249999998763087,
+                "maximum": 0.009332999999969616
+              }
+            }
+          },
+          "deadlineMisses": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "expectedDetailFailures": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "backgroundWriter": [
+            {
+              "stopped": true,
+              "batches": 59
+            }
+          ],
+          "qualification": "incompleteEvidence"
+        },
+        {
+          "indexedCandidates": 10000,
+          "samplesPerCondition": 200,
+          "distributions": {
+            "disabled": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.03229199999987031,
+                "p95": 0.037790999999970154,
+                "minimum": 0.03070900000011534,
+                "maximum": 0.14400000000000546
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.0011670000001231529,
+                "p95": 0.0017500000001291482,
+                "minimum": 0.0010829999998804851,
+                "maximum": 0.04600000000004911
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.00016600000003563764,
+                "p95": 0.0002080000001569715,
+                "minimum": 0.00012499999979809218,
+                "maximum": 0.0008749999999508873
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.00012500000002546585,
+                "p95": 0.00016699999991942605,
+                "minimum": 8.299999990413198e-05,
+                "maximum": 0.001040999999986525
+              }
+            },
+            "warm": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.10104200000000674,
+                "p95": 0.12066700000013952,
+                "minimum": 0.09545900000011898,
+                "maximum": 0.36799999999993815
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.0673749999998563,
+                "p95": 0.0865000000001146,
+                "minimum": 0.06341700000007222,
+                "maximum": 0.2796250000001237
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.06337499999995089,
+                "p95": 0.08187500000008185,
+                "minimum": 0.05970800000000054,
+                "maximum": 0.2642909999999574
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0015409999998610147,
+                "p95": 0.0021669999998721323,
+                "minimum": 0.0013329999999314168,
+                "maximum": 0.012332999999898675
+              }
+            },
+            "background": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.11604200000010678,
+                "p95": 0.20724999999993088,
+                "minimum": 0.0987079999999878,
+                "maximum": 0.38645900000005895
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.08083299999998417,
+                "p95": 0.15762500000005275,
+                "minimum": 0.06604200000015226,
+                "maximum": 0.2942089999999098
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.07637499999987085,
+                "p95": 0.151459000000159,
+                "minimum": 0.06224999999994907,
+                "maximum": 0.27662500000019463
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0016250000001036824,
+                "p95": 0.004333999999971638,
+                "minimum": 0.001374999999825377,
+                "maximum": 0.009958000000096945
+              }
+            },
+            "cold": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.17416700000012497,
+                "p95": 0.2986670000000231,
+                "minimum": 0.13641699999993762,
+                "maximum": 0.42108299999995324
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.13283400000000256,
+                "p95": 0.2243750000000091,
+                "minimum": 0.1016660000000229,
+                "maximum": 0.32466599999997925
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.126166000000012,
+                "p95": 0.21229099999982282,
+                "minimum": 0.09712500000000546,
+                "maximum": 0.3052500000001146
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.00254199999994853,
+                "p95": 0.005290999999942869,
+                "minimum": 0.0016659999998864805,
+                "maximum": 0.009666999999808468
+              }
+            }
+          },
+          "deadlineMisses": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "expectedDetailFailures": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "backgroundWriter": [
+            {
+              "stopped": true,
+              "batches": 72
+            }
+          ],
+          "qualification": "incompleteEvidence"
+        },
+        {
+          "indexedCandidates": 100000,
+          "samplesPerCondition": 200,
+          "distributions": {
+            "disabled": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.03954199999952834,
+                "p95": 0.04675000000042928,
+                "minimum": 0.026541000000179338,
+                "maximum": 0.9346660000001066
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.0010830000001078588,
+                "p95": 0.0019589999992604135,
+                "minimum": 0.0009579999996276456,
+                "maximum": 0.010000000000218279
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.0001250000004802132,
+                "p95": 0.00020800000038434519,
+                "minimum": 8.299999990413198e-05,
+                "maximum": 0.001374999999825377
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0001249999995707185,
+                "p95": 0.00016700000014679972,
+                "minimum": 8.299999990413198e-05,
+                "maximum": 0.0012500000002546585
+              }
+            },
+            "warm": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.10425000000032014,
+                "p95": 0.13241699999980483,
+                "minimum": 0.09608299999945302,
+                "maximum": 0.3313749999997526
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.07595800000035524,
+                "p95": 0.09475000000020373,
+                "minimum": 0.06966700000066339,
+                "maximum": 0.27462500000001455
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.07341699999960838,
+                "p95": 0.09204099999988102,
+                "minimum": 0.06741599999986647,
+                "maximum": 0.2641249999996944
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0011249999997744453,
+                "p95": 0.0016660000001138542,
+                "minimum": 0.0009999999992942321,
+                "maximum": 0.006250000000363798
+              }
+            },
+            "background": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.10662500000034925,
+                "p95": 0.13737500000024738,
+                "minimum": 0.09600000000045839,
+                "maximum": 0.29604099999960454
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.0772079999997004,
+                "p95": 0.10787499999969441,
+                "minimum": 0.06737500000053842,
+                "maximum": 0.22579200000018318
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.07483400000000984,
+                "p95": 0.10570800000004965,
+                "minimum": 0.06525000000056025,
+                "maximum": 0.2174590000004173
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.0011249999997744453,
+                "p95": 0.001291999999921245,
+                "minimum": 0.0009999999992942321,
+                "maximum": 0.004541000000244821
+              }
+            },
+            "cold": {
+              "prepared": {
+                "count": 200,
+                "p50": 0.1533339999996315,
+                "p95": 0.2515419999999722,
+                "minimum": 0.13458400000035908,
+                "maximum": 0.36366699999962293
+              },
+              "selection": {
+                "count": 200,
+                "p50": 0.12087500000052387,
+                "p95": 0.20662499999980355,
+                "minimum": 0.10375000000021828,
+                "maximum": 0.28395799999998417
+              },
+              "lookup": {
+                "count": 200,
+                "p50": 0.11808399999972607,
+                "p95": 0.201958999999988,
+                "minimum": 0.1013329999996131,
+                "maximum": 0.2713340000000244
+              },
+              "innerSelection": {
+                "count": 200,
+                "p50": 0.001374999999825377,
+                "p95": 0.002915999999459018,
+                "minimum": 0.0011249999997744453,
+                "maximum": 0.008584000000155356
+              }
+            }
+          },
+          "deadlineMisses": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "expectedDetailFailures": {
+            "disabled": 0,
+            "warm": 0,
+            "background": 0,
+            "cold": 0
+          },
+          "backgroundWriter": [
+            {
+              "stopped": true,
+              "batches": 52
+            }
+          ],
+          "qualification": "incompleteEvidence"
+        }
+      ]
+    }
+  ],
+  "prerequisiteQualification": {
+    "status": "pending",
+    "slices": [
+      "LS-S073",
+      "LS-S076",
+      "LS-S078",
+      "LS-S080"
+    ],
+    "reason": "Current effective inputs differ from historical qualification; prerequisite receipts are unmodified."
+  },
+  "historicalFailuresPreserved": [
+    {
+      "path": "implementation/evidence/S083-TIMING-ADAPTATION-1.json",
+      "sha256": "3649b979bc9a4e1ccc7c46d0456f394f9d845918223c084ec0abcad2bf9e9ef7"
+    },
+    {
+      "path": "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json",
+      "sha256": "af08c347bdcc01ebcd96fdc7c1004114cba45c477800fb319f5d0a4420534c3f"
+    }
+  ],
+  "limitations": [
+    "This measures one independently authored known-match corpus shape with repeated paired inputs. It is not the canonical full semantic/held-out campaign, calibrated ranking, exploration allocation, or all current-turn wording. Partial union fallback remains bounded and cannot guarantee every relevant candidate will be among its first 32 matches.",
+    "Fresh SQLite connection is not operating-system page-cache cold, JIT/module cold or model cold. Background work is a single synthetic projection writer, not the actual selected-provider analysis workload. Model first-token output, audio/barge-in/continuity, GPU/provider pressure and Human quality were not measured. Full S084 performance qualification remains incomplete.",
+    "The earlier contended 29.346 ms Lab deadline miss remains preserved. Its exact contributor is unresolved; this separate corpus retrieval fix and passing full-suite successor do not retroactively explain it or promise deadline compliance under every load.",
+    "S083 reserved presentation/older-database fencing, selected-provider and current-source prerequisites, remaining S084 semantic/exploration/analysis/full performance, and PWCE Personal V1 T5 mapping remain open. No deployment, saved review service restart, live configuration, personal-data import, training, new provider selection or Human acceptance occurred. Approved schemas and unrelated dirty artifacts remain unchanged."
+  ]
+}

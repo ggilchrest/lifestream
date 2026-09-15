@@ -171,8 +171,16 @@ export class UnderstandingRepository {
     const terms=[...new Set((input.toLowerCase().match(/[\p{L}\p{N}]{3,40}/gu)??[]).filter(term=>!['the','what','about','tell','please','could','would','does','explain','optional','source','attributed','detail','authority','grants','tentative','question','topic','discovery','candidate'].includes(term)))].slice(0,12);
     if(!terms.length)return [];
     if(!/^[a-f0-9]{64}$/u.test(boundary))return [];
-    const match=`scope_key:"${scopeKey(scope)}" AND boundary:"${boundary}" AND content:(${terms.map(term=>`"${term}"`).join(" OR ")})`;
-    const rows=this.database.connection.prepare("SELECT a.artifact_id AS id,a.payload_json AS payload,p.content,p.fresh_until_ms AS freshUntil FROM understanding_projection_fts JOIN understanding_projection p ON p.projection_id=understanding_projection_fts.rowid JOIN understanding_artifacts a ON a.artifact_id=p.artifact_id WHERE understanding_projection_fts MATCH ? AND p.scope_key=? AND p.boundary=? AND p.fresh_until_ms>? AND a.kind='candidate' AND json_extract(a.payload_json,'$.status')='proposed' LIMIT 32").all(match,scopeKey(scope),boundary,this.now()) as {id:string;payload:string;content:string;freshUntil:number}[];
+    const owner=scopeKey(scope),time=this.now();
+    const match=(operator:'AND'|'OR')=>`scope_key:"${owner}" AND boundary:"${boundary}" AND content:(${terms.map(term=>`"${term}"`).join(` ${operator} `)})`;
+    const query=this.database.connection.prepare("SELECT a.artifact_id AS id,a.payload_json AS payload,p.content,p.fresh_until_ms AS freshUntil FROM understanding_projection_fts JOIN understanding_projection p ON p.projection_id=understanding_projection_fts.rowid JOIN understanding_artifacts a ON a.artifact_id=p.artifact_id WHERE understanding_projection_fts MATCH ? AND p.scope_key=? AND p.boundary=? AND p.fresh_until_ms>? AND a.kind='candidate' AND json_extract(a.payload_json,'$.status')='proposed' LIMIT 32");
+    type SelectionRow={id:string;payload:string;content:string;freshUntil:number};
+    // Retrieve the bounded, more specific intersection before a broad union can
+    // fill every slot with common-word matches. Keep the existing union fallback
+    // when optional wording prevents a complete lexical match; never scan/rank
+    // an unbounded corpus or relax the scope, expiry or suppression checks.
+    let rows=query.all(match('AND'),owner,boundary,time) as SelectionRow[];
+    if(!rows.length&&terms.length>1)rows=query.all(match('OR'),owner,boundary,time) as SelectionRow[];
     const words=(text:string):string[]=>text.toLowerCase().match(/[\p{L}\p{N}]+/gu)??[];
     const inputWords=new Set(words(input)),domain=/\b(?:in|from)\s+(?:the\s+)?([\p{L}\p{N}][\p{L}\p{N} '\-]{1,60}?)(?=\s+(?:universe|franchise|series|context)\b|[,?!.]|$)/iu.exec(input)?.[1];
     const ranked=rows.flatMap((row,index)=>{const candidate=JSON.parse(row.payload) as UnderstandingRecord;if(this.candidateSuppressed(scope,candidate))return [];

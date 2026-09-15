@@ -114,3 +114,58 @@ export function benchmarkDiscovery(environment: DiscoveryEnvironment, runs: Reco
   }
   return { environment: structuredClone(environment), sampleCountPerCondition: expectedIds.length, percentileMethod: "nearest-rank", gates, distributions: reports, comparisons, raw: structuredClone(runs), status: gates.some(gate => gate.status === "fail") ? "failedObjectives" : gates.some(gate => gate.status === "unverified") ? "incompleteEvidence" : "passedMeasuredObjectives", claimBoundary: environment.evidence === "fixture" ? "Fixture measurements only; no real provider, physical or Human acceptance" : "Named environment measurements only; Human acceptance remains separate" };
 }
+
+export type DiscoveryLookupSample = {
+  pairId: string; preparedStartedAt: number; selectionStartedAt: number;
+  selectionCompletedAt: number; preparedCompletedAt: number;
+  lookupMs: number; innerSelectionMs: number; threadCpuMicroseconds: number | null;
+  residentMemoryMiB: number; selectedItems: number; enrichmentTokenUpperBound: number;
+  disposition: string; expectedDetailPresent: boolean;
+};
+export type DiscoveryLookupEnvironment = {
+  hardware: string; os: string; powerMode: string; sourceRevision: string;
+  configurationDigest: string; cachePolicy: string; backgroundWork: string;
+  seed: number; corpusRecords: 100 | 10000 | 100000;
+};
+/** Actual local measurements can be useful before inference/audio measurements exist.
+ * Missing stages are explicit; this report never supplies fabricated provider milestones. */
+export function benchmarkDiscoveryLookup(environment: DiscoveryLookupEnvironment, runs: Record<DiscoveryCondition, readonly DiscoveryLookupSample[]>) {
+  for (const field of ['hardware','os','powerMode','sourceRevision','configurationDigest','cachePolicy','backgroundWork'] as const)
+    if (!environment[field]?.trim()) throw new Error('complete local lookup environment required');
+  if (!Number.isSafeInteger(environment.seed) || ![100,10000,100000].includes(environment.corpusRecords)) throw new Error('invalid local corpus experiment');
+  const ids=runs.disabled.map(sample=>sample.pairId);
+  if(ids.length<200||new Set(ids).size!==ids.length||ids.some(id=>!id))throw new Error('at least 200 unique paired lookups required');
+  const conditions=['disabled','warm','background','cold'] as const;
+  const distributions={} as Record<DiscoveryCondition,{prepared:Distribution;selection:Distribution;lookup:Distribution;innerSelection:Distribution}>;
+  const gates:{condition:DiscoveryCondition;metric:string;status:'pass'|'fail';count?:number}[]=[];
+  for(const condition of conditions){
+    const samples=runs[condition];
+    if(samples.length!==ids.length||samples.some((sample,i)=>sample.pairId!==ids[i]))throw new Error('same ordered paired lookups required');
+    for(const sample of samples){
+      const times=[sample.preparedStartedAt,sample.selectionStartedAt,sample.selectionCompletedAt,sample.preparedCompletedAt];
+      if(times.some((time,i)=>!Number.isFinite(time)||time<0||i>0&&time<times[i-1]!))throw new Error('finite monotonic local milestones required');
+      if([sample.lookupMs,sample.innerSelectionMs,sample.residentMemoryMiB].some(value=>!Number.isFinite(value)||value<0)
+        ||sample.threadCpuMicroseconds!==null&&(!Number.isFinite(sample.threadCpuMicroseconds)||sample.threadCpuMicroseconds<0))throw new Error('invalid local resource measurement');
+      if(![sample.selectedItems,sample.enrichmentTokenUpperBound].every(value=>Number.isSafeInteger(value)&&value>=0)
+        ||typeof sample.expectedDetailPresent!=='boolean'||!['included','disabled','deadline','boundaryChanged','empty'].includes(sample.disposition))throw new Error('invalid local selection observation');
+    }
+    const prepared=distribution(samples.map(s=>s.preparedCompletedAt-s.preparedStartedAt))!,selection=distribution(samples.map(s=>s.selectionCompletedAt-s.selectionStartedAt))!;
+    distributions[condition]={prepared,selection,lookup:distribution(samples.map(s=>s.lookupMs))!,innerSelection:distribution(samples.map(s=>s.innerSelectionMs))!};
+    gates.push({condition,metric:'preparedLatency',status:prepared.p50<=15&&prepared.p95<=40?'pass':'fail'},
+      {condition,metric:'selectionLatency',status:selection.p50<=5&&selection.p95<=10?'pass':'fail'});
+    const missing=samples.filter(s=>condition==='disabled'?s.expectedDetailPresent:!s.expectedDetailPresent).length;
+    gates.push({condition,metric:'expectedDetail',status:missing?'fail':'pass',count:missing});
+    const bad=samples.filter(s=>s.selectedItems>8||s.enrichmentTokenUpperBound>1024||
+      (condition==='disabled'||s.disposition!=='included')&&(s.selectedItems!==0||s.enrichmentTokenUpperBound!==0||s.expectedDetailPresent)).length;
+    gates.push({condition,metric:'boundedFailClosedSelection',status:bad?'fail':'pass',count:bad});
+  }
+  const comparisons=(['warm','background','cold'] as const).map(condition=>{
+    const pairs=runs.disabled.map((s,i)=>[s.selectionCompletedAt-s.selectionStartedAt,runs[condition][i]!.selectionCompletedAt-runs[condition][i]!.selectionStartedAt] as const);
+    return {condition,p95Delta:distributions[condition].selection.p95-distributions.disabled.selection.p95,uncertainty:pairedP95Interval(pairs,environment.seed)};
+  });
+  return {environment:structuredClone(environment),sampleCountPerCondition:ids.length,distributions,comparisons,gates,
+    deadlineMisses:Object.fromEntries(conditions.map(condition=>[condition,runs[condition].filter(s=>s.disposition==='deadline').length])),
+    status:gates.some(g=>g.status==='fail')?'failedLocalObjectives':'passedLocalObjectives',qualification:'incompleteEvidence',
+    unmeasured:['model output','first useful token','first audible sample','barge-in stop','audio continuity','GPU/provider pressure','Human quality'],
+    claimBoundary:'Synthetic local SQLite and prepared-input measurements only. Connection-cold is not OS-cache-cold or model-cold. No provider, physical or Human qualification.',raw:structuredClone(runs)};
+}

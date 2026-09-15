@@ -47,3 +47,20 @@ test("Discovery restart cancels unfinished work and keeps failed admissions char
  const next=f.work();next.budget=w.budget;assert.throws(()=>f.admit(next),/budget exhausted/);
  assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[f.brief()],()=>true),false);
 });
+
+test('specific multi-term Discovery matches survive more than 32 common-word candidates without widening scope',t=>{
+ const f=fixture();t.after(()=>f.db.close());
+ for(let batch=0;batch<6;batch++){
+  const w=f.work();w.topicRef='topic:archive';f.admit(w);f.repo.start(f.scope,String(w.workId));
+  const parent={...f.brief(),topicRef:'topic:archive',claims:[{claimId:randomUUID(),text:'Synthetic archive material.',sourceRefs:['source:synthetic'],qualifier:'attributed',versionScope:'synthetic',spoilerClass:'none',contradictionRefs:[]}]};
+  const candidates=Array.from({length:7},()=>({...f.candidate(parent),content:'Synthetic archive material.',topicRefs:['topic:archive']}));
+  assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[parent,...candidates],()=>true),true);
+ }
+ const w=f.work();f.admit(w);f.repo.start(f.scope,String(w.workId));const parent=f.brief(),wanted={...f.candidate(parent),content:'Synthetic quartz calibration uses QTZ_MARKER_482.'};
+ assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[parent,wanted],()=>true),true);
+ const result=f.repo.select(f.scope,f.boundary,'Tell me about synthetic quartz.');assert.equal(result.length,1);assert.match(result[0]!.content,/QTZ_MARKER_482/);
+ assert.match(f.repo.select(f.scope,f.boundary,'quartz unrepresentedword')[0]!.content,/QTZ_MARKER_482/,'ordinary optional wording retains the bounded union fallback');
+ assert.deepEqual(f.repo.select({...f.scope,userId:randomUUID()},f.boundary,'synthetic quartz'),[]);
+ assert.deepEqual(f.repo.select(f.scope,understandingDigest('old-boundary'),'synthetic quartz'),[]);
+ f.advance(600001);assert.deepEqual(f.repo.select(f.scope,f.boundary,'synthetic quartz'),[]);
+});

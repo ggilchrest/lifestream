@@ -61,3 +61,32 @@ test("LS-TEST-134/135: token growth, added latency and playback gaps fail indepe
   const report = benchmarkDiscovery(environment, input);
   for (const [condition, metric] of [["background", "added:firstUsefulToken"], ["warm", "enrichmentBounds"], ["cold", "audioContinuity"]]) assert.ok(report.gates.some(gate => gate.condition === condition && gate.metric === metric && gate.status === "fail"));
 });
+
+import {benchmarkDiscoveryLookup,type DiscoveryLookupSample} from '../src/benchmark.ts';
+const localEnvironment={hardware:'fixture CPU',os:'fixture OS',powerMode:'fixed',sourceRevision:'fixture-revision',configurationDigest:'fixture-digest',cachePolicy:'declared connection cache',backgroundWork:'declared fixture writer',seed:73,corpusRecords:100 as const};
+const localRuns=()=>Object.fromEntries(['disabled','warm','background','cold'].map(condition=>[condition,Array.from({length:200},(_,i):DiscoveryLookupSample=>({pairId:`pair:${i}`,preparedStartedAt:0,selectionStartedAt:1,selectionCompletedAt:2,preparedCompletedAt:3,lookupMs:0.6,innerSelectionMs:0.2,threadCpuMicroseconds:100,residentMemoryMiB:50,selectedItems:condition==='disabled'?0:1,enrichmentTokenUpperBound:condition==='disabled'?0:100,disposition:condition==='disabled'?'disabled':'included',expectedDetailPresent:condition!=='disabled'}))])) as Record<'disabled'|'warm'|'background'|'cold',DiscoveryLookupSample[]>;
+
+test('local lookup report preserves real-stage boundaries and never invents provider or audio evidence',()=>{
+ const runs=localRuns(),report=benchmarkDiscoveryLookup(localEnvironment,runs);
+ assert.equal(report.status,'passedLocalObjectives');assert.equal(report.qualification,'incompleteEvidence');
+ assert.ok(report.unmeasured.includes('first useful token'));assert.match(report.claimBoundary,/not OS-cache-cold/);
+ assert.equal(report.sampleCountPerCondition,200);assert.deepEqual(report.raw,runs);runs.warm[0]!.lookupMs=99;assert.equal(report.raw.warm[0]!.lookupMs,0.6);
+ assert.deepEqual(report.comparisons[0]!.uncertainty,{lower:0,upper:0,resamples:500,method:'paired-percentile-bootstrap-95pct-v1'});
+});
+
+test('one missing contextual detail remains a failure even when p95 passes and deadline fallback is correct',()=>{
+ const runs=localRuns();Object.assign(runs.background[0]!,{selectionCompletedAt:30,preparedCompletedAt:31,lookupMs:29,disposition:'deadline',selectedItems:0,enrichmentTokenUpperBound:0,expectedDetailPresent:false});
+ const report=benchmarkDiscoveryLookup(localEnvironment,runs);
+ assert.equal(report.status,'failedLocalObjectives');assert.equal(report.deadlineMisses.background,1);
+ assert.ok(report.gates.some(g=>g.condition==='background'&&g.metric==='selectionLatency'&&g.status==='pass'));
+ assert.ok(report.gates.some(g=>g.condition==='background'&&g.metric==='expectedDetail'&&g.status==='fail'&&g.count===1));
+ assert.ok(report.gates.some(g=>g.condition==='background'&&g.metric==='boundedFailClosedSelection'&&g.status==='pass'));
+ runs.background[0]!.selectedItems=1;assert.ok(benchmarkDiscoveryLookup(localEnvironment,runs).gates.some(g=>g.metric==='boundedFailClosedSelection'&&g.status==='fail'));
+});
+
+test('local measurements reject missing pairs, clock reversals and invalid resource values',()=>{
+ const short=localRuns();short.disabled.pop();assert.throws(()=>benchmarkDiscoveryLookup(localEnvironment,short),/200/);
+ const changed=localRuns();changed.cold[0]!.pairId='changed';assert.throws(()=>benchmarkDiscoveryLookup(localEnvironment,changed),/ordered paired/);
+ const invalid=localRuns();invalid.warm[0]!.selectionCompletedAt=NaN;assert.throws(()=>benchmarkDiscoveryLookup(localEnvironment,invalid),/monotonic/);
+ const cpu=localRuns();cpu.warm[0]!.threadCpuMicroseconds=-1;assert.throws(()=>benchmarkDiscoveryLookup(localEnvironment,cpu),/resource/);
+});
