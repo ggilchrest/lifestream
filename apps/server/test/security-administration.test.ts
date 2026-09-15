@@ -33,15 +33,15 @@ test('authenticated HTTP tools await providers and logout fences late discovery'
  const {createLifestreamServer}=await import('../src/index.ts'),{loadProfile}=await import('../src/config/loader.ts');
  const root=mkdtempSync(join(tmpdir(),'ls-async-tools-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
  const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'data.sqlite'),artifactDirectory:join(root,'artifacts')};
- const installerToken=password(),provider=new FixtureCapabilityProvider([capability]),app=createLifestreamServer({config,capabilityProvider:provider,localAuth:{stateDirectory:join(root,'safety'),installerToken}});await app.start();t.after(()=>app.shutdown());
+ const installerToken=password(),schemas=FixtureCapabilityProvider.schemaArtifacts([capability],()=>true),provider=new FixtureCapabilityProvider([capability],schemas),app=createLifestreamServer({config,capabilityProvider:provider,capabilitySchemas:schemas,localAuth:{stateDirectory:join(root,'safety'),installerToken}});await app.start();t.after(()=>app.shutdown());
  const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={origin:base,'content-type':'application/json'};
  const request=(path:string,body?:unknown)=>fetch(base+path,{method:body===undefined?'GET':'POST',headers,...(body===undefined?{}:{body:JSON.stringify(body)})});
  const setup=await request('/api/auth/v1/setup',{username:'owner',password:password(),installerToken});headers.cookie=setup.headers.get('set-cookie')!.split(';')[0]!;headers['x-lifestream-csrf']=((await setup.json()) as any).session.csrfToken;
  const created=await (await request('/api/admin/v1/assistants',{displayName:'Synthetic Async Tools'})).json() as any,path=`/api/authority/v1/assistants/${created.assistantId}`;
- const listing=await request(path+'/tools');assert.equal(listing.status,200);assert.equal(((await listing.json()) as any).tools[0].id,capability.id);
+ const listing=await request(path+'/tools');assert.equal(listing.status,200);const listed=(await listing.json()) as any;assert.equal(listed.tools[0].id,capability.id);assert.match(listed.tools[0].inputSchemaRef.sha256,/^[a-f0-9]{64}$/);
  const pending=await (await request(path+'/grants',{scope:[capability.id],durationSeconds:60,durationMode:'allowOnce'})).json() as any;
  assert.equal((await request(path+`/grants/${pending.grant.id}/decision`,{expectedRevision:1,decision:'active'})).status,200);
- const invoked=await request(path+`/tools/${capability.id}/invoke`,{grantId:pending.grant.id,input:{text:'synthetic'}});assert.equal(invoked.status,200);assert.equal(((await invoked.json()) as any).result.lifecycle,'succeeded');
+ const invoked=await request(path+`/tools/${capability.id}/invoke`,{grantId:pending.grant.id,input:{text:'synthetic'}});assert.equal(invoked.status,200);const result=(await invoked.json()) as any;assert.equal(result.result.lifecycle,'succeeded');assert.deepEqual(result.result.outputSchema,listed.tools[0].outputSchemaRef);
  let release!:()=>void,entered!:()=>void;const held=new Promise<void>(resolve=>{release=resolve;}),started=new Promise<void>(resolve=>{entered=resolve;});const original=provider.getSnapshot.bind(provider);
  provider.getSnapshot=async(input,context)=>{entered();await held;return original(input,{...context,isCurrent:()=>true});};
  const slow=request(path+'/tools');await started;assert.equal((await request('/api/auth/v1/sign-out',{})).status,200);release();

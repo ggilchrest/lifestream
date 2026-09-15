@@ -1,3 +1,4 @@
+import type {CapabilitySchemaStore} from "@lifestream/runtime/capabilities/schema-artifacts";
 import { randomUUID, createHash } from "node:crypto";
 import type { Database } from "@lifestream/storage-sqlite";
 import { GrantRepository, AdmissionRepository } from "@lifestream/storage-sqlite";
@@ -9,8 +10,9 @@ import { AuthenticationError, type LocalAuthentication, type LocalContext } from
 export type SecurityResult = { status: number; body: Record<string, unknown> };
 const object = (value: unknown): Record<string, unknown> => { if (!value || typeof value !== "object" || Array.isArray(value)) throw new AuthenticationError(422, "invalid_request"); return value as Record<string, unknown>; };
 export class SecurityAdministration {
+  private readonly schemas:CapabilitySchemaStore|undefined;
   private readonly database: Database; private readonly auth: LocalAuthentication; private readonly grants: GrantRepository; private readonly admissions: AdmissionRepository; private readonly provider: CapabilityProvider | undefined; private readonly now: () => number; private readonly validator = createContractValidator();
-  constructor(database: Database, auth: LocalAuthentication, provider?: CapabilityProvider, now: () => number = Date.now) { this.database = database; this.auth = auth; this.grants = new GrantRepository(database); this.admissions = new AdmissionRepository(database); this.provider = provider; this.now = now; }
+  constructor(database: Database, auth: LocalAuthentication, provider?: CapabilityProvider, now: () => number = Date.now, schemas?:CapabilitySchemaStore) { this.schemas=schemas; this.database = database; this.auth = auth; this.grants = new GrantRepository(database); this.admissions = new AdmissionRepository(database); this.provider = provider; this.now = now; }
   handleLocal(method: string, path: string, context: LocalContext, input: unknown): SecurityResult {
     this.auth.assertCurrent(context); const parts = path.split("/").filter(Boolean), assistantId = parts[4], body = object(input);
     if (parts[3] !== "assistants" || !assistantId || !this.auth.canAdminister(context, assistantId)) throw new AuthenticationError(403, "assistant_scope_denied");
@@ -35,7 +37,7 @@ export class SecurityAdministration {
       const resolver = new CapabilityResolver(this.provider, undefined, async invocation => {
         if (typeof body.grantId!=="string") return undefined;
         try { const admission=this.admissions.admitGoverned({grantId:body.grantId,principalId:context.principalId,assistantId,sessionId:context.sessionId,capabilityId:invocation.capabilityId,invocationId:invocation.invocationId,inputDigest:createHash("sha256").update(JSON.stringify(invocation.input)).digest("hex"),now:new Date(this.now()).toISOString(),assertCurrent:()=>{this.auth.assertCurrent(context);if(!this.auth.canAdminister(context,assistantId))throw new AuthenticationError(403,"assistant_scope_denied");}});return {invocationId:admission.invocationId,status:"admitted",grantRevision:admission.grantRevision};} catch {return undefined;}
-      }, () => new Date(this.now()).toISOString());
+      }, () => new Date(this.now()).toISOString(),this.schemas);
       const grantCurrent=()=>{if(typeof body.grantId!=="string")return true;const grant=this.grants.get(body.grantId,context.principalId);return !!grant&&grant.assistantId===assistantId&&["active","consumed"].includes(grant.status)&&Date.parse(String(grant.terms.expiresAt))>this.now();};
       const scopedCall={...call,isCurrent:()=>call.isCurrent()&&grantCurrent()};
       const snapshot = await resolver.snapshot(scope, call);

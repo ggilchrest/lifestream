@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "bac64e0283a44ec57afcd6e41160fcd7b9d8edde",
+  "currentRevision": "2fb49b14e5d50600af694103cb7c2d6db7782cbd",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -135,54 +135,61 @@
     "packages/runtime/src/capabilities/schema-validation.ts",
     "packages/runtime/src/capabilities/schema-worker.ts",
     "packages/runtime/test/capability-schema.test.ts",
-    "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
+    "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json",
+    "packages/runtime/src/capabilities/schema-artifacts.ts",
+    "packages/runtime/test/capability-artifacts.test.ts",
+    "implementation/evidence/LS-S028-CAPABILITY-ARTIFACTS-1.json"
   ],
   "changedFiles": [
+    "apps/server/src/admin/security-administration.ts",
+    "apps/server/src/index.ts",
+    "apps/server/test/security-administration.test.ts",
     "docs/local-authentication.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json",
+    "implementation/evidence/LS-S028-CAPABILITY-ARTIFACTS-1.json",
+    "packages/providers-fixture/src/capability/provider.ts",
     "packages/runtime/package.json",
+    "packages/runtime/src/capabilities/ports.ts",
     "packages/runtime/src/capabilities/resolver.ts",
-    "packages/runtime/src/capabilities/schema-validation.ts",
-    "packages/runtime/src/capabilities/schema-worker.ts",
-    "packages/runtime/test/capability-schema.test.ts",
+    "packages/runtime/src/capabilities/schema-artifacts.ts",
+    "packages/runtime/test/capability-artifacts.test.ts",
     "pnpm-lock.yaml"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-ARTIFACTS-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-ARTIFACTS-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-ARTIFACTS-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-ARTIFACTS-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-ARTIFACTS-1.json"
     },
     {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-ARTIFACTS-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-ARTIFACTS-1.json"
     }
   ],
   "decisions": [
@@ -197,8 +204,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Complete canonical capability/authority envelopes and ArtifactRef schema binding, including cold status recovery and lifecycle/invalidation semantics; connect PWCE-owned approval, admission, invocation and reconciliation through its public contracts. Continue joint LS-S028/PV1-T5 and remaining S083/S084 work. Independent development remains.",
-  "updatedAt": "2026-09-15T09:19:20.750258Z",
+  "nextAction": "Migrate complete canonical provider messages, decision/evidence artifacts and invalidations. Publish and map PWCE capability schema artifacts and its trusted approval/admission/invocation/reconciliation boundary, then verify real-provider cold action recovery and joint LS-S028/PV1-T5. Continue remaining S083/S084 tasks; independent work remains.",
+  "updatedAt": "2026-09-15T09:36:31.531069Z",
   "updatedBy": "Codex",
-  "notes": "Declared capability argument/output schemas verified with bounded worker validation, canonical invocation identity and failed-refresh invalidation. Full canonical provider envelopes and PWCE action composition remain open."
+  "notes": "Configured canonical ArtifactRef schema validation, per-read authorization and fresh-resolver result recovery verified, including authenticated HTTP composition. Full canonical provider messages and actual PWCE action mapping remain open."
 }

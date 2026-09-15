@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-CAPABILITY-ARTIFACTS-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "2fb49b14e5d50600af694103cb7c2d6db7782cbd",
+  "sourceBinding": "Base revision and changed-source digests; the enclosing commit contains the configured schema-artifact component.",
+  "specificationRevision": "03d04d8a8a4e453a49ea183cf7f3631f2c1a5f05",
+  "recordedAt": "2026-09-15T09:36:31.531069Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/admin/security-administration.ts",
+      "sha256": "11de3fb70552b6ff3b5873a4cd10360b37ccb3a598b3ac0b7c144b7070633d25"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "bbf24657fc14280a3ab77b23d979b028bf8d4dbad86f39b111597049f766b039"
+    },
+    {
+      "path": "apps/server/test/security-administration.test.ts",
+      "sha256": "67cc0a285ee83e2ac7f559107f22e8dba5568263dbfbdde234ec33669ebb0145"
+    },
+    {
+      "path": "docs/local-authentication.md",
+      "sha256": "6a952b9fbd98d29788b17376528a4cded4f28d50da903577ef68f348471b44ed"
+    },
+    {
+      "path": "packages/providers-fixture/src/capability/provider.ts",
+      "sha256": "99a447fbb4fd363136ab839b358f34a10fe3ef76182fe1add398ab8742c22abe"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "cc3846323df913bb5feb4d36f8aad4ad47c085cfa37199df7d00c022c7e4f0ec"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/ports.ts",
+      "sha256": "b325f4f5f9b04bd889d3dd5977834286eab023bd79046752d9a28ce0974e66e7"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/resolver.ts",
+      "sha256": "343c65fcda1164851213e02410313e81e402bb389bfc89071e0f4843ff7ca7b1"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/schema-artifacts.ts",
+      "sha256": "6bf7fbd91e13981af27ee7656899a8e6fd1063a0856904284c8671bdb4de5e17"
+    },
+    {
+      "path": "packages/runtime/test/capability-artifacts.test.ts",
+      "sha256": "93ae4bccdaed8fd6b07e7f916faf4402aca35d705d655278f06c0b261300c6f8"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "d574f6af6dd7ffdf6ca358a8c6cbd33cd622f2d8e7a0e7d0ac71fb02ff1b5b65"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "4d20039187766ecf4261e9ed6173ad96a9961359",
+    "producerSourceChanged": false,
+    "newProducerSuiteRun": false
+  },
+  "claims": [
+    "Configured schema stores use the existing protocol-common ArtifactRef schema without exporting or changing a machine contract. Metadata, SHA-256, media type, schema dialect and exact byte length are checked. Pins and bytes are copied; returned bytes are checked again before UTF-8/JSON parsing.",
+    "Every schema read is authorized under copied Assistant, endpoint, session, environment and authority scope with deadline, cancellation and current-owner checks. Invocation arguments and extra invocation fields are not sent to the schema store. A reference, including a URL-like reference, never initiates networking or grants access.",
+    "Referenced snapshot definitions require both schema pins and agreement with the resolved schemas. Input access is checked again before admission. Missing stores, altered references, revoked access and inconsistent or incomplete definitions cannot fall back to the inline schema.",
+    "A fresh resolver recovers successful status using the original provider-bound output reference and authorized pinned bytes without discovery, admission or invocation. Registry byte reconstitution preserves the original schema independently of later discovery. Missing or tampered artifacts and changed owner scope withhold output.",
+    "Fixture results retain their original output schema reference. Changed or omitted references on a referenced invocation remain unknown after dispatch. Boolean and object JSON Schemas preserve their declared validation semantics.",
+    "The trusted server construction options supply a separate capability schema store to authenticated administration. The actual HTTP test verifies schema metadata in discovery and result output, current grants and logout fencing. Existing separate-process PWCE context/conversation checks remain green."
+  ],
+  "limits": {
+    "configuredSchemaRecords": 256,
+    "schemaBytesPerRecord": 16384,
+    "implicitNetworkOrFilesystemResolution": false
+  },
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "pwce-artifacts-build-last.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "pwce-artifacts-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "pwce-artifacts-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "pwce-artifacts-source.log",
+      "logSha256": "55a29e701eea6e7ac3da96298aadec71f80b4644e80e21054a2ae1063e38f991"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "pwce-artifacts-tooling.log",
+      "logSha256": "67b733a15ddfa4d59b6cd30a30247c9342964a7c56acd1f4a70c2b0a86cab4f9"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "pwce-artifacts-process.log",
+      "logSha256": "02759ca39c168bbc379f0e4b78e8b99b961d9530eee1285149f7de288aa6769c"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "pwce-artifacts-private.log",
+      "logSha256": "378679791b74060db73eaff44ac1cbd1afa3577e3d4f7a11f610455a565bf119"
+    }
+  ],
+  "counts": {
+    "sourceTestsPassed": 508,
+    "newArtifactTests": 15,
+    "toolingTestsPassed": 45,
+    "separateProcessContextChecksPassed": 19,
+    "authenticatedWorldRuntimeChecksPassed": 7,
+    "baselineReproductionsFailed": 1
+  },
+  "preservedFailures": [
+    {
+      "log": "pwce-artifacts-baseline.log",
+      "sha256": "9c73de5baf42c30f566e7131613809bf379dac37d8a838dd672ac43973331735",
+      "result": "Archived prior resolver rejects cold status even with the original output reference and a configured verified schema store; the new fresh-resolver recovery test passes."
+    }
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-artifacts/2026-09-15",
+  "remaining": [
+    "Migrate full canonical ProviderMessage request/result envelopes, decision/evidence artifact fields and invalidation surfaces; current runtime records are internal projections.",
+    "Publish and map actual PWCE capability schema artifacts, trusted admission, scoped approval, snapshot/precondition binding, invocation and reconciliation through public gateway contracts.",
+    "Verify real-provider durable cold action recovery; current recovery evidence uses a fresh resolver and reconstituted synthetic schema registry, not a PWCE action adapter.",
+    "Complete joint LS-S028/PV1-T5 qualification and remaining S083/S084 work."
+  ],
+  "unchangedBoundaries": [
+    "The four approved S083/S084 schemas and preserved dirty artifacts keep exact hashes.",
+    "No saved-service restart, deployment, live configuration/effects, personal-data import, model/provider selection, training or new Human acceptance.",
+    "SYNPRJ_Q7M4 observations and published PWCE wire bundle/generated client are unchanged."
+  ],
+  "disposition": "continue"
+}

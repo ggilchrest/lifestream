@@ -1,3 +1,4 @@
+import type {SchemaArtifactRef} from "./schema-artifacts.js";
 import type {DispatchReceipt} from "../authority/authorize-dispatch.js";
 export type SideEffectClass = "none" | "reversible" | "irreversible" | "unknown";
 export type IdempotencyPosture = "idempotent" | "nonIdempotent" | "unsupported";
@@ -16,11 +17,14 @@ export type CapabilityScope = {
   readonly authorityContextRef: AuthorityContextRef;
 };
 
+export type CapabilityJsonSchema = Record<string, unknown> | boolean;
 export type CapabilityDefinition = {
   readonly id: string;
   readonly version: string;
-  readonly inputSchema: Record<string, unknown>;
-  readonly outputSchema: Record<string, unknown>;
+  readonly inputSchema: CapabilityJsonSchema;
+  readonly outputSchema: CapabilityJsonSchema;
+  readonly inputSchemaRef?: SchemaArtifactRef;
+  readonly outputSchemaRef?: SchemaArtifactRef;
   readonly sideEffect: SideEffectClass;
   readonly authorization: "none" | "required";
   readonly idempotency: IdempotencyPosture;
@@ -63,6 +67,7 @@ export type CapabilityInvocationResult = {
   readonly invocationId: string;
   readonly lifecycle: CapabilityLifecycle;
   readonly output?: unknown;
+  readonly outputSchema?: SchemaArtifactRef;
   readonly reason?: string;
   readonly receipt?: string;
 };

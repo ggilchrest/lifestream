@@ -1,4 +1,6 @@
 import {createHash} from 'node:crypto';
+import {resolveCapabilitySchema} from './schema-artifacts.ts';
+import type {CapabilitySchemaStore} from './schema-artifacts.js';
 import {boundedJson,canonicalJson,validateCapabilitySchema} from './schema-validation.ts';
 import type { DispatchReceipt } from '../authority/authorize-dispatch.js';
 import type {CapabilityDefinition,CapabilityInvocation,CapabilityInvocationResult,CapabilityProvider,CapabilityScope,CapabilitySnapshot,CapabilityCallContext,CapabilityStatusRequest} from './ports.js';
@@ -13,12 +15,13 @@ export class CapabilityResolver {
   private readonly cache:CapabilitySnapshotCache;
   private readonly dispatch:AuthorityDispatcher;
   private readonly now:()=>string;
+  private readonly schemaStore:CapabilitySchemaStore|undefined;
   private epoch=0;
   private readonly reads=new Map<string,symbol>();
   private readonly modes=new Map<string,CapabilityCallContext["executionMode"]>();
   private readonly attempts=new Map<string,Attempt>();
-  constructor(provider:CapabilityProvider,cache=new CapabilitySnapshotCache(),dispatch:AuthorityDispatcher=async()=>undefined,now:()=>string=()=>new Date().toISOString()){
-    this.provider=provider;this.cache=cache;this.dispatch=dispatch;this.now=now;
+  constructor(provider:CapabilityProvider,cache=new CapabilitySnapshotCache(),dispatch:AuthorityDispatcher=async()=>undefined,now:()=>string=()=>new Date().toISOString(),schemaStore?:CapabilitySchemaStore){
+    this.provider=provider;this.cache=cache;this.dispatch=dispatch;this.now=now;this.schemaStore=schemaStore;
   }
   async snapshot(scope:CapabilityScope,context:CapabilityCallContext):Promise<CapabilitySnapshot>{
     const owned=structuredClone(scope),key=scopeKey(owned),ticket=Symbol(),call=new CapabilityCall(context);
@@ -32,6 +35,9 @@ export class CapabilityResolver {
       const identities = new Set<string>();
       for (const capability of definitions.capabilities) {
         const identity = capability.id + ':' + capability.version;
+        if((capability.inputSchemaRef!==undefined)!==(capability.outputSchemaRef!==undefined))throw new CapabilityCallError('invalidResponse');
+        await this.checkSchemaBinding(capability.inputSchemaRef,capability.inputSchema,owned,call);
+        await this.checkSchemaBinding(capability.outputSchemaRef,capability.outputSchema,owned,call);
         if (identities.has(identity) || !await call.wait(() => validateCapabilitySchema(capability.inputSchema, null, call.context.signal, true)) || !await call.wait(() => validateCapabilitySchema(capability.outputSchema, null, call.context.signal, true))) throw new CapabilityCallError('invalidResponse');
         identities.add(identity);
       }
@@ -63,6 +69,7 @@ export class CapabilityResolver {
     if(call.context.executionMode!=='live')return this.result(invocation,'denied','non_live_dispatch_denied');
     const capability=snapshot.capabilities.find(item=>item.id===invocation.capabilityId&&item.version===invocation.capabilityVersion);
     if(!capability||!await call.wait(()=>validateCapabilitySchema(capability.inputSchema,invocation.input,call.context.signal)))return this.result(invocation,'denied','capability_or_arguments_invalid');
+    await this.checkSchemaBinding(capability.inputSchemaRef,capability.inputSchema,invocation,call);
     fresh();entry.capability=capability;
     // Status is read under current scope before consuming any one-use admission.
     const prior=await call.wait(()=>this.provider.getInvocation(statusRequest(invocation,invocation.invocationId),call.context));fresh();
@@ -85,10 +92,22 @@ export class CapabilityResolver {
   }
   private async checkedResult(result:CapabilityInvocationResult,request:CapabilityStatusRequest,call:CapabilityCall,capability?:CapabilityDefinition):Promise<CapabilityInvocationResult>{
     if(result.invocationId!==request.invocationId||!['authorized','denied','approvalRequired','started','succeeded','failed','outcomeUnknown'].includes(result.lifecycle))throw new CapabilityCallError('invalidResponse');
-    if(!boundedJson(result)||result.lifecycle!=='succeeded'&&Object.hasOwn(result,'output'))throw new CapabilityCallError('invalidResponse');
+    if(!boundedJson(result)||result.lifecycle!=='succeeded'&&(Object.hasOwn(result,'output')||Object.hasOwn(result,'outputSchema')))throw new CapabilityCallError('invalidResponse');
     const copy=structuredClone(result);
-    if(copy.lifecycle==='succeeded'&&(!capability||!await call.wait(()=>validateCapabilitySchema(capability.outputSchema,copy.output,call.context.signal))))throw new CapabilityCallError('invalidResponse');
+    if(copy.lifecycle==='succeeded'){
+      let schema=capability?.outputSchema;
+      if(copy.outputSchema!==undefined){
+        if(capability?.outputSchemaRef&&canonicalJson(copy.outputSchema)!==canonicalJson(capability.outputSchemaRef))throw new CapabilityCallError('invalidResponse');
+        const resolved=await resolveCapabilitySchema(copy.outputSchema,request,call,this.schemaStore);
+        if(schema!==undefined&&canonicalJson(schema)!==canonicalJson(resolved))throw new CapabilityCallError('invalidResponse');
+        schema=resolved;
+      }else if(capability?.outputSchemaRef)throw new CapabilityCallError('invalidResponse');
+      if(schema===undefined||!await call.wait(()=>validateCapabilitySchema(schema,copy.output,call.context.signal)))throw new CapabilityCallError('invalidResponse');
+    }
     call.check();return copy;
+  }
+  private async checkSchemaBinding(reference:CapabilityDefinition['inputSchemaRef'],schema:CapabilityDefinition['inputSchema'],scope:CapabilityScope,call:CapabilityCall):Promise<void>{
+    if(reference!==undefined&&canonicalJson(await resolveCapabilitySchema(reference,scope,call,this.schemaStore))!==canonicalJson(schema))throw new CapabilityCallError('invalidResponse');
   }
   private result(invocation:CapabilityStatusRequest,lifecycle:CapabilityInvocationResult['lifecycle'],reason:string):CapabilityInvocationResult{return {invocationId:invocation.invocationId,lifecycle,reason};}
 }

@@ -91,6 +91,10 @@
     "./context/world": {
       "types": "./dist/context/world.d.ts",
       "import": "./dist/context/world.js"
+    },
+    "./capabilities/schema-artifacts": {
+      "types": "./dist/capabilities/schema-artifacts.d.ts",
+      "import": "./dist/capabilities/schema-artifacts.js"
     }
   },
   "scripts": {
@@ -99,6 +103,7 @@
   },
   "dependencies": {
     "ajv": "^8.18.0",
-    "ajv-formats": "^3.0.1"
+    "ajv-formats": "^3.0.1",
+    "@lifestream/contracts": "workspace:*"
   }
 }
