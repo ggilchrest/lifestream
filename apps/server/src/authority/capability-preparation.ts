@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { createContractValidator } from '@lifestream/contracts';
 import type { ArtifactRef, CapabilitySnapshotRequest, CapabilitySnapshotResult, CreateAuthorityRequestRequest, capabilitySnapshot_Root } from '@lifestream/contracts/provider-messages';
 import type { Database, GrantOwnerBinding, TrustedGrantProposal } from '@lifestream/storage-sqlite';
-import type { AuthorityRequest, providerMessages_DefsGovernedDisposition as GovernedDisposition } from '@lifestream/contracts/provider-messages';
+import type { AuthorityRequest, CapabilityStatusRequest, providerMessages_DefsGovernedDisposition as GovernedDisposition } from '@lifestream/contracts/provider-messages';
 import type { ProviderCallContext } from '@lifestream/runtime/ports/provider-messages';
 import type { CapabilityProvider } from '@lifestream/runtime/ports/provider-messages';
 import { CanonicalProviderBoundary } from '@lifestream/runtime/ports/provider-boundary';
@@ -32,7 +32,7 @@ export type CanonicalCapabilityComposition = {
   governance?: {
     evaluate(request: AuthorityRequest, context: ProviderCallContext): Promise<{ disposition: GovernedDisposition; evidence: Uint8Array }>;
     assertCurrent(request: AuthorityRequest, disposition: GovernedDisposition): void;
-    readEvidence(reference: ArtifactRef, request: AuthorityRequest, context: ProviderCallContext): Promise<Uint8Array>;
+    readEvidence(reference: ArtifactRef, request: AuthorityRequest | CapabilityStatusRequest, context: ProviderCallContext): Promise<Uint8Array>;
   };
   schemas: CapabilitySchemaStore; adapters: readonly CapabilityScopeAdapter[];
 };

@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S042-CANONICAL-RECONCILIATION-1",
+  "slice": "LS-S042",
+  "status": "componentVerified",
+  "sourceRevision": "3d4d9cfcc3a853e2914d7167206a66b18fcb3d92",
+  "sourceBinding": "Exact changed source hashes below bind this canonical HTTP reconciliation increment relative to sourceRevision; the enclosing commit contains the implementation. This is not whole-slice, selected-provider, physical or Human qualification.",
+  "specificationRevision": "4a73437ebe2b873a3ca33f60803c07adf6925cf8",
+  "recordedAt": "2026-09-15T14:54:29.048680Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/authority/canonical-dispatch.ts",
+      "sha256": "6cda1bee66ba31415a3855a78dda7205d3b237a4cc7d62a4d14217351d02e83b"
+    },
+    {
+      "path": "apps/server/src/authority/capability-preparation.ts",
+      "sha256": "b56c78dfafca73ac4537fbe5c8207a0b1b23e30184f7dbef717078368a25c349"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "d96391481c60738404ef3c3b5318445b8d49c252e8bb3acd5edda1cfdd3aba60"
+    },
+    {
+      "path": "apps/server/test/canonical-dispatch.test.ts",
+      "sha256": "51cb9b22b56cd644fc73706be0f67d088b1fdb0f44e198ec8fec90bfd466eb29"
+    },
+    {
+      "path": "apps/server/test/canonical-reconciliation.test.ts",
+      "sha256": "6b40aef954bb1a9f6b3571d4209751e3177f9b91c35833ce3ecfb52cf83f876c"
+    },
+    {
+      "path": "apps/server/test/fixtures/canonical-capability.ts",
+      "sha256": "31404646b18de0eaceefbb10b74c1d341fdbed63dee269f19a544c9d898d7ddd"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "366c527f372e2d85f5044f0687a45ca4031cd5d20109d8e197434879ae7134d2"
+    },
+    {
+      "path": "docs/canonical-provider-boundary.md",
+      "sha256": "7afd19ab9f94341fe4d4f4d320d441d6937efac1d082e27ba76f45869a1ff773"
+    },
+    {
+      "path": "packages/storage-sqlite/src/authority/canonical-grants.ts",
+      "sha256": "eb19c5340ea3e5eff521eca3c1b8256fc7bc9b3d22628529aca4787067f1b463"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "92e866af0bea12439b97abc60fda5fa0fcee0f4d52ac8c565f2323d93ee94f5c"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0034_canonical_dispatch_observations.sql",
+      "sha256": "8d82661b3e36d4253974503a0300afaaba84647721530f2614453a72b5e75c2c"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "c8362fc3b5d38b84875122440b06fee3ab3607d474db7ef8387266270ae1b26a"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "c4e0b476e918ffe94dd63889143f5ed85b0c66f9233d6aa2e95b327152ac1687"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "f7ed724c63e31726bfa64f442ecd35726c6d05cfbabbbad6122d47f1eaa7471a"
+    }
+  ],
+  "claims": [
+    "The authenticated local canonical tool API now offers explicit reconciliation using CapabilityProvider.getInvocation with the original admitted provider, invocation, idempotency key and complete scope. It performs no catalog discovery, authority evaluation, grant issuance, admission, initial-call claim or invoke.",
+    "Current authentication, Assistant/session/endpoint/audience ownership, selected provider and original output schema access fence the read. Access is checked before querying and after provider/evidence waits. Result envelopes, invocation/provider/receipt identity, output schema, and actual evidence digest/length are verified before storage or disclosure.",
+    "Migration 34 retains append-only canonical status observations separately from immutable admission, receipt, consumption and initial result. Observations survive actual server restart. The first confirmed terminal wins serialization; a late concurrent unknown cannot overwrite it. Missing or uncommitted status evidence supplies no new confirmation.",
+    "The ledger permits sixteen uncertain observations and reserves the seventeenth slot for confirmation. Excess uncertain replies are not reported as stored; a later verified confirmation can use the reserved slot. Admitted but unclaimed invocations are not queried or started automatically.",
+    "GET and reconciliation distinguish effective status from originalStatus/result, with latestObservation and observationCount. Identical dispatch POSTs continue to return the original result. Successful output, uncertainty reasons and failure messages all retain current host/schema access checks; withheld replies do not erase history.",
+    "The final full suite passes 662 tests, including 18 new canonical reconciliation HTTP cases and all prior dispatch/preparation/grant regressions. Tests cover missing/unknown/confirmed success/failure, storage rollback, scoped access withdrawal, malformed provider data, evidence corruption, bounded capacity, finite deadline and no late write, restart and concurrency. No additional action or grant consumption occurs during reconciliation.",
+    "All 43 workspace-tool tests, type checking, build, lint and private specification validation pass. Expected migration health reporting includes 34; existing data migration regressions pass."
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "canonical-reconciliation-full-final.log",
+      "logSha256": "da6b31c31d82abd6bc4cf8f2811cf51320b166d68d9535b86f8a69d8c570528b",
+      "testsPassed": 662
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "canonical-reconciliation-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "canonical-reconciliation-build-final.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "canonical-reconciliation-lint-final.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "canonical-reconciliation-workspace-tests.log",
+      "logSha256": "5b24e829a7e16774da670162d443f250c9f416217d47f5288d82e4353de86891",
+      "testsPassed": 43
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "canonical-reconciliation-private.log",
+      "logSha256": "89d5061faec20b393edeb1c44ea88e69a5884bc29c66b592e37c9592fc0a25a4"
+    }
+  ],
+  "preservedFailures": [
+    {
+      "log": "canonical-reconciliation-focused.log",
+      "logSha256": "b916d77ecaea4f9873abfc99529ef4b48a9b5d3eba5be848988b51d81bfc1023",
+      "resolution": "Corrected the receipt-mismatch expectation to the existing authority conflict status. The initial suite also recorded one unknown reply in the prior revocation-ordering test; its isolated and diagnostic reruns passed. Review found and removed a fixture clock-ordering race by using one timestamp for confirmedAt/completedAt. The final full suite passed without relaxing runtime validation or deadlines."
+    }
+  ],
+  "localEvidenceDirectory": ".lifestream/benchmarks/canonical-reconciliation/2026-09-15",
+  "exclusions": [
+    "No saved Human service was rebuilt, restarted, migrated or reconfigured; no real capability action, selected-provider/model call, personal-data import, training or Human acceptance occurred.",
+    "Canonical configured-provider/PWCE adapters, full AuthorityProvider getGrants/invalidation subscriptions, LS-S044 control-web migration, target-state preconditions, joint action scenarios and backup-restore fencing remain open. The older coarse-grant runtime is not used as a fallback.",
+    "Existing SYNPRJ_Q7M4 compliance observations and historical qualifications are unchanged. Broad source qualification and remaining S083/S084 implementation plus separate Human, physical and performance evidence remain open.",
+    "The existing GitHub Workspace handoff workflow was observed successful for the preceding 3d4d9cf revision; that observation is not CI evidence for this new increment. Current evidence is the local commands above."
+  ]
+}

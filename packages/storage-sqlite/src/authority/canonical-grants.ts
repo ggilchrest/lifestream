@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { createContractValidator } from '@lifestream/contracts';
 import type { GrantRequest, GrantLifecycleEvent, ArtifactRef, SourceRevision, humanAuthorityGrant_Root as CanonicalGrant } from '@lifestream/contracts/provider-messages';
-import type { AuthorityDispatchRequest, humanAuthorityDecision_Root as DispatchDecision, CapabilityInvocationResult } from '@lifestream/contracts/provider-messages';
+import type { AuthorityDispatchRequest, humanAuthorityDecision_Root as DispatchDecision, CapabilityInvocationResult, CapabilityStatusRequest, CapabilityStatusResult } from '@lifestream/contracts/provider-messages';
 import { isDeepStrictEqual } from 'node:util';
 import type { Database, Transaction } from '../database.js';
 export type { CanonicalGrant, GrantRequest, GrantLifecycleEvent };
@@ -60,7 +60,11 @@ export type CanonicalAdmission = {
   request: AuthorityDispatchRequest; principalId: string; providerEvidenceBase64: string;
   decision: DispatchDecision; receipt: ArtifactRef; auditRef: ArtifactRef;
 };
-export type CanonicalDispatchView = { admission: CanonicalAdmission; initialCallClaimed: boolean; result: CapabilityInvocationResult | null };
+export type CanonicalDispatchObservation = { sequence: number; observedAt: string; request: CapabilityStatusRequest; result: CapabilityStatusResult; evidenceBase64: string | null };
+export type CanonicalDispatchView = { admission: CanonicalAdmission; initialCallClaimed: boolean; result: CapabilityInvocationResult | null; observations: CanonicalDispatchObservation[] };
+export function canonicalDispatchTerminal(result: CapabilityInvocationResult | CapabilityStatusResult | null): boolean {
+  return result?.outcome.status === 'succeeded' && ['succeeded','failed'].includes(result.outcome.payload.type);
+}
 
 /** Canonical request approval and immutable grant lifecycle. Legacy coarse grants
  * remain separate historical records; none acquire missing scope by migration. */
@@ -336,7 +340,7 @@ export class CanonicalGrantRepository {
         const ref = result.outcome.payload.evidenceRef, evidence = bytes === null || bytes === undefined ? null : Buffer.from(bytes, 'base64');
         if (!evidence || evidence.byteLength !== ref.byteLength || createHash('sha256').update(evidence).digest('hex') !== ref.sha256) fail('unavailable');
       }
-      return { admission, result, initialCallClaimed: !!tx.get('SELECT 1 FROM canonical_dispatch_claims WHERE invocation_id=?', invocationId) };
+      return { admission, result, observations: this.readObservations(tx, admission), initialCallClaimed: !!tx.get('SELECT 1 FROM canonical_dispatch_claims WHERE invocation_id=?', invocationId) };
     });
   }
   private disposition(request: AuthorityDispatchRequest, evidence: Uint8Array, now?: string): void {
@@ -418,6 +422,50 @@ export class CanonicalGrantRepository {
       const json = JSON.stringify(result), prior = tx.get<Row>('SELECT payload_json,sha256 FROM canonical_dispatch_results WHERE invocation_id=?', invocationId);
       if (prior) { if (prior.sha256 !== hash(json) || hash(prior.payload_json) !== prior.sha256) fail('conflict'); return; }
       tx.run('INSERT INTO canonical_dispatch_results VALUES (?,?,?,?)', invocationId, json, hash(json), evidence ? Buffer.from(evidence).toString('base64') : null);
+    });
+  }
+
+  private observationBinding(admission: CanonicalAdmission, request: CapabilityStatusRequest, result: CapabilityStatusResult, evidence: Uint8Array | null): void {
+    check(providerSchema + 'CapabilityStatusRequest', request); check(providerSchema + 'CapabilityStatusResult', result);
+    if (request.payload.invocationId !== admission.request.payload.invocationId || request.idempotencyKey !== admission.request.idempotencyKey ||
+      request.executionMode !== admission.request.executionMode || !isDeepStrictEqual(request.scope, admission.request.scope) ||
+      result.providerRef !== admission.request.payload.requiredProviderDisposition.providerRef || result.requestId !== request.requestId || result.correlationId !== request.correlationId) fail('conflict');
+    const status = result.outcome.status === 'succeeded' ? result.outcome.payload : null;
+    if (status && status.invocationId !== request.payload.invocationId) fail('conflict');
+    const ref = status && 'evidenceRef' in status ? status.evidenceRef : null;
+    if (ref && (!evidence || evidence.byteLength > 131072 || evidence.byteLength !== ref.byteLength || createHash('sha256').update(evidence).digest('hex') !== ref.sha256)) fail('unavailable');
+    if (status && 'receiptRef' in status && !isDeepStrictEqual(status.receiptRef, admission.receipt)) fail('conflict');
+  }
+  private readObservations(tx: Transaction, admission: CanonicalAdmission): CanonicalDispatchObservation[] {
+    const rows = tx.all<Row>('SELECT payload_json,sha256 FROM canonical_dispatch_observations WHERE invocation_id=? ORDER BY sequence', admission.decision.invocationId);
+    if (rows.length > 17) fail('unavailable');
+    return rows.map((row, index) => {
+      if (Buffer.byteLength(row.payload_json) > 524288 || hash(row.payload_json) !== row.sha256) fail('unavailable');
+      const observation = JSON.parse(row.payload_json) as CanonicalDispatchObservation;
+      if (observation.sequence !== index + 1 || !validator.validate(common + 'Time', observation.observedAt).valid ||
+        !(observation.evidenceBase64 === null || typeof observation.evidenceBase64 === 'string')) fail('unavailable');
+      this.observationBinding(admission, observation.request, observation.result, observation.evidenceBase64 === null ? null : Buffer.from(observation.evidenceBase64, 'base64'));
+      return observation;
+    });
+  }
+  /** A read-only provider observation cannot change the original admission,
+   * claim, consumption or initial reply. The first confirmed terminal wins. */
+  observeDispatch(request: CapabilityStatusRequest, result: CapabilityStatusResult, evidence: Uint8Array | null, context: CanonicalHumanContext, assertCurrent: () => void): boolean {
+    request = check(providerSchema + 'CapabilityStatusRequest', request); result = check(providerSchema + 'CapabilityStatusResult', result); evidence = evidence && Uint8Array.from(evidence);
+    return this.database.transaction(tx => {
+      const admission = this.readAdmission(tx, request.payload.invocationId, context);
+      if (!admission || !tx.get('SELECT 1 FROM canonical_dispatch_claims WHERE invocation_id=?', request.payload.invocationId)) return fail('notFound');
+      this.observationBinding(admission, request, result, evidence); assertCurrent();
+      const observations = this.readObservations(tx, admission), original = tx.get<Row>('SELECT payload_json,sha256 FROM canonical_dispatch_results WHERE invocation_id=?', request.payload.invocationId);
+      if ((original && canonicalDispatchTerminal(stored<CapabilityInvocationResult>(original, providerSchema + 'CapabilityInvocationResult'))) || observations.some(value => canonicalDispatchTerminal(value.result))) return false;
+      const prior = observations.find(value => value.request.requestId === request.requestId);
+      if (prior) { if (!isDeepStrictEqual(prior.request, request) || !isDeepStrictEqual(prior.result, result)) fail('conflict'); return false; }
+      // Reserve the seventeenth slot for eventual confirmation. Polls remain
+      // bounded by their call deadline; an unrecordable reply is never released.
+      if (observations.length >= (canonicalDispatchTerminal(result) ? 17 : 16)) fail('capacity');
+      const observation: CanonicalDispatchObservation = { sequence: observations.length + 1, observedAt: clock(context), request, result, evidenceBase64: evidence ? Buffer.from(evidence).toString('base64') : null };
+      const json = JSON.stringify(observation); if (Buffer.byteLength(json) > 524288) fail('capacity');
+      tx.run('INSERT INTO canonical_dispatch_observations VALUES (?,?,?,?,?)', request.payload.invocationId, observation.sequence, request.requestId, json, hash(json)); assertCurrent(); return true;
     });
   }
 

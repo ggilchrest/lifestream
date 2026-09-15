@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { createContractValidator } from '@lifestream/contracts';
-import type { AuthorityRequest, AuthorityDispatchRequest, CapabilityInvocationRequest, providerMessages_DefsGovernedDisposition as GovernedDisposition } from '@lifestream/contracts/provider-messages';
-import { CanonicalGrantRepository, CanonicalGrantError } from '@lifestream/storage-sqlite';
+import type { AuthorityRequest, AuthorityDispatchRequest, CapabilityInvocationRequest, CapabilityStatusRequest, providerMessages_DefsGovernedDisposition as GovernedDisposition } from '@lifestream/contracts/provider-messages';
+import { CanonicalGrantRepository, CanonicalGrantError, canonicalDispatchTerminal } from '@lifestream/storage-sqlite';
 import type { Database, CanonicalHumanContext, CanonicalDispatchView } from '@lifestream/storage-sqlite';
 import { evaluateCanonicalGrant } from '@lifestream/runtime/authority/grants';
 import { CanonicalProviderBoundary } from '@lifestream/runtime/ports/provider-boundary';
@@ -29,7 +29,7 @@ export class CanonicalCapabilityDispatch {
     const governance = composition.governance;
     this.composition = { ...composition, ...(governance ? { governance: { evaluate: governance.evaluate.bind(governance), assertCurrent: governance.assertCurrent.bind(governance), readEvidence: governance.readEvidence.bind(governance) } } : {}) };
   }
-  static matches(path: string): boolean { return /^\/api\/authority\/v1\/assistants\/[^/]+\/tools\/invocations\/[^/]+(?:\/dispatch)?$/.test(path); }
+  static matches(path: string): boolean { return /^\/api\/authority\/v1\/assistants\/[^/]+\/tools\/invocations\/[^/]+(?:\/(?:dispatch|reconcile))?$/.test(path); }
   private context(local: LocalContext, assistantId: string): CanonicalHumanContext {
     return { principalId: local.principalId, providerRef: 'local-human', authenticationEvidenceRef: '', now: () => new Date(this.now()).toISOString(),
       assertCurrent: binding => {
@@ -37,29 +37,64 @@ export class CanonicalCapabilityDispatch {
         if (binding.assistantId !== assistantId || !this.auth.canAdminister(local, assistantId) || (binding.sessionId !== null && binding.sessionId !== local.sessionId)) unavailable('authority_not_found', 404);
       } };
   }
-  private response(view: CanonicalDispatchView, replayed: boolean) {
+  private response(view: CanonicalDispatchView, replayed: boolean, observations = false) {
+    const latest = view.observations.at(-1), effective = latest?.result ?? view.result;
+    const status = canonicalDispatchTerminal(effective) && effective?.outcome.status === 'succeeded' ? effective.outcome.payload.type : 'outcomeUnknown';
     return { status: 200, replayed, body: { invocationId: view.admission.decision.invocationId, replayed, receipt: view.admission.receipt,
       decision: view.admission.decision, initialCallClaimed: view.initialCallClaimed,
-      status: view.result?.outcome.status === 'succeeded' && ['succeeded','failed'].includes(view.result.outcome.payload.type) ? view.result.outcome.payload.type : 'outcomeUnknown', result: view.result } };
+      status: view.result?.outcome.status === 'succeeded' && ['succeeded','failed'].includes(view.result.outcome.payload.type) ? view.result.outcome.payload.type : 'outcomeUnknown', result: view.result, ...(observations ? { originalStatus: canonicalDispatchTerminal(view.result) && view.result?.outcome.status === 'succeeded' ? view.result.outcome.payload.type : 'outcomeUnknown', status, observationCount: view.observations.length, latestObservation: latest ? { sequence: latest.sequence, observedAt: latest.observedAt, result: latest.result } : null } : {}) } };
   }
-  private async replayResult(view: CanonicalDispatchView, local: LocalContext, inputCall: CapabilityCallContext) {
-    if (view.result?.outcome.status !== 'succeeded' || view.result.outcome.payload.type !== 'succeeded') return this.response(view, true);
-    const result = view.result.outcome.payload;
-    const current = () => { this.auth.assertCurrent(local); this.preparation.retainedForResult(result.invocationId, local.principalId); return inputCall.isCurrent(); };
+  private async replayResult(view: CanonicalDispatchView, local: LocalContext, inputCall: CapabilityCallContext, observations = false) {
+    const observed = observations ? view.observations.at(-1)?.result ?? view.result : view.result;
+    if (!observed) return this.response(view, true, observations);
+    const invocationId = view.admission.decision.invocationId;
+    const current = () => { this.auth.assertCurrent(local); this.preparation.retainedForResult(invocationId, local.principalId); return inputCall.isCurrent(); };
     const call = new CapabilityCall({ ...inputCall, isCurrent: current });
     try {
-      const record = this.preparation.retainedForResult(result.invocationId, local.principalId), scope = view.admission.request.scope;
-      if (!isDeepStrictEqual(record.outputSchema, result.outputSchema)) return unavailable();
+      const record = this.preparation.retainedForResult(invocationId, local.principalId), scope = view.admission.request.scope;
+      // Provider reasons/errors can contain scoped details too. Access checks
+      // protect every stored provider payload, not only successful output.
       const schema = await resolveCapabilitySchema(record.outputSchema, { assistantId: scope.assistantId, endpointId: scope.endpointId!, sessionId: local.sessionId, environment: scope.environmentId, authorityContextRef: scope.authorityContextRef! }, call, this.composition.schemas);
-      if (!await call.wait(() => validateCapabilitySchema(schema, result.output, call.context.signal))) return unavailable();
-      call.check(); return this.response(view, true);
+      if (observed.outcome.status === 'succeeded' && observed.outcome.payload.type === 'succeeded') {
+        const result = observed.outcome.payload;
+        if (!isDeepStrictEqual(record.outputSchema, result.outputSchema) || !await call.wait(() => validateCapabilitySchema(schema, result.output, call.context.signal))) return unavailable();
+      }
+      call.check(); return this.response(view, true, observations);
+    } finally { call.close(); }
+  }
+  private async reconcile(view: CanonicalDispatchView, local: LocalContext, inputCall: CapabilityCallContext, context: CanonicalHumanContext) {
+    if (inputCall.executionMode !== 'live') return unavailable('capability_reconciliation_mode_unavailable', 409);
+    const invocationId = view.admission.decision.invocationId;
+    if (canonicalDispatchTerminal(view.result) || view.observations.some(value => canonicalDispatchTerminal(value.result)) || !view.initialCallClaimed) return this.replayResult(view, local, inputCall, true);
+    if (!this.composition.governance || this.composition.providerRef !== view.admission.request.payload.requiredProviderDisposition.providerRef) return unavailable();
+    const current = () => { this.auth.assertCurrent(local); this.preparation.retainedForResult(invocationId, local.principalId); return inputCall.isCurrent(); };
+    const call = new CapabilityCall({ ...inputCall, isCurrent: current });
+    try {
+      const record = this.preparation.retainedForResult(invocationId, local.principalId), scope = view.admission.request.scope;
+      const schemaScope = { assistantId: scope.assistantId, endpointId: scope.endpointId!, sessionId: local.sessionId, environment: scope.environmentId, authorityContextRef: scope.authorityContextRef! };
+      await resolveCapabilitySchema(record.outputSchema, schemaScope, call, this.composition.schemas);
+      const request: CapabilityStatusRequest = { schemaVersion: '1.0.0', operation: 'CapabilityProvider.getInvocation', requestId: call.context.requestId, correlationId: call.context.correlationId,
+        deadlineAt: call.context.deadlineAt, cancellationId: randomUUID(), executionMode: 'normal', scope, idempotencyKey: view.admission.request.idempotencyKey, payload: { invocationId } };
+      const provider = new CanonicalProviderBoundary({ providerRef: this.composition.providerRef }).capability(this.composition.provider);
+      const providerContext = { signal: call.context.signal, isCurrent: (candidate: typeof scope) => isDeepStrictEqual(candidate, scope) && current() };
+      // No catalog discovery, authorization, admission or invoke method participates.
+      const result = await call.wait(() => provider.getInvocation(request, providerContext));
+      const status = result.outcome.status === 'succeeded' ? result.outcome.payload : null;
+      const ref = status && 'evidenceRef' in status ? status.evidenceRef : null;
+      const evidence = ref ? await call.wait(() => this.composition.governance!.readEvidence(ref, structuredClone(request), providerContext)) : null;
+      // Recheck schema access after both provider awaits before retaining or releasing output.
+      const schema = await resolveCapabilitySchema(record.outputSchema, schemaScope, call, this.composition.schemas);
+      if (status?.type === 'succeeded' && (!isDeepStrictEqual(status.outputSchema, record.outputSchema) || !await call.wait(() => validateCapabilitySchema(schema, status.output, call.context.signal)))) return unavailable();
+      const inserted = this.repository.observeDispatch(request, result, evidence, context, () => call.check());
+      const reply = await this.replayResult(this.repository.dispatchView(invocationId, context)!, local, inputCall, true);
+      return { ...reply, replayed: !inserted, body: { ...reply.body, replayed: !inserted } };
     } finally { call.close(); }
   }
   async handle(method: string, path: string, local: LocalContext, raw: unknown, inputCall: CapabilityCallContext) {
     try { return await this.execute(method, path, local, raw, inputCall); }
     catch (error) {
       if (error instanceof AuthenticationError) throw error;
-      if (error instanceof CanonicalGrantError) return unavailable(`authority_${error.code}`, error.code === 'conflict' ? 409 : error.code === 'notFound' ? 404 : 503);
+      if (error instanceof CanonicalGrantError) return unavailable(`authority_${error.code}`, error.code === 'conflict' ? 409 : error.code === 'notFound' ? 404 : error.code === 'capacity' ? 429 : 503);
       return unavailable();
     }
   }
@@ -70,7 +105,12 @@ export class CanonicalCapabilityDispatch {
     this.auth.assertCurrent(local); if (!this.auth.canAdminister(local, assistantId)) return unavailable('authority_not_found', 404);
     if (method === 'GET' && parts.length === 8) {
       const view = this.repository.dispatchView(invocationId, context); if (!view) return unavailable('authority_not_found', 404);
-      return this.replayResult(view, local, inputCall);
+      return this.replayResult(view, local, inputCall, true);
+    }
+    if (method === 'POST' && parts[8] === 'reconcile') {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw) || Object.keys(raw).length) return unavailable('invalid_reconciliation', 422);
+      const view = this.repository.dispatchView(invocationId, context); if (!view) return unavailable('authority_not_found', 404);
+      return this.reconcile(view, local, inputCall, context);
     }
     if (method !== 'POST' || parts[8] !== 'dispatch') return unavailable('capability_dispatch_method_not_allowed', 405);
     if (!boundedJson(raw) || !raw || typeof raw !== 'object' || Array.isArray(raw)) return unavailable('invalid_dispatch', 422);
@@ -134,7 +174,7 @@ export class CanonicalCapabilityDispatch {
       return this.response(this.repository.dispatchView(invocationId, context)!, false);
     } catch (error) {
       if (error instanceof AuthenticationError) throw error;
-      if (error instanceof CanonicalGrantError) return unavailable(`authority_${error.code}`, error.code === 'conflict' ? 409 : error.code === 'notFound' ? 404 : 503);
+      if (error instanceof CanonicalGrantError) return unavailable(`authority_${error.code}`, error.code === 'conflict' ? 409 : error.code === 'notFound' ? 404 : error.code === 'capacity' ? 429 : 503);
       return unavailable();
     } finally { call.close(); }
   }

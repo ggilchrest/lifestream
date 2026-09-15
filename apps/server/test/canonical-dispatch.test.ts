@@ -1,22 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID, createHash } from 'node:crypto';
-import { setup, prepared, envelope } from './fixtures/canonical-capability.ts';
-async function ready(t: Parameters<typeof setup>[0], grantClass = 'allowOnce', shortExpiry: 'request' | 'grant' | null = null) {
-  const f = await setup(t), input = { ...f.body(), requestedClass: grantClass };
-  const now = Date.parse(input.expiresAt) - 45000;
-  if (shortExpiry) input.expiresAt = new Date(now + 1000).toISOString();
-  if (shortExpiry === 'grant') input.grantExpiresAt = new Date(now + 1000).toISOString();
-  const p = await prepared(f, input);
-  const created = await f.create(p); assert.equal(created.status, 201, JSON.stringify(created.body));
-  const approved = await f.approve(created.body.result); assert.equal(approved.status, 200, JSON.stringify(approved.body));
-  const grant = approved.body.result.grant;
-  const path = f.path.replace('synthetic.echo/prepare', `invocations/${p.request.invocationId}`);
-  const command = { grantId: grant.grantId, idempotencyKey: input.idempotencyKey };
-  const dispatch = () => f.send(path + '/dispatch', command);
-  const revoke = () => f.send(`/api/authority/v1/grants/${grant.grantId}/revoke`, envelope({ grantId: grant.grantId, expectedRevision: grant.revision, reason: { code: 'synthetic_revoke', summary: 'Synthetic revocation' } }));
-  return { ...f, p, input, grant, path, command, dispatch, revoke };
-}
+import { ready, prepared } from './fixtures/canonical-capability.ts';
 const count = (f: Awaited<ReturnType<typeof ready>>, table: string) => f.db.connection.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get()!.n;
 
 test('canonical HTTP prepare, approve and dispatch preserves original arguments and consumes once with actual receipt evidence', async t => {

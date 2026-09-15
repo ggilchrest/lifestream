@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "4a9d3c5ed751f951af0fbb3c2330324f1a053788",
+  "currentRevision": "3d4d9cfcc3a853e2914d7167206a66b18fcb3d92",
   "activeSlice": "LS-S042",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -97,24 +97,25 @@
     "docs/canonical-provider-boundary.md",
     "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json",
     "packages/runtime/package.json",
-    "apps/server/test/fixtures/canonical-capability.ts"
+    "apps/server/test/fixtures/canonical-capability.ts",
+    "packages/storage-sqlite/src/migrations/0034_canonical_dispatch_observations.sql",
+    "apps/server/test/canonical-reconciliation.test.ts",
+    "implementation/evidence/LS-S042-CANONICAL-RECONCILIATION-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/authority/canonical-api.ts",
     "apps/server/src/authority/canonical-dispatch.ts",
     "apps/server/src/authority/capability-preparation.ts",
     "apps/server/src/index.ts",
     "apps/server/test/canonical-dispatch.test.ts",
-    "apps/server/test/capability-preparation.test.ts",
+    "apps/server/test/canonical-reconciliation.test.ts",
     "apps/server/test/fixtures/canonical-capability.ts",
     "apps/server/test/server.test.ts",
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json",
-    "packages/runtime/package.json",
+    "implementation/evidence/LS-S042-CANONICAL-RECONCILIATION-1.json",
     "packages/storage-sqlite/src/authority/canonical-grants.ts",
     "packages/storage-sqlite/src/index.ts",
-    "packages/storage-sqlite/src/migrations/0033_canonical_dispatch.sql",
+    "packages/storage-sqlite/src/migrations/0034_canonical_dispatch_observations.sql",
     "packages/storage-sqlite/src/migrations/index.ts",
     "packages/storage-sqlite/test/initiative-delivery.test.ts",
     "packages/storage-sqlite/test/initiative-expression.test.ts"
@@ -123,37 +124,32 @@
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-RECONCILIATION-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-RECONCILIATION-1.json"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-RECONCILIATION-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-RECONCILIATION-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-RECONCILIATION-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
-    },
-    {
-      "command": "node scripts/check-pwce-context-process.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-RECONCILIATION-1.json"
     }
   ],
   "decisions": [
@@ -168,8 +164,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Continue canonical provider status reconciliation/invalidation and LS-S044 control-web workflow, then connect the actual PWCE capability/authority adapter, target-state preconditions and joint action scenarios. Continue remaining S083/S084 development and broad source requalification; preserve separate Human and physical acceptance boundaries.",
-  "updatedAt": "2026-09-15T14:34:15.574622Z",
+  "nextAction": "Connect the canonical capability/authority path to the configured fixture/PWCE adapters and migrate the LS-S044 control-web workflow. Finish canonical getGrants/invalidation subscriptions, target-state preconditions, joint action and backup-restore scenarios; continue remaining S083/S084 development and broad source qualification. Preserve separate Human and physical acceptance boundaries.",
+  "updatedAt": "2026-09-15T14:54:29.048680Z",
   "updatedBy": "Codex",
-  "notes": "Canonical authenticated HTTP preparation -> approval -> final dispatch verified in the source suite. Receipt binds source hashes and synthetic evidence; no whole-slice or selected-provider qualification is implied. Current run disposition: continue."
+  "notes": "Canonical dispatch reconciliation verified with original provider/scope, append-only observations, immutable first results and current access checks for all stored provider details. Source/evidence bindings recorded in the new receipt. Run disposition: continue."
 }
