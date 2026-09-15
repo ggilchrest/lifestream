@@ -8,6 +8,8 @@ import { OllamaInferenceProvider } from "@lifestream/providers-ollama";
 import { SglangInferenceProvider } from "@lifestream/providers-sglang";
 import { VoxCpmProvider } from "@lifestream/providers-voxcpm";
 import { WebSocket } from "ws";
+import { PwceWorldContext } from "./pwce-world.ts";
+import { validatePwceProfile } from "../config/pwce.ts";
 
 export type ProviderHealthStatus = "healthy" | "degraded" | "unavailable";
 export type ProviderInstanceHealth = {
@@ -50,6 +52,7 @@ export class ProviderRegistry {
   readonly inference?: InferenceProvider;
   readonly stt?: SpeechToTextProvider;
   readonly tts?: VoxCpmProvider;
+  readonly world?: PwceWorldContext;
   private readonly config: RuntimeConfig;
   private probing: Promise<void> | undefined;
   constructor(config: RuntimeConfig) {
@@ -62,6 +65,13 @@ export class ProviderRegistry {
       instances[id] = Object.freeze({ id, ...descriptor, required: config.providerRequirements[providerKey] === "required" });
     }
     this.providers = instances;
+    const pwce = validatePwceProfile(config.pwceProfile, config.providers, config.authority, config.secretRefs);
+    if (pwce) {
+      const token = process.env[config.secretRefs[pwce.tokenSecretRef]!.name];
+      if (token) this.world = new PwceWorldContext(pwce, token);
+      else this.providers.world = Object.freeze({ ...this.providers.world!, status: "unavailable", reason: "PWCE credential is not loaded" });
+      this.providers.capability = Object.freeze({ ...this.providers.capability!, status: "unavailable", reason: "PWCE action adapter composition remains unavailable; standalone grants cannot substitute" });
+    }
     if (config.providers.inference === "fixture") this.inference = new FixtureInferenceProvider();
     if (config.providers.inference === "ai5090-development" && config.inferenceProfile) this.inference = new SglangInferenceProvider({ endpoint: config.inferenceProfile.endpoint, model: config.inferenceProfile.servedModelName, ...(process.env.LIFESTREAM_INFERENCE_API_KEY ? { apiKey: process.env.LIFESTREAM_INFERENCE_API_KEY } : {}) });
     if (config.providers.inference === "ollama-mac-local" && config.inferenceProfile) this.inference = new OllamaInferenceProvider({ endpoint: config.inferenceProfile.endpoint, model: config.inferenceProfile.servedModelName, contextLength: config.inferenceProfile.contextLength });
@@ -72,8 +82,16 @@ if (config.providers.tts === "voxcpm" && config.ttsProfile) this.tts = new VoxCp
   async probe(timeoutMs = 2_000): Promise<void> {
     // Coalesce concurrent readiness callers; do not retain a startup snapshot
     // after the bounded probe completes. These calls never generate speech.
-    this.probing ??= Promise.all([this.probeInference(timeoutMs), this.probeStt(timeoutMs), this.probeTts(timeoutMs)]).then(() => undefined).finally(() => { this.probing = undefined; });
+    this.probing ??= Promise.all([this.probeInference(timeoutMs), this.probeStt(timeoutMs), this.probeTts(timeoutMs), this.probeWorld(timeoutMs)]).then(() => undefined).finally(() => { this.probing = undefined; });
     await this.probing;
+  }
+  private async probeWorld(timeoutMs: number): Promise<void> {
+    if (!this.world) return;
+    const controller = new AbortController(), timer = setTimeout(() => controller.abort(), timeoutMs);
+    const { reason: _reason, ...current } = this.providers.world!;
+    try { await this.world.probe(controller.signal); this.providers.world = Object.freeze({ ...current, status: "healthy" }); }
+    catch { this.providers.world = Object.freeze({ ...current, status: "unavailable", reason: "PWCE connection or pinned gateway identity is unavailable" }); }
+    finally { clearTimeout(timer); }
   }
   private async probeStt(timeoutMs: number): Promise<void> {
     const current = this.providers.stt;

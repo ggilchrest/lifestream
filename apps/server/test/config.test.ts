@@ -42,3 +42,15 @@ test("unknown keys and non-fixture test providers fail closed", () => {
   assert.throws(() => loadConfig({ defaults: { ...base, providers: { ...base.providers, memory: "live" } }, profile: {}, environment: {}, cli: {} }), /requires fixture/);
   assert.throws(() => loadConfig({ defaults: { ...base, profile: "mac-local", inferenceProfile: { runtime: "Ollama", runtimeVersion: "0.31.1", model: "Qwen", modelRevision: "r", servedModelName: "qwen", quantization: "q4", contextLength: 1, endpoint: "http://127.0.0.1:11434", developmentOnly: true } }, profile: {}, environment: {}, cli: {} }), /runtime artifact digest/);
 });
+
+test('PWCE configuration binds World, mode, sites and an environment credential without local grants',()=>{
+ const pwceProfile={endpoint:'http://127.0.0.1:12345',worldRef:'world.synthetic',executionEnvironmentRef:'replay',siteRefs:['home.one'],principalRef:'agent.synthetic',lifestreamEnvironmentId:'deployment.synthetic',tokenSecretRef:'gateway'};
+ const input={...base,profile:'local-dev',providers:{...base.providers,world:'pwce',capability:'pwce'},authority:{provider:'pwce',authentication:'local-password'},secretRefs:{gateway:{kind:'env',name:'PWCE_SYNTHETIC_TOKEN'}},pwceProfile};
+ const load=(extra:Record<string,unknown>={})=>loadConfig({defaults:{...input,...extra},profile:{},environment:{},cli:{}});
+ assert.equal(load().pwceProfile?.timeoutMs,1000);
+ for(const change of [{token:'plaintext'},{endpoint:'http://user:secret@localhost'},{endpoint:'http://localhost?token=secret'},{executionEnvironmentRef:'deployment.synthetic'},{siteRefs:['home.one','home.one']},{timeoutMs:5001},{maximumPromptBytes:16385},{tokenSecretRef:'missing'}]) assert.throws(()=>load({pwceProfile:{...pwceProfile,...change}}));
+ assert.throws(()=>load({providers:{...input.providers,capability:'fixture'}}),/standalone/);
+ assert.throws(()=>load({authority:{...input.authority,provider:'fixture'}}),/standalone/);
+ assert.throws(()=>load({profile:'test'}),/fixture/);
+ assert.throws(()=>load({providers:base.providers}),/explicit/);
+});

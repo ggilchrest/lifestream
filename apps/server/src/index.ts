@@ -31,6 +31,7 @@ import { AssistantProfileRepository, Database, InitiativeLedgerRepository, Memor
 import { isProfile, loadProfile, redactedDigest } from "./config/loader.ts";
 import { createProviderRegistry, type ProviderInstanceHealth, type ProviderRegistry } from "./composition/providers.ts";
 import type { Profile, RuntimeConfig } from "./config/schema.js";
+import { unavailableWorldContext } from "@lifestream/runtime/context/world";
 import { streamMessage, type HostRuntimeInput } from "./runtime/inference.ts";
 import { relationshipControlDefaults, relationshipControlInventory, compileRelationshipContext, type CompiledRelationshipContext, type RelationshipContextRecord } from "@lifestream/runtime/context";
 import { ContextCache } from "@lifestream/runtime/context/cache";
@@ -559,7 +560,7 @@ export class LifestreamServer {
   async start(): Promise<void> { if (this.listening) return; await ensureStorage(this.config); this.migrationRecords = this.database.migrate(); this.storageReady = true; await new Promise<void>((resolveStart, reject) => { const onError = (error: Error) => { this.server.off("listening", onListening); reject(error); }; const onListening = () => { this.server.off("error", onError); resolveStart(); }; this.server.once("error", onError); this.server.once("listening", onListening); this.server.listen(this.port, this.host); }); this.listening = true; await this.providers.probe(); this.state = this.providers.ready ? "ready" : "degraded"; }
   async runBoundedWork<T>(work: Promise<T>): Promise<T> { if (this.state !== "ready") throw new Error("server is not accepting work"); const tracked = work.finally(() => this.activeWork.delete(tracked)); this.activeWork.add(tracked); return tracked as Promise<T>; }
   admitRelationalOpportunity(opportunity: Parameters<RelationalInitiativeCoordinator["admit"]>[0], eligibility: Parameters<RelationalInitiativeCoordinator["admit"]>[1]) { if (this.state !== "ready") return { admitted: false as const, reason: "endpointUnavailable" as const }; return this.initiative.admit(opportunity, eligibility); }
-  async shutdown(deadlineMs = this.shutdownDeadlineMs): Promise<void> { if (this.state === "stopped") return; this.state = "draining"; this.invalidateRuntimeInputs(); this.listening = false; for (const session of this.audioSessions) session.close(); this.audioSessions.clear(); this.audioServer.close(); const close = new Promise<void>((resolveClose) => this.server.close(() => resolveClose())); const bounded = Promise.allSettled([...this.activeWork]).then(() => undefined); await Promise.race([Promise.all([close, bounded]), new Promise<void>((resolveDeadline) => setTimeout(resolveDeadline, deadlineMs))]); this.activeWork.clear();this.conversationHistory.clear(); this.initiativeHost.close(); this.admin.close(); this.database.close(); this.state = "stopped"; }
+  async shutdown(deadlineMs = this.shutdownDeadlineMs): Promise<void> { if (this.state === "stopped") return; this.state = "draining"; this.providers.world?.close(); this.invalidateRuntimeInputs(); this.listening = false; for (const session of this.audioSessions) session.close(); this.audioSessions.clear(); this.audioServer.close(); const close = new Promise<void>((resolveClose) => this.server.close(() => resolveClose())); const bounded = Promise.allSettled([...this.activeWork]).then(() => undefined); await Promise.race([Promise.all([close, bounded]), new Promise<void>((resolveDeadline) => setTimeout(resolveDeadline, deadlineMs))]); this.activeWork.clear();this.conversationHistory.clear(); this.initiativeHost.close(); this.admin.close(); this.database.close(); this.state = "stopped"; }
   address(): { host: string; port: number } { const address = this.server.address(); if (!address || typeof address === "string") throw new Error("server is not listening"); return { host: address.address, port: address.port }; }
   private get localOrigin(): string { return `http://${this.host}:${this.address().port}`; }
   private get cookieName(): string { return `lifestream_${this.address().port}`; }
@@ -623,7 +624,10 @@ export class LifestreamServer {
   }
   private applyProtected(method: string, path: string, context: LocalContext, body: Record<string, unknown>): AdminResult {
     const auth = this.localAuth!; auth.assertCurrent(context);
-    if (path.startsWith("/api/authority/v1/")) return this.securityAdmin!.handle(method, path, context, body);
+    if (path.startsWith("/api/authority/v1/")) {
+      if (this.config.authority.provider === "pwce") return { status: 503, body: { code: "pwce_authority_unavailable", message: "PWCE action administration is unavailable; local grants cannot substitute." } };
+      return this.securityAdmin!.handle(method, path, context, body);
+    }
     if (method === "GET" && path === "/api/admin/v1/capabilities") return { status: 200, body: { capabilities: administrationCapabilities(), grantsAuthority: false } };
     if (path === "/api/admin/v1/people/me" || /^\/api\/admin\/v1\/people\/me\/(?:activate|revoke|rollback|export)$/u.test(path)) return this.admin.handleUserProfile(method, path.split("/")[6], context.principalId, body, id => auth.canAdminister(context, id));
     const parts = path.split("/").filter(Boolean), assistantId = parts[4];
@@ -692,19 +696,21 @@ export class LifestreamServer {
     if (this.profileSwitching) return json(response, 409, { code: "profile_switch_in_progress", message: "another profile switch is in progress" });
     this.profileSwitching = true;
     let candidateDatabase: Database | undefined;
+    let candidateProviders: ReturnType<typeof createProviderRegistry> | undefined;
     try {
-      const candidateConfig = this.profileLoader(requested as Profile); const candidateProviders = createProviderRegistry(candidateConfig);
+      const candidateConfig = this.profileLoader(requested as Profile); candidateProviders = createProviderRegistry(candidateConfig);
+      const preparedProviders = candidateProviders;
       await candidateProviders.probe();
       if (body?.action === "check") return json(response, 200, { requestedProfile: requested, activeProfile: this.config.profile, ready: candidateProviders.ready, providers: candidateProviders.providers });
       if (!candidateProviders.ready) return json(response, 503, { code: "profile_unavailable", message: `${requested} required providers are unavailable; ${this.config.profile} remains active`, activeProfile: this.config.profile, requestedProfile: requested, providers: candidateProviders.providers });
-      await ensureStorage(candidateConfig); candidateDatabase = new Database({ path: candidateConfig.storage.databasePath }); const candidateMigrations = candidateDatabase.migrate(); const candidateMemories = new MemoryRepository(candidateDatabase); const candidateInitiative = new RelationalInitiativeCoordinator(8, new InitiativeLedgerRepository(candidateDatabase)); const candidateAdmin = new AssistantAdminApi(new AssistantProfileRepository(candidateDatabase), candidateMemories, candidateDatabase,()=>isolatedLabRuntime(candidateProviders,candidateConfig),candidateConfig.storage.databasePath===":memory:"?undefined:join(candidateConfig.storage.artifactDirectory,"relationship-recovery"));
+      await ensureStorage(candidateConfig); candidateDatabase = new Database({ path: candidateConfig.storage.databasePath }); const candidateMigrations = candidateDatabase.migrate(); const candidateMemories = new MemoryRepository(candidateDatabase); const candidateInitiative = new RelationalInitiativeCoordinator(8, new InitiativeLedgerRepository(candidateDatabase)); const candidateAdmin = new AssistantAdminApi(new AssistantProfileRepository(candidateDatabase), candidateMemories, candidateDatabase,()=>isolatedLabRuntime(preparedProviders,candidateConfig),candidateConfig.storage.databasePath===":memory:"?undefined:join(candidateConfig.storage.artifactDirectory,"relationship-recovery"));
       for (const session of this.audioSessions) session.close(); this.audioSessions.clear();
-      const previousDatabase = this.database; this.initiativeHost.close(); this.initiativeHost=new InitiativeHost(candidateDatabase); this.admin.close(); this.config = candidateConfig; this.providers = candidateProviders; this.database = candidateDatabase; this.memories = candidateMemories; this.initiative = candidateInitiative; this.admin = candidateAdmin; this.migrationRecords = candidateMigrations; candidateDatabase = undefined; previousDatabase.close(); this.state = "ready"; this.profileSwitching = false;
+      const previousDatabase = this.database; this.providers.world?.close(); this.initiativeHost.close(); this.initiativeHost=new InitiativeHost(candidateDatabase); this.admin.close(); this.config = candidateConfig; this.providers = candidateProviders; this.database = candidateDatabase; this.memories = candidateMemories; this.initiative = candidateInitiative; this.admin = candidateAdmin; this.migrationRecords = candidateMigrations; candidateDatabase = undefined; previousDatabase.close(); this.state = "ready"; this.profileSwitching = false;
       return json(response, 200, { ...this.health, switched: true });
     } catch (error) {
       candidateDatabase?.close();
       return json(response, 500, { code: "profile_switch_failed", message: error instanceof Error ? error.message : "profile switch failed", activeProfile: this.config.profile });
-    } finally { this.profileSwitching = false; }
+    } finally { if (candidateProviders !== this.providers) candidateProviders?.world?.close(); this.profileSwitching = false; this.invalidateRuntimeInputs(); }
   }
   private runtimeSelfContext(microphone: RuntimeSelfContext["inputModalities"]["microphone"], endpoint: RuntimeSelfContext["endpointScope"], context?: AuthContext, asOf = new Date().toISOString()): RuntimeSelfContext {
     const session = context ? readSessionEndpoint(this.database, context.sessionId) : { revision: 0, endpoint: null };
@@ -735,14 +741,29 @@ export class LifestreamServer {
     const boundary = () => JSON.stringify([warmth(),this.admin.getActivePersona(assistantId, context.principalId, !!authorizationCurrent)?.sourceRevision,this.admin.contextBoundary(assistantId,relationshipId,context.principalId),this.runtimeSelfContext(microphone,endpoint,context,asOf)]);
     const prepared = snapshot(); const fingerprint = boundary();
     const conversation=this.conversationPort(assistantId,relationshipId,context);
-    return { ...prepared,...(conversation?{conversation}:{}), onInferenceRequest:request=>{const memory=request.sections.find(section=>section.kind==='preparedMemory')?.content??'';this.admin.noteDiscoveryRequest(assistantId,relationshipId,context.principalId,context.sessionId,(prepared.preparedRelationshipContext?.sourceRevisions??[]).filter(id=>id.startsWith('discovery-candidate:')&&memory.includes(id)));}, isCurrent: () => { try { return (authorizationCurrent ? authorizationCurrent() : Date.parse(context.expiresAt) > Date.now()) && !["draining", "stopped"].includes(this.state) && fingerprint === boundary() && (!prepared.preparedRelationshipContext || Date.parse(prepared.preparedRelationshipContext.freshUntil) > Date.now()); } catch { return false; } } };
+    const result: HostRuntimeInput = { ...prepared,...(conversation?{conversation}:{}), onInferenceRequest:request=>{const memory=request.sections.find(section=>section.kind==='preparedMemory')?.content??'';this.admin.noteDiscoveryRequest(assistantId,relationshipId,context.principalId,context.sessionId,(prepared.preparedRelationshipContext?.sourceRevisions??[]).filter(id=>id.startsWith('discovery-candidate:')&&memory.includes(id)));}, isCurrent: () => { try { return (authorizationCurrent ? authorizationCurrent() : Date.parse(context.expiresAt) > Date.now()) && !["draining", "stopped"].includes(this.state) && fingerprint === boundary() && (!prepared.preparedRelationshipContext || Date.parse(prepared.preparedRelationshipContext.freshUntil) > Date.now()); } catch { return false; } } };
+    if (this.config.providers.world === "pwce") {
+      const world = this.providers.world, ownerCurrent = result.isCurrent;
+      const owner = {
+        assistantId, principalId: context.principalId, sessionId: context.sessionId,
+        endpointId: prepared.endpointId,
+        audienceKnown: prepared.runtimeSelfContext.audienceScope === "authenticatedSession",
+        revision: createHash("sha256").update(JSON.stringify([prepared.runtimeSelfContext.sourceRevision, prepared.profileProjection?.sourceRevision, this.admin.contextBoundary(assistantId, relationshipId, context.principalId)])).digest("hex"),
+        isCurrent: () => world === this.providers.world && ownerCurrent(),
+        onInvalidation: () => this.invalidateWorldInputs()
+      };
+      result.prepareWorld = signal => world ? world.prepare(owner, signal) : Promise.resolve({ context: unavailableWorldContext("provider_unavailable"), isCurrent: owner.isCurrent, isSnapshotCurrent: owner.isCurrent });
+      result.capabilityContext = "PWCE action administration is unavailable. World observations do not grant actions. Standalone grants cannot substitute for PWCE authority.";
+    }
+    return result;
   }
-  private invalidateRuntimeInputs(reason="configurationChanged"): void { this.conversationHistory.prune(); this.initiativeHost.invalidate(reason); for (const fence of this.runtimeFences) if (!fence.current()) fence.abort(); for (const session of this.audioSessions) session.invalidateIfStale(); }
+  private invalidateWorldInputs(): void { for (const fence of this.runtimeFences) if (!fence.current()) fence.abort(); for (const session of this.audioSessions) session.invalidateIfStale(); }
+  private invalidateRuntimeInputs(reason="configurationChanged"): void { this.providers.world?.prune(); this.conversationHistory.prune(); this.initiativeHost.invalidate(reason); for (const fence of this.runtimeFences) if (!fence.current()) fence.abort(); for (const session of this.audioSessions) session.invalidateIfStale(); }
   private async handleRuntime(request: IncomingMessage, response: ServerResponse): Promise<void> {
     if (!this.storageReady || ["draining", "stopped"].includes(this.state) || this.providers.providers.inference?.status !== "healthy") return json(response, 503, { code: "inference_unavailable", message: "runtime inference is unavailable" });
     const context = this.requestContext(request, false); if (!context) return json(response, 401, { code: "authentication_required", message: "authentication required" });
     const body = asObject(await readBody(request)); if (!body) return json(response, 422, { code: "invalid_request", message: "message body must be an object" });
-    delete body.preparedRelationshipContext; delete body.profileProjection; delete body.runtimeSelfContext; delete body.memory; delete body.world; delete body.capabilities;
+    delete body.preparedRelationshipContext; delete body.profileProjection; delete body.runtimeSelfContext; delete body.memory; delete body.world; delete body.preparedWorldContext; delete body.capabilities;
     // Typed text does not establish a negotiated physical/logical endpoint.
     body.endpointId = null;
     let prepared: HostRuntimeInput; try { prepared = this.prepareRuntimeInput(body, context, "inactive", "none", () => this.runtimeAuthorized(request, body.assistantId)); } catch { return json(response, 404, { code: "relationship_not_found", message: "relationship context is unavailable for this authenticated subject" }); }
@@ -754,7 +775,7 @@ export class LifestreamServer {
     body.endpointId = prepared.endpointId ?? null;
     if (prepared.preparedRelationshipContext) body.preparedRelationshipContext = prepared.preparedRelationshipContext;
     const disconnected = new AbortController(); response.once("close", () => { if (!response.writableEnded) disconnected.abort(); });
-    const fence = { current: prepared.isCurrent, abort: () => disconnected.abort() }; this.runtimeFences.add(fence);
+    const fence = { current: () => prepared.isCurrent(), abort: () => disconnected.abort() }; this.runtimeFences.add(fence);
     const releaseDiscovery=this.admin.discovery.foregroundStarted();
     const initiativeOwner=typeof body.assistantId==="string"?this.admin.initiativeOwner(body.assistantId,typeof body.relationshipId==="string"?body.relationshipId:undefined,context.principalId):undefined;
     const releaseInitiative=this.initiativeHost.foregroundStarted(initiativeOwner?{scope:initiativeOwner.scope,sessionId:context.sessionId}:undefined);

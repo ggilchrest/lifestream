@@ -7,8 +7,8 @@ export type PwceCacheScope = Omit<PwceSubscriptionScope, "requestId" | "correlat
   readonly sessionId: string; readonly environmentId: string;
 };
 export type PwceReadTicket = { readonly epoch: number; readonly key: string; readonly cursor: string };
-export type PwceCachedRead<T> = { readonly value: T; readonly expiresAt: string; readonly isCurrent: () => boolean };
-type Entry<T> = { value: T; epoch: number; expires: number; monotonicExpires: number; bytes: number };
+export type PwceCachedRead<T> = { readonly value: T; readonly expiresAt: string; readonly isCurrent: () => boolean; readonly isSnapshotCurrent: () => boolean };
+type Entry<T> = { value: T; epoch: number; expires: number; monotonicExpires: number; snapshotExpires: number; snapshotMonotonicExpires: number; bytes: number };
 const kinds = new Set(["context.invalidated", "authority.invalidated", "capabilities.invalidated", "action.updated", "provider.degraded"]);
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
 const bounded = (value: unknown): value is string => typeof value === "string" && value.length > 0 && value.length <= 2048;
@@ -111,7 +111,8 @@ export class PwceScopedCache<T> {
     if (expires <= now) throw new PwceCacheError("read_invalidated");
     this.remove(ticket.key);
     while (this.entries.size >= 32 || this.bytes + size > 1_048_576) this.remove(this.entries.keys().next().value!);
-    const entry = { value: copied, epoch: this.epoch, expires, monotonicExpires: this.monotonic() + expires - now, bytes: size };
+    const snapshotExpires = Math.min(this.authorityExpires, validity);
+    const entry = { value: copied, epoch: this.epoch, expires, monotonicExpires: this.monotonic() + expires - now, snapshotExpires, snapshotMonotonicExpires: this.monotonic() + snapshotExpires - now, bytes: size };
     this.entries.set(ticket.key, entry); this.bytes += size;
     // The read's cursor is not an acknowledgement of event delivery. Keep the
     // event high-water mark until replay is consumed; otherwise races lose events.
@@ -123,7 +124,7 @@ export class PwceScopedCache<T> {
     return this.checkScope() && !this.needsRefresh && this.entries.get(key) === entry && entry.epoch === this.epoch && this.clock() < entry.expires && this.monotonic() < entry.monotonicExpires;
   }
   private lease(key: string, entry: Entry<T>): PwceCachedRead<T> {
-    return { value: structuredClone(entry.value), expiresAt: new Date(entry.expires).toISOString(), isCurrent: () => this.entryCurrent(key, entry) };
+    return { value: structuredClone(entry.value), expiresAt: new Date(entry.expires).toISOString(), isCurrent: () => this.entryCurrent(key, entry), isSnapshotCurrent: () => this.checkScope() && entry.epoch === this.epoch && this.clock() < entry.snapshotExpires && this.monotonic() < entry.snapshotMonotonicExpires };
   }
   get(key: string): PwceCachedRead<T> | undefined {
     const entry = this.entries.get(key);

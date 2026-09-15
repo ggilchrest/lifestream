@@ -13,7 +13,8 @@
     "@lifestream/runtime": "workspace:*",
     "@lifestream/storage-sqlite": "workspace:*",
     "ws": "^8.21.3",
-    "@lifestream/contracts": "workspace:*"
+    "@lifestream/contracts": "workspace:*",
+    "@lifestream/providers-pwce": "workspace:*"
   },
   "scripts": {
     "build": "../../node_modules/.bin/tsc -b && esbuild ../control-web/vad-source.js --bundle --format=esm --outfile=../control-web/vad-bundle.js",

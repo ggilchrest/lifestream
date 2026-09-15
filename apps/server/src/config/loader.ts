@@ -1,11 +1,12 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { Profile, ProviderRequirement, RuntimeConfig, SecretRef } from "./schema.js";
+import { validatePwceProfile } from "./pwce.ts";
 
 type ConfigInput = Partial<RuntimeConfig> & { [key: string]: unknown };
 type ConfigSources = { defaults: ConfigInput; profile: ConfigInput; environment: ConfigInput; cli: ConfigInput };
 
-const keys = new Set(["profile", "providers", "providerRequirements", "inferenceProfile", "sttProfile", "ttsProfile", "storage", "authority", "secretRefs"]);
+const keys = new Set(["profile", "providers", "providerRequirements", "inferenceProfile", "sttProfile", "ttsProfile", "pwceProfile", "storage", "authority", "secretRefs"]);
 const providerKeys = new Set(["inference", "memory", "stt", "tts", "world", "capability", "renderer", "clock"]);
 const storageKeys = new Set(["databasePath", "artifactDirectory"]);
 const authorityKeys = new Set(["provider", "authentication"]);
@@ -78,6 +79,8 @@ export const loadConfig = (sources: ConfigSources): RuntimeConfig => {
   if (merged.profile === "test" && Object.values(providers).some((value) => value !== "fixture")) throw new Error("test profile requires fixture providers");
   for (const [key, value] of Object.entries(providerRequirements)) if (value !== "required" && value !== "optional") throw new Error(`invalid provider requirement: ${key}`);
   const result = { profile: merged.profile, providers: providers as RuntimeConfig["providers"], providerRequirements: providerRequirements as RuntimeConfig["providerRequirements"], storage: storage as RuntimeConfig["storage"], authority: authority as RuntimeConfig["authority"], secretRefs: validateSecretRefs(merged.secretRefs ?? {}) } as RuntimeConfig;
+  const pwceProfile = validatePwceProfile(merged.pwceProfile, providers, authority, result.secretRefs);
+  if (pwceProfile) result.pwceProfile = pwceProfile;
   if (inferenceProfile) result.inferenceProfile = inferenceProfile as NonNullable<RuntimeConfig["inferenceProfile"]>;
   if (sttProfile) result.sttProfile = sttProfile as NonNullable<RuntimeConfig["sttProfile"]>;
   if (ttsProfile) result.ttsProfile = ttsProfile as NonNullable<RuntimeConfig["ttsProfile"]>;

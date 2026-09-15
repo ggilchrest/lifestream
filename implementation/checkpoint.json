@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "357e4aec45e925ccb35ca8460bbabb5b18a80ef1",
+  "currentRevision": "18c4da0dae7656153ac770ef5458e9a4d35eec79",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -99,67 +99,103 @@
     "packages/providers-pwce/tsconfig.json",
     "packages/runtime/package.json",
     "pnpm-lock.yaml",
-    "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json"
+    "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json",
+    "apps/server/src/config/schema.ts",
+    "apps/server/src/config/loader.ts",
+    "apps/server/src/config/pwce.ts",
+    "apps/server/src/composition/pwce-world.ts",
+    "apps/server/src/composition/providers.ts",
+    "apps/server/src/runtime/inference.ts",
+    "apps/server/src/runtime/audio.ts",
+    "apps/server/src/index.ts",
+    "apps/server/package.json",
+    "apps/server/tsconfig.json",
+    "apps/server/test/pwce-world.test.ts",
+    "apps/server/test/config.test.ts",
+    "apps/server/test/inference.test.ts",
+    "packages/runtime/src/context/world.ts",
+    "packages/runtime/src/inference/prompt.ts",
+    "packages/runtime/test/world.test.ts",
+    "scripts/check-pwce-runtime.mjs",
+    "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json",
+    "apps/server/test/audio.test.ts"
   ],
   "changedFiles": [
+    "apps/server/package.json",
+    "apps/server/src/composition/providers.ts",
+    "apps/server/src/composition/pwce-world.ts",
+    "apps/server/src/config/loader.ts",
+    "apps/server/src/config/pwce.ts",
+    "apps/server/src/config/schema.ts",
+    "apps/server/src/index.ts",
+    "apps/server/src/runtime/audio.ts",
+    "apps/server/src/runtime/inference.ts",
+    "apps/server/test/audio.test.ts",
+    "apps/server/test/config.test.ts",
+    "apps/server/test/pwce-world.test.ts",
+    "apps/server/tsconfig.json",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json",
-    "packages/providers-pwce/package.json",
+    "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json",
     "packages/providers-pwce/src/cache.ts",
-    "packages/providers-pwce/src/context-session.ts",
-    "packages/providers-pwce/src/index.ts",
     "packages/providers-pwce/test/cache.test.ts",
-    "packages/providers-pwce/test/context-session.test.ts",
-    "packages/providers-pwce/tsconfig.json",
     "packages/runtime/package.json",
+    "packages/runtime/src/context/world.ts",
+    "packages/runtime/src/inference/prompt.ts",
+    "packages/runtime/test/world.test.ts",
     "pnpm-lock.yaml",
-    "scripts/check-pwce-context.mjs"
+    "scripts/check-pwce-context-process.mjs",
+    "scripts/check-pwce-runtime.mjs"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json"
-    },
-    {
-      "command": "node --test --experimental-strip-types packages/providers-pwce/test/client.test.ts packages/providers-pwce/test/transport.test.ts packages/providers-pwce/test/cache.test.ts packages/providers-pwce/test/context-session.test.ts packages/runtime/test/pwce-mapping.test.ts",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
     },
     {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/audio.test.ts apps/server/test/pwce-world.test.ts apps/server/test/config.test.ts packages/runtime/test/world.test.ts packages/providers-pwce/test/cache.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/world.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
     },
     {
-      "command": "python3 check-docs.py",
+      "command": "python3 /private/tmp/check-pwce-world-docs.py",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
     }
   ],
   "decisions": [
@@ -174,8 +210,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Wire the selected PWCE WorldContext read-session into validated server configuration, lifecycle and ordinary conversation context, then complete async Authority/Capability ports and admission/outcome mapping. Finish full mapping-profile digests and joint scenarios. Continue remaining S083/S084 work. No whole-goal blocker: independent work remains.",
-  "updatedAt": "2026-09-15T07:53:57.624950Z",
+  "nextAction": "Complete asynchronous Authority/Capability ports and PWCE admission/outcome mapping, full mapping-profile qualification and joint scenarios. Continue remaining S083/S084 development. No whole-goal blocker; independent work remains.",
+  "updatedAt": "2026-09-15T08:26:28.829123Z",
   "updatedBy": "Codex",
-  "notes": "Scoped read-session cache component verified: 460 source tests, 66 focused adapter cases, 45 tooling cases, 19 actual HTTP checks and 25 documentation pages pass. Producer source/bundle unchanged; producer docs and private specification published separately. Server runtime composition remains incomplete."
+  "notes": "Host-owned PWCE world preparation verified through ordinary text/audio and isolated authenticated conversation. Full LS-S028/PV1-T5 and remaining S083/S084 work are not complete."
 }

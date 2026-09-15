@@ -3,17 +3,35 @@ import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import { buildCanonicalPrompt, type RuntimeSelfContext, type AssistantPersonaProjection } from "@lifestream/runtime/inference/prompt";
 import type { InferenceProvider,InferenceRequest } from "@lifestream/runtime/inference";
+import type { PreparedWorldContext, WorldContextPreparation } from "@lifestream/runtime/context/world";
 
 type Body = Record<string, unknown>;
 export type InferenceRuntimeIdentity = { profile: string; implementation: string; model: string; revision: string; fixture: boolean };
-export type HostRuntimeInput = { conversation?:ConversationPort; onInferenceRequest?: (request:InferenceRequest)=>void; inspection?: { fullPromptPreview: boolean }; endpointId?: string | null; assistantId: string; runtimeSelfContext: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection; preparedRelationshipContext?: NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]>; isCurrent: () => boolean };
+export type HostRuntimeInput = { prepareWorld?: WorldContextPreparation; preparedWorldContext?: PreparedWorldContext; admitWorld?: () => boolean; capabilityContext?: string; conversation?:ConversationPort; onInferenceRequest?: (request:InferenceRequest)=>void; inspection?: { fullPromptPreview: boolean }; endpointId?: string | null; assistantId: string; runtimeSelfContext: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection; preparedRelationshipContext?: NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]>; isCurrent: () => boolean };
+export async function prepareHostWorld(input: HostRuntimeInput | undefined, signal: AbortSignal): Promise<void> {
+  if (!input?.prepareWorld) return;
+  if (!input.isCurrent() || signal.aborted) throw new Error("Runtime world scope is unavailable");
+  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 5000);
+  const combined = AbortSignal.any([signal, controller.signal]);
+  let onAbort = () => {};
+  try {
+    const lease = await Promise.race([input.prepareWorld(combined), new Promise<never>((_resolve, reject) => { onAbort = () => reject(new Error("World preparation cancelled")); combined.addEventListener("abort", onAbort, { once: true }); if (combined.aborted) onAbort(); })]);
+    if (combined.aborted || !input.isCurrent() || !lease.isCurrent()) throw new Error("Runtime world scope changed");
+    const current = input.isCurrent;
+    input.preparedWorldContext = lease.context; input.admitWorld = lease.isCurrent;
+    input.isCurrent = () => current() && lease.isSnapshotCurrent();
+  } finally { clearTimeout(timer); combined.removeEventListener("abort", onAbort); }
+}
 const writeEvent = (response: ServerResponse, event: string, data: unknown) => response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 
 export async function streamMessage(response: ServerResponse, provider: InferenceProvider | undefined, body: Body, sessionId: string, aborted: AbortSignal, providerIdentity?: InferenceRuntimeIdentity, runtimeSelfContext?: RuntimeSelfContext, hostInput?: HostRuntimeInput): Promise<void> {
   if (!provider) { response.writeHead(503, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "inference_unavailable", message: "inference provider is unavailable" })); return; }
   if (typeof body.userInput !== "string" || !body.userInput.trim()) { response.writeHead(422, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "invalid_request", message: "userInput is required" })); return; }
   if(hostInput?.conversation)body.conversation=hostInput.conversation.read();
-  const interactionId = randomUUID(); const assistantId = typeof body.assistantId === "string" && body.assistantId ? body.assistantId : "assistant-neutral"; const request = buildCanonicalPrompt({ assistantId, sessionId, interactionId, endpointId: typeof body.endpointId === "string" ? body.endpointId : null, userInput: body.userInput, ...(typeof body.conversation === "string" ? { conversation: body.conversation } : {}), ...(typeof body.memory === "string" ? { memory: body.memory } : {}), ...(typeof body.world === "string" ? { world: body.world } : {}), ...(typeof body.capabilities === "string" ? { capabilities: body.capabilities } : {}), ...(body.preparedRelationshipContext && typeof body.preparedRelationshipContext === "object" ? { preparedRelationshipContext: body.preparedRelationshipContext as NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]> } : {}), executionMode: body.executionMode === "replay" ? "replay" : "live", ...(runtimeSelfContext ? { runtimeSelfContext } : {}), ...(hostInput?.profileProjection ? { profileProjection: hostInput.profileProjection } : {}) });
+  const deadlineAt = new Date(Date.now() + 10_000).toISOString();
+  try { if (hostInput?.prepareWorld) await prepareHostWorld(hostInput, aborted); }
+  catch { response.writeHead(409, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "runtime_context_changed", message: "Current world context is unavailable." })); return; }
+  const interactionId = randomUUID(); const assistantId = typeof body.assistantId === "string" && body.assistantId ? body.assistantId : "assistant-neutral"; const request = buildCanonicalPrompt({ deadlineAt, ...(hostInput?.preparedWorldContext ? { preparedWorldContext: hostInput.preparedWorldContext } : {}), assistantId, sessionId, interactionId, endpointId: typeof body.endpointId === "string" ? body.endpointId : null, userInput: body.userInput, ...(typeof body.conversation === "string" ? { conversation: body.conversation } : {}), ...(typeof body.memory === "string" ? { memory: body.memory } : {}), ...(typeof body.world === "string" ? { world: body.world } : {}), ...(hostInput?.capabilityContext ? { capabilities: hostInput.capabilityContext } : typeof body.capabilities === "string" ? { capabilities: body.capabilities } : {}), ...(body.preparedRelationshipContext && typeof body.preparedRelationshipContext === "object" ? { preparedRelationshipContext: body.preparedRelationshipContext as NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]> } : {}), executionMode: body.executionMode === "replay" ? "replay" : "live", ...(runtimeSelfContext ? { runtimeSelfContext } : {}), ...(hostInput?.profileProjection ? { profileProjection: hostInput.profileProjection } : {}) });
 
   const controller = new AbortController(); const onAbort = () => controller.abort(aborted.reason); aborted.addEventListener("abort", onAbort, { once: true }); if (aborted.aborted) controller.abort(aborted.reason); const deadline = setTimeout(() => controller.abort(new Error("deadline")), Math.max(1, Date.parse(request.deadlineAt) - Date.now()));
   response.writeHead(200, { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", connection: "keep-alive" }); writeEvent(response, "interaction.started", { interactionId, sessionId, assistantId, ...(providerIdentity ? { provider: providerIdentity } : {}) }); writeEvent(response, "input.manifest", request.manifest);
@@ -28,6 +46,7 @@ export async function streamMessage(response: ServerResponse, provider: Inferenc
   let terminal = false,answer="";
   try {
     if(controller.signal.aborted||hostInput&&!hostInput.isCurrent()){writeEvent(response,'interaction.error',{code:controller.signal.aborted?abortCode():'runtime_context_changed',message:'Current request scope is unavailable.'});terminal=true;return;}
+    if (hostInput?.admitWorld && !hostInput.admitWorld()) throw new Error("World context expired before inference admission");
     hostInput?.conversation?.remember({interactionId,role:"user",text:body.userInput});
     try{hostInput?.onInferenceRequest?.(request);}catch{/* Optional repetition bookkeeping cannot block an ordinary reply. */}
     for await (const chunk of provider.generate(request, { signal: controller.signal })) {

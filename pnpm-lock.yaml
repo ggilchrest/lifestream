@@ -38,6 +38,9 @@ importers:
       '@lifestream/providers-ollama':
         specifier: workspace:*
         version: link:../../packages/providers-ollama
+      '@lifestream/providers-pwce':
+        specifier: workspace:*
+        version: link:../../packages/providers-pwce
       '@lifestream/providers-sglang':
         specifier: workspace:*
         version: link:../../packages/providers-sglang

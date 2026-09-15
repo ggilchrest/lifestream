@@ -7,7 +7,7 @@ import type { AudioFrame, SpeechToTextProvider } from "@lifestream/runtime/voice
 import type { VoxCpmProvider } from "@lifestream/providers-voxcpm";
 import { defaultVoiceSettings, parseVoiceSettings, type VoiceSettings } from "./voice-settings.ts";
 import { SpeechQueue } from "./speech-queue.ts";
-import type { HostRuntimeInput } from "./inference.ts";
+import { prepareHostWorld, type HostRuntimeInput } from "./inference.ts";
 import {validateAudioFrame} from "@lifestream/runtime/voice";
 
 type AudioRequest = { schemaVersion: "1.0.0"; requestId: string; correlationId: string; sessionId: string; expectedSessionRevision: number; endpointId: string; audioInputId: string; format: AudioFrame["format"]; voiceSettings?: VoiceSettings; assistantId?: string; relationshipId?: string };
@@ -201,8 +201,9 @@ export class AudioSession {
       if (transcript === undefined || !transcript.trim()) throw new Error("speech input did not produce a committed transcript");
       if (controller.signal.aborted) throw new Error("audio turn interrupted");
         this.currentInput = this.deps.prepare?.({ ...(request.assistantId ? { assistantId: request.assistantId } : {}), ...(request.relationshipId ? { relationshipId: request.relationshipId } : {}), endpointId: request.endpointId, userInput: transcript });
+        if (this.currentInput?.prepareWorld) await prepareHostWorld(this.currentInput, controller.signal);
         outputLease=this.deps.outputLease?.(this.currentInput?.endpointId??request.endpointId,deadlineAt);
-        const prompt = buildCanonicalPrompt({ assistantId: this.currentInput?.assistantId ?? this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: this.currentInput?.endpointId ?? request.endpointId, userInput: transcript, ...(this.currentInput?.conversation?{conversation:this.currentInput.conversation.read()}:{}), deadlineAt, executionMode: "live", voiceMode: true, ...(this.currentInput ? { runtimeSelfContext: this.currentInput.runtimeSelfContext, ...(this.currentInput.profileProjection ? { profileProjection: this.currentInput.profileProjection } : {}), ...(this.currentInput.preparedRelationshipContext ? { preparedRelationshipContext: this.currentInput.preparedRelationshipContext } : {}) } : {}) });
+        const prompt = buildCanonicalPrompt({ ...(this.currentInput?.preparedWorldContext ? { preparedWorldContext: this.currentInput.preparedWorldContext } : {}), ...(this.currentInput?.capabilityContext ? { capabilities: this.currentInput.capabilityContext } : {}), assistantId: this.currentInput?.assistantId ?? this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: this.currentInput?.endpointId ?? request.endpointId, userInput: transcript, ...(this.currentInput?.conversation?{conversation:this.currentInput.conversation.read()}:{}), deadlineAt, executionMode: "live", voiceMode: true, ...(this.currentInput ? { runtimeSelfContext: this.currentInput.runtimeSelfContext, ...(this.currentInput.profileProjection ? { profileProjection: this.currentInput.profileProjection } : {}), ...(this.currentInput.preparedRelationshipContext ? { preparedRelationshipContext: this.currentInput.preparedRelationshipContext } : {}) } : {}) });
         const conversation=this.currentInput?.conversation;conversation?.remember({interactionId:traceId,role:"user",text:transcript});
         let answer = "";
         const segmenter = new SpeechSafeSegmenter(360);
@@ -231,6 +232,7 @@ export class AudioSession {
         };
         const generation = (async () => {
         this.invalidateIfStale();if(controller.signal.aborted)throw new Error('audio turn interrupted');
+        if (this.currentInput?.admitWorld && !this.currentInput.admitWorld()) throw new Error("World context expired before speech inference admission");
         try{this.currentInput?.onInferenceRequest?.(prompt);}catch{/* Optional inclusion bookkeeping is not speech authority. */}
         for await (const chunk of this.deps.inference.generate(prompt, { signal: controller.signal })) {
           this.invalidateIfStale();

@@ -136,3 +136,17 @@ test('replay cannot acknowledge events it omitted, reuse a page cursor, or attac
   {events:[],nextCursor:'invalid',resyncRequired:false,hasMore:false}
  ]){const f=fixture();const lease=f.read();assert.throws(()=>f.cache.acceptReplay(replay));assert.equal(lease.isCurrent(),false);}
 });
+
+test('admitted snapshot outlives cache reuse age but never evidence, authority or invalidation', () => {
+ const f=fixture(), lease=f.read();f.elapsed(1001);f.wall(1001);
+ assert.equal(lease.isCurrent(),false);assert.equal(lease.isSnapshotCurrent(),true);
+ f.read();assert.equal(lease.isSnapshotCurrent(),true,'cache replacement alone does not revoke an admitted snapshot');
+ f.cache.accept(event('1'));assert.equal(lease.isSnapshotCurrent(),false);
+ for(const change of ['scope','authority','disconnect']){
+  const g=fixture(), read=g.read();
+  if(change==='scope')g.changeOwner();else if(change==='authority')g.elapsed(60001);else g.cache.disconnected();
+  assert.equal(read.isSnapshotCurrent(),false);
+ }
+ const g=fixture();const bounded=g.cache.commitRead(g.cache.beginRead('bounded'),{text:'fresh'}, {cursor:'0',validUntil:'2026-09-15T12:59:02Z'});
+ g.elapsed(2001);g.wall(-60000);assert.equal(bounded.isSnapshotCurrent(),false,'wall rollback cannot extend source validity');
+});

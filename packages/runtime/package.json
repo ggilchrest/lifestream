@@ -87,6 +87,10 @@
     "./context/pwce-mapping": {
       "types": "./dist/context/pwce-mapping.d.ts",
       "import": "./dist/context/pwce-mapping.js"
+    },
+    "./context/world": {
+      "types": "./dist/context/world.d.ts",
+      "import": "./dist/context/world.js"
     }
   },
   "scripts": {

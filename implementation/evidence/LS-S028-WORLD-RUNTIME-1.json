@@ -1,0 +1,209 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-WORLD-RUNTIME-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "18c4da0dae7656153ac770ef5458e9a4d35eec79",
+  "sourceBinding": "Implementation base plus exact changed-source digests; the enclosing commit contains the verified component.",
+  "specificationRevision": "d7ca069d1c48c01a87858cd59716bc2b0d8a48e0",
+  "recordedAt": "2026-09-15T08:26:28.829123Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/package.json",
+      "sha256": "5ccf1a0905792c122bba310f7a9c17ee0792f9f5962c2cb1cd41cb1b22aa299d"
+    },
+    {
+      "path": "apps/server/src/composition/providers.ts",
+      "sha256": "25469971dd5bf6e6073530a2590309551b970672f540e2df7e20d6c0bdfafa69"
+    },
+    {
+      "path": "apps/server/src/composition/pwce-world.ts",
+      "sha256": "3ff3821a09876832fb861827639f17bb534c054e9882c6ac1ac21f2ba7d3d003"
+    },
+    {
+      "path": "apps/server/src/config/loader.ts",
+      "sha256": "70e20e2a5980a74b318e54a30303a2c50b71ff3133b237dabb474f149b364f4b"
+    },
+    {
+      "path": "apps/server/src/config/pwce.ts",
+      "sha256": "de6b7ed01ade225978a6bfb7f78b3f90702418430e4059219de21944ec3e8cad"
+    },
+    {
+      "path": "apps/server/src/config/schema.ts",
+      "sha256": "95209924c3c772a29158be3fcfdf7aad07f670bc4c530adb08b9a31beec53216"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "c48a247db96eaf33032284399eb3511e31969d91f6ba77ae36b508d732183615"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "7268a4581de8c9e0ac3c86b9692036d2efdd5c432dbbfc5e0ba0a2e2b73a761f"
+    },
+    {
+      "path": "apps/server/src/runtime/inference.ts",
+      "sha256": "641933b0ea29628caafd7b022dfeb4903c52afcd60c26615d07f7713f059c34f"
+    },
+    {
+      "path": "apps/server/test/audio.test.ts",
+      "sha256": "a7d7cba7f99af7f3cdd78f83fe98d3b1df7e3edef7d918f0ad684b1a25c255bb"
+    },
+    {
+      "path": "apps/server/test/config.test.ts",
+      "sha256": "1524bdcf95def6d2db8f3bacd4544e9c94bdbb86762b8c23cf02cf4a4009f438"
+    },
+    {
+      "path": "apps/server/test/pwce-world.test.ts",
+      "sha256": "223f1255aaaaf2beb2cdd71554af6a0b5226bb83667dba1b0ecd463dd8c83f6e"
+    },
+    {
+      "path": "apps/server/tsconfig.json",
+      "sha256": "b7c4c22543786d111edb1e7a47ee9f880b995e994eec4e29b50370b0b3cd69ac"
+    },
+    {
+      "path": "packages/providers-pwce/src/cache.ts",
+      "sha256": "ebb85da51381033fc90cf08bb1a185150ac2d00213f3896939c346e042826a52"
+    },
+    {
+      "path": "packages/providers-pwce/test/cache.test.ts",
+      "sha256": "9b77b1f9343d1c6603285bd47841eb434c11bc56dce22f7db527bee1f59426d4"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "484c3144061d8718b8fba5b3d8024293e26ee9c047554164be898a121fa6d182"
+    },
+    {
+      "path": "packages/runtime/src/context/world.ts",
+      "sha256": "da78c6f3b457898eef9faf88a7ff4de2595c9f2143279f20806d6fdc4d50c3c2"
+    },
+    {
+      "path": "packages/runtime/src/inference/prompt.ts",
+      "sha256": "b2112976cd28fc50e0f219d729264ab6ed2afa92c914421d800359f7fe68329d"
+    },
+    {
+      "path": "packages/runtime/test/world.test.ts",
+      "sha256": "f35a25c6ead610a6287d008c5069fed40a558ae2bae68388a7220fdde21e20b3"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "cc669e96f495b12327cf386775863e6435688508d377521ba343cb6503a6987b"
+    },
+    {
+      "path": "scripts/check-pwce-context-process.mjs",
+      "sha256": "cecfec44d780ff5ae6188bed67aaba0a9a8a363f5d837d4ed2f0dce9a9e24393"
+    },
+    {
+      "path": "scripts/check-pwce-runtime.mjs",
+      "sha256": "dce6257208d1af0805acf71550d1793ef77345585e7ac6d6003a91455f4c8dfe"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "4eab678b22c651b040b630652bcf3999a8631283",
+    "sourceUnchangedSince": "0ef22bab70ac24a4461e4c57fd667b5e14bccdb6",
+    "newProducerImplementationTestRun": false
+  },
+  "claims": [
+    "Explicit PWCE configuration validates World, execution mode, sites, deployment and environment secret reference. Missing credentials yield unavailable status. PWCE selection cannot use standalone capability grants.",
+    "Ordinary text and audio await bounded host-owned world preparation within the existing turn deadline. Authenticated host scope determines Assistant, endpoint, participants and audience. Unknown audience or missing endpoint sends no scoped read; clients cannot override world facts or capability state.",
+    "Prepared prompt items retain qualifiers and source metadata as untrusted data. The independent byte budget omits whole records and reports omission/partial-result state, or withholds all facts if metadata cannot fit. The manifest binds the formatted content digest.",
+    "Cache reuse/admission age and admitted snapshot validity are separate. Admitted generation may outlive cache reuse age but remains fenced by source validity, authority, owner scope, event epoch and wall/monotonic time. Profile replacement and shutdown close volatile world sessions.",
+    "The separate-process synthetic test verifies an actual authenticated model request with two separate sites, replay mode, contradictory booleans, stale observations and matching prompt preview. A 1500ms generation survives cache age; audience withdrawal cancels subsequent output. A focused audio test verifies the same host world preparation and blocks invalidated text/PCM.",
+    "No-op world preparation does not add an asynchronous pause to unselected ordinary turns. Existing deadline and cancellation tests pass."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "pwce-world-build-3.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "pwce-world-typecheck-final.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "pwce-world-lint-final.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "pwce-world-full-final.log",
+      "logSha256": "8e8735cc6991de1fb3bff6f8b1b9894e51cd86ca0ff872fc55fb6e92cffbe5f3"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "pwce-world-process-final.log",
+      "logSha256": "f75b8dccf5cba8aae9a6749a6112c01c9f20ac718fd617d1f5df0871a65a51cd"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/audio.test.ts apps/server/test/pwce-world.test.ts apps/server/test/config.test.ts packages/runtime/test/world.test.ts packages/providers-pwce/test/cache.test.ts",
+      "result": "pass",
+      "log": "pwce-world-focused.log",
+      "logSha256": "6fd39d97788d12b22ac73125be28e6ebcb0af4f3b1b99d100a33b59f0d48a278"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/world.test.ts",
+      "result": "pass",
+      "log": "pwce-world-formatter.log",
+      "logSha256": "5e87d2a0da4d6da7426af9a1ad5c5a1768497c3d2a5a63ddcd928510625a38a5"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "pwce-world-tooling.log",
+      "logSha256": "e9dcbbcdea9e14cb2276abe14117c51e7a8693f03beb1824b973bb4e2a71f9a1"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "pwce-world-private.log",
+      "logSha256": "348a8a4ca0822ee540fa7efa562b2088d850c634e3bc9bfbd48ba590326fa929"
+    },
+    {
+      "command": "python3 /private/tmp/check-pwce-world-docs.py",
+      "result": "pass",
+      "log": "pwce-world-docs.log",
+      "logSha256": "3bc4c6a8b12ca7d08a2239fc251aab00c334f23e474019d0b1e976239d0b0805"
+    }
+  ],
+  "counts": {
+    "lifestreamSourceTestsPassed": 468,
+    "focusedTestsPassed": 37,
+    "lifestreamToolingTestsPassed": 45,
+    "separateProcessContextChecksPassed": 19,
+    "authenticatedRuntimeChecksPassed": 7,
+    "producerDocumentationPagesChecked": 26
+  },
+  "preservedFailures": [
+    {
+      "log": "pwce-world-process.log",
+      "sha256": "69d81f62ce60783061f5a213f6bd06d23df3ce0e4f15df3e2c2536baaa1cea9b",
+      "result": "Initial new harness failed to resolve a workspace package from the scripts directory. Corrected to the same built runtime module used by the server; final separate-process checks pass."
+    },
+    {
+      "log": "pwce-world-full.log",
+      "sha256": "676d202641d4bd0e837ef92781c3347970c6e885a5f77a543020fa00f9cfc243",
+      "result": "Initial regression run hung in the ordinary-turn deadline test because a no-op asynchronous preparation delayed timer installation. The identified test child was terminated. Preparation is now awaited only when selected; final 468-test suite passes."
+    }
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-world/2026-09-15",
+  "unchangedBoundaries": [
+    "The four approved S083/S084 schemas and six preserved artifacts match their recorded hashes.",
+    "No saved service restart, live configuration change, deployment, personal-data import, training, provider selection or new Human acceptance.",
+    "SYNPRJ_Q7M4 observations remain unchanged; no new model-quality or physical speech acceptance.",
+    "Published gateway bundle/catalog/generated client remain unchanged."
+  ],
+  "remaining": [
+    "Complete async Authority/Capability runtime ports and PWCE admission/outcome mapping.",
+    "Complete full mapping-profile schema/fixture digest qualification and joint LS-S028/PV1-T5 scenarios.",
+    "Continue remaining S083 presentation/restore fencing/provider prerequisites and S084 semantic/exploration/full performance work."
+  ],
+  "disposition": "continue"
+}
