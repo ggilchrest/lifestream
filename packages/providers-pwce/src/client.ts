@@ -15,7 +15,7 @@ export type PwceClientOptions = { readonly baseUrl: string; readonly token: stri
 export type PwceClientResult = { readonly status: string; readonly [key: string]: unknown };
 export type PwceIdentityScope = { readonly assistantRef?: string | null; readonly endpointRef?: string | null; readonly participantRefs?: readonly string[]; readonly audienceRef?: string | null };
 export type PwceSubscriptionScope = PwceIdentityScope & { readonly worldRef: string; readonly executionEnvironmentRef: "normal" | "live" | "test" | "replay" | "simulation" | "dry-run"; readonly requestId: string; readonly correlationId: string };
-export type PwceSubscriptionOptions = { readonly afterCursor?: string; readonly limit?: number; readonly signal?: AbortSignal; readonly scope?: PwceSubscriptionScope };
+export type PwceSubscriptionOptions = { readonly afterCursor?: string; readonly limit?: number; readonly signal?: AbortSignal; readonly scope?: PwceSubscriptionScope; readonly onReady?: () => void };
 const CORE_OPERATIONS = Object.freeze(["context.getPreparedInputs", "context.query", "evidence.get", "events.subscribe", "authority.evaluate", "authority.authorizeDispatch", "authority.getGrants", "capabilities.getSnapshot", "capabilities.invoke", "capabilities.getInvocation", "trace.publish", "health.get"]);
 const objectInput=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
 
@@ -174,9 +174,9 @@ export class PwceGatewayClient {
   subscribeInvalidations(authorityContextRef: string, siteRef: string, options: PwceSubscriptionOptions = {}): AsyncGenerator<PwceInvalidationEvent> {
     // Snapshot at method call, including before the caller starts iteration.
     const url = this.eventsUrl(authorityContextRef, siteRef, options.afterCursor ?? "0", options.limit ?? 100, options.scope);
-    return this.readInvalidations(url, options.signal);
+    return this.readInvalidations(url, options.signal, options.onReady);
   }
-  private async *readInvalidations(url: string, signal?: AbortSignal): AsyncGenerator<PwceInvalidationEvent> {
+  private async *readInvalidations(url: string, signal?: AbortSignal, onReady?: () => void): AsyncGenerator<PwceInvalidationEvent> {
     const scope = new PwceCallScope(this.streamLifetimeMs, signal);
     const headersExpiresAt = performance.now() + this.requestTimeoutMs;
     const checkHeadersDeadline = () => {
@@ -195,7 +195,7 @@ export class PwceGatewayClient {
         if (!response.ok) checkStatus(response, await readJsonObject(response, scope));
         checkHeadersDeadline();
         clearTimeout(headersDeadline);
-        yield* readEventStream(response, scope);
+        yield* readEventStream(response, scope, onReady);
       } finally { cancelBody(response.body); }
     } finally { clearTimeout(headersDeadline); scope.close(); }
   }

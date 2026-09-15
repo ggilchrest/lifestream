@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "ef2fdac9cf1e828dca13a487d1578786c0590087",
+  "currentRevision": "f364079046fda504c78b42f976b96577296254cb",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -210,96 +210,103 @@
     "packages/providers-pwce/src/admission-recovery-bundle.ts",
     "packages/providers-pwce/test/admission-recovery-client.test.ts",
     "implementation/evidence/LS-S028-ADMISSION-RECOVERY-1.json",
-    "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+    "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json",
+    "packages/providers-pwce/src/invalidation-streams.ts",
+    "packages/providers-pwce/test/invalidation-streams.test.ts",
+    "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
   ],
   "changedFiles": [
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json",
+    "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json",
     "packages/providers-pwce/src/capability-catalog.ts",
-    "packages/providers-pwce/test/capability-catalog.test.ts",
+    "packages/providers-pwce/src/client.ts",
+    "packages/providers-pwce/src/index.ts",
+    "packages/providers-pwce/src/invalidation-streams.ts",
+    "packages/providers-pwce/src/transport.ts",
+    "packages/providers-pwce/test/invalidation-streams.test.ts",
     "scripts/check-pwce-dispatch-process.mjs"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
-      "command": "node --test --experimental-strip-types packages/providers-pwce/test/capability-catalog.test.ts",
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/invalidation-streams.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "node scripts/check-pwce-dispatch-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "node scripts/generate-pwce-admission-recovery-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     },
     {
       "command": "node scripts/workspace.mjs preflight LS-S028",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
     }
   ],
   "decisions": [
@@ -315,8 +322,8 @@
     "2026-09-15: operator explicitly authorizes continued development and supersedes the previous implementation restriction; existing scoped push authorization continues."
   ],
   "blockers": [],
-  "nextAction": "Continue canonical PWCE authority/capability SSE mapping and host lifecycle, including multi-site coverage, bounded resume/backpressure and producer capability-source notification delivery. Preserve the external-grant schema gap and continue independent work.",
-  "updatedAt": "2026-09-15T20:14:15.623769Z",
+  "nextAction": "Complete configured PWCE canonical host composition and lifecycle around catalog, preview, admission, invocation and invalidations. Preserve the external-grant schema gap; continue independent scope without standalone authority fallback.",
+  "updatedAt": "2026-09-15T20:54:12.186960Z",
   "updatedBy": "Codex",
-  "notes": "Catalog invalidation component verified: 775 application tests (11 new), 26 focused catalog tests, 43 workspace tests and 65 joined checks. Trusted invalidation aborts in-flight catalog/schema reads and requires fresh discovery; immutable substitution evidence and historical action custody remain intact. No canonical SSE subscription or saved runtime activation is claimed."
+  "notes": "Canonical PWCE invalidation component verified: 800 application tests (25 new stream tests), 43 workspace tests and 67 separate-process checks. Both canonical streams react to actual producer revocation, reject completion and remove retained catalog custody. All 128 sites are covered for both logical ports; replay, connection readiness, cursor identity, cancellation and bounded queues are tested. No saved host activation or complete external-grant query is claimed."
 }

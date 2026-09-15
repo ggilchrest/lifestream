@@ -43,11 +43,11 @@ function budget(deadlineAt: string, signal: AbortSignal): PwceCallScope {
   if (remaining > 30_000) return fail('invalid_request');
   return new PwceCallScope(remaining, signal);
 }
-function modeMatches(mode: 'normal' | 'live' | 'replay' | 'simulation', environment: PwceCapabilityBinding['executionEnvironmentRef']): boolean {
+export function modeMatches(mode: 'normal' | 'live' | 'replay' | 'simulation', environment: PwceCapabilityBinding['executionEnvironmentRef']): boolean {
   return mode === 'replay' || mode === 'simulation' ? mode === environment : ['normal','live','test'].includes(environment);
 }
 function boundIdentity(value: unknown): boolean { return value === null || typeof value === 'string' && value.length > 0 && value.length <= 128; }
-function validateBinding(value: PwceCapabilityBinding): void {
+export function validateBinding(value: PwceCapabilityBinding): void {
   if (!boundedJson(value,16_384) || !object(value) || Object.keys(value).sort().join(',') !== 'authorityContextRef,executionEnvironmentRef,identity,principalRef,siteRefs,worldRef' ||
     !isUuid(value.authorityContextRef) || !boundIdentity(value.worldRef) || value.worldRef === null || !boundIdentity(value.principalRef) || value.principalRef === null ||
     !Array.isArray(value.siteRefs) || !value.siteRefs.length || value.siteRefs.length > 128 || value.siteRefs.some(site=>typeof site !== 'string' || !/^[a-z0-9][a-z0-9._-]{0,63}$/.test(site)) || new Set(value.siteRefs).size !== value.siteRefs.length ||

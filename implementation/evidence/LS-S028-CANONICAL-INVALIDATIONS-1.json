@@ -1,0 +1,246 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-CANONICAL-INVALIDATIONS-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "f364079046fda504c78b42f976b96577296254cb",
+  "specificationRevision": "643bae54643c216a02ba02cfe90ce04ed1bd944e",
+  "producerRevision": "33fd48cea56e5352211db0b948fb760c13db8c27",
+  "recordedAt": "2026-09-15T20:54:12.186960Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "020c5fcdca8dfe389e176d5477ff7d0d535f2799adba8e73162efaf0b1c76c3b"
+      },
+      {
+        "path": "packages/providers-pwce/src/capability-catalog.ts",
+        "sha256": "17944f15222e000adf8524016528ec78c03dfcf85e8bb5e36df9e8111ac4b337"
+      },
+      {
+        "path": "packages/providers-pwce/src/client.ts",
+        "sha256": "e19a472f543fe962afff840cf0ae23dfa66e103289dc70ddaaeb6c58ee4eac6b"
+      },
+      {
+        "path": "packages/providers-pwce/src/index.ts",
+        "sha256": "6c483a2c6019db261d4d9d8fb92d0fa6dd4f4702e0df92df95f7bf3165a02225"
+      },
+      {
+        "path": "packages/providers-pwce/src/transport.ts",
+        "sha256": "ac22b71978371617b047e91503fb52a87845faa9d35cff1dc99bcfe6eaf6f109"
+      },
+      {
+        "path": "packages/providers-pwce/src/invalidation-streams.ts",
+        "sha256": "a3a4c605c3b8acc0cd0f01e2c3728918362d2f3e9a2070592d78434877fd0af3"
+      },
+      {
+        "path": "packages/providers-pwce/test/invalidation-streams.test.ts",
+        "sha256": "2fc5543033da1f99e3e8e83f574431cda7d8961fcabf3a651104bce5d7804be1"
+      },
+      {
+        "path": "scripts/check-pwce-dispatch-process.mjs",
+        "sha256": "4e27a9475c60b803ef4ea068946d7592db9ec382685a8fbb3d83098884a3dfac"
+      }
+    ]
+  },
+  "claim": "Canonical PWCE authority and capability subscriptions preserve scoped multi-site replay, bounded stream lifecycle, per-site cursor continuity, duplicate identity checks and immediate catalog invalidation. Both canonical boundaries accept actual Gateway revocation as rejected completion while retained catalog custody is removed. No notification grants permission or dispatches an action.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-full.log",
+      "logSha256": "dc232336ff57e517a77f09e82e1d0c947ef164cd474abc8639b05f310203ef2a"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-typecheck-complete.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-build-complete.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-lint-complete.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/invalidation-streams.test.ts",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-focused-complete.log",
+      "logSha256": "370da3963e73cbe875c0071d8c85169f478735b7e716e389723ad7422c32fcf0"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-joined-dispatch.log",
+      "logSha256": "38f72290ca7dc6505ab09038031054df7c9d96d6ad31fae509ccf8e7ac7903e2"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-joined-context.log",
+      "logSha256": "9f790505d52fffa1fde3ac2e532dcd80d9de4f5c55b50ef085dfaff1c1cb488f"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-private.log",
+      "logSha256": "8a6ee12e97f872adb277a3dc4968b17ab2665d7aa54b83e7301df8545f367d76"
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-pin-dispatch.log",
+      "logSha256": "7799cc7b7e6b5549e994e5cef2ccba3b115d973b57349f7bf933be0d14482b29"
+    },
+    {
+      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-pin-capability.log",
+      "logSha256": "12a961678e4187057f78756f2e2e50550c255bb75fc164a4ae54ed13eb545205"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-pin-admission.log",
+      "logSha256": "1ea6850d9e2e4905eaa564322be8ca06ee7101ccb057e81a16cd2d3576264fa2"
+    },
+    {
+      "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-pin-invocation.log",
+      "logSha256": "3fee32e6e63c209794993635f4e39e08b84ce0d830ec9048603c09846292b79b"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-recovery-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-pin-admission-recovery.log",
+      "logSha256": "975333cd9170f3d011f25613c2ce6ee61f24f749c5abbf3ccc6bca7823a41f0a"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-workspace-tests.log",
+      "logSha256": "c396b726a95ea9df36d57d44b785317976ee602bd3c9b7a82d8a60ee0d9903d7"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-workspace-check.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-canonical-invalidations-preflight.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "results": {
+    "applicationTests": 800,
+    "newStreamTests": 25,
+    "focusedStreamTests": 25,
+    "joinedChecks": 67,
+    "newJoinedInvalidationChecks": 2,
+    "syntheticTargetCalls": 4,
+    "preservedDirtyArtifacts": 6,
+    "workspaceTests": 43
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-canonical-invalidations/2026-09-15",
+  "earlierLogs": [
+    {
+      "log": "ls-canonical-invalidations-build-final.log",
+      "sha256": "3b0cf22b87e20c2ed1d5d4bdf1250a92654fc67d1e6e23145a25009cb28aa224"
+    },
+    {
+      "log": "ls-canonical-invalidations-build.log",
+      "sha256": "ec4c5b81975a775b83964c6fe07711152b1a37fbbe90429e0fdbf4e16e78c101"
+    },
+    {
+      "log": "ls-canonical-invalidations-focused-2.log",
+      "sha256": "8aa86d7a3eb2a5741eda8a0e2aea68815879f8c459c0dd23ea4b75b777ea879d"
+    },
+    {
+      "log": "ls-canonical-invalidations-focused-3.log",
+      "sha256": "424e44ebad1087fcae4c8eefd13c4571a3dc51aafeec12e4f97c7fd06a5123c4"
+    },
+    {
+      "log": "ls-canonical-invalidations-focused-final-2.log",
+      "sha256": "c9e479440590f38ea20c5f4ae8c45f8eed79ffd005ee98ca31a042c630ebba6f"
+    },
+    {
+      "log": "ls-canonical-invalidations-focused-final.log",
+      "sha256": "aaa7e18352ca03c8fc91790c19c9e5b69b61adf6e5b051188d5cca30433f87d8"
+    },
+    {
+      "log": "ls-canonical-invalidations-focused-initial.log",
+      "sha256": "58821396e2e585f5221614bf8412f296b110b67b449f24d6e95628c099295ee9"
+    },
+    {
+      "log": "ls-canonical-invalidations-joined-initial.log",
+      "sha256": "05aa08e1f5fe24f1becb11bbae31e15e40d4a4e51e6d0646a20a4601a31d0d2c"
+    },
+    {
+      "log": "ls-canonical-invalidations-lint-final.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "log": "ls-canonical-invalidations-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "log": "ls-canonical-invalidations-typecheck-2.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-canonical-invalidations-typecheck-3.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-canonical-invalidations-typecheck-4.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-canonical-invalidations-typecheck-final-2.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-canonical-invalidations-typecheck-final-3.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-canonical-invalidations-typecheck-final.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-canonical-invalidations-typecheck-initial.log",
+      "sha256": "c502085131827cf5689a7bb9ec98568c818d85a9e5c8244c78b728d99f29256d"
+    }
+  ],
+  "earlierResults": "Initial type checking found narrowing errors, which were corrected. The first focused run passed 17/18: its backpressure fixture replaced a shared site array while retaining the old snapshot scope; the fixture now mutates the intended shared array. Further tests cover transport readiness, complete 128-site coverage for both ports, cursor collisions and independent parallel subscribers. Original failed logs remain preserved.",
+  "limits": {
+    "maximumRequestMs": 30000,
+    "defaultWatchMs": 10000,
+    "maximumWatchMs": 25000,
+    "defaultPhysicalSiteCapacity": 256,
+    "maximumBindingSites": 128,
+    "defaultQueueFrames": 128,
+    "defaultEvidenceRecords": 256,
+    "maximumEventJsonBytes": 65536
+  },
+  "exclusions": [
+    "No saved runtime activation or full canonical PWCE host composition is claimed.",
+    "External grant-query representation and authority-context restoration remain outstanding.",
+    "Original event receipts are bounded local observations, not durable audit custody or fresh PWCE authorization.",
+    "No selected-provider model qualification or SYNPRJ_Q7M4 trial was run.",
+    "No personal data, live configuration, physical effects, training, model selection or Human acceptance changed."
+  ]
+}

@@ -17,6 +17,8 @@ import { PwceGatewayClient } from '../packages/providers-pwce/src/client.ts';
 import { PwceAuthorityPreview, pwceLightOperation, pwceGovernedDisposition } from '../packages/providers-pwce/src/authority-preview.ts';
 import { canonicalJson } from '../packages/runtime/src/capabilities/schema-validation.ts';
 import { PwceCapabilityCatalog, PWCE_LIGHT_CAPABILITY_ID } from '../packages/providers-pwce/src/capability-catalog.ts';
+import { PwceInvalidationStreams } from '../packages/providers-pwce/src/invalidation-streams.ts';
+import { CanonicalProviderBoundary } from '../packages/runtime/src/ports/provider-boundary.ts';
 import { EXPECTED_PWCE_CAPABILITY_BUNDLE } from '../packages/providers-pwce/src/capability-bundle.ts';
 import { createContractValidator } from '../packages/contracts/src/validator.ts';
 import { PwceTrustedDispatchClient } from '../packages/providers-pwce/src/dispatch.ts';
@@ -28,7 +30,7 @@ host.stderr.on('data',chunk=>{stderr+=String(chunk);if(stderr.length>8192)host.k
 async function readLine(){let timer;try { const item=await Promise.race([iterator.next(),exit.then(()=>{throw new Error('synthetic producer exited');}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('synthetic producer response deadline exceeded')),10000);})]);assert.equal(item.done,false);assert.ok(item.value.length<4096);return JSON.parse(item.value); }finally{clearTimeout(timer);}}
 async function stats(){host.stdin.write('stats\n');const result=await readLine();assert.equal(result.fixtureStats,true);return result.calls;}
 const ajv=new Ajv2020({strict:false});addFormats(ajv);const validateRequest=ajv.compile(PWCE_DISPATCH_REQUEST_SCHEMA),validateResponse=ajv.compile(PWCE_DISPATCH_RESPONSE_SCHEMA);
-let calls=0, wireCalls=0, catalogChecks=0, authorityChecks=0, admissionChecks=0, invocationChecks=0, recoveryChecks=0, recoveryQueries=0;
+let calls=0, wireCalls=0, catalogChecks=0, authorityChecks=0, admissionChecks=0, invocationChecks=0, recoveryChecks=0, recoveryQueries=0, invalidationChecks=0;
 const custodyDir=mkdtempSync(join(tmpdir(),'pwce-joined-admission-')),custodyPath=join(custodyDir,'state.sqlite');
 let database=new Database({path:custodyPath});database.migrate();
 try {
@@ -135,7 +137,24 @@ try {
  const unknownCommand={...unknownInput,actionRef:unknownAdmission.actionRef};
  for(let i=0;i<2;i++){const reply=await client.invoke(authority.authorityContextRef,unknownCommand);assert.ok(validateResponse(reply),JSON.stringify(validateResponse.errors));assert.equal(reply.status,'outcome_unknown');}assert.equal(await stats(),baselineCalls+2);calls++;
  const pendingInput={...input,requestId:randomUUID(),idempotencyKey:randomUUID()};const pending=await client.authorizeDispatch(authority.authorityContextRef,pendingInput);
+ const streamCatalog=new PwceCapabilityCatalog({providerRef:'pwce.synthetic',client:core,resolve:async()=>binding,isCurrent:()=>true});
+ let readyCount=0,allReady;const streamReady=new Promise(resolve=>{allReady=resolve;});
+ const streams=new PwceInvalidationStreams({providerRef:'pwce.synthetic',client:core,catalog:streamCatalog,resolve:async()=>binding,isCurrent:()=>true,watchDurationMs:3000,onReady:()=>{if(++readyCount===2)allReady();}});
+ const collect=async source=>{const events=[];for await(const event of source)events.push(event);return events;};
+ const boundary=new CanonicalProviderBoundary({providerRef:'pwce.synthetic'});
+ const watchers=['capability','authority'].map(kind=>{
+  const provider=kind==='capability'?boundary.capability({subscribeInvalidations:(q,c)=>streams.subscribeCapabilities(q,c)}):boundary.authority({subscribeInvalidations:(q,c)=>streams.subscribeAuthority(q,c)});
+  const q={...catalogRequest(),operation:kind==='capability'?'CapabilityProvider.subscribeInvalidations':'AuthorityProvider.subscribeInvalidations',payload:{providerRef:'pwce.synthetic',afterSequence:null,sourceRevision:null}};
+  return collect(provider.subscribeInvalidations(q,callContext));
+ });
+ await Promise.race([streamReady,Promise.all(watchers).then(()=>assert.fail('canonical streams ended before both were ready'))]);
+ const streamSnapshot=(await streamCatalog.getSnapshot(catalogRequest(),callContext)).outcome.payload;
+ assert.ok(streamCatalog.retained(streamSnapshot.snapshotId,localScope));
  host.stdin.write('revoke\n');assert.equal((await readLine()).revoked,true);
+ for(const events of await Promise.all(watchers)){
+  assert.ok(events.some(event=>event.kind==='data'&&['authorityChanged','providerChanged'].includes(event.payload.reason)));
+  assert.equal(events.at(-1).outcome.status,'rejected');assert.equal(streamCatalog.retained(streamSnapshot.snapshotId,localScope),undefined);invalidationChecks++;
+ }
  await assert.rejects(catalog.schemas.read(EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0].inputSchemaArtifact,schemaScope,schemaContext()),{code:'authority_context_invalidated'});catalogChecks++;
  await assert.rejects(catalog.getSnapshot(catalogRequest(),callContext),{code:'authority_context_invalidated'});catalogChecks++;
  await assert.rejects(invocation().getInvocation(queryFor(invocationInput),callContext),{code:'authority_context_invalidated'});invocationChecks++;
@@ -148,7 +167,7 @@ try {
  assert.equal(denied.outcome.payload.disposition,'denied');assert.equal(denied.outcome.payload.admittedAt,null);assert.equal(await stats(),baselineCalls+2);authorityChecks++;
 
  await assert.rejects(client.invoke(authority.authorityContextRef,{...pendingInput,actionRef:pending.actionRef}),{code:'authority_context_invalidated'});assert.equal(await stats(),baselineCalls+2);calls++;
- console.log(JSON.stringify({checks:calls,catalogChecks,authorityChecks,admissionChecks,invocationChecks,recoveryChecks,recoveryQueries,wireCalls,targetCalls:baselineCalls+2,fixtures:true,scope:'separate-process canonical catalog, preview and durable final admission plus pinned dispatch transport; canonical original invocation/status custody and read-only pending admission recovery; no configured runtime activation, real effects or Human acceptance'}));
+ console.log(JSON.stringify({checks:calls,catalogChecks,authorityChecks,admissionChecks,invocationChecks,recoveryChecks,recoveryQueries,invalidationChecks,wireCalls,targetCalls:baselineCalls+2,fixtures:true,scope:'separate-process canonical catalog, authority, invocation and pending admission recovery; authenticated canonical capability/authority streams invalidate retained state on revocation; no configured runtime activation, real effects or Human acceptance'}));
 }finally{
  database.close();rmSync(custodyDir,{recursive:true,force:true});
  host.stdin.end('stop\n');let timer;

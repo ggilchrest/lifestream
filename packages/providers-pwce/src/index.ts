@@ -17,3 +17,5 @@ export type { PwceAuthorityAdmissionOptions, PwceAdmissionCustody, PwceAdmission
 export { pwceGovernedDisposition } from './authority-preview.ts';
 export { PwceInvocation, pwceInvocationDigest } from './invocation.ts';
 export type { PwceInvocationOptions, PwceInvocationCustody, PwceInvocationRecord, PwceInvocationObservation } from './invocation.ts';
+export { PwceInvalidationStreams } from './invalidation-streams.ts';
+export type { PwceInvalidationOptions, PwceInvalidationEvidence } from './invalidation-streams.ts';

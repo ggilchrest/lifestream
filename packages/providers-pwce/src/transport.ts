@@ -158,7 +158,7 @@ export function checkStatus(response: Response, value: Record<string, unknown>):
 
 export type PwceInvalidationEvent = { readonly id: string | null; readonly event: string; readonly data: string };
 
-export async function* readEventStream(response: Response, scope: PwceCallScope): AsyncGenerator<PwceInvalidationEvent> {
+export async function* readEventStream(response: Response, scope: PwceCallScope, onReady?: () => void): AsyncGenerator<PwceInvalidationEvent> {
   if (!response.body || response.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() !== "text/event-stream") {
     cancelBody(response.body);
     throw malformed();
@@ -172,6 +172,7 @@ export async function* readEventStream(response: Response, scope: PwceCallScope)
   let event = "message";
   let data: string[] = [];
   try {
+    scope.check();onReady?.();scope.check();
     while (true) {
       const chunk = await scope.wait(reader.read());
       if (chunk.done) {
