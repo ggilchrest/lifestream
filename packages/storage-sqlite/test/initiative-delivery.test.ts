@@ -301,11 +301,31 @@ test("S083 independent SQLite workers race for one runtime inference slot",{time
 test("S083 inference migration upgrades an existing delivery database without rewriting its records or migrations",()=>{
  const directory=mkdtempSync(join(tmpdir(),"initiative-inference-upgrade-")),path=join(directory,"db.sqlite");let db=new Database({path,migrations:loadMigrations().filter(m=>m.id<=23)});const oldMigrations=db.migrate();
  try{
-  const oldLedger=new InitiativeDeliveryRepository(db,()=>start),r=eligible(oldLedger,opportunity(start));db.close();db=new Database({path});
-  const upgraded=db.migrate();assert.deepEqual(upgraded.slice(0,-1),oldMigrations);assert.equal(upgraded.at(-1)!.id,24);
+  // Seed the old schema directly; today's transition code requires migration 25.
+  const oldLedger=new InitiativeDeliveryRepository(db,()=>start),admitted=oldLedger.admit(scope,opportunity(start),current);
+  db.connection.prepare("UPDATE initiative_delivery SET state='eligible',outcome_json=?,version=version+1 WHERE opportunity_id=?").run(JSON.stringify({...admitted.outcome,state:'eligible'}),admitted.opportunity.opportunityId);
+  const r=oldLedger.get(scope,admitted.opportunity.opportunityId)!;db.close();db=new Database({path});
+  const upgraded=db.migrate();assert.deepEqual(upgraded.slice(0,oldMigrations.length),oldMigrations);assert.deepEqual(upgraded.slice(oldMigrations.length).map(m=>m.id),[24,25]);
   const ledger=new InitiativeDeliveryRepository(db,()=>start);assert.deepEqual(ledger.get(scope,r.opportunity.opportunityId),r);
   assert.deepEqual(ledger.inferenceUsage(scope),{relationshipHour:0,runtimeHour:0,active:false});
   const claim=ledger.reserveInference(scope,r.opportunity.opportunityId,r.version,inferenceLimits,current);ledger.settleInference(scope,r.opportunity.opportunityId,claim);
   assert.deepEqual(db.migrate(),upgraded);assert.equal(ledger.inferenceUsage(scope).relationshipHour,1);
  }finally{db.close();rmSync(directory,{recursive:true,force:true});}
+});
+
+
+test('S083 speech playback remains pending after endpoint acceptance and recovers unknown with its observed stage',()=>{
+ for(const completion of ['restart','expiry','cancel','playback','text']){
+  const f=fixture();try{
+   let r=queue(f.ledger,opportunity(f.now()));const receiptId=randomUUID();r=change(f.ledger,r,{type:'beginEmission',receiptId,current,awaitPlayback:completion!=='text'});r=change(f.ledger,r,{type:'emitted',receiptId});r=change(f.ledger,r,{type:'acknowledge',receiptId,sessionId,kind:'endpointAccepted'});
+   const pending=()=>Number(f.database.connection.prepare('SELECT count(*) AS n FROM initiative_playback_pending').get()!.n);
+   assert.equal(pending(),completion==='text'?0:1);
+   if(completion==='cancel')r=change(f.ledger,r,{type:'finish',state:'cancelled',reasons:['cancelled']});
+   if(completion==='playback')r=change(f.ledger,r,{type:'acknowledge',receiptId,sessionId,kind:'playbackCompleted'});
+   if(completion==='expiry'){f.advance(300001);assert.equal(f.ledger.expirePending(),1);}else f.ledger.recover();
+   r=f.ledger.get(scope,r.opportunity.opportunityId)!;assert.equal(pending(),0);assert.equal(r.budget,'charged');assert.equal(r.outcome.lastDeliveryStage,'acknowledged');
+   assert.equal(r.outcome.state,['restart','expiry'].includes(completion)?'unknown':completion==='cancel'?'cancelled':'acknowledged');assert.equal(r.outcome.acknowledgmentKind,completion==='playback'?'playbackCompleted':'endpointAccepted');
+   if(['restart','expiry','cancel'].includes(completion))assert.throws(()=>change(f.ledger,r,{type:'acknowledge',receiptId,sessionId,kind:'playbackCompleted'}));
+  }finally{f.database.close();}
+ }
 });

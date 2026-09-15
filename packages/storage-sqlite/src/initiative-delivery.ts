@@ -33,12 +33,12 @@ export type InitiativeDeliveryAction =
   | { type: "eligible" }
   | { type: "generated"; preparedViewId: string; interactionId: string; preparedDigest?:string }
   | { type: "queue"; limits: InitiativeOpeningLimits; current: (tx: Transaction) => boolean }
-  | { type: "beginEmission"; receiptId: string; current: (tx: Transaction) => boolean }
+  | { type: "beginEmission"; awaitPlayback?:boolean; receiptId: string; current: (tx: Transaction) => boolean }
   | { type: "emitted"; receiptId: string }
   | { type: "acknowledge"; sessionId: string; receiptId: string; kind: Acknowledgment }
   | { type: "finish"; state: "suppressed" | "expired" | "failed" | "cancelled" | "unknown"; reasons: string[] }
   | { type: "respond"; sessionId: string; response: Exclude<Response,"notObserved"> };
-type Row = { opportunity_json: string; outcome_json: string; version: number; budget_state: InitiativeDeliveryRecord["budget"]; emission_started: number; receipt_id: string | null; reserved_ms: number | null; updated_ms: number };
+type Row = { awaiting_playback:number; opportunity_json: string; outcome_json: string; version: number; budget_state: InitiativeDeliveryRecord["budget"]; emission_started: number; receipt_id: string | null; reserved_ms: number | null; updated_ms: number };
 const validator = createContractValidator();
 const digest = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const scopeKey = (scope: InitiativeScope) => digest([scope.assistantId,scope.userId,scope.relationshipId,scope.deploymentId]);
@@ -141,6 +141,7 @@ export class InitiativeDeliveryRepository {
   transition(scope: InitiativeScope,id: string,expectedVersion: number,action: InitiativeDeliveryAction,beforeCommit?: (tx:Transaction)=>void): InitiativeDeliveryRecord {
     return this.database.transaction(tx=>{
       const row=this.row(tx,scope,id),record=decode(row),{opportunity,outcome}=record,key=scopeKey(scope),now=this.clock(tx);
+      row.awaiting_playback=tx.get("SELECT opportunity_id FROM initiative_playback_pending WHERE opportunity_id=?",id)?1:0;
       if(row.version!==expectedVersion)throw new Error("Initiative revision conflict");
       const state=outcome.state;
       const requireState=(...allowed:State[])=>{if(!allowed.includes(state))throw new Error("Invalid Initiative transition");};
@@ -167,7 +168,7 @@ export class InitiativeDeliveryRepository {
           if(action.current(tx)!==true)throw new Error("Initiative boundary changed");
           // Persist intent before returning the single-use host emission claim. This is
           // NOT an observed delivery stage. A crash here retains uncertain accounting.
-          row.emission_started=1;row.receipt_id=action.receiptId;row.budget_state="charged";break;
+          row.awaiting_playback=action.awaitPlayback===true?1:0;row.emission_started=1;row.receipt_id=action.receiptId;row.budget_state="charged";break;
         case "emitted":
           requireState("queued");
           if(!row.emission_started||row.receipt_id!==action.receiptId)throw new Error("Invalid Initiative emission receipt");
@@ -176,12 +177,13 @@ export class InitiativeDeliveryRepository {
           requireState("emitted","acknowledged");
           if(action.sessionId!==opportunity.sessionId||!row.emission_started||action.receiptId!==row.receipt_id)throw new Error("Invalid Initiative acknowledgment");
           if(state==="acknowledged"&&outcome.acknowledgmentKind==="playbackCompleted"&&action.kind!=="playbackCompleted")throw new Error("Initiative acknowledgment cannot regress");
+          if(action.kind==="playbackCompleted")row.awaiting_playback=0;
           outcome.state="acknowledged";outcome.lastDeliveryStage="acknowledged";outcome.deliveryReceiptRef=action.receiptId;outcome.acknowledgmentKind=action.kind;outcome.reasonCodes=[action.kind];break;
         case "finish": {
-          if(terminal.has(state))throw new Error("Initiative outcome is terminal");
-          const next:Record<string,State[]>={pending:["suppressed","expired","cancelled"],eligible:["suppressed","failed","expired","cancelled"],generated:["suppressed","expired","cancelled"],queued:["suppressed","failed","expired","cancelled"],emitted:["failed","cancelled","unknown"]};
+          if(terminal.has(state)&&!(state==="acknowledged"&&row.awaiting_playback))throw new Error("Initiative outcome is terminal");
+          const next:Record<string,State[]>={pending:["suppressed","expired","cancelled"],eligible:["suppressed","failed","expired","cancelled"],generated:["suppressed","expired","cancelled"],queued:["suppressed","failed","expired","cancelled"],emitted:["failed","cancelled","unknown"],acknowledged:["failed","cancelled","unknown"]};
           if(!next[state]?.includes(action.state))throw new Error("Invalid Initiative transition");
-          outcome.state=action.state;outcome.reasonCodes=[...action.reasons];
+          row.awaiting_playback=0;outcome.state=action.state;outcome.reasonCodes=[...action.reasons];
           // The persisted emission-intent fence proves whether a refund is safe.
           // Once intent was issued, even an unobserved send is charged conservatively.
           if(row.budget_state==="held"&&!row.emission_started){row.budget_state="released";tx.run("DELETE FROM initiative_unanswered_topics WHERE scope_key=? AND session_id=? AND topic_hash=? AND opportunity_id=?",key,opportunity.sessionId,digest(opportunity.topicKey),id);}
@@ -197,6 +199,7 @@ export class InitiativeDeliveryRepository {
       }
       outcome.occurredAt=new Date(now).toISOString();validate(outcome,"RelationalInitiativeOutcome");
       tx.run("UPDATE initiative_delivery SET version=version+1,state=?,outcome_json=?,updated_ms=?,reserved_ms=?,budget_state=?,emission_started=?,receipt_id=? WHERE opportunity_id=? AND scope_key=? AND version=?",outcome.state,JSON.stringify(outcome),now,row.reserved_ms,row.budget_state,row.emission_started,row.receipt_id,id,key,expectedVersion);
+      if(row.awaiting_playback)tx.run("INSERT OR IGNORE INTO initiative_playback_pending VALUES (?)",id);else tx.run("DELETE FROM initiative_playback_pending WHERE opportunity_id=?",id);
       beforeCommit?.(tx);
       return {opportunity,outcome,version:expectedVersion+1,budget:row.budget_state};
     });
@@ -208,19 +211,20 @@ export class InitiativeDeliveryRepository {
   expirePending(): number {return this.settlePending(false);}
   private settlePending(restart:boolean):number {
     return this.database.transaction(tx=>{
-      const now=this.clock(tx),rows=tx.all<Row>(`SELECT * FROM initiative_delivery WHERE state IN ${active}${restart?"":" AND expires_ms<=?"}`,...(restart?[]:[now]));
+      const now=this.clock(tx),rows=tx.all<Row>(`SELECT *,EXISTS(SELECT 1 FROM initiative_playback_pending p WHERE p.opportunity_id=initiative_delivery.opportunity_id) AS awaiting_playback FROM initiative_delivery WHERE (state IN ${active} OR opportunity_id IN (SELECT opportunity_id FROM initiative_playback_pending))${restart?"":" AND expires_ms<=?"}`,...(restart?[]:[now]));
       // Exclusive startup only: the prior process no longer owns an executing call.
       // Preserve every reservation for rolling budgets and one-call deduplication.
       if(restart)tx.run("UPDATE initiative_inference_calls SET settled_ms=? WHERE settled_ms IS NULL",now);
       for(const row of rows){
         const {opportunity,outcome}=decode(row);
-        outcome.state=outcome.state==="emitted"?"unknown":row.emission_started?"failed":"expired";
+        outcome.state=outcome.state==="emitted"||row.awaiting_playback&&outcome.lastDeliveryStage==="acknowledged"?"unknown":row.emission_started?"failed":"expired";
         outcome.reasonCodes=[outcome.state==="unknown"?"ackTimeout":restart?"restartExpired":outcome.state==="failed"?"outputFailed":"expired"];
         outcome.occurredAt=new Date(now).toISOString();validate(outcome,"RelationalInitiativeOutcome");
         const budget=row.budget_state==="held"?"released":row.budget_state;
         if(budget==="released")tx.run("DELETE FROM initiative_unanswered_topics WHERE opportunity_id=?",opportunity.opportunityId);
         tx.run("UPDATE initiative_delivery SET version=version+1,state=?,outcome_json=?,updated_ms=?,budget_state=? WHERE opportunity_id=?",outcome.state,JSON.stringify(outcome),now,budget,opportunity.opportunityId);
       }
+      for(const row of rows)tx.run("DELETE FROM initiative_playback_pending WHERE opportunity_id=?",decode(row).opportunity.opportunityId);
       return rows.length;
     });
   }

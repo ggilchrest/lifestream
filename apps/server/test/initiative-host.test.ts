@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
+import {WebSocket} from 'ws';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
@@ -13,7 +14,7 @@ import type {InitiativeSimulationEvent} from '../src/runtime/initiative-host.ts'
 import {extensionSettings} from '../../../tests/fixtures/extension-settings.ts';
 const validator=createContractValidator(),apiId='https://lifestream.dev/contracts/initiative-api/1.0.0';
 
-async function fixture(t:TestContext,enabled=true){
+async function fixture(t:TestContext,enabled=true,modality:'text'|'speech'='text'){
  const root=await mkdtemp(join(tmpdir(),'initiative-host-'));t.after(()=>rm(root,{recursive:true,force:true}));
  const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};
  const events=new Map<string,InitiativeSimulationEvent>(),installerToken=randomUUID();
@@ -25,15 +26,16 @@ async function fixture(t:TestContext,enabled=true){
  assert.equal((await send(`/api/admin/v1/assistants/${assistant.assistantId}/activate`,{profileId:assistant.profile.profileId,expectedActiveRevision:null})).status,200);
  const rel=(await send(`/api/admin/v1/assistants/${assistant.assistantId}/relationships`,{})).body.relationship;
  const path=`/api/admin/v1/assistants/${assistant.assistantId}/relationships/${rel.relationshipId}`,route=path+'/initiative/v1';
- const endpoint=(await send('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession'})).body.endpoint;
+ if(modality==='speech'){(app as any).providers.stt={};(app as any).providers.tts={};}
+ const endpoint=(await send('/api/runtime/v1/session-context',{expectedRevision:0,mode:modality==='speech'?'audio':'text',audienceScope:'authenticatedSession'})).body.endpoint;
  const declaration=(await send(path+'/candidates',{content:'Allow a synthetic social opening in this explicitly reviewed test session.',category:'declaration',contextUse:'baseline',source:'authored',sourceFamily:'synthetic-owner',uncertainty:'low',expectedRevision:rel.revision,idempotencyKey:randomUUID()})).body;
  assert.equal((await send(path+`/candidates/${declaration.candidate.candidateId}/decision`,{decision:'approved',expectedRevision:(await send(path)).body.relationship.revision,idempotencyKey:randomUUID()})).status,200);
- const settings={...structuredClone(extensionSettings.initiative),preset:'custom',proactiveness:5,dimensions:{initiative:5,warmth:5,curiosity:3,followThrough:3,persistence:0},allowedContexts:['privateAvailable'],endpointIds:[endpoint.endpointId],allowedModalities:['text'],allowedKinds:['arrivalReturn','availableCheckIn','groundedFollowUp'],consentRefs:[declaration.candidate.candidateId],tuning:{...extensionSettings.initiative.tuning,openingsPerHour:2,openingsPerDay:8,minimumGapSeconds:120,checkInIntervalSeconds:300}};
+ const settings={...structuredClone(extensionSettings.initiative),preset:'custom',proactiveness:5,dimensions:{initiative:5,warmth:5,curiosity:3,followThrough:3,persistence:0},allowedContexts:['privateAvailable'],endpointIds:[endpoint.endpointId],allowedModalities:[modality],allowedKinds:['arrivalReturn','availableCheckIn','groundedFollowUp'],consentRefs:[declaration.candidate.candidateId],tuning:{...extensionSettings.initiative.tuning,openingsPerHour:2,openingsPerDay:8,minimumGapSeconds:120,checkInIntervalSeconds:300}};
  const extension=async(body:Record<string,unknown>,extra:Record<string,string>={})=>{const r=await send(route,{schemaVersion:'1.0.0',...body},extra);assert.equal(validator.validate(apiId,r.body).valid,true,JSON.stringify(r));return r;};
  const draft=await extension({operation:'draft',idempotencyKey:randomUUID(),expectedActiveConfigurationId:null,settings});assert.equal(draft.status,201,JSON.stringify(draft));const active=draft.body.records[0];assert.equal((await extension({operation:'activate',idempotencyKey:randomUUID(),configurationId:active.configurationId,expectedRevision:active.revision,confirmed:true})).status,200);
- let n=0;const event=(overrides:Partial<InitiativeSimulationEvent>={})=>{const e:InitiativeSimulationEvent={userId:auth.principalId,sessionId:auth.sessionId,sourceEventId:randomUUID(),kind:'availableCheckIn',topicRef:null,observedAt:Date.now()-10000+n++,expiresAt:Date.now()+60000,context:'privateAvailable',modality:'text',...overrides};events.set(e.sourceEventId,e);return {schemaVersion:'1.0.0',operation:'simulate',idempotencyKey:randomUUID(),sessionId:auth.sessionId,sourceEventId:e.sourceEventId,kind:e.kind,topicRef:e.topicRef};};
+ let n=0;const event=(overrides:Partial<InitiativeSimulationEvent>={})=>{const e:InitiativeSimulationEvent={userId:auth.principalId,sessionId:auth.sessionId,sourceEventId:randomUUID(),kind:'availableCheckIn',topicRef:null,observedAt:Date.now()-10000+n++,expiresAt:Date.now()+60000,context:'privateAvailable',modality,...overrides};events.set(e.sourceEventId,e);return {schemaVersion:'1.0.0',operation:'simulate',idempotencyKey:randomUUID(),sessionId:auth.sessionId,sourceEventId:e.sourceEventId,kind:e.kind,topicRef:e.topicRef};};
  const db=new Database({path:config.storage.databasePath});t.after(()=>db.close());
- return {app,config,db,auth,assistant,rel,path,route,headers,base,send,extension,event,events,settings,active,ready:()=>extension({operation:'outputReadiness',sessionId:auth.sessionId,modality:'text',ready:true})};
+ return {app,config,db,auth,assistant,rel,path,route,headers,base,send,extension,event,events,settings,active,ready:()=>extension({operation:'outputReadiness',sessionId:auth.sessionId,modality,ready:true})};
 }
 const outcome=(r:any,id?:string)=>r.body.records.find((x:any)=>x.recordType==='outcome'&&(!id||x.opportunityId===id));
 const calls=(db:Database)=>Number(db.connection.prepare('SELECT count(*) AS n FROM initiative_inference_calls').get()!.n);
@@ -127,4 +129,60 @@ test('dismissal is atomic with its retry identity and never converts silence int
  f.db.exec('DROP TRIGGER reject_dismiss_retry');assert.equal(outcome(await f.extension(dismiss)).response,'dismissed');assert.equal((await f.extension(dismiss)).status,200);
  assert.equal(String(f.db.connection.prepare('SELECT payload_json FROM assistant_relationships').get()!.payload_json),before);
  const next=await f.extension(f.event());assert.equal(next.status,409);assert.equal(calls(f.db),1);
+});
+
+async function speechFixture(t:TestContext){
+ const f=await fixture(t,true,'speech'),wire:any[]=[],synthesis:any[]=[],model:InferenceRequest[]=[];let stt=0,finish:()=>void=()=>{};
+ const completed=new Promise<void>(resolve=>{finish=resolve;});
+ const tts:any={withoutAdmissionRetries(){return this;},async *synthesize(request:any){synthesis.push(request);yield {kind:'data',segmentId:request.segmentId,frame:{frameId:randomUUID(),sequence:0,format:request.format,sampleOffset:0,sampleCount:10,dataBase64:Buffer.alloc(20).toString('base64')},mappingRevision:'synthetic-speech:1'};yield {kind:'terminal',outcome:'succeeded',outputSamples:10,frameCount:1,mappingRevision:'synthetic-speech:1',degradedDimensions:[]};}};
+ (f.app as any).providers.tts=tts;(f.app as any).providers.stt={async *transcribe(){stt++;throw new Error('No synthetic input capture');}};
+ (f.app as any).providers.inference={async *generate(request:InferenceRequest){model.push(request);yield {kind:'text',text:'Synthetic opening.'};yield {kind:'done'};}};
+ const socket=new WebSocket(f.base.replace('http:','ws:')+'/api/runtime/v1/audio',{origin:f.base,headers:{cookie:f.headers.cookie!}});t.after(()=>socket.close());
+ socket.on('message',raw=>{const e=JSON.parse(raw.toString());wire.push(e);if(e.event?.payload.type==='terminal')finish();});await new Promise<void>((resolve,reject)=>{socket.once('open',resolve);socket.once('error',reject);});
+ const ack=(r:any,kind='endpointAccepted')=>f.extension({operation:'acknowledge',sessionId:f.auth.sessionId,opportunityId:outcome(r).opportunityId,receiptId:outcome(r).deliveryReceiptRef,kind});
+ const pending=()=>Number(f.db.connection.prepare('SELECT count(*) AS n FROM initiative_playback_pending').get()!.n);
+ const preview=()=>fetch(f.base+'/api/runtime/v1/tts',{method:'POST',headers:f.headers,body:JSON.stringify({text:'Synthetic competing output.'})});
+ return {...f,socket,wire,synthesis,model,tts,completed,ack,pending,preview,stt:()=>stt};
+}
+async function until(check:()=>boolean){for(let n=0;n<200;n++){if(check())return;await new Promise(r=>setTimeout(r,10));}assert.fail('Bounded synthetic state did not settle');}
+
+test('protected speech delivery holds ownership after synthesis until receipt-bound playback acknowledgment', {timeout:15000},async t=>{
+ const f=await speechFixture(t);assert.equal((await f.ready()).status,200);const request=f.event(),r=await f.extension(request);await f.completed;
+ assert.equal(r.body.delivery.modality,'speech');assert.equal(r.body.delivery.captureEnabled,false);assert.equal(outcome(r).state,'emitted');assert.equal(f.stt(),0);assert.equal(f.model.length,1);assert.equal(f.synthesis.length,1);assert.equal(f.model[0]!.scope.interactionId,r.body.delivery.interactionId);assert.equal(f.model[0]!.sections.find(s=>s.kind==='userInput')!.content,'');
+ assert.equal(f.wire.some(e=>['transcript','accepted','turnStarted'].includes(e.type)),false);assert.equal(f.wire.find(e=>e.type==='audio').interactionTraceId,r.body.delivery.interactionId);assert.equal(f.pending(),1);
+ assert.equal((await f.preview()).status,409);assert.equal(outcome(await f.ack(r)).acknowledgmentKind,'endpointAccepted');assert.equal(f.pending(),1);assert.equal((await f.preview()).status,409);
+ assert.equal((await f.extension({operation:'acknowledge',sessionId:f.auth.sessionId,opportunityId:outcome(r).opportunityId,receiptId:randomUUID(),kind:'playbackCompleted'})).status,409);assert.equal(f.pending(),1);
+ assert.equal(outcome(await f.ack(r,'playbackCompleted')).acknowledgmentKind,'playbackCompleted');await until(()=>!(f.app as any).audioOwnership.currentLease(f.auth.sessionId));assert.equal(f.pending(),0);
+ assert.equal((await f.extension(request)).body.delivery,null);assert.equal(f.model.length,1);assert.equal((await f.ack(r,'playbackCompleted')).status,200);
+});
+
+test('speech readiness is bound to one connected transport and cannot enable fallback output', {timeout:15000},async t=>{
+ const f=await fixture(t,true,'speech');assert.equal((await f.ready()).status,409);const r=await f.extension(f.event());assert.equal(outcome(r).state,'suppressed');assert.equal(calls(f.db),0);assert.equal(r.body.delivery,null);
+ const g=await speechFixture(t);assert.equal((await g.ready()).status,200);g.socket.close();await new Promise<void>(r=>g.socket.once('close',()=>r()));
+ const next=new WebSocket(g.base.replace('http:','ws:')+'/api/runtime/v1/audio',{origin:g.base,headers:{cookie:g.headers.cookie!}});t.after(()=>next.close());await new Promise<void>((resolve,reject)=>{next.once('open',resolve);next.once('error',reject);});
+ const stale=await g.extension(g.event());assert.equal(outcome(stale).state,'suppressed');assert.equal(g.model.length,0);assert.equal(stale.body.delivery,null);
+});
+
+test('premature playback acknowledgment fails and partial failure preserves endpoint acceptance without a playback claim', {timeout:15000},async t=>{
+ const f=await speechFixture(t);let release:()=>void=()=>{};const gate=new Promise<void>(resolve=>{release=resolve;});const original=f.tts.synthesize;
+ f.tts.synthesize=async function*(request:any){for await(const e of original(request)){if(e.kind==='terminal'){await gate;throw new Error('Synthetic partial provider failure');}yield e;}};
+ await f.ready();const r=await f.extension(f.event());try{assert.equal((await f.ack(r,'playbackCompleted')).status,409);assert.equal((await f.ack(r)).status,200);}finally{release();}
+ await until(()=>f.pending()===0);const final=outcome(await f.extension({operation:'inspect'}));assert.equal(final.state,'failed');assert.equal(final.lastDeliveryStage,'acknowledged');assert.equal(final.acknowledgmentKind,'endpointAccepted');assert.equal((await f.ack(r,'playbackCompleted')).status,409);assert.ok(f.wire.some(e=>e.type==='stopPlayback'));
+});
+
+test('quiet, endpoint change, explicit stop and ordinary typed replies cancel uncompleted speech playback', {timeout:20000},async t=>{
+ for(const cause of ['quiet','endpoint','stop','reply']){
+  const f=await speechFixture(t);await f.ready();const r=await f.extension(f.event());await f.completed;await f.ack(r);
+  if(cause==='quiet')await f.extension({operation:'temporaryMode',idempotencyKey:randomUUID(),sessionId:f.auth.sessionId,mode:'quiet',endsAt:null,dimensions:null});
+  if(cause==='endpoint')await f.send('/api/runtime/v1/session-context',{expectedRevision:1,mode:'audio',audienceScope:'unknown'});
+  if(cause==='stop')f.socket.send(JSON.stringify({type:'interrupt',interactionTraceId:r.body.delivery.interactionId,reason:'Explicit stop'}));
+  if(cause==='reply'){const response=await fetch(f.base+'/api/runtime/v1/messages',{method:'POST',headers:f.headers,body:JSON.stringify({assistantId:f.assistant.assistantId,relationshipId:f.rel.relationshipId,userInput:'Synthetic ordinary reply.'})});assert.equal(response.status,200);await response.text();}
+  await until(()=>f.pending()===0);const final=outcome(await f.extension({operation:'inspect'}));assert.equal(final.state,'cancelled',cause);assert.equal(final.lastDeliveryStage,'acknowledged');assert.equal(final.acknowledgmentKind,'endpointAccepted');if(cause==='reply')assert.equal(final.response,'replied');assert.equal((await f.ack(r,'playbackCompleted')).status,409);await until(()=>f.wire.some(e=>e.type==='stopPlayback'));
+ }
+});
+
+
+test('lost speech playback acknowledgment expires unknown and never releases a replayable payload', {timeout:10000},async t=>{
+ const f=await speechFixture(t);await f.ready();const request=f.event({expiresAt:Date.now()+1000}),r=await f.extension(request);await f.completed;await f.ack(r);
+ await until(()=>f.pending()===0);const final=outcome(await f.extension({operation:'inspect'}));assert.equal(final.state,'unknown');assert.deepEqual(final.reasonCodes,['ackTimeout']);assert.equal(final.lastDeliveryStage,'acknowledged');assert.equal(final.acknowledgmentKind,'endpointAccepted');assert.equal((await f.extension(request)).body.delivery,null);assert.equal(f.model.length,1);assert.equal((await f.ack(r,'playbackCompleted')).status,409);
 });

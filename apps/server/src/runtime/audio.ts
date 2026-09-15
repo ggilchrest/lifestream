@@ -23,8 +23,16 @@ export const hasAudioEnergy = (dataBase64: string, threshold = 0.015): boolean =
 export const VOICE_TURN_DEADLINE_MS = 180_000;
 export const SPEECH_SEGMENT_DEADLINE_MS = 45_000;
 export type AudioOutputLease={current:()=>boolean;release:()=>void};
-export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
-export type OutputOnlySpeech={text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void};
+export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
+export type OutputOnlySpeech={text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
+
+async function waitForPreviousOutput(previous:Promise<void>,signal:AbortSignal):Promise<void>{
+  let timer:ReturnType<typeof setTimeout>|undefined,abort=()=>{};
+  try{await Promise.race([previous,new Promise<void>((_,reject)=>{
+    abort=()=>reject(new Error("Previous speech output has not settled; no new recognition or generation was started."));
+    timer=setTimeout(abort,15000);signal.addEventListener('abort',abort,{once:true});if(signal.aborted)abort();
+  })]);}finally{if(timer)clearTimeout(timer);signal.removeEventListener('abort',abort);}
+}
 
 export class AudioSession {
   private readonly socket: AudioSocket;
@@ -36,8 +44,10 @@ export class AudioSession {
   private interactionTraceId: string | undefined;
   private turnQueue: Promise<void> = Promise.resolve();
   private closed = false;
+  private readonly lifetime=new AbortController();
   private pendingTurns = 0;
   private starting = false;
+  private outputSettlement:Promise<void>|undefined;
   private voiceSettings: VoiceSettings = { ...defaultVoiceSettings };
   private sequence = 0;
   private currentInput: HostRuntimeInput | undefined;
@@ -46,7 +56,8 @@ export class AudioSession {
   constructor(socket: AudioSocket, deps: AudioDependencies, sessionId: string) { this.socket = socket; this.deps = deps; this.sessionId = sessionId; }
 
   belongsTo(sessionId:string):boolean{return this.sessionId===sessionId;}
-  get outputAvailable():boolean{return !this.closed&&this.socket.readyState===OPEN&&!this.controller&&!this.starting&&!this.pendingTurns;}
+  get outputConnected():boolean{return !this.closed&&this.socket.readyState===OPEN;}
+  get outputAvailable():boolean{return this.outputConnected&&!this.controller&&!this.starting&&!this.pendingTurns;}
   /** Uses the established output transport without a start/input request, STT,
    * fabricated transcript or second inference call. Host policy owns admission. */
   async speakOutputOnly(input:OutputOnlySpeech):Promise<{samples:number;frames:number;mappingRevision:string;warmth:"unsupported";degradedDimensions:string[]}>{
@@ -54,9 +65,10 @@ export class AudioSession {
     const deadline=Math.min(Date.parse(input.deadlineAt),Date.now()+SPEECH_SEGMENT_DEADLINE_MS);
     if(!Number.isFinite(deadline)||deadline<=Date.now())throw new Error("Output-only speech expired");
     const lease=this.deps.outputLease(input.endpointId,new Date(deadline).toISOString()),controller=new AbortController(),signal=AbortSignal.any([controller.signal,input.signal]);
+    let settledOutput:()=>void=()=>{};this.outputSettlement=new Promise<void>(resolve=>{settledOutput=resolve;});
     this.controller=controller;this.interactionTraceId=input.interactionId;this.sequence=0;this.currentInput=undefined;
     const timer=setTimeout(()=>controller.abort(),Math.max(1,deadline-Date.now()));
-    let samples=0,frames=0,started=false,done=false,mappingRevision="unknown",settlement:Promise<void>|undefined,settled=false;
+    let samples=0,frames=0,started=false,done=false,terminalSent=false,mappingRevision="unknown",settlement:Promise<void>|undefined,settled=false;
     const degraded=new Set<string>(["warmth"]),pacer=new PcmPacer(),segmentId=randomUUID(),decisionId=randomUUID();
     const current=()=>!this.closed&&this.socket.readyState===OPEN&&!signal.aborted&&Date.now()<deadline&&input.current()===true&&lease.current();
     const request={contractVersion:"2.0.0" as const,text:input.text,segmentId,format:{encoding:"pcm_s16le" as const,sampleRateHz:48000 as const,channels:1 as const},voiceProfile:{voiceRef:"fixture-voice-design",revision:1},decision:{decisionId,revision:1},delivery:{interactionId:input.interactionId,segmentId,decisionId,decisionRevision:1,deliveryMode:this.voiceSettings.deliveryMode,urgency:"low",pace:this.voiceSettings.pace,energy:this.voiceSettings.energy},deadlineAt:new Date(deadline).toISOString()};
@@ -79,15 +91,17 @@ export class AudioSession {
         send(this.socket,{type:"audio",interactionTraceId:input.interactionId,chunk:{segmentId:event.segmentId,frame:event.frame}});samples+=event.frame.sampleCount;frames++;
       }
       if(!done||!current())throw new Error("Output-only speech has no current successful terminal");
-      response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:"completed",finalResponse:null,error:null});
+      response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:"completed",finalResponse:null,error:null});terminalSent=true;
+      if(input.synthesized)await input.synthesized(signal);
+      if(!current())throw new Error("Output-only playback was interrupted or expired");
       return {samples,frames,mappingRevision,warmth:"unsupported",degradedDimensions:[...degraded]};
     }catch(error){
-      const cancelled=signal.aborted||!input.current()||!lease.current();controller.abort();if(started)send(this.socket,{type:"stopPlayback",interactionTraceId:input.interactionId,reason:"output_only_cancelled_or_failed"});
-      response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:cancelled?"interrupted":"failed",finalResponse:null,error:problem("output_only_stopped","Output-only speech stopped; playback completion is not established.",input.interactionId)});throw error;
-    }finally{clearTimeout(timer);controller.abort();const release=()=>{lease.release();this.controller=undefined;this.interactionTraceId=undefined;};if(settlement&&!settled)void settlement.catch(()=>undefined).then(release);else release();}
+      const cancelled=signal.aborted||!input.current()||!lease.current();if(cancelled)input.interrupted?.(Date.now()>=deadline?"expired":"cancelled");controller.abort();if(started)send(this.socket,{type:"stopPlayback",interactionTraceId:input.interactionId,reason:"output_only_cancelled_or_failed"});
+      if(!terminalSent)response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:cancelled?"interrupted":"failed",finalResponse:null,error:problem("output_only_stopped","Output-only speech stopped; playback completion is not established.",input.interactionId)});throw error;
+    }finally{clearTimeout(timer);controller.abort();const release=()=>{lease.release();this.controller=undefined;this.interactionTraceId=undefined;this.outputSettlement=undefined;settledOutput();};if(settlement&&!settled)void settlement.catch(()=>undefined).then(release);else release();}
   }
 
-  close(): void { this.closed = true; this.frames = []; this.voiceSettings = { ...defaultVoiceSettings }; this.request = undefined; this.controller?.abort(); this.socket.close(1001, "audio session closed"); }
+  close(): void { this.closed = true;this.lifetime.abort(); this.frames = []; this.voiceSettings = { ...defaultVoiceSettings }; this.request = undefined; this.controller?.abort(); this.socket.close(1001, "audio session closed"); }
   invalidateIfStale(): void { if (this.currentInput && !this.currentInput.isCurrent()) { this.controller?.abort(); if (this.interactionTraceId) send(this.socket, { type: "stopPlayback", interactionTraceId: this.interactionTraceId, reason: "runtime_input_stale" }); } }
 
   async message(raw: string): Promise<void> {
@@ -111,8 +125,12 @@ export class AudioSession {
     if (message.nextSequence !== this.frames.length || message.sampleCount !== this.sampleCount()) return send(this.socket, { type: "error", requestId: request.requestId, problem: problem("audio_commit_invalid", "audio commit accounting is invalid", request.correlationId) });
     const frames = this.frames.slice(); this.frames = [];
     if (!frames.length || this.pendingTurns >= 3) { send(this.socket, { type: "error", problem: problem("audio_queue_limit", "Voice queue is full or empty input was committed; reconnect voice.", request.correlationId) }); this.close(); return; }
-    this.pendingTurns++;
-    this.turnQueue = this.turnQueue.then(() => this.runTurn(frames)).finally(() => { this.pendingTurns--; });
+    const releaseForeground=this.deps.foregroundStarted?.(request);this.controller?.abort();
+    const priorOutput=this.outputSettlement;this.pendingTurns++;
+    this.turnQueue = this.turnQueue.then(async () => { if(priorOutput){
+      try{await waitForPreviousOutput(priorOutput,this.lifetime.signal);}
+      catch(error){send(this.socket,{type:"error",requestId:request.requestId,problem:problem("audio_previous_output_unsettled",error instanceof Error?error.message:"Previous output is unavailable",request.correlationId)});return;}
+    }await this.runTurn(frames); }).finally(() => { this.pendingTurns--;releaseForeground?.(); });
     await this.turnQueue;
   }
 
@@ -130,7 +148,7 @@ export class AudioSession {
     if (this.closed) return;
     this.voiceSettings = settings;
     if (this.deps.prepare) { try { const prepared = this.deps.prepare({ ...(request.assistantId ? { assistantId: request.assistantId } : {}), ...(request.relationshipId ? { relationshipId: request.relationshipId } : {}), endpointId: request.endpointId, userInput: "" }); this.identity.assistantId = prepared.assistantId; } catch { this.close(); return; } }
-    this.request = request;
+    this.request = request;this.starting=false;
     send(this.socket, { type: "accepted", identity: { ...this.identity, sessionId: request.sessionId, endpointId: request.endpointId, interactionTraceId: request.correlationId }, audioInputId: request.audioInputId });
   }
 

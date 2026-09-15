@@ -84,3 +84,32 @@ test('ordinary voice transport and HTTP speech preview share the same server aud
  try{const rejected=await preview();assert.equal(rejected.status,409);assert.equal((await rejected.json() as any).code,'audio_output_owned');assert.equal(calls,1);}finally{release();}
  await done;assert.equal(messages.at(-1).event.payload.state,'completed');const after=await preview();assert.equal(after.status,200);assert.match(await after.text(),/succeeded/u);assert.equal(calls,2);
 });
+
+
+test('output-only speech retains its owner through browser playback and explicit interruption',async()=>{
+ const f=fixture();let entered:()=>void=()=>{},finish:()=>void=()=>{};const started=new Promise<void>(r=>{entered=r;}),played=new Promise<void>(r=>{finish=r;});
+ f.input.synthesized=async signal=>{entered();await new Promise<void>((resolve,reject)=>{signal.addEventListener('abort',()=>reject(new Error('Stopped')),{once:true});void played.then(resolve);});};
+ const pending=f.session.speakOutputOnly(f.input);await started;assert.equal(f.events.at(-1).event.payload.state,'completed');assert.equal(f.session.outputAvailable,false);assert.ok(f.service.currentLease(f.sessionId));
+ await f.session.message(JSON.stringify({type:'interrupt',interactionTraceId:f.input.interactionId,reason:'Explicit stop'}));await assert.rejects(pending);finish();assert.equal(f.service.currentLease(f.sessionId),undefined);assert.equal(f.events.at(-1).type,'stopPlayback');assert.equal(f.session.outputAvailable,true);
+});
+
+test('committing ordinary input preempts social playback and processes the queued user turn after release',async()=>{
+ const f=fixture();let entered:()=>void=()=>{},foreground=0;const started=new Promise<void>(r=>{entered=r;});f.deps.foregroundStarted=()=>{foreground++;return()=>{foreground--;};};
+ f.input.synthesized=async signal=>{entered();await new Promise<void>((_,reject)=>signal.addEventListener('abort',()=>reject(new Error('Preempted')),{once:true}));};
+ const pending=f.session.speakOutputOnly(f.input);await started;assert.equal(foreground,0);
+ const audioInputId=randomUUID();await f.session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId:f.sessionId,expectedSessionRevision:1,endpointId:f.endpointId,audioInputId,format:{encoding:'pcm_s16le',sampleRateHz:16000,channels:1}}}));
+ assert.equal(foreground,0);await f.session.message(JSON.stringify({type:'frame',audioInputId,frame:{...f.frame(),format:{encoding:'pcm_s16le',sampleRateHz:16000,channels:1}}}));
+ const committed=f.session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:10}));assert.equal(foreground,1);await assert.rejects(pending);await committed;
+ assert.equal(f.counts().sttCalls,1);assert.equal(foreground,0);assert.ok(f.events.some(e=>e.type==='turnStarted'));assert.equal(f.session.outputAvailable,true);
+});
+
+
+test('a provider that will not settle produces a bounded ordinary-reply error without overlapping recognition', {timeout:22000},async()=>{
+ const f=fixture();let release:()=>void=()=>{},entered:()=>void=()=>{},foreground=0;const started=new Promise<void>(r=>{entered=r;});
+ f.tts.synthesize=async function*(request:any){yield {kind:'data',segmentId:request.segmentId,frame:f.frame(),mappingRevision:'map'};entered();await new Promise<void>(r=>{release=r;});};
+ f.deps.foregroundStarted=()=>{foreground++;return()=>{foreground--;};};const pending=f.session.speakOutputOnly(f.input);await started;
+ const audioInputId=randomUUID();await f.session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId:f.sessionId,expectedSessionRevision:1,endpointId:f.endpointId,audioInputId,format:{encoding:'pcm_s16le',sampleRateHz:16000,channels:1}}}));await f.session.message(JSON.stringify({type:'frame',audioInputId,frame:{...f.frame(),format:{encoding:'pcm_s16le',sampleRateHz:16000,channels:1}}}));
+ const committed=f.session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:10}));
+ try{await assert.rejects(pending);await committed;assert.equal(foreground,0);assert.equal(f.counts().sttCalls,0);assert.equal(f.events.at(-1).problem.code,'audio_previous_output_unsettled');assert.equal(f.session.outputAvailable,false);}finally{release();await new Promise(r=>setImmediate(r));}
+ assert.equal(f.session.outputAvailable,true);
+});

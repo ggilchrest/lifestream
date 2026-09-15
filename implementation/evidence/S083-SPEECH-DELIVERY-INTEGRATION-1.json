@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-SPEECH-DELIVERY-INTEGRATION-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "f1dd1fbf7631cb09be61dedbf76e810b2ad46da0",
+  "specificationRevision": "8304bfc64b1d45fb4fb942d0feb86925b80dc93c",
+  "recordedAt": "2026-09-15T02:40:02.933621Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "a8d2e0db27a5680dc866211d5e29852f21a679d08b758ad149b0c47c5c2d7dd5"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "a110c6613c14392b44ce9a0f3401bc27d7a095b1967beb8ccb02a04276c0f5f5"
+    },
+    {
+      "path": "apps/server/src/runtime/initiative-host.ts",
+      "sha256": "01441cc80bba8eb9d84319db8640a74f530a9242ac4b16fda0bacc9ef9ed2863"
+    },
+    {
+      "path": "apps/server/test/audio-output.test.ts",
+      "sha256": "74322403dd85bd61c84780537b341accb9ea31d9718e79d74f6e4b56c9aed13b"
+    },
+    {
+      "path": "apps/server/test/initiative-host.test.ts",
+      "sha256": "8ae8eb809e5ddf805fc40dc1382552a57fa9268b40b56ea9693b778a72af8e9d"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "e889401115510b29fa929895ae9596a3ac95015e3fa81f7b9063b75e82812867"
+    },
+    {
+      "path": "packages/storage-sqlite/src/initiative-delivery.ts",
+      "sha256": "a799a51851d7d5ac1a78d75be1864f7e0ef05b5f6c3980a408eaacfdf584fc06"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "36bc258c423f76e8fef1032da1bc701b6f4af09eabb0be3e0ff61bd4ea3cde03"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0025_initiative_playback.sql",
+      "sha256": "96b8e2658aacf1c68b7cec306f089b4d43a1dde126415f6470133ad4468b4718"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "d901b5ae0d1d14059a8099de8a1c6136f6915e0f7713bc32b6185591406a1e9d"
+    }
+  ],
+  "claims": [
+    "Host-enabled synthetic Initiative speech now joins the real local-password administration/session path, current opt-in/privacy/readiness, one canonical candidate request with voice mode, durable emission accounting and the existing AudioSession output transport. The same interaction identifier links the one-use HTTP delivery metadata and ordinary WebSocket text/audio events. No input start, STT call, fabricated user text or transcript is required.",
+    "Speech readiness binds to exactly one connected transport object and current session endpoint revision. Missing, closed, replaced or ambiguous transports cannot reuse an old acknowledgment or fall back to text. An idle connection no longer counts as an active user turn.",
+    "The shared session audio lease remains owned through synthesis and pending endpoint playback. Successful synthesis only emits the existing completed response event; it does not assert playback. Receipt-bound playback acknowledgment is rejected before successful synthesis, after interruption or with a different receipt. Endpoint acceptance and playback completion remain separate observed stages.",
+    "Migration 0025 adds only a minimal pending-playback identifier table. Acceptance before playback keeps the pending marker. Failure, cancellation, expiry and exclusive restart retain the last observed stage and conservative charge; lost acknowledgment becomes unknown. Completed playback and text-only acceptance remain settled. Existing migration bytes and historical delivery records are preserved, including sparse-ledger upgrade behavior.",
+    "Quiet mode, endpoint/audience changes, explicit interrupt and ordinary typed replies cancel unfinished speech playback. Actual committed voice input preempts social output, waits for its producer/lease to settle, then enters ordinary recognition. A producer that will not settle yields an explicit bounded 15-second reply error with no overlapping recognition or generation; its occupied output slot remains held until actual settlement.",
+    "Protected integration tests use isolated databases, real local authentication and synthetic providers. They verify correlation, absence of input capture/recognition, one model request, competing preview rejection, stale readiness, premature/forged acknowledgment, partial failure, cancellation, timeout, retry-without-payload and durable recovery. Additional AudioSession tests cover playback ownership and voice-turn preemption."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "f21fd6e8f541f148866140476087cd2496b7d5862dc9bd4a49121634d858bff4"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "726059989426fbfabb103fad985f51841be83a9cf438c8c8ca3b6085d11d3881"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "c89b964c4d4e3aa2495e91064520929797a10a7652ca1d9b24120ee8b1483e05"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "412296e8c5dcbb99243a1f378027d8d32e9637b9ac8b6246984f8f8b8f021a3c"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 371,
+    "toolingTests": 45,
+    "newSourceTests": 9,
+    "browserTests": 29
+  },
+  "intermediateFindings": [
+    {
+      "command": "pnpm test",
+      "result": "fail",
+      "logSha256": "663498a721523121dd68ab2425a595e7b6d3e4fa449f762ed1c99b2b799fe794",
+      "summary": "Initial regression run: two migration issues corrected (health ID expectation and non-idempotent ALTER against sparse migration history); one unchanged Discovery Lab ambiguous-pair expectation also failed during the concurrent run. This failed observation is preserved, not relabeled as passing."
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-lab.test.ts",
+      "result": "pass",
+      "logSha256": "47fa2b1f96a6ed3419dab328d8efb1d13224a182f29ccf62d64321fdd19e2945",
+      "summary": "Unchanged independent Discovery recheck: three tests pass. The final complete source suite also passes. A precise cause for the intermediate expectation failure was not captured; optional-selection timing/performance qualification remains open."
+    }
+  ],
+  "limitations": [
+    "Browser Initiative controls, output-only connection readiness, conversation turn labeling/linkage and automatic acknowledgments from actual scheduled PCM completion are still to be implemented. These server/API tests manually emulate endpoint acknowledgments; they are not proof that a browser or Human heard audio.",
+    "The existing browser regression suite does not yet cover the new Initiative speech user flow. Ordinary browser playback state and microphone/typed-reply lifecycle must be joined to Initiative readiness and cancellation before full barge-in/readiness acceptance.",
+    "Pending speech bookkeeping handles process restart, not restoring an older database that predates admission. External restore fencing, opportunity inspection, applied/degraded expression inspection, gradient Lab, reserved acknowledgments and bounded timing adaptation remain open.",
+    "Prosodic warmth remains explicitly unsupported by the present speech mapping. No selected-provider speech/performance, physical presence, real-device playback or Human qualification occurred. Current-source S071/S072/S073/S076/S078 successor qualifications remain pending.",
+    "No saved review service was restarted or deployed. No personal-data import, live configuration change, training, provider/model selection or model-quality observation occurred. Full S083/S084 and PWCE development remains active."
+  ]
+}

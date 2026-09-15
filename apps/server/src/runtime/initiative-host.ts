@@ -7,6 +7,7 @@ import {resolveInitiativePolicy,type InitiativeFacts,type InitiativeTemporaryMod
 import {extensionError} from '../relationship-extensions.ts';
 import {InitiativeCandidateGenerator} from './initiative.ts';
 import type {HostRuntimeInput} from './inference.ts';
+import type {OutputOnlySpeech} from './audio.ts';
 
 export type InitiativeOwner={scope:InitiativeScope;configuration?:Record<string,unknown>;profile?:Record<string,unknown>;boundary:string;consentCurrent:boolean;evidenceRefs:string[]};
 export type InitiativeSession={sessionId:string;conversationId:string;revision:number;endpoint:EndpointProfile};
@@ -14,8 +15,9 @@ export type InitiativeSession={sessionId:string;conversationId:string;revision:n
 export type InitiativeSimulationEvent={userId:string;sessionId:string;sourceEventId:string;kind:InitiativeOpportunity['kind'];topicRef:string|null;observedAt:number;expiresAt:number;context:InitiativeFacts['context'];modality:'text'|'speech';dwellSeconds?:number;absenceSeconds?:number;unfinishedEvidenceCurrent?:boolean};
 export type InitiativeSimulation={resolve:(scope:InitiativeScope,sessionId:string,sourceEventId:string)=>InitiativeSimulationEvent|undefined};
 type Result={status:number;body:Record<string,unknown>};
-type Context={owner:()=>InitiativeOwner|undefined;session:()=>InitiativeSession|undefined;authorized:()=>boolean;prepare:()=>HostRuntimeInput;provider:InferenceProvider|undefined;signal:AbortSignal;emit:(prefix:string,suffix:()=>string)=>void};
-type Job={scope:InitiativeScope;sessionId:string;controller:AbortController;current:()=>boolean;reason:string};
+type Speech={identity:object;available:()=>boolean;current:()=>boolean;speak:(input:OutputOnlySpeech)=>Promise<unknown>};
+type Context={speech?:Speech;owner:()=>InitiativeOwner|undefined;session:()=>InitiativeSession|undefined;authorized:()=>boolean;prepare:()=>HostRuntimeInput;provider:InferenceProvider|undefined;signal:AbortSignal;emit:(prefix:string,suffix:()=>string)=>void};
+type Job={speech?:{synthesized:boolean;complete:()=>void};scope:InitiativeScope;sessionId:string;controller:AbortController;current:()=>boolean;reason:string};
 const validator=createContractValidator(),api='https://lifestream.dev/contracts/initiative-api/1.0.0';
 const canonical=(value:unknown):string=>Array.isArray(value)?`[${value.map(canonical).join(',')}]`:value&&typeof value==='object'?`{${Object.keys(value).sort().map(k=>`${JSON.stringify(k)}:${canonical((value as Record<string,unknown>)[k])}`).join(',')}}`:JSON.stringify(value);
 const hash=(value:unknown)=>createHash('sha256').update(canonical(value)).digest('hex');
@@ -27,7 +29,7 @@ const active=new Set(['pending','eligible','generated','queued','emitted']);
 export class InitiativeHost {
  readonly ledger:InitiativeDeliveryRepository;
  private readonly generator=new InitiativeCandidateGenerator();
- private readonly readiness=new Map<string,{revision:number;endpointId:string;text:boolean;speech:boolean}>();
+ private readonly readiness=new Map<string,{revision:number;endpointId:string;text:boolean;speech:boolean;transport?:object}>();
  private readonly modes=new Map<string,InitiativeTemporaryMode>();
  private readonly jobs=new Map<string,Job>();
  private foreground=0;
@@ -72,7 +74,9 @@ export class InitiativeHost {
   if(raw.idempotencyKey){const retry=this.retry(scope,raw);if(retry==='conflict')return extensionError(409,'idempotency_conflict','This retry key identifies a different request.');if(retry==='same')return this.response(owner,operation,[{code:'already_processed',summary:'This request was already processed. Current metadata is shown; output and temporary modes are never replayed.',sourceRefs:[]}]);}
   if(operation==='outputReadiness'){
    if(this.readiness.size>=256&&!this.readiness.has(k))return extensionError(409,'initiative_capacity','Session readiness capacity is full.');
+   if(raw.modality==='speech'&&raw.ready===true&&(!context.speech?.available()||!session.endpoint.outputModalities.includes('audio')))return extensionError(409,'speech_transport_unavailable','Connect one idle output transport for this session before enabling speech readiness. This does not start the microphone.');
    const old=this.readiness.get(k),entry=old?.revision===session.revision?old:{revision:session.revision,endpointId:session.endpoint.endpointId,text:false,speech:false};
+   if(raw.modality==='speech'){if(raw.ready===true&&context.speech)entry.transport=context.speech.identity;else delete entry.transport;}
    entry[raw.modality as 'text'|'speech']=raw.ready===true;this.readiness.set(k,entry);this.invalidate('endpointUnavailable');
    return this.response(owner,operation,[{code:'output_readiness',summary:`${raw.modality} output is ${raw.ready?'ready':'not ready'} for this session. This grants no consent or input capture.`,sourceRefs:[session.endpoint.endpointId]}]);
   }
@@ -92,14 +96,16 @@ export class InitiativeHost {
   }
   if(['acknowledge','dismiss','cancel'].includes(operation)){
    const r=this.ledger.get(scope,String(raw.opportunityId));if(!r||r.opportunity.sessionId!==session.sessionId)return extensionError(404,'initiative_not_found','No opportunity in this session.');
-   if(operation==='acknowledge'&&raw.kind==='playbackCompleted')return extensionError(409,'playback_not_available','This text output path cannot report speech playback completion.');
+   const job=this.jobs.get(r.opportunity.opportunityId);
+   if(operation==='acknowledge'&&job?.speech&&!job.current())return extensionError(409,'playback_scope_changed','The original speech output session is no longer current.');
+   if(operation==='acknowledge'&&raw.kind==='playbackCompleted'&&!(job?.speech?.synthesized||r.outcome.state==='acknowledged'&&r.outcome.acknowledgmentKind==='playbackCompleted'))return extensionError(409,'playback_not_available','Playback acknowledgment requires successful synthesis on this original speech delivery.');
    try{
-    if(operation==='acknowledge')this.ledger.transition(scope,r.opportunity.opportunityId,r.version,{type:'acknowledge',sessionId:session.sessionId,receiptId:String(raw.receiptId),kind:raw.kind as 'endpointAccepted'|'playbackCompleted'});
+    if(operation==='acknowledge'){this.ledger.transition(scope,r.opportunity.opportunityId,r.version,{type:'acknowledge',sessionId:session.sessionId,receiptId:String(raw.receiptId),kind:raw.kind as 'endpointAccepted'|'playbackCompleted'});if(raw.kind==='playbackCompleted')job?.speech?.complete();}
     else {
      if(operation==='dismiss')this.ledger.transition(scope,r.opportunity.opportunityId,r.version,{type:'respond',sessionId:session.sessionId,response:'dismissed'},()=>this.saveRetry(scope,raw));
-     else if(active.has(r.outcome.state))this.ledger.transition(scope,r.opportunity.opportunityId,r.version,{type:'finish',state:'cancelled',reasons:['cancelled']},()=>this.saveRetry(scope,raw));
+     else if(active.has(r.outcome.state)||job?.speech&&r.outcome.state==='acknowledged'&&r.outcome.acknowledgmentKind==='endpointAccepted')this.ledger.transition(scope,r.opportunity.opportunityId,r.version,{type:'finish',state:'cancelled',reasons:['cancelled']},()=>this.saveRetry(scope,raw));
      else return extensionError(409,'initiative_terminal','The opportunity is already terminal.');
-     const job=this.jobs.get(r.opportunity.opportunityId);if(job){job.reason='cancelled';job.controller.abort();}
+     if(job){job.reason='cancelled';job.controller.abort();}
     }
     return this.response(owner,operation);
    }catch{return extensionError(409,'initiative_stage_conflict','The session, receipt or observed delivery stage does not permit this operation.');}
@@ -111,7 +117,8 @@ export class InitiativeHost {
   if(!owner.configuration)return extensionError(409,'initiative_not_configured','Review and activate Initiative settings first.');
   const config=owner.configuration,tuning=config.tuning as Record<string,number>,mode=this.mode(scope,session.sessionId),ttl=event.kind==='arrivalReturn'?tuning.arrivalTtlSeconds:event.kind==='availableCheckIn'?tuning.checkInTtlSeconds:tuning.followUpTtlSeconds;
   const expires=Math.min(event.expiresAt,event.observedAt+ttl!*1000,mode?.expiresAt??Infinity),id=randomUUID();
-  const facts=():InitiativeFacts=>{const s=context.session(),o=context.owner(),ready=this.readiness.get(k);return {sessionId:session.sessionId,endpointId:session.endpoint.endpointId,modality:event.modality,kind:event.kind,context:event.context,authorized:context.authorized()&&!!s&&s.revision===session.revision,identityQualified:true,privateAudience:s?.endpoint.privacyClass==='personal',consentCurrent:o?.consentCurrent===true,sourceQualified:hash(this.simulation!.resolve(scope,session.sessionId,event.sourceEventId)??null)===hash(event),sourceExpiresAt:expires,outputReady:event.modality==='text'&&!!s&&ready?.revision===s.revision&&ready.endpointId===s.endpoint.endpointId&&ready.text&&s.endpoint.outputModalities.includes('text'),leaseAvailable:this.foreground===0&&!this.closed,...(event.dwellSeconds===undefined?{}:{dwellSeconds:event.dwellSeconds}),...(event.absenceSeconds===undefined?{}:{absenceSeconds:event.absenceSeconds}),unfinishedEvidenceCurrent:event.unfinishedEvidenceCurrent===true&&event.topicRef!==null&&!!o?.evidenceRefs.includes(event.topicRef)};};
+  let speechActive=false;
+  const facts=():InitiativeFacts=>{const s=context.session(),o=context.owner(),ready=this.readiness.get(k);return {sessionId:session.sessionId,endpointId:session.endpoint.endpointId,modality:event.modality,kind:event.kind,context:event.context,authorized:context.authorized()&&!!s&&s.revision===session.revision,identityQualified:true,privateAudience:s?.endpoint.privacyClass==='personal',consentCurrent:o?.consentCurrent===true,sourceQualified:hash(this.simulation!.resolve(scope,session.sessionId,event.sourceEventId)??null)===hash(event),sourceExpiresAt:expires,outputReady:!!s&&ready?.revision===s.revision&&ready.endpointId===s.endpoint.endpointId&&(event.modality==='text'?ready.text&&s.endpoint.outputModalities.includes('text'):ready.speech&&s.endpoint.outputModalities.includes('audio')&&ready.transport===context.speech?.identity&&!!context.speech?.current()&&(speechActive||context.speech.available())),leaseAvailable:this.foreground===0&&!this.closed,...(event.dwellSeconds===undefined?{}:{dwellSeconds:event.dwellSeconds}),...(event.absenceSeconds===undefined?{}:{absenceSeconds:event.absenceSeconds}),unfinishedEvidenceCurrent:event.unfinishedEvidenceCurrent===true&&event.topicRef!==null&&!!o?.evidenceRefs.includes(event.topicRef)};};
   const policy=()=>{const o=context.owner();return resolveInitiativePolicy({scope,...(o?.configuration?{configuration:o.configuration}:{}),profile:o?.profile,facts:facts(),...(this.mode(scope,session.sessionId)?{temporary:this.mode(scope,session.sessionId)!}:{}),now:Date.now()});};
   const selected=policy();
   const opportunity:InitiativeOpportunity={...scope,schemaVersion:'1.0.0',recordType:'opportunity',opportunityId:id,correlationId:randomUUID(),conversationId:session.conversationId,sessionId:session.sessionId,endpointId:session.endpoint.endpointId,configurationId:String(config.configurationId),configurationRevision:Number(config.revision),policyRevision:selected.revision,kind:event.kind,category:'social',urgency:'low',sourceKind:'simulatedBrowser',sourceRefs:[`synthetic-event:${event.sourceEventId}`,...(event.topicRef?[event.topicRef]:[])],executionMode:'simulation',observedAt:new Date(event.observedAt).toISOString(),receivedAt:new Date(now).toISOString(),expiresAt:new Date(expires).toISOString(),dedupKey:hash([scope,session.sessionId,event.sourceEventId]),topicKey:event.topicRef??`social:${event.kind}`};
@@ -127,28 +134,41 @@ export class InitiativeHost {
   let prepared:HostRuntimeInput|undefined,preparedViewId:string,preparedCurrent=()=>true;
   const current=()=>!signal.aborted&&context.authorized()&&context.owner()?.boundary===owner.boundary&&policy().allowed&&policy().revision===selected.revision&&preparedCurrent();
   const job:Job={scope,sessionId:session.sessionId,controller,current,reason:'cancelled'};this.jobs.set(id,job);
-  const expiry=setTimeout(()=>{job.reason='expired';controller.abort();},Math.max(1,expires-Date.now()));
+  const expiry=setTimeout(()=>{job.reason=job.speech?'ackTimeout':'expired';controller.abort();},Math.max(1,expires-Date.now()));
   try{
    if(!current())throw new Error('boundary changed');
    row=this.ledger.transition(scope,id,row.version,{type:'eligible'});prepared=context.prepare();preparedCurrent=prepared.isCurrent;prepared={...prepared,isCurrent:current};preparedViewId=randomUUID();
-   const candidate=await this.generator.generateDurably(context.provider,{opportunity,prepared,interactionId:randomUUID(),dimensions:selected.dimensions,maximumOutputTokens:tuning.generationMaxTokens!,deadlineMs:tuning.generationDeadlineSeconds!*1000,conversation:'',voiceMode:false,signal},{ledger:this.ledger,expectedVersion:row.version,limits:{perRelationshipHour:tuning.inferenceCallsPerRelationshipHour!,perRuntimeHour:tuning.inferenceCallsPerRuntimeHour!},current});
+   const candidate=await this.generator.generateDurably(context.provider,{opportunity,prepared,interactionId:randomUUID(),dimensions:selected.dimensions,maximumOutputTokens:tuning.generationMaxTokens!,deadlineMs:tuning.generationDeadlineSeconds!*1000,conversation:'',voiceMode:event.modality==='speech',signal},{ledger:this.ledger,expectedVersion:row.version,limits:{perRelationshipHour:tuning.inferenceCallsPerRelationshipHour!,perRuntimeHour:tuning.inferenceCallsPerRuntimeHour!},current});
    if(candidate.status==='noCandidate'){this.ledger.transition(scope,id,row.version,{type:'finish',state:'suppressed',reasons:['noCandidate']});return this.response(owner,operation);}
    row=this.ledger.transition(scope,id,row.version,{type:'generated',preparedViewId,preparedDigest:candidate.request.sections.find(s=>s.kind==='preparedMemory')!.contentDigest,interactionId:candidate.request.scope.interactionId});
    row=this.ledger.transition(scope,id,row.version,{type:'queue',limits:{perHour:tuning.openingsPerHour!,perDay:tuning.openingsPerDay!,minimumGapMs:tuning.minimumGapSeconds!*1000},current});
-   const receiptId=randomUUID();row=this.ledger.transition(scope,id,row.version,{type:'beginEmission',receiptId,current});
-   const delivery={opportunityId:id,sessionId:session.sessionId,interactionId:candidate.request.scope.interactionId,modality:'text',text:candidate.text,expiresAt:opportunity.expiresAt,captureEnabled:false};
-   // Write the payload prefix before recording emission. Endpoint acceptance still
-   // requires its subsequent authenticated acknowledgment of the completed JSON.
-   context.emit(`{"delivery":${JSON.stringify(delivery)},`,()=>{
+   const receiptId=randomUUID();
+   const delivery={opportunityId:id,sessionId:session.sessionId,interactionId:candidate.request.scope.interactionId,modality:event.modality,text:candidate.text,expiresAt:opportunity.expiresAt,captureEnabled:false};
+   const issued=()=>{
     row=this.ledger.transition(scope,id,row.version,{type:'emitted',receiptId});
-    const result=this.response(owner,operation,[{code:'synthetic_output',summary:'Synthetic text opening emitted. Endpoint acceptance and playback have not been observed.',sourceRefs:[receiptId]}]);delete result.body.delivery;
+    const result=this.response(owner,operation,[{code:'synthetic_output',summary:`Synthetic ${event.modality} opening emitted. Endpoint acceptance and playback are separate. ${event.modality==='speech'?'Prosodic warmth is unsupported by the current speech mapping.':''}`,sourceRefs:[receiptId]}]);delete result.body.delivery;
     return JSON.stringify(result.body).slice(1);
-   });
+   };
+   if(event.modality==='speech'){
+    if(!context.speech?.available())throw new Error('Speech transport unavailable');
+    speechActive=true;
+    let complete:()=>void=()=>{};const played=new Promise<void>(resolve=>{complete=resolve;});job.speech={synthesized:false,complete};
+    await context.speech.speak({text:candidate.text,interactionId:candidate.request.scope.interactionId,endpointId:session.endpoint.endpointId,deadlineAt:opportunity.expiresAt,warmth:selected.expressionWarmth,signal,current,
+     beforeEmission:()=>{row=this.ledger.transition(scope,id,row.version,{type:'beginEmission',receiptId,awaitPlayback:true,current});},
+     emitted:()=>{const suffix=issued();context.emit(`{"delivery":${JSON.stringify(delivery)},`,()=>suffix);},
+     synthesized:async playbackSignal=>{job.speech!.synthesized=true;await new Promise<void>((resolve,reject)=>{const abort=()=>reject(new Error('Playback stopped'));if(playbackSignal.aborted)return abort();playbackSignal.addEventListener('abort',abort,{once:true});void played.then(()=>{playbackSignal.removeEventListener('abort',abort);resolve();});});},
+     interrupted:reason=>{if(reason==='expired')job.reason='ackTimeout';controller.abort();}
+    });
+   }else{
+    row=this.ledger.transition(scope,id,row.version,{type:'beginEmission',receiptId,current});
+    // Prefix issuance is the observed output; metadata never replays its payload.
+    context.emit(`{"delivery":${JSON.stringify(delivery)},`,issued);
+   }
    return undefined;
   }catch{
    const latest=this.ledger.get(scope,id)!;
-   if(active.has(latest.outcome.state)){
-    const restrictions=policy().reasons,state=signal.aborted?'cancelled':latest.outcome.state==='emitted'?'failed':restrictions.length?'suppressed':latest.outcome.state==='eligible'||latest.outcome.state==='queued'?'failed':'suppressed';
+   if(active.has(latest.outcome.state)||job.speech&&latest.outcome.state==='acknowledged'&&latest.outcome.acknowledgmentKind==='endpointAccepted'){
+    const restrictions=policy().reasons,state=signal.aborted?(job.reason==='ackTimeout'&&['emitted','acknowledged'].includes(latest.outcome.lastDeliveryStage)?'unknown':'cancelled'):['emitted','acknowledged'].includes(latest.outcome.state)?'failed':restrictions.length?'suppressed':latest.outcome.state==='eligible'||latest.outcome.state==='queued'?'failed':'suppressed';
     this.ledger.transition(scope,id,latest.version,{type:'finish',state,reasons:signal.aborted?[job.reason]:restrictions.length?restrictions:[latest.outcome.state==='eligible'?'generationFailed':'outputFailed']});
    }
    if(!context.authorized())return extensionError(403,'initiative_scope_changed','Current session authorization no longer permits this operation.');
