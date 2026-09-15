@@ -1,0 +1,139 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-BROWSER-MICROPHONE-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "d595cc4bfd2ddf371919d1d631a7af23d25fda12",
+  "specificationRevision": "372498a0f83718fdbb50b559189205bef5fefab9",
+  "recordedAt": "2026-09-15T03:36:59.742211Z",
+  "sourceFiles": [
+    {
+      "path": "apps/control-web/conversation-capture.js",
+      "sha256": "9d337b758079648805e2e7478cd5fcce1250f7e4234cdb50595f54b2f7404310"
+    },
+    {
+      "path": "apps/control-web/conversation-output.js",
+      "sha256": "f98c1f6d7f2d447406d093f855c18d37403d2688e5d4258c164de40a615d51f2"
+    },
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "64e5824204c722fbb18c2efbb38b42198cbb7f93888c020e518ccfba72f42963"
+    },
+    {
+      "path": "apps/control-web/test/conversation-capture.test.mjs",
+      "sha256": "423bcd159d584eec85e1b0d564f9df8cb2a99927d448b39b77f7ed18a1082091"
+    },
+    {
+      "path": "apps/control-web/test/initiative-conversation.test.mjs",
+      "sha256": "1d8d23c957b96cc1ad147fc6a5c9ed0ff052beeb7756a789fc8ee1cdf905a3ca"
+    },
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "08d6058d8c4b924b8dd9edfd0813d9bb2d42be5f837b12f2bece17c472ed513a"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "8580eb088a08d66458e0920e80638a2f4afa2dd80d9a77fd30cb6117ec622ba9"
+    },
+    {
+      "path": "apps/control-web/workspace.js",
+      "sha256": "8f6bf8e467b14d464a4ac5aa26f1d858e937f2c4365bdd45946aaf9f81ec2e9a"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "d8b9d2756ecd3446724a9d7bb916f45429c4e3f8097009be7e57e73c0b6aefc4"
+    },
+    {
+      "path": "apps/server/src/runtime/initiative-host.ts",
+      "sha256": "6b7c8e4a9ec6106a632ad581e87866ac6292518c0fedec2b3afc7df3b03222f1"
+    },
+    {
+      "path": "apps/server/test/audio-output.test.ts",
+      "sha256": "803c008120af276d18e85705a26d953af9abe1add2854f78b8f339f1f5b178b4"
+    }
+  ],
+  "claims": [
+    "The main Conversation view now offers explicit microphone start and stop beside typed replies. Output readiness never starts capture. Native 16 kHz capture uses the existing local Silero probability detector, configurable SpeechGate, pre-roll and sustained speech/barge-in thresholds. Frame queues and utterances are bounded; only qualified speech is transmitted. No profile/provider switch or speech-recognition fallback is introduced.",
+    "Microphone input and Initiative speech share one authenticated AudioSession WebSocket. Qualified speech stops current browser output before sending PCM; an ordinary committed voice turn preempts the social job and enters normal recognition, context assembly, inference and speech. Recognized user and streamed Assistant turns appear in the same conversation. Ordinary speech accepts bounded consecutive segments and reports completion only after synthesis and scheduled playback end.",
+    "Stop, typed submission, navigation, page hiding, server-side disclosure change and sign-out release capture and output. Late permission or detector setup cannot resurrect a stopped microphone. Cancelled trace IDs are retained in a bounded set so late output cannot interrupt or replay into a successor voice turn.",
+    "AudioSession retains bounded temporary conversation context: at most 20 entries, 16000 characters per entry and 60000 UTF-8 text bytes; its serialized prompt projection is capped at 65536 bytes. Emitted speech openings carry their opportunity reference and are labeled as emission rather than reception. Voice reply prompts use only entries for the same Assistant and relationship whose original context remains current. Closure clears this connection-local history; none is persisted as canonical memory.",
+    "Browser evidence uses an actual isolated authenticated server, synthetic providers, generated silent media tracks and a controlled VAD probability fixture. It verifies one connection, one recognition after interruption, ordinary scoped reply context, absence of a false Initiative playback receipt, continued listening status, explicit Stop, late permission cleanup and capture release on disclosure/navigation/sign-out. Unit coverage separately verifies speech qualification, pre-roll, PCM accounting, bounded utterance length, multi-segment playback, and stale or foreign voice-history exclusion."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "5ce08f76f4dc2aaef56e0eed406066ec8e8ed2b275991acc89215d71809c79bb"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "bb598369ebf129477f12fa4b7b19ab4aa774f141488285fc3d2715ee439d5dd2"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "7cc3c0c75c06283895f44fe9e2be2549515bb6156ca27c825d87e5d2cc3d67e9"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "a4143a106a37b2c8863f639c03d94a3836bfc3c90f9b4b9f7bd3a44f04069720"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 377,
+    "newSourceTests": 1,
+    "browserTests": 41,
+    "newBrowserTests": 6,
+    "toolingTests": 45
+  },
+  "visualArtifacts": [
+    {
+      "kind": "desktop",
+      "sha256": "92ddda3a232fdce1046f263ad1e664ba4376c7b97e3a92ffb181f7ca95564b4c",
+      "retention": "Local synthetic browser screenshot only; not committed"
+    },
+    {
+      "kind": "mobile",
+      "sha256": "723993aed60c8c3ef70f72fab3f12b2eb2ba790b55ccb99e332291501b4d09f5",
+      "retention": "Local synthetic browser screenshot only; not committed"
+    }
+  ],
+  "intermediateFindings": [
+    {
+      "result": "fail",
+      "logSha256": "240bf14244b89ecd9b93a8b50047eebc80f6479e52bd3290ff01ec364d1be00e",
+      "summary": "The initial joined microphone test passed interruption and playback but found an empty prior-opening context. The admission cancellation predicate had incorrectly been reused for historical context. The implementation now uses the original prepared-context validity predicate, keeping cancelled emission inspectable while still dropping stale/private scope. The successor browser test verifies the opening reaches the ordinary voice prompt."
+    },
+    {
+      "summary": "Visual inspection found the microphone status remained Processing after playback. Completion now restores the explicit listening state and updates the conversation status; the final browser test checks both labels."
+    }
+  ],
+  "limitations": [
+    "Controlled probability fixtures and generated silent tracks establish software routing and lifecycle behavior, not physical microphone performance, actual room presence, selected-provider latency or Human audition. The maintained Silero module is reused; no new physical speech-detection qualification was performed.",
+    "Voice history is connection-local. Shared text/voice history across reconnection and text openings still needs a common conversation continuity path; this receipt verifies speech-opening to voice-reply continuity on one connection only. No persisted conversation-history or long-term-memory claim is made.",
+    "Guided host-owned synthetic setup, expression inspection, pinned gradient Lab, reserved acknowledgments, bounded timing adaptation, older-database restore fencing and current-source prerequisite qualifications remain open. Full S083/S084 and PWCE Personal V1 development remains active.",
+    "No saved review service was restarted or deployed. No personal-data import, live configuration change, training, model/provider selection, actual external research or new model-quality observation occurred. Approved schema bytes, historical evidence and unrelated dirty artifacts remain unchanged."
+  ]
+}

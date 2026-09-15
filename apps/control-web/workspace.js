@@ -4,7 +4,7 @@ export function installWorkspace() {
   const $ = selector => document.querySelector(selector);
   const editor = $('.editor'), rail = $('.rail');
   const destinations = [
-    ['conversation','Conversation','Typed replies and explicitly enabled openings in the current session.',['.conversation-room'],'Interact'],
+    ['conversation','Conversation','Typed and spoken replies, with explicitly enabled openings in this session.',['.conversation-room'],'Interact'],
     ['profile','Assistant profile','Identity, presentation and version history.',['#profile-editor','#profile-rollback'],'Manage'],
     ['person','People & context','Your profile and the context you choose to share.',['#user-profile'],'Manage'],
     ['relationship','Relationship setup','Start or skip a relationship review for the selected Assistant.',['#relationship-overview'],'Manage'],

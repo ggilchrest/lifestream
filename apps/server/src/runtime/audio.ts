@@ -24,7 +24,7 @@ export const VOICE_TURN_DEADLINE_MS = 180_000;
 export const SPEECH_SEGMENT_DEADLINE_MS = 45_000;
 export type AudioOutputLease={current:()=>boolean;release:()=>void};
 export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; inputCurrent?: (request: AudioRequest) => boolean; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
-export type OutputOnlySpeech={text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
+export type OutputOnlySpeech={conversation?:{assistantId:string;relationshipId:string;opportunityId:string;current:()=>boolean};text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
 
 async function waitForPreviousOutput(previous:Promise<void>,signal:AbortSignal):Promise<void>{
   let timer:ReturnType<typeof setTimeout>|undefined,abort=()=>{};
@@ -38,6 +38,19 @@ export class AudioSession {
   private readonly socket: AudioSocket;
   private readonly deps: AudioDependencies;
   private readonly sessionId: string;
+  private conversationTurns:Array<{assistantId:string;relationshipId:string|null;interactionId:string;role:"user"|"assistant";text:string;opportunityId?:string;current:()=>boolean}>=[];
+  private rememberTurn(input:typeof this.conversationTurns[number]):void{
+    this.conversationTurns=this.conversationTurns.filter(turn=>{try{return turn.current();}catch{return false;}});
+    const previous=this.conversationTurns.findIndex(turn=>turn.interactionId===input.interactionId&&turn.role===input.role);
+    if(previous>=0)this.conversationTurns.splice(previous,1);
+    this.conversationTurns.push({...input,text:input.text.slice(-16000)});
+    while(this.conversationTurns.length>20||this.conversationTurns.reduce((sum,turn)=>sum+Buffer.byteLength(turn.text,"utf8"),0)>60000)this.conversationTurns.shift();
+  }
+  private conversation(assistantId:string,relationshipId?:string):string{
+    this.conversationTurns=this.conversationTurns.filter(turn=>{try{return turn.current();}catch{return false;}});
+    const turns=this.conversationTurns.filter(turn=>turn.assistantId===assistantId&&turn.relationshipId===(relationshipId??null)).map(({role,text,opportunityId})=>({role,text,...(opportunityId?{opportunityId,observation:"emitted; reception not established"}:{})}));
+    while(Buffer.byteLength(JSON.stringify(turns),"utf8")>65536)turns.shift();return JSON.stringify(turns);
+  }
   private request: AudioRequest | undefined;
   private frames: AudioFrame[] = [];
   private controller: AbortController | undefined;
@@ -86,7 +99,7 @@ export class AudioSession {
         validateAudioFrame(event.frame,request.format);
         if(event.frame.sampleOffset!==samples||event.frame.sequence!==frames||Buffer.from(event.frame.dataBase64,"base64").length!==event.frame.sampleCount*2||samples+event.frame.sampleCount>48000*60)throw new Error("Speech frame accounting is invalid");
         await pacer.admit(event.frame.sampleCount,event.frame.format.sampleRateHz,signal);if(!current())throw new Error("Audio lease or policy changed before emission");
-        if(!started){input.beforeEmission();if(!current())throw new Error("Output-only admission changed");response(this.socket,input.interactionId,this.sequence++,{type:"textDelta",text:input.text});started=true;input.emitted();}
+        if(!started){input.beforeEmission();if(!current())throw new Error("Output-only admission changed");response(this.socket,input.interactionId,this.sequence++,{type:"textDelta",text:input.text});started=true;input.emitted();if(input.conversation)this.rememberTurn({assistantId:input.conversation.assistantId,relationshipId:input.conversation.relationshipId,opportunityId:input.conversation.opportunityId,interactionId:input.interactionId,role:"assistant",text:input.text,current:input.conversation.current});}
         if(!current())throw new Error("Output-only ownership changed");
         send(this.socket,{type:"audio",interactionTraceId:input.interactionId,chunk:{segmentId:event.segmentId,frame:event.frame}});samples+=event.frame.sampleCount;frames++;
       }
@@ -101,7 +114,7 @@ export class AudioSession {
     }finally{clearTimeout(timer);controller.abort();const release=()=>{lease.release();this.controller=undefined;this.interactionTraceId=undefined;this.outputSettlement=undefined;settledOutput();};if(settlement&&!settled)void settlement.catch(()=>undefined).then(release);else release();}
   }
 
-  close(): void { this.closed = true;this.lifetime.abort(); this.frames = []; this.voiceSettings = { ...defaultVoiceSettings }; this.request = undefined; this.controller?.abort(); this.socket.close(1001, "audio session closed"); }
+  close(): void { this.closed = true;this.lifetime.abort(); this.frames = [];this.conversationTurns=[]; this.voiceSettings = { ...defaultVoiceSettings }; this.request = undefined; this.controller?.abort(); this.socket.close(1001, "audio session closed"); }
   private ensureInputCurrent(request = this.request): boolean {
     if (!request) return !this.closed;
     let current = false;
@@ -197,7 +210,9 @@ export class AudioSession {
       if (controller.signal.aborted) throw new Error("audio turn interrupted");
         this.currentInput = this.deps.prepare?.({ ...(request.assistantId ? { assistantId: request.assistantId } : {}), ...(request.relationshipId ? { relationshipId: request.relationshipId } : {}), endpointId: request.endpointId, userInput: transcript });
         outputLease=this.deps.outputLease?.(this.currentInput?.endpointId??request.endpointId,deadlineAt);
-        const prompt = buildCanonicalPrompt({ assistantId: this.currentInput?.assistantId ?? this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: this.currentInput?.endpointId ?? request.endpointId, userInput: transcript, deadlineAt, executionMode: "live", voiceMode: true, ...(this.currentInput ? { runtimeSelfContext: this.currentInput.runtimeSelfContext, ...(this.currentInput.profileProjection ? { profileProjection: this.currentInput.profileProjection } : {}), ...(this.currentInput.preparedRelationshipContext ? { preparedRelationshipContext: this.currentInput.preparedRelationshipContext } : {}) } : {}) });
+        const prompt = buildCanonicalPrompt({ assistantId: this.currentInput?.assistantId ?? this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: this.currentInput?.endpointId ?? request.endpointId, userInput: transcript, conversation:this.conversation(this.currentInput?.assistantId??this.identity.assistantId,request.relationshipId), deadlineAt, executionMode: "live", voiceMode: true, ...(this.currentInput ? { runtimeSelfContext: this.currentInput.runtimeSelfContext, ...(this.currentInput.profileProjection ? { profileProjection: this.currentInput.profileProjection } : {}), ...(this.currentInput.preparedRelationshipContext ? { preparedRelationshipContext: this.currentInput.preparedRelationshipContext } : {}) } : {}) });
+        const turnScope={assistantId:this.currentInput?.assistantId??this.identity.assistantId,relationshipId:request.relationshipId??null,interactionId:traceId,current:this.currentInput?.isCurrent??current};
+        this.rememberTurn({...turnScope,role:"user",text:transcript});
         let answer = "";
         const segmenter = new SpeechSafeSegmenter(360);
         const queue = new SpeechQueue(controller.signal);
@@ -229,7 +244,7 @@ export class AudioSession {
         for await (const chunk of this.deps.inference.generate(prompt, { signal: controller.signal })) {
           this.invalidateIfStale();
           if (controller.signal.aborted) throw new Error("audio turn interrupted");
-          if (chunk.kind === "text" && chunk.text) { answer += chunk.text; if (answer.length > 16_384) throw new Error("voice response text limit exceeded"); response(this.socket, traceId, this.sequence++, { type: "textDelta", text: chunk.text }); for (const segment of segmenter.push(chunk.text)) await queue.put(segment.text); }
+          if (chunk.kind === "text" && chunk.text) { answer += chunk.text; if (answer.length > 16_384) throw new Error("voice response text limit exceeded"); response(this.socket, traceId, this.sequence++, { type: "textDelta", text: chunk.text });this.rememberTurn({...turnScope,role:"assistant",text:answer}); for (const segment of segmenter.push(chunk.text)) await queue.put(segment.text); }
           if (chunk.kind === "capabilityRequest" && chunk.capability?.effect === "read-only") response(this.socket, traceId, this.sequence++, { type: "capabilityStatus", result: { capabilityName: chunk.capability.name, state: "selected", effect: "read-only", outcome: "notDispatched" } });
           if (chunk.kind === "error") throw new Error(chunk.error?.message ?? "inference failed");
         }

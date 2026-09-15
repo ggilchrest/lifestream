@@ -94,3 +94,5 @@
 @media(max-width:1050px){.room-layout{grid-template-columns:minmax(0,1fr)}.room-setup{display:block}.room-turn{padding:16px}.room-history .section-head{align-items:start;flex-direction:column}}
 
 .room-setup{margin:0}.room-setup>summary{font-size:20px;color:#163351}.room-history .record-fields,.room-turn .record-fields{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px 16px}.room-history dt,.room-turn dt{font-weight:650;color:var(--muted)}.room-history dd,.room-turn dd{margin:0;overflow-wrap:anywhere}.room-history>p{max-width:70ch}@media(max-width:600px){.room-history .record-fields,.room-turn .record-fields{grid-template-columns:minmax(100px,.8fr) minmax(0,1.2fr);gap:12px}.room-turn header{gap:4px}}
+
+.room-microphone{border-top:1px solid var(--line);margin-top:20px;padding-top:20px}.room-microphone>p{margin:12px 0}.room-microphone .actions{gap:12px}

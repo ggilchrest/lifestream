@@ -154,7 +154,7 @@ export class InitiativeHost {
     if(!context.speech?.available())throw new Error('Speech transport unavailable');
     speechActive=true;
     let complete:()=>void=()=>{};const played=new Promise<void>(resolve=>{complete=resolve;});job.speech={synthesized:false,complete};
-    await context.speech.speak({text:candidate.text,interactionId:candidate.request.scope.interactionId,endpointId:session.endpoint.endpointId,deadlineAt:opportunity.expiresAt,warmth:selected.expressionWarmth,signal,current,
+    await context.speech.speak({conversation:{assistantId:owner.scope.assistantId,relationshipId:owner.scope.relationshipId,opportunityId:opportunity.opportunityId,current:preparedCurrent},text:candidate.text,interactionId:candidate.request.scope.interactionId,endpointId:session.endpoint.endpointId,deadlineAt:opportunity.expiresAt,warmth:selected.expressionWarmth,signal,current,
      beforeEmission:()=>{row=this.ledger.transition(scope,id,row.version,{type:'beginEmission',receiptId,awaitPlayback:true,current});},
      emitted:()=>{const suffix=issued();context.emit(`{"delivery":${JSON.stringify(delivery)},`,()=>suffix);},
      synthesized:async playbackSignal=>{job.speech!.synthesized=true;await new Promise<void>((resolve,reject)=>{const abort=()=>reject(new Error('Playback stopped'));if(playbackSignal.aborted)return abort();playbackSignal.addEventListener('abort',abort,{once:true});void played.then(()=>{playbackSignal.removeEventListener('abort',abort);resolve();});});},

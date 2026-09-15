@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "6b3558602a7e8ecd311a82783cbc94a40e93e1b0",
+  "currentRevision": "d595cc4bfd2ddf371919d1d631a7af23d25fda12",
   "activeSlice": "LS-S083",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -151,56 +151,66 @@
     "apps/control-web/conversation-output.js",
     "apps/control-web/test/initiative-conversation.test.mjs",
     "implementation/evidence/S083-BROWSER-CONVERSATION-1.json",
-    "implementation/evidence/S083-AUDIO-INPUT-CURRENCY-1.json"
+    "implementation/evidence/S083-AUDIO-INPUT-CURRENCY-1.json",
+    "apps/control-web/conversation-capture.js",
+    "apps/control-web/test/conversation-capture.test.mjs",
+    "implementation/evidence/S083-BROWSER-MICROPHONE-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/index.ts",
+    "apps/control-web/conversation-capture.js",
+    "apps/control-web/conversation-output.js",
+    "apps/control-web/conversation-room.js",
+    "apps/control-web/test/conversation-capture.test.mjs",
+    "apps/control-web/test/initiative-conversation.test.mjs",
+    "apps/control-web/DESIGN.md",
+    "apps/control-web/styles.css",
+    "apps/control-web/workspace.js",
     "apps/server/src/runtime/audio.ts",
-    "apps/server/test/audio.test.ts",
-    "apps/server/test/initiative-host.test.ts",
-    "implementation/evidence/S083-AUDIO-INPUT-CURRENCY-1.json",
+    "apps/server/src/runtime/initiative-host.ts",
+    "apps/server/test/audio-output.test.ts",
+    "implementation/evidence/S083-BROWSER-MICROPHONE-1.json",
     "implementation/checkpoint.json"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-AUDIO-INPUT-CURRENCY-1.json"
+      "evidence": "implementation/evidence/S083-BROWSER-MICROPHONE-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-AUDIO-INPUT-CURRENCY-1.json"
+      "evidence": "implementation/evidence/S083-BROWSER-MICROPHONE-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-AUDIO-INPUT-CURRENCY-1.json"
+      "evidence": "implementation/evidence/S083-BROWSER-MICROPHONE-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-AUDIO-INPUT-CURRENCY-1.json"
+      "evidence": "implementation/evidence/S083-BROWSER-MICROPHONE-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-AUDIO-INPUT-CURRENCY-1.json"
+      "evidence": "implementation/evidence/S083-BROWSER-MICROPHONE-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-AUDIO-INPUT-CURRENCY-1.json"
+      "evidence": "implementation/evidence/S083-BROWSER-MICROPHONE-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-AUDIO-INPUT-CURRENCY-1.json"
+      "evidence": "implementation/evidence/S083-BROWSER-MICROPHONE-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-AUDIO-INPUT-CURRENCY-1.json"
+      "evidence": "implementation/evidence/S083-BROWSER-MICROPHONE-1.json"
     }
   ],
   "decisions": [
@@ -215,8 +225,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Integrate and verify the browser microphone and ordinary audio lifecycle with Initiative readiness and cancellation; provide a guided host-owned synthetic test setup. Finish expression inspection, pinned gradient Lab, reserved acknowledgments, bounded timing adaptation and older-database restore fencing. Continue S084 semantic Discovery/exploration/qualified analysis/actual-output/performance while preserving historical failed observations. Refresh current-source prerequisites and complete PWCE Personal V1 T5 core mapping. Do not infer full S083/S084 or Human acceptance.",
-  "updatedAt": "2026-09-15T03:20:01.963558Z",
+  "nextAction": "Complete common text/voice conversation continuity across reconnects and text openings, then provide guided host-owned synthetic setup. Finish expression inspection, pinned gradient Lab, reserved acknowledgments, bounded timing adaptation and older-database restore fencing. Continue S084 semantic Discovery/exploration/qualified analysis/actual-output/performance while preserving historical failed observations. Refresh current-source prerequisites and complete PWCE Personal V1 T5 core mapping. Do not infer full S083/S084 or Human acceptance.",
+  "updatedAt": "2026-09-15T03:36:59.742211Z",
   "updatedBy": "Codex",
-  "notes": "Audio input currency component verified: authenticated start, capture, queue and recognition are bound to the current session revision and audio endpoint; disclosure changes close stale capture. Browser voice integration and complete S083/S084/PWCE qualification remain active."
+  "notes": "First-party microphone component verified with synthetic capture: same-connection speech interruption and ordinary scoped voice reply, truthful playback state, late-permission and scope cleanup. Full S083/S084/PWCE qualification remains in progress."
 }

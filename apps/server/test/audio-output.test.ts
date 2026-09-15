@@ -113,3 +113,18 @@ test('a provider that will not settle produces a bounded ordinary-reply error wi
  try{await assert.rejects(pending);await committed;assert.equal(foreground,0);assert.equal(f.counts().sttCalls,0);assert.equal(f.events.at(-1).problem.code,'audio_previous_output_unsettled');assert.equal(f.session.outputAvailable,false);}finally{release();await new Promise(r=>setImmediate(r));}
  assert.equal(f.session.outputAvailable,true);
 });
+
+test('voice reply context retains only current openings from the same Assistant and relationship',async()=>{
+ for(const mode of ['same','otherAssistant','otherRelationship','forgotten']){
+  const f=fixture(),assistantId=randomUUID(),relationshipId=randomUUID(),opportunityId=randomUUID(),prompts:any[]=[];let current=true;
+  f.input.conversation={assistantId,relationshipId,opportunityId,current:()=>current};f.input.text='SCOPED_SYNTHETIC_OPENING';await f.session.speakOutputOnly(f.input);if(mode==='forgotten')current=false;
+  f.deps.prepare=(input:any)=>({assistantId:input.assistantId,isCurrent:()=>true});
+  f.deps.stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Synthetic spoken response.'}};yield {kind:'terminal',outcome:'succeeded'};}};
+  f.deps.inference={async *generate(prompt:any){prompts.push(prompt);yield {kind:'text',text:'Synthetic voice answer.'};yield {kind:'done'};}};
+  const audioInputId=randomUUID(),format={encoding:'pcm_s16le',sampleRateHz:16000,channels:1};await f.session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId:f.sessionId,expectedSessionRevision:1,endpointId:f.endpointId,audioInputId,format,assistantId:mode==='otherAssistant'?randomUUID():assistantId,relationshipId:mode==='otherRelationship'?randomUUID():relationshipId}}));
+  for(let i=0;i<2;i++){await f.session.message(JSON.stringify({type:'frame',audioInputId,frame:{...f.frame(),format}}));await f.session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:10}));}
+  assert.equal(prompts.length,2);const prior=prompts[0].sections.find((s:any)=>s.kind==='conversation').content;
+  if(mode==='same'){assert.match(prior,/SCOPED_SYNTHETIC_OPENING/);assert.match(prior,new RegExp(opportunityId));}else assert.doesNotMatch(prior,/SCOPED_SYNTHETIC_OPENING/,mode);
+  assert.match(prompts[1].sections.find((s:any)=>s.kind==='conversation').content,/Synthetic spoken response/);assert.match(prompts[1].sections.find((s:any)=>s.kind==='conversation').content,/Synthetic voice answer/);f.session.close();
+ }
+});
