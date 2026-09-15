@@ -65,7 +65,8 @@ export async function setup(t: { after(callback: () => unknown): void }, configu
     const response = await fetch(base + path, { method: body === undefined ? 'GET' : 'POST', headers: { ...headers, ...extra }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(10_000) });
     return { status: response.status, body: await response.json() as any, cookie: response.headers.get('set-cookie')?.split(';')[0] };
   };
-  const session = await send('/api/auth/v1/setup', { username: 'owner', password: secret(), installerToken }); assert.equal(session.status, 201, JSON.stringify(session.body));
+  const password = secret();
+  const session = await send('/api/auth/v1/setup', { username: 'owner', password, installerToken }); assert.equal(session.status, 201, JSON.stringify(session.body));
   headers.cookie = session.cookie!; headers['x-lifestream-csrf'] = session.body.session.csrfToken;
   const assistant = await send('/api/admin/v1/assistants', { displayName: 'Synthetic prepared capability' }); assert.equal(assistant.status, 201);
   const endpoint = await send('/api/runtime/v1/session-context', { expectedRevision: 0, mode: 'text', audienceScope: 'authenticatedSession' }); assert.equal(endpoint.status, 200);
@@ -76,6 +77,7 @@ export async function setup(t: { after(callback: () => unknown): void }, configu
   const create = async (prepared: any) => { const { environmentId: _environment, sideEffectClass: _effect, ...payload } = prepared.request; return send('/api/authority/v1/requests', envelope(payload)); };
   const approve = async (request: any) => send(`/api/authority/v1/requests/${request.requestId}/approve`, envelope({ requestId: request.requestId, expectedRevision: request.revision, confirmationDigest: request.confirmationDigest, grantClass: request.requestedClass, expiresAt: request.grantExpiresAt, reviewAfter: request.reviewAfter }));
   return { send, db, path, body, create, approve,
+    signInAgain: () => send('/api/auth/v1/sign-in', { username: 'owner', password, totp: '' }),
     lastInvocation: () => lastInvocation, lastStatusRequest: () => lastStatusRequest,
     statusMode(mode: string) { statusMode = mode; }, counters: () => ({ invoke: calls, catalog: catalogCalls, evaluate: evaluationCalls, status: statusCalls }),
     blockStatus() { let release!: () => void; const started = new Promise<void>(resolve => { statusEntered = resolve; }); statusWait = new Promise<void>(resolve => { release = resolve; }); t.after(() => release()); return { started, release }; },

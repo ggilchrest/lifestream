@@ -103,3 +103,38 @@
 .initiative-lab > details { margin-top: .75rem; }
 
 .initiative-lab details table th:first-child { white-space: nowrap; min-width: 4rem; }
+
+/* Permissions: shared clear-sky tokens, separate destinations and adjacent decisions. */
+.security-page .shell{max-width:1440px;padding:24px}
+.security-header{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:24px}
+.security-header h1{margin:4px 0}.security-header p{margin:8px 0}
+.security-layout{display:grid;grid-template-columns:250px minmax(0,1fr);align-items:start;gap:24px;margin-top:24px}
+.security-page .card{min-width:0}.security-content{min-width:0}
+.security-content>.card,.security-content section>.card{margin:20px 0}
+.security-rail nav{display:grid;gap:8px;margin:24px 0}
+.security-rail nav a{padding:12px;border-radius:9px;text-decoration:none;color:#18314c;min-height:44px;box-sizing:border-box}
+.security-rail nav a[aria-current=page]{background:#deebff;font-weight:700;border-left:4px solid #2874bf}
+.security-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 16px}
+.security-tabs button[aria-pressed=false]{background:#fff;color:#18314c;border:1px solid #9db4ca}
+.security-page button,.security-page select,.security-page summary{min-height:44px}
+.security-page [hidden]{display:none!important}.security-page input,.security-page select,.security-page textarea{box-sizing:border-box;max-width:100%;width:100%}
+.security-page label{display:block;margin:12px 0}.security-page input[type=checkbox]{width:22px;min-height:22px;height:22px;flex-shrink:0}
+.security-page .security-confirm{display:flex;align-items:flex-start;gap:12px;padding:16px;background:#edf3ff;border-radius:12px}
+.security-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px}
+.security-fields{display:grid;grid-template-columns:minmax(120px,1fr) minmax(0,3fr);gap:12px 20px;margin:16px 0}
+.security-fields dt{font-weight:600}.security-fields dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.security-id,.security-page pre{overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;font-size:13px}
+.security-table{width:100%;border-collapse:collapse;margin:16px 0;table-layout:fixed}
+.security-table th,.security-table td{text-align:left;padding:12px 8px;border-bottom:1px solid #c9d9e9;vertical-align:top;overflow-wrap:anywhere}
+.security-table th{font-size:13px;background:#edf3fb}.security-table td{font-size:14px}
+.security-table th:first-child{width:32%}.security-table button{width:100%;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.security-page summary{cursor:pointer;align-content:center;font-weight:600}.security-page details{margin:16px 0}
+.security-page .actions{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.security-outcome{border-left:4px solid #2874bf;padding:16px;background:#edf3fb;margin-top:20px}
+.security-page :focus-visible{outline:3px solid #794be2;outline-offset:3px}
+.security-page #cap-status:not(:empty),.security-page #security-status:not(:empty){padding:12px 16px;background:#fff;border:1px solid #c9d9e9;border-radius:9px;overflow-wrap:anywhere}
+@media(max-width:760px){.security-page .shell{padding:12px}.security-layout{grid-template-columns:minmax(0,1fr);gap:16px}.security-header{align-items:start;flex-direction:column;gap:8px}.security-rail nav{grid-template-columns:repeat(2,minmax(0,1fr));margin:12px 0}.security-grid{grid-template-columns:minmax(0,1fr)}.security-fields{grid-template-columns:minmax(0,1fr);gap:4px}.security-fields dd{margin-bottom:12px}.security-table thead{display:none}.security-table,.security-table tbody,.security-table tr,.security-table td{display:block;width:auto}.security-table tr{border:1px solid #c9d9e9;border-radius:12px;margin:16px 0;padding:12px;background:#fff}.security-table td{border:0;padding:6px 0}.security-table td::before{content:attr(data-label);display:block;font-size:12px;font-weight:700;color:#506782;margin-bottom:4px}.security-tabs button{flex:1 1 100px}.security-page .card{padding:16px}}
+
+@media(min-width:761px){.security-page #security-navigation>summary{display:none}}
+@media(max-width:760px){.security-page .security-nav-hint{display:none}.security-page #security-navigation{margin-bottom:0}}
+.security-page .skip-link:not(:focus){clip-path:inset(50%);width:1px;height:1px;overflow:hidden;white-space:nowrap;padding:0}

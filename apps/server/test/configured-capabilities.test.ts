@@ -104,3 +104,45 @@ test('configured static fixture emits a scoped gap and a valid finite terminal w
   assert.equal(events[1]!.kind, 'terminal');
   if (events[1]!.kind === 'terminal') assert.equal(events[1]!.outcome.status, 'succeeded');
 });
+
+
+test('prepared action inspection preserves exact input and retry key through approval and restart without dispatch', async t => {
+  const f = await setup(t, 'startup'), input = f.body(), p = await prepared(f, input);
+  const path = toolsPath(f) + `/invocations/${p.request.invocationId}/preparation`;
+  const inspect = async () => {
+    const r = await f.send(path); assert.equal(r.status, 200, JSON.stringify(r.body));
+    assert.deepEqual(r.body.preparation, p); assert.deepEqual(r.body.input, input.input);
+    assert.equal(r.body.idempotencyKey, input.idempotencyKey); assert.equal(r.body.grantsAuthority, false);
+    assert.equal(r.body.dispatchStarted, false); assert.equal(r.body.inputSchema.type, 'object');
+    assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS count FROM canonical_dispatch_claims').get()!.count, 0);
+    return r.body;
+  };
+  await inspect(); const created = await f.create(p); await f.approve(created.body.result);
+  await f.restart(); await inspect();
+  assert.equal((await f.send(path, undefined, { cookie: '' })).status, 401);
+  assert.equal((await f.send(path + '?input=override')).status, 422);
+  assert.equal((await f.send(path, {})).status, 405);
+  assert.equal((await f.send(path.replace(p.request.invocationId, randomUUID()))).status, 404);
+  assert.equal((await f.send(path.replace(p.request.assistantId, randomUUID()))).status, 403);
+  await f.send('/api/runtime/v1/session-context', { expectedRevision: 1, mode: 'text', audienceScope: 'unknown' });
+  assert.notEqual((await f.send(path)).status, 200);
+});
+
+test('prepared action inspection refuses withdrawn schema access and provider changes', async t => {
+  const f = await setup(t), p = await prepared(f);
+  const path = toolsPath(f) + `/invocations/${p.request.invocationId}/preparation`;
+  assert.equal((await f.send(path)).status, 200); f.denySchemas();
+  assert.notEqual((await f.send(path)).status, 200);
+  const other = await setup(t, 'startup'), q = await prepared(other); other.changeProvider();
+  assert.notEqual((await other.send(toolsPath(other) + `/invocations/${q.request.invocationId}/preparation`)).status, 200);
+});
+
+
+test('prepared arguments belong to their original session even for a second login by the same Owner', async t => {
+  const f = await setup(t, 'startup'), p = await prepared(f), path = toolsPath(f) + `/invocations/${p.request.invocationId}/preparation`;
+  const second = await f.signInAgain(); assert.equal(second.status, 200);
+  const headers = { cookie: second.cookie!, 'x-lifestream-csrf': second.body.session.csrfToken };
+  assert.equal((await f.send('/api/runtime/v1/session-context', { expectedRevision: 0, mode: 'text', audienceScope: 'authenticatedSession' }, headers)).status, 200);
+  assert.equal((await f.send(path, undefined, headers)).status, 404);
+  assert.equal((await f.send(path)).status, 200);
+});

@@ -1,0 +1,205 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S044-CANONICAL-CONTROL-1",
+  "slice": "LS-S044",
+  "status": "componentVerified",
+  "sourceRevision": "05675c4ed548c7a7caee9ad326c395f776534674",
+  "specificationRevision": "29b6cc56e80fd8afac76968c8ae7bab45c058c77",
+  "recordedAt": "2026-09-15T16:42:57.733Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/control-web/DESIGN.md",
+        "sha256": "5518c68e233993cc7847808330b328b1da1339810689ee7f7253820d064a5ff1"
+      },
+      {
+        "path": "apps/control-web/auth.js",
+        "sha256": "a03c61adc09373f65d68efbc251f751f4fc0b31c4448f89b0a30e0992f501551"
+      },
+      {
+        "path": "apps/control-web/capability-permissions.js",
+        "sha256": "70d997f434a3baa58e948647712c7ae07473ca6cd49031d9a433d0159d8f6bb6"
+      },
+      {
+        "path": "apps/control-web/security.html",
+        "sha256": "671fc1b29cf197c10ad3eb6076ccb8bcd804a9153ccd8ce6077a4f988cc2090d"
+      },
+      {
+        "path": "apps/control-web/security.js",
+        "sha256": "fa906e7b77bca598ba7d1d340cf6aa232acf58ff1f06fac1959f1c973986b5e3"
+      },
+      {
+        "path": "apps/control-web/styles.css",
+        "sha256": "b879a0a56412ce84400fc980f3f02a6fca62a48bb8432a19c4ad3672be51115a"
+      },
+      {
+        "path": "apps/control-web/test/canonical-permissions.test.mjs",
+        "sha256": "303b882e3b1d95fc6e0080c40986478f755cb03f50ce446f102f181f119c00de"
+      },
+      {
+        "path": "apps/control-web/test/local-auth.test.mjs",
+        "sha256": "017a353af52eadaccd75d9ddc7ff38fc78b0369598968b83b471eb2f629640af"
+      },
+      {
+        "path": "apps/server/src/authority/capability-preparation.ts",
+        "sha256": "2b90918967423b84308f45b2b43f93a4c83f2ac6681e309547aa719a6a918ae0"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "17fa5a6786eaecf930a349b367413579cca5807df8fd53752c64339f5dd5be13"
+      },
+      {
+        "path": "apps/server/test/configured-capabilities.test.ts",
+        "sha256": "6fcf8c418ce7984e1c904e3ddd239af241a422007199d274aa8822a6d8960d7c"
+      },
+      {
+        "path": "apps/server/test/fixtures/canonical-capability.ts",
+        "sha256": "e170f2ce22485784495d6e6b03b468871096cb09cef1643fe958d0a194fdb51d"
+      },
+      {
+        "path": "apps/server/test/server.test.ts",
+        "sha256": "d54d1ec30aace9a64f86b1ea05940d49c88621f7b91c0fb0f92c5f32895d45d4"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "e3f91c8bb1d98e7e2199ced3be64b094848792f739be87c8ee0445cc02229f9a"
+      },
+      {
+        "path": "scripts/check-canonical-control-browser.mjs",
+        "sha256": "3b62b86273c412cd5fe0dd2010a8fe90ac7482293bb90b32dec7bf6e56ed1e47"
+      }
+    ]
+  },
+  "claim": "The configured canonical fixture capability path is operable through the actual authenticated control page: scoped catalog and exact prepared-input review, original-session reload/restart inspection, pinned approval/denial, grant history/revocation, explicit dispatch, safe original-command retry and durable result inspection. Account, Skill and proposal workflows remain separately navigable.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "detail": "675 application tests; zero skipped",
+      "log": "canonical-control-full.log",
+      "logSha256": "9e7809a254a0f6f483c173deb58170afc964aac43072ed72f85a93ada1272a1a"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed module> node scripts/check-canonical-control-browser.mjs",
+      "result": "pass",
+      "detail": "2 real Chrome journeys; zero skipped",
+      "log": "canonical-control-browser-release.log",
+      "logSha256": "a85227a86c05bb839057aaf36ddeea6c5ce16cdcce224227e1e23b6f2ddc7409"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "detail": "pass",
+      "log": "canonical-control-typecheck-complete.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "detail": "pass",
+      "log": "canonical-control-build-complete.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "detail": "pass",
+      "log": "canonical-control-lint-release.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "detail": "43 checks",
+      "log": "canonical-control-workspace-tests.log",
+      "logSha256": "49e81731bf8826e3dd694aee9d6c24c57bba2ef15517129f98157c3660902a88"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "detail": "specification consistency only",
+      "log": "canonical-control-private-final.log",
+      "logSha256": "b0c32bdda2517488cbc15aca0e31241d91d4784300ce40f2a63d97a0ea2d847a"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "detail": "19 passed; 30 optional browser checks skipped in this command; the two affected journeys ran separately",
+      "log": "canonical-control-surface.log",
+      "logSha256": "3557c8729e8e7a15f308d2b5df6aeb6d020580610a3dc45d0fc2e67cf72dc7fa"
+    }
+  ],
+  "verifiedBehaviors": [
+    "Original preparation is readable only by its owning authenticated session with current Assistant/endpoint/provider/schema access; no grant or dispatch on GET.",
+    "A second login by the same Owner cannot read the first session preparation.",
+    "Browser reload preserves the original arguments and preparation idempotency key.",
+    "Lost approval and lost dispatch responses reuse identical commands; the dispatched action has one initial claim.",
+    "Persistent permission reuse admits a freshly prepared matching action without a new grant.",
+    "Denial, stale revision rejection, revocation and expired authentication preserve server authority and clear obsolete actions.",
+    "Request pages are bounded, preserve unique identities across next-page reads and support server state filtering.",
+    "Actual script-like input is rendered as text.",
+    "Desktop 1440x900, 390x844 and 320px page widths and a 720px reflow equivalent to 200% of a 1440px viewport have no horizontal page overflow; keyboard approval was exercised.",
+    "Browser restart exposed old HTTP sockets reaching a stopped server. Bounded shutdown now closes remaining connections, with a separate socket regression test."
+  ],
+  "captureFiles": [
+    {
+      "path": "captures/admitted-result.png",
+      "sha256": "16f98b01646c01748fca736e55731ac38c693aada1e30f3593db6fd10b601719"
+    },
+    {
+      "path": "captures/denied.png",
+      "sha256": "f1585a63665a569aac1053d8c2016ec9e4a09a5d942ed00acc68f32ceff49757"
+    },
+    {
+      "path": "captures/desktop-200-percent-equivalent.png",
+      "sha256": "8fa618bdbcc95a718ef0727816f4e7a604bcb6da0720e37f0ffe6841c1401718"
+    },
+    {
+      "path": "captures/expired-authentication.png",
+      "sha256": "2557ee3514ce23f30057ce12f2e71e1cc29fc36923e08c4933609ec23350266b"
+    },
+    {
+      "path": "captures/pending-320.png",
+      "sha256": "1c37d55305c8c72ce6e8bb6f7596e48dbe9f7f90d39c43dbb5469b37de5bbf34"
+    },
+    {
+      "path": "captures/pending-390.png",
+      "sha256": "e95aee2d3944c9c7bd42c126168f3b305128367b27abcfc4acfab7067c708cc0"
+    },
+    {
+      "path": "captures/pending-once-desktop.png",
+      "sha256": "6deb700a5743b35392d2cd2311d7404d0e655773939bb362d67b99ccd86c7152"
+    },
+    {
+      "path": "captures/persistent-review.png",
+      "sha256": "3c762938d52beef22b4912f16a3cd83fdb966eeae4db067b76f1aa40cdc795d6"
+    },
+    {
+      "path": "captures/revocation.png",
+      "sha256": "aefb8fa5548b5dfadc5c9e30f3d8c08793e36678f075275365d3e8d1d61d25dd"
+    },
+    {
+      "path": "captures/stale.png",
+      "sha256": "d21f1508ebf6ade07df700ca906dcd21c08934fb074e8a4c0a2bc0ac16a21064"
+    },
+    {
+      "path": "captures/unknown-approval-outcome.png",
+      "sha256": "a24f25506ad7dfa7276e6d60b1ee3d527957f3291664559a548a914b3f9b4cb8"
+    }
+  ],
+  "localArchive": ".lifestream/benchmarks/canonical-control/2026-09-15",
+  "preservedFailures": [
+    "Early browser checks exposed old HTTP connections surviving shutdown and the omission of the required denial/cancellation confirmation digest; both are fixed and regression checked.",
+    "Intermediate harness failures included a source/dist import mismatch, navigation timing and unread socket data; their logs are retained."
+  ],
+  "exclusions": [
+    "No new Human acceptance.",
+    "No saved Human-review service restart, deployment or live configuration change.",
+    "No personal-data import, training, provider/model change or physical effect.",
+    "No selected-provider certification or new SYNPRJ_Q7M4 result; its existing nonblocking history is unchanged.",
+    "No claim that this fixture UI run supplies the missing configured PWCE authority/capability adapter or broader S083/S084 qualification.",
+    "The 720px reflow check is not a claim of actual browser zoom, comprehensive accessibility certification or perceptual acceptance."
+  ]
+}

@@ -3,9 +3,9 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "54321218abad9f08f80a43cf8622f54535258bee",
+  "currentRevision": "05675c4ed548c7a7caee9ad326c395f776534674",
   "activeSlice": "LS-S044",
-  "sliceStatus": "blocked",
+  "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
     "LS-S002",
@@ -92,13 +92,72 @@
     "apps/control-web/test/canonical-permissions.test.mjs",
     "scripts/check-canonical-control-browser.mjs",
     "implementation/evidence/LS-S044-CANONICAL-CONTROL-1.json",
-    "docs/canonical-provider-boundary.md"
+    "docs/canonical-provider-boundary.md",
+    "apps/control-web/test/local-auth.test.mjs",
+    "apps/server/test/fixtures/canonical-capability.ts",
+    "apps/server/test/server.test.ts"
   ],
   "changedFiles": [
     "apps/control-web/DESIGN.md",
-    "implementation/checkpoint.json"
+    "apps/control-web/auth.js",
+    "apps/control-web/capability-permissions.js",
+    "apps/control-web/security.html",
+    "apps/control-web/security.js",
+    "apps/control-web/styles.css",
+    "apps/control-web/test/canonical-permissions.test.mjs",
+    "apps/control-web/test/local-auth.test.mjs",
+    "apps/server/src/authority/capability-preparation.ts",
+    "apps/server/src/index.ts",
+    "apps/server/test/configured-capabilities.test.ts",
+    "apps/server/test/fixtures/canonical-capability.ts",
+    "apps/server/test/server.test.ts",
+    "docs/canonical-provider-boundary.md",
+    "implementation/checkpoint.json",
+    "implementation/evidence/LS-S044-CANONICAL-CONTROL-1.json",
+    "scripts/check-canonical-control-browser.mjs"
   ],
-  "validation": [],
+  "validation": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S044-CANONICAL-CONTROL-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed module> node scripts/check-canonical-control-browser.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S044-CANONICAL-CONTROL-1.json"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S044-CANONICAL-CONTROL-1.json"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S044-CANONICAL-CONTROL-1.json"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S044-CANONICAL-CONTROL-1.json"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S044-CANONICAL-CONTROL-1.json"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S044-CANONICAL-CONTROL-1.json"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S044-CANONICAL-CONTROL-1.json"
+    }
+  ],
   "decisions": [
     "WSL development isolation remains application-level: host physical GPU index 1 is exposed as provider-local cuda:0 through CUDA_VISIBLE_DEVICES=1; strict container GPU invisibility is not claimed.",
     "LS-DEC-038 adds an explicitly selected Mac-local development fallback using Ollama Qwen3.5 2B Q4_K_M plus native MLX VoxCPM2 4-bit TTS and compact English Moonshine Tiny STT; no automatic failover or NeMo-equivalent streaming partials are claimed.",
@@ -108,13 +167,12 @@
     "2026-09-14: operator explicitly accepts combined S080/S081 Human review; all eleven guide steps passed. Record implementation/evidence/LS-S081-human-acceptance-1.json. Prior no-Human-acceptance/pending wording is superseded for this explicit Human decision only.",
     "2026-09-14: operator directs identifier-output compliance failures to nonblocking model-quality tracking and model selection after development. Prepared input, privacy and application completion remain hard requirements.",
     "2026-09-14: operator explicitly authorizes S083 and S084 implementation and verification: Continue with both. Earlier recovery stop is satisfied and superseded for these slices. Separate private machine export, live configuration, physical effects, provider selection, training and Human acceptance boundaries remain.",
-    "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
+    "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion.",
+    "2026-09-15: operator explicitly authorizes continued development and supersedes the previous implementation restriction; existing scoped push authorization continues."
   ],
-  "blockers": [
-    "Automatic approval review rejected public push 5432121 twice and then rejected the next implementation edit, applying AGENTS.md:164 (September 11 planning-only pass) despite the later active development goal and push authorization. Explicit operator confirmation superseding that restriction is pending; no alternate execution or publication route will bypass the rejection."
-  ],
-  "nextAction": "After operator confirmation clears the automatic review restriction, publish verified local commit 5432121 through the same existing remote. Implement the scoped read-only preparation inspector, then the documented LS-S044 canonical control workflow. Complete configured PWCE authority/capability mapping and all remaining independent authorized development; do not mark Human or physical acceptance complete.",
-  "updatedAt": "2026-09-15T15:50:03.526119Z",
+  "blockers": [],
+  "nextAction": "Publish this verified LS-S044 increment, then continue the existing configured PWCE authority/capability path and remaining S083/S084 work. Preserve physical, selected-provider, performance and Human exclusions; do not substitute fixture proof.",
+  "updatedAt": "2026-09-15T16:42:57.733Z",
   "updatedBy": "Codex",
-  "notes": "The requested development remains authorized by the operator, but automatic review rejects both publication and the next code edit under the historical planning-only instruction. Permitted design work is completed in apps/control-web/DESIGN.md. No code from the rejected edit executed. First goal turn encountering this tool-approval impasse; the overall goal remains active."
+  "notes": "The September 11 planning-only restriction is explicitly superseded by the operator on September 15. Configured canonical permissions UI and original-session inspection are component-verified with 675 application tests and two actual Chrome journeys. Preserved dirty artifacts and the saved Human-review service remain untouched. This closes the local approval-review impasse, not the full ongoing development goal."
 }

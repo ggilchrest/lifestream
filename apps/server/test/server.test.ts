@@ -320,3 +320,16 @@ test("relationship Lab executes scoped fixture comparisons and requires separate
  const prepared=await api(path,{syntheticOnly:true,transmissionApproved:true,scenarios:[{id:'one',prompt:'Explain a cache.',sourceFamily:'one',split:'comparison',forbiddenTerms:[]},{id:'held',prompt:'Explain Python.',sourceFamily:'held',split:'heldOut',forbiddenTerms:[]}],criteria:['nonempty','noForbiddenTerms'],repeatedRuns:2,candidateControls:{verbosity:0},candidateRepresentation:'conventionOriented'});assert.equal(prepared.status,201);assert.deepEqual(prepared.body.lab.representations,['recordOriented','conventionOriented']);
  const run=async(action:string)=>{const before=(await api(path)).body.lab;assert.equal((await api(path+action,{expectedRevision:before.revision})).status,202);for(let n=0;n<100;n++){const lab=(await api(path)).body.lab;if(lab.status!=='running')return lab;await new Promise(r=>setTimeout(r,5));}throw new Error('Lab did not finish');};let lab=await run('/run');assert.equal(lab.status,'completed');assert.equal(lab.comparison.resultCount,12);assert.ok(Object.values(lab.comparison.variability).every(v=>v===0));assert.equal((await api(path+'/decision',{decision:'promoted',expectedRevision:lab.revision})).status,409);lab=await run('/held-out');assert.equal(lab.heldOut.resultCount,12);const result=await api(path+'/decision',{decision:'promoted',expectedRevision:lab.revision});assert.equal(result.status,200);assert.equal(result.body.configuration.status,'draft');assert.equal(result.body.activeStateChanged,false);
 });
+
+test('bounded shutdown closes lingering HTTP connections before a same-port restart', async t => {
+  const { connect } = await import('node:net'), { once } = await import('node:events');
+  const root = await mkdtemp(join(tmpdir(),'lifestream-http-drain-')); t.after(() => rm(root,{recursive:true,force:true}));
+  let app = createLifestreamServer({config:config(root)}); await app.start(); const port = app.address().port;
+  t.after(() => app.shutdown()); const socket = connect(port,'127.0.0.1'); socket.on('error',() => {}); t.after(() => socket.destroy()); await once(socket,'connect'); socket.resume();
+  // A partly transmitted request keeps the connection out of the idle pool.
+  socket.write(`POST /api/runtime/v1/turn HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nContent-Type: application/json\r\nContent-Length: 100\r\n\r\n{`);
+  const closed = once(socket,'close'); await app.shutdown(20);
+  const deadline = AbortSignal.timeout(1000); await Promise.race([closed, new Promise((_,reject) => deadline.addEventListener('abort',() => reject(new Error('Old HTTP connection survived shutdown')),{once:true}))]);
+  app = createLifestreamServer({config:config(root),port}); await app.start();
+  const response = await fetch(`http://127.0.0.1:${port}/control/security.html`); assert.equal(response.status,200); assert.match(await response.text(),/Permissions/);
+});

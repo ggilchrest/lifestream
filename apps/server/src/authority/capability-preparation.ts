@@ -149,8 +149,37 @@ export class CanonicalCapabilityPreparation implements CanonicalAuthorityHost {
         await resolveCapabilitySchema(adapter.outputSchema, schemaScope, call, this.schemas);
         tools.push({ capabilityId: definition.capabilityId, version: definition.version, sideEffectClass: definition.sideEffectClass, authorization: definition.authorization, inputSchema, inputSchemaRef: adapter.inputSchema, outputSchemaRef: adapter.outputSchema });
       }
-      call.check(); return { status: 'available', protocol: 'canonical', providerRef: this.providerRef, environmentId: this.environmentId, tools, grantsAuthority: false, dispatchStarted: false };
+      call.check(); return { status: 'available', protocol: 'canonical', providerRef: this.providerRef, environmentId: this.environmentId, expiresAt: snapshot.expiresAt, tools, grantsAuthority: false, dispatchStarted: false };
     } catch (error) { if (error instanceof AuthenticationError) throw error; return unavailable(); } finally { call.close(); }
+  }
+  /** Inspect retained input for exact Human review; this neither grants nor dispatches. */
+  async inspect(assistantId: string, invocationId: string, local: LocalContext, inputCall: CapabilityCallContext) {
+    const guard = () => {
+      this.auth.assertCurrent(local);
+      if (!this.auth.canAdminister(local, assistantId)) unavailable('assistant_scope_denied', 403);
+    };
+    guard();
+    if (!valid(common + 'UUID', assistantId) || !valid(common + 'UUID', invocationId)) unavailable('invalid_preparation_reference', 422);
+    const read = () => {
+      guard(); const record = this.retainedForResult(invocationId, local.principalId);
+      if (record.scope.assistantId !== assistantId || record.scope.sessionId !== local.sessionId) unavailable('authority_not_found', 404);
+      return record;
+    };
+    const record = read();
+    const call = new CapabilityCall({ ...inputCall, isCurrent: () => {
+      read(); return inputCall.isCurrent();
+    } });
+    try {
+      call.check();
+      const scope = { assistantId, endpointId: record.scope.endpointId!, sessionId: local.sessionId,
+        environment: record.scope.environmentId, authorityContextRef: record.scope.authorityContextRef! };
+      const inputSchema = await resolveCapabilitySchema(record.inputSchema, scope, call, this.schemas);
+      if (!await call.wait(() => validateCapabilitySchema(inputSchema, record.input, call.context.signal))) unavailable('capability_input_invalid', 422);
+      call.check();
+      return { preparation: structuredClone(record.proposal), input: structuredClone(record.input), inputSchema,
+        idempotencyKey: record.idempotencyKey, providerRef: record.providerRef, grantsAuthority: false, dispatchStarted: false };
+    } catch (error) { if (error instanceof AuthenticationError) throw error; return unavailable(); }
+    finally { call.close(); }
   }
   async prepare(assistantId: string, capabilityId: string, local: LocalContext, raw: unknown, inputCall: CapabilityCallContext) {
     const guard = () => { this.auth.assertCurrent(local); if (!this.auth.canAdminister(local, assistantId)) unavailable('assistant_scope_denied', 403); };
