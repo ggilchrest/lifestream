@@ -150,7 +150,7 @@ export class CanonicalAuthorityApi {
       } else if (operation === 'GetAuthorityGrant') {
         if (payload.cursor !== null) throw new AuthenticationError(409, 'authority_cursor_conflict');
         const grant = this.repository.inspectGrant(payload.grantId, context); revision = this.repository.sourceRevision(grant.assistantId, context);
-        result = { ...this.grantView(grant, local, context), sourceRevision: revision, events: this.repository.events(grant.grantId, context), nextCursor: null, admittedInvocationIds: [] };
+        result = { ...this.grantView(grant, local, context), sourceRevision: revision, events: this.repository.events(grant.grantId, context), nextCursor: null, admittedInvocationIds: this.repository.admittedInvocationIds(grant.grantId, context) };
       } else {
         const internalOperation = operation === 'CreateAuthorityRequest' ? 'createRequest' : operation === 'ApproveAuthorityRequest' ? 'approveRequest' : operation === 'RevokeAuthorityGrant' ? 'revokeGrant' : 'decideRequest';
         const intent = { operation, payload }, command = { requestId, correlationId, idempotencyKey: normalized.idempotencyKey as string, intent };
@@ -185,7 +185,7 @@ export class CanonicalAuthorityApi {
         if (!isDeepStrictEqual(snapshot.artifact, auditData.recordRef) || !isDeepStrictEqual(JSON.parse(new TextDecoder().decode(snapshot.bytes)), mutation.request ?? mutation.grant)) throw unavailable();
         if (operation === 'ApproveAuthorityRequest') this.proof(mutation.grant!, context);
         revision = mutation.sourceRevision;
-        result = operation === 'CreateAuthorityRequest' ? mutation.request : { request: mutation.request, grant: mutation.grant, sourceRevision: revision, auditRef: mutation.auditRef, admittedInvocationIds: [] };
+        result = operation === 'CreateAuthorityRequest' ? mutation.request : { request: mutation.request, grant: mutation.grant, sourceRevision: revision, auditRef: mutation.auditRef, admittedInvocationIds: mutation.admittedInvocationIds ?? [] };
       }
       call.check(); this.auth.assertCurrent(local);
       const body = { schemaVersion: '1.0.0', requestId, correlationId, status: 'succeeded', sourceRevision: revision, result, error: null };

@@ -111,6 +111,10 @@
     "./capabilities/schema-validation": {
       "types": "./dist/capabilities/schema-validation.d.ts",
       "import": "./dist/capabilities/schema-validation.js"
+    },
+    "./authority/grants": {
+      "types": "./dist/authority/grants.d.ts",
+      "import": "./dist/authority/grants.js"
     }
   },
   "scripts": {

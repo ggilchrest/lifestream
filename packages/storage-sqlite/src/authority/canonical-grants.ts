@@ -1,6 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { createContractValidator } from '@lifestream/contracts';
 import type { GrantRequest, GrantLifecycleEvent, ArtifactRef, SourceRevision, humanAuthorityGrant_Root as CanonicalGrant } from '@lifestream/contracts/provider-messages';
+import type { AuthorityDispatchRequest, humanAuthorityDecision_Root as DispatchDecision, CapabilityInvocationResult } from '@lifestream/contracts/provider-messages';
+import { isDeepStrictEqual } from 'node:util';
 import type { Database, Transaction } from '../database.js';
 export type { CanonicalGrant, GrantRequest, GrantLifecycleEvent };
 const providerSchema = 'https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/';
@@ -21,7 +23,7 @@ export type TrustedGrantProposal = {
   request: Omit<GrantRequest, 'schemaVersion' | 'requestId' | 'revision' | 'principalId' | 'authorityProviderRef' | 'confirmationDigest' | 'state' | 'grantId' | 'createdAt'>;
   scopeDerivation: 'validatedArguments' | 'inputBoundOnly';
 };
-export type AuthorityMutation = { request: GrantRequest | null; grant: CanonicalGrant | null; events: GrantLifecycleEvent[]; auditRef?: ArtifactRef; sourceRevision?: SourceRevision };
+export type AuthorityMutation = { request: GrantRequest | null; grant: CanonicalGrant | null; events: GrantLifecycleEvent[]; auditRef?: ArtifactRef; sourceRevision?: SourceRevision; admittedInvocationIds?: string[] };
 export class CanonicalGrantError extends Error {
   readonly code: 'invalid' | 'notFound' | 'conflict' | 'expired' | 'unavailable' | 'capacity' | 'scopeDerivationRequired';
   constructor(code: CanonicalGrantError['code']) { super(`Canonical authority ${code}`); this.code = code; }
@@ -53,6 +55,12 @@ function stored<T>(row: Row | undefined, schema: string): T {
   if (hash(row.payload_json) !== row.sha256) fail('unavailable');
   try { return check(schema, JSON.parse(row.payload_json)) as T; } catch { return fail('unavailable'); }
 }
+
+export type CanonicalAdmission = {
+  request: AuthorityDispatchRequest; principalId: string; providerEvidenceBase64: string;
+  decision: DispatchDecision; receipt: ArtifactRef; auditRef: ArtifactRef;
+};
+export type CanonicalDispatchView = { admission: CanonicalAdmission; initialCallClaimed: boolean; result: CapabilityInvocationResult | null };
 
 /** Canonical request approval and immutable grant lifecycle. Legacy coarse grants
  * remain separate historical records; none acquire missing scope by migration. */
@@ -138,6 +146,7 @@ export class CanonicalGrantRepository {
         lifecycleEventIds: result.events.map(event => event.eventId) };
       result.auditRef = this.saveArtifact(tx, `urn:lifestream:authority-audit:${command.idempotencyKey}`, subject!, 'urn:lifestream:local-authority-audit:1', JSON.stringify(audit));
       result.sourceRevision = this.revision(tx, subject!.principalId, subject!.assistantId);
+      result.admittedInvocationIds = result.grant ? this.admittedIds(tx, result.grant.grantId) : [];
       this.guard(context, subject!); finalCheck?.(result);
       const json = JSON.stringify(result); if (Buffer.byteLength(json) > 524288) fail('capacity');
       tx.run('INSERT INTO canonical_authority_commands VALUES (?,?,?,?,?,?)', command.idempotencyKey, principalId, operation, inputDigest, json, hash(json));
@@ -147,7 +156,8 @@ export class CanonicalGrantRepository {
   private revision(tx: Transaction, principalId: string, assistantId: string): SourceRevision {
     const requests = tx.all<{ request_id: string; sha256: string }>('SELECT request_id,sha256 FROM canonical_grant_requests WHERE principal_id=? AND assistant_id=? ORDER BY request_id', principalId, assistantId);
     const grants = tx.all<{ grant_id: string; sha256: string }>('SELECT grant_id,sha256 FROM canonical_grants WHERE principal_id=? AND assistant_id=? ORDER BY grant_id', principalId, assistantId);
-    return { providerRef: this.providerRef, revision: hash(JSON.stringify({ requests, grants })), highWaterMark: null };
+    const admissions = tx.all<{ invocation_id: string; sha256: string }>('SELECT invocation_id,sha256 FROM canonical_dispatch_admissions WHERE principal_id=? AND assistant_id=? ORDER BY invocation_id', principalId, assistantId);
+    return { providerRef: this.providerRef, revision: hash(JSON.stringify({ requests, grants, admissions })), highWaterMark: null };
   }
   sourceRevision(assistantId: string, context: CanonicalHumanContext): SourceRevision {
     check(common + 'UUID', assistantId); clock(context);
@@ -163,14 +173,15 @@ export class CanonicalGrantRepository {
     tx.run('INSERT INTO canonical_authority_artifacts VALUES (?,?,?,?,?,?,?)', reference, binding.principalId, binding.assistantId, JSON.stringify(owner), schemaRef, bytes, artifact.sha256);
     return artifact;
   }
-  artifact(reference: string, context: CanonicalHumanContext): { artifact: ArtifactRef; bytes: Uint8Array } {
-    return this.database.transaction(tx => {
+  private readArtifact(tx: Transaction, reference: string, context: CanonicalHumanContext): { artifact: ArtifactRef; bytes: Uint8Array } {
       const row = tx.get<{ binding_json: string; schema_ref: string; payload_json: string; sha256: string }>('SELECT * FROM canonical_authority_artifacts WHERE reference=? AND principal_id=?', reference, context.principalId);
       if (!row) return fail('notFound');
       if (hash(row.payload_json) !== row.sha256) fail('unavailable');
       this.guard(context, JSON.parse(row.binding_json));
       return { artifact: { reference, sha256: row.sha256, mediaType: 'application/json', schemaRef: row.schema_ref, byteLength: Buffer.byteLength(row.payload_json) }, bytes: new Uint8Array(Buffer.from(row.payload_json)) };
-    });
+  }
+  artifact(reference: string, context: CanonicalHumanContext): { artifact: ArtifactRef; bytes: Uint8Array } {
+    return this.database.transaction(tx => this.readArtifact(tx, reference, context));
   }
   /** Identical transport intent can replay without consulting a changed capability catalog. */
   replay(operation: string, intent: unknown, command: AuthorityCommand, context: CanonicalHumanContext): AuthorityMutation | undefined {
@@ -295,4 +306,119 @@ export class CanonicalGrantRepository {
       if (!last || last.newRevision !== grant.revision || (last.type === 'issued' ? grant.status !== 'active' : last.type !== grant.status)) fail('unavailable');
       this.guard(context, grant); return events; });
   }
+  private admittedIds(tx: Transaction, grantId: string): string[] {
+    return tx.all<{ invocation_id: string }>('SELECT invocation_id FROM canonical_dispatch_admissions WHERE grant_id=? ORDER BY invocation_id', grantId).map(row => row.invocation_id);
+  }
+  admittedInvocationIds(grantId: string, context: CanonicalHumanContext): string[] {
+    return this.database.transaction(tx => { this.grant(tx, grantId, context); return this.admittedIds(tx, grantId); });
+  }
+  private readAdmission(tx: Transaction, invocationId: string, context: CanonicalHumanContext): CanonicalAdmission | undefined {
+    check(common + 'UUID', invocationId);
+    const row = tx.get<Row>('SELECT payload_json,sha256 FROM canonical_dispatch_admissions WHERE invocation_id=? AND principal_id=?', invocationId, context.principalId);
+    if (!row) return undefined;
+    if (hash(row.payload_json) !== row.sha256 || Buffer.byteLength(row.payload_json) > 524288) fail('unavailable');
+    const value = JSON.parse(row.payload_json) as CanonicalAdmission;
+    check(providerSchema + 'AuthorityDispatchRequest', value.request); check('https://lifestream.dev/contracts/human-authority-decision/2.0.0', value.decision);
+    if (value.principalId !== context.principalId || value.request.payload.invocationId !== invocationId || value.decision.invocationId !== invocationId) fail('unavailable');
+    this.guard(context, { ...value.request.scope, endpointId: value.request.scope.endpointId!, sessionId: value.request.scope.sessionId!, principalId: value.principalId, authorityProviderRef: this.providerRef });
+    const receipt = this.readArtifact(tx, value.receipt.reference, context), audit = this.readArtifact(tx, value.auditRef.reference, context);
+    if (!isDeepStrictEqual(receipt.artifact, value.receipt) || !isDeepStrictEqual(JSON.parse(Buffer.from(receipt.bytes).toString()), value.decision) || !isDeepStrictEqual(audit.artifact, value.auditRef)) fail('unavailable');
+    this.disposition(value.request, Buffer.from(value.providerEvidenceBase64, 'base64'));
+    return value;
+  }
+  dispatchView(invocationId: string, context: CanonicalHumanContext): CanonicalDispatchView | undefined {
+    return this.database.transaction(tx => {
+      const admission = this.readAdmission(tx, invocationId, context); if (!admission) return undefined;
+      const row = tx.get<Row>('SELECT payload_json,sha256 FROM canonical_dispatch_results WHERE invocation_id=?', invocationId);
+      const result = row ? stored<CapabilityInvocationResult>(row, providerSchema + 'CapabilityInvocationResult') : null;
+      if (result?.outcome.status === 'succeeded' && 'evidenceRef' in result.outcome.payload && result.outcome.payload.evidenceRef) {
+        const bytes = tx.get<{ evidence_base64: string | null }>('SELECT evidence_base64 FROM canonical_dispatch_results WHERE invocation_id=?', invocationId)?.evidence_base64;
+        const ref = result.outcome.payload.evidenceRef, evidence = bytes === null || bytes === undefined ? null : Buffer.from(bytes, 'base64');
+        if (!evidence || evidence.byteLength !== ref.byteLength || createHash('sha256').update(evidence).digest('hex') !== ref.sha256) fail('unavailable');
+      }
+      return { admission, result, initialCallClaimed: !!tx.get('SELECT 1 FROM canonical_dispatch_claims WHERE invocation_id=?', invocationId) };
+    });
+  }
+  private disposition(request: AuthorityDispatchRequest, evidence: Uint8Array, now?: string): void {
+    const d = request.payload.requiredProviderDisposition, ref = d.evidenceRef;
+    if (evidence.byteLength > 131072 || ref.byteLength !== evidence.byteLength || createHash('sha256').update(evidence).digest('hex') !== ref.sha256 ||
+      d.invocationId !== request.payload.invocationId || d.inputDigest !== request.payload.inputDigest || d.scopeDigest !== hash(canonical(request.payload.scope)) ||
+      !isDeepStrictEqual(d.authorityContextRef, request.scope.authorityContextRef) || d.disposition !== 'authorized' || Date.parse(d.expiresAt) <= Date.parse(d.evaluatedAt) ||
+      (now !== undefined && (Date.parse(d.evaluatedAt) > Date.parse(now) || Date.parse(d.expiresAt) <= Date.parse(now)))) fail('unavailable');
+  }
+  /** Serializes with revoke. The eligibility callback is trusted host logic and
+   * receives a detached current grant; callers cannot provide a receipt or decision. */
+  authorizeDispatch(request: AuthorityDispatchRequest, evidence: Uint8Array, context: CanonicalHumanContext,
+    evaluate: (grant: CanonicalGrant) => { disposition: DispatchDecision['disposition']; reasonCode: DispatchDecision['reasonCode'] },
+    assertAdmissionCurrent: () => void): { admission: CanonicalAdmission; replayed: boolean } {
+    request = check(providerSchema + 'AuthorityDispatchRequest', request); evidence = Uint8Array.from(evidence);
+    return this.database.transaction(tx => {
+      const prior = this.readAdmission(tx, request.payload.invocationId, context);
+      if (prior) {
+        // Fresh transport IDs/catalog revisions are not permission to change original intent.
+        if (prior.request.idempotencyKey !== request.idempotencyKey || prior.request.payload.grantId !== request.payload.grantId ||
+          prior.request.payload.inputDigest !== request.payload.inputDigest || !isDeepStrictEqual(prior.request.payload.scope, request.payload.scope)) fail('conflict');
+        return { admission: prior, replayed: true };
+      }
+      if (tx.get('SELECT 1 FROM canonical_dispatch_admissions WHERE idempotency_key=?', request.idempotencyKey)) fail('conflict');
+      if ((tx.get<{ count: number }>('SELECT COUNT(*) AS count FROM canonical_dispatch_admissions')?.count ?? 0) >= 4096) fail('capacity');
+      if (request.payload.grantId === null || request.executionMode !== 'normal') fail('invalid');
+      const grant = this.grant(tx, request.payload.grantId!, context), now = clock(context);
+      if (grant.revision !== request.payload.expectedGrantRevision || Date.parse(request.deadlineAt) <= Date.parse(now)) fail('conflict');
+      this.disposition(request, evidence, now);
+      const proof = this.readArtifact(tx, grant.authenticationEvidenceRef, context), authentication = JSON.parse(Buffer.from(proof.bytes).toString());
+      if (proof.artifact.schemaRef !== 'urn:lifestream:local-authentication-proof:1' || authentication.providerRef !== 'local-password' ||
+        authentication.principalId !== grant.principalId || authentication.assistantId !== grant.assistantId ||
+        !validator.validate(common + 'UUID', authentication.sessionId).valid || !validator.validate(common + 'Time', authentication.authenticatedAt).valid ||
+        !validator.validate(common + 'Time', authentication.verifiedAt).valid || Date.parse(authentication.authenticatedAt) > Date.parse(authentication.verifiedAt) ||
+        Date.parse(authentication.verifiedAt) > Date.parse(grant.issuedAt) || (grant.sessionId !== null && authentication.sessionId !== grant.sessionId)) fail('unavailable');
+      const eligible = evaluate(structuredClone(grant));
+      if (eligible.disposition !== 'authorized' || eligible.reasonCode !== 'authority_authorized') fail('conflict');
+      this.guard(context, grant); assertAdmissionCurrent();
+      const decision: DispatchDecision = { schemaVersion: '2.0.0', decisionId: randomUUID(), kind: 'dispatch', ...eligible,
+        correlationId: request.correlationId, invocationId: request.payload.invocationId, principalId: context.principalId, assistantId: request.scope.assistantId,
+        endpointId: request.scope.endpointId!, environmentId: request.scope.environmentId, executionMode: request.executionMode, grantId: grant.grantId, grantRevision: grant.revision,
+        snapshotId: request.payload.snapshotId, snapshotRevision: request.payload.snapshotRevision, authorityContextRef: request.scope.authorityContextRef!,
+        inputDigest: request.payload.inputDigest, scopeDigest: hash(canonical(request.payload.scope)), evaluatedAt: now, admittedAt: now };
+      check('https://lifestream.dev/contracts/human-authority-decision/2.0.0', decision);
+      let event: GrantLifecycleEvent | null = null;
+      if (grant.grantClass === 'allowOnce') {
+        const consumed = { ...grant, revision: grant.revision + 1, status: 'consumed' as const, consumedDecisionId: decision.decisionId };
+        event = { ...this.event(consumed, 'consumed', request, context, now), invocationId: request.payload.invocationId, decisionId: decision.decisionId };
+        this.saveGrant(tx, consumed, event);
+      }
+      const receipt = this.saveArtifact(tx, `urn:lifestream:dispatch-receipt:${decision.decisionId}`, grant, 'https://lifestream.dev/contracts/human-authority-decision/2.0.0', JSON.stringify(decision));
+      const auditRef = this.saveArtifact(tx, `urn:lifestream:dispatch-audit:${decision.decisionId}`, grant, 'urn:lifestream:dispatch-audit:1', JSON.stringify({ decisionId: decision.decisionId, receipt, providerDisposition: request.payload.requiredProviderDisposition, lifecycleEventId: event?.eventId ?? null, idempotencyKey: request.idempotencyKey }));
+      const admission: CanonicalAdmission = { request, principalId: context.principalId, providerEvidenceBase64: Buffer.from(evidence).toString('base64'), decision, receipt, auditRef };
+      const json = JSON.stringify(admission); if (Buffer.byteLength(json) > 524288) fail('capacity');
+      tx.run('INSERT INTO canonical_dispatch_admissions VALUES (?,?,?,?,?,?,?)', request.payload.invocationId, context.principalId, request.scope.assistantId, grant.grantId, request.idempotencyKey, json, hash(json));
+      this.guard(context, grant); return { admission: structuredClone(admission), replayed: false };
+    });
+  }
+  /** At most one initial provider call. Reading or replaying a receipt cannot claim it again. */
+  claimInitialDispatch(invocationId: string, receipt: ArtifactRef, context: CanonicalHumanContext, assertCurrent: () => void): boolean {
+    return this.database.transaction(tx => {
+      const admission = this.readAdmission(tx, invocationId, context); if (!admission || !isDeepStrictEqual(receipt, admission.receipt)) fail('notFound');
+      if (tx.get('SELECT 1 FROM canonical_dispatch_claims WHERE invocation_id=?', invocationId)) return false;
+      assertCurrent();
+      tx.run('INSERT INTO canonical_dispatch_claims VALUES (?,?)', invocationId, clock(context)); return true;
+    });
+  }
+  recordDispatchResult(invocationId: string, result: CapabilityInvocationResult, evidence: Uint8Array | null, context: CanonicalHumanContext): void {
+    result = check(providerSchema + 'CapabilityInvocationResult', result);
+    this.database.transaction(tx => {
+      const admission = this.readAdmission(tx, invocationId, context);
+      if (!admission || !tx.get('SELECT 1 FROM canonical_dispatch_claims WHERE invocation_id=?', invocationId)) return fail('notFound');
+      if (result.providerRef !== admission.request.payload.requiredProviderDisposition.providerRef || result.requestId !== admission.request.requestId || result.correlationId !== admission.request.correlationId ||
+        (result.outcome.status === 'succeeded' && result.outcome.payload.invocationId !== invocationId)) fail('conflict');
+      const status = result.outcome.status === 'succeeded' ? result.outcome.payload : null;
+      const evidenceRef = status && 'evidenceRef' in status ? status.evidenceRef : null;
+      if (evidenceRef && (!evidence || evidence.byteLength > 131072 || evidenceRef.byteLength !== evidence.byteLength || createHash('sha256').update(evidence).digest('hex') !== evidenceRef.sha256)) fail('unavailable');
+      if (status && 'receiptRef' in status && !isDeepStrictEqual(status.receiptRef, admission.receipt)) fail('conflict');
+      const json = JSON.stringify(result), prior = tx.get<Row>('SELECT payload_json,sha256 FROM canonical_dispatch_results WHERE invocation_id=?', invocationId);
+      if (prior) { if (prior.sha256 !== hash(json) || hash(prior.payload_json) !== prior.sha256) fail('conflict'); return; }
+      tx.run('INSERT INTO canonical_dispatch_results VALUES (?,?,?,?)', invocationId, json, hash(json), evidence ? Buffer.from(evidence).toString('base64') : null);
+    });
+  }
+
 }

@@ -1,63 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { randomUUID, randomBytes } from 'node:crypto';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { Database } from '@lifestream/storage-sqlite';
-import type { CapabilityProvider } from '@lifestream/runtime/ports/provider-messages';
-import { ConfiguredCapabilitySchemas, encodeCapabilitySchema } from '@lifestream/runtime/capabilities/schema-artifacts';
-import { createLifestreamServer } from '../src/index.ts';
-import { loadProfile } from '../src/config/loader.ts';
-const envelope = (payload: unknown) => ({ schemaVersion: '1.0.0', requestId: randomUUID(), correlationId: randomUUID(), idempotencyKey: randomUUID(), payload });
-const secret = () => `Synthetic-${randomBytes(24).toString('hex')}`;
-async function setup(t: { after(callback: () => unknown): void }, configured = true) {
-  const root = mkdtempSync(join(tmpdir(), 'ls-real-preparation-'));
-  let now = Date.now(), allowed = true, deriveKind: 'validatedArguments' | 'inputBoundOnly' = 'validatedArguments', variant = 0, calls = 0, wait: Promise<void> | undefined;
-  let entered: (() => void) | undefined;
-  const input = encodeCapabilitySchema('urn:synthetic:echo-input:1', { type: 'object', required: ['target','text'], additionalProperties: false, properties: { target: { enum: ['synthetic:one','synthetic:two'] }, text: { type: 'string', maxLength: 80 } } });
-  const output = encodeCapabilitySchema('urn:synthetic:echo-output:1', { type: 'object', required: ['text'], properties: { text: { type: 'string' } }, additionalProperties: false });
-  const schemas = new ConfiguredCapabilitySchemas([input, output], () => allowed), snapshots = new Map<string, any>();
-  const provider: CapabilityProvider = {
-    async getSnapshot(request) {
-      entered?.(); if (wait) await wait;
-      const key = JSON.stringify({ scope: request.scope, variant }); let snapshot = snapshots.get(key);
-      if (!snapshot) { snapshot = { schemaVersion: '2.0.0', snapshotId: randomUUID(), revision: 1, assistantId: request.scope.assistantId, endpointId: request.scope.endpointId, sessionId: request.scope.sessionId, environmentId: request.scope.environmentId, authorityContextRef: request.scope.authorityContextRef,
-        issuedAt: new Date(now - 100).toISOString(), expiresAt: new Date(Date.now() + 120_000).toISOString(), capabilities: [{ capabilityId: 'synthetic.echo', version: '1.0.0', inputSchemaRef: input.artifact.reference, outputSchemaRef: output.artifact.reference, sideEffectClass: 'reversible', authorization: 'approvalRequired', idempotency: 'required', latencyClass: 'interactive', offlineAvailable: true, simulationSupported: true, providerRouteRef: 'synthetic:echo-route' }] }; snapshots.set(key, snapshot); }
-      return { schemaVersion: '1.0.0', operation: request.operation, requestId: request.requestId, correlationId: request.correlationId, providerRef: 'fixture', completedAt: new Date().toISOString(), outcome: { status: 'succeeded', payload: structuredClone(snapshot), error: null } };
-    },
-    async invoke() { calls++; throw new Error('Preparation must never invoke'); }, async getInvocation() { throw new Error('No invocation started'); },
-    async *subscribeInvalidations() { throw new Error('No subscription in preparation fixture'); }
-  };
-  const config = loadProfile('test'); config.authority.authentication = 'local-password'; config.storage = { databasePath: join(root, 'data.sqlite'), artifactDirectory: join(root, 'artifacts') };
-  const composition = { environmentId: randomUUID(), providerRef: 'fixture', provider, schemas, adapters: [{ capabilityId: 'synthetic.echo', version: '1.0.0', providerRouteRef: 'synthetic:echo-route', revision: '1', inputSchema: input.artifact, outputSchema: output.artifact,
-    derive(args: unknown) { const value = args as { target: string; text: string }; return { scope: { capabilityId: 'synthetic.echo', capabilityVersion: '1.0.0', operation: 'echo', targetRefs: [value.target], dataScopeRefs: [] }, effectSummary: `Echo ${value.text.length} characters to ${value.target}.`, scopeDerivation: deriveKind }; } }] };
-  const installerToken = secret(), localAuth = { stateDirectory: join(root, 'safety'), installerToken, now: () => now };
-  let app = createLifestreamServer({ config, localAuth, ...(configured ? { canonicalCapabilities: composition } : {}) }); await app.start();
-  const port = app.address().port, base = `http://127.0.0.1:${port}`, headers: Record<string, string> = { origin: base, 'content-type': 'application/json' };
-  const send = async (path: string, body?: unknown, extra: Record<string, string> = {}) => {
-    const response = await fetch(base + path, { method: body === undefined ? 'GET' : 'POST', headers: { ...headers, ...extra }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(10_000) });
-    return { status: response.status, body: await response.json() as any, cookie: response.headers.get('set-cookie')?.split(';')[0] };
-  };
-  const session = await send('/api/auth/v1/setup', { username: 'owner', password: secret(), installerToken }); assert.equal(session.status, 201, JSON.stringify(session.body));
-  headers.cookie = session.cookie!; headers['x-lifestream-csrf'] = session.body.session.csrfToken;
-  const assistant = await send('/api/admin/v1/assistants', { displayName: 'Synthetic prepared capability' }); assert.equal(assistant.status, 201);
-  const endpoint = await send('/api/runtime/v1/session-context', { expectedRevision: 0, mode: 'text', audienceScope: 'authenticatedSession' }); assert.equal(endpoint.status, 200);
-  const db = new Database({ path: config.storage.databasePath });
-  t.after(async () => { await app.shutdown(); db.close(); rmSync(root, { recursive: true, force: true }); });
-  const path = `/api/authority/v1/assistants/${assistant.body.assistantId}/tools/synthetic.echo/prepare`;
-  const body = () => ({ idempotencyKey: randomUUID(), capabilityVersion: '1.0.0', input: { target: 'synthetic:one', text: 'Some synthetic text' }, requestedClass: 'allowOnce', grantExpiresAt: new Date(now + 90_000).toISOString(), reviewAfter: null, expiresAt: new Date(now + 45_000).toISOString(), untrustedRationale: null });
-  const create = async (prepared: any) => { const { environmentId: _environment, sideEffectClass: _effect, ...payload } = prepared.request; return send('/api/authority/v1/requests', envelope(payload)); };
-  const approve = async (request: any) => send(`/api/authority/v1/requests/${request.requestId}/approve`, envelope({ requestId: request.requestId, expectedRevision: request.revision, confirmationDigest: request.confirmationDigest, grantClass: request.requestedClass, expiresAt: request.grantExpiresAt, reviewAfter: request.reviewAfter }));
-  return { send, db, path, body, create, approve, calls: () => calls, headers, composition,
-    changeProvider() { config.providers.capability = 'unavailable'; },
-    advance(ms: number) { now += ms; }, denySchemas() { allowed = false; }, changeCatalog() { variant++; }, inputBoundOnly() { deriveKind = 'inputBoundOnly'; },
-    block() { let release!: () => void; const started = new Promise<void>(resolve => { entered = resolve; }); wait = new Promise<void>(resolve => { release = resolve; }); return { started, release }; },
-    async restart() { await app.shutdown(); app = createLifestreamServer({ config, localAuth, port, ...(configured ? { canonicalCapabilities: composition } : {}) }); await app.start(); }
-  };
-}
-const prepared = async (f: Awaited<ReturnType<typeof setup>>, body = f.body()) => { const result = await f.send(f.path, body); assert.equal(result.status, 201, JSON.stringify(result.body)); return result.body.preparation; };
-
+import { randomUUID } from 'node:crypto';
+import { setup, prepared } from './fixtures/canonical-capability.ts';
 test('authenticated preparation validates real arguments and supplies the canonical request and approval', async t => {
   const f = await setup(t), p = await prepared(f);
   assert.deepEqual(p.request.scope.targetRefs, ['synthetic:one']); assert.equal(p.request.effectSummary, 'Echo 19 characters to synthetic:one.'); assert.equal(f.calls(), 0);

@@ -3,6 +3,8 @@ import { isDeepStrictEqual } from 'node:util';
 import { createContractValidator } from '@lifestream/contracts';
 import type { ArtifactRef, CapabilitySnapshotRequest, CapabilitySnapshotResult, CreateAuthorityRequestRequest, capabilitySnapshot_Root } from '@lifestream/contracts/provider-messages';
 import type { Database, GrantOwnerBinding, TrustedGrantProposal } from '@lifestream/storage-sqlite';
+import type { AuthorityRequest, providerMessages_DefsGovernedDisposition as GovernedDisposition } from '@lifestream/contracts/provider-messages';
+import type { ProviderCallContext } from '@lifestream/runtime/ports/provider-messages';
 import type { CapabilityProvider } from '@lifestream/runtime/ports/provider-messages';
 import { CanonicalProviderBoundary } from '@lifestream/runtime/ports/provider-boundary';
 import { CapabilityCall } from '@lifestream/runtime/capabilities/call';
@@ -26,11 +28,17 @@ export type CapabilityScopeAdapter = {
 };
 export type CanonicalCapabilityComposition = {
   environmentId: string; providerRef: string; provider: CapabilityProvider;
+  /** A trusted provider adapter must supply actual evidence and a synchronous current-source fence. */
+  governance?: {
+    evaluate(request: AuthorityRequest, context: ProviderCallContext): Promise<{ disposition: GovernedDisposition; evidence: Uint8Array }>;
+    assertCurrent(request: AuthorityRequest, disposition: GovernedDisposition): void;
+    readEvidence(reference: ArtifactRef, request: AuthorityRequest, context: ProviderCallContext): Promise<Uint8Array>;
+  };
   schemas: CapabilitySchemaStore; adapters: readonly CapabilityScopeAdapter[];
 };
-type Preparation = {
+export type CapabilityPreparation = {
   principalId: string; idempotencyKey: string; intentDigest: string; providerRef: string; adapterRevision: string;
-  scope: BoundScope; ownerRevision: string; snapshot: capabilitySnapshot_Root; definition: Definition;
+  scope: BoundScope; hostRevision: string; ownerRevision: string; snapshot: capabilitySnapshot_Root; definition: Definition;
   input: unknown; inputSchema: ArtifactRef; outputSchema: ArtifactRef; proposal: TrustedGrantProposal;
 };
 const validator = createContractValidator(), common = 'https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/';
@@ -72,6 +80,11 @@ export class CanonicalCapabilityPreparation implements CanonicalAuthorityHost {
     if (!session || !endpoint || endpoint.endpointId !== binding.endpointId || endpoint.privacyClass !== 'personal' || endpoint.health !== 'healthy' ||
       !this.database.connection.prepare('SELECT 1 FROM local_assistant_permissions WHERE principal_id=? AND assistant_id=? AND administer=1').get(principalId, binding.assistantId)) unavailable('authority_scope_changed', 409);
   }
+  private hostRevision(binding: GrantOwnerBinding, principalId: string): string {
+    this.assertCurrent(binding, principalId);
+    const owner = { assistantId: binding.assistantId, endpointId: binding.endpointId, environmentId: binding.environmentId, sessionId: binding.sessionId };
+    return hash({ owner, principalId, endpoint: readSessionEndpoint(this.database, binding.sessionId!), providerRef: this.providerRef });
+  }
   private ownerRevision(binding: GrantOwnerBinding, principalId: string, issuingRequestId: string | null = null): string {
     this.assertCurrent(binding, principalId);
     const endpoint = readSessionEndpoint(this.database, binding.sessionId!);
@@ -82,7 +95,7 @@ export class CanonicalCapabilityPreparation implements CanonicalAuthorityHost {
     return hash({ binding: owner, principalId, endpoint, grants, providerRef: this.providerRef });
   }
   private authorityContext(binding: GrantOwnerBinding, principalId: string, revision: string) {
-    const owner = hash({ binding, principalId, providerRef: this.providerRef });
+    const owner = hash({ binding: { assistantId: binding.assistantId, endpointId: binding.endpointId, environmentId: binding.environmentId, sessionId: binding.sessionId }, principalId, providerRef: this.providerRef });
     return this.database.transaction(tx => {
       const existing = tx.get<{ context_id: string; revision: number; source_digest: string }>('SELECT * FROM canonical_preparation_contexts WHERE owner_key=?', owner);
       if (existing?.source_digest === revision) return { providerRef: 'local-human', contextId: existing.context_id, revision: existing.revision };
@@ -92,15 +105,15 @@ export class CanonicalCapabilityPreparation implements CanonicalAuthorityHost {
       return next;
     });
   }
-  private read(principalId: string, column: 'idempotency_key' | 'invocation_id', value: string): Preparation | undefined {
+  private read(principalId: string, column: 'idempotency_key' | 'invocation_id', value: string): CapabilityPreparation | undefined {
     const row = this.database.connection.prepare(`SELECT payload_json,sha256 FROM canonical_preparations WHERE principal_id=? AND ${column}=?`).get(principalId, value) as { payload_json: string; sha256: string } | undefined;
     if (!row) return undefined;
-    let record: Preparation;
-    try { record = JSON.parse(row.payload_json) as Preparation; if (!boundedJson(record, 524288) || hash(record) !== row.sha256) unavailable(); } catch { return unavailable(); }
+    let record: CapabilityPreparation;
+    try { record = JSON.parse(row.payload_json) as CapabilityPreparation; if (!boundedJson(record, 524288) || hash(record) !== row.sha256) unavailable(); } catch { return unavailable(); }
     if (record.principalId !== principalId || (column === 'idempotency_key' ? record.idempotencyKey : record.proposal.request.invocationId) !== value) unavailable();
     return record;
   }
-  private assertRecord(record: Preparation, issuingRequestId: string | null = null): void {
+  private assertRecord(record: CapabilityPreparation, issuingRequestId: string | null = null): void {
     const request = record.proposal.request;
     if (record.providerRef !== this.providerRef || this.ownerRevision(request, record.principalId, issuingRequestId) !== record.ownerRevision ||
       Date.parse(record.snapshot.issuedAt) > this.now() || Date.parse(record.snapshot.expiresAt) <= this.now() || Date.parse(request.expiresAt) <= this.now() ||
@@ -158,7 +171,7 @@ export class CanonicalCapabilityPreparation implements CanonicalAuthorityHost {
         !['validatedArguments','inputBoundOnly'].includes(proposal.scopeDerivation) || (proposal.scopeDerivation === 'inputBoundOnly' && body.requestedClass !== 'allowOnce') ||
         Date.parse(body.expiresAt) <= this.now() || Date.parse(body.expiresAt) > Date.parse(snapshot.expiresAt) || Date.parse(body.grantExpiresAt) <= this.now() ||
         (body.requestedClass === 'allowPersistent' && body.reviewAfter === null) || (body.reviewAfter !== null && (Date.parse(body.reviewAfter) <= this.now() || Date.parse(body.reviewAfter) > Date.parse(body.grantExpiresAt)))) unavailable('invalid_preparation_terms', 422);
-      const record: Preparation = { principalId: local.principalId, idempotencyKey: body.idempotencyKey, intentDigest, providerRef: this.providerRef, adapterRevision: adapter.revision, scope, ownerRevision: currentRevision, snapshot, definition, input: body.input, inputSchema: adapter.inputSchema, outputSchema: adapter.outputSchema, proposal };
+      const record: CapabilityPreparation = { principalId: local.principalId, idempotencyKey: body.idempotencyKey, intentDigest, providerRef: this.providerRef, adapterRevision: adapter.revision, scope, hostRevision: this.hostRevision(binding, local.principalId), ownerRevision: currentRevision, snapshot, definition, input: body.input, inputSchema: adapter.inputSchema, outputSchema: adapter.outputSchema, proposal };
       this.assertRecord(record); call.check();
       const saved = this.database.transaction(tx => {
         call.check(); const competing = this.read(local.principalId, 'idempotency_key', body.idempotencyKey);
@@ -170,7 +183,7 @@ export class CanonicalCapabilityPreparation implements CanonicalAuthorityHost {
       return { preparation: structuredClone(saved.proposal), replayed: saved !== record };
     } catch (error) { if (error instanceof AuthenticationError) throw error; return unavailable(); } finally { call.close(); }
   }
-  private async verifyRecord(record: Preparation, call: CapabilityCall): Promise<void> {
+  private async verifyRecord(record: CapabilityPreparation, call: CapabilityCall): Promise<void> {
     this.assertRecord(record); call.check();
     const snapshot = await this.snapshot(record.scope, record.proposal.request.scope.capabilityId, call);
     if (!isDeepStrictEqual(snapshot, record.snapshot)) unavailable('capability_preparation_changed', 409);
@@ -183,6 +196,37 @@ export class CanonicalCapabilityPreparation implements CanonicalAuthorityHost {
     const derived = adapter.derive(structuredClone(record.input));
     if (!isDeepStrictEqual(derived.scope, record.proposal.request.scope) || derived.effectSummary !== record.proposal.request.effectSummary || derived.scopeDerivation !== record.proposal.scopeDerivation) unavailable('capability_preparation_changed', 409);
     this.assertRecord(record); call.check();
+  }
+  retainedForResult(invocationId: string, principalId: string): CapabilityPreparation {
+    const record = this.read(principalId, 'invocation_id', invocationId);
+    if (!record) return unavailable('authority_not_found', 404);
+    if (!record.hostRevision || record.hostRevision !== this.hostRevision(record.proposal.request, principalId)) unavailable('capability_preparation_changed', 409);
+    return structuredClone(record);
+  }
+  /** Refresh authority after grant issuance without changing the approved input or material scope. */
+  async refreshForDispatch(invocationId: string, idempotencyKey: string, local: LocalContext, call: CapabilityCall): Promise<CapabilityPreparation> {
+    const original = this.read(local.principalId, 'invocation_id', invocationId);
+    if (!original) return unavailable('authority_not_found', 404);
+    if (original.idempotencyKey !== idempotencyKey) unavailable('authority_idempotency_conflict', 409);
+    if (!original.hostRevision || original.hostRevision !== this.hostRevision(original.proposal.request, local.principalId)) unavailable('capability_preparation_changed', 409);
+    const record = structuredClone(original);
+    record.ownerRevision = this.ownerRevision(record.proposal.request, local.principalId);
+    record.scope.authorityContextRef = this.authorityContext(record.proposal.request, local.principalId, record.ownerRevision);
+    record.snapshot = await this.snapshot(record.scope, record.definition.capabilityId, call);
+    const definition = record.snapshot.capabilities.find(value => value.capabilityId === record.definition.capabilityId && value.version === record.definition.version);
+    if (!isDeepStrictEqual(definition, original.definition)) unavailable('capability_preparation_changed', 409);
+    // The pending request deadline does not revoke a subsequently approved grant.
+    // Preserve the stored terms and validate grant eligibility at final admission.
+    const pendingExpiry = record.proposal.request.expiresAt;
+    record.proposal.request.expiresAt = record.snapshot.expiresAt;
+    try { await this.verifyRecord(record, call); }
+    finally { record.proposal.request.expiresAt = pendingExpiry; }
+    this.assertDispatchCurrent(record, false); return record;
+  }
+  assertDispatchCurrent(record: CapabilityPreparation, admitted: boolean): void {
+    if (record.hostRevision !== this.hostRevision(record.proposal.request, record.principalId) ||
+      (!admitted && this.ownerRevision(record.proposal.request, record.principalId) !== record.ownerRevision) ||
+      Date.parse(record.snapshot.issuedAt) > this.now() || Date.parse(record.snapshot.expiresAt) <= this.now() || hash(record.input) !== record.proposal.request.inputDigest) unavailable('capability_preparation_changed', 409);
   }
   assertProposalCurrent(request: TrustedGrantProposal['request'] & { requestId?: string }, principalId: string): void {
     const record = this.read(principalId, 'invocation_id', request.invocationId); if (!record) return unavailable('authority_not_found', 404);

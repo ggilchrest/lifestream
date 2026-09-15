@@ -3,8 +3,8 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "7b0642a518c3b8d08d1eff77c9394b74267b73b2",
-  "activeSlice": "LS-S043",
+  "currentRevision": "4a9d3c5ed751f951af0fbb3c2330324f1a053788",
+  "activeSlice": "LS-S042",
   "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
@@ -75,43 +75,46 @@
     "LS-S081"
   ],
   "allowedFiles": [
-    "apps/server/src/authority/api.ts",
-    "apps/server/test/authority-api.test.ts",
+    "packages/runtime/src/authority/evaluate.ts",
+    "packages/runtime/src/authority/authorize-dispatch.ts",
+    "packages/storage-sqlite/src/authority/admission.ts",
+    "packages/runtime/test/authority-dispatch.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S043.json",
-    "apps/server/src/authority/canonical-api.ts",
-    "apps/server/test/canonical-authority-api.test.ts",
-    "apps/server/src/index.ts",
-    "apps/server/test/server.test.ts",
-    "scripts/generate-provider-types.mjs",
-    "packages/contracts/src/provider-messages.ts",
+    "implementation/evidence/LS-S042.json",
     "packages/storage-sqlite/src/authority/canonical-grants.ts",
-    "packages/storage-sqlite/src/migrations/0031_canonical_authority_evidence.sql",
+    "packages/storage-sqlite/src/migrations/0033_canonical_dispatch.sql",
     "packages/storage-sqlite/src/migrations/index.ts",
     "packages/storage-sqlite/src/index.ts",
+    "apps/server/src/authority/canonical-dispatch.ts",
+    "apps/server/src/authority/capability-preparation.ts",
+    "apps/server/src/authority/canonical-api.ts",
+    "apps/server/src/index.ts",
+    "apps/server/test/canonical-dispatch.test.ts",
+    "apps/server/test/capability-preparation.test.ts",
+    "apps/server/test/server.test.ts",
     "packages/storage-sqlite/test/initiative-delivery.test.ts",
     "packages/storage-sqlite/test/initiative-expression.test.ts",
-    "packages/storage-sqlite/test/canonical-grants.test.ts",
     "docs/canonical-provider-boundary.md",
-    "implementation/evidence/LS-S043-CANONICAL-API-1.json",
+    "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json",
     "packages/runtime/package.json",
-    "scripts/check-pwce-runtime.mjs",
-    "apps/server/src/authority/capability-preparation.ts",
-    "apps/server/test/capability-preparation.test.ts",
-    "packages/storage-sqlite/src/migrations/0032_canonical_preparations.sql",
-    "implementation/evidence/LS-S043-CAPABILITY-PREPARATION-1.json"
+    "apps/server/test/fixtures/canonical-capability.ts"
   ],
   "changedFiles": [
     "apps/server/src/authority/canonical-api.ts",
+    "apps/server/src/authority/canonical-dispatch.ts",
     "apps/server/src/authority/capability-preparation.ts",
     "apps/server/src/index.ts",
+    "apps/server/test/canonical-dispatch.test.ts",
     "apps/server/test/capability-preparation.test.ts",
+    "apps/server/test/fixtures/canonical-capability.ts",
     "apps/server/test/server.test.ts",
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S043-CAPABILITY-PREPARATION-1.json",
+    "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json",
     "packages/runtime/package.json",
-    "packages/storage-sqlite/src/migrations/0032_canonical_preparations.sql",
+    "packages/storage-sqlite/src/authority/canonical-grants.ts",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/src/migrations/0033_canonical_dispatch.sql",
     "packages/storage-sqlite/src/migrations/index.ts",
     "packages/storage-sqlite/test/initiative-delivery.test.ts",
     "packages/storage-sqlite/test/initiative-expression.test.ts"
@@ -120,47 +123,37 @@
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S043-CAPABILITY-PREPARATION-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S043-CAPABILITY-PREPARATION-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S043-CAPABILITY-PREPARATION-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S043-CAPABILITY-PREPARATION-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S043-CAPABILITY-PREPARATION-1.json"
-    },
-    {
-      "command": "node scripts/check-pwce-context-process.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S043-CAPABILITY-PREPARATION-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S043-CAPABILITY-PREPARATION-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
     },
     {
-      "command": "node scripts/workspace.mjs check",
+      "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S043-CAPABILITY-PREPARATION-1.json"
-    },
-    {
-      "command": "node scripts/workspace.mjs preflight LS-S043",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S043-CAPABILITY-PREPARATION-1.json"
+      "evidence": "implementation/evidence/LS-S042-CANONICAL-DISPATCH-1.json"
     }
   ],
   "decisions": [
@@ -175,8 +168,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Implement canonical final dispatch under LS-S042 using the retained validated invocation, actual canonical grant, durable decision/receipt, one-use consumption and admitted-invocation ledger. Connect the LS-S044 control-web workflow and actual PWCE capability/authority mapping; finish physical target-state preconditions and joint action scenarios. Continue remaining S083/S084 development and broad source requalification.",
-  "updatedAt": "2026-09-15T14:01:29.414570Z",
+  "nextAction": "Continue canonical provider status reconciliation/invalidation and LS-S044 control-web workflow, then connect the actual PWCE capability/authority adapter, target-state preconditions and joint action scenarios. Continue remaining S083/S084 development and broad source requalification; preserve separate Human and physical acceptance boundaries.",
+  "updatedAt": "2026-09-15T14:34:15.574622Z",
   "updatedBy": "Codex",
-  "notes": "Canonical capability preparation is integrated with authenticated request creation and approval. 625 source tests pass, including 11 new preparation HTTP cases. Final canonical dispatch, control-web and PWCE action mapping remain open."
+  "notes": "Canonical authenticated HTTP preparation -> approval -> final dispatch verified in the source suite. Receipt binds source hashes and synthetic evidence; no whole-slice or selected-provider qualification is implied. Current run disposition: continue."
 }

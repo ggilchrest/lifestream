@@ -1,0 +1,161 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S042-CANONICAL-DISPATCH-1",
+  "slice": "LS-S042",
+  "status": "componentVerified",
+  "sourceRevision": "4a9d3c5ed751f951af0fbb3c2330324f1a053788",
+  "sourceBinding": "Exact changed source hashes below bind this HTTP dispatch integration relative to sourceRevision; the enclosing commit contains the implementation. This is not whole-slice, selected-provider, physical or Human qualification.",
+  "specificationRevision": "d53cb7103c3fc80d983dd00d4b04525fdd341bea",
+  "recordedAt": "2026-09-15T14:34:15.574622Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/authority/canonical-api.ts",
+      "sha256": "c6983770f54a85d738c9bbc5ff82a21970eb498331b9df066ca65e0c92565946"
+    },
+    {
+      "path": "apps/server/src/authority/canonical-dispatch.ts",
+      "sha256": "9c484ca07a9ef7a683f227d400b3b4087b44c200bfbb8ac2f56d54e4097b83e0"
+    },
+    {
+      "path": "apps/server/src/authority/capability-preparation.ts",
+      "sha256": "e77ce4fedcb9c613ab018620dfaaf68f797fd46c97697bb8da9839039eb0cd84"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "a4d058dfa76edc9306ab7e28ecff63fff101b594d2c91b1c7b6e76a855c0b62b"
+    },
+    {
+      "path": "apps/server/test/canonical-dispatch.test.ts",
+      "sha256": "202c339b87bdb0aaf6187724b4ab8a284621876c25422a617402f81641559793"
+    },
+    {
+      "path": "apps/server/test/capability-preparation.test.ts",
+      "sha256": "39a42ef6eb9ea93187287350f80077e9212522d09705966fb645258b10448b41"
+    },
+    {
+      "path": "apps/server/test/fixtures/canonical-capability.ts",
+      "sha256": "ea3bce3525b08090236b4ad4e96d79dee6e2826aad4556b665f32d68048782da"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "fb1228d8f143d499d1d974cdfb2ab4dbe11b9d01f453c7c31273b779b3a66c17"
+    },
+    {
+      "path": "docs/canonical-provider-boundary.md",
+      "sha256": "746962047fce4bda760075478f9f6dd4015f76f4ea7d0fc45a92847654568a08"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "f0f57e53fb406855a15b1973be6248546a3598b58424d787ad451d8696f68091"
+    },
+    {
+      "path": "packages/storage-sqlite/src/authority/canonical-grants.ts",
+      "sha256": "012bafd82369d68eb484bb38216ae90b50ad1bbb1a2f05506cdc50ee58a46b7f"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "4ba8dc4a41c157aab6f501c83a39588bf4b940da36c6778e84f05e928c2b4d27"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0033_canonical_dispatch.sql",
+      "sha256": "bca311cdcab52ee1467649de721061015ed3abd09e4e81ee730dddd27a643647"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "e62f6b363eaf79ce57ef7006009e876f2e859d9d3f909cb7caa1beaf8b251967"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "0926f922ab6e7830a0861d386c7c8df68e1a66efe2b6dd67b764da5bcc401fea"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "254142bb69a1a9c6561ae6b464cd18432b40feb5842ddf30859bd0b45c9f2b41"
+    }
+  ],
+  "claims": [
+    "The explicitly composed local-password server now executes the full canonical preparation, request, approval and final-dispatch path through actual HTTP authentication, SQLite and a synthetic canonical provider. Dispatch accepts only the original invocation/key and selected grant; authority context, input, material scope and receipt are constructed by trusted host code.",
+    "Approval advances authority revision. Dispatch refreshes the provider catalog while preserving original invocation, input, interaction, definition, provider route, schema artifacts and derived target/data terms. The host binding prevents provider, endpoint or audience substitution; historical preparations missing that binding fail closed.",
+    "One serialized canonical grant transaction checks current eligibility and pre-consumption revision, actual authentication proof, current host/catalog binding, and bound provider disposition with digest-verified evidence. It commits the canonical HumanAuthorityDecision receipt, audit, admission, and one-use consumption together. Receipt/audit failure rolls back all admission state before provider I/O.",
+    "A unique durable initial-call claim prevents duplicate initial dispatch. Concurrent HTTP retries produce one admission and one call. Missing, malformed or unverifiable provider replies and failed claim/result persistence remain outcomeUnknown; restart does not refund grants or start another call, including an admitted but unclaimed invocation.",
+    "Revocation shares the grant writer. Revocation first prevents dispatch; admission first remains recorded and may finish. Grant detail and mutation replies expose actual admitted invocation IDs. Command replays preserve the original captured IDs; the canonical source revision includes the admission ledger.",
+    "Successful output requires the canonical result envelope, original output schema and actual digest/length-verified result evidence retained with the immutable first response. Reading or replaying recorded output requires current owner/host and original schema access; withdrawal withholds output without erasing history or repeating a provider call.",
+    "The final full suite passes 644 tests, including 19 added canonical dispatch HTTP cases, 11 preparation cases and 13 canonical grant API cases. Independent workspace tools pass 43 tests, and the existing disposable PWCE context/conversation composition passes 26 checks. Migration 33 preserves prior stored data and updates expected migration reporting."
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "canonical-dispatch-full-final.log",
+      "logSha256": "4f4d5f009a887826161ee4604087541b278011aae43373a1ab1393a04dfb703e",
+      "testsPassed": 644
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "canonical-dispatch-typecheck-final.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "canonical-dispatch-build-final.log",
+      "logSha256": "536d69924f8d6423b29ed4bd48e5bffa4c5da4151374f992ed3ec4dd7d029523"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "canonical-dispatch-lint-final.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "canonical-dispatch-workspace-tests.log",
+      "logSha256": "15dc658d7e7db0bcddd58b9d02b20aba3fc1c723ed5e4067800676d56c4c3271",
+      "testsPassed": 43
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "canonical-dispatch-private-validate.log",
+      "logSha256": "cf8963618450c9f7f6852275769513e931bace38932ba42ab20ee337701b1c16"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "canonical-dispatch-pwce-context.log",
+      "logSha256": "516cc246954e6f47344d03c0730acc360894ec6fd61e80c4f63ceb846c95757b",
+      "testsPassed": 26
+    }
+  ],
+  "preservedFailures": [
+    {
+      "log": "canonical-dispatch-focused-2.log",
+      "logSha256": "ccd96cc96c0bfb841b48fe037c801be99f3b5ee9bfc12d2ed3302fcbdd5c4d44",
+      "resolution": "Fixed fixture evidence schema references and aligned fixture times with the local authentication clock."
+    },
+    {
+      "log": "canonical-dispatch-single-3.log",
+      "logSha256": "ae55d5d4988c30ac75b9c37bac37db7ca7e09ec7171e886de8a700628dc54744",
+      "resolution": "Canonical consumed grant now records the required consumedDecisionId, matching its receipt and lifecycle event."
+    },
+    {
+      "log": "canonical-dispatch-focused-3.log",
+      "logSha256": "ccd727daaaefc6bc8094d4bb9f971c548fa6def1c9825f57ae5d6b034b0ce75b",
+      "resolution": "Matched the stale-authority conflict response and shortened virtual expiry tests to stay within the real bounded-call deadline."
+    },
+    {
+      "log": "canonical-dispatch-focused-4.log",
+      "logSha256": "357f0499a65855394d330904815256f8e0656691c84a2ecc3583045ff39c8688",
+      "resolution": "Corrected a test preparation route and normalized corrupt dispatch-custody failures to safe unavailable responses."
+    }
+  ],
+  "localEvidenceDirectory": ".lifestream/benchmarks/canonical-dispatch/2026-09-15",
+  "exclusions": [
+    "The saved Human administration service was not rebuilt, restarted, reconfigured or migrated. No live device action, selected-provider call, model selection, personal-data import or training occurred.",
+    "This does not complete the canonical AuthorityProvider getGrants/invalidation subscriptions, canonical provider status reconciliation, control-web workflow migration or actual PWCE capability/authority adapter. The coarse-grant runtime path remains separate.",
+    "Historical backup restore fencing, full joint action scenarios, target-state preconditions, broad source requalification and remaining S083/S084 implementation and Human/physical/performance acceptance remain open.",
+    "No SYNPRJ_Q7M4 measurement was added or rewritten in this increment. Model-compliance telemetry remains nonblocking."
+  ]
+}
