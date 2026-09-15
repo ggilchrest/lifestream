@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-DURABLE-DELIVERY-LIFECYCLE-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "14d0913ada253a2832572496731a37cc4382ba83",
+  "specificationRevision": "c336d7ade7e8cd69bd79fa8b9df715139bc2fbd1",
+  "recordedAt": "2026-09-15T00:49:14.437455Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "5107b727c4ffa1d51eded51586b26df678f81c4526d7abe8c6132b2b17720189"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "427ac9436985a6bc103314708042684e6419ec0bb087391e1a28f43632478d2d"
+    },
+    {
+      "path": "packages/storage-sqlite/src/initiative-delivery.ts",
+      "sha256": "176d38b022cb0789bbaf8715ea27d941e13135f0ac02702567f8129cebf1f4ae"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "5dda0bac4919fed670d5350ad6ea71dabdce99910d7f6abfc188c22d16978dc6"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0023_initiative_delivery.sql",
+      "sha256": "6a6d98d787b63b2595d164d9c6f1a1d7012c5832421193f53ac07676dfe0a927"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "4e4cb44d5d2c6ec85eb95de0e54ad5a8afc813d776518b8749cf9b4e1a4ead02"
+    }
+  ],
+  "claims": [
+    "Approved Initiative v1 opportunities and outcomes are schema checked and persisted as scoped metadata. Generated text, audio and user transcript content are not ledger fields.",
+    "Atomic compare-and-swap transitions preserve generated, queued, emitted and acknowledged stages. Receipt and session binding reject cross-session, forged, premature and regressing acknowledgments. Endpoint acceptance, playback completion and response remain distinct.",
+    "Opening reservations enforce host-supplied bounded rolling hourly/daily ceilings and minimum gaps. A durable single-use emission intent charges before allowing a transport attempt but does not assert observed emission. Cancellation before issuance safely refunds; ambiguous or partial output stays charged.",
+    "Exclusive startup recovery closes every pending stage without requeue, retaining the last observed stage and unanswered-topic accounting. Source watermarks and clock fencing survive ordinary restart and bounded 24-hour record pruning.",
+    "Two simultaneous independent SQLite workers admit one occurrence. Independent writer revisions, budget checks, injected admission/emission storage faults and rollback readback are verified.",
+    "Sparse migration metadata recovery and existing server health behavior accept additive migration 23. All earlier migration and approved contract bytes remain unchanged."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "fba1f56d4a7fd97519c46f8fb4de5d1c75b4be58e4d2e3b0ae8f958ebc045623"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "3c0b5284748f454a9e4b52555a6c91c88b07f94ad1766bbbd6e7effd019d0147"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "474a1ca570f66002ecac55a5802225f634c588a3a0e60db7128217b09c59aebb"
+    },
+    {
+      "command": "node --test packages/storage-sqlite/test/database.test.ts packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "result": "pass",
+      "logSha256": "6659c67cc2b2e7dca839de97d388eed5f8c8d7c7fc453cf566d486597281a912"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "7ab2d8f5d48f358f2c5e161e1ed575309ef10f751daa5b8ccbd854b68c548d76"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 322,
+    "browserTests": 29,
+    "toolingTests": 45,
+    "focusedTests": 15,
+    "privateValidatorUnitTests": 53
+  },
+  "caseCoverage": [
+    {
+      "caseId": "LS-TEST-117",
+      "scope": "Durable owner-local metadata, concurrency, restart, clock/source and pruning component only; not host ingress, physical dwell, handoff/audio or backup-rollback conformance."
+    },
+    {
+      "caseId": "LS-TEST-120",
+      "scope": "Durable transition, receipt and conservative accounting component only; real output transport/provider/voice remains to be joined."
+    }
+  ],
+  "correctionsDuringValidation": [
+    "Node strip-only tests required ordinary class fields rather than parameter properties.",
+    "New migration made repeatable for the existing sparse-ledger recovery test.",
+    "Explicit server-health migration expectation advanced from 22 to 23."
+  ],
+  "limitations": [
+    "New canonical lifecycle repository is not yet invoked by the server Initiative coordinator. The existing legacy ledger remains unchanged until the ordinary output-only integration is completed.",
+    "Host must derive scope, source, consent, configuration, current boundary and lease decisions. Repository callbacks are internal host seams, not an authentication boundary. Denials must route to inspectable host outcomes and dispose stale candidates.",
+    "Full arrival qualification, effective behavioral settings, inference budgets, per-runtime social generation, protected simulation/session binding, output readiness, temporary modes, final context/source/privacy checks, browser output and Lab gradient remain pending.",
+    "External backup/recovery journal integration and stale restore fencing remain pending. Normal SQLite restart tests do not certify restored older database snapshots.",
+    "Preflight identifies changed effective inputs for S071/S072/S073/S076/S078. Required current-source qualification successors remain pending; no receipt is rewritten or substituted.",
+    "No actual provider inference, physical presence, audible delivery, Human acceptance, live activation, deployment, personal-data import or model-quality observation occurred. Broader S083/S084 and PWCE work remains active."
+  ]
+}

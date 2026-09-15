@@ -12,3 +12,6 @@ export type { ProfileBuilderJob, ProfileCandidate, ProfileUpload, ProfileSource,
 
 export { UnderstandingRepository, understandingDigest, hypothesisFingerprint, candidateFingerprint } from "./understanding.js";
 export type { UnderstandingScope, UnderstandingRecord } from "./understanding.js";
+
+export { InitiativeDeliveryRepository } from "./initiative-delivery.js";
+export type { InitiativeScope, InitiativeOpportunity, InitiativeDeliveryOutcome, InitiativeDeliveryRecord, InitiativeDeliveryAction, InitiativeOpeningLimits } from "./initiative-delivery.js";
