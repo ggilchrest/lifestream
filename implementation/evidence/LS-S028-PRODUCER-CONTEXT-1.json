@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-PRODUCER-CONTEXT-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "0fcb7dad5348ea4367cbb3f82fc50d893b6f5b63",
+  "specificationRevision": "bf676fe63587e81510340fdd9b1fa0ff9235d079",
+  "recordedAt": "2026-09-15T06:45:44.832542Z",
+  "sourceFiles": [
+    {
+      "path": "packages/providers-pwce/src/client.ts",
+      "sha256": "7a2886f280d383128da37d100d6953e1c4b8bc198fa86582d0ffd59bae5598ec"
+    },
+    {
+      "path": "packages/providers-pwce/src/transport.ts",
+      "sha256": "acd08ef0381fdc48351540599da57109447e747f8beef601b7ff6610257c3e8d"
+    },
+    {
+      "path": "packages/runtime/src/context/pwce-mapping.ts",
+      "sha256": "bb3bac24c4f0d4756264c238afa8165e25d99ef7bf24c5f43b3d466faf65b0ac"
+    }
+  ],
+  "sourceBinding": "Consumer source is unchanged from sourceRevision. This component corrects producer-owned context before completing the Lifestream mapping.",
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "74dad87f12fab95d5da3e87197e37d553ae3de3a",
+    "batch": "DEVELOPMENT-BATCH-163.md",
+    "sourceFiles": [
+      {
+        "path": "src/domain/observation-service.js",
+        "sha256": "7e9eaa819940e03680d1fa35012c87c79f3ef93df6c5045691536ab787e9b59e"
+      },
+      {
+        "path": "src/domain/query-service.js",
+        "sha256": "631635d987224f27ccd63e68eadf1da2db1d22c4ce48ef8f4bb2cc81949e0968"
+      },
+      {
+        "path": "src/gateway/gateway-service.js",
+        "sha256": "38b32c890643b0690c97229e205b8be77531762d654e46c194ca276bbf60a054"
+      },
+      {
+        "path": "src/agent/basic-agent.js",
+        "sha256": "106baec1ad28c7e558bb7036df42bc71af03ffdd474494f80164a4aaa8454ceb"
+      },
+      {
+        "path": "test/gateway-context-qualification.test.js",
+        "sha256": "bd2b3afc784286ef3eec1a25df65e7daf3700d64ae38d6d0afa3561bf47ed1ba"
+      }
+    ]
+  },
+  "claims": [
+    "Prepared inputs retain per-item knowledge state, conflicting candidates and evidence references, site, event/receipt times, basis, age and freshness. Source revision, evaluation time and invalidation cursor are present. Current, prepared and explanation paths share qualification: old conflicting evidence remains conflicted. Missing freshness targets remain unknown.",
+    "A caller maximum-age restriction can withhold main and contradictory values without discarding the conflict or evidence references. Explicit allowStale retains qualified old values; it does not mark them current. Actual authenticated HTTP serialization preserves false and true values and omits withheld values rather than inventing false or null.",
+    "As-of retrieval uses the full eligible snapshot to select the latest observation independently of history pagination. A conflict at the requested boundary has no arbitrarily selected fact. Freshness is computed at that boundary. A 105-observation, one-item-page regression preserves selected value 103 and the source-bound history cursor.",
+    "Read-only audit writes no longer alter history/as-of/explain/search source revisions. Historical source fingerprints bind observation receipt and freshness metadata, and continuation cursor source identity matches the returned historical revision. Basic Agent history answers now return actual observation references.",
+    "The producer actual-HTTP fixture proves scoped evidence expansion and rejects a known foreign-site evidence reference. World, execution mode, request and correlation metadata survive the Gateway. The separate-process synthetic fixture also passes the existing sixteen Lifestream client/contract/mapping cases and five request-authentication checks, with mock-only negative/parser cases still distinguished.",
+    "Both affected manual/QA journeys, the feature map and a linked release note are updated. Twenty-two documentation pages pass local link/anchor/screenshot/alt/shared-CSS and index checks. No Studio layout or control changes were made."
+  ],
+  "checks": [
+    {
+      "repository": "PWCE",
+      "command": "npm test",
+      "result": "pass",
+      "logSha256": "86e98e13cf9396f71b1fc35a15d5745660a6ea83633a94d9edc0d00c8b6048e0"
+    },
+    {
+      "repository": "PWCE",
+      "command": "node --test test/gateway-context-qualification.test.js test/gateway-service.test.js test/adapter-and-query.test.js",
+      "result": "pass",
+      "logSha256": "cc3663e532966326b266fe62c8759354b2fa5ea41d7db26cc92f7a42b3b84e09"
+    },
+    {
+      "repository": "PWCE",
+      "command": "npm run validate",
+      "result": "pass",
+      "logSha256": "e31118fd431327a2355113d49120584018feac09e64cf4bcd476ecd7e5ec0cbb"
+    },
+    {
+      "repository": "PWCE",
+      "command": "python3 /private/tmp/check-pwce-context-docs.py",
+      "result": "pass",
+      "logSha256": "871d866d9b99a06f413262e5b3a32530933bfef857de6e8026072648fe326fda"
+    },
+    {
+      "repository": "Lifestream",
+      "command": "node /private/tmp/pwce-context-network.mjs",
+      "result": "pass",
+      "logSha256": "858181b695805ae54b807a18d0aedc981a335199174d78f0fd6f7a0fd5dfd0cc"
+    },
+    {
+      "repository": "Lifestream",
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "089d1910d09783b90bcb79dd00878379713815855a631abbd5065c033a321148"
+    }
+  ],
+  "counts": {
+    "producerTestsPassed": 147,
+    "newContextRegressionTestsPassed": 8,
+    "targetedProducerCasesPassed": 41,
+    "existingConsumerCasesPassed": 16,
+    "separateProcessAuthenticationChecksPassed": 5,
+    "documentationPagesChecked": 22
+  },
+  "preservedFailure": {
+    "result": "fail",
+    "casesFailed": 6,
+    "reason": "The six initial regression cases failed before correction: lost prepared qualification, age overwriting conflict, page-truncated as-of selection, arbitrary conflict selection, audit-dependent source revisions and absent Basic Agent history references.",
+    "logSha256": "e54fc436820f1ab2f34eddb3ce1fdeb3c12cc2df49261769eb5f44dc1ad2dc11"
+  },
+  "rawEvidence": {
+    "localDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-context/2026-09-15",
+    "networkDriverSha256": "747ad94f752137704cbca8d22d6d41aa0c640b3eadc98dca8930e03005f7ab16"
+  },
+  "bundle": {
+    "profileId": "pwce-agent-gateway.v1",
+    "profileVersion": "1.0.0",
+    "bundleDigest": "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2",
+    "changed": false
+  },
+  "limitations": [
+    "This closes producer correctness defects discovered while examining mapping inputs; full LS-S028/PV1-T5 acceptance remains in progress. Lifestream qualified mapping, cache invalidation/resynchronization, async authority/capability ports, runtime server composition and joint scenarios remain required.",
+    "Scope-bound SSE subscriptions must also carry current Assistant, endpoint, participant, audience and execution-mode bindings before shared-space runtime use. That transport composition is not claimed by this receipt.",
+    "Consumer runtime source did not change in this batch. The prior 428-case Lifestream source result remains historical; this batch ran the sixteen current consumer contract/client/mapping cases against the corrected producer. The 41-case producer focused run preceded the final undeclared-freshness assertion, which is covered by the final 147-case suite.",
+    "Changing historical cursor fingerprints can invalidate an older continuation cursor; a fresh first page is required. No canonical observations, saved stores, applied migrations or published contract artifacts were rewritten.",
+    "No live configuration, deployment, saved review service restart, personal-data import, training, provider/model selection, physical effect or new Human acceptance occurred. Approved schema bytes, unrelated dirty artifacts, original failure receipts and ongoing model-quality telemetry remain preserved."
+  ]
+}
