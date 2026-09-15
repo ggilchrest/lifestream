@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-GATEWAY-REQUEST-BINDING-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "906e9fbe4ae01ad46c00f34792c0e42fc97e0390",
+  "specificationRevision": "bae9b94b0035a713619916711b626fa5e8d0b064",
+  "recordedAt": "2026-09-15T06:10:01.732273Z",
+  "sourceFiles": [
+    {
+      "path": "packages/providers-pwce/src/client.ts",
+      "sha256": "21c07a26282af92db58576163c33632f6f5422b375d1392c197cab74d6b83f84"
+    },
+    {
+      "path": "packages/providers-pwce/test/client.test.ts",
+      "sha256": "8b6f74b5debd469240eab5527fca1abf70f87dfbe3f95e93179af6ea19f01763"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "e7b73b4f7773be39b4788417631937d51aed3d8b",
+    "batch": "DEVELOPMENT-BATCH-162.md",
+    "sourceFiles": [
+      {
+        "path": "src/http/gateway-server.js",
+        "sha256": "ca0e3a901a92dcb77693bdcfbb9040adff7998705f965e156526b2151c51ad2f"
+      },
+      {
+        "path": "test/gateway-http.test.js",
+        "sha256": "260a1e8179ddc860518371d9d5c02be281e3ae9cc8feda7d6a71750ff061ca49"
+      },
+      {
+        "path": "scripts/gateway-fixture-server.mjs",
+        "sha256": "0d86d7fa0c01ee761a2c5afaed5eecd433efafe72f3d1856cfa4c5190415ecf5"
+      }
+    ]
+  },
+  "claims": [
+    "Operation-specific query, evaluation, final-authorization, invocation and trace methods reject caller-supplied operation, authorityContextRef and token fields before networking. The explicitly supplied authority reference must be nonempty. Requests and authority-creation site lists are snapshotted before asynchronous negotiation so subsequent caller mutation cannot switch operation, authority, site scope or nested input.",
+    "The pinned core operation catalog must contain exactly the required twelve operation names without missing entries, duplicates or extra undeclared operations. An otherwise advertised health request is withheld if core coverage is incompatible. Existing bundle/version/artifact/generated-client digest checks remain.",
+    "PWCE HTTP requests require an object body. A token field is rejected before the authenticated service is called, and the bearer-header token is bound after request fields. Correctly authenticated requests continue to work; knowing an authority reference or putting a valid token in a body cannot replace connection authentication.",
+    "The joined loopback fixture uses the actual PWCE gateway binding in a separate process, memory-only synthetic state and a generated synthetic token, with no Home Assistant adapter or action service. Five actual HTTP boundary cases pass without token disclosure. Sixteen Lifestream contract/client/mapping tests pass with the existing live-compatible tests pointed at this gateway; negative and parser cases that intentionally use fixture responses remain labeled fixture proof.",
+    "The public producer manual, QA, feature-map and release note describe the authentication correction. Twenty-one documentation pages passed link/anchor/screenshot-path checks; Studio controls were not changed. The fixed fixture host shuts down explicitly or at its 60-second limit."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "d73a9ed1120acaf7ab26bc86245a33dc48075c913cb68cd5b84ada55ebed45da"
+    },
+    {
+      "command": "node --test packages/providers-pwce/test/client.test.ts",
+      "result": "pass",
+      "logSha256": "23b9af314f5fac53368cf3511fd8e435df3cbe2222ea69b5c16d0359871d8345"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "437ac330dee98fbaec3c0064c63ea2fd401f41ff1b582237f867b5a1d9ae1e57"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "bff50a8894993742e263511fbf4d5eb889fb4c2775c2839e977d838e5294fe82"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node /private/tmp/pwce-boundary-network-final.mjs",
+      "result": "pass",
+      "logSha256": "858181b695805ae54b807a18d0aedc981a335199174d78f0fd6f7a0fd5dfd0cc"
+    }
+  ],
+  "counts": {
+    "lifestreamSourceTestsPassed": 408,
+    "newLifestreamSourceTestsPassed": 3,
+    "lifestreamToolingTestsPassed": 45,
+    "pwceTestsPassed": 139,
+    "newPwceTestsPassed": 1,
+    "consumerContractClientMappingTestsPassed": 16,
+    "actualHttpBoundaryChecksPassed": 5,
+    "documentationPagesChecked": 21
+  },
+  "networkChecks": [
+    {
+      "name": "missing-header",
+      "status": 400
+    },
+    {
+      "name": "wrong-header",
+      "status": 400
+    },
+    {
+      "name": "correct-header-with-body-token",
+      "status": 400
+    },
+    {
+      "name": "wrong-header-without-body-token",
+      "status": 401
+    },
+    {
+      "name": "valid-header",
+      "status": 200
+    }
+  ],
+  "bundle": {
+    "profileId": "pwce-agent-gateway.v1",
+    "profileVersion": "1.0.0",
+    "bundleDigest": "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2",
+    "changed": false
+  },
+  "historicalEvidencePreserved": [
+    {
+      "path": "implementation/evidence/LS-S028.json",
+      "sha256": "7e76d9d8dc10764b313f553dd60c3cef6c509d29350102848dce8669295f139c"
+    },
+    {
+      "path": "implementation/evidence/LS-S046.json",
+      "sha256": "71209f29306bad998a02416227e3d90ae27c9d52df87118f9c55e3765f5e1ebe"
+    },
+    {
+      "path": "implementation/evidence/XR-001-pwce-consumer-reconciliation.json",
+      "sha256": "67039ca1a1a4f30f2e1bb29265ff6b87a0aa023d62a1a2dcfed65c73aad0e1d0"
+    }
+  ],
+  "limitations": [
+    "The server still does not instantiate the PWCE runtime adapter. Rich qualified response mapping, async authority/capability integration, bounded transport/deadlines, invalidation/resynchronization, runtime composition and the complete joint scenarios remain implementation/verification work; this receipt does not close PV1-T5 or full LS-S028 acceptance.",
+    "No optional PWCE profile, live provider, Home Assistant effect, deployment, saved review service restart, live configuration, personal-data import, training or Human acceptance was performed. Unrelated dirty artifacts and approved schemas remain preserved.",
+    "The standalone PWCE compatibility CLI usage attempt lacked its required lock path and was not a compatibility qualification. Existing fixture compatibility tests passed in the producer suite; no composition acceptance lock was advanced.",
+    "S083/S084 remaining work and full provider/performance qualifications remain open. Existing deadline failures and model-quality observations were not rewritten. Browser behavior was not changed by the uninstantiated client, so the prior browser suite was not rerun for this component."
+  ]
+}

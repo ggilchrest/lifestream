@@ -3,6 +3,9 @@ export type PwceBundle = { readonly bundleId: string; readonly bundleVersion: st
 export type PwceClientOptions = { readonly baseUrl: string; readonly token: string; readonly fetchImpl?: typeof fetch };
 export type PwceClientResult = { readonly status: string; readonly [key: string]: unknown };
 export type PwceInvalidationEvent = { readonly id: string | null; readonly event: string; readonly data: string };
+const CORE_OPERATIONS = Object.freeze(["context.getPreparedInputs", "context.query", "evidence.get", "events.subscribe", "authority.evaluate", "authority.authorizeDispatch", "authority.getGrants", "capabilities.getSnapshot", "capabilities.invoke", "capabilities.getInvocation", "trace.publish", "health.get"]);
+const objectInput=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
+
 export const EXPECTED_PWCE_PROFILE = Object.freeze({ profileId: "pwce-agent-gateway.v1", profileVersion: "1.0.0", bundleId: "pwce-agent-gateway.bundle.v1", bundleVersion: "1.0.0", schemaDigest: "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2", operationCatalogVersion: "0.1.0", operationCatalogDigest: "445cb4e4b9811a26a41c5821c7d68b09f377b69d24d42ec6dcd0acec5d950b65" });
 export const EXPECTED_PWCE_ARTIFACTS = Object.freeze([
   { path: "contracts/gateway/operation-catalog.json", sha256: "51bfb941913fc27578dc3c4b3ca038d4bfdf4433eda72f2069173503e7b19a0c" },
@@ -18,21 +21,39 @@ export const EXPECTED_PWCE_GENERATED_CLIENT_SHA256 = "fdb2a5a425b1a54e0d41c923e6
 export class PwceGatewayClient {
   private readonly baseUrl: string; private readonly token: string; private readonly fetchImpl: typeof fetch;
   constructor(options: PwceClientOptions) { if (!options.baseUrl || !options.token) throw new Error("PWCE gateway URL and token are required"); this.baseUrl = options.baseUrl.replace(/\/$/, ""); this.token = options.token; this.fetchImpl = options.fetchImpl ?? fetch; }
-  async profile(signal?: AbortSignal): Promise<PwceProfile> { const profile = await this.json<PwceProfile>("/gateway/v1/profile", { ...(signal ? { signal } : {}) }); if (profile.profileId !== EXPECTED_PWCE_PROFILE.profileId || profile.profileVersion !== EXPECTED_PWCE_PROFILE.profileVersion || profile.bundleId !== EXPECTED_PWCE_PROFILE.bundleId || profile.bundleVersion !== EXPECTED_PWCE_PROFILE.bundleVersion || profile.schemaDigest !== EXPECTED_PWCE_PROFILE.schemaDigest || profile.operationCatalogVersion !== EXPECTED_PWCE_PROFILE.operationCatalogVersion || profile.operationCatalogDigest !== EXPECTED_PWCE_PROFILE.operationCatalogDigest || profile.schemaStatus !== "published") throw new Error("PWCE gateway profile is incompatible"); return profile; }
+  async profile(signal?: AbortSignal): Promise<PwceProfile> { const profile = await this.json<PwceProfile>("/gateway/v1/profile", { ...(signal ? { signal } : {}) }); if (profile.profileId !== EXPECTED_PWCE_PROFILE.profileId || profile.profileVersion !== EXPECTED_PWCE_PROFILE.profileVersion || profile.bundleId !== EXPECTED_PWCE_PROFILE.bundleId || profile.bundleVersion !== EXPECTED_PWCE_PROFILE.bundleVersion || profile.schemaDigest !== EXPECTED_PWCE_PROFILE.schemaDigest || profile.operationCatalogVersion !== EXPECTED_PWCE_PROFILE.operationCatalogVersion || profile.operationCatalogDigest !== EXPECTED_PWCE_PROFILE.operationCatalogDigest || profile.schemaStatus !== "published") throw new Error("PWCE gateway profile is incompatible");
+    if (!Array.isArray(profile.operationCatalog) || profile.operationCatalog.length !== CORE_OPERATIONS.length
+      || new Set(profile.operationCatalog.map(entry=>entry?.operation)).size !== CORE_OPERATIONS.length
+      || CORE_OPERATIONS.some(operation=>!profile.operationCatalog.some(entry=>entry?.operation===operation)))
+      throw new Error("PWCE gateway required core operation catalog is incompatible");
+    return profile; }
   async bundle(signal?: AbortSignal): Promise<PwceBundle> { const bundle = await this.json<PwceBundle>("/gateway/v1/bundle", { ...(signal ? { signal } : {}) }); if (bundle.bundleId !== EXPECTED_PWCE_PROFILE.bundleId || bundle.bundleVersion !== EXPECTED_PWCE_PROFILE.bundleVersion || bundle.bundleDigest !== EXPECTED_PWCE_PROFILE.schemaDigest || bundle.generatedClient.path !== "src/gateway/generated-client.js" || bundle.generatedClient.sha256 !== EXPECTED_PWCE_GENERATED_CLIENT_SHA256 || JSON.stringify(bundle.artifacts) !== JSON.stringify(EXPECTED_PWCE_ARTIFACTS)) throw new Error("PWCE gateway bundle is incompatible"); return bundle; }
   async negotiate(signal?: AbortSignal): Promise<{ readonly profile: PwceProfile; readonly bundle: PwceBundle }> { const [profile, bundle] = await Promise.all([this.profile(signal), this.bundle(signal)]); return { profile, bundle }; }
-  async authority(siteRefs: readonly string[], signal?: AbortSignal): Promise<PwceClientResult> { await this.negotiate(signal); return this.json("/gateway/v1/authority", { method: "POST", body: { siteRefs: [...siteRefs] }, ...(signal ? { signal } : {}) }); }
-  async request(payload: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { const { profile } = await this.negotiate(signal); if (!profile.operationCatalog.some((entry) => entry.operation === payload.operation)) throw new Error("PWCE operation is not advertised"); return this.json("/gateway/v1/request", { method: "POST", body: payload, ...(signal ? { signal } : {}) }); }
+  async authority(siteRefs: readonly string[], signal?: AbortSignal): Promise<PwceClientResult> { const body = { siteRefs: [...siteRefs] }; await this.negotiate(signal); return this.json("/gateway/v1/authority", { method: "POST", body, ...(signal ? { signal } : {}) }); }
+  async request(payload: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> {
+    if(!objectInput(payload)||Object.hasOwn(payload,'token'))throw new Error('PWCE request body cannot supply transport credentials');
+    // Snapshot before asynchronous negotiation; later caller mutation cannot change
+    // the operation, authority or normalized input that was admitted here.
+    const body=structuredClone(payload);
+    if(typeof body.operation!=='string'||!CORE_OPERATIONS.includes(body.operation))throw new Error('PWCE operation is not advertised');
+    await this.negotiate(signal);
+    return this.json("/gateway/v1/request", { method: "POST", body, ...(signal ? { signal } : {}) });
+  }
+  private async boundRequest(operation:string,authorityContextRef:string,input:Record<string,unknown>,signal?:AbortSignal):Promise<PwceClientResult> {
+    if(typeof authorityContextRef!=='string'||!authorityContextRef.trim())throw new Error('PWCE authority reference is required');
+    if(!objectInput(input)||['operation','authorityContextRef','token'].some(field=>Object.hasOwn(input,field)))throw new Error('PWCE input cannot replace a bound operation, authority or transport credential');
+    return this.request({...structuredClone(input),operation,authorityContextRef},signal);
+  }
   getPreparedInputs(authorityContextRef: string, siteRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "context.getPreparedInputs", authorityContextRef, siteRef }, signal); }
-  queryContext(authorityContextRef: string, query: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "context.query", authorityContextRef, ...query }, signal); }
+  queryContext(authorityContextRef: string, query: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.boundRequest("context.query", authorityContextRef, query, signal); }
   getEvidence(authorityContextRef: string, evidenceRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "evidence.get", authorityContextRef, evidenceRef }, signal); }
   getGrants(authorityContextRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "authority.getGrants", authorityContextRef }, signal); }
-  evaluate(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "authority.evaluate", authorityContextRef, ...input }, signal); }
-  authorizeDispatch(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "authority.authorizeDispatch", authorityContextRef, ...input }, signal); }
+  evaluate(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.boundRequest("authority.evaluate", authorityContextRef, input, signal); }
+  authorizeDispatch(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.boundRequest("authority.authorizeDispatch", authorityContextRef, input, signal); }
   getCapabilities(authorityContextRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "capabilities.getSnapshot", authorityContextRef }, signal); }
-  invoke(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "capabilities.invoke", authorityContextRef, ...input }, signal); }
+  invoke(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.boundRequest("capabilities.invoke", authorityContextRef, input, signal); }
   getInvocation(authorityContextRef: string, actionRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "capabilities.getInvocation", authorityContextRef, actionRef }, signal); }
-  publishTrace(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "trace.publish", authorityContextRef, ...input }, signal); }
+  publishTrace(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.boundRequest("trace.publish", authorityContextRef, input, signal); }
   eventsUrl(authorityContextRef: string, siteRef: string, afterCursor = "0", limit = 100): string { const params = new URLSearchParams({ authorityContextRef, siteRef, afterCursor, limit: String(limit) }); return `${this.baseUrl}/gateway/v1/events?${params}`; }
   async *subscribeInvalidations(authorityContextRef: string, siteRef: string, options: { readonly afterCursor?: string; readonly limit?: number; readonly signal?: AbortSignal } = {}): AsyncGenerator<PwceInvalidationEvent> {
     await this.negotiate(options.signal);

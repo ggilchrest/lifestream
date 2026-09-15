@@ -3,8 +3,8 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "966edf27ba301bf2aae88867fc27792faa8dfb5f",
-  "activeSlice": "LS-S084",
+  "currentRevision": "906e9fbe4ae01ad46c00f34792c0e42fc97e0390",
+  "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
@@ -75,172 +75,63 @@
     "LS-S081"
   ],
   "allowedFiles": [
-    "packages/contracts/src/schemas/personal-understanding.schema.json",
-    "packages/contracts/test/contract-validation.test.ts",
-    "packages/runtime/src/understanding/coordinator.ts",
-    "packages/runtime/src/understanding/selection.ts",
-    "packages/runtime/test/understanding.test.ts",
-    "packages/runtime/src/context/builder.ts",
-    "packages/runtime/src/context/cache.ts",
-    "packages/runtime/src/inference/prompt.ts",
-    "packages/runtime/test/context.test.ts",
-    "packages/runtime/src/dreaming/run.ts",
-    "packages/runtime/src/dreaming/proposal-validator.ts",
-    "packages/runtime/src/dreaming/apply.ts",
-    "packages/runtime/src/dreaming/reverse.ts",
-    "packages/runtime/test/dreaming.test.ts",
-    "packages/runtime/src/capabilities/ports.ts",
-    "packages/runtime/src/capabilities/resolver.ts",
-    "packages/runtime/test/capabilities.test.ts",
-    "packages/storage-sqlite/src/understanding.ts",
-    "packages/storage-sqlite/test/understanding.test.ts",
-    "packages/storage-sqlite/src/memory.ts",
-    "packages/storage-sqlite/src/dreaming-repository.ts",
-    "packages/storage-sqlite/test/memory.test.ts",
-    "packages/performance/src/benchmark.ts",
-    "packages/performance/test/understanding.test.ts",
-    "apps/server/src/index.ts",
-    "apps/server/test/understanding.test.ts",
-    "apps/server/test/server.test.ts",
-    "apps/control-web/app.js",
-    "apps/control-web/index.html",
-    "apps/control-web/styles.css",
-    "apps/control-web/test/understanding.test.mjs",
-    "docs/human-testing-guide.html",
+    "packages/providers-pwce/src/client.ts",
+    "packages/providers-pwce/test/client.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S084.json",
-    "packages/runtime/src/inference/port.ts",
-    "packages/runtime/test/inference.test.ts",
-    "packages/runtime/test/dreaming-run.test.ts",
-    "packages/runtime/test/dreaming-application.test.ts",
-    "packages/storage-sqlite/src/profile-builder.ts",
-    "packages/performance/test/benchmark.test.ts",
-    "packages/contracts/src/schemas/understanding-api.schema.json",
-    "implementation/evidence/S083-S084-PREPARATION-1.json",
-    "implementation/evidence/LS-S073-development-extension-regression-1.json",
-    "implementation/evidence/S083-S084-SCHEMA-EXPORT-1.json",
-    "apps/server/src/relationship-extensions.ts",
-    "apps/server/test/relationship-extensions.test.ts",
-    "packages/contracts/src/schemas/relational-initiative.schema.json",
-    "packages/contracts/src/schemas/initiative-api.schema.json",
-    "apps/control-web/relationship-extensions.js",
-    "apps/control-web/test/relationship-extensions.test.mjs",
-    "apps/control-web/workspace.js",
-    "apps/control-web/DESIGN.md",
-    "packages/contracts/src/validator.ts",
-    "implementation/evidence/S083-S084-CONFIGURATION-1.json",
-    "packages/storage-sqlite/src/migrations/0020_understanding.sql",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/src/index.ts",
-    "packages/storage-sqlite/package.json",
-    "packages/runtime/package.json",
-    "pnpm-lock.yaml",
-    "apps/server/src/admin/understanding.ts",
-    "apps/server/src/admin/relationship-recovery.ts",
-    "apps/server/src/admin/recovery-journal.ts",
-    "tests/fixtures/extension-settings.ts",
-    "apps/control-web/discovery-workflows.js",
-    "implementation/evidence/S084-SUPPLIED-SOURCE-PREPARATION-1.json",
-    "apps/server/src/admin/discovery-feedback.ts",
-    "apps/server/src/admin/relationship-records.ts",
-    "implementation/evidence/S084-SCOPED-FEEDBACK-1.json",
-    "apps/server/src/admin/discovery-analysis.ts",
-    "apps/server/test/discovery-analysis.test.ts",
-    "packages/providers-ollama/src/provider.ts",
-    "packages/providers-ollama/test/provider.test.ts",
-    "packages/providers-sglang/src/provider.ts",
-    "packages/providers-sglang/test/provider.test.ts",
-    "implementation/evidence/S084-BOUNDED-ANALYSIS-1.json",
-    "packages/storage-sqlite/src/migrations/0021_understanding_review.sql",
-    "apps/server/test/discovery-review.test.ts",
-    "apps/control-web/test/discovery-review.test.mjs",
-    "implementation/evidence/S084-HYPOTHESIS-REVIEW-1.json",
-    "apps/server/src/admin/discovery-candidates.ts",
-    "apps/server/test/discovery-candidates.test.ts",
-    "packages/storage-sqlite/src/migrations/0022_understanding_candidates.sql",
-    "implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json",
-    "apps/server/src/runtime/inference.ts",
-    "apps/server/src/runtime/audio.ts",
-    "apps/server/src/admin/discovery-selection.ts",
-    "apps/server/src/admin/discovery-lab.ts",
-    "apps/server/src/admin/discovery-lab-worker.ts",
-    "apps/server/test/discovery-lab.test.ts",
-    "apps/control-web/discovery-lab.js",
-    "apps/control-web/test/discovery-lab.test.mjs",
-    "implementation/evidence/S084-DISCOVERY-LAB-1.json",
-    "apps/server/src/admin/discovery-preference.ts",
-    "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json",
-    "apps/server/test/discovery-selection.test.ts",
-    "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json",
-    "scripts/benchmark-discovery-local.mjs",
-    "scripts/discovery-benchmark-worker.mjs",
-    "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+    "implementation/evidence/LS-S028.json",
+    "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
   ],
   "changedFiles": [
-    "scripts/benchmark-discovery-local.mjs",
-    "scripts/discovery-benchmark-worker.mjs",
-    "packages/performance/src/benchmark.ts",
-    "packages/performance/test/understanding.test.ts",
-    "packages/storage-sqlite/src/understanding.ts",
-    "packages/storage-sqlite/test/understanding.test.ts",
-    "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json",
+    "packages/providers-pwce/src/client.ts",
+    "packages/providers-pwce/test/client.test.ts",
+    "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json",
     "implementation/checkpoint.json"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
+    },
+    {
+      "command": "node --test packages/providers-pwce/test/client.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
-    },
-    {
-      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
     },
     {
-      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-1.json",
-      "result": "fail",
-      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
-    },
-    {
-      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-2.json",
+      "command": "node /private/tmp/pwce-boundary-network-final.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
-    },
-    {
-      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-3.json",
-      "result": "pass",
-      "evidence": "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json"
+      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
     }
   ],
   "decisions": [
@@ -255,8 +146,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Continue S083 reserved noninterrupting presentation transport and older-database restore fencing; refresh current prerequisite and existing ai5090 qualifications. Continue S084 semantic Discovery/exploration/qualified analysis/full provider performance and PWCE Personal V1 T5 core mapping. Preserve deadline history and corpus measurements. No whole-goal blocker: independent work remains.",
-  "updatedAt": "2026-09-15T05:49:36.442789Z",
+  "nextAction": "Complete the PWCE adapter with bounded transport, qualified response mapping, invalidation/resynchronization, async authority/capability ports and server composition through existing public contracts. Continue S083 presentation/restore fencing and existing ai5090/current prerequisites; S084 semantic/exploration/analysis/full performance remains open. No whole-goal blocker: independent work remains.",
+  "updatedAt": "2026-09-15T06:10:01.732273Z",
   "updatedBy": "Codex",
-  "notes": "Bounded lexical intersection-first retrieval fixes the recorded common-word corpus starvation. Failed baseline preserves 1800 missing enabled details; both successor runs each pass all 1800 enabled inclusions at 100/10000/100000 indexed candidates. Final full suite 405 source, 48 browser and 45 tooling pass. Original contended Lab deadline history remains unresolved; full provider/semantic/performance qualification stays incomplete."
+  "notes": "Closed PWCE request-binding prerequisites across independent producer and consumer repositories. Producer 139 tests, consumer 408 source/45 tooling, 16 client-contract-mapping tests with the disposable real gateway, and 5 actual HTTP boundary checks pass. No full runtime adapter or T5 acceptance is claimed. Historical source/model/deadline receipts remain unchanged."
 }

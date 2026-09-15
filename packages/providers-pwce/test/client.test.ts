@@ -10,3 +10,37 @@ test("fails closed on an incompatible profile before any request is sent", async
 test("does not allow an unadvertised operation", async () => { const client = new PwceGatewayClient({ baseUrl: "http://fixture", token, fetchImpl: async (url) => new Response(JSON.stringify(url.endsWith("profile") ? { ...profile, operationCatalog: [{ operation: "health.get" }] } : url.endsWith("bundle") ? bundle : {}), { status: 200 }) }); await assert.rejects(() => client.request({ operation: "admin.install" }), /not advertised/); });
 test("exposes the complete mapped core operation surface", async () => { const requests: string[] = []; const client = new PwceGatewayClient({ baseUrl, token, fetchImpl: async (url, init) => { requests.push(`${init?.method ?? "GET"} ${url}`); if (url.endsWith("profile")) return new Response(JSON.stringify(profile), { status: 200 }); if (url.endsWith("bundle")) return new Response(JSON.stringify(bundle), { status: 200 }); return new Response(JSON.stringify({ status: "known", operation: JSON.parse(String(init?.body)).operation }), { status: 200 }); } }); const authority = "authority.fixture"; await client.queryContext(authority, { mode: "search", siteRefs: ["home.one"], text: "x" }); await client.getEvidence(authority, "evidence.fixture"); await client.getGrants(authority); await client.evaluate(authority, { capabilityRef: "capability.fixture" }); await client.authorizeDispatch(authority, { capabilityRef: "capability.fixture" }); await client.getCapabilities(authority); await client.invoke(authority, { capabilityRef: "capability.fixture", idempotencyKey: "idempotency.fixture" }); await client.getInvocation(authority, "action.fixture"); await client.publishTrace(authority, { traceNamespace: "lifestream.fixture", events: [{ type: "fixture" }] }); assert.deepEqual(requests.filter((request) => request.includes("/gateway/v1/request")).length, 9); });
 test("parses the PWCE bounded SSE invalidation stream", async () => { const sse = "id: 7\nevent: context.invalidated\ndata: {\"cursor\":\"7\"}\n\n: gateway-replay\n\nevent: resync.required\ndata: {\"reason\":\"cursor_expired\"}\n\n"; const stream = new ReadableStream({ start(controller) { controller.enqueue(new TextEncoder().encode(sse)); controller.close(); } }); const client = new PwceGatewayClient({ baseUrl, token, fetchImpl: async (url) => { if (url.endsWith("profile")) return new Response(JSON.stringify(profile), { status: 200 }); if (url.endsWith("bundle")) return new Response(JSON.stringify(bundle), { status: 200 }); return new Response(stream, { status: 200, headers: { "Content-Type": "text/event-stream" } }); } }); const events = []; for await (const event of client.subscribeInvalidations("authority.fixture", "home.one")) events.push(event); assert.deepEqual(events, [{ id: "7", event: "context.invalidated", data: "{\"cursor\":\"7\"}" }, { id: null, event: "resync.required", data: "{\"reason\":\"cursor_expired\"}" }]); });
+
+test('operation-specific methods reject caller replacement of operation, authority and transport credentials before networking',async()=>{
+ let calls=0;const client=new PwceGatewayClient({baseUrl:'http://fixture',token:'synthetic-client-token',fetchImpl:async()=>{calls++;throw new Error('No request should be sent');}});
+ for(const method of ['queryContext','evaluate','authorizeDispatch','invoke','publishTrace'] as const){
+  for(const field of ['operation','authorityContextRef','token'])await assert.rejects(()=>client[method]('authority.bound',{[field]:'forged'}),/cannot replace/);
+  await assert.rejects(()=>client[method]('',{}),/authority reference/);
+ }
+ await assert.rejects(()=>client.request({operation:'health.get',authorityContextRef:'authority.bound',token:'forged'}),/transport credentials/);
+ await assert.rejects(()=>client.request({operation:['health.get'],authorityContextRef:'authority.bound'}),/not advertised/);
+ assert.equal(calls,0);
+});
+
+test('required core catalog gaps and duplicates fail before otherwise advertised operations',async()=>{
+ for(const catalog of [profile.operationCatalog.slice(1),[...profile.operationCatalog.slice(1),profile.operationCatalog[1]], [...profile.operationCatalog,{operation:'admin.install'}]]){
+  const paths:string[]=[];const client=new PwceGatewayClient({baseUrl:'http://fixture',token:'synthetic-client-token',fetchImpl:async(url)=>{paths.push(String(url));return new Response(JSON.stringify(String(url).endsWith('profile')?{...profile,operationCatalog:catalog}:bundle));}});
+  await assert.rejects(()=>client.health('authority.bound'),/required core operation catalog/);
+  assert.equal(paths.some(path=>path.endsWith('/gateway/v1/request')),false);
+ }
+});
+
+test('request and wrapper inputs are snapshotted before asynchronous profile negotiation',async()=>{
+ for(const mode of ['request','query','authority']){
+  let release!:()=>void;const wait=new Promise<void>(resolve=>{release=resolve;});let observed:any;
+  const client=new PwceGatewayClient({baseUrl:'http://fixture',token:'synthetic-client-token',fetchImpl:async(url,init)=>{
+   if(String(url).endsWith('profile')){await wait;return new Response(JSON.stringify(profile));}
+   if(String(url).endsWith('bundle'))return new Response(JSON.stringify(bundle));
+   observed=JSON.parse(String(init?.body));return new Response(JSON.stringify({status:'known'}));
+  }});
+  const wrapped=mode!=='request';const input:any=wrapped?{mode:'search',siteRefs:['home.one']}:{operation:'health.get',authorityContextRef:'authority.bound',siteRefs:['home.one']};
+  const pending=mode==='authority'?client.authority(input.siteRefs):wrapped?client.queryContext('authority.bound',input):client.request(input);
+  input.operation='capabilities.invoke';input.authorityContextRef='authority.other';input.siteRefs.push('home.other');release();await pending;
+  assert.equal(observed.operation,mode==='authority'?undefined:wrapped?'context.query':'health.get');assert.equal(observed.authorityContextRef,mode==='authority'?undefined:'authority.bound');assert.deepEqual(observed.siteRefs,['home.one']);
+ }
+});
