@@ -570,7 +570,7 @@ export class LifestreamServer {
       const initiativePath=/^\/api\/admin\/v1\/assistants\/[^/]+\/relationships\/[^/]+\/initiative\/v1$/u.test(path);
       if(method==="POST"&&initiativePath&&!["inspect","draft","preview","activate","rollback"].includes(String(body.operation)))return this.handleInitiative(request,response,path,context,body);
       const result = this.applyProtected(method, path, context, body);
-      if(initiativePath&&body.operation==="inspect"&&result.status===200){const parts=path.split("/").filter(Boolean),owner=this.admin.initiativeOwner(parts[4]!,parts[6]!,context.principalId);if(owner)result.body.records=[...(result.body.records as unknown[]),...this.initiativeHost.records(owner.scope)].slice(0,128);}
+      if(initiativePath&&body.operation==="inspect"&&result.status===200){const parts=path.split("/").filter(Boolean),owner=this.admin.initiativeOwner(parts[4]!,parts[6]!,context.principalId);if(owner){result.body.records=[...(result.body.records as unknown[]),...this.initiativeHost.records(owner.scope)].slice(0,128);result.body.explanations=[...(result.body.explanations as unknown[]),...this.initiativeHost.runtimeExplanations()];}}
       if (method !== "GET" && result.status < 400) { this.localAuth.touch(context); if (!extensionReadOnly(path, body)) this.invalidateRuntimeInputs(); }
       return json(response, result.status, result.body);
     }

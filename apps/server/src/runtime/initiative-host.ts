@@ -37,6 +37,7 @@ export class InitiativeHost {
  private readonly database:Database;
  private readonly simulation:InitiativeSimulation|undefined;
  constructor(database:Database,simulation?:InitiativeSimulation){this.database=database;this.simulation=simulation;this.ledger=new InitiativeDeliveryRepository(database);this.ledger.recover();}
+ runtimeExplanations(){return [{code:this.simulation?'synthetic_ingress_enabled':'synthetic_ingress_disabled',summary:this.simulation?'This test host accepts only its prepared synthetic occurrences for the bound subject and session.':'Synthetic ingress is disabled on this host.',sourceRefs:[] as string[]}];}
  records(scope:InitiativeScope):unknown[]{return this.ledger.list(scope).slice(0,63).flatMap(r=>[r.opportunity,r.outcome]);}
  private response(owner:InitiativeOwner,operation:string,explanations:Array<{code:string;summary:string;sourceRefs:string[]}>=[],changed=false):Result {
   return {status:200,body:{schemaVersion:'1.0.0',relationshipId:owner.scope.relationshipId,operation,activeConfigurationId:owner.configuration?.configurationId??null,records:[...(owner.configuration?[owner.configuration]:[]),...this.records(owner.scope)].slice(0,128),explanations:[{code:'bounded_runtime_history',summary:'Current configuration and at most 63 recent opportunities and outcomes. Simulation is synthetic; emission, endpoint acceptance and playback completion are separate. No microphone capture is started.',sourceRefs:[]},...explanations],activeStateChanged:changed,executionMode:this.simulation?'simulation':'live',nextCursor:null,delivery:null}};

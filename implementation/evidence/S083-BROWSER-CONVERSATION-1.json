@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-BROWSER-CONVERSATION-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "ed24c315d09354d84d475defd6e71148cad744af",
+  "specificationRevision": "4db9964f5db28a2c3c517ba315322e5c973fc3cf",
+  "recordedAt": "2026-09-15T03:11:29.776590Z",
+  "sourceFiles": [
+    {
+      "path": "apps/control-web/conversation-output.js",
+      "sha256": "383178410f864ec114325d0a40946527d8f32c29a1e582dbdef7a4e141300327"
+    },
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "ae0c5b3aaadedfd60cdc651259456a7734e80ca8aa83dcc9ce4de65be0e38f56"
+    },
+    {
+      "path": "apps/control-web/test/initiative-conversation.test.mjs",
+      "sha256": "5cfc3b49724c6a14c400f175acd946d55d62d3584778bf0030286cb027707d83"
+    },
+    {
+      "path": "apps/control-web/app.js",
+      "sha256": "4a60b14095050aed9148feb6de941f99a61a091fcfcb6d2d9791ccae722a60f8"
+    },
+    {
+      "path": "apps/control-web/workspace.js",
+      "sha256": "fd72608ffda33600ba8d7dcc7c12303a2ec9746e1d60b3d5e74a04643a6f2733"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "88a398070018c6d0db03ee0803b2495ddf582672a516251bf89315bddc6fe9d5"
+    },
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "760ef323ef3d2f25fa224ebf034f3f7b909e31aaa2311685da6fd73bea19ae3e"
+    },
+    {
+      "path": "apps/server/src/runtime/initiative-host.ts",
+      "sha256": "11ee04de066aa52d6c1fe9f2a336143189c2c4784888d1dd1fe8d6f6fc751af6"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "b6903f51ad4895db5e0199b8c1575ceab06618a02b72db2bcce2417cd68ef0f8"
+    }
+  ],
+  "claims": [
+    "First-party Conversation navigation joins ordinary typed replies with explicitly enabled text or output-only speech openings. Displayed Assistant turns carry opportunity, conversation and interaction references, without fabricated user turns. Recent displayed context is bounded to 20 entries and approximately 64 KiB; the page retains at most 100 turns and clears them on account, Assistant, relationship or disclosure changes.",
+    "Speech setup resumes Web Audio from the explicit browser gesture and connects the existing authenticated AudioSession without capture, start or STT. The browser matches the one-use HTTP metadata to its WebSocket trace and text before scheduling PCM. Endpoint acceptance follows the match; playback acknowledgment follows successful synthesis and all scheduled sources ending naturally. Stopping sources cannot produce a playback claim.",
+    "Output readiness, reviewed permission and session disclosure remain distinct. Quiet and temporary companionship use the existing scoped runtime operations. Synthetic testing is visible only when the host explicitly supports it, and accepts only a host-prepared occurrence identifier rather than client-authored identity, arrival or consent facts.",
+    "Stop, ordinary typed replies, navigation, hidden pages and scope changes cancel output and prevent automatic resumption. Stop also aborts social generation and fences a typed submission waiting for readiness shutdown, preventing a late model request. Transport errors, expiry and unmatched or oversized frames fail visibly.",
+    "Records have labeled lifecycle, acknowledgment and response fields, with long identifiers and evidence in a collapsed details section. Desktop and mobile layouts were inspected from isolated authenticated browser captures; no horizontal overflow was observed at 390 pixels.",
+    "Browser fixtures exercise actual local authentication, protected configuration and session APIs, synthetic text/speech delivery, receipt timing, typed reply context, quiet suppression, Stop during playback/generation/readiness shutdown, and sign-out clearing. They observe no microphone or recognition calls for output-only openings."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "09ec81ef0c5764460762a8ed3dcf79a5c9cf569901ca724b4a0ac4da98f2399a"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "f26909eb8a8bcf0aba65966b6915b64229fd3310fd0aba198bdff9ea9e376a5c"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "a50810cd7e0a1aba74965a764b6e6094eaff8502f7d3e7117a4eb633683e4fb1"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "3e23b4c2843029f898cc6af1f7e75950e7dbac582d14a14a5366783ab73c2bf6"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 371,
+    "browserTests": 35,
+    "toolingTests": 45,
+    "newBrowserFileTests": 6
+  },
+  "visualArtifacts": [
+    {
+      "kind": "desktop",
+      "sha256": "09e9828e0ebb9f3efa8d752aa8750cc35a029fcc02b9519bc845a523a8c4edd3",
+      "retention": "Local screenshot only; not committed"
+    },
+    {
+      "kind": "mobile",
+      "sha256": "1259bc20f524a484b5fe4b236a121612baf6dcba4318dcc82529aa3d51c558ce",
+      "retention": "Local screenshot only; not committed"
+    }
+  ],
+  "intermediateFindings": [
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "fail",
+      "logSha256": "ed9d26ded4201d345c7a89074a1e386cf3955f2634ed653fb1eaacb86c6956bd",
+      "summary": "The initial full browser run checked the prior playback history before an asynchronous refresh finished and expected Replied too early. The assertion now waits for the actual response field. The later complete browser suite passes."
+    },
+    {
+      "summary": "Review found a pending typed submission could outlive Stop while waiting for output shutdown. Stop now invalidates that submission; an added delayed-readiness browser test proves no cancelled message reaches inference."
+    }
+  ],
+  "limitations": [
+    "This new Conversation view is output-only and explicitly does not offer microphone capture or voice barge-in. Server preemption support exists, but the full browser microphone and ordinary audio lifecycle remains to be integrated and qualified.",
+    "Synthetic source setup is host-owned and currently requires a prepared occurrence identifier. A guided synthetic host workflow, gradient Lab, reserved acknowledgments, bounded timing adaptation, expression inspection and older-database restore fencing remain open.",
+    "Headless browser tests used synthetic text and silent PCM. They do not establish selected-provider behavior, physical audibility, Human reception, physical presence or full S083 acceptance. Prosodic warmth remains explicitly unsupported by the current speech mapping.",
+    "Current-source prerequisite qualifications, remaining S084 semantic and performance work, and PWCE Personal V1 core integration remain active. Historical failed observations and Human acceptance records remain unchanged.",
+    "No saved review service was restarted or deployed. No personal-data import, live configuration change, training, provider selection or new model-quality observation occurred. The approved four schemas and unrelated dirty artifacts remain unchanged."
+  ]
+}
