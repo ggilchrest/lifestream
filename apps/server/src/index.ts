@@ -590,7 +590,12 @@ export class LifestreamServer {
       if (method !== "GET") { this.localAuth.csrf(context, String(request.headers["x-lifestream-csrf"] ?? "")); if (body.authoredBy === "ai" || body.authoredBy === "model") throw new AuthenticationError(403, "ai_change_requires_proposal_review"); }
       const initiativePath=/^\/api\/admin\/v1\/assistants\/[^/]+\/relationships\/[^/]+\/initiative\/v1$/u.test(path);
       if(method==="POST"&&initiativePath&&!["inspect","draft","preview","activate","rollback","compare"].includes(String(body.operation)))return this.handleInitiative(request,response,path,context,body);
-      const result = this.applyProtected(method, path, context, body);
+      const cancellation = new AbortController();
+      const onClose=()=>{if(!response.writableEnded)cancellation.abort();};response.once("close",onClose);
+      const call={requestId:randomUUID(),correlationId:randomUUID(),deadlineAt:new Date(Date.now()+5000).toISOString(),executionMode:"live" as const,signal:cancellation.signal,isCurrent:()=>{try{this.localAuth!.assertCurrent(context);const assistantId=path.split("/").filter(Boolean)[4];return !!assistantId&&this.localAuth!.canAdminister(context,assistantId)&&!["draining","stopped"].includes(this.state);}catch{return false;}}};
+      let result: AdminResult;
+      try {result=path.startsWith("/api/authority/v1/")&&this.config.authority.provider!=="pwce" ? await this.securityAdmin!.handle(method,path,context,body,call) : this.applyProtected(method,path,context,body);}
+      finally{response.removeListener("close",onClose);cancellation.abort();}
       if(initiativePath&&body.operation==="inspect"&&result.status===200){const parts=path.split("/").filter(Boolean),owner=this.admin.initiativeOwner(parts[4]!,parts[6]!,context.principalId);if(owner){this.initiativeHost.augmentInspection(owner,context.sessionId,result.body);}}
       if (method !== "GET" && result.status < 400) { this.localAuth.touch(context); if (!extensionReadOnly(path, body)) this.invalidateRuntimeInputs(); }
       return json(response, result.status, result.body);
@@ -626,7 +631,7 @@ export class LifestreamServer {
     const auth = this.localAuth!; auth.assertCurrent(context);
     if (path.startsWith("/api/authority/v1/")) {
       if (this.config.authority.provider === "pwce") return { status: 503, body: { code: "pwce_authority_unavailable", message: "PWCE action administration is unavailable; local grants cannot substitute." } };
-      return this.securityAdmin!.handle(method, path, context, body);
+      return this.securityAdmin!.handleLocal(method, path, context, body);
     }
     if (method === "GET" && path === "/api/admin/v1/capabilities") return { status: 200, body: { capabilities: administrationCapabilities(), grantsAuthority: false } };
     if (path === "/api/admin/v1/people/me" || /^\/api\/admin\/v1\/people\/me\/(?:activate|revoke|rollback|export)$/u.test(path)) return this.admin.handleUserProfile(method, path.split("/")[6], context.principalId, body, id => auth.canAdminister(context, id));

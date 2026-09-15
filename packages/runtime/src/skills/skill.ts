@@ -1,10 +1,12 @@
+import type {CapabilityCallContext} from "../capabilities/ports.js";
+import {CapabilityCall} from "../capabilities/call.ts";
 export type SkillStatus = "draft" | "active" | "retired";
 export type JsonObject = { [key: string]: unknown };
 export type Binding = { targetPointer: string; source: { type: "literal"; value: unknown } | { type: "input"; pointer: string } | { type: "stepOutput"; stepId: string; pointer: string } };
 export type SkillStep = { stepId: string; capabilityId: string; capabilityVersion: string; inputBindings: Binding[]; onMissingInput: "reject" };
 export type Skill = { schemaVersion: "1.0.0"; skillId: string; assistantId: string; revision: number; version: string; status: SkillStatus; name: string; description: string; requiredCapabilities: { capabilityId: string; version: string }[]; preconditions: ({ type: "inputPresent"; pointer: string } | { type: "inputEquals"; pointer: string; value: unknown })[]; maxSteps: number; steps: SkillStep[]; outputBindings: Binding[]; failurePolicy: "stop"; compensationGuidance: string; provenance: unknown; createdAt: string; createdBy: string; activationRef: unknown };
-export type SkillInvocation = { capabilityId: string; capabilityVersion: string; input: unknown };
-export type SkillInvoker = (invocation: SkillInvocation) => { lifecycle: "succeeded" | "denied" | "approvalRequired" | "failed" | "outcomeUnknown"; output?: unknown; reason?: string };
+export type SkillInvocation = { invocationId: string; capabilityId: string; capabilityVersion: string; input: unknown };
+export type SkillInvoker = (invocation: SkillInvocation, context: CapabilityCallContext) => Promise<{ lifecycle: "succeeded" | "denied" | "approvalRequired" | "failed" | "outcomeUnknown"; output?: unknown; reason?: string }>;
 export type SkillExecutionResult = { skillId: string; skillRevision: number; executionId: string; status: "succeeded" | "failed" | "approvalRequired" | "outcomeUnknown"; completedStepIds: string[]; stoppedAtStepId: string | null; invocationIds: string[]; output: unknown; reason: string | null };
 export type CapabilityProposal = { proposalId: string; assistantId: string; capabilityId: string; userValue: string; interactionRef: string; requiredData: string[]; effects: string[]; risks: string[]; candidateProviders: string[]; status: "inert" };
 
@@ -24,25 +26,31 @@ export function createCapabilityProposal(input: Omit<CapabilityProposal, "status
 }
 
 export class SkillExecutor {
-  private readonly available: (capabilityId: string, version: string) => boolean;
+  private readonly available: (capabilityId: string, version: string, context: CapabilityCallContext) => Promise<boolean>;
   private readonly invoke: SkillInvoker;
-  constructor(available: (capabilityId: string, version: string) => boolean, invoke: SkillInvoker) { this.available = available; this.invoke = invoke; }
+  constructor(available: (capabilityId: string, version: string, context: CapabilityCallContext) => Promise<boolean>, invoke: SkillInvoker) { this.available = available; this.invoke = invoke; }
 
-  execute(skill: Skill, input: unknown, executionId: string): SkillExecutionResult {
+  async execute(skill: Skill, input: unknown, executionId: string, context: CapabilityCallContext): Promise<SkillExecutionResult> {
+    skill=structuredClone(skill);input=structuredClone(input);
+    const call=new CapabilityCall(context);
+    try {
     validateSkill(skill);
     if (skill.status !== "active") return this.result(skill, executionId, "failed", [], null, [], null, "skill_not_active");
-    if (skill.requiredCapabilities.some((required) => !this.available(required.capabilityId, required.version))) return this.result(skill, executionId, "failed", [], null, [], null, "capability_missing");
+    for (const required of skill.requiredCapabilities) if (!await call.wait(()=>this.available(required.capabilityId, required.version,call.context))) return this.result(skill, executionId, "failed", [], null, [], null, "capability_missing");
     if (!preconditionsHold(skill.preconditions, input)) return this.result(skill, executionId, "failed", [], null, [], null, "precondition_failed");
     const outputs = new Map<string, unknown>(); const completed: string[] = []; const invocationIds: string[] = [];
     for (const step of skill.steps) {
       const args = materialize(step.inputBindings, input, outputs);
       if (!args.ok) return this.result(skill, executionId, "failed", completed, step.stepId, invocationIds, null, "input_missing");
       const invocationId = `${executionId}:${step.stepId}`; invocationIds.push(invocationId);
-      const outcome = this.invoke({ capabilityId: step.capabilityId, capabilityVersion: step.capabilityVersion, input: args.value });
+      let outcome: Awaited<ReturnType<SkillInvoker>>,started=false;
+      try { outcome = await call.wait(()=>{started=true;return this.invoke({ invocationId, capabilityId: step.capabilityId, capabilityVersion: step.capabilityVersion, input: args.value },call.context);}); }
+      catch { return this.result(skill, executionId, started ? "outcomeUnknown" : "failed", completed, step.stepId, invocationIds, null, "step_requires_reconciliation"); }
       if (outcome.lifecycle !== "succeeded") return this.result(skill, executionId, outcome.lifecycle === "approvalRequired" ? "approvalRequired" : outcome.lifecycle === "outcomeUnknown" ? "outcomeUnknown" : "failed", completed, step.stepId, invocationIds, null, outcome.reason ?? outcome.lifecycle);
       outputs.set(step.stepId, outcome.output); completed.push(step.stepId);
     }
     return this.result(skill, executionId, "succeeded", completed, null, invocationIds, materialize(skill.outputBindings, input, outputs).value ?? {}, null);
+    } finally {call.close();}
   }
 
   private result(skill: Skill, executionId: string, status: SkillExecutionResult["status"], completedStepIds: string[], stoppedAtStepId: string | null, invocationIds: string[], output: unknown, reason: string | null): SkillExecutionResult { return { skillId: skill.skillId, skillRevision: skill.revision, executionId, status, completedStepIds, stoppedAtStepId, invocationIds, output, reason }; }

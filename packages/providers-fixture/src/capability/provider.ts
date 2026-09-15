@@ -1,11 +1,5 @@
-type CapabilityDefinition = { readonly id: string; readonly version: string; readonly inputSchema: Record<string, unknown>; readonly outputSchema: Record<string, unknown>; readonly sideEffect: "none" | "reversible" | "irreversible" | "unknown"; readonly authorization: "none" | "required"; readonly idempotency: "idempotent" | "nonIdempotent" | "unsupported"; readonly latencyClass: "fast" | "bounded" | "long"; readonly offlineAvailable: boolean; readonly simulationSupported: boolean; readonly route: string };
-type AuthorityContextRef = { readonly providerRef: string; readonly contextId: string; readonly revision: number };
-type CapabilitySnapshotRequest = { readonly assistantId: string; readonly endpointId: string; readonly sessionId: string; readonly environment: string; readonly authorityContextRef: AuthorityContextRef; readonly now: string };
-type CapabilityInvocation = CapabilitySnapshotRequest & { readonly invocationId: string; readonly interactionId: string; readonly capabilityId: string; readonly capabilityVersion: string; readonly snapshotId: string; readonly snapshotRevision: number; readonly input: unknown; readonly idempotencyKey?: string };
-type CapabilityInvocationResult = { readonly invocationId: string; readonly lifecycle: "authorized" | "denied" | "approvalRequired" | "started" | "succeeded" | "failed" | "outcomeUnknown"; readonly output?: unknown; readonly reason?: string; readonly receipt?: string };
-type CapabilitySnapshot = Omit<CapabilitySnapshotRequest, "now"> & { readonly snapshotId: string; readonly revision: number; readonly expiresAt: string; readonly capabilities: readonly CapabilityDefinition[] };
-type CapabilityProvider = { getSnapshot(request: CapabilitySnapshotRequest): CapabilitySnapshot; invoke(invocation: CapabilityInvocation, capability: CapabilityDefinition): CapabilityInvocationResult; getInvocation(invocationId: string): CapabilityInvocationResult | undefined };
-
+import type {CapabilityProvider, CapabilityDefinition, AdmittedCapabilityInvocation, CapabilityInvocationResult, CapabilitySnapshot, CapabilitySnapshotRequest, CapabilityStatusRequest, CapabilityCallContext} from "@lifestream/runtime/capabilities/ports";
+const key=(request:CapabilityStatusRequest)=>JSON.stringify([request.assistantId,request.endpointId,request.sessionId,request.environment,request.authorityContextRef,request.invocationId]);
 export class FixtureCapabilityProvider implements CapabilityProvider {
   private readonly results = new Map<string, CapabilityInvocationResult>();
   private readonly calls = new Map<string, number>();
@@ -13,7 +7,8 @@ export class FixtureCapabilityProvider implements CapabilityProvider {
 
   constructor(definitions: readonly CapabilityDefinition[] = []) { this.definitions = definitions; }
 
-  getSnapshot(request: CapabilitySnapshotRequest): CapabilitySnapshot {
+  async getSnapshot(request: CapabilitySnapshotRequest, context: CapabilityCallContext): Promise<CapabilitySnapshot> {
+    context.signal.throwIfAborted(); if(!context.isCurrent())throw new Error("fixture_scope_changed");
     return Object.freeze({
       ...request,
       snapshotId: "00000000-0000-4000-8000-000000000017",
@@ -23,19 +18,22 @@ export class FixtureCapabilityProvider implements CapabilityProvider {
     });
   }
 
-  invoke(invocation: CapabilityInvocation, capability: CapabilityDefinition): CapabilityInvocationResult {
+  async invoke(invocation: AdmittedCapabilityInvocation, capability: CapabilityDefinition, context: CapabilityCallContext): Promise<CapabilityInvocationResult> {
+    context.signal.throwIfAborted(); if(!context.isCurrent())throw new Error("fixture_scope_changed");
+    if((capability.sideEffect!=="none"||capability.authorization==="required")&&(!invocation.dispatchReceipt||invocation.dispatchReceipt.status!=="admitted"||invocation.dispatchReceipt.invocationId!==invocation.invocationId))return {invocationId:invocation.invocationId,lifecycle:"denied",reason:"fixture_admission_required"};
     const calls = (this.calls.get(invocation.invocationId) ?? 0) + 1;
     this.calls.set(invocation.invocationId, calls);
-    if (this.results.has(invocation.invocationId)) return structuredClone(this.results.get(invocation.invocationId)!);
+    if (this.results.has(key(invocation))) return structuredClone(this.results.get(key(invocation))!);
     const lifecycle: CapabilityInvocationResult = capability.idempotency === "unsupported"
       ? { invocationId: invocation.invocationId, lifecycle: "outcomeUnknown", reason: "fixture_outcome_unknown" }
       : { invocationId: invocation.invocationId, lifecycle: "succeeded", output: { fixture: true } };
-    this.results.set(invocation.invocationId, lifecycle);
+    this.results.set(key(invocation), lifecycle);
     return structuredClone(lifecycle);
   }
 
-  getInvocation(invocationId: string): CapabilityInvocationResult | undefined {
-    const result = this.results.get(invocationId);
+  async getInvocation(request: CapabilityStatusRequest, context: CapabilityCallContext): Promise<CapabilityInvocationResult | undefined> {
+    context.signal.throwIfAborted(); if(!context.isCurrent())throw new Error("fixture_scope_changed");
+    const result = this.results.get(key(request));
     return result && structuredClone(result);
   }
 

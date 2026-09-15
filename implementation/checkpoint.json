@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "18c4da0dae7656153ac770ef5458e9a4d35eec79",
+  "currentRevision": "05be85b720284d24d4692f0a153c1d15b0348314",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -118,84 +118,76 @@
     "packages/runtime/test/world.test.ts",
     "scripts/check-pwce-runtime.mjs",
     "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json",
-    "apps/server/test/audio.test.ts"
+    "apps/server/test/audio.test.ts",
+    "packages/runtime/src/capabilities/ports.ts",
+    "packages/runtime/src/capabilities/resolver.ts",
+    "packages/runtime/src/capabilities/cache.ts",
+    "packages/runtime/src/capabilities/call.ts",
+    "packages/runtime/src/skills/skill.ts",
+    "packages/runtime/test/capabilities.test.ts",
+    "packages/runtime/test/skills.test.ts",
+    "packages/providers-fixture/src/capability/provider.ts",
+    "apps/server/src/admin/security-administration.ts",
+    "apps/server/test/security-administration.test.ts",
+    "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json",
+    "docs/local-authentication.md"
   ],
   "changedFiles": [
-    "apps/server/package.json",
-    "apps/server/src/composition/providers.ts",
-    "apps/server/src/composition/pwce-world.ts",
-    "apps/server/src/config/loader.ts",
-    "apps/server/src/config/pwce.ts",
-    "apps/server/src/config/schema.ts",
+    "apps/server/src/admin/security-administration.ts",
     "apps/server/src/index.ts",
-    "apps/server/src/runtime/audio.ts",
-    "apps/server/src/runtime/inference.ts",
-    "apps/server/test/audio.test.ts",
-    "apps/server/test/config.test.ts",
-    "apps/server/test/pwce-world.test.ts",
-    "apps/server/tsconfig.json",
+    "apps/server/test/security-administration.test.ts",
+    "docs/local-authentication.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json",
-    "packages/providers-pwce/src/cache.ts",
-    "packages/providers-pwce/test/cache.test.ts",
-    "packages/runtime/package.json",
-    "packages/runtime/src/context/world.ts",
-    "packages/runtime/src/inference/prompt.ts",
-    "packages/runtime/test/world.test.ts",
-    "pnpm-lock.yaml",
-    "scripts/check-pwce-context-process.mjs",
-    "scripts/check-pwce-runtime.mjs"
+    "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json",
+    "packages/providers-fixture/src/capability/provider.ts",
+    "packages/runtime/src/capabilities/cache.ts",
+    "packages/runtime/src/capabilities/call.ts",
+    "packages/runtime/src/capabilities/ports.ts",
+    "packages/runtime/src/capabilities/resolver.ts",
+    "packages/runtime/src/skills/skill.ts",
+    "packages/runtime/test/capabilities.test.ts",
+    "packages/runtime/test/skills.test.ts"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
+      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
+      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
+      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
+      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/capabilities.test.ts packages/runtime/test/skills.test.ts apps/server/test/security-administration.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
     },
     {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
-    },
-    {
-      "command": "node --test --experimental-strip-types apps/server/test/audio.test.ts apps/server/test/pwce-world.test.ts apps/server/test/config.test.ts packages/runtime/test/world.test.ts packages/providers-pwce/test/cache.test.ts",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
-    },
-    {
-      "command": "node --test --experimental-strip-types packages/runtime/test/world.test.ts",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
+      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
+      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
-    },
-    {
-      "command": "python3 /private/tmp/check-pwce-world-docs.py",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json"
+      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
     }
   ],
   "decisions": [
@@ -210,8 +202,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Complete asynchronous Authority/Capability ports and PWCE admission/outcome mapping, full mapping-profile qualification and joint scenarios. Continue remaining S083/S084 development. No whole-goal blocker; independent work remains.",
-  "updatedAt": "2026-09-15T08:26:28.829123Z",
+  "nextAction": "Complete canonical capability/authority envelopes, strict schema validation and lifecycle/invalidation mapping; implement PWCE trusted admission/invocation/reconciliation through public contracts. Then full LS-S028/PV1-T5 scenarios and remaining S083/S084 tasks. Independent work remains; no whole-goal blocker.",
+  "updatedAt": "2026-09-15T08:42:32.982345Z",
   "updatedBy": "Codex",
-  "notes": "Host-owned PWCE world preparation verified through ordinary text/audio and isolated authenticated conversation. Full LS-S028/PV1-T5 and remaining S083/S084 work are not complete."
+  "notes": "Asynchronous capability/Skill execution and authenticated HTTP caller migration verified. Canonical envelopes, strict argument validation, full lifecycle/invalidation and actual PWCE authority/action mapping remain open; not whole-slice acceptance."
 }

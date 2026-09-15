@@ -1,3 +1,4 @@
+import type {DispatchReceipt} from "../authority/authorize-dispatch.js";
 export type SideEffectClass = "none" | "reversible" | "irreversible" | "unknown";
 export type IdempotencyPosture = "idempotent" | "nonIdempotent" | "unsupported";
 
@@ -66,8 +67,15 @@ export type CapabilityInvocationResult = {
   readonly receipt?: string;
 };
 
+export type CapabilityCallContext = {
+  readonly requestId: string; readonly correlationId: string; readonly deadlineAt: string;
+  readonly executionMode: "live" | "replay" | "simulation";
+  readonly signal: AbortSignal; readonly isCurrent: () => boolean;
+};
+export type AdmittedCapabilityInvocation = CapabilityInvocation & { readonly dispatchReceipt: DispatchReceipt | null };
+export type CapabilityStatusRequest = CapabilityScope & { readonly invocationId: string };
 export interface CapabilityProvider {
-  getSnapshot(request: CapabilitySnapshotRequest): CapabilitySnapshot;
-  invoke(invocation: CapabilityInvocation, capability: CapabilityDefinition): CapabilityInvocationResult;
-  getInvocation(invocationId: string): CapabilityInvocationResult | undefined;
+  getSnapshot(request: CapabilitySnapshotRequest, context: CapabilityCallContext): Promise<CapabilitySnapshot>;
+  invoke(invocation: AdmittedCapabilityInvocation, capability: CapabilityDefinition, context: CapabilityCallContext): Promise<CapabilityInvocationResult>;
+  getInvocation(request: CapabilityStatusRequest, context: CapabilityCallContext): Promise<CapabilityInvocationResult | undefined>;
 }

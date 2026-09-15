@@ -11,17 +11,17 @@ function key(scope: CapabilityScope): string {
 }
 
 export class CapabilitySnapshotCache {
-  private readonly entries = new Map<string, CapabilitySnapshot>();
+  private readonly entries = new Map<string, {snapshot:CapabilitySnapshot; monotonicExpires:number}>();
 
-  put(snapshot: CapabilitySnapshot): CapabilitySnapshot {
+  put(snapshot: CapabilitySnapshot, now = new Date().toISOString()): CapabilitySnapshot {
     const copy = structuredClone(snapshot);
-    this.entries.set(key(snapshot), copy);
+    this.entries.set(key(snapshot), {snapshot:copy,monotonicExpires:performance.now()+Math.max(0,Date.parse(snapshot.expiresAt)-Date.parse(now))});
     return structuredClone(copy);
   }
 
   get(scope: CapabilityScope, now: string): CapabilitySnapshot | undefined {
-    const snapshot = this.entries.get(key(scope));
-    if (!snapshot || snapshot.expiresAt <= now || !sameAuthority(snapshot, scope)) return undefined;
+    const entry = this.entries.get(key(scope)),snapshot=entry?.snapshot;
+    if (!snapshot || !entry || !Number.isFinite(Date.parse(now)) || Date.parse(snapshot.expiresAt) <= Date.parse(now) || performance.now() >= entry.monotonicExpires || !sameAuthority(snapshot, scope)) return undefined;
     return structuredClone(snapshot);
   }
 

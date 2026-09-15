@@ -1,0 +1,157 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-ASYNC-CAPABILITY-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "05be85b720284d24d4692f0a153c1d15b0348314",
+  "sourceBinding": "Implementation base and exact changed-source digests; enclosing commit contains this asynchronous runtime component.",
+  "specificationRevision": "567c2bc9be98938898c2186e9b6ab120dee2c70c",
+  "recordedAt": "2026-09-15T08:42:32.982345Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/admin/security-administration.ts",
+      "sha256": "c1982a09bdf1d3ed090e07a1e3f88c4b5b225a134a66fc08e05ebe0809dd3141"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "1674f2f38a150e54c86c30934c9c5c96c13332e3134bc68a59c20abb4435a418"
+    },
+    {
+      "path": "apps/server/test/security-administration.test.ts",
+      "sha256": "f9de4e16f7a540bab08e28f7640dd78a0f29f0d516b725c736e88bed79c9792e"
+    },
+    {
+      "path": "docs/local-authentication.md",
+      "sha256": "9f6123bd326eaf4f0ba0689c117593c2da35fe58d35154e9233080706d5ef335"
+    },
+    {
+      "path": "packages/providers-fixture/src/capability/provider.ts",
+      "sha256": "ff9f441d2018d71bd6b2951cf62b68e66ead722fdf6dec1ee5908970c2faaec6"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/cache.ts",
+      "sha256": "1f7fb60ef7ecde21d79cb8295a97be7043edb01847bf9b8986ef25281682ea49"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/call.ts",
+      "sha256": "d18e8a73f8372e182505e6af01781b5304085e6da8857ee33ff8a053d199ae48"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/ports.ts",
+      "sha256": "5fcc9263e5b721d2df08ca9be089a88ccaa8ad0c4561015d976df3c3ddc2c23c"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/resolver.ts",
+      "sha256": "044969405cd9aa2c8b7ea26026e0bd963aa0a5042bb2eea5835f638c538d35d4"
+    },
+    {
+      "path": "packages/runtime/src/skills/skill.ts",
+      "sha256": "47a4f81887d6102634b5055485c1a83c3eaad4c0a86a47ea7d5ba0df7b2bd5a5"
+    },
+    {
+      "path": "packages/runtime/test/capabilities.test.ts",
+      "sha256": "0443a26e5399a9f8f69de0b32aba22cc5d76b9c26597d53a489c109bdd88e64e"
+    },
+    {
+      "path": "packages/runtime/test/skills.test.ts",
+      "sha256": "55b9f707ae06e1190c1f0fe4fe6a25ebf77f423928f60998193093614de18e67"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "4eab678b22c651b040b630652bcf3999a8631283",
+    "sourceUnchangedSince": "0ef22bab70ac24a4461e4c57fd667b5e14bccdb6",
+    "newProducerImplementationTestRun": false
+  },
+  "claims": [
+    "Capability provider snapshot, invocation and scoped status operations return Promises. Host call context carries request/correlation, deadline, execution mode, cancellation and current-owner checks. A finite deadline bounds ignored cancellation; late results are withheld.",
+    "The resolver checks owner, snapshot scope/revision/expiry and invalidation epoch after awaits. Newer discovery supersedes older pending reads. Scope and execution mode bind cache use; replay discovery cannot become a live invocation. Cache expiry uses wall and monotonic time.",
+    "Status is read before consuming one-use admission. Actual admission receipts are passed to the provider. Arguments are copied before awaiting admission. Concurrent identical invocations share one attempt; changed arguments under the same identity are denied. Lost post-dispatch responses remain unknown and cannot trigger redispatch within the resolver. Durable cross-process idempotency remains the provider responsibility.",
+    "Skill execution awaits discovery and sequential invocation under its overall deadline, passes recorded step invocation identities, copies inputs and stops on uncertainty without retry or compensation.",
+    "Local HTTP tools await provider operations outside synchronous grant/review transactions. Current authentication, Assistant permission and grant state are checked while awaiting. The authenticated synthetic HTTP test verifies actual tool discovery/invocation and withholds delayed discovery after logout.",
+    "Existing isolated PWCE read/conversation integration remains green; configured PWCE action administration still rejects standalone-grant fallback."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "pwce-async-build-final.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "pwce-async-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "pwce-async-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "pwce-async-full.log",
+      "logSha256": "130f4c4a0265a13c5a984c094f292604e9f877de2a29ff2ff4160a1e38e7f75d"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/capabilities.test.ts packages/runtime/test/skills.test.ts apps/server/test/security-administration.test.ts",
+      "result": "pass",
+      "log": "pwce-async-focused-final.log",
+      "logSha256": "fb0a169ccff411fc4e32108bd7ba0f0687f2cd843b4037d7a957a440d92a9bcf"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "pwce-async-process.log",
+      "logSha256": "bb690c457931b253ec43a2ba5c8ed8bf809a063733ed509f033c9ca464f82f10"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "pwce-async-tooling.log",
+      "logSha256": "cd12779c22564d72470bbe9678f1a20d88694212ce117efedde4c4cd7c1b3bc0"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "pwce-async-private.log",
+      "logSha256": "1b5709e1fc2dc212509f2335c6b90a0b7bd56b7e5be54f122a531233435b413f"
+    }
+  ],
+  "counts": {
+    "lifestreamSourceTestsPassed": 481,
+    "focusedAsyncTestsPassed": 24,
+    "lifestreamToolingTestsPassed": 45,
+    "separateProcessContextChecksPassed": 19,
+    "authenticatedWorldRuntimeChecksPassed": 7
+  },
+  "preservedFailures": [
+    {
+      "log": "pwce-async-focused.log",
+      "sha256": "20793591303049dc44ee40023f66a6fc7de1ea61d7ae06f0b76e159298b75daf",
+      "result": "Initial source test run could not resolve runtime value imports ending in .js. Corrected the value imports to .ts under the existing strip-types/build workflow."
+    },
+    {
+      "log": "pwce-async-focused-3.log",
+      "sha256": "955e37be96624084f9efeb88ec8f8a730aae28f8aea769d33692441c98e02273",
+      "result": "A new Skill test expected message instead of its declared text binding. Corrected the fixture expectation; final tests verify original input retention across asynchronous discovery."
+    }
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-async/2026-09-15",
+  "unchangedBoundaries": [
+    "All four approved S083/S084 schemas and six preserved dirty artifacts retain their hashes.",
+    "No saved-service restart, deployment, live configuration, personal-data import, provider/model selection, training or new Human acceptance.",
+    "SYNPRJ_Q7M4 telemetry is unchanged. No new physical or selected-provider acceptance.",
+    "Published PWCE wire bundle/catalog/generated client are unchanged."
+  ],
+  "remaining": [
+    "Complete canonical provider request/result envelopes, strict argument-schema validation, complete lifecycle mapping and invalidation surfaces.",
+    "Implement asynchronous AuthorityProvider and actual PWCE trusted admission, approval, invocation and outcome reconciliation through the public gateway; never manufacture a receipt or substitute standalone grants.",
+    "Complete full mapping-profile digest qualification and joint LS-S028/PV1-T5 scenarios.",
+    "Continue all remaining S083/S084 presentation, restore, semantic/exploration, provider prerequisite and performance work."
+  ],
+  "disposition": "continue"
+}

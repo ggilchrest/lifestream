@@ -4,14 +4,14 @@ import { GrantRepository, AdmissionRepository } from "@lifestream/storage-sqlite
 import { createContractValidator } from "@lifestream/contracts";
 import { SkillExecutor, validateSkill, type Skill } from "@lifestream/runtime/skills";
 import { CapabilityResolver } from "@lifestream/runtime/capabilities/resolver";
-import type { CapabilityProvider, CapabilityScope } from "@lifestream/runtime/capabilities/ports";
+import type { CapabilityProvider, CapabilityScope, CapabilityCallContext } from "@lifestream/runtime/capabilities/ports";
 import { AuthenticationError, type LocalAuthentication, type LocalContext } from "../auth/local-auth.ts";
 export type SecurityResult = { status: number; body: Record<string, unknown> };
 const object = (value: unknown): Record<string, unknown> => { if (!value || typeof value !== "object" || Array.isArray(value)) throw new AuthenticationError(422, "invalid_request"); return value as Record<string, unknown>; };
 export class SecurityAdministration {
   private readonly database: Database; private readonly auth: LocalAuthentication; private readonly grants: GrantRepository; private readonly admissions: AdmissionRepository; private readonly provider: CapabilityProvider | undefined; private readonly now: () => number; private readonly validator = createContractValidator();
   constructor(database: Database, auth: LocalAuthentication, provider?: CapabilityProvider, now: () => number = Date.now) { this.database = database; this.auth = auth; this.grants = new GrantRepository(database); this.admissions = new AdmissionRepository(database); this.provider = provider; this.now = now; }
-  handle(method: string, path: string, context: LocalContext, input: unknown): SecurityResult {
+  handleLocal(method: string, path: string, context: LocalContext, input: unknown): SecurityResult {
     this.auth.assertCurrent(context); const parts = path.split("/").filter(Boolean), assistantId = parts[4], body = object(input);
     if (parts[3] !== "assistants" || !assistantId || !this.auth.canAdminister(context, assistantId)) throw new AuthenticationError(403, "assistant_scope_denied");
     const base = { assistantId, principalId: context.principalId, grantsAuthority: false };
@@ -22,19 +22,36 @@ export class SecurityAdministration {
     if (parts[5] === "grants" && parts[6] && parts[7] === "decision" && parts.length === 8 && method === "POST") { const grant = this.grants.get(parts[6], context.principalId); if (!grant || grant.assistantId !== assistantId || !["active", "denied", "revoked"].includes(String(body.decision)) || !Number.isInteger(body.expectedRevision)) throw new AuthenticationError(409, "grant_decision_conflict"); try { return { status: 200, body: { ...base, grant: this.grants.decide(grant.id, context.principalId, body.expectedRevision as number, body.decision as "active" | "denied" | "revoked") } }; } catch { throw new AuthenticationError(409, "grant_decision_conflict"); } }
     if (parts[5] === "audit" && parts.length === 6 && method === "GET") return { status: 200, body: { ...base, events: this.database.connection.prepare("SELECT e.event,e.occurred_at AS occurredAt,e.grant_id AS grantId,e.actor FROM authority_events e JOIN authority_grants g ON e.grant_id=g.id WHERE g.assistant_id=? AND g.principal_id=? ORDER BY e.id").all(assistantId, context.principalId) } };
     if (parts[5] === "skills") return this.skills(method, parts, context, body, assistantId);
+    return { status: 404, body: { code: "not_found", message: "administration operation not found" } };
+  }
+  async handle(method: string, path: string, context: LocalContext, input: unknown, call: CapabilityCallContext): Promise<SecurityResult> {
+    this.auth.assertCurrent(context);const parts=path.split("/").filter(Boolean),assistantId=parts[4],body=object(input);
+    if(parts[3]!=="assistants"||!assistantId||!this.auth.canAdminister(context,assistantId))throw new AuthenticationError(403,"assistant_scope_denied");
+    const base={assistantId,principalId:context.principalId,grantsAuthority:false};
+    try {
     if (parts[5] === "tools") {
       if (!this.provider) return { status: 200, body: { ...base, tools: [], status: "unavailable", reason: "No capability provider is attached to this local administration instance; no live dispatch is inferred." } };
       const scope: CapabilityScope = { assistantId, endpointId: "administration", sessionId: context.sessionId, environment: "local-administration", authorityContextRef: { providerRef: "local-human", contextId: context.principalId, revision: 1 } };
-      const resolver = new CapabilityResolver(this.provider, undefined, invocation => {
+      const resolver = new CapabilityResolver(this.provider, undefined, async invocation => {
         if (typeof body.grantId!=="string") return undefined;
         try { const admission=this.admissions.admitGoverned({grantId:body.grantId,principalId:context.principalId,assistantId,sessionId:context.sessionId,capabilityId:invocation.capabilityId,invocationId:invocation.invocationId,inputDigest:createHash("sha256").update(JSON.stringify(invocation.input)).digest("hex"),now:new Date(this.now()).toISOString(),assertCurrent:()=>{this.auth.assertCurrent(context);if(!this.auth.canAdminister(context,assistantId))throw new AuthenticationError(403,"assistant_scope_denied");}});return {invocationId:admission.invocationId,status:"admitted",grantRevision:admission.grantRevision};} catch {return undefined;}
       }, () => new Date(this.now()).toISOString());
-      const snapshot = resolver.snapshot(scope);
+      const grantCurrent=()=>{if(typeof body.grantId!=="string")return true;const grant=this.grants.get(body.grantId,context.principalId);return !!grant&&grant.assistantId===assistantId&&["active","consumed"].includes(grant.status)&&Date.parse(String(grant.terms.expiresAt))>this.now();};
+      const scopedCall={...call,isCurrent:()=>call.isCurrent()&&grantCurrent()};
+      const snapshot = await resolver.snapshot(scope, call);
       if (method === "GET" && parts.length === 6) return { status: 200, body: { ...base, tools: snapshot.capabilities, snapshotRevision: snapshot.revision, expiresAt: snapshot.expiresAt, status: "available", limitation: "Discovery and Skill activation do not grant invocation authority." } };
       if (method === "POST" && parts.length === 8 && parts[7] === "simulate") { const capability = snapshot.capabilities.find(item => item.id === parts[6]); return { status: 200, body: { ...base, status: capability?.simulationSupported ? "simulated" : "unknown", providerInvoked: false, liveEffects: false } }; }
-      if (method === "POST" && parts.length === 8 && parts[7] === "invoke") { const capability = snapshot.capabilities.find(item => item.id === parts[6]); if (!capability) throw new AuthenticationError(404, "capability_not_found"); const result = resolver.invoke({ ...scope, invocationId: randomUUID(), interactionId: randomUUID(), capabilityId: capability.id, capabilityVersion: capability.version, snapshotId: snapshot.snapshotId, snapshotRevision: snapshot.revision, input: body.input }); return { status: result.lifecycle === "succeeded" ? 200 : 403, body: { ...base, result } }; }
+      if (method === "POST" && parts.length === 8 && parts[7] === "invoke") { const capability = snapshot.capabilities.find(item => item.id === parts[6]); if (!capability) throw new AuthenticationError(404, "capability_not_found"); const result = await resolver.invoke({ ...scope, invocationId: randomUUID(), interactionId: randomUUID(), capabilityId: capability.id, capabilityVersion: capability.version, snapshotId: snapshot.snapshotId, snapshotRevision: snapshot.revision, input: body.input },scopedCall); return { status: result.lifecycle === "succeeded" ? 200 : 403, body: { ...base, result } }; }
     }
-    return { status: 404, body: { code: "not_found", message: "administration operation not found" } };
+
+    if(parts[5]==="skills"&&parts[7]==="simulate"&&parts.length===8&&method==="POST"){
+      const row=this.database.connection.prepare("SELECT COALESCE((SELECT h.payload_json FROM local_skill_revisions h WHERE h.skill_id=s.skill_id ORDER BY h.revision DESC LIMIT 1),s.payload_json) AS payload_json FROM skills s WHERE skill_id=? AND assistant_id=?").get(parts[6]!,assistantId) as {payload_json:string}|undefined;
+      if(!row)throw new AuthenticationError(404,"skill_not_found");
+      const result=await new SkillExecutor(async()=>false,async()=>({lifecycle:"denied",reason:"simulation_has_no_dispatch"})).execute(JSON.parse(row.payload_json) as Skill,body.input,randomUUID(),call);
+      return {status:200,body:{result,liveEffects:false,memoryWrites:false,grantsAuthority:false}};
+    }
+    return this.handleLocal(method,path,context,body);
+    } catch(error) { if(error instanceof AuthenticationError)throw error;return {status:503,body:{code:"capability_unavailable",message:"The capability request could not finish under the current scope."}}; }
   }
   private skills(method: string, parts: string[], context: LocalContext, body: Record<string, unknown>, assistantId: string): SecurityResult {
     const current = parts[6] ? this.database.connection.prepare("SELECT payload_json FROM skills WHERE skill_id=? AND assistant_id=?").get(parts[6], assistantId) as { payload_json: string } | undefined : undefined;
@@ -51,7 +68,7 @@ export class SecurityAdministration {
       this.persistSkill(skill, existing?.revision); return { status: 201, body: { skill, grantsAuthority: false } };
     }
     if (method === "POST" && existing && parts.length === 8 && parts[7] === "activate") { if (body.expectedRevision !== existing.revision || existing.status !== "draft") throw new AuthenticationError(409, "skill_activation_conflict"); const next = { ...existing, revision: existing.revision + 1, status: "active" as const, activationRef: { reference: `human-review:${context.principalId}:${existing.skillId}:${existing.revision}`, sha256: createHash("sha256").update(JSON.stringify(existing)).digest("hex"), mediaType: "application/json", schemaRef: "https://lifestream.dev/contracts/skill/1.0.0", byteLength: Buffer.byteLength(JSON.stringify(existing)) } }; if(!this.validator.validate("https://lifestream.dev/contracts/skill/1.0.0",next).valid)throw new AuthenticationError(422,"invalid_skill_activation");this.persistSkill(next, existing.revision); return { status: 200, body: { skill: next, grantsAuthority: false } }; }
-    if (method === "POST" && existing && parts.length === 8 && parts[7] === "simulate") { const result = new SkillExecutor(() => false, () => ({ lifecycle: "denied", reason: "simulation_has_no_dispatch" })).execute(existing, body.input, randomUUID()); return { status: 200, body: { result, liveEffects: false, memoryWrites: false, grantsAuthority: false } }; }
+
     return { status: 404, body: { code: "not_found", message: "Skill operation not found" } };
   }
   private persistSkill(skill: Skill, expected?: number): void {
