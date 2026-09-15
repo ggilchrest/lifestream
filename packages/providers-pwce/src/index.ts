@@ -5,3 +5,5 @@ export { PwceCacheError, PwceScopedCache } from "./cache.js";
 export type { PwceCacheScope, PwceCachedRead } from "./cache.js";
 export { PwceContextSession } from "./context-session.js";
 export type { PwceQuery } from "./context-session.js";
+export { PwceTrustedDispatchClient } from './dispatch.js';
+export type { PwceDispatchClientOptions } from './dispatch.js';

@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-DISPATCH-TRANSPORT-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "657b0ee309b00816c1e6ebf322e6934c5282666f",
+  "specificationRevision": "da10205ebaea96d1f45e789ab045f8405d0c2ff5",
+  "producerRevision": "487e465101df02bfa1b4e569ce6781b8edda4a78",
+  "recordedAt": "2026-09-15T17:15:22.864Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "packages/providers-pwce/src/dispatch.ts",
+        "sha256": "782dc5d59cee3a6ee01fcb2f04a31522121862dcd843bd49752a02c6bfb2e073"
+      },
+      {
+        "path": "packages/providers-pwce/src/dispatch-bundle.ts",
+        "sha256": "552c4fdc893360152053bbd6b59faacdf787c41ac6b865033551baa14b8310f6"
+      },
+      {
+        "path": "packages/providers-pwce/src/index.ts",
+        "sha256": "c1858489317b16b31893931cb01e3a94283f5f59d8b5052d110fb18d7f566bb9"
+      },
+      {
+        "path": "packages/providers-pwce/test/dispatch.test.ts",
+        "sha256": "8719dc0e71c41e5345c3a9db02bf7fe04c72642813d5dfb64053d032a5c11d94"
+      },
+      {
+        "path": "scripts/generate-pwce-dispatch-pin.mjs",
+        "sha256": "f55972d5e8f7175cf0b81baee78d990be94fd2868c406dd869074b0804b05573"
+      },
+      {
+        "path": "scripts/check-pwce-dispatch-process.mjs",
+        "sha256": "e7d407a5959bdc10c041eeca81141b6fe404f7da4ca31a418590e541c6e2e7aa"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "1d73187a1b6acffcd38993103d56f99c6302b690a9b9dbbcdeb5b16f5927140d"
+      }
+    ]
+  },
+  "claim": "Lifestream negotiates the exact published trusted-dispatch extension and core Gateway dependency, isolates the host dispatcher credential, bounds and snapshots each call, and preserves producer dispositions over separately running synthetic PWCE HTTP. Admission sends no target command; an intentionally discarded completed reply can be read by repeating the original invocation without another command. Unknown outcomes stay unknown and changed access fences dispatch.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-dispatch-full.log",
+      "logSha256": "5fced167719cc083a514b384914a9b0d715ceafccb342e0e1bab2f5557d7282f"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-dispatch-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-dispatch-build.log",
+      "logSha256": "3b0cf22b87e20c2ed1d5d4bdf1250a92654fc67d1e6e23145a25009cb28aa224"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-dispatch-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/dispatch.test.ts",
+      "result": "pass",
+      "log": "ls-dispatch-tests.log",
+      "logSha256": "cc8eb7e71d0d6bc1cf2715aa9c245ab90d78b06c8fd1fa8f1bd2bd741dc8f198"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "log": "ls-dispatch-process.log",
+      "logSha256": "9b6c7d7865c980ec491158c978a4d923f27134e2c09b1fa5745be37a4ef7f2c2"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "ls-dispatch-context-regression.log",
+      "logSha256": "135328a1f2455f35a3311786f4379e1919df00fb006b8f1d92ca5d4dc2cfd68e"
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-dispatch-pin.log",
+      "logSha256": "7799cc7b7e6b5549e994e5cef2ccba3b115d973b57349f7bf933be0d14482b29"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-dispatch-workspace-tests.log",
+      "logSha256": "e67e5f38a87f9b0de661934770c2b8b22a49a4110fd4ddaa3e34d99ea183108c"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-dispatch-private.log",
+      "logSha256": "3570bc6e5c9b371dfbc8aaa46decba3ed8174bd4f820cb3e4f64c4323058bb08"
+    }
+  ],
+  "coverage": {
+    "applicationTests": 684,
+    "newClientTests": 9,
+    "workspaceTests": 43,
+    "joinedDispatchChecks": 7,
+    "joinedDispatchWireCalls": 9,
+    "joinedSyntheticTargetCalls": 2,
+    "existingWorldContextChecks": 19,
+    "existingRuntimeConversationChecks": 7,
+    "schemaValidation": "Actual joined requests and successful responses validate with AJV against the generated producer request/response schema pins."
+  },
+  "dispatchDependency": {
+    "bundleId": "pwce-trusted-dispatch.bundle.v1",
+    "bundleVersion": "1.0.0",
+    "dispatchProfileId": "pwce-trusted-dispatch.v1",
+    "dispatchProfileVersion": "1.0.0",
+    "requiredGatewayBundle": {
+      "bundleId": "pwce-agent-gateway.bundle.v1",
+      "bundleVersion": "1.0.0",
+      "bundleDigest": "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2"
+    },
+    "digestAlgorithm": "sha256-ordered-path-bytes-v1",
+    "bundleDigest": "c61b022af86244d9da5f6b1e2222b44df22487289c0a963816f5242e0958e7be",
+    "artifacts": [
+      {
+        "path": "contracts/gateway-dispatch/transport.json",
+        "sha256": "89b51459b788f49cfbea04b43121f216c477c79e0248dae525a664e305095bbe"
+      },
+      {
+        "path": "contracts/gateway-dispatch/request.schema.json",
+        "sha256": "a727b6cb9f1db9252075d32ce4e3826f036a700c4bc7d6742d9a92eeba25443e"
+      },
+      {
+        "path": "contracts/gateway-dispatch/response.schema.json",
+        "sha256": "0ba4d439853235e9638a4d405383c3753f52af12182b00c282a60997b3b13b62"
+      }
+    ]
+  },
+  "evidenceArchive": "lifestream/.lifestream/benchmarks/pwce-dispatch-transport/2026-09-15 (composition workspace, local only)",
+  "exclusions": [
+    "No configured canonical PWCE authority/capability/evidence adapter or control-plane action acceptance yet.",
+    "No manufactured canonical admission receipt or local-grant substitution for PWCE.",
+    "No saved service restart, deployment, live configuration change, physical effect, personal import, training, provider/model selection, performance certification or Human acceptance.",
+    "No SYNPRJ_Q7M4 run or telemetry change.",
+    "Separate-process fixture proof does not qualify physical devices or restore process-local authority/snapshot custody."
+  ],
+  "nextAction": "Complete the producer evidence and canonical AuthorityProvider/CapabilityProvider mapping, configure that existing PWCE path through host secret references, and verify joined action/approval/recovery scenarios. Continue remaining existing S083/S084 work and other authorized development; no new operator decision is required for this verified transport increment."
+}
