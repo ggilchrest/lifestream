@@ -95,6 +95,14 @@
     "./capabilities/schema-artifacts": {
       "types": "./dist/capabilities/schema-artifacts.d.ts",
       "import": "./dist/capabilities/schema-artifacts.js"
+    },
+    "./ports/provider-messages": {
+      "types": "./dist/ports/provider-messages.d.ts",
+      "import": "./dist/ports/provider-messages.js"
+    },
+    "./ports/provider-boundary": {
+      "types": "./dist/ports/provider-boundary.d.ts",
+      "import": "./dist/ports/provider-boundary.js"
     }
   },
   "scripts": {

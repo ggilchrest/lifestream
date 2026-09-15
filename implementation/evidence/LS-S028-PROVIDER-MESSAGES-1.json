@@ -1,0 +1,152 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-PROVIDER-MESSAGES-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "e68b7c60e3c90a4d0aa3b5f003bbce8725bc14a0",
+  "sourceBinding": "Base revision and changed-source hashes; the enclosing commit contains this canonical message boundary component.",
+  "specificationRevision": "6a9224b102bbac7d7c13294a6f3b5786e929cf8a",
+  "recordedAt": "2026-09-15T10:04:14.018662Z",
+  "sourceFiles": [
+    {
+      "path": "docs/canonical-provider-boundary.md",
+      "sha256": "06af74e71812d5117cd596d23bf25373c171cd796bdff8d78a96d30b4e3d3a36"
+    },
+    {
+      "path": "packages/contracts/package.json",
+      "sha256": "f4f68c03a5d6c586c19b9247a2362f81de0b47097b9e4dfd3d7d292762323e67"
+    },
+    {
+      "path": "packages/contracts/src/provider-messages.ts",
+      "sha256": "b3a6a8ad233f9ea2f281120c302af0fcc82bb8114df69c6209ca399929408a40"
+    },
+    {
+      "path": "packages/contracts/test/provider-types.test.ts",
+      "sha256": "8a81330930fb2cfb3618f54496cde12e862d98d2417f24cd46c96ab6cb4d8186"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "2ef17200f4b8c8f3cc4e3329d4c590abf6616146e22db9b2327e1cc2556a3598"
+    },
+    {
+      "path": "packages/runtime/src/ports/provider-boundary.ts",
+      "sha256": "4a193598cc77360fef3ae4a23c63475bf77df6918a213ec1adee0f5e1ba8863a"
+    },
+    {
+      "path": "packages/runtime/src/ports/provider-messages.ts",
+      "sha256": "9439762d5bb321d0414a776ea80b963f83fec2d126c5ad612cea5750599bbb03"
+    },
+    {
+      "path": "packages/runtime/test/provider-boundary.test.ts",
+      "sha256": "b3022cda3a4dce71d1f0c79edd003695f2229c76a65e7ce121ea345c3948f959"
+    },
+    {
+      "path": "scripts/generate-provider-types.mjs",
+      "sha256": "bf6c0c61fd9a37b99f5ab34a0b89feaf077043be6f638de5571bbb37feef0adb"
+    }
+  ],
+  "schemaInputs": [
+    {
+      "path": "packages/contracts/src/schemas/capability-snapshot.schema.json",
+      "sha256": "3f12f36f3d0b9a97032d1939b77eb6aac6c0477591d20674158fa1de1cd94123"
+    },
+    {
+      "path": "packages/contracts/src/schemas/human-authority-decision.schema.json",
+      "sha256": "1311ee5b75fa6ef98bf79324ced3d04d7f68c22919058249d62e13ca63810631"
+    },
+    {
+      "path": "packages/contracts/src/schemas/human-authority-grant.schema.json",
+      "sha256": "deaf40c152ad5c64d1b77444c1c4fa23821544afe452045a09671d4443abd546"
+    },
+    {
+      "path": "packages/contracts/src/schemas/protocol-common.schema.json",
+      "sha256": "d7bdc15c51875828b6b72dbbdf7b849856afdc9b2b66c0fbff479e84ba60b0d6"
+    },
+    {
+      "path": "packages/contracts/src/schemas/provider-messages.schema.json",
+      "sha256": "c845f73461f73d5852659fb8f29d749fc035f7a6d846bc0c5b3399e0e896c025"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "4d20039187766ecf4261e9ed6173ad96a9961359",
+    "producerSourceChanged": false,
+    "newProducerSuiteRun": false
+  },
+  "claims": [
+    "Sixteen request/result/event types and their transitive shape aliases are generated from five existing published schemas, with deterministic regeneration checked in the source suite. No canonical schema bytes change or private schema export is introduced.",
+    "Both canonical provider interfaces expose all four catalogued methods. The runtime wrapper copies, validates and freezes requests, responses and call context; operation/request/correlation/provider identity, configured scope and finite deadline/cancellation are checked before provider entry and after each await.",
+    "Invocation entry checks input digest, capability/version and a trusted host admission callback. Dispatch admission additionally checks the governing disposition binding, time and approval; missing hooks, mismatches, revoked owners and cancellation prevent provider entry.",
+    "Authority decisions retain local Human and external variants, bind invocation/snapshot/input/scope/execution mode, and enforce principal and checked grant revision for local results. Grant reads reject foreign owners/scopes/providers, duplicates, over-limit pages and stale eligible records.",
+    "Capability status binds its original invocation and requires canonical output-schema/evidence metadata for confirmed success. Denied, intermediate, typed failure and unknown states remain distinct. Failed local consumption after entering an effect-bearing method remains potentially admitted and never causes an automatic retry.",
+    "Both invalidation families enforce sequence zero and contiguous frames, fixed stream/request/provider identity, exact scoped data, typed terminal status and bounded EOF. Missing terminal, duplicates, gaps, late data, identity changes and hanging completion fail; late or uncooperative cleanup cannot block indefinitely.",
+    "Final source suite passes 527 tests, including 19 new canonical-boundary/generator tests. Existing 45 tooling tests and 26 separate-process synthetic PWCE context/runtime checks pass."
+  ],
+  "limits": {
+    "messageBytes": 1048576,
+    "visitedValues": 8192,
+    "nestingDepth": 32,
+    "defaultDeadlineMs": 30000,
+    "automaticRetries": 0
+  },
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "provider-build.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "provider-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "provider-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "provider-full-tests.log",
+      "logSha256": "8e11a6ca3c102d57b9802892527430d106c03a119bb014f47eb96b91478fc88b",
+      "testsPassed": 527
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/provider-boundary.test.ts packages/contracts/test/provider-types.test.ts",
+      "result": "pass",
+      "log": "provider-boundary-tests.log",
+      "logSha256": "9feaaac9c2b8ce64b9a3d49bc12b60f041a6eee6ac5524e2040be619870fbd1c",
+      "testsPassed": 19
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "provider-tooling.log",
+      "logSha256": "767de14122e1861e1c188dfa8bff780dc01b6e1121d8dbe6aa49d9f3b516d935",
+      "testsPassed": 45
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "provider-process.log",
+      "logSha256": "abe7e603ff3f26ac1fafe5232d7add1028dbbc2076d10673ae6027594487dbd5"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "provider-private.log",
+      "logSha256": "0985f63e79d7038f64d4921b2c26a3e4f59fd5739ecd921b45f3955210bb846f"
+    }
+  ],
+  "exclusions": [
+    "Canonical message boundary is a verified component, not yet wired into the existing server resolver, local authority store or PWCE action adapter.",
+    "Trusted admission hooks must still integrate the actual immutable artifact resolver, current catalog, authenticated authority serialization and durable receipt validation; metadata shape validation alone does not prove evidence bytes or output-schema conformance.",
+    "No new durable idempotency, real-provider cold action recovery, PWCE action/schema publication or joint LS-S028/PV1-T5 qualification is claimed.",
+    "Saved services and configurations, personal data, provider/model choices, live effects, training, S083/S084 Human acceptance and historical model-quality observations remain unchanged."
+  ],
+  "nextAction": "Migrate canonical messages into actual runtime consumers with explicit host-owned UUID/scope mapping and existing artifact/admission checks; complete PWCE schema, approval, dispatch and reconciliation mapping and joint scenarios, then continue remaining S083/S084 work."
+}
