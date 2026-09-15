@@ -38,4 +38,18 @@ const multi=mapPwceContextResponse(await client.request({...envelope(bothScope),
 assert.deepEqual(multi.items.map(item=>item.siteRef),['home.one','home.two']);assert.equal(multi.items[1].knowledgeState,'unknown');results.push('multi-site known and unknown subjects');
 const foreign=await client.request({...envelope(scope(both,['home.two'])),operation:'context.query',mode:'current',siteRef:'home.two',externalEntityId:'sensor.foreign',property:'state'});
 await assert.rejects(client.request({...envelope(scope()),operation:'evidence.get',evidenceRef:foreign.evidenceRefs[0]}),error=>error.code==='scope_denied');results.push('reference does not grant foreign evidence access');
+const identity={assistantRef:'assistant.synthetic',endpointRef:'endpoint.synthetic',participantRefs:['participant.synthetic'],audienceRef:'audience.synthetic'};
+const scopedAuthority=await client.authority(['home.one'],undefined,identity);
+const subscriptionScope={...identity,worldRef:'world.personal.v1',executionEnvironmentRef:'replay',requestId:randomUUID(),correlationId};
+for(const change of [{assistantRef:'assistant.other'},{endpointRef:'endpoint.other'},{participantRefs:[]},{audienceRef:'audience.other'},{worldRef:'world.other'}]){
+ const stream=client.subscribeInvalidations(scopedAuthority.authorityContextRef,'home.one',{scope:{...subscriptionScope,...change}});
+ await assert.rejects(stream.next(),error=>error.code==='scope_denied');
+}
+results.push('HTTP SSE rejects five foreign scope identities');
+const response=await fetch(`${url}/gateway/v1/authority`,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({siteRefs:['home.one'],ttlMs:500,...identity})});
+assert.equal(response.status,201);const shortAuthority=await response.json();
+const frames=[];
+for await(const event of client.subscribeInvalidations(shortAuthority.authorityContextRef,'home.one',{scope:subscriptionScope}))frames.push(event);
+assert.equal(frames.length,1);assert.equal(frames[0].event,'resync.required');assert.equal(JSON.parse(frames[0].data).reason,'authority_context_expired');
+results.push('HTTP scoped SSE accepts exact identities and closes on quiet authority expiry');
 console.log(JSON.stringify({syntheticScenario:'qualified-context',liveEffects:false,casesPassed:results.length,checks:results}));

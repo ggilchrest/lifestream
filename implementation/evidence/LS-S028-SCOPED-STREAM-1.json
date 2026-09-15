@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-SCOPED-STREAM-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "e0d08d20d17b43febb6c1bcdb861a404bfd4590b",
+  "sourceBinding": "Implementation base plus exact changed-source digests; the enclosing commit contains the verified scoped stream component.",
+  "specificationRevision": "a4c4afebbff3503c8cfb48cca08947e527cf2c37",
+  "recordedAt": "2026-09-15T07:31:41.674591Z",
+  "sourceFiles": [
+    {
+      "path": "packages/providers-pwce/src/client.ts",
+      "sha256": "536992e3e1a019a08b6f48909c77bc8ccf8688a2b604a81ecf1504bd87decd55"
+    },
+    {
+      "path": "packages/providers-pwce/src/index.ts",
+      "sha256": "9824dc4636ed2b17690a933bd7e8ce1413eaf74f93244640e503c0be8e90c62c"
+    },
+    {
+      "path": "packages/providers-pwce/test/client.test.ts",
+      "sha256": "a860d3e0e79f654ce5b5613cfb75eafad1c5e6cff5e63385d4fae92e872a607f"
+    },
+    {
+      "path": "scripts/check-pwce-context.mjs",
+      "sha256": "6d8d4ce4a590a6d48135b624ae0cab8db4cb1447adc2ec6e55f6b745f640b627"
+    },
+    {
+      "path": "scripts/check-pwce-context-process.mjs",
+      "sha256": "d837665ca39f9b611e52e1b26e54a4c6dac946d2332949479608c00313e647d5"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "0ef22bab70ac24a4461e4c57fd667b5e14bccdb6",
+    "batch": "DEVELOPMENT-BATCH-165.md"
+  },
+  "claims": [
+    "Lifestream can issue an authority context with host-owned Assistant, endpoint, participant and audience scope. Its event client sends the same scope plus explicit World, execution mode, request and correlation identities. Scope snapshots occur at method call before iteration or asynchronous negotiation; input cannot override bound authority, site, operation or token. Legacy omitted scope remains compatible only with matching unbound authority.",
+    "PWCE HTTP validates and forwards scoped subscription fields. Unknown, repeated or oversized query parameters and malformed participant lists are denied. Authentication stays in the bearer header. Scoped identities are checked before events are released and the request audit retains replay mode and correlation.",
+    "PWCE revalidates authority after asynchronous setup, before live delivery and on principal/grant/World change. Idle subscriptions expire after the shorter of remaining authority lifetime or 30 seconds. Terminal resynchronization carries only a bounded reason; subsequent protected events are withheld. Authenticated replay and live registration share one synchronous handoff.",
+    "Expired/future cursors or a replay exceeding the selected bound require fresh state instead of an incomplete replay. Filtered global cursors can legitimately skip numeric values. Callback mutation cannot alter retained event data. Consumer duplicate suppression and runtime cache revalidation remain separate pending implementation.",
+    "Fifteen separate-process HTTP checks pass: thirteen read mapping checks, rejection of five mismatched stream identities and exact-scope stream acceptance followed by quiet expiry. The producer fixture remains synthetic and in memory, with generated credentials and automatic shutdown. No saved service or live configuration changed."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "pwce-stream-build-final.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "pwce-stream-typecheck-final.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "pwce-stream-lint-final.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "pwce-stream-source-delivery.log",
+      "logSha256": "45e904c9a15522b97477d435e4d0bcc659c38281edba0af4924e18496fcc3b8a"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/client.test.ts",
+      "result": "pass",
+      "log": "pwce-stream-client-final.log",
+      "logSha256": "301e3d2cdb6b7048e86e199a87a56b101f13efc9176816b786ff0f3ebccef372"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "pwce-stream-process.log",
+      "logSha256": "ab485f6c4c92c2383cf1d5c3f0f7fe58e159a5d03adf381803c468f151c00a8c"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "pwce-stream-tooling.log",
+      "logSha256": "64cdb422b4adcae6b9a665bfe570d373b096a63b9a172af597a68e2b4b8464b8"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "pwce-stream-private.log",
+      "logSha256": "6bd1a508e5a2575b0e02bd6a56be2cfc801f0582de70dcaa8f4df473b92813a6"
+    }
+  ],
+  "producerChecks": [
+    {
+      "command": "npm test",
+      "result": "pass",
+      "log": "pwce-stream-producer-final.log",
+      "logSha256": "0b7f4e6dca7cc06b882809682a5f44a489a2929d6f6b3b8b7d7cb2b09e6ae1e6"
+    },
+    {
+      "command": "npm run validate",
+      "result": "pass",
+      "log": "pwce-stream-contracts.log",
+      "logSha256": "e31118fd431327a2355113d49120584018feac09e64cf4bcd476ecd7e5ec0cbb"
+    },
+    {
+      "command": "python3 check-docs.py",
+      "result": "pass",
+      "log": "pwce-stream-docs-final.log",
+      "logSha256": "1747bbe3c3a7e01aa39728b8b54b1640281f7a49ded7241886ea9f6f33a81ec6"
+    }
+  ],
+  "counts": {
+    "lifestreamSourceTestsPassed": 440,
+    "focusedClientTestsPassed": 14,
+    "lifestreamToolingTestsPassed": 45,
+    "producerTestsPassed": 156,
+    "newProducerTestsPassed": 9,
+    "separateProcessHttpChecksPassed": 15,
+    "producerDocumentationPagesChecked": 24
+  },
+  "preservedRuns": [
+    {
+      "log": "pwce-stream-docs.log",
+      "sha256": "1747bbe3c3a7e01aa39728b8b54b1640281f7a49ded7241886ea9f6f33a81ec6",
+      "classification": "Earlier test-development or sandbox-restricted run; retained separately from successful final verification."
+    },
+    {
+      "log": "pwce-stream-producer.log",
+      "sha256": "418ad640774b575dd60e4b3778a046cd0d2bbb906f6a7eefae08ae720b404184",
+      "classification": "Earlier test-development or sandbox-restricted run; retained separately from successful final verification."
+    },
+    {
+      "log": "pwce-stream-producer-focused.log",
+      "sha256": "c523f1f6b2d916b1e063481752e37f6fa6cd3903f73943fe705218f3ec758367",
+      "classification": "Earlier test-development or sandbox-restricted run; retained separately from successful final verification."
+    },
+    {
+      "log": "pwce-stream-client.log",
+      "sha256": "60655c14c184d407ad31fd21e855f0cf91cab5f73b5e337b5dd9be8fc035452f",
+      "classification": "Earlier test-development or sandbox-restricted run; retained separately from successful final verification."
+    },
+    {
+      "log": "pwce-stream-source.log",
+      "sha256": "7480f44f90e1f824f5ef7448c3c3c5d049733058600aef565acdc49eab5a0755",
+      "classification": "Earlier test-development or sandbox-restricted run; retained separately from successful final verification."
+    }
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-stream/2026-09-15",
+  "unchangedBoundaries": [
+    "Published PWCE bundle, seven schema/catalog artifacts and generated-client pins remain unchanged. Producer-generated subscription convenience methods remain legacy/unscoped; the scoped convenience API is Lifestream-owned.",
+    "All four S083/S084 approved schemas and six preserved dirty artifacts match their recorded hashes.",
+    "SYNPRJ_Q7M4 model-quality observations were not rerun or relabeled.",
+    "No browser layout changed; no new Human, perceptual, selected-provider or production acceptance is claimed."
+  ],
+  "remaining": [
+    "Ordered duplicate handling and scoped cache invalidation/resynchronization before protected use.",
+    "Async runtime WorldContext/Authority/Capability providers and server composition.",
+    "Full mapping-profile schema/fixture digest qualification and joint LS-S028/PV1-T5 scenarios.",
+    "Remaining S083 presentation, restore fencing, selected-provider prerequisites and S084 semantic/exploration/performance work."
+  ],
+  "disposition": "continue"
+}

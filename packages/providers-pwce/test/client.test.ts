@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"; import { test } from "node:test"; import { EXPECTED_PWCE_ARTIFACTS, EXPECTED_PWCE_GENERATED_CLIENT_SHA256, PwceGatewayClient } from "../src/client.ts";
+import type { PwceSubscriptionScope } from "../src/client.ts";
 const token = process.env.PWCE_GATEWAY_TOKEN ?? "fixture-gateway-token"; const baseUrl = process.env.PWCE_GATEWAY_URL ?? "http://fixture"; const operations = ["context.getPreparedInputs", "context.query", "evidence.get", "events.subscribe", "authority.evaluate", "authority.authorizeDispatch", "authority.getGrants", "capabilities.getSnapshot", "capabilities.invoke", "capabilities.getInvocation", "trace.publish", "health.get"]; const profile = { profileId: "pwce-agent-gateway.v1", profileVersion: "1.0.0", bundleId: "pwce-agent-gateway.bundle.v1", bundleVersion: "1.0.0", schemaStatus: "published", schemaDigest: "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2", operationCatalogVersion: "0.1.0", operationCatalogDigest: "445cb4e4b9811a26a41c5821c7d68b09f377b69d24d42ec6dcd0acec5d950b65", operationCatalog: operations.map((operation) => ({ operation })) };
 const bundle = { bundleId: profile.bundleId, bundleVersion: profile.bundleVersion, bundleDigest: profile.schemaDigest, artifacts: EXPECTED_PWCE_ARTIFACTS, generatedClient: { path: "src/gateway/generated-client.js", sha256: EXPECTED_PWCE_GENERATED_CLIENT_SHA256 } };
 test("verifies the exact published bundle and generated-client identity", async () => { const client = new PwceGatewayClient({ baseUrl, token, ...(process.env.PWCE_GATEWAY_URL ? {} : { fetchImpl: async () => new Response(JSON.stringify(bundle), { status: 200 }) }) }); const received = await client.bundle(); assert.equal(received.bundleDigest, profile.schemaDigest); assert.equal(received.generatedClient.sha256, EXPECTED_PWCE_GENERATED_CLIENT_SHA256); });
@@ -43,4 +44,36 @@ test('request and wrapper inputs are snapshotted before asynchronous profile neg
   input.operation='capabilities.invoke';input.authorityContextRef='authority.other';input.siteRefs.push('home.other');release();await pending;
   assert.equal(observed.operation,mode==='authority'?undefined:wrapped?'context.query':'health.get');assert.equal(observed.authorityContextRef,mode==='authority'?undefined:'authority.bound');assert.deepEqual(observed.siteRefs,['home.one']);
  }
+});
+
+test('scoped authority and SSE preserve host identities and snapshot before iteration', async () => {
+ const seen: {url:string;body?:string}[]=[];
+ const client=new PwceGatewayClient({baseUrl:'http://fixture',token:'synthetic-client-token',fetchImpl:async(url,init)=>{
+  seen.push({url:String(url),body:typeof init?.body==='string'?init.body:undefined});
+  if(String(url).includes('/events?'))return new Response('event: resync.required\ndata: {"reason":"authority_context_expired"}\n\n',{headers:{'Content-Type':'text/event-stream'}});
+  return new Response(JSON.stringify(String(url).endsWith('profile')?profile:String(url).endsWith('bundle')?bundle:{status:'known'}));
+ }});
+ const identity={assistantRef:'assistant.one',endpointRef:'endpoint.one',participantRefs:['participant.one'],audienceRef:'audience.one'};
+ const pending=client.authority(['home.one'],undefined,identity);identity.participantRefs.push('participant.other');await pending;
+ assert.deepEqual(JSON.parse(seen.find(item=>item.url.endsWith('/authority'))!.body!).participantRefs,['participant.one']);
+ const scope:PwceSubscriptionScope={...identity,worldRef:'world.personal.v1',executionEnvironmentRef:'replay',requestId:'request.one',correlationId:'correlation.one'};
+ const stream=client.subscribeInvalidations('authority.bound','home.one',{scope});
+ identity.participantRefs.push('participant.late');(scope as any).worldRef='world.other';
+ const events=[];for await(const event of stream)events.push(event);
+ const params=new URL(seen.find(item=>item.url.includes('/events?'))!.url).searchParams;
+ assert.equal(params.get('worldRef'),'world.personal.v1');assert.equal(params.get('executionEnvironmentRef'),'replay');
+ assert.equal(params.get('authorityContextRef'),'authority.bound');assert.equal(params.get('siteRef'),'home.one');
+ assert.deepEqual(JSON.parse(params.get('participantRefs')!),['participant.one','participant.other']);
+ assert.equal(params.get('assistantRef'),'assistant.one');assert.equal(params.get('audienceRef'),'audience.one');
+ assert.equal(events[0].event,'resync.required');
+});
+
+test('scoped subscriptions reject scope overrides and malformed identities before network', async () => {
+ let calls=0;
+ const client=new PwceGatewayClient({baseUrl:'http://fixture',token:'synthetic-client-token',fetchImpl:async()=>{calls++;throw new Error('network forbidden');}});
+ const scope:PwceSubscriptionScope={worldRef:'world.personal.v1',executionEnvironmentRef:'test',requestId:'request.one',correlationId:'correlation.one'};
+ for(const change of [{operation:'capabilities.invoke'},{token:'other'},{siteRef:'other'},{authorityContextRef:'other'},{worldRef:''},{requestId:undefined},{executionEnvironmentRef:'other'},{participantRefs:['p','p']},{participantRefs:'p'},{audienceRef:123}])assert.throws(()=>client.subscribeInvalidations('authority.bound','home.one',{scope:{...scope,...change} as any}));
+ for(const afterCursor of ['','1e2','-1','9007199254740992',0 as any])assert.throws(()=>client.subscribeInvalidations('authority.bound','home.one',{afterCursor}));
+ await assert.rejects(client.authority(['home.one'],undefined,{siteRefs:['home.other']} as any));
+ assert.equal(calls,0);
 });

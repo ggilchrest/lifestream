@@ -5,6 +5,9 @@ export type PwceProfile = { readonly profileId: string; readonly profileVersion:
 export type PwceBundle = { readonly bundleId: string; readonly bundleVersion: string; readonly bundleDigest: string; readonly artifacts: readonly { readonly path: string; readonly sha256: string }[]; readonly generatedClient: { readonly path: string; readonly sha256: string } };
 export type PwceClientOptions = { readonly baseUrl: string; readonly token: string; readonly fetchImpl?: typeof fetch; readonly requestTimeoutMs?: number; readonly streamLifetimeMs?: number };
 export type PwceClientResult = { readonly status: string; readonly [key: string]: unknown };
+export type PwceIdentityScope = { readonly assistantRef?: string | null; readonly endpointRef?: string | null; readonly participantRefs?: readonly string[]; readonly audienceRef?: string | null };
+export type PwceSubscriptionScope = PwceIdentityScope & { readonly worldRef: string; readonly executionEnvironmentRef: "normal" | "live" | "test" | "replay" | "simulation" | "dry-run"; readonly requestId: string; readonly correlationId: string };
+export type PwceSubscriptionOptions = { readonly afterCursor?: string; readonly limit?: number; readonly signal?: AbortSignal; readonly scope?: PwceSubscriptionScope };
 const CORE_OPERATIONS = Object.freeze(["context.getPreparedInputs", "context.query", "evidence.get", "events.subscribe", "authority.evaluate", "authority.authorizeDispatch", "authority.getGrants", "capabilities.getSnapshot", "capabilities.invoke", "capabilities.getInvocation", "trace.publish", "health.get"]);
 const objectInput=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
 
@@ -56,8 +59,8 @@ export class PwceGatewayClient {
     scope.check();
     return { profile, bundle };
   }
-  async authority(siteRefs: readonly string[], signal?: AbortSignal): Promise<PwceClientResult> {
-    const body = encodeRequest({ siteRefs: [...siteRefs] });
+  async authority(siteRefs: readonly string[], signal?: AbortSignal, identity: PwceIdentityScope = {}): Promise<PwceClientResult> {
+    const body = encodeRequest({ ...snapshotIdentity(identity), siteRefs: [...siteRefs] });
     return this.call(signal, async scope => {
       await this.readNegotiation(scope);
       return this.json("/gateway/v1/authority", scope, { method: "POST", body });
@@ -90,10 +93,28 @@ export class PwceGatewayClient {
   invoke(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.boundRequest("capabilities.invoke", authorityContextRef, input, signal); }
   getInvocation(authorityContextRef: string, actionRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "capabilities.getInvocation", authorityContextRef, actionRef }, signal); }
   publishTrace(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.boundRequest("trace.publish", authorityContextRef, input, signal); }
-  eventsUrl(authorityContextRef: string, siteRef: string, afterCursor = "0", limit = 100): string { const params = new URLSearchParams({ authorityContextRef, siteRef, afterCursor, limit: String(limit) }); return `${this.baseUrl}/gateway/v1/events?${params}`; }
-  async *subscribeInvalidations(authorityContextRef: string, siteRef: string, options: { readonly afterCursor?: string; readonly limit?: number; readonly signal?: AbortSignal } = {}): AsyncGenerator<PwceInvalidationEvent> {
-    const url = this.eventsUrl(authorityContextRef, siteRef, options.afterCursor ?? "0", options.limit ?? 100);
-    const scope = new PwceCallScope(this.streamLifetimeMs, options.signal);
+  eventsUrl(authorityContextRef: string, siteRef: string, afterCursor = "0", limit = 100, scope?: PwceSubscriptionScope): string {
+    for (const value of [authorityContextRef, siteRef]) boundedIdentity(value);
+    if (typeof afterCursor !== "string" || !/^(0|[1-9][0-9]*)$/.test(afterCursor) || !Number.isSafeInteger(Number(afterCursor)) || !Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error("PWCE subscription cursor or limit is invalid");
+    const params = new URLSearchParams({ authorityContextRef, siteRef, afterCursor, limit: String(limit) });
+    if (scope !== undefined) {
+      const fields = ["worldRef", "executionEnvironmentRef", "requestId", "correlationId"];
+      if (!objectInput(scope) || Object.keys(scope).some(key => ![...fields, ...IDENTITY_FIELDS].includes(key))) throw new Error("PWCE subscription scope contains an unknown field");
+      for (const key of fields) { const value = scope[key as keyof PwceSubscriptionScope]; boundedIdentity(value); params.set(key, value as string); }
+      if (!["normal", "live", "test", "replay", "simulation", "dry-run"].includes(scope.executionEnvironmentRef)) throw new Error("PWCE subscription execution mode is invalid");
+      const identity = snapshotIdentity(Object.fromEntries(IDENTITY_FIELDS.filter(key => Object.hasOwn(scope, key)).map(key => [key, scope[key as keyof PwceSubscriptionScope]])));
+      for (const [key, value] of Object.entries(identity)) if (value !== null && value !== undefined) params.set(key, Array.isArray(value) ? JSON.stringify(value) : String(value));
+    }
+    if (new TextEncoder().encode(`?${params}`).byteLength > 16_384) throw new Error("PWCE subscription query exceeds its transport limit");
+    return `${this.baseUrl}/gateway/v1/events?${params}`;
+  }
+  subscribeInvalidations(authorityContextRef: string, siteRef: string, options: PwceSubscriptionOptions = {}): AsyncGenerator<PwceInvalidationEvent> {
+    // Snapshot at method call, including before the caller starts iteration.
+    const url = this.eventsUrl(authorityContextRef, siteRef, options.afterCursor ?? "0", options.limit ?? 100, options.scope);
+    return this.readInvalidations(url, options.signal);
+  }
+  private async *readInvalidations(url: string, signal?: AbortSignal): AsyncGenerator<PwceInvalidationEvent> {
+    const scope = new PwceCallScope(this.streamLifetimeMs, signal);
     const headersExpiresAt = performance.now() + this.requestTimeoutMs;
     const checkHeadersDeadline = () => {
       if (performance.now() >= headersExpiresAt) scope.abort(deadlineExceeded());
@@ -125,4 +146,19 @@ export class PwceGatewayClient {
     checkStatus(response, value);
     return value as T;
   }
+}
+
+const IDENTITY_FIELDS = ["assistantRef", "endpointRef", "participantRefs", "audienceRef"];
+function boundedIdentity(value: unknown): asserts value is string {
+  if (typeof value !== "string" || value.length < 1 || value.length > 128) throw new Error("PWCE scope identity must be a bounded string");
+}
+function snapshotIdentity(value: PwceIdentityScope): PwceIdentityScope {
+  if (!objectInput(value) || Object.keys(value).some(key => !IDENTITY_FIELDS.includes(key))) throw new Error("PWCE identity scope contains an unknown field");
+  const copy = structuredClone(value);
+  for (const key of ["assistantRef", "endpointRef", "audienceRef"] as const) if (copy[key] !== undefined && copy[key] !== null) boundedIdentity(copy[key]);
+  if (copy.participantRefs !== undefined) {
+    if (!Array.isArray(copy.participantRefs) || copy.participantRefs.length > 32 || new Set(copy.participantRefs).size !== copy.participantRefs.length) throw new Error("PWCE participants must be a bounded unique list");
+    copy.participantRefs.forEach(boundedIdentity);
+  }
+  return copy;
 }
