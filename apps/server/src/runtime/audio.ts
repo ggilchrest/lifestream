@@ -8,6 +8,7 @@ import type { VoxCpmProvider } from "@lifestream/providers-voxcpm";
 import { defaultVoiceSettings, parseVoiceSettings, type VoiceSettings } from "./voice-settings.ts";
 import { SpeechQueue } from "./speech-queue.ts";
 import type { HostRuntimeInput } from "./inference.ts";
+import {validateAudioFrame} from "@lifestream/runtime/voice";
 
 type AudioRequest = { schemaVersion: "1.0.0"; requestId: string; correlationId: string; sessionId: string; expectedSessionRevision: number; endpointId: string; audioInputId: string; format: AudioFrame["format"]; voiceSettings?: VoiceSettings; assistantId?: string; relationshipId?: string };
 type AudioClientMessage = { type: "start"; request: AudioRequest } | { type: "frame"; audioInputId: string; frame: AudioFrame } | { type: "commitTurn"; audioInputId: string; nextSequence: number; sampleCount: number } | { type: "interrupt"; interactionTraceId: string; reason: string } | { type: "stop"; audioInputId: string };
@@ -21,7 +22,9 @@ export const hasAudioEnergy = (dataBase64: string, threshold = 0.015): boolean =
 
 export const VOICE_TURN_DEADLINE_MS = 180_000;
 export const SPEECH_SEGMENT_DEADLINE_MS = 45_000;
-export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
+export type AudioOutputLease={current:()=>boolean;release:()=>void};
+export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
+export type OutputOnlySpeech={text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void};
 
 export class AudioSession {
   private readonly socket: AudioSocket;
@@ -42,6 +45,48 @@ export class AudioSession {
 
   constructor(socket: AudioSocket, deps: AudioDependencies, sessionId: string) { this.socket = socket; this.deps = deps; this.sessionId = sessionId; }
 
+  belongsTo(sessionId:string):boolean{return this.sessionId===sessionId;}
+  get outputAvailable():boolean{return !this.closed&&this.socket.readyState===OPEN&&!this.controller&&!this.starting&&!this.pendingTurns;}
+  /** Uses the established output transport without a start/input request, STT,
+   * fabricated transcript or second inference call. Host policy owns admission. */
+  async speakOutputOnly(input:OutputOnlySpeech):Promise<{samples:number;frames:number;mappingRevision:string;warmth:"unsupported";degradedDimensions:string[]}>{
+    if(!this.outputAvailable||!this.deps.outputLease||!validUuid(input.interactionId)||!validUuid(input.endpointId)||!input.text.trim()||input.text.length>4000||!Number.isFinite(input.warmth)||input.warmth<0||input.warmth>1||input.current()!==true||input.signal.aborted)throw new Error("Output-only speech is unavailable");
+    const deadline=Math.min(Date.parse(input.deadlineAt),Date.now()+SPEECH_SEGMENT_DEADLINE_MS);
+    if(!Number.isFinite(deadline)||deadline<=Date.now())throw new Error("Output-only speech expired");
+    const lease=this.deps.outputLease(input.endpointId,new Date(deadline).toISOString()),controller=new AbortController(),signal=AbortSignal.any([controller.signal,input.signal]);
+    this.controller=controller;this.interactionTraceId=input.interactionId;this.sequence=0;this.currentInput=undefined;
+    const timer=setTimeout(()=>controller.abort(),Math.max(1,deadline-Date.now()));
+    let samples=0,frames=0,started=false,done=false,mappingRevision="unknown",settlement:Promise<void>|undefined,settled=false;
+    const degraded=new Set<string>(["warmth"]),pacer=new PcmPacer(),segmentId=randomUUID(),decisionId=randomUUID();
+    const current=()=>!this.closed&&this.socket.readyState===OPEN&&!signal.aborted&&Date.now()<deadline&&input.current()===true&&lease.current();
+    const request={contractVersion:"2.0.0" as const,text:input.text,segmentId,format:{encoding:"pcm_s16le" as const,sampleRateHz:48000 as const,channels:1 as const},voiceProfile:{voiceRef:"fixture-voice-design",revision:1},decision:{decisionId,revision:1},delivery:{interactionId:input.interactionId,segmentId,decisionId,decisionRevision:1,deliveryMode:this.voiceSettings.deliveryMode,urgency:"low",pace:this.voiceSettings.pace,energy:this.voiceSettings.energy},deadlineAt:new Date(deadline).toISOString()};
+    try{
+      if(!current())throw new Error("Output-only ownership changed");
+      const tts=this.deps.tts.withoutAdmissionRetries();
+      for await(const event of bufferedStream(tts.synthesize(request,signal),signal,64,()=>controller.abort(),(pending,complete)=>{settlement=pending;settled=complete;})){
+        if(!current()||done)throw new Error("Output-only speech became stale or emitted after terminal");
+        if(mappingRevision!=="unknown"&&event.mappingRevision!==mappingRevision)throw new Error("Speech mapping changed");mappingRevision=event.mappingRevision;
+        if(event.kind==="preAudio"){for(const d of event.degradedDimensions)degraded.add(d);continue;}
+        if(event.kind==="terminal"){
+          if(event.outcome!=="succeeded"||event.outputSamples!==samples||event.frameCount!==frames||!samples)throw new Error("Speech did not produce complete audio");
+          for(const d of event.degradedDimensions)degraded.add(d);done=true;continue;
+        }
+        validateAudioFrame(event.frame,request.format);
+        if(event.frame.sampleOffset!==samples||event.frame.sequence!==frames||Buffer.from(event.frame.dataBase64,"base64").length!==event.frame.sampleCount*2||samples+event.frame.sampleCount>48000*60)throw new Error("Speech frame accounting is invalid");
+        await pacer.admit(event.frame.sampleCount,event.frame.format.sampleRateHz,signal);if(!current())throw new Error("Audio lease or policy changed before emission");
+        if(!started){input.beforeEmission();if(!current())throw new Error("Output-only admission changed");response(this.socket,input.interactionId,this.sequence++,{type:"textDelta",text:input.text});started=true;input.emitted();}
+        if(!current())throw new Error("Output-only ownership changed");
+        send(this.socket,{type:"audio",interactionTraceId:input.interactionId,chunk:{segmentId:event.segmentId,frame:event.frame}});samples+=event.frame.sampleCount;frames++;
+      }
+      if(!done||!current())throw new Error("Output-only speech has no current successful terminal");
+      response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:"completed",finalResponse:null,error:null});
+      return {samples,frames,mappingRevision,warmth:"unsupported",degradedDimensions:[...degraded]};
+    }catch(error){
+      const cancelled=signal.aborted||!input.current()||!lease.current();controller.abort();if(started)send(this.socket,{type:"stopPlayback",interactionTraceId:input.interactionId,reason:"output_only_cancelled_or_failed"});
+      response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:cancelled?"interrupted":"failed",finalResponse:null,error:problem("output_only_stopped","Output-only speech stopped; playback completion is not established.",input.interactionId)});throw error;
+    }finally{clearTimeout(timer);controller.abort();const release=()=>{lease.release();this.controller=undefined;this.interactionTraceId=undefined;};if(settlement&&!settled)void settlement.catch(()=>undefined).then(release);else release();}
+  }
+
   close(): void { this.closed = true; this.frames = []; this.voiceSettings = { ...defaultVoiceSettings }; this.request = undefined; this.controller?.abort(); this.socket.close(1001, "audio session closed"); }
   invalidateIfStale(): void { if (this.currentInput && !this.currentInput.isCurrent()) { this.controller?.abort(); if (this.interactionTraceId) send(this.socket, { type: "stopPlayback", interactionTraceId: this.interactionTraceId, reason: "runtime_input_stale" }); } }
 
@@ -50,6 +95,7 @@ export class AudioSession {
     let message: AudioClientMessage;
     try { message = JSON.parse(raw) as AudioClientMessage; } catch { this.socket.close(1003, "malformed JSON"); return; }
     if (message.type === "start") return this.start(message.request);
+    if (message.type === "interrupt") { if (message.interactionTraceId === this.interactionTraceId) { this.controller?.abort(); send(this.socket, { type: "stopPlayback", interactionTraceId: message.interactionTraceId, reason: message.reason }); } return; }
     const request = this.request;
     if (!request || ((message.type === "frame" || message.type === "commitTurn" || message.type === "stop") && message.audioInputId !== request.audioInputId)) return send(this.socket, { type: "error", requestId: request?.requestId ?? randomUUID(), problem: problem("audio_input_identity_changed", "audio input identity changed", request?.correlationId ?? randomUUID()) });
     if (message.type === "frame") {
@@ -60,7 +106,6 @@ export class AudioSession {
       // after speech qualification; this route must not bypass that gate.
       this.frames.push(message.frame); return;
     }
-    if (message.type === "interrupt") { if (message.interactionTraceId === this.interactionTraceId) { this.controller?.abort(); send(this.socket, { type: "stopPlayback", interactionTraceId: message.interactionTraceId, reason: message.reason }); } return; }
     if (message.type === "stop") { this.close(); return; }
     if (message.type !== "commitTurn") return;
     if (message.nextSequence !== this.frames.length || message.sampleCount !== this.sampleCount()) return send(this.socket, { type: "error", requestId: request.requestId, problem: problem("audio_commit_invalid", "audio commit accounting is invalid", request.correlationId) });
@@ -97,6 +142,7 @@ export class AudioSession {
     const traceId = this.interactionTraceId; const deadlineAt = new Date(Date.now() + VOICE_TURN_DEADLINE_MS).toISOString();
     const controller = this.controller;
     let timedOut = false, internalFailure = false;
+    let outputLease:AudioOutputLease|undefined;
     const timer = setTimeout(() => { timedOut = true; controller.abort(); }, VOICE_TURN_DEADLINE_MS);
     send(this.socket, { type: "turnStarted", interactionTraceId: traceId });
     const audio = async function* () { for (const frame of frames) yield { type: "frame" as const, audioInputId: request.audioInputId, frame }; yield { type: "end" as const, audioInputId: request.audioInputId, nextSequence: frames.length, sampleCount: frames.reduce((total, frame) => total + frame.sampleCount, 0) }; }();
@@ -114,6 +160,7 @@ export class AudioSession {
       if (transcript === undefined || !transcript.trim()) throw new Error("speech input did not produce a committed transcript");
       if (controller.signal.aborted) throw new Error("audio turn interrupted");
         this.currentInput = this.deps.prepare?.({ ...(request.assistantId ? { assistantId: request.assistantId } : {}), ...(request.relationshipId ? { relationshipId: request.relationshipId } : {}), endpointId: request.endpointId, userInput: transcript });
+        outputLease=this.deps.outputLease?.(this.currentInput?.endpointId??request.endpointId,deadlineAt);
         const prompt = buildCanonicalPrompt({ assistantId: this.currentInput?.assistantId ?? this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: this.currentInput?.endpointId ?? request.endpointId, userInput: transcript, deadlineAt, executionMode: "live", voiceMode: true, ...(this.currentInput ? { runtimeSelfContext: this.currentInput.runtimeSelfContext, ...(this.currentInput.profileProjection ? { profileProjection: this.currentInput.profileProjection } : {}), ...(this.currentInput.preparedRelationshipContext ? { preparedRelationshipContext: this.currentInput.preparedRelationshipContext } : {}) } : {}) });
         let answer = "";
         const segmenter = new SpeechSafeSegmenter(360);
@@ -159,13 +206,13 @@ export class AudioSession {
         // inference fails. Keep both activities bounded and settle both.
         void generation.catch(() => {});
         const synthesis=async function*(){for await(const text of queue)yield* speak(text);};
-        try { for await (const speech of bufferedStream(synthesis(),controller.signal,64,()=>{if(!controller.signal.aborted){internalFailure=true;controller.abort();}})) {await pacer.admit(speech.frame.sampleCount,speech.frame.format.sampleRateHz,controller.signal);this.invalidateIfStale();if(controller.signal.aborted)throw new Error("audio context changed");send(this.socket,{type:"audio",interactionTraceId:traceId,chunk:{segmentId:speech.segmentId,frame:speech.frame}});} await generation; }
+        try { for await (const speech of bufferedStream(synthesis(),controller.signal,64,()=>{if(!controller.signal.aborted){internalFailure=true;controller.abort();}})) {await pacer.admit(speech.frame.sampleCount,speech.frame.format.sampleRateHz,controller.signal);this.invalidateIfStale();if(controller.signal.aborted||outputLease&&!outputLease.current())throw new Error("audio context or output lease changed");send(this.socket,{type:"audio",interactionTraceId:traceId,chunk:{segmentId:speech.segmentId,frame:speech.frame}});} await generation; }
         catch (error) { internalFailure ||= !controller.signal.aborted; controller.abort(); queue.close(error); await generation.catch(() => {}); throw error; }
         response(this.socket, traceId, this.sequence++, { type: "terminal", state: "completed", finalResponse: null, error: null });
     } catch (error) {
       const interrupted = this.controller.signal.aborted && !timedOut && !internalFailure;
       response(this.socket, traceId, this.sequence++, { type: "terminal", state: interrupted ? "interrupted" : "failed", finalResponse: null, error: problem(interrupted ? "audio_interrupted" : timedOut ? "audio_deadline_exceeded" : "audio_turn_failed", timedOut ? "Voice turn exceeded its 180 second limit; you can try another turn." : error instanceof Error ? error.message : "audio turn failed", traceId, !interrupted) });
-    } finally { clearTimeout(timer); this.controller = undefined; this.interactionTraceId = undefined; this.currentInput = undefined; }
+    } finally { clearTimeout(timer); outputLease?.release(); this.controller = undefined; this.interactionTraceId = undefined; this.currentInput = undefined; }
   }
 }
 import {PcmPacer} from './pcm-pacer.ts';

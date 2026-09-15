@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "ca70b8034abb8200083f34d5183f75caec9173c7",
+  "currentRevision": "e9ba8ce06450b47eb179fd25111e70b8891b62e0",
   "activeSlice": "LS-S083",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -138,56 +138,67 @@
     "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json",
     "apps/server/src/runtime/initiative-host.ts",
     "apps/server/test/initiative-host.test.ts",
-    "implementation/evidence/S083-PROTECTED-INITIATIVE-RUNTIME-1.json"
+    "implementation/evidence/S083-PROTECTED-INITIATIVE-RUNTIME-1.json",
+    "apps/server/test/audio-output.test.ts",
+    "packages/providers-voxcpm/src/provider.ts",
+    "packages/providers-voxcpm/test/provider.test.ts",
+    "implementation/evidence/S083-OUTPUT-ONLY-SPEECH-1.json",
+    "packages/runtime/package.json",
+    "apps/server/src/runtime/buffered-stream.ts"
   ],
   "changedFiles": [
     "apps/server/src/index.ts",
-    "apps/server/src/runtime/initiative-host.ts",
-    "apps/server/test/initiative-host.test.ts",
+    "apps/server/src/runtime/audio.ts",
+    "apps/server/src/runtime/buffered-stream.ts",
+    "apps/server/test/audio-output.test.ts",
+    "packages/providers-voxcpm/src/provider.ts",
+    "packages/providers-voxcpm/test/provider.test.ts",
+    "packages/runtime/package.json",
+    "packages/runtime/src/endpoints/handoff.ts",
+    "packages/runtime/test/endpoints-handoff.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S083-PROTECTED-INITIATIVE-RUNTIME-1.json",
-    "packages/storage-sqlite/src/initiative-delivery.ts"
+    "implementation/evidence/S083-OUTPUT-ONLY-SPEECH-1.json"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-PROTECTED-INITIATIVE-RUNTIME-1.json"
+      "evidence": "implementation/evidence/S083-OUTPUT-ONLY-SPEECH-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-PROTECTED-INITIATIVE-RUNTIME-1.json"
+      "evidence": "implementation/evidence/S083-OUTPUT-ONLY-SPEECH-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-PROTECTED-INITIATIVE-RUNTIME-1.json"
+      "evidence": "implementation/evidence/S083-OUTPUT-ONLY-SPEECH-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-PROTECTED-INITIATIVE-RUNTIME-1.json"
+      "evidence": "implementation/evidence/S083-OUTPUT-ONLY-SPEECH-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-PROTECTED-INITIATIVE-RUNTIME-1.json"
+      "evidence": "implementation/evidence/S083-OUTPUT-ONLY-SPEECH-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-PROTECTED-INITIATIVE-RUNTIME-1.json"
+      "evidence": "implementation/evidence/S083-OUTPUT-ONLY-SPEECH-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-PROTECTED-INITIATIVE-RUNTIME-1.json"
+      "evidence": "implementation/evidence/S083-OUTPUT-ONLY-SPEECH-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-PROTECTED-INITIATIVE-RUNTIME-1.json"
+      "evidence": "implementation/evidence/S083-OUTPUT-ONLY-SPEECH-1.json"
     }
   ],
   "decisions": [
@@ -203,7 +214,7 @@
   ],
   "blockers": [],
   "nextAction": "Complete Initiative output-only speech and ordinary conversation/transcript UI integration, readiness/audio-lease ownership and truthful playback/barge-in behavior. Build the opportunity inspector and pinned gradient Lab; finish reserved acknowledgments, bounded timing and older-database-restore protection. Continue S084 semantic Discovery/exploration/qualified analysis/actual output/performance, refresh current-source prerequisites, and finish PWCE Personal V1 T5 core mapping. Full S083/S084 and Human acceptance remain open.",
-  "updatedAt": "2026-09-15T01:59:53.169566Z",
+  "updatedAt": "2026-09-15T02:23:05.800709Z",
   "updatedBy": "Codex",
-  "notes": "Protected synthetic Initiative text operations now join authentication, current policy, session/conversation identity, generation and durable delivery accounting. Temporary controls, one shared warmth value and foreground/source/audience cancellation are covered by protected API regressions. Browser conversation/inspector, speech, restore fencing and full certification remain open."
+  "notes": "Output-only speech and shared ordinary WebSocket/HTTP audio ownership are component-verified. Initiative host/browser speech delivery, foreground lifecycle, truthful playback acknowledgments, UI, restoration fencing and full certification remain open."
 }

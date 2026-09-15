@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-OUTPUT-ONLY-SPEECH-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "e9ba8ce06450b47eb179fd25111e70b8891b62e0",
+  "specificationRevision": "bf4a0de85dafdb4bfd03f6ad7acbdc644a6b1496",
+  "recordedAt": "2026-09-15T02:23:05.800709Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "f69808dcb20a4837ee0b970b6c40f9293d6e2eb4a4a0031d1eb51303c746b192"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "b99543b653377d5f74f51bea7b512e19b00853551a73b8cc2b3aa741cd4c42f9"
+    },
+    {
+      "path": "apps/server/src/runtime/buffered-stream.ts",
+      "sha256": "fe0250185444f5221633866ccb7e115e28ace60de7dc35da2e4cc4cca1805ecc"
+    },
+    {
+      "path": "apps/server/test/audio-output.test.ts",
+      "sha256": "897c3bdb5999b961924cbd0300109e664414fc3914cd0e1f4baec13aa13a7908"
+    },
+    {
+      "path": "packages/providers-voxcpm/src/provider.ts",
+      "sha256": "99d28cd81107d5b6e0dad7267cccf0b1c76f43999097522a042691e327654d5b"
+    },
+    {
+      "path": "packages/providers-voxcpm/test/provider.test.ts",
+      "sha256": "9ec39ca1807074db39b54fba86caae7062e453772f047b816e1cecdbea115bb5"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "d64f5dc3dfbaed36303b9501c16f765187579f7f542cea2c4456c0bc30de7c08"
+    },
+    {
+      "path": "packages/runtime/src/endpoints/handoff.ts",
+      "sha256": "604e162660ef324641c7d43dcb2e25901846b69eb3223cef7b8d16536f266a41"
+    },
+    {
+      "path": "packages/runtime/test/endpoints-handoff.test.ts",
+      "sha256": "2d97b3030f2611f72168ef66ed9bf77f738e655e4f67c06922aa5db19df7e629"
+    }
+  ],
+  "claims": [
+    "AudioSession can synthesize a bounded supplied Assistant opening without input setup, STT, inference, fabricated user text or an input transcript. It emits the existing text/audio/terminal event shapes and performs no busy-admission retry for this path.",
+    "Output-only emission checks current authorization/policy supplied by the host, endpoint lease, deadline and socket state before output. The durable pre-emission callback precedes the first text write; emission accounting follows that write. Failed callbacks, malformed or incomplete synthesis, interruption and stale handoff produce no successful completion.",
+    "Output interruption returns without waiting for an unresponsive producer while retaining the occupied AudioSession and lease until that producer settles. A stale release cannot remove a successor lease. Expired leases cannot hand off, successor leases retain the valid expiry, and lease ownership cannot be extended by changing supplied expiry bytes.",
+    "Ordinary WebSocket voice output and HTTP TTS preview now acquire the same session audio ownership service. An overlapping preview is rejected; after the first owner settles, a subsequent preview can proceed. Current authentication and session endpoint revisions are rechecked before PCM emission.",
+    "Existing TTS mapping and degraded dimensions are retained. Expressive warmth is explicitly reported unsupported by this speech component; no unsupported prosody mapping or new provider request field is invented."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "3b0cf22b87e20c2ed1d5d4bdf1250a92654fc67d1e6e23145a25009cb28aa224"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "1910b0255aa2b114d6732bbded3d2ad1a2316a5a2d85bd524ab5dc4aa17b8171"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "c16136fddf6cb97e3e62e25fd251cd0ddb125ef1dfb5ad0eb97985b037bbf10c"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "6d1e613c9e3c8dd4b02ba10b8ef52821c1ca9b1e37e65c1a4eb5585175a4d7b1"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "b83cc3295cc143744ff389aa88e0d48b976e12fb6f0cfab89baf2d36e5a1d23b"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 362,
+    "browserTests": 29,
+    "toolingTests": 45,
+    "newOutputOnlyTestsIncludedInSourceSuite": 7
+  },
+  "limitations": [
+    "The output-only method is not yet connected to InitiativeHost delivery or browser readiness, conversation display and acknowledgments. Its cancellation and ownership tests do not establish the complete Initiative barge-in/foreground lifecycle.",
+    "The joined WebSocket/HTTP regression uses explicitly configured isolated fixture authentication and synthetic providers. It is not selected-provider, physical playback, distributed lease, restart/old-database-restore or Human qualification.",
+    "A completed response denotes successful synthesis and transport emission only, not endpoint acceptance or audible playback. Playback receipts, actual browser stop/drain behavior and voiced warmth evaluation remain pending.",
+    "Opportunity inspection, gradient Lab, reserved nonpersonal acknowledgments, bounded timing adaptation, current-source prerequisite successors and full S083/S084 certification remain open. S084 and PWCE continuation remain active.",
+    "No saved review service was restarted. No live activation, deployment, capture, personal-data import, training, model/provider selection or model-quality observation occurred."
+  ],
+  "qualificationPending": {
+    "slices": [
+      "LS-S071",
+      "LS-S072",
+      "LS-S073",
+      "LS-S076",
+      "LS-S078"
+    ],
+    "reason": "Refresh current-source successor qualifications after joined changes; preserve historical receipts."
+  }
+}

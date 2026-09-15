@@ -12,7 +12,7 @@ interface TextToSpeechProvider { capabilities(): TtsCapabilities; synthesize(req
 
 type VoiceReference = { dataBase64: string; sampleRateHz: 16000; transcript: string };
 type VoiceDesign = { description: string; seed: number; reference?: VoiceReference | null };
-export type VoxCpmOptions = { baseUrl: string; voiceBundleKey: string; voiceBundleRevision: number; runtimeRevision: string; modelRevision: string; mappingRevision: string; voiceDesign?: VoiceDesign; fetch?: typeof globalThis.fetch; onDiagnostic?: (event: { requestId: string; code: string }) => void };
+export type VoxCpmOptions = { busyAdmissionRetries?:0|2; baseUrl: string; voiceBundleKey: string; voiceBundleRevision: number; runtimeRevision: string; modelRevision: string; mappingRevision: string; voiceDesign?: VoiceDesign; fetch?: typeof globalThis.fetch; onDiagnostic?: (event: { requestId: string; code: string }) => void };
 
 export class VoxCpmProvider implements TextToSpeechProvider {
   private readonly options: VoxCpmOptions;
@@ -20,6 +20,7 @@ export class VoxCpmProvider implements TextToSpeechProvider {
   private controls: { description: boolean; reference: boolean } | undefined;
   constructor(options: VoxCpmOptions) { this.options = options; this.requestFetch = options.fetch ?? globalThis.fetch; }
   withVoiceDesign(voiceDesign: VoiceDesign): VoxCpmProvider { const provider = new VoxCpmProvider({ ...this.options, voiceDesign }); provider.controls = this.controls; return provider; }
+  withoutAdmissionRetries(): VoxCpmProvider { const provider=new VoxCpmProvider({...this.options,busyAdmissionRetries:0});provider.controls=this.controls;return provider; }
   async voiceControls(): Promise<{ description: boolean; reference: boolean }> {
     if (this.controls) return { ...this.controls };
     try { const response = await this.requestFetch(`${this.options.baseUrl}/v1/capabilities`, { signal: AbortSignal.timeout(2000) }); const body = await response.json() as { voiceDesignControl?: string; voiceReferenceControl?: string }; if (response.ok) this.controls = { description: body.voiceDesignControl === "voxcpm.voice-design.v1", reference: body.voiceReferenceControl === "voxcpm.voice-reference.v1" }; return this.controls ? { ...this.controls } : { description: false, reference: false }; } catch { return { description: false, reference: false }; }
@@ -81,7 +82,7 @@ export class VoxCpmProvider implements TextToSpeechProvider {
             // A rejected admission has produced no audio/effect to duplicate.
             // Retry at most twice within the original absolute deadline, so
             // non-preemptible sentence cleanup need not lose the next turn.
-            if(terminalOnly&&event.outcome==="providerUnavailable"&&attempt<2&&Date.parse(request.deadlineAt)-Date.now()>100){
+            if(terminalOnly&&event.outcome==="providerUnavailable"&&attempt<(this.options.busyAdmissionRetries??2)&&Date.parse(request.deadlineAt)-Date.now()>100){
               this.options.onDiagnostic?.({requestId:body.requestId,code:"busy_admission_retry"});
               await reader!.cancel();reader!.releaseLock();reader=undefined;
               await delay(100,undefined,{signal:controller.signal});

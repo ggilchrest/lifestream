@@ -1,6 +1,8 @@
 // One producer; bounded transport lookahead, not parallel model generation.
 // Provider PCM packets are <=100 ms, so 64 events retain at most 6.4 s audio.
-export async function* bufferedStream<T>(source:AsyncIterable<T>,signal:AbortSignal,capacity=64,onStop?:()=>void):AsyncGenerator<T>{
+// A host using detached settlement must retain its occupied provider/output slot
+// until that promise settles. The default still joins cleanup before returning.
+export async function* bufferedStream<T>(source:AsyncIterable<T>,signal:AbortSignal,capacity=64,onStop?:()=>void,onSettlement?:(settled:Promise<void>,complete:boolean)=>void):AsyncGenerator<T>{
   const values:T[]=[];let ended=false,error:unknown,wake:(()=>void)|undefined,space:(()=>void)|undefined,stopped=false;
   const abort=()=>{stopped=true;wake?.();space?.();};
   signal.addEventListener('abort',abort,{once:true});if(signal.aborted)abort();
@@ -11,5 +13,5 @@ export async function* bufferedStream<T>(source:AsyncIterable<T>,signal:AbortSig
   })();
   try{
     while(true){signal.throwIfAborted();if(error)throw error;const value=values.shift();if(value!==undefined){space?.();space=undefined;yield value;continue;}if(ended)return;await new Promise<void>(resolve=>{wake=resolve;});}
-  }finally{abort();if(!ended)onStop?.();signal.removeEventListener('abort',abort);await producer;}
+  }finally{abort();if(!ended)onStop?.();signal.removeEventListener('abort',abort);if(onSettlement)onSettlement(producer,ended);else await producer;}
 }

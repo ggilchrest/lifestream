@@ -79,6 +79,10 @@
     "./understanding/coordinator": {
       "types": "./dist/understanding/coordinator.d.ts",
       "import": "./dist/understanding/coordinator.js"
+    },
+    "./endpoints/handoff": {
+      "types": "./dist/endpoints/handoff.d.ts",
+      "import": "./dist/endpoints/handoff.js"
     }
   },
   "scripts": {
