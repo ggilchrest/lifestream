@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "14d0913ada253a2832572496731a37cc4382ba83",
+  "currentRevision": "584ac035cb7e91386f1ff33121a5adc1d9c98b1f",
   "activeSlice": "LS-S083",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -128,63 +128,62 @@
     "packages/storage-sqlite/src/migrations/0023_initiative_delivery.sql",
     "packages/storage-sqlite/src/migrations/index.ts",
     "packages/storage-sqlite/src/index.ts",
-    "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json"
+    "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json",
+    "apps/server/src/runtime/initiative.ts",
+    "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
   ],
   "changedFiles": [
-    "apps/server/test/server.test.ts",
+    "apps/server/src/runtime/initiative.ts",
+    "apps/server/test/initiative.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json",
-    "packages/storage-sqlite/src/index.ts",
-    "packages/storage-sqlite/src/initiative-delivery.ts",
-    "packages/storage-sqlite/src/migrations/0023_initiative_delivery.sql",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/test/initiative-delivery.test.ts"
+    "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json",
+    "packages/runtime/src/inference/prompt.ts"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json"
+      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json"
+      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json"
+      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json"
+      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json"
+      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json"
+      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
     },
     {
-      "command": "node --test packages/storage-sqlite/test/database.test.ts packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "command": "node --test apps/server/test/initiative.test.ts packages/runtime/test/inference.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json"
+      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json"
+      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json"
+      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
     }
   ],
   "decisions": [
@@ -199,8 +198,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Connect S083 canonical opportunity and delivery ledger to protected host simulation/session scope, effective policy, shared prepared context and ordinary output-only browser transport. Complete bounded budgets, cancellation/lease/privacy fences and gradient Lab. Continue remaining S084 semantic Discovery, bounded exploration, qualified analysis and real output/performance demonstrations; refresh current-source prerequisite qualifications. PWCE Personal V1 T5 full core mapping remains open. No Human acceptance or full-slice completion is claimed.",
-  "updatedAt": "2026-09-15T00:49:14.437455Z",
+  "nextAction": "Connect the Initiative delivery ledger and candidate generator to protected host session/simulation ingress, effective numeric policy and durable inference budgets, shared prepared context, ordinary output-only text/speech transport, readiness/lease fences and Assistant transcript linkage. Complete temporary modes, inspector and gradient Lab. Continue remaining S084 semantic Discovery, bounded exploration, qualified analysis, real output/corpus/voice performance, prerequisite qualification successors and PWCE Personal V1 T5 full core mapping. Do not claim full-slice or Human acceptance from these components.",
+  "updatedAt": "2026-09-15T01:00:25.755936Z",
   "updatedBy": "Codex",
-  "notes": "S083 durable canonical delivery lifecycle and conservative accounting component verified. Server output-only integration and complete slice qualification remain pending; S083/S084 stay in progress."
+  "notes": "Bounded Initiative candidate generation now uses the shared canonical prompt and prepared context, with strict no-user-input semantics and cancellation/settlement checks. Fixture and regression evidence is published; the protected host/output join and complete slice acceptance remain pending."
 }

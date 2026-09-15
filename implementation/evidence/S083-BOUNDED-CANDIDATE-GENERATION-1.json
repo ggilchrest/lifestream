@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-BOUNDED-CANDIDATE-GENERATION-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "584ac035cb7e91386f1ff33121a5adc1d9c98b1f",
+  "specificationRevision": "c9a28019cbe408f058d892d9bd02116d63c32784",
+  "recordedAt": "2026-09-15T01:00:25.755936Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/runtime/initiative.ts",
+      "sha256": "a507149cf63a1ffa66ba5d3bae27d36ee5a56a81e0fc1d49862d772688bf0559"
+    },
+    {
+      "path": "apps/server/test/initiative.test.ts",
+      "sha256": "aa699ca2b39a2f2f3a294ebba3312673849b3ed7e0c7a0cbb308fc165e0672f4"
+    },
+    {
+      "path": "packages/runtime/src/inference/prompt.ts",
+      "sha256": "4d7c6dd7a0d900a97d33389d393d3c698fce099a77622f352584d3d4c57f3dec"
+    }
+  ],
+  "claims": [
+    "Typed host-only Initiative metadata extends the existing canonical interaction-state and policy sections. Section ordering, untrusted prepared memory, persona projection and ordinary user-turn policy behavior remain unchanged. Nonempty fabricated user input and Initiative metadata on a user turn are rejected.",
+    "The candidate generator validates canonical opportunity shape, intended Assistant/logical endpoint, prepared relationship/configuration binding, current disclosure scope, selected persona and prepared-context expiry before inference. Replay and absent/currently denied durable admission make no provider call.",
+    "One candidate call per generator instance, with host-selected 32-256 generation-token cap and 1-15 second deadline capped by source and view expiry. Local output accounting uses the existing conservative UTF-8 byte upper bound. No tools, output, microphone capture or conversation write occurs in this component.",
+    "Cancellation/deadline races bound caller waiting even when a provider iterator stalls. The social slot remains occupied until actual provider iterator settlement, so timeout cannot silently admit overlapping calls. No terminal, tool/error chunks, post-terminal text, excess output and changed boundaries discard the candidate.",
+    "An isolated SQLite test joins unique pending-to-eligible admission to an actual fixture-provider request and generated outcome. Retrying the same durable admission cannot call the provider again. Empty successful output is a truthful noCandidate result, not an emitted opening."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "6c4bd5875824c19125c40789d4c2883bfe2e0bb6571431ecd3231c13f6812d1e"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "f7b283fa6291017291a42f87ec9bc0c62c146b863b65659e6967196bee3111dd"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "561bca8793f6c7a49aba283c217eecfb46e0e938d2cf4c90fae66d29e81a70f5"
+    },
+    {
+      "command": "node --test apps/server/test/initiative.test.ts packages/runtime/test/inference.test.ts",
+      "result": "pass",
+      "logSha256": "f949decaeffaf13d13ba51117f6e957dde5b140a607728f26cf642f2501794a3"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "a94ffcd9b0fb2776e2ebce1baf3f13247b7fa31541839ca401e12d4d288653c1"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 328,
+    "browserTests": 29,
+    "toolingTests": 45,
+    "focusedTests": 14,
+    "privateValidatorUnitTests": 53
+  },
+  "caseCoverage": [
+    {
+      "caseId": "LS-TEST-113",
+      "scope": "Shared canonical persona/prepared-context and empty user-input generation component. Protected ordinary conversation/output connection remains pending."
+    },
+    {
+      "caseId": "LS-TEST-115",
+      "scope": "Candidate current-boundary and cancellation component only; final output policy/privacy/lease races remain pending."
+    },
+    {
+      "caseId": "LS-TEST-120",
+      "scope": "Candidate failure/no-terminal/noCandidate classification before delivery. No additional delivery or playback evidence."
+    }
+  ],
+  "limitations": [
+    "The new generator is not yet connected to the server Initiative coordinator or an exposed operation. Main protected ingress, output readiness, effective policy, temporary modes, generation budgets, single runtime coordination and transcript linkage remain pending.",
+    "Its synchronous durable-admission callback is an internal host seam. The test supplies the existing ledger transition; future host integration must atomically enforce inference budgets, configuration, consent and actual scope. Caller-provided references never establish authority.",
+    "Current selected-provider priority/latency, actual generated-output quality, speech warmth, physical presence and Human acceptance are not certified by fixture execution. No new model-quality observation was made.",
+    "The byte upper-bound output check can conservatively reject text that would fit a particular model tokenizer. Actual tokenizer/provider performance qualification remains pending and is not claimed from the local bound.",
+    "Source qualification successors and all remaining S083/S084 and PWCE work remain open. No private schema or prose export, live configuration, capture, provider selection, deployment or personal-data import occurred."
+  ]
+}
