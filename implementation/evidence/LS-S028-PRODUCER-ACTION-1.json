@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-PRODUCER-ACTION-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "ea3e159d0a6a69c267203b760b4b4834af767f36",
+  "sourceBinding": "Lifestream implementation unchanged; exact producer revision and source digests below bind this dependency correction.",
+  "specificationRevision": "e22c171d3450102625c3dd082eed18420924872c",
+  "recordedAt": "2026-09-15T09:05:01.976459Z",
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "4d20039187766ecf4261e9ed6173ad96a9961359",
+    "baselineRevision": "4eab678b22c651b040b630652bcf3999a8631283",
+    "evidence": "DEVELOPMENT-BATCH-167.md",
+    "sourceFiles": [
+      {
+        "path": "src/actions/action-service.js",
+        "sha256": "f8769bf94516c87b283f95b9e7c2bc9e768d4ccbcaf2649a8924c9910a7e9899"
+      },
+      {
+        "path": "src/actions/approval-service.js",
+        "sha256": "7fcdedc0d6c9dd13a485fc14ca7d89f257cbbc12d56358c7651286d1e3d90237"
+      },
+      {
+        "path": "src/actions/capability-catalog.js",
+        "sha256": "021be7e61d09acc830e12c16f71108ee8450583a4f850e45a1d5c09f7bec5715"
+      },
+      {
+        "path": "src/gateway/gateway-service.js",
+        "sha256": "2d17a4923ec784b3b86b68db7b8dc38ba155ef04c7034fc0746007df5aa05250"
+      },
+      {
+        "path": "src/runtime/state-store.js",
+        "sha256": "1ebaaa5b68b1e433e5e4e9da079c3e5e9cdbdc5c202c462140eec53ecea090bd"
+      },
+      {
+        "path": "test/action-admission-boundaries.test.js",
+        "sha256": "aa86d525e4eec1f87b05f0c6c7e4e76d82afed2bfcc866da6264d423f160524b"
+      },
+      {
+        "path": "test/action-gateway-http.test.js",
+        "sha256": "b9208e2088e7d216240477cd3832b642a83367912e02c087c608d21bc8f92fba"
+      }
+    ]
+  },
+  "claims": [
+    "Six producer gaps reproduced against an archived baseline and corrected: version preservation, post-audit authority, environment fingerprint, concurrent and restored attempt fencing, and complete denied action shape.",
+    "Producer-owned admission persists a started attempt before target invocation. A second owner sharing the StateStore or a restored started attempt cannot repeat the target call. Failed persistence does not expose an uncommitted candidate in memory.",
+    "Approval and idempotency share normalized capability version and execution/identity scope. Authority and approval are rechecked before crossing the target. Status reads require original scope and current authority after awaiting the action read.",
+    "Finite brightness parameters and bounded target are required. Dispatch waits have an at-most-30-second admission deadline; expiry after crossing yields unknown without retry or late-result rewriting. Newer reconciliation cannot be erased by a late dispatch reply.",
+    "An actual synthetic HTTP check verifies preview without effect, restricted authorizeDispatch, version rejection, invocation, duplicate identity, changed-input conflict and scoped status.",
+    "All existing separate-process context and authenticated conversation checks pass against this producer. No Lifestream action adapter or full joint acceptance is claimed."
+  ],
+  "checks": [
+    {
+      "command": "PWCE: npm test",
+      "result": "pass",
+      "log": "pwce-action-boundaries-final.log",
+      "logSha256": "6296be2d86dac78f5bff8f90d0e8b631e18306314d654eb7c12572d0c97b7fa5"
+    },
+    {
+      "command": "PWCE: npm run validate",
+      "result": "pass",
+      "log": "pwce-action-validate.log",
+      "logSha256": "e31118fd431327a2355113d49120584018feac09e64cf4bcd476ecd7e5ec0cbb"
+    },
+    {
+      "command": "Lifestream: node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "pwce-action-ls-process.log",
+      "logSha256": "b3e9f658fb01dcb553d5cddb7e682569dd0aa80b8f21410b4612a1e658bb8536"
+    },
+    {
+      "command": "PWCE: documentation links, anchors, images, CSS, map and release check",
+      "result": "pass",
+      "log": "pwce-action-docs.log",
+      "logSha256": "1cbaa8b56fb0b42baa9fa5851e3b66a517eac7146293b7ad334a34d04a8ee480"
+    },
+    {
+      "command": "Lifestream private: npm run validate",
+      "result": "pass",
+      "log": "pwce-action-private-validate.log",
+      "logSha256": "bce7b363aaced47b6544cb3f4c5f50b4add3b736ac590edae1868f9c407d560c"
+    }
+  ],
+  "counts": {
+    "producerTestsPassed": 176,
+    "newProducerTests": 20,
+    "baselineReproductionsFailed": 6,
+    "contractFixturesPassed": 13,
+    "manifestChecksPassed": 3,
+    "htmlPagesChecked": 27,
+    "separateProcessContextChecksPassed": 19,
+    "authenticatedWorldRuntimeChecksPassed": 7
+  },
+  "preservedFailures": [
+    {
+      "log": "pwce-action-boundaries-baseline-corrected.log",
+      "sha256": "e1d99e0f6d9f47468fea6ef4ba7839b29fcc4b881b08b75df7a5ac4a76d808f2",
+      "result": "Six failures against the baseline; all pass after correction."
+    },
+    {
+      "log": "pwce-action-boundaries-green.log",
+      "sha256": "a3d182f02d1fdc80c3362556e884d3588470cdce269ccc2ab51912b8a85c582c",
+      "result": "Initial new test setup used too-short synthetic token; fixed setup and reproduced all six against original code. Existing event test updated to assert admitted, started and result events."
+    },
+    {
+      "log": "pwce-action-boundaries-suite.log",
+      "sha256": "fc9ec2944c6f85f9a80155f578fc1b15103d1fe84cfe1e5ef84c99ce5e70cb14",
+      "result": "Existing approval expectation treated omitted version and current declared version differently; aligned normalized identity and retained explicit different-version rejection."
+    }
+  ],
+  "compatibility": {
+    "pwceBundleDigest": "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2",
+    "wireBundleAndGeneratedClientUnchanged": true,
+    "jointCompatibilityAccepted": false,
+    "notes": [
+      "Legacy weaker approval fingerprints require fresh approval; stored historical receipts remain unchanged.",
+      "Old admissions lacking a deadline cannot dispatch. Status now requires the invocation execution environment and identity scope.",
+      "The producer compatibility CLI rejected the differently shaped composition candidate; no full compatibility lock was generated or claimed."
+    ]
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-action/2026-09-15",
+  "unchangedBoundaries": [
+    "Four approved S083/S084 schemas and six preserved dirty artifacts keep exact hashes.",
+    "No saved-service restart, live configuration/effect, deployment, personal-data import, training, provider/model selection or new Human acceptance.",
+    "SYNPRJ_Q7M4 observations unchanged; no model-quality rerun."
+  ],
+  "remaining": [
+    "Complete canonical capability/authority envelopes, lifecycle/invalidation, full mapping-profile qualification and joint LS-S028/PV1-T5 scenarios.",
+    "Connect asynchronous PWCE authority, scoped approval transport, snapshot/precondition binding, invocation and reconciliation through public contracts without manufactured local admission.",
+    "Continue remaining S083/S084 work; independent development remains."
+  ],
+  "disposition": "continue"
+}

@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "05be85b720284d24d4692f0a153c1d15b0348314",
+  "currentRevision": "ea3e159d0a6a69c267203b760b4b4834af767f36",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -130,64 +130,38 @@
     "apps/server/src/admin/security-administration.ts",
     "apps/server/test/security-administration.test.ts",
     "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json",
-    "docs/local-authentication.md"
+    "docs/local-authentication.md",
+    "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/admin/security-administration.ts",
-    "apps/server/src/index.ts",
-    "apps/server/test/security-administration.test.ts",
-    "docs/local-authentication.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json",
-    "packages/providers-fixture/src/capability/provider.ts",
-    "packages/runtime/src/capabilities/cache.ts",
-    "packages/runtime/src/capabilities/call.ts",
-    "packages/runtime/src/capabilities/ports.ts",
-    "packages/runtime/src/capabilities/resolver.ts",
-    "packages/runtime/src/skills/skill.ts",
-    "packages/runtime/test/capabilities.test.ts",
-    "packages/runtime/test/skills.test.ts"
+    "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
   ],
   "validation": [
     {
-      "command": "pnpm build",
+      "command": "PWCE: npm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
     },
     {
-      "command": "pnpm typecheck",
+      "command": "PWCE: npm run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
     },
     {
-      "command": "pnpm lint",
+      "command": "Lifestream: node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
     },
     {
-      "command": "pnpm test",
+      "command": "PWCE: documentation links, anchors, images, CSS, map and release check",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
     },
     {
-      "command": "node --test --experimental-strip-types packages/runtime/test/capabilities.test.ts packages/runtime/test/skills.test.ts apps/server/test/security-administration.test.ts",
+      "command": "Lifestream private: npm run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
-    },
-    {
-      "command": "node scripts/check-pwce-context-process.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
-    },
-    {
-      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
-    },
-    {
-      "command": "pnpm --dir .private validate",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
     }
   ],
   "decisions": [
@@ -202,8 +176,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Complete canonical capability/authority envelopes, strict schema validation and lifecycle/invalidation mapping; implement PWCE trusted admission/invocation/reconciliation through public contracts. Then full LS-S028/PV1-T5 scenarios and remaining S083/S084 tasks. Independent work remains; no whole-goal blocker.",
-  "updatedAt": "2026-09-15T08:42:32.982345Z",
+  "nextAction": "Connect PWCE-owned action authority and scoped approval/invocation/reconciliation through public contracts, completing canonical envelopes, snapshot/precondition binding and full lifecycle/invalidation mapping. Then complete joint LS-S028/PV1-T5 and remaining S083/S084 tasks. No whole-goal blocker.",
+  "updatedAt": "2026-09-15T09:05:01.976459Z",
   "updatedBy": "Codex",
-  "notes": "Asynchronous capability/Skill execution and authenticated HTTP caller migration verified. Canonical envelopes, strict argument validation, full lifecycle/invalidation and actual PWCE authority/action mapping remain open; not whole-slice acceptance."
+  "notes": "PWCE producer action admission and interruption component verified and pushed. Lifestream implementation unchanged. Full LS-S028/PV1-T5 authority/capability mapping and remaining S083/S084 work continue."
 }
