@@ -139,14 +139,14 @@ export class InitiativeHost {
   try{
    if(!current())throw new Error('boundary changed');
    row=this.ledger.transition(scope,id,row.version,{type:'eligible'});prepared=context.prepare();preparedCurrent=prepared.isCurrent;prepared={...prepared,isCurrent:current};preparedViewId=randomUUID();
-   const candidate=await this.generator.generateDurably(context.provider,{opportunity,prepared,interactionId:randomUUID(),dimensions:selected.dimensions,maximumOutputTokens:tuning.generationMaxTokens!,deadlineMs:tuning.generationDeadlineSeconds!*1000,conversation:'',voiceMode:event.modality==='speech',signal},{ledger:this.ledger,expectedVersion:row.version,limits:{perRelationshipHour:tuning.inferenceCallsPerRelationshipHour!,perRuntimeHour:tuning.inferenceCallsPerRuntimeHour!},current});
+   const candidate=await this.generator.generateDurably(context.provider,{opportunity,prepared,interactionId:randomUUID(),dimensions:selected.dimensions,maximumOutputTokens:tuning.generationMaxTokens!,deadlineMs:tuning.generationDeadlineSeconds!*1000,conversation:prepared.conversation?.read()??'',voiceMode:event.modality==='speech',signal},{ledger:this.ledger,expectedVersion:row.version,limits:{perRelationshipHour:tuning.inferenceCallsPerRelationshipHour!,perRuntimeHour:tuning.inferenceCallsPerRuntimeHour!},current});
    if(candidate.status==='noCandidate'){this.ledger.transition(scope,id,row.version,{type:'finish',state:'suppressed',reasons:['noCandidate']});return this.response(owner,operation);}
    row=this.ledger.transition(scope,id,row.version,{type:'generated',preparedViewId,preparedDigest:candidate.request.sections.find(s=>s.kind==='preparedMemory')!.contentDigest,interactionId:candidate.request.scope.interactionId});
    row=this.ledger.transition(scope,id,row.version,{type:'queue',limits:{perHour:tuning.openingsPerHour!,perDay:tuning.openingsPerDay!,minimumGapMs:tuning.minimumGapSeconds!*1000},current});
    const receiptId=randomUUID();
    const delivery={opportunityId:id,sessionId:session.sessionId,interactionId:candidate.request.scope.interactionId,modality:event.modality,text:candidate.text,expiresAt:opportunity.expiresAt,captureEnabled:false};
    const issued=()=>{
-    row=this.ledger.transition(scope,id,row.version,{type:'emitted',receiptId});
+    row=this.ledger.transition(scope,id,row.version,{type:'emitted',receiptId});prepared!.conversation?.remember({interactionId:candidate.request.scope.interactionId,role:'assistant',text:candidate.text,opportunityId:id,observation:'emitted'});
     const result=this.response(owner,operation,[{code:'synthetic_output',summary:`Synthetic ${event.modality} opening emitted. Endpoint acceptance and playback are separate. ${event.modality==='speech'?'Prosodic warmth is unsupported by the current speech mapping.':''}`,sourceRefs:[receiptId]}]);delete result.body.delivery;
     return JSON.stringify(result.body).slice(1);
    };
@@ -154,7 +154,7 @@ export class InitiativeHost {
     if(!context.speech?.available())throw new Error('Speech transport unavailable');
     speechActive=true;
     let complete:()=>void=()=>{};const played=new Promise<void>(resolve=>{complete=resolve;});job.speech={synthesized:false,complete};
-    await context.speech.speak({conversation:{assistantId:owner.scope.assistantId,relationshipId:owner.scope.relationshipId,opportunityId:opportunity.opportunityId,current:preparedCurrent},text:candidate.text,interactionId:candidate.request.scope.interactionId,endpointId:session.endpoint.endpointId,deadlineAt:opportunity.expiresAt,warmth:selected.expressionWarmth,signal,current,
+    await context.speech.speak({text:candidate.text,interactionId:candidate.request.scope.interactionId,endpointId:session.endpoint.endpointId,deadlineAt:opportunity.expiresAt,warmth:selected.expressionWarmth,signal,current,
      beforeEmission:()=>{row=this.ledger.transition(scope,id,row.version,{type:'beginEmission',receiptId,awaitPlayback:true,current});},
      emitted:()=>{const suffix=issued();context.emit(`{"delivery":${JSON.stringify(delivery)},`,()=>suffix);},
      synthesized:async playbackSignal=>{job.speech!.synthesized=true;await new Promise<void>((resolve,reject)=>{const abort=()=>reject(new Error('Playback stopped'));if(playbackSignal.aborted)return abort();playbackSignal.addEventListener('abort',abort,{once:true});void played.then(()=>{playbackSignal.removeEventListener('abort',abort);resolve();});});},

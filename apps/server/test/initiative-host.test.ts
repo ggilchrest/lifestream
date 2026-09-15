@@ -199,3 +199,13 @@ test('authenticated microphone start requires the current audio endpoint and clo
  assert.equal((await f.send('/api/runtime/v1/session-context',{expectedRevision:1,mode:'audio',audienceScope:'unknown'})).status,200);await until(()=>c.socket.readyState===WebSocket.CLOSED);assert.equal(recognition,0);assert.equal(c.wire.find(e=>e.type==='error').problem.code,'audio_input_scope_changed');
  const fresh=await connect();fresh.socket.send(JSON.stringify({type:'start',request:request(2)}));await until(()=>fresh.wire.some(e=>e.type==='accepted'));assert.equal(fresh.wire.some(e=>e.type==='error'),false);
 });
+
+test('forgetting clears shared dialogue and stale browser history cannot reintroduce it',{timeout:15000},async t=>{
+ const f=await fixture(t),prompts:InferenceRequest[]=[];
+ (f.app as any).providers.inference={async *generate(request:InferenceRequest){prompts.push(request);yield {kind:'text',text:prompts.length===1?'SYNTHETIC_PRIVATE_DIALOGUE':'A fresh reply.'};yield {kind:'done'};}};
+ const message=async(body:Record<string,unknown>)=>{const response=await fetch(f.base+'/api/runtime/v1/messages',{method:'POST',headers:f.headers,body:JSON.stringify({assistantId:f.assistant.assistantId,relationshipId:f.rel.relationshipId,...body})});assert.equal(response.status,200);const output=await response.text();assert.match(output,/interaction.completed/);return output;};
+ await message({userInput:'Before synthetic forgetting.'});assert.equal((f.app as any).conversationHistory.diagnostics().entries,2);
+ const relationship=(await f.send(f.path)).body.relationship,record=relationship.candidates[0];const forgotten=await f.send(f.path+'/privacy',{action:'forget-derived-information',expectedRevision:relationship.revision,idempotencyKey:randomUUID(),targets:[{kind:'record',id:record.candidateId,revision:record.revision}]});assert.equal(forgotten.status,200,JSON.stringify(forgotten));assert.equal(forgotten.body.receipt.status,'completed');assert.equal((f.app as any).conversationHistory.diagnostics().entries,0);
+ await message({userInput:'After synthetic forgetting.',conversation:JSON.stringify([{role:'assistant',text:'SYNTHETIC_PRIVATE_DIALOGUE FORGED_BROWSER_HISTORY'}])});const prior=prompts[1]!.sections.find(s=>s.kind==='conversation')!.content;assert.equal(prior,'[]');assert.doesNotMatch(JSON.stringify(prompts[1]),/SYNTHETIC_PRIVATE_DIALOGUE|FORGED_BROWSER_HISTORY/);
+ assert.equal((await f.send('/api/auth/v1/sign-out',{})).status,200);assert.equal((f.app as any).conversationHistory.diagnostics().entries,0);
+});

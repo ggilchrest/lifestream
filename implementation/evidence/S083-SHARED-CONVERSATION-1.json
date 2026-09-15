@@ -1,0 +1,137 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-SHARED-CONVERSATION-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "e8cc1a8ce3f0048d8b70df368f5b42159135f32a",
+  "specificationRevision": "19b7f1c4bf1de91aa42d8e268d5cafc233ad2889",
+  "recordedAt": "2026-09-15T03:56:16.846040Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/runtime/conversation.ts",
+      "sha256": "36268d8afd35749b3a38c03e38a9d5b71b379a76457bdf1439f0f977b3d50f46"
+    },
+    {
+      "path": "apps/server/test/conversation.test.ts",
+      "sha256": "76772309676cba20fa6d741b69a17eb0295597528503bc528095a549ebe1c03e"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "ba0ba8a23ce3817caf5dcea8d06c522f2ef7506b2f80f52398792cde850d9668"
+    },
+    {
+      "path": "apps/server/src/runtime/inference.ts",
+      "sha256": "0413ad1ddeacb3a68a033cf29d1ec06400c96f9c13300ee54ab866c7b6c9c044"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "e45dd6821c0159a377c364a0f6fbe3e4f0e26d2ef1305559f958e897a92ec9a9"
+    },
+    {
+      "path": "apps/server/src/runtime/initiative-host.ts",
+      "sha256": "d70f54b0c2adf2260be0161ef8e92767398fe57e3db98e46044170a85fd1e77b"
+    },
+    {
+      "path": "apps/server/test/audio-output.test.ts",
+      "sha256": "74322403dd85bd61c84780537b341accb9ea31d9718e79d74f6e4b56c9aed13b"
+    },
+    {
+      "path": "apps/server/test/initiative-host.test.ts",
+      "sha256": "f617843f33d5e63a909de48d33016c3b052400c6177bd90da2b11f0ec811e7f6"
+    },
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "0cea035f58b659a2e4af1e83bfaaa07f5d13904e05a1b703e29e65a8ed4db1c7"
+    },
+    {
+      "path": "apps/control-web/test/initiative-conversation.test.mjs",
+      "sha256": "0a6f05aba6456d2546b87a82744fbbbd075e1960328044e90132f3039bc966c8"
+    },
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "e69a6ea3ab07dd27dee2760fea92b2cb81dd6a72f2c0c429b2be6f63a207c4c9"
+    }
+  ],
+  "claims": [
+    "Authenticated typed turns, ordinary voice turns and observed Initiative emissions now share one volatile dialogue history, keyed by principal, session, conversation, Assistant and resolved relationship. Canonical session/endpoint and relationship records remain owned by their existing services; the history is not a new database or canonical memory store.",
+    "Ordinary text and voice prompts read the same preceding turns, and social candidate generation also receives current conversation context. Accepted user text/transcripts and emitted Assistant text are recorded with interaction identity; emitted openings retain opportunity linkage and an explicit emission observation. Partial streamed answers update one entry rather than duplicating each delta. Inspection and retry routes still do not replay output payloads.",
+    "Microphone closure and reconnection preserve eligible dialogue. Changes between text and audio preserve it when the same subject, endpoint and audience remain. Authentication expiry/sign-out, endpoint/audience changes, profile or relationship data changes, forgetting/recovery changes and process shutdown invalidate or erase context. A retired history binding cannot reinsert late output.",
+    "The first-party browser no longer transmits its displayed transcript as conversation input. Authenticated ordinary requests use server-observed history instead of client-supplied prior context, preventing a stale page from reintroducing forgotten text through that field. Actual current user input remains ordinary untrusted input.",
+    "History limits are 20 entries and 65536 serialized bytes per scope; 32 scopes, 128 entries and 524288 serialized bytes per runtime; and 16000 characters per entry. Retention is no more than 30 minutes and never exceeds the source authentication expiry. Reads do not extend it. A single unreferenced timer erases expired payloads while idle; monotonic expiry observation prevents clock rollback from reviving them.",
+    "Browser verification executes typed input, a text opening, text-to-audio mode change, a scoped spoken reply, microphone Stop/reconnect, another voice reply, then a typed reply, inspecting the actual provider requests throughout. An authenticated forgetting test proves immediate removal and rejects stale browser-context restoration. Dedicated unit tests cover every scope identity, streamed upserts, limits, retirement, authentication/TTL expiry, clock rollback and idle erasure."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "cfefcdf50a9188fbf9646a5be2e1e78402394544b1c40b9b0a4d07a3db9dfb0d"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "f903862625aadc9b1bd1f58147dc0dcbb4309641e759e65d5b914e5969e3ba8f"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "ed33335a177469b13298c6ccbed81811c95d18c4d2c293ecc8d6f69d5aec5feb"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "72e56f73076ac1b245601881c4fab1c36ffdec999cb10572289ed3ed33f8e64c"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 382,
+    "newSourceTests": 6,
+    "supersededConnectionLocalHistoryTests": 1,
+    "browserTests": 42,
+    "newBrowserTests": 1,
+    "toolingTests": 45
+  },
+  "intermediateFindings": [
+    {
+      "result": "fail",
+      "logSha256": "8c961168ad8e1c733ec15446624a812d05a7bafb8a7a2c2ab743e83ed93a9a4e",
+      "summary": "The first direct-source test run could not load a TypeScript parameter property, which the repository strip-only runner does not support. Replaced it with an explicit field assignment; subsequent source and browser suites executed and passed."
+    }
+  ],
+  "limitations": [
+    "Context remains volatile and bounded, and is intentionally not restored after process restart. This is not a durable transcript archive or long-term memory feature. Coarse data-boundary invalidation may remove the whole recent scope rather than selected individual turn fragments.",
+    "Synthetic providers and controlled microphone probability fixtures verify routing and scope, not selected-provider quality, physical presence, audible performance or Human reception. No new model-quality observation or Human acceptance occurred.",
+    "Guided host-owned synthetic setup, expression inspection, pinned gradient Lab, reserved acknowledgments, bounded timing adaptation, older-database restore fencing and current-source prerequisite qualifications remain open. Full S083/S084 and PWCE Personal V1 development remains active.",
+    "No saved review service was restarted or deployed. No personal-data import, live configuration change, training, provider selection or external research occurred. Approved machine schemas, historical evidence and unrelated dirty artifacts remain unchanged."
+  ],
+  "prerequisiteQualification": {
+    "status": "pending",
+    "slices": [
+      "LS-S071",
+      "LS-S072",
+      "LS-S073",
+      "LS-S076",
+      "LS-S078"
+    ],
+    "reason": "Effective inputs changed since prior qualification; historical receipts preserved."
+  }
+}
