@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-CATALOG-INVALIDATION-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "ef2fdac9cf1e828dca13a487d1578786c0590087",
+  "specificationRevision": "f107fbdc349be3a4417b46b609f8240d30b55be4",
+  "producerRevision": "cffeb4c57040cf2dec0433ef9a8cbaf9cc0c782e",
+  "recordedAt": "2026-09-15T20:14:15.623769Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "packages/providers-pwce/src/capability-catalog.ts",
+        "sha256": "73e4911e36c858dd6092af41b6a79bc84ad8bf4d6a8a4d07cbf18fa60154826c"
+      },
+      {
+        "path": "packages/providers-pwce/test/capability-catalog.test.ts",
+        "sha256": "34bcba7e915a820c2e19150522acd7119a66bf57bb4104c36f1d621167361cd3"
+      },
+      {
+        "path": "scripts/check-pwce-dispatch-process.mjs",
+        "sha256": "8d538c2a321cd0696c844ed436d6dacdb60bfe9ea53817ec7ca8809e35c3b126"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "afbd418303bb3124dc12210aa94f4318605df11cdafeb83fc178f9b3b3528578"
+      }
+    ]
+  },
+  "claim": "Trusted scoped catalog invalidation discards retained projections and aborts affected discovery, revalidation and schema reads, including late results from uncooperative dependencies. Fresh discovery cannot rescue an earlier invalidated call. Original identity-substitution evidence and historical action custody are preserved.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-full.log",
+      "logSha256": "5b94a21773aceaca1857ac3c7f6c90343de9e4e6670a8a6f3adcf08d2ba62676"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-build.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-lint-final.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/capability-catalog.test.ts",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-focused.log",
+      "logSha256": "de1b9c0c194f78e5a24cd1c9ab6cd0d96c50e6e2ac90f45f61402db4c7214e14"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-joined-dispatch.log",
+      "logSha256": "8c936cbc347e2daa24f9f29d48f36127901c75a0c93e35447593feddd8b00f16"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-joined-context.log",
+      "logSha256": "440338d54c8ad2f5de90caa39da2624dda854a1f2f003085dbb1119449664197"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-private.log",
+      "logSha256": "c60b4d549c5d7c8f3bf5fbbda931b8c4860206b13bca993d6d8c942bc4c79ad7"
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-pin-dispatch.log",
+      "logSha256": "7799cc7b7e6b5549e994e5cef2ccba3b115d973b57349f7bf933be0d14482b29"
+    },
+    {
+      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-pin-capability.log",
+      "logSha256": "12a961678e4187057f78756f2e2e50550c255bb75fc164a4ae54ed13eb545205"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-pin-admission.log",
+      "logSha256": "1ea6850d9e2e4905eaa564322be8ca06ee7101ccb057e81a16cd2d3576264fa2"
+    },
+    {
+      "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-pin-invocation.log",
+      "logSha256": "3fee32e6e63c209794993635f4e39e08b84ce0d830ec9048603c09846292b79b"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-recovery-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-pin-admission-recovery.log",
+      "logSha256": "975333cd9170f3d011f25613c2ce6ee61f24f749c5abbf3ccc6bca7823a41f0a"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-workspace-tests.log",
+      "logSha256": "f983fbde381745ad87187bf1287fc016c6734ae86bf0b4c240d6974b4cb00bc5"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-workspace-check.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-catalog-invalidation-preflight.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "results": {
+    "applicationTests": 775,
+    "newCatalogTests": 11,
+    "focusedCatalogTests": 26,
+    "joinedChecks": 65,
+    "syntheticTargetCalls": 4,
+    "preservedDirtyArtifacts": 6,
+    "workspaceTests": 43
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-catalog-invalidation/2026-09-15",
+  "exclusions": [
+    "Canonical authority/capability SSE projection and host subscription lifecycle are not implemented by this component.",
+    "The joined invalidation ingress is a trusted synthetic host call, followed by actual separate-process Gateway rediscovery; it is not an observed canonical SSE event.",
+    "No saved service, model, live configuration, physical effect or Human acceptance changed.",
+    "No current-provider qualification or SYNPRJ_Q7M4 trial was run."
+  ]
+}

@@ -62,6 +62,15 @@ try {
  }
  assert.equal(await catalog.schemas.read(EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0].inputSchemaArtifact,{...schemaScope,sessionId:randomUUID()},schemaContext()),undefined);
  assert.equal(await stats(),0);catalogChecks++;
+ // Trusted local invalidation ingress, followed by actual Gateway rediscovery.
+ // This is not an active canonical SSE subscription or a manufactured event.
+ assert.deepEqual(catalog.invalidateAuthority(localScope.authorityContextRef),[projected.outcome.payload.snapshotId]);
+ assert.equal(catalog.retained(projected.outcome.payload.snapshotId,localScope),undefined);
+ assert.equal(await catalog.schemas.read(EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0].inputSchemaArtifact,schemaScope,schemaContext()),undefined);catalogChecks++;
+ const refreshed=await catalog.getSnapshot(catalogRequest(),callContext);
+ assert.equal(refreshed.outcome.payload.snapshotId,projected.outcome.payload.snapshotId);
+ assert.equal(catalog.retained(refreshed.outcome.payload.snapshotId,localScope).producerSnapshotRef,snapshot.snapshotRef);
+ assert.equal(await stats(),0);catalogChecks++;
  const preparedActions=new Map(), hash=value=>createHash('sha256').update(canonicalJson(value)).digest('hex');
  const createPreview=selectedCatalog=>new PwceAuthorityPreview({providerRef:'pwce.synthetic',client:core,catalog:selectedCatalog,resolve:async request=>preparedActions.get(request.payload.invocationId),isCurrent:(request,prepared)=>hash(preparedActions.get(request.payload.invocationId))===hash(prepared)});
  const preview=createPreview(catalog);

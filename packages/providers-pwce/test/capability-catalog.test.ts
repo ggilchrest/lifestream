@@ -190,3 +190,137 @@ test('schema transport rejects tampered bytes or artifact metadata and never sen
     for (const {init} of f.sent) { assert.equal(new Headers(init.headers).get('x-pwce-dispatcher-token'), null); assert.equal(init.redirect, 'error'); }
   }
 });
+
+function pauseAt(f, phase) {
+  let release, entered;
+  const gate = new Promise(resolve => { release = resolve; });
+  const started = new Promise(resolve => { entered = resolve; });
+  f.state.hook = async current => { if (current === phase) { entered(); await gate; } };
+  return { started, release };
+}
+
+test('authority invalidation clears all projections under that authority without touching other contexts', async () => {
+  const f=fixture(), first=(await f.catalog.getSnapshot(f.request(),f.context)).outcome.payload;
+  const filtered=f.request(); filtered.payload.requestedCapabilityIds=['other.synthetic'];
+  const second=(await f.catalog.getSnapshot(filtered,f.context)).outcome.payload;
+  const other=f.request(); other.scope.authorityContextRef.contextId=randomUUID();
+  const third=(await f.catalog.getSnapshot(other,f.context)).outcome.payload;
+  // Different trace and session still share the invalidated authority context.
+  const related=f.request(); related.scope.sessionId=randomUUID(); related.scope.interactionTraceId=randomUUID();
+  const fourth=(await f.catalog.getSnapshot(related,f.context)).outcome.payload;
+  assert.deepEqual(f.catalog.invalidateAuthority(f.scope.authorityContextRef),[first.snapshotId,second.snapshotId,fourth.snapshotId].sort());
+  for(const [snapshot,scope]of [[first,f.scope],[second,f.scope],[fourth,related.scope]])assert.equal(f.catalog.retained(snapshot.snapshotId,scope),undefined);
+  assert.ok(f.catalog.retained(third.snapshotId,other.scope));
+  assert.deepEqual(f.catalog.invalidateAuthority(f.scope.authorityContextRef),[]);
+  const refreshed=(await f.catalog.getSnapshot(f.request(),f.context)).outcome.payload;
+  assert.equal(refreshed.snapshotId,first.snapshotId);
+  assert.ok(f.catalog.retained(first.snapshotId,f.scope));
+});
+
+test('authority invalidation aborts resolution, negotiation and snapshot reads before stale completion', async () => {
+  for(const phase of ['resolve','contracts','snapshot']){
+    const f=fixture(),gate=pauseAt(f,phase),pending=f.catalog.getSnapshot(f.request(),f.context);
+    const rejected=assert.rejects(pending,{code:'snapshot_invalidated'});
+    await gate.started;
+    assert.deepEqual(f.catalog.invalidateAuthority(f.scope.authorityContextRef),[]);
+    await rejected; // The resolver may ignore cancellation; it cannot hold the caller.
+    gate.release();
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(await f.catalog.schemas.read(descriptor.inputSchemaArtifact,f.schemaScope,f.schemaContext()),undefined);
+  }
+});
+
+test('a fresh projection with the same ID cannot rescue a revalidation invalidated in flight', async () => {
+  const f=fixture(),snapshot=(await f.catalog.getSnapshot(f.request(),f.context)).outcome.payload;
+  const request={...f.request(),payload:{snapshotId:snapshot.snapshotId,snapshotRevision:snapshot.revision}};
+  const gate=pauseAt(f,'snapshot'),pending=f.catalog.revalidate(request,f.context);
+  const rejected=assert.rejects(pending,{code:'snapshot_invalidated'});
+  await gate.started; f.catalog.invalidateAuthority(f.scope.authorityContextRef);
+  f.state.hook=async()=>{};
+  assert.equal((await f.catalog.getSnapshot(f.request(),f.context)).outcome.payload.snapshotId,snapshot.snapshotId);
+  gate.release(); await rejected;
+  assert.ok(await f.catalog.revalidate(request,f.context));
+});
+
+test('authority invalidation prevents both snapshot and schema-download completions from releasing bytes', async () => {
+  for(const phase of ['snapshot','schema']){
+    const f=fixture(); await f.catalog.getSnapshot(f.request(),f.context);
+    const gate=pauseAt(f,phase),pending=f.catalog.schemas.read(descriptor.inputSchemaArtifact,f.schemaScope,f.schemaContext());
+    const rejected=assert.rejects(pending,{code:'snapshot_invalidated'});
+    await gate.started;f.catalog.invalidateAuthority(f.scope.authorityContextRef);await rejected;
+    gate.release();await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(await f.catalog.schemas.read(descriptor.inputSchemaArtifact,f.schemaScope,f.schemaContext()),undefined);
+    assert.equal(f.state.schemaReads,phase==='schema'?1:0);
+  }
+});
+
+test('invalidation for another authority leaves an in-flight read usable', async () => {
+  const f=fixture(),gate=pauseAt(f,'snapshot'),pending=f.catalog.getSnapshot(f.request(),f.context);
+  await gate.started;
+  f.catalog.invalidateAuthority({...f.scope.authorityContextRef,contextId:randomUUID()});
+  f.catalog.invalidateAuthority({...f.scope.authorityContextRef,revision:2});
+  gate.release();const snapshot=(await pending).outcome.payload;
+  assert.ok(f.catalog.retained(snapshot.snapshotId,f.scope));
+});
+
+test('catalog read capacity is bounded and invalidation releases occupied slots', async () => {
+  const f=fixture(1),gate=pauseAt(f,'resolve'),pending=f.catalog.getSnapshot(f.request(),f.context);
+  const rejected=assert.rejects(pending,{code:'snapshot_invalidated'});
+  await gate.started;
+  await assert.rejects(f.catalog.getSnapshot(f.request(),f.context),{code:'catalog_read_capacity'});
+  assert.equal(f.sent.length,0);
+  f.catalog.invalidateAll();await rejected;
+  f.state.hook=async()=>{};
+  assert.equal((await f.catalog.getSnapshot(f.request(),f.context)).outcome.status,'succeeded');
+  gate.release();
+});
+
+test('all-scope invalidation clears retained records and resolving calls across authorities', async () => {
+  const f=fixture(),snapshot=(await f.catalog.getSnapshot(f.request(),f.context)).outcome.payload;
+  const other=f.request();other.scope.authorityContextRef.contextId=randomUUID();
+  const gate=pauseAt(f,'resolve'),pending=f.catalog.getSnapshot(other,f.context);
+  const rejected=assert.rejects(pending,{code:'snapshot_invalidated'});
+  await gate.started;
+  assert.deepEqual(f.catalog.invalidateAll(),[snapshot.snapshotId]);
+  await rejected;gate.release();
+  assert.equal(f.catalog.retained(snapshot.snapshotId,f.scope),undefined);
+});
+
+test('invalidation does not erase substitution evidence or permit a previously poisoned identity', async () => {
+  const f=fixture();await f.catalog.getSnapshot(f.request(),f.context);
+  f.body.limitations=['substituted'];
+  await assert.rejects(f.catalog.getSnapshot(f.request(),f.context),{code:'snapshot_identity_changed'});
+  f.catalog.invalidateAll();f.body.limitations=[];
+  await assert.rejects(f.catalog.getSnapshot(f.request(),f.context),{code:'snapshot_identity_changed'});
+});
+
+test('invalidation removes new-use custody but preserves scoped historical read ownership', async () => {
+  const f=fixture(),snapshot=(await f.catalog.getSnapshot(f.request(),f.context)).outcome.payload;
+  const original=f.catalog.retained(snapshot.snapshotId,f.scope);
+  f.catalog.invalidateAll();
+  assert.equal(f.catalog.retained(snapshot.snapshotId,f.scope),undefined);
+  f.catalog.assertReadScope(original,f.scope,'normal',f.context);
+  f.state.boundCurrent=false;
+  assert.throws(()=>f.catalog.assertReadScope(original,f.scope,'normal',f.context),{code:'scope_changed'});
+});
+
+test('malformed or foreign invalidation references cannot clear retained state', async () => {
+  const f=fixture(),snapshot=(await f.catalog.getSnapshot(f.request(),f.context)).outcome.payload;
+  for(const reference of [null,{}, {...f.scope.authorityContextRef,providerRef:'other'}, {...f.scope.authorityContextRef,revision:-1}, {...f.scope.authorityContextRef,extra:true}]){
+    assert.throws(()=>f.catalog.invalidateAuthority(reference),{code:'invalid_invalidation_scope'});
+    assert.ok(f.catalog.retained(snapshot.snapshotId,f.scope));
+  }
+});
+
+test('failed and cancelled reads release bounded tracking without requiring invalidation', async () => {
+  const f=fixture(1);f.state.hook=async()=>{throw new Error('synthetic resolver failure');};
+  await assert.rejects(f.catalog.getSnapshot(f.request(),f.context));
+  f.state.hook=async()=>{};
+  const cancelled=new AbortController();cancelled.abort();
+  await assert.rejects(f.catalog.getSnapshot(f.request(),{...f.context,signal:cancelled.signal}),{code:'cancelled'});
+  for(let i=0;i<5;i++){
+    const snapshot=(await f.catalog.getSnapshot(f.request(),f.context)).outcome.payload;
+    assert.ok(f.catalog.retained(snapshot.snapshotId,f.scope));
+    f.catalog.invalidateAuthority(f.scope.authorityContextRef);
+  }
+});

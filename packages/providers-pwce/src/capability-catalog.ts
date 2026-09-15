@@ -73,6 +73,7 @@ export class PwceCapabilityCatalog {
   readonly schemas: CapabilitySchemaStore;
   private readonly records = new Map<string,PwceCatalogRecord>();
   private readonly sourceDigests = new Map<string,{digest:string;expiresAt:string;poisoned:boolean}>();
+  private readonly reads = new Map<PwceCallScope,M.CallScope>();
   private readonly options: PwceCapabilityCatalogOptions;
   constructor(options: PwceCapabilityCatalogOptions) {
     const capacity=options.capacity??256;
@@ -88,6 +89,34 @@ export class PwceCapabilityCatalog {
     for(const [id,record]of this.records)if(Date.parse(record.snapshot.expiresAt)<=Date.now())this.records.delete(id);
     for(const [id,record]of this.sourceDigests)if(Date.parse(record.expiresAt)<=Date.now())this.sourceDigests.delete(id);
   }
+  private track(call:PwceCallScope,scope:M.CallScope):void {
+    call.check();
+    if(this.reads.size>=this.options.capacity!)fail('catalog_read_capacity');
+    this.reads.set(call,structuredClone(scope));
+  }
+  private finish(call:PwceCallScope):void { this.reads.delete(call);call.close(); }
+  /** Trusted invalidation ingress. A foreign event must be authenticated and
+   * mapped to its local authority context before calling this method. */
+  invalidateAuthority(reference:NonNullable<M.CallScope['authorityContextRef']>):string[] {
+    if(!boundedJson(reference)||!validator.validate('https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/AuthorityContextRef',reference).valid||reference.providerRef!==this.options.providerRef)fail('invalid_invalidation_scope');
+    const owned=structuredClone(reference);
+    return this.invalidate(scope=>isDeepStrictEqual(scope.authorityContextRef,owned));
+  }
+  /** Unknown stream continuity requires a fresh read for every retained scope. */
+  invalidateAll():string[] { return this.invalidate(()=>true); }
+  private invalidate(matches:(scope:M.CallScope)=>boolean):string[] {
+    this.prune();
+    const removed:string[]=[];
+    for(const [id,record]of this.records)if(matches(record.scope)){this.records.delete(id);removed.push(id);}
+    for(const [call,scope]of this.reads)if(matches(scope)){
+      // Aborting also fences a custom resolver/transport that ignores signals.
+      call.abort(new PwceTransportError('snapshot_invalidated','PWCE capability read was invalidated'));
+      this.reads.delete(call);
+    }
+    // Keep immutable identity/digest checks. A notification is not evidence of
+    // changed bytes, and fresh discovery may legitimately return the same ID.
+    return removed.sort();
+  }
   private async producerSnapshot(binding:PwceCapabilityBinding,requestId:string,correlationId:string,deadline:string,signal:AbortSignal,snapshotRef?:string):Promise<Record<string,unknown>> {
     return this.options.client.request({...binding.identity,authorityContextRef:binding.authorityContextRef,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,requestId,correlationId,deadline,operation:'capabilities.getSnapshot',...(snapshotRef?{snapshotRef}:{})},signal);
   }
@@ -95,6 +124,7 @@ export class PwceCapabilityCatalog {
     if(!boundedJson(input)||!validator.validate('https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilitySnapshotRequest',input).valid) return fail('invalid_request');
     const request=structuredClone(input), scope=request.scope,call=budget(request.deadlineAt,context.signal);
     try {
+      this.track(call,scope);
       call.check();if(!context.isCurrent(scope)||!scope.endpointId||!scope.sessionId||scope.authorityContextRef?.providerRef!==this.options.providerRef)return fail('scope_changed');
       const binding=structuredClone(await call.wait(this.options.resolve(structuredClone(scope),request.executionMode,call.signal)));validateBinding(binding);this.check(scope,binding,context,call);
       if(!modeMatches(request.executionMode,binding.executionEnvironmentRef))return fail('execution_mode_mismatch');
@@ -112,7 +142,7 @@ export class PwceCapabilityCatalog {
       this.sourceDigests.set(key,{digest:producerDigest,expiresAt:snapshot.expiresAt,poisoned:false});
       this.records.set(snapshot.snapshotId,structuredClone({snapshot,scope,binding,producerSnapshotRef:body.snapshotRef as string,producerRevision:body.sourceRevision as number,producerDigest,executionMode:request.executionMode}));
       return {schemaVersion:'1.0.0',operation:request.operation,requestId:request.requestId,correlationId:request.correlationId,providerRef:this.options.providerRef,completedAt:new Date().toISOString(),outcome:{status:'succeeded',payload:structuredClone(snapshot),error:null}};
-    }finally{call.close();}
+    }finally{this.finish(call);}
   }
   retained(snapshotId:string,scope:M.CallScope):PwceCatalogRecord|undefined {
     this.prune();const record=this.records.get(snapshotId);
@@ -132,6 +162,7 @@ export class PwceCapabilityCatalog {
     try {
       const record = this.retained(owned.payload.snapshotId, owned.scope);
       if (!record || record.snapshot.revision !== owned.payload.snapshotRevision || record.executionMode !== owned.executionMode) return fail('snapshot_unavailable');
+      this.track(call,owned.scope);
       this.check(owned.scope, record.binding, context, call);
       const raw = await call.wait(this.producerSnapshot(record.binding, owned.requestId, owned.correlationId, owned.deadlineAt, call.signal, record.producerSnapshotRef));
       this.check(owned.scope, record.binding, context, call);
@@ -142,7 +173,7 @@ export class PwceCapabilityCatalog {
       }
       if (!this.retained(record.snapshot.snapshotId, owned.scope)) return fail('snapshot_unavailable');
       return record;
-    } finally { call.close(); }
+    } finally { this.finish(call); }
   }
   private async readSchema(reference:SchemaArtifactRef,inputScope:CapabilityScope,context:CapabilityCallContext):Promise<Uint8Array|undefined>{
     const requested=structuredClone(reference),scope=structuredClone(inputScope),call=budget(context.deadlineAt,context.signal);this.prune();
@@ -150,11 +181,12 @@ export class PwceCapabilityCatalog {
       call.check();if(!context.isCurrent())return fail('scope_changed');
       const record=[...this.records.values()].find(value=>value.snapshot.capabilities.length&&value.scope.assistantId===scope.assistantId&&value.scope.endpointId===scope.endpointId&&value.scope.sessionId===scope.sessionId&&value.scope.environmentId===scope.environment&&isDeepStrictEqual(value.scope.authorityContextRef,scope.authorityContextRef));
       if(!record||!modeMatches(context.executionMode,record.binding.executionEnvironmentRef)||![descriptor.inputSchemaArtifact,descriptor.resultSchemaArtifact].some(value=>isDeepStrictEqual(value,requested)))return undefined;
+      this.track(call,record.scope);
       const check=()=>{call.check();if(this.sourceDigests.get(hash([record.binding,record.producerSnapshotRef]))?.poisoned)fail('snapshot_identity_changed');if(!context.isCurrent()||!this.options.isCurrent(structuredClone(record.binding),structuredClone(record.scope))||Date.parse(record.snapshot.expiresAt)<=Date.now())fail('scope_changed');};check();
       // Public schema bytes still require the current scoped snapshot before use.
       const raw=await call.wait(this.producerSnapshot(record.binding,context.requestId,context.correlationId,context.deadlineAt,call.signal,record.producerSnapshotRef));check();
       if(hash(bodyOf(raw,record.binding,context.requestId,context.correlationId))!==record.producerDigest){const source=this.sourceDigests.get(hash([record.binding,record.producerSnapshotRef]));if(source)source.poisoned=true;return fail('snapshot_identity_changed');}
       const bytes=await call.wait(this.options.client.capabilitySchema(requested,call.signal));check();return new Uint8Array(bytes);
-    }finally{call.close();}
+    }finally{this.finish(call);}
   }
 }
