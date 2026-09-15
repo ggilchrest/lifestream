@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "5ed569e32324785c4d789223a0e25a21856c6f29",
+  "currentRevision": "52545a8a4537e6c92ef5cd25ab10cff93e718ff9",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -160,71 +160,82 @@
     "packages/storage-sqlite/src/migrations/0022_understanding_candidates.sql",
     "implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json",
     "apps/server/src/runtime/inference.ts",
-    "apps/server/src/runtime/audio.ts"
+    "apps/server/src/runtime/audio.ts",
+    "apps/server/src/admin/discovery-selection.ts",
+    "apps/server/src/admin/discovery-lab.ts",
+    "apps/server/src/admin/discovery-lab-worker.ts",
+    "apps/server/test/discovery-lab.test.ts",
+    "apps/control-web/discovery-lab.js",
+    "apps/control-web/test/discovery-lab.test.mjs",
+    "implementation/evidence/S084-DISCOVERY-LAB-1.json"
   ],
   "changedFiles": [
     "apps/control-web/DESIGN.md",
+    "apps/control-web/discovery-lab.js",
     "apps/control-web/discovery-workflows.js",
     "apps/control-web/relationship-extensions.js",
     "apps/control-web/styles.css",
-    "apps/control-web/test/understanding.test.mjs",
-    "apps/server/src/admin/discovery-candidates.ts",
-    "apps/server/src/admin/recovery-journal.ts",
-    "apps/server/src/admin/relationship-recovery.ts",
+    "apps/control-web/test/discovery-lab.test.mjs",
+    "apps/control-web/test/discovery-review.test.mjs",
+    "apps/server/src/admin/discovery-lab-worker.ts",
+    "apps/server/src/admin/discovery-lab.ts",
+    "apps/server/src/admin/discovery-selection.ts",
     "apps/server/src/admin/understanding.ts",
     "apps/server/src/index.ts",
-    "apps/server/src/runtime/audio.ts",
-    "apps/server/src/runtime/inference.ts",
-    "apps/server/test/discovery-candidates.test.ts",
-    "apps/server/test/server.test.ts",
+    "apps/server/test/discovery-lab.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json",
-    "packages/storage-sqlite/src/index.ts",
-    "packages/storage-sqlite/src/migrations/0022_understanding_candidates.sql",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/src/understanding.ts",
-    "packages/storage-sqlite/test/understanding.test.ts"
+    "implementation/evidence/S084-DISCOVERY-LAB-1.json"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json"
+      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json"
+      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json"
+      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json"
+      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json"
+      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/discovery-lab.test.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+    },
+    {
+      "command": "node /private/tmp/s084-lab-built-worker.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json"
+      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json"
+      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json"
+      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
     }
   ],
   "decisions": [
@@ -239,8 +250,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Complete S084 semantic candidate policy, analysis admission UI and isolated Lab; qualify actual corpus/provider/voice performance and exact-source dependencies. Continue remaining S083 opportunity/output lifecycle and other dependency-ready Lifestream/PWCE specification work before stopping for Human review.",
-  "updatedAt": "2026-09-14T23:59:42.690781Z",
+  "nextAction": "Close preference-aware ambiguity selection using current permitted evidence while preserving explicit-domain/correction precedence; complete remaining canonical Discovery demonstrations, semantic hypothesis/connection policy, exploration and qualified analysis/output evaluation. Continue S083 opportunity/output lifecycle, real corpus/provider/voice qualification, current-source prerequisites and remaining dependency-ready Lifestream/PWCE scope before stopping for Human review.",
+  "updatedAt": "2026-09-15T00:19:46.308387Z",
   "updatedBy": "Codex",
-  "notes": "Contextual candidate component verified; see implementation/evidence/S084-CONTEXTUAL-CANDIDATES-1.json. Full S083/S084 remain in progress; no new Human acceptance."
+  "notes": "Isolated Discovery input Lab is implemented and verified as a component. Its real shared selector exposes failed ambiguity expectations: alternate-domain details are included despite explicit favorite evidence. This remains actionable S084 implementation work, not Human/model acceptance. Full S083/S084 remain in progress."
 }

@@ -1,3 +1,4 @@
+import {DiscoveryInputLab} from './discovery-lab.ts';
 import {compileDiscoveryCandidates} from './discovery-candidates.ts';
 import {analyzeDiscoveryEvidence,type DiscoveryAnalysisPort,type DiscoveryEvidence} from "./discovery-analysis.ts";
 import { recoveryDigest } from "./recovery-journal.ts";
@@ -6,7 +7,7 @@ import { createContractValidator } from "@lifestream/contracts";
 import { UnderstandingRepository, understandingDigest, hypothesisFingerprint, candidateFingerprint, type Database, type UnderstandingRecord, type UnderstandingScope } from "@lifestream/storage-sqlite";
 import type {HypothesisRejection,CandidateSuppression} from './recovery-journal.ts';
 import { UnderstandingWorkCoordinator } from "@lifestream/runtime/understanding/coordinator";
-import { selectPreparedEnrichment } from "@lifestream/runtime/understanding/selection";
+import {selectDiscoveryContext} from "./discovery-selection.ts";
 import { extensionError, type RelationshipConfiguration } from "../relationship-extensions.ts";
 
 type Result = {status:number;body:Record<string,unknown>};
@@ -14,7 +15,7 @@ type Snapshot = { boundary:string; configuration:RelationshipConfiguration|undef
 type Claim = {claimId:string;text:string;sourceRefs:string[];qualifier:string;versionScope:string;spoilerClass:string;contradictionRefs:string[]};
 type Source = {sourceRef:string;sourceFamily:string;sourceRevision:string;topicRef:string;policyRef:string;retrievedAt:string;reliability:string;reliabilityBasis:string;content:string;claims:Claim[];aliasClaims:Claim[];knowledgeGaps:string[]};
 type Settings = {enabled:boolean;researchMode:string;policyRefs:string[];approvedTopicRefs:string[];excludedSourceRefs:string[];excludedTopicRefs:string[];spoilerPolicy:string;progressBoundaryRef:string|null;budget:Record<string,number>};
-type DiscoveryHost={suppressCandidate?:(scope:UnderstandingScope,target:CandidateSuppression|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';rejectHypothesis?:(scope:UnderstandingScope,target:HypothesisRejection|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};analysis?:()=>DiscoveryAnalysisPort|undefined;evidence?:(scope:UnderstandingScope,refs:string[])=>DiscoveryEvidence[];changed:()=>void};
+type DiscoveryHost={configuration?:(scope:UnderstandingScope,id:string)=>RelationshipConfiguration|undefined;suppressCandidate?:(scope:UnderstandingScope,target:CandidateSuppression|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';rejectHypothesis?:(scope:UnderstandingScope,target:HypothesisRejection|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};analysis?:()=>DiscoveryAnalysisPort|undefined;evidence?:(scope:UnderstandingScope,refs:string[])=>DiscoveryEvidence[];changed:()=>void};
 const validator=createContractValidator();
 const schema="https://lifestream.dev/contracts/understanding-api/1.0.0";
 export class DiscoveryAdministration {
@@ -22,6 +23,7 @@ export class DiscoveryAdministration {
   private readonly coordinator=new UnderstandingWorkCoordinator({pressureAllowsWork:()=>process.memoryUsage().heapUsed<256*1024*1024});
   private readonly tasks=new Map<string,{relationshipId:string;scope:UnderstandingScope;promise:Promise<unknown>}>();
   private closed=false;
+  private readonly inputLab=new DiscoveryInputLab();
   private readonly recent=new Map<string,{revision:number;ids:Map<string,number>}>();
   private readonly cleanupTimer:ReturnType<typeof setInterval>;
   private readonly host:DiscoveryHost;
@@ -38,7 +40,7 @@ export class DiscoveryAdministration {
     while(entry.ids.size>32)entry.ids.delete(entry.ids.keys().next().value!);entry.revision++;this.recent.delete(key);this.recent.set(key,entry);while(this.recent.size>128)this.recent.delete(this.recent.keys().next().value!);
   }
   foregroundStarted():()=>void{return this.coordinator.foregroundStarted();}
-  close():void{if(this.closed)return;this.closed=true;this.recent.clear();clearInterval(this.cleanupTimer);for(const [key,task] of this.tasks){this.coordinator.cancel(key);this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
+  close():void{if(this.closed)return;this.closed=true;this.inputLab.close();this.recent.clear();clearInterval(this.cleanupTimer);for(const [key,task] of this.tasks){this.coordinator.cancel(key);this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
   invalidate(relationshipId:string):void{for(const [key,task]of this.tasks)if(task.relationshipId===relationshipId)this.coordinator.cancel(key);}
   records(scope:UnderstandingScope):UnderstandingRecord[]{return this.repository.list(scope,this.host.snapshot(scope).boundary);}
   private response(scope:UnderstandingScope,operation:string,records:UnderstandingRecord[],message:string,status=200):Result{
@@ -51,6 +53,30 @@ export class DiscoveryAdministration {
     if(!validator.validate(schema+"#/$defs/Request",input).valid)return extensionError(422,"invalid_discovery_request","Unsupported Discovery request.");
     const request=input as Record<string,unknown>,operation=String(request.operation);
     if(this.closed||!authorizationCurrent())return extensionError(403,"discovery_scope_denied","Current relationship authorization is required.");
+    if(operation==='compare'){
+      try {
+        const configuration=this.host.configuration?.(scope,String(request.configurationId));
+        if(!configuration?.extensions?.understanding||configuration.quarantined||configuration.relationshipId!==scope.relationshipId)return extensionError(404,'comparison_configuration_unavailable','Select an available Discovery configuration in this relationship.');
+        const snapshot=this.host.snapshot(scope),entry=this.inputLab.readOrStart(understandingDigest(scope),snapshot.boundary,configuration);
+        if(entry.error)return extensionError(409,'comparison_failed',entry.error);
+        const response=this.response(scope,operation,[],entry.report?'Isolated input comparison completed.':'Isolated input comparison is running. Refresh comparison to read its result.',entry.report?200:202);
+        response.body.executionMode='simulation';
+        if(entry.report){
+          const failed=entry.report.rows.filter(row=>row.checks.some(check=>!check.pass)).length;
+          response.body.explanations=[{code:'lab_summary',summary:`${entry.report.canonicalRequestCount} canonical requests assembled; ${failed} rows have failed input expectations. No model was called. These are input checks, not conversational quality, provider latency or Human acceptance. No live state was changed. Results expire after ten minutes.`,sourceRefs:[`scenario:${entry.report.scenarioRevision}`,`configuration:${entry.configurationDigest}`]},
+            {code:'lab_policy',summary:'Baseline keeps mandatory synthetic evidence with Discovery disabled. Enabled uses the fixed 512-token reference allocation. Selected uses the chosen saved settings, including exclusions; fixture sources require policy:discovery-lab-v1. Comparisons never activate settings. The six input cases are a component scenario set; all canonical Discovery demonstrations and actual model-output evaluations remain pending.',sourceRefs:[]},
+            ...entry.report.rows.flatMap(row=>{
+              if(row.memory.length>3600)throw new Error('Comparison input exceeds the bounded inspector capacity');
+              const prefix=`lab:${row.id}:${row.variant}`;
+              return [{code:prefix+':checks',summary:`${row.split==='heldOut'?'Held-out':'Comparison'} · ${row.note}\n${row.checks.map(check=>`${check.pass?'PASS':'FAIL'}: ${check.name}`).join('\n')}\nSelection: ${row.disposition}; ${row.selectedItems} items; ${row.tokenUpperBound} estimated tokens (UTF-8 byte upper bound); ${row.elapsedMs.toFixed(3)} ms local selection. This is not a performance certification.`,sourceRefs:[`manifest:${row.manifestDigest}`,...row.sourceRefs]},
+                {code:prefix+':input',summary:`Prompt: ${row.prompt}\nPrepared memory (part 1):\n${row.memory.slice(0,1700)}`,sourceRefs:[]},...(row.memory.length>1700?[{code:prefix+':more',summary:`Prepared memory (continued):\n${row.memory.slice(1700)}`,sourceRefs:[]}]:[])];
+            })];
+        }
+        if(!authorizationCurrent()||snapshot.boundary!==this.host.snapshot(scope).boundary)return extensionError(409,'comparison_scope_changed','Comparison scope changed. Refresh before comparing.');
+        if(!validator.validate(schema+'#/$defs/Response',response.body).valid)throw new Error('Invalid bounded comparison response');
+        return response;
+      }catch(error){return extensionError(409,'comparison_unavailable',error instanceof Error?error.message:'Comparison unavailable');}
+    }
     if(operation==="feedback"){
       try {
         if(!this.host.feedback)return extensionError(409,"feedback_unavailable","This runtime has no scoped evidence writer.");
@@ -194,13 +220,7 @@ export class DiscoveryAdministration {
     }catch(error){return extensionError(409,"analysis_admission_denied",error instanceof Error?error.message:"Analysis admission denied");}
   }
   select(scope:UnderstandingScope,input:string,audience:"authenticatedSession"|"unknown",remainingBytes:number,sessionId?:string){
-    const start=performance.now(),snapshot=this.host.snapshot(scope),settings=snapshot.configuration?.extensions?.understanding as Settings|undefined;
-    const enabled=!!settings?.enabled&&audience==="authenticatedSession"&&!/\b(?:actually|instead|not|never|correction|stop)\b|don't|no longer/iu.test(input);
-    const budget={tokens:Math.max(0,Math.min(settings?.budget.enrichmentTokens??0,remainingBytes-1)),items:settings?.budget.selectedItems??0,deadlineMs:settings?.budget.optionalSelectionDeadlineMs??10};
-    let candidates:ReturnType<UnderstandingRepository["select"]>=[];
-    try{if(enabled){candidates=this.repository.select(scope,snapshot.boundary,input);const recent=sessionId?this.recent.get(this.recentKey(scope,sessionId)):undefined;if(recent)candidates=candidates.filter(item=>(recent.ids.get(item.id)??0)<=Date.now());}}catch{/* Optional index failure withholds enrichment; the ordinary reply remains available. */}
-    const selected=selectPreparedEnrichment({candidates,enabled,budget,boundaryCurrent:()=>snapshot.boundary===this.host.snapshot(scope).boundary,now:()=>performance.now()});
-    if(performance.now()-start>=budget.deadlineMs)return {...selected,items:[],content:"",tokenUpperBound:0,freshUntil:Date.now(),disposition:"deadline" as const};
-    return {...selected,freshUntil:Math.min(Date.now()+120000,...candidates.filter(item=>selected.items.some(chosen=>chosen.id===item.id)).map(item=>item.freshUntil))};
+    const snapshot=this.host.snapshot(scope),recent=sessionId?this.recent.get(this.recentKey(scope,sessionId)):undefined;
+    return selectDiscoveryContext({repository:this.repository,scope,boundary:snapshot.boundary,input,audience,remainingBytes,settings:snapshot.configuration?.extensions?.understanding as Settings|undefined,current:()=>snapshot.boundary===this.host.snapshot(scope).boundary,recent:id=>(recent?.ids.get(id)??0)>Date.now()});
   }
 }

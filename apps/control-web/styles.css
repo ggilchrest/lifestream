@@ -77,3 +77,14 @@
 [data-candidate-detail] h5{font-size:1rem;margin:20px 0 12px}
 @media(min-width:761px){[data-candidate-list] td.record-id{display:table-cell}}
 @media(max-width:760px){[data-candidate-list] td:nth-child(2)::before{content:'Candidate ID';display:block;font:600 12px system-ui;color:var(--muted);margin-bottom:4px}[data-candidate-list] td:nth-child(3)::before{content:'Status / expiry: ';font-weight:600}}
+
+/* Discovery comparisons keep one scenario in view, with aligned variants. */
+.discovery-lab-variants { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.discovery-lab-variants .workflow-step { margin: 0; min-width: 0; }
+.discovery-lab-variants h6 { font-size: 1rem; margin: 0 0 12px; }
+.lab-readable-text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.6; }
+@media (max-width: 1000px) { .discovery-lab-variants { grid-template-columns: 1fr; } }
+.discovery-lab-variants details + details { margin-top: 12px; }
+.discovery-input-dialog { width: min(900px, calc(100% - 32px)); }
+.discovery-lab-variants { align-items: start; }
+.discovery-lab-variants article > button { margin-top: 12px; }

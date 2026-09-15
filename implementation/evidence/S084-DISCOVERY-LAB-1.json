@@ -1,0 +1,160 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-15T00:19:46.308387Z",
+  "slice": "LS-S084",
+  "status": "inProgress",
+  "claim": "Isolated synthetic Discovery input comparison through the production bounded selector, context append function and canonical prompt builder, with protected administration and readable browser inspection. This component does not certify complete Discovery behavior.",
+  "baseRevision": "52545a8a4537e6c92ef5cd25ab10cff93e718ff9",
+  "specificationRevision": "175ace2bce4cf17090a58fd987935cfb000940a1",
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "0e0a1d44e08cb0bd61cf9d8c74dbee77076dc91f06b34a95bce060d872c30bd9"
+    },
+    {
+      "path": "apps/control-web/discovery-lab.js",
+      "sha256": "4c8c4201f8fe067771c06e56bd7c95a7d2ae8bf4be278fc640f35880cb182240"
+    },
+    {
+      "path": "apps/control-web/discovery-workflows.js",
+      "sha256": "b46386dc3880b9f876ee6530eeaa6638d3e26a77764132eee133f098c7fc3cf4"
+    },
+    {
+      "path": "apps/control-web/relationship-extensions.js",
+      "sha256": "28b49bb4e439c2fa28b15de9986e36dcf5c329ac886187bc00feb45f38d06890"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "b057ee4d70f3e6c596f0c0f0ee18c3bef5f59a337817ffc2107d37652ea52df8"
+    },
+    {
+      "path": "apps/control-web/test/discovery-lab.test.mjs",
+      "sha256": "912b18807a40715304e84a47a7f7bf75c1c0a01f7cb71a773b68a5dd07bb4371"
+    },
+    {
+      "path": "apps/control-web/test/discovery-review.test.mjs",
+      "sha256": "8ef8d3edf910717ce42e1891e2bbdffc1c5c4ed36c6b9bc2710d4691c729ad1a"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-lab-worker.ts",
+      "sha256": "c45fe1c8e3146a14183d8986496f800207012c6a481a4f634915ef807da59d73"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-lab.ts",
+      "sha256": "dd59943eabddbe9f87447180ddc3515ebd7727243b9f1ff1e3fb4446fef3bce8"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-selection.ts",
+      "sha256": "41aaa2baf241073c7306c7236377436ad23787e2d09bd05a106c6d037d31b745"
+    },
+    {
+      "path": "apps/server/src/admin/understanding.ts",
+      "sha256": "9aefae932875dfe81fe4846f7ddf764b1737836a353e7b9a2fd592600300fb0a"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "ac8bc8e90faead227baab557cccc779039e648dd6e5f8ff930f392f3cb427627"
+    },
+    {
+      "path": "apps/server/test/discovery-lab.test.ts",
+      "sha256": "cd0f4bfb202f305723ab7f22ca34073253e7d01b8b90048a4ded927d0d63c7d9"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "309 passed",
+      "logSha256": "c3fdcbd5119b27b55b75c7e74166e391c71139cad1a0b757895f07095a787705"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "29 passed before final compact Lab inspector layout",
+      "logSha256": "65d372f084f83378bd1fb3d4006d81b99cf6213bfaae938506f6e60c68b64fe8"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/discovery-lab.test.mjs",
+      "result": "1 passed on final Lab source",
+      "logSha256": "96ec3ceb043ba6632dff1cc95ced415a54063146aed486dfeebc0f178edf6caf"
+    },
+    {
+      "command": "node /private/tmp/s084-lab-built-worker.mjs",
+      "result": "compiled JavaScript worker assembled 18 canonical inputs",
+      "logSha256": "fa6584c226ab0ffa09f9e2b1493999e6023e6d0f5f27e8a685033bf040d7f6c8"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "45 passed",
+      "logSha256": "b6f09181d24610182834c5f6b0f4834b4ac772c23933c7f7b0786a25badb05da"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass; specification validation only",
+      "logSha256": "43b10bb00c9c2752840ede675f4086fc9a3f280961bbc68409bec18825656f10"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass; structural check only",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "verifiedComponentBehavior": [
+    "The approved compare envelope resolves a saved configuration only in its authenticated relationship; unknown, foreign, quarantined and unsupported requests fail before comparison.",
+    "One bounded worker per runtime owns an isolated in-memory database and receives configuration values without live evidence, profile prose or provider access. Concurrent starts are capped, repeated polling shares the same result, and interrupted workers report failure.",
+    "The worker compiles and transactionally publishes source-backed synthetic candidates with the production compiler and repository, then calls the same selection and append functions as ordinary typed and voice preparation.",
+    "Six frozen input scenarios produce 18 canonical requests across baseline, enabled reference and selected settings, including two held-out prompts and an independent non-game source family.",
+    "Baseline keeps mandatory synthetic evidence while Discovery is disabled. Current explicit domain and correction expectations pass; token/item/total-context bounds remain checked.",
+    "Selected configuration exclusions and policy are applied to synthetic fixture sources. Suppressed inclusion cannot fabricate an expected detail; the unmet expectation remains visible.",
+    "The protected API test observes zero inference-provider calls and unchanged live relationship/configuration/Discovery tables during comparison. No configuration is activated.",
+    "The browser selects a draft, runs and refreshes comparison, displays failed expectations, changes scenario, inspects the actual prepared-memory text in a wide native dialog, and clears its results at sign-out.",
+    "Final desktop and mobile layouts were visually inspected; detailed checks are collapsed by default and only one scenario is presented at a time."
+  ],
+  "observedImplementationGap": {
+    "case": "ambiguous-pair",
+    "prompt": "Tell me about Orin and Vale.",
+    "baselineEvidence": "Explicit synthetic statement: Forest Chronicle is my favorite. Activity is not proof of enjoyment. Missing imports do not establish dislike.",
+    "expected": "The supported Forest Chronicle detail is selected without the alternate Stellar Saga detail when current context is ambiguous.",
+    "observed": "Both FOREST_DETAIL_281 and STELLAR_DETAIL_392 enter prepared memory in the enabled reference and enabled selected configuration. Two of eighteen rows fail the alternate-detail expectation.",
+    "classification": "Incomplete preference-aware candidate selection; implementation work remains actionable. This is distinct from nonblocking model-output quality telemetry.",
+    "disposition": "Preserved as failed input evidence; not a full S084 pass and not a reason to stop independent development."
+  },
+  "screenshots": [
+    {
+      "label": "Desktop comparison",
+      "sha256": "fc17efb6916d1db760093f863d7b97964dbb7985e5ea13de8861ed494a93ca07"
+    },
+    {
+      "label": "Mobile comparison",
+      "sha256": "13b602135cdae37c4b7babc050eb1fa4e5f7d71d3a239664d835796fdb5feb94"
+    },
+    {
+      "label": "Wide input inspector",
+      "sha256": "6e9c53580a7b4b49a97406659ed1a512b9523ae8cd2d492b217473efa40e84b8"
+    }
+  ],
+  "limitations": [
+    "Input Lab does not call a model or prove natural conversational quality, reference resolution by the provider, pleasantness, physical speech, production latency or Human acceptance.",
+    "This six-case input scenario subset does not discharge all six canonical Discovery demonstrations, multi-trait hypotheses/connections, scoped-feedback scenarios or full held-out model evaluation. Those remain required.",
+    "Comparison results are volatile, capped to one cached scope/configuration/boundary and expire after ten minutes. They do not survive restart, activate settings or become canonical memory.",
+    "Worker memory and ten-second wall-clock limits are enforced; foreground contention, CPU chunking, corpus scaling and 200 paired-turn performance gates remain unqualified.",
+    "Full preference-aware ranking, calibrated independent scores, bounded exploration allocation, live qualified analysis admission, S083 opportunity/output integration and current-source prerequisite successor receipts remain pending.",
+    "No saved Human review service restart, live configuration change, personal-data import, network research, new provider/model selection, training or new Human acceptance occurred."
+  ],
+  "schemaExportChanged": false,
+  "modelQualityObservationsChanged": false,
+  "humanAcceptanceClaim": false
+}
