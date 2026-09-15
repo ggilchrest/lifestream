@@ -7,3 +7,5 @@ export { PwceContextSession } from "./context-session.js";
 export type { PwceQuery } from "./context-session.js";
 export { PwceTrustedDispatchClient } from './dispatch.js';
 export type { PwceDispatchClientOptions } from './dispatch.js';
+export { PwceCapabilityCatalog, PWCE_LIGHT_CAPABILITY_ID } from './capability-catalog.js';
+export type { PwceCapabilityBinding, PwceCapabilityCatalogOptions, PwceCatalogRecord } from './capability-catalog.js';

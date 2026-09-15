@@ -1,0 +1,174 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-CAPABILITY-CATALOG-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "319a458fbf53fcb77f70e038c64a6c6267ad6de1",
+  "specificationRevision": "739fbd106b9d96f5c67489a0d8ed0dae17691d4d",
+  "producerRevision": "62cb3504466509aa19eb08203cc4464a30da63b6",
+  "recordedAt": "2026-09-15T17:51:04.503Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "packages/providers-pwce/src/capability-catalog.ts",
+        "sha256": "6a8dd0fb1c62b7cda883534d3b26e575b6928e9ad4c1368b25cc1535f180fceb"
+      },
+      {
+        "path": "packages/providers-pwce/src/capability-bundle.ts",
+        "sha256": "f4294c85a6120f9e7613be2f3ba5edbd1525f148bdf18d7181d7401138bbaee4"
+      },
+      {
+        "path": "packages/providers-pwce/src/client.ts",
+        "sha256": "80193de9cd42a2ff83155dcf3c5b0c8d0867475b6f4ac6d4b217d5cb98b92fbb"
+      },
+      {
+        "path": "packages/providers-pwce/src/index.ts",
+        "sha256": "b2c333a653abd81893d1142cf9726a104be929f7338c7222f0a2d0bbb7906310"
+      },
+      {
+        "path": "packages/providers-pwce/test/capability-catalog.test.ts",
+        "sha256": "50ffda671a278819ca9bac9f89824066571da25ed50e8b5993dfba930458a47c"
+      },
+      {
+        "path": "packages/providers-pwce/package.json",
+        "sha256": "b2bf7ff1cc5e2988e75a461880a9c59c31b4bc735dd50ca793ec5540c03b0713"
+      },
+      {
+        "path": "packages/providers-pwce/tsconfig.json",
+        "sha256": "d0ad858df53354616ce40adccc17cbb92a15064169e9dd49fe78a48f7e232f98"
+      },
+      {
+        "path": "pnpm-lock.yaml",
+        "sha256": "6d8944e22790cf712b203fd79a56545ad1adba6bb24e557c467c8563d23778c8"
+      },
+      {
+        "path": "scripts/generate-pwce-capability-pin.mjs",
+        "sha256": "889122701527f82e57954ce82108e7a91742c77ecc547d575c4750f799c51c0d"
+      },
+      {
+        "path": "scripts/check-pwce-dispatch-process.mjs",
+        "sha256": "88438be6f78e4e0829dcbb81859226b394161fcface87ede6760481ca6d637f5"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "baadddf28a35fb553cdac3b3178542574592b949e0ea9edded2907d42b04d7fd"
+      }
+    ]
+  },
+  "claim": "Canonical scoped PWCE capability catalog and producer-owned schema mapping over authenticated HTTP, preserving producer identity and exact artifacts without granting authority or dispatching effects. Separate-process synthetic verification includes revocation and original snapshot custody.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-capability-catalog-full.log",
+      "logSha256": "ff336af743f2e9e1a84cc17d661a17ea7d9dc6d49f251f4796dd1f1072e0d71d"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-capability-catalog-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-capability-catalog-build.log",
+      "logSha256": "e2a22759c1ed542f258a938bec41d3f010f37edf0df5b374d732f57fc8c7db71"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-capability-catalog-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-capability-catalog-workspace-tests.log",
+      "logSha256": "b3a94709e5b3c6f3f5bab2bbc581954d97f0e44d69551f24f5e1771f36ebb5d5"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "ls-capability-catalog-workspace-check.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/capability-catalog.test.ts",
+      "result": "pass",
+      "log": "ls-capability-catalog-unit.log",
+      "logSha256": "7323a9b3c969ccf86e7045c2577923462d2b492a80fe17946e1bae62e95cc116"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "log": "ls-capability-catalog-joined.log",
+      "logSha256": "76fd8380bb759eaf683e9f6c94b4fb361080f9c6a5cdb7c4997597010119ea09"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "ls-capability-catalog-context.log",
+      "logSha256": "5a870c655237cbad16fdb4c340cfa819b6eafd3e7fc13239933d33e8a23538ed"
+    },
+    {
+      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-capability-catalog-pin.log",
+      "logSha256": "12a961678e4187057f78756f2e2e50550c255bb75fc164a4ae54ed13eb545205"
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-capability-catalog-dispatch-pin.log",
+      "logSha256": "7799cc7b7e6b5549e994e5cef2ccba3b115d973b57349f7bf933be0d14482b29"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-capability-catalog-private.log",
+      "logSha256": "9e2fd0cf7814ae13eca2bdec0ce5b146bf55f33b3b2861e1d1fd07fd1b48c395"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-capability-catalog-preflight-final.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "counts": {
+    "applicationTests": 698,
+    "catalogUnitTestsIncludedInApplicationTotal": 14,
+    "workspaceTests": 43,
+    "joinedCatalogChecks": 6,
+    "joinedDispatchChecks": 7,
+    "joinedContextChecks": 19,
+    "joinedRuntimeChecks": 7
+  },
+  "capabilityBundle": {
+    "bundleId": "pwce-capability-contracts.bundle.v1",
+    "version": "1.0.0",
+    "digest": "6df58c602d8a43fdababd388c588aef631662e5904139837baa36db9c6730a0c"
+  },
+  "verificationNotes": [
+    "Initial typecheck found the missing direct contracts dependency and a generic type constraint; both were corrected before the successful full validation.",
+    "An additional standalone runtime check lacked its required fixture environment and refused to run. The existing check-pwce-context-process runner already creates that environment and passed all seven runtime cases. Its successful log is recorded separately.",
+    "A preliminary preflight detected the not-yet-updated changedFiles list; final preflight is required after receipt/checkpoint completion."
+  ],
+  "failedDiagnostic": {
+    "command": "node scripts/check-pwce-runtime.mjs (without required fixture environment)",
+    "result": "notExecuted",
+    "log": "ls-capability-catalog-runtime.log",
+    "logSha256": "fad4c7f38422f13a3ec4cb1b831b1bca018f81a49eab8375ba4f97874e7803f3"
+  },
+  "exclusions": [
+    "Complete canonical external authority, grant query, invocation and result/evidence mapping",
+    "Configured PWCE capability control-plane/runtime activation",
+    "Durable producer-custody restart and backup-restore fencing",
+    "Live physical effects, deployment, provider/model selection and new Human acceptance"
+  ],
+  "continuation": "Continue canonical external authority and original action custody mapping; preserve nonblocking model-quality telemetry and complete independent development.",
+  "localLogArchive": "lifestream/.lifestream/benchmarks/pwce-capability-catalog/2026-09-15"
+}

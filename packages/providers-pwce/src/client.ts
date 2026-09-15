@@ -1,3 +1,7 @@
+import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
+import type { SchemaArtifactRef } from "@lifestream/runtime/capabilities/schema-artifacts";
+import { EXPECTED_PWCE_CAPABILITY_BUNDLE } from "./capability-bundle.ts";
 import { boundedFetch, cancelBody, checkStatus, deadlineExceeded, encodeRequest, PwceCallScope, readEventStream, readJsonObject, transportLimit } from "./transport.ts";
 import type { PwceInvalidationEvent } from "./transport.ts";
 export type { PwceInvalidationEvent } from "./transport.ts";
@@ -58,6 +62,29 @@ export class PwceGatewayClient {
     const [profile, bundle] = await Promise.all([this.readProfile(scope), this.readBundle(scope)]);
     scope.check();
     return { profile, bundle };
+  }
+  private async readCapabilityContracts(scope: PwceCallScope): Promise<typeof EXPECTED_PWCE_CAPABILITY_BUNDLE> {
+    const received = await this.json<Record<string, unknown>>("/gateway/v1/capability-contracts", scope);
+    if (!isDeepStrictEqual(received, EXPECTED_PWCE_CAPABILITY_BUNDLE)) throw new Error("PWCE capability contract bundle is incompatible");
+    return structuredClone(EXPECTED_PWCE_CAPABILITY_BUNDLE);
+  }
+  capabilityContracts(signal?: AbortSignal): Promise<typeof EXPECTED_PWCE_CAPABILITY_BUNDLE> {
+    return this.call(signal, async scope => { await this.readNegotiation(scope); return this.readCapabilityContracts(scope); });
+  }
+  capabilitySchema(reference: SchemaArtifactRef, signal?: AbortSignal): Promise<Uint8Array> {
+    const owned = structuredClone(reference);
+    const expected = EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities.flatMap(value => [value.inputSchemaArtifact, value.resultSchemaArtifact]).find(value => isDeepStrictEqual(value, owned));
+    if (!expected) return Promise.reject(new Error("PWCE schema artifact is not pinned"));
+    return this.call(signal, async scope => {
+      await this.readNegotiation(scope); await this.readCapabilityContracts(scope);
+      const result = await this.json<Record<string, unknown>>(`/gateway/v1/capability-contracts/${expected.sha256}`, scope);
+      if (Object.keys(result).sort().join(',') !== 'artifact,schemaJson' || !isDeepStrictEqual(result.artifact, expected) || typeof result.schemaJson !== 'string') throw new Error("PWCE schema artifact is incompatible");
+      const bytes = new TextEncoder().encode(result.schemaJson);
+      if (bytes.length !== expected.byteLength || createHash('sha256').update(bytes).digest('hex') !== expected.sha256) throw new Error("PWCE schema artifact bytes differ from their pin");
+      const schema = JSON.parse(result.schemaJson);
+      if (schema.$id !== expected.reference || schema.$schema !== expected.schemaRef) throw new Error("PWCE schema identity is incompatible");
+      scope.check(); return bytes;
+    });
   }
   async authority(siteRefs: readonly string[], signal?: AbortSignal, identity: PwceIdentityScope = {}): Promise<PwceClientResult> {
     const body = encodeRequest({ ...snapshotIdentity(identity), siteRefs: [...siteRefs] });

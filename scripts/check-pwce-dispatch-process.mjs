@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { randomBytes, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { createInterface } from 'node:readline';
 import { resolve } from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import { PwceGatewayClient } from '../packages/providers-pwce/src/client.ts';
+import { PwceCapabilityCatalog, PWCE_LIGHT_CAPABILITY_ID } from '../packages/providers-pwce/src/capability-catalog.ts';
+import { EXPECTED_PWCE_CAPABILITY_BUNDLE } from '../packages/providers-pwce/src/capability-bundle.ts';
+import { createContractValidator } from '../packages/contracts/src/validator.ts';
 import { PwceTrustedDispatchClient } from '../packages/providers-pwce/src/dispatch.ts';
 import { PWCE_DISPATCH_REQUEST_SCHEMA, PWCE_DISPATCH_RESPONSE_SCHEMA } from '../packages/providers-pwce/src/dispatch-bundle.ts';
 const producer=resolve(process.env.PWCE_PRODUCER_ROOT ?? '../PWCE'), token=randomBytes(24).toString('hex'), dispatcherToken=randomBytes(24).toString('hex');
@@ -16,7 +19,7 @@ host.stderr.on('data',chunk=>{stderr+=String(chunk);if(stderr.length>8192)host.k
 async function readLine(){let timer;try { const item=await Promise.race([iterator.next(),exit.then(()=>{throw new Error('synthetic producer exited');}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('synthetic producer response deadline exceeded')),10000);})]);assert.equal(item.done,false);assert.ok(item.value.length<4096);return JSON.parse(item.value); }finally{clearTimeout(timer);}}
 async function stats(){host.stdin.write('stats\n');const result=await readLine();assert.equal(result.fixtureStats,true);return result.calls;}
 const ajv=new Ajv2020({strict:false});addFormats(ajv);const validateRequest=ajv.compile(PWCE_DISPATCH_REQUEST_SCHEMA),validateResponse=ajv.compile(PWCE_DISPATCH_RESPONSE_SCHEMA);
-let calls=0, wireCalls=0;
+let calls=0, wireCalls=0, catalogChecks=0;
 try {
  const ready=await readLine();assert.equal(ready.fixture,true);assert.equal(ready.liveEffects,false);assert.equal(ready.scenario,'trusted-dispatch');
  const url=new URL(ready.url);assert.equal(url.protocol,'http:');assert.equal(url.hostname,'127.0.0.1');
@@ -32,6 +35,22 @@ try {
  const authority=await core.authority(['home.one'],undefined,identity);
  const scope={...identity,worldRef:'world.personal.v1',executionEnvironmentRef:'test'};
  const snapshot=await core.request({...scope,authorityContextRef:authority.authorityContextRef,operation:'capabilities.getSnapshot'});
+ const localScope={assistantId:randomUUID(),endpointId:randomUUID(),sessionId:randomUUID(),environmentId:randomUUID(),conversationId:randomUUID(),interactionTraceId:null,authorityContextRef:{providerRef:'pwce.synthetic',contextId:randomUUID(),revision:1}};
+ const binding={authorityContextRef:authority.authorityContextRef,principalRef:'agent.fixture',siteRefs:['home.one'],worldRef:scope.worldRef,executionEnvironmentRef:scope.executionEnvironmentRef,identity};
+ const catalog=new PwceCapabilityCatalog({providerRef:'pwce.synthetic',client:core,resolve:async()=>binding,isCurrent:()=>true});
+ const catalogRequest=()=>({schemaVersion:'1.0.0',operation:'CapabilityProvider.getSnapshot',requestId:randomUUID(),correlationId:randomUUID(),deadlineAt:new Date(Date.now()+5000).toISOString(),cancellationId:randomUUID(),executionMode:'normal',scope:localScope,idempotencyKey:null,payload:{requestedCapabilityIds:[]}});
+ const callContext={signal:new AbortController().signal,isCurrent:()=>true}, projected=await catalog.getSnapshot(catalogRequest(),callContext);
+ const contracts=createContractValidator();assert.ok(contracts.validate('https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilitySnapshotResult',projected).valid);
+ assert.equal(projected.outcome.payload.capabilities[0].capabilityId,PWCE_LIGHT_CAPABILITY_ID);assert.equal(catalog.retained(projected.outcome.payload.snapshotId,localScope).producerSnapshotRef,snapshot.snapshotRef);catalogChecks++;
+ const schemaScope={assistantId:localScope.assistantId,endpointId:localScope.endpointId,sessionId:localScope.sessionId,environment:localScope.environmentId,authorityContextRef:localScope.authorityContextRef};
+ const schemaContext=()=>({...callContext,requestId:randomUUID(),correlationId:randomUUID(),deadlineAt:new Date(Date.now()+5000).toISOString(),executionMode:'live'});
+ for(const artifact of [EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0].inputSchemaArtifact,EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0].resultSchemaArtifact]) {
+  const bytes=await catalog.schemas.read(artifact,schemaScope,schemaContext());assert.equal(bytes.byteLength,artifact.byteLength);assert.equal(createHash('sha256').update(bytes).digest('hex'),artifact.sha256);
+  const schema=JSON.parse(new TextDecoder().decode(bytes));assert.equal(schema.$id,artifact.reference);ajv.compile(schema);catalogChecks++;
+ }
+ assert.equal(await catalog.schemas.read(EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0].inputSchemaArtifact,{...schemaScope,sessionId:randomUUID()},schemaContext()),undefined);
+ assert.equal(await stats(),0);catalogChecks++;
+
  const input={...scope,requestId:randomUUID(),correlationId:randomUUID(),deadline:new Date(Date.now()+30_000).toISOString(),snapshotRef:snapshot.snapshotRef,capabilityRef:'home.light.set_level',capabilityVersion:'1.0.0',capabilityOperation:'light.set_level',siteRef:'home.one',targetEntityId:'light.synthetic',parameters:{level:0.5},idempotencyKey:randomUUID(),approvalRequired:false,approvalRef:null};
  const admitted=await client.authorizeDispatch(authority.authorityContextRef,input);assert.ok(validateResponse(admitted),JSON.stringify(validateResponse.errors));assert.equal(admitted.status,'admitted');assert.equal(await stats(),0);calls++;
  const duplicate=await client.authorizeDispatch(authority.authorityContextRef,input);assert.equal(duplicate.actionRef,admitted.actionRef);assert.equal(duplicate.duplicate,true);assert.equal(await stats(),0);calls++;
@@ -45,8 +64,10 @@ try {
  for(let i=0;i<2;i++){const reply=await client.invoke(authority.authorityContextRef,unknownCommand);assert.ok(validateResponse(reply),JSON.stringify(validateResponse.errors));assert.equal(reply.status,'outcome_unknown');}assert.equal(await stats(),2);calls++;
  const pendingInput={...input,requestId:randomUUID(),idempotencyKey:randomUUID()};const pending=await client.authorizeDispatch(authority.authorityContextRef,pendingInput);
  host.stdin.write('revoke\n');assert.equal((await readLine()).revoked,true);
+ await assert.rejects(catalog.schemas.read(EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0].inputSchemaArtifact,schemaScope,schemaContext()),{code:'authority_context_invalidated'});catalogChecks++;
+ await assert.rejects(catalog.getSnapshot(catalogRequest(),callContext),{code:'authority_context_invalidated'});catalogChecks++;
  await assert.rejects(client.invoke(authority.authorityContextRef,{...pendingInput,actionRef:pending.actionRef}),{code:'authority_context_invalidated'});assert.equal(await stats(),2);calls++;
- console.log(JSON.stringify({checks:calls,wireCalls,targetCalls:2,fixtures:true,scope:'separate-process pinned dispatch transport; no canonical adapter, real effects or Human acceptance'}));
+ console.log(JSON.stringify({checks:calls,catalogChecks,wireCalls,targetCalls:2,fixtures:true,scope:'separate-process canonical catalog and schema mapping plus pinned dispatch transport; no canonical action adapter, real effects or Human acceptance'}));
 }finally{
  host.stdin.end('stop\n');let timer;
  try{await Promise.race([exit,new Promise(resolve=>{timer=setTimeout(()=>{host.kill('SIGTERM');resolve();},3000);})]);}finally{clearTimeout(timer);lines.close();}

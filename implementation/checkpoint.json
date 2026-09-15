@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "657b0ee309b00816c1e6ebf322e6934c5282666f",
+  "currentRevision": "319a458fbf53fcb77f70e038c64a6c6267ad6de1",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -180,69 +180,93 @@
     "packages/providers-pwce/test/dispatch.test.ts",
     "scripts/generate-pwce-dispatch-pin.mjs",
     "scripts/check-pwce-dispatch-process.mjs",
-    "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json"
+    "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json",
+    "packages/providers-pwce/src/capability-bundle.ts",
+    "packages/providers-pwce/src/capability-catalog.ts",
+    "packages/providers-pwce/test/capability-catalog.test.ts",
+    "scripts/generate-pwce-capability-pin.mjs",
+    "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
   ],
   "changedFiles": [
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json",
-    "packages/providers-pwce/src/dispatch-bundle.ts",
-    "packages/providers-pwce/src/dispatch.ts",
+    "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json",
+    "packages/providers-pwce/package.json",
+    "packages/providers-pwce/src/capability-bundle.ts",
+    "packages/providers-pwce/src/capability-catalog.ts",
+    "packages/providers-pwce/src/client.ts",
     "packages/providers-pwce/src/index.ts",
-    "packages/providers-pwce/test/dispatch.test.ts",
+    "packages/providers-pwce/test/capability-catalog.test.ts",
+    "packages/providers-pwce/tsconfig.json",
+    "pnpm-lock.yaml",
     "scripts/check-pwce-dispatch-process.mjs",
-    "scripts/generate-pwce-dispatch-pin.mjs"
+    "scripts/generate-pwce-capability-pin.mjs"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json"
-    },
-    {
-      "command": "node --test --experimental-strip-types packages/providers-pwce/test/dispatch.test.ts",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json"
-    },
-    {
-      "command": "node scripts/check-pwce-dispatch-process.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json"
-    },
-    {
-      "command": "node scripts/check-pwce-context-process.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json"
-    },
-    {
-      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/capability-catalog.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
+    },
+    {
+      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-TRANSPORT-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-CATALOG-1.json"
     }
   ],
   "decisions": [
@@ -258,8 +282,8 @@
     "2026-09-15: operator explicitly authorizes continued development and supersedes the previous implementation restriction; existing scoped push authorization continues."
   ],
   "blockers": [],
-  "nextAction": "Complete the producer evidence and canonical AuthorityProvider/CapabilityProvider mapping, configure that existing PWCE path through host secret references, and verify joined action/approval/recovery scenarios. Continue remaining existing S083/S084 work and other authorized development; no new operator decision is required for this verified transport increment.",
-  "updatedAt": "2026-09-15T17:15:22.864Z",
+  "nextAction": "Continue canonical PWCE external authority preview/admission and original invocation/result custody mapping; resolve the external grant-query shape under its existing owner, then configured runtime composition. Catalog/schema component is verified; no complete adapter claim.",
+  "updatedAt": "2026-09-15T17:51:04.503Z",
   "updatedBy": "Codex",
-  "notes": "PWCE trusted transport component verified: 684 application tests, nine new client tests and seven separate-process dispatch checks. Producer contracts are published and pinned; canonical configured authority/capability/evidence mapping remains in progress. Prior core and Human evidence is preserved. Development/push authorization remains active; saved services and dirty artifacts are preserved."
+  "notes": "PWCE catalog/schema component verified: 698 application tests (14 new catalog tests), 43 workspace tests, six joined catalog checks plus seven dispatch and 26 context/runtime checks. Exact public producer artifacts and foreign scope are preserved. Full canonical external authority/capability/evidence composition remains in progress. Prior core and Human evidence, saved services, dirty artifacts and nonblocking model-quality telemetry are preserved."
 }

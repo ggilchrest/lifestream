@@ -98,6 +98,9 @@ importers:
 
   packages/providers-pwce:
     dependencies:
+      '@lifestream/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@lifestream/runtime':
         specifier: workspace:*
         version: link:../runtime
