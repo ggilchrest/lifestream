@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "584ac035cb7e91386f1ff33121a5adc1d9c98b1f",
+  "currentRevision": "f93520c2c758df8a4a2587af64711a05fad67248",
   "activeSlice": "LS-S083",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -130,60 +130,73 @@
     "packages/storage-sqlite/src/index.ts",
     "implementation/evidence/S083-DURABLE-DELIVERY-LIFECYCLE-1.json",
     "apps/server/src/runtime/initiative.ts",
-    "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
+    "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json",
+    "apps/server/src/admin/initiative-policy.ts",
+    "apps/server/test/initiative-policy.test.ts",
+    "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/runtime/initiative.ts",
-    "apps/server/test/initiative.test.ts",
+    "apps/control-web/DESIGN.md",
+    "apps/control-web/relationship-extensions.js",
+    "apps/control-web/test/relationship-extensions.test.mjs",
+    "apps/server/src/admin/initiative-policy.ts",
+    "apps/server/src/index.ts",
+    "apps/server/src/relationship-extensions.ts",
+    "apps/server/test/initiative-policy.test.ts",
+    "apps/server/test/relationship-extensions.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json",
-    "packages/runtime/src/inference/prompt.ts"
+    "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
+      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
+      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
+      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
+      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
+      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/relationship-extensions.test.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
+      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
     },
     {
-      "command": "node --test apps/server/test/initiative.test.ts packages/runtime/test/inference.test.ts",
+      "command": "node --test apps/server/test/initiative-policy.test.ts apps/server/test/relationship-extensions.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
+      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
+      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json"
+      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
     }
   ],
   "decisions": [
@@ -198,8 +211,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Connect the Initiative delivery ledger and candidate generator to protected host session/simulation ingress, effective numeric policy and durable inference budgets, shared prepared context, ordinary output-only text/speech transport, readiness/lease fences and Assistant transcript linkage. Complete temporary modes, inspector and gradient Lab. Continue remaining S084 semantic Discovery, bounded exploration, qualified analysis, real output/corpus/voice performance, prerequisite qualification successors and PWCE Personal V1 T5 full core mapping. Do not claim full-slice or Human acceptance from these components.",
-  "updatedAt": "2026-09-15T01:00:25.755936Z",
+  "nextAction": "Wire effective Initiative policy, candidate generation and durable delivery ledger into protected session/synthetic opportunity ingress, runtime inference budgets, temporary-mode commands and ordinary output-only text/speech transport. Apply one expression-warmth value, readiness/lease/cancellation/privacy fences, and Assistant transcript linkage. Complete opportunity inspector and gradient Lab, then remaining S084 semantic Discovery/exploration/qualified analysis/actual output and performance; refresh source-bound prerequisites and finish PWCE Personal V1 T5 full core mapping. Full S083/S084 and Human acceptance remain open.",
+  "updatedAt": "2026-09-15T01:20:39.009674Z",
   "updatedBy": "Codex",
-  "notes": "Bounded Initiative candidate generation now uses the shared canonical prompt and prepared context, with strict no-user-input semantics and cancellation/settlement checks. Fixture and regression evidence is published; the protected host/output join and complete slice acceptance remain pending."
+  "notes": "Effective Initiative policy is connected to protected configuration preview and numeric-bound activation checks. Independent advanced controls, readable restrictions and mobile/desktop review are verified. Full runtime ingress/output and slice acceptance remain pending."
 }

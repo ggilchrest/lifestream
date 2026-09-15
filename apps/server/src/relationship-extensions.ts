@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { createContractValidator } from "@lifestream/contracts";
+import {initiativeSettingsError} from "./admin/initiative-policy.ts";
 import type { Database } from "@lifestream/storage-sqlite";
 
 export type ExtensionKind = "initiative" | "understanding";
@@ -37,6 +38,7 @@ export function handleExtensionConfiguration(options: {
   defaults: Record<string, number>; current: () => boolean;
   activationDenial: (parent: RelationshipConfiguration) => string | undefined;
   reload: () => void;
+  reviewExplanations?: (parent:RelationshipConfiguration|undefined) => {code:string;summary:string;sourceRefs:string[]}[];
 }): Result {
   const { database, kind, scope, defaults } = options;
   if (!validator.validate(`${apiId(kind)}#/$defs/Request`, options.request).valid) return extensionError(422, "invalid_extension_request", "Unsupported version, operation or fields.");
@@ -66,6 +68,7 @@ export function handleExtensionConfiguration(options: {
         const source = operation === "rollback" ? selected! : active;
         selected = { ...(source ? structuredClone(source) : { preset: "balanced" as const, controls: { ...defaults } }), configurationId: randomUUID(), relationshipId: scope.relationshipId, revision: Math.max(0, ...parents.map(parent => parent.revision)) + 1, status: "draft", basisActiveConfigurationId: active?.configurationId ?? null, createdBy: scope.userId, createdAt: new Date().toISOString(), name: `${operation === "rollback" ? "Rollback" : "Review"} ${kind}`, extensions: { ...structuredClone(source?.extensions ?? {}), ...(operation === "draft" ? { [kind]: structuredClone(request.settings) as Record<string, unknown> } : {}) } };
         if (operation === "rollback") selected.restoredFrom = String(request.configurationId);
+        if(kind==="initiative"){const invalid=initiativeSettingsError(selected.extensions!.initiative!);if(invalid)return extensionError(422,"initiative_preset_mismatch",invalid);}
         save(selected); status = 201;
       } else if (operation === "preview" || operation === "activate") {
         if (!selected || !selected.extensions?.[kind] || selected.quarantined) return extensionError(404, "configuration_unavailable", "Configuration is unavailable in this relationship.");
@@ -79,6 +82,7 @@ export function handleExtensionConfiguration(options: {
       }
       const records = (operation === "inspect" ? parents : selected ? [selected] : []).filter(parent => !parent.quarantined).map(parent => projectExtension(kind, parent, scope)).filter(record => record !== undefined);
       const response: Result = { status, body: { schemaVersion: "1.0.0", relationshipId: scope.relationshipId, operation, activeConfigurationId: changed ? selected!.configurationId : active?.configurationId ?? null, records: records.slice(-128), explanations: [{ code: changed ? "activated" : "review_only", summary: changed ? "The existing parent configuration was activated. Output and research still require current runtime policy." : "Review has no delivery, acquisition or active-setting effect.", sourceRefs: [] }], activeStateChanged: changed, executionMode: "live", nextCursor: null, ...(kind === "initiative" ? { delivery: null } : {}) } };
+      if(options.reviewExplanations)(response.body.explanations as unknown[]).push(...options.reviewExplanations(selected??active));
       if (!validator.validate(`${apiId(kind)}#/$defs/Response`, response.body).valid) throw new Error("Invalid extension response");
       if (key) tx.run("INSERT INTO assistant_relationship_idempotency (idempotency_key,relationship_id,operation,response_json) VALUES (?,?,?,?)", key, scope.relationshipId, binding, JSON.stringify(response));
       return response;

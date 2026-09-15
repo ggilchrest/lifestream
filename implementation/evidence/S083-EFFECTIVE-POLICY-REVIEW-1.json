@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-EFFECTIVE-POLICY-REVIEW-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "f93520c2c758df8a4a2587af64711a05fad67248",
+  "specificationRevision": "560270e0166d28229af6a27fea036ffb8b2c97bd",
+  "recordedAt": "2026-09-15T01:20:39.009674Z",
+  "sourceFiles": [
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "4d4ae7c052b90bb9e85c1e9f8b1f876bf75266dc96cf2b6ca19263c6eff4b15f"
+    },
+    {
+      "path": "apps/control-web/relationship-extensions.js",
+      "sha256": "9b4d50e273e4952b13a029234cdccbb98d1d1d1476900a56133b1228f1f938d8"
+    },
+    {
+      "path": "apps/control-web/test/relationship-extensions.test.mjs",
+      "sha256": "0e98baa15a2c8a186716b8d31e5cd440e16256883324ef19dd777bab8ef9097e"
+    },
+    {
+      "path": "apps/server/src/admin/initiative-policy.ts",
+      "sha256": "ab7da073cad39df765b01a9b6889fcf9de4dd7fa5d742f4ba7176539912962c8"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "6575ce8c68b0a7aaf2c38f13178b84810baa0aeb8ed0ffbed249873618f5a4c0"
+    },
+    {
+      "path": "apps/server/src/relationship-extensions.ts",
+      "sha256": "bfa436855872ddc38f5196ecfbf47bbc32c95f44fb4adb00056b191df17e82a7"
+    },
+    {
+      "path": "apps/server/test/initiative-policy.test.ts",
+      "sha256": "3edf13631bd51621fdf95671aa1c0a0c54fb117e45317fd4fd67209dfd689823"
+    },
+    {
+      "path": "apps/server/test/relationship-extensions.test.ts",
+      "sha256": "0b8a9eb2e73c50dd56970b04a55d920000df735a70ab8e73cadbdc12bacd2bc3"
+    }
+  ],
+  "claims": [
+    "Protected Initiative configuration preview now calculates independent effective dimensions and explains current delivery restrictions with scoped source references. Preview is always non-admitting, including when complete synthetic runtime facts would otherwise pass.",
+    "Explicit declared numeric Assistant baselines and bounds precede reviewed relationship overrides. Existing 0-1 warmth is mapped into the integer control with disclosed rounding and returned on the same 0-1 expression scale. Undeclared disposition sources are labeled as undeclared; prose is not reinterpreted as permission.",
+    "Protected activation rejects values outside the active Assistant numeric bounds and inconsistent named presets. Drafts remain reviewable. The existing parent lifecycle, CAS, idempotency, CSRF, authentication and scope boundaries remain in use.",
+    "The pure policy calculation checks current subject, consent, source expiry/qualification, arrival dwell/absence, enabled check-in kinds, unfinished follow-up evidence, privacy, context, channel and output ownership/readiness facts. Stable primary-denial ordering is deterministic.",
+    "Session/configuration-bound temporary mode evaluation respects explicit duration, restores durable settings after expiry, and cannot expand consent, channel membership or opening ceilings. Quiet always suppresses. This is calculation evidence, not a completed temporary-mode operation.",
+    "Advanced UI edits mark Custom immediately and preserve other dimensions; selecting Custom no longer resets the values. The simple control selects its corresponding preset vector without filling consent or channels. Effective values, restrictions and collapsed provenance remain together before activation."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "06bc0820372747fbf66f4a7bcca946a2637dd189f335f05624e2423974c94899"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "907e3d43c74788e5fb69b3d4e296a83e5d9d825e34495460d0fac6040a4fe7df"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/relationship-extensions.test.mjs",
+      "result": "pass",
+      "logSha256": "16e336e09e070ea0124c52313416604784af9be697d6ea84eeb1236bdef1a39f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "b3990ccc706dc4c90b4eac020157d1d92356f46e9e53a278ccc5c90990310929"
+    },
+    {
+      "command": "node --test apps/server/test/initiative-policy.test.ts apps/server/test/relationship-extensions.test.ts",
+      "result": "pass",
+      "logSha256": "563e9cbfbdb9771c638c515b99fb5c18d6019d3fb076dfe504138dddec4fe068"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "e4ba40cc51aef5b7fe812668897edcdafa4f986878a208b6e825a146e789f9f8"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 333,
+    "browserTests": 29,
+    "focusedBrowserTests": 1,
+    "toolingTests": 45,
+    "focusedSourceTests": 7,
+    "privateValidatorUnitTests": 53
+  },
+  "visualInspection": {
+    "desktop": "1360x960 browser viewport; actual saved draft preview, dimension differences, policy restrictions, source details and activation controls inspected.",
+    "mobile": "390x844 browser viewport; stacked records and policy review inspected without horizontal overflow.",
+    "screenshots": [
+      {
+        "name": "lifestream-initiative-policy-desktop.png",
+        "sha256": "766cd9f7ba21caf6bf4ee1e18b4a62b18422d4a940918ccec5ece332b41d27fc"
+      },
+      {
+        "name": "lifestream-initiative-mobile.png",
+        "sha256": "c3626fee92558629109728aa34870933266bc345293eaf3561bd069c495eb7af"
+      }
+    ]
+  },
+  "caseCoverage": [
+    {
+      "caseId": "LS-TEST-108",
+      "scope": "Quiet default, independent numeric controls and review component."
+    },
+    {
+      "caseId": "LS-TEST-118",
+      "scope": "Protected configuration review, numeric bounds and owner scope component; live cross-session output still pending."
+    },
+    {
+      "caseId": "LS-TEST-121",
+      "scope": "Actual browser draft/preview/activation review and explanation component; opportunity inspector and gradient Lab still pending."
+    }
+  ],
+  "limitations": [
+    "The policy resolver is connected to protected configuration review and numeric activation checks. It is not yet wired to the server opportunity ingress, candidate generator or final output path. Runtime facts are host inputs, never client assertions.",
+    "Policy checks cover the personalized generated-opening path. Independently permitted nonpersonal reserved/presentation acknowledgments remain pending. No shared-audience fallback is implemented.",
+    "Temporary-mode storage, versioned commands and expiry cancellation are not implemented by this pure calculation. Runtime operator/deployment ceilings and durable inference budgets still need integration. Opening accounting remains the separately tested delivery-ledger component.",
+    "Only explicitly declared integer 0-11 disposition values and the specified existing 0-1 warmth mapping are interpreted. Core Persona prose remains protected in the shared prompt rather than parsed as numeric policy; active learned adaptations do not rewrite the explicit controls.",
+    "Expression mapping is calculated and inspected; actual output-only generation/speech application, selected-provider behavior, physical presence, gradient comparisons and Human audition remain unverified.",
+    "No live activation, deployment, capture, personal-data import, training, model selection or new model-quality observation occurred. Remaining S083/S084 and PWCE work remains active."
+  ]
+}

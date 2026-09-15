@@ -59,7 +59,8 @@ test("extension administration uses real local authentication, CSRF and transact
   const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={origin:base,"content-type":"application/json"};
   const send=async(path:string,body:unknown,extra:Record<string,string>={})=>fetch(base+path,{method:"POST",headers:{...headers,...extra},body:JSON.stringify(body)});
   const setup=await send("/api/auth/v1/setup",{username:"owner",password:randomUUID()+randomUUID(),installerToken});assert.equal(setup.status,201);headers.cookie=setup.headers.get("set-cookie")!.split(";")[0]!;headers["x-lifestream-csrf"]=(await setup.json() as any).session.csrfToken;
-  const assistant=await (await send("/api/admin/v1/assistants",{displayName:"Synthetic Protected Review"})).json() as any;
+  const assistant=await (await send("/api/admin/v1/assistants",{displayName:"Synthetic Protected Review",adaptivePersonaPolicy:{dimensions:[{key:"warmth",valueType:"number",minimum:0,maximum:.8,baseline:.5,maxDeltaPerDreamingRun:.1,maxDeltaPer30Days:.2,minimumIndependentEvidence:2,confidenceThreshold:.8,reviewAfterDays:7,sensitive:false,activation:"humanApproval"}]}})).json() as any;
+  assert.equal((await send(`/api/admin/v1/assistants/${assistant.assistantId}/activate`,{profileId:assistant.profile.profileId,expectedActiveRevision:null})).status,200);
   const rel=await (await send(`/api/admin/v1/assistants/${assistant.assistantId}/relationships`,{})).json() as any;
   const path=`/api/admin/v1/assistants/${assistant.assistantId}/relationships/${rel.relationship.relationshipId}/understanding/v1`;
   const draft={schemaVersion:"1.0.0",operation:"draft",idempotencyKey:"atomic-failure",expectedActiveConfigurationId:null,settings:settings.understanding};
@@ -79,5 +80,14 @@ test("extension administration uses real local authentication, CSRF and transact
   const afterFailure=await (await send(path,{schemaVersion:"1.0.0",operation:"inspect"})).json() as any;assert.equal(afterFailure.activeConfigurationId,null);assert.equal(afterFailure.records[0].lifecycle,"draft");
   db.exec("DROP TRIGGER reject_extension_activation");assert.equal((await send(path,activate)).status,200);
   assert.equal((await send(path,{...activate,expectedRevision:999})).status,409);
+  const initiativePath=path.replace("/understanding/","/initiative/");
+  const edited={...structuredClone(settings.initiative),dimensions:{...settings.initiative.dimensions,curiosity:8}};
+  const mismatch=await send(initiativePath,{schemaVersion:"1.0.0",operation:"draft",idempotencyKey:"independent-dimensions",expectedActiveConfigurationId:value.configurationId,settings:edited});assert.equal(mismatch.status,422);
+  const custom=await send(initiativePath,{schemaVersion:"1.0.0",operation:"draft",idempotencyKey:"independent-dimensions",expectedActiveConfigurationId:value.configurationId,settings:{...edited,preset:"custom"}});assert.equal(custom.status,201);const selected=(await custom.json() as any).records[0];
+  const policyPreview=await (await send(initiativePath,{schemaVersion:"1.0.0",operation:"preview",configurationId:selected.configurationId})).json() as any;
+  assert.equal(policyPreview.activeStateChanged,false);assert.equal(policyPreview.delivery,null);assert.match(policyPreview.explanations.find((x:any)=>x.code==="initiative_dimensions").summary,/curiosity 8/);assert.match(policyPreview.explanations.find((x:any)=>x.code==="initiative_delivery_review").summary,/no explicit output opt-in/);
+  assert.equal(policyPreview.records[0].dimensions.initiative,2);assert.equal(policyPreview.records[0].preset,"custom");
+  const outside=await send(initiativePath,{schemaVersion:"1.0.0",operation:"draft",idempotencyKey:"bounded-warmth",expectedActiveConfigurationId:value.configurationId,settings:{...edited,preset:"custom",dimensions:{...edited.dimensions,warmth:11}}});assert.equal(outside.status,201);const bounded=(await outside.json() as any).records[0];
+  const denied=await send(initiativePath,{schemaVersion:"1.0.0",operation:"activate",configurationId:bounded.configurationId,expectedRevision:bounded.revision,confirmed:true,idempotencyKey:"bounded-warmth-activate"});assert.equal(denied.status,409);assert.match((await denied.json() as any).message,/declared numeric bounds/);
   await send("/api/auth/v1/sign-out",{});assert.equal((await send(path,{schemaVersion:"1.0.0",operation:"inspect"})).status,401);
 });

@@ -1,3 +1,4 @@
+import {resolveInitiativePolicy,initiativePolicyExplanations,initiativeSettingsError} from "./admin/initiative-policy.ts";
 import {favoriteSupport,evidenceDependency} from './admin/discovery-preference.ts';
 import {appendDiscoveryContext} from './admin/discovery-selection.ts';
 import {createDiscoveryFeedback,feedbackIsCurrent} from "./admin/discovery-feedback.ts";
@@ -5,7 +6,7 @@ import { extensionError } from "./relationship-extensions.ts";
 import { understandingDigest } from "@lifestream/storage-sqlite";
 import { DiscoveryAdministration } from "./admin/understanding.ts";
 import type { UnderstandingScope } from "@lifestream/storage-sqlite";
-import { handleExtensionConfiguration, legacyConfigurationView, type RelationshipConfiguration } from "./relationship-extensions.ts";
+import { projectExtension, handleExtensionConfiguration, legacyConfigurationView, type RelationshipConfiguration } from "./relationship-extensions.ts";
 import {recoveryDigest} from "./admin/recovery-journal.ts";
 import {RelationshipRecovery,type RecoveryRelationship} from "./admin/relationship-recovery.ts";
 import {readinessView,applyReadiness,routeReadiness,exportReadiness,type RelationshipReadiness} from "./admin/relationship-readiness.ts";
@@ -176,6 +177,9 @@ class AssistantAdminApi {
     if (parent.derivedLabId) { const lab = [relationship.lab, ...(relationship.labHistory ?? [])].find(item => item?.experimentId === parent.derivedLabId); if (!lab?.sourceSnapshot || lab.status !== "promoted" || lab.sourceSnapshot.boundary !== this.labBoundary(relationship)) return "The Lab source changed; review current evidence."; }
     if (parent.derivedInsightId) { const insight = relationship.insights?.find(item => item.insightId === parent.derivedInsightId); if (!insight || insight.status !== "accepted" || insight.sourceRevision !== relationship.revision || JSON.stringify(insight.sourceRefs) !== JSON.stringify(insightRefs(relationship))) return "The insight source changed; review current evidence."; }
     const settings = parent.extensions?.initiative;
+    if(settings){const invalid=initiativeSettingsError(settings);if(invalid)return invalid;
+      if(relationship.deploymentId){const policy=resolveInitiativePolicy({scope:relationship as UnderstandingScope,configuration:projectExtension("initiative",parent,relationship)!,profile:this.profiles.list(relationship.assistantId).find(item=>item.status==="active"),now:Date.now(),preview:true});if(policy.reasons.includes("contextRestricted")||policy.reasons.includes("invalidScope"))return "Initiative values exceed or conflict with the Assistant's declared numeric bounds. Review the dimensions and profile.";}
+    }
     if (settings && Array.isArray(settings.consentRefs) && settings.consentRefs.some(ref => typeof ref !== "string" || !relationship.candidates.some(record => record.candidateId === ref && record.status === "approved" && !record.processingRevoked && !record.suppressed && !this.recovery.denied(relationship.userId, relationship.relationshipId, record.candidateId)))) return "Initiative consent references must resolve to currently approved, available relationship records.";
     return undefined;
   }
@@ -274,7 +278,8 @@ class AssistantAdminApi {
         }
         const result=handleExtensionConfiguration({ database: this.database, kind: parts[7], scope: relationship, request: body, defaults: relationshipControlDefaults,
           current: () => authorizationCurrent() && !this.recoveryPending(relationship),
-          activationDenial: parent => this.extensionActivationDenial(parent, relationship), reload: () => this.reloadRecovery() });
+          activationDenial: parent => this.extensionActivationDenial(parent, relationship), reload: () => this.reloadRecovery(),
+          ...(parts[7]==="initiative"&&relationship.deploymentId?{reviewExplanations:(parent:RelationshipConfiguration|undefined)=>initiativePolicyExplanations(resolveInitiativePolicy({scope:relationship as UnderstandingScope,...(parent?{configuration:projectExtension("initiative",parent,relationship)!}:{}),profile:this.profiles.list(assistantId).find(item=>item.status==="active"),now:Date.now(),preview:true,previewConsentCurrent:!!parent&&this.extensionActivationDenial(parent,relationship)===undefined}))}:{}) });
         if(parts[7]==="understanding"&&asObject(body)?.operation==="inspect"&&result.status===200&&relationship.deploymentId){const records=result.body.records as unknown[];result.body.records=[...records,...this.discovery.records(relationship as UnderstandingScope)].slice(0,128);(result.body.explanations as unknown[]).push({code:"bounded_history",summary:"At most 128 configuration, current derived and recent work records are shown. Supplied-source attribution is implemented; optional model analysis requires separate provider-priority qualification.",sourceRefs:[]});}
         return result;
       }

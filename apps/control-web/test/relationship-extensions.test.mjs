@@ -19,9 +19,15 @@ test('extension review pages keep draft, preview and activation in order with sc
  await nav('relationship');await page.locator('#relationship-create').click();await page.waitForFunction(()=>document.querySelector('#relationship-results').textContent.includes('revision 1'));
  for(const [view,kind] of [['initiative','initiative'],['discovery','understanding']]){
   await nav(view);const panel=page.locator(`.relationship-${kind}`);await panel.locator('[data-action=refresh]').click();await panel.locator('[data-role=status]').filter({hasText:'Settings loaded'}).waitFor();
-  if(kind==='initiative')await panel.locator('[data-path=preset]').selectOption('reserved');
+  if(kind==='initiative'){
+   await panel.locator('[data-path=preset]').selectOption('reserved');await panel.getByText('Output scope, consent & advanced limits',{exact:true}).click();await panel.locator('summary').filter({hasText:/^Dimensions$/}).click();
+   const curiosity=panel.locator('[data-path="dimensions.curiosity"]');await curiosity.fill('8');await curiosity.press('Tab');
+   assert.equal(await panel.locator('[data-path=preset]').inputValue(),'custom');assert.equal(await panel.locator('[data-path="dimensions.initiative"]').inputValue(),'2');assert.equal(await panel.locator('[data-path="dimensions.persistence"]').inputValue(),'0');
+   await panel.locator('[data-path=preset]').selectOption('custom');assert.equal(await curiosity.inputValue(),'8');
+  }
   await panel.getByRole('button',{name:'Save review draft',exact:true}).click();await panel.locator('[data-role=status]').filter({hasText:'Draft saved'}).waitFor();
   assert.equal(await panel.locator('[data-role=review]').isVisible(),true);assert.equal(await panel.locator('[data-action=activate]').isEnabled(),true);assert.ok(await panel.locator('[data-role=history] th').count()>=4);
+  if(kind==='initiative'){const policy=panel.getByRole('region',{name:'Effective Initiative policy'});assert.equal(await policy.isVisible(),true);assert.match(await policy.textContent(),/curiosity 8/);assert.match(await policy.textContent(),/no explicit output opt-in/);await page.screenshot({path:'/private/tmp/lifestream-initiative-policy-desktop.png',fullPage:true});}
   await panel.locator('[data-action=activate]').click();await panel.locator('[data-role=status]').filter({hasText:'Reviewed settings activated'}).waitFor();assert.match(await panel.locator('[data-role=active]').textContent(),/Revision/);
   await page.screenshot({path:`/private/tmp/lifestream-${view}-desktop.png`,fullPage:true});
  }
