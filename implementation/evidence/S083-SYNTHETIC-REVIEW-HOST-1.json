@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-SYNTHETIC-REVIEW-HOST-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "1bbfff96abf943dc0bc1a160696e4a45adc420e8",
+  "specificationRevision": "7996e8bde3ab7e25ffb73913d9b37e860379fdd8",
+  "recordedAt": "2026-09-15T04:21:54.490915Z",
+  "sourceFiles": [
+    {
+      "path": "scripts/start-initiative-review.mjs",
+      "sha256": "e4a9885e6a025b32e212356a7fa55b9633f38ceab562e8787f824c4c584d7dc3"
+    },
+    {
+      "path": "apps/control-web/test/initiative-review-host.test.mjs",
+      "sha256": "297eb609e5383694bf9b4e4b1bb90e56b13732465adfd5a13ff8965d87903d2c"
+    },
+    {
+      "path": "docs/initiative-synthetic-review.md",
+      "sha256": "2b012947880b7496d8202cb37468a58b16b3aa43ad658e5c808d8ca2b03abbba"
+    }
+  ],
+  "claims": [
+    "The review launcher always creates a new private synthetic realm and uses the existing protected local-password APIs to enroll its generated account, create a neutral Assistant and relationship, and approve independently authored synthetic declarations. It never opens an existing review database. Generated credentials are written only to a mode-0600 file inside a mode-0700 directory, not to command output, URLs, receipts or Git.",
+    "The operator session list contains only eligible sessions of the seeded synthetic account with an existing runtime endpoint, omitting revoked, expired and foreign sessions. Numbered selection avoids copying opaque IDs. Setup is an explicit protected configuration draft/activation for the chosen endpoint; it neither changes that session disclosure nor starts capture/output. Profile mutation is rejected and the launcher has a fixed profile loader.",
+    "Preparation separately creates one current host-owned check-in, arrival or grounded-follow-up occurrence. The registry binds user, Assistant, relationship, deployment and session; holds at most 128 events; filters expiry; and does not survive host shutdown/restart. No provider call, output-readiness update, consent change or disclosure change occurs during preparation. The follow-up references only the seeded unfinished synthetic exercise. Existing eligibility, cooldown, deduplication and unanswered-topic accounting remain active.",
+    "The public guide covers fresh launch, private sign-in, session disclosure, numbered host setup, source preparation and the first-party picker. Fixture and existing ai5090 provider selection are explicit and separate; the launcher does not start provider services, configure tunnels, select another model or fall back. The execution profile remains test and the selected provider profile is recorded separately.",
+    "Joined verification exercises a fresh browser sign-in, actual Session disclosure controls, protected synthetic configuration activation, a host-prepared arrival, the labeled picker and adjacent output readiness, and an observed Assistant opening without user input. An API test additionally verifies no-output preparation, missing readiness suppression, grounded follow-up emission, session isolation, capacity and sign-out invalidation. A spawned standalone process prints only the credentials path and closes its own loopback service on quit."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "289d7064f7e30060a3e2886a51415e35333e3a8625fbe1086e1c9db0267ad600"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "e7b3fa450a2331d740ffc830739c99265e225585323d7db167a3836984a568ed"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "8882f753b196de3d8e9b090e94f55dcbf4f89efc381b43936ed44bfd2908bbbd"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "eedc36b164a669b7ed550f89ec9cb21ca48627bba9533b06536d5ce850e55ca1"
+    },
+    {
+      "command": "node scripts/start-initiative-review.mjs --help",
+      "result": "pass",
+      "logSha256": "64582b236dfb5a1bc3d271c92eb1b2f6a373f99e8cf26bdb6e37c65c4e0e41b5"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 384,
+    "browserAndLauncherTests": 46,
+    "newBrowserAndLauncherTests": 3,
+    "toolingTests": 45
+  },
+  "intermediateFindings": [
+    {
+      "result": "fail",
+      "logSha256": "3a78efba58cb5f4ba8665f8bd62f1e9c937e76c5bafb5566898c6ab0ef997f23",
+      "summary": "The root script initially imported a source barrel whose JavaScript export paths are unavailable before compilation. It now imports the built public storage package, consistent with the documented build prerequisite."
+    },
+    {
+      "result": "fail",
+      "logSha256": "1d6046f0a6165f84058d6a2d7b4446442b0fc06d6d4047e71928340761461494",
+      "summary": "Initial setup searched the public configuration projection for status rather than its lifecycle field. Corrected the selector; protected activation and the joined browser flow then passed."
+    }
+  ],
+  "prerequisiteQualification": {
+    "status": "pending",
+    "slices": [
+      "LS-S071",
+      "LS-S072",
+      "LS-S073",
+      "LS-S076",
+      "LS-S078"
+    ],
+    "reason": "Current effective inputs differ from historical qualification; receipts remain unchanged."
+  },
+  "limitations": [
+    "All executed launcher checks used fixture providers and synthetic data. The ai5090 launcher branch was not executed here; its current-source selected-provider qualification remains required. No new model-quality observation, audible performance, physical presence or Human acceptance is claimed.",
+    "Fresh launch deliberately creates another realm. This is not qualification of restoring an older database, and no saved Human-review service or data was restarted, deployed or reconfigured.",
+    "Expression-result inspection, pinned gradient Lab, reserved acknowledgments, bounded timing adaptation and older-database restore fencing remain open, alongside S084 semantic Discovery/analysis/performance and PWCE Personal V1 T5 mapping. Full S083/S084 completion remains unverified.",
+    "No personal-data import, training, new provider selection or external research occurred. Approved machine-schema bytes, historical evidence and unrelated dirty artifacts remain preserved."
+  ]
+}
