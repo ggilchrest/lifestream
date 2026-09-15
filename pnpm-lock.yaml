@@ -93,7 +93,11 @@ importers:
         specifier: workspace:*
         version: link:../runtime
 
-  packages/providers-pwce: {}
+  packages/providers-pwce:
+    dependencies:
+      '@lifestream/runtime':
+        specifier: workspace:*
+        version: link:../runtime
 
   packages/providers-sglang:
     dependencies:

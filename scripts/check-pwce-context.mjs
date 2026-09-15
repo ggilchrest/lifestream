@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { PwceContextSession } from '../packages/providers-pwce/src/context-session.ts';
 import { PwceGatewayClient } from '../packages/providers-pwce/src/client.ts';
 import { mapPwceContextResponse, mapPwceEvidenceResponse } from '../packages/runtime/src/context/pwce-mapping.ts';
 
@@ -52,4 +53,17 @@ const frames=[];
 for await(const event of client.subscribeInvalidations(shortAuthority.authorityContextRef,'home.one',{scope:subscriptionScope}))frames.push(event);
 assert.equal(frames.length,1);assert.equal(frames[0].event,'resync.required');assert.equal(JSON.parse(frames[0].data).reason,'authority_context_expired');
 results.push('HTTP scoped SSE accepts exact identities and closes on quiet authority expiry');
+let ownerCurrent=true;const operations=[];
+const sessionClient=new PwceGatewayClient({baseUrl:url,token,fetchImpl:async(resource,init)=>{if(init?.body){const body=JSON.parse(String(init.body));if(body.operation)operations.push(body.operation);}return fetch(resource,init);}});
+const session=new PwceContextSession(sessionClient,{...identity,worldRef:'world.personal.v1',executionEnvironmentRef:'replay',authorityContextRef:scopedAuthority.authorityContextRef,authorityExpiresAt:scopedAuthority.expiresAt,siteRef:'home.one',principalRef:'agent.fixture',sessionId:'session.synthetic',environmentId:'lifestream.synthetic'},{isCurrent:()=>ownerCurrent});
+try{
+ const first=await session.getPreparedInputs(),second=await session.getPreparedInputs();
+ assert.equal(first.isCurrent(),true);assert.equal(second.isCurrent(),true);assert.equal(operations.filter(op=>op==='context.getPreparedInputs').length,1);assert.equal(operations.filter(op=>op==='events.subscribe').length,3);
+ assert.equal(second.value.items.find(item=>item.subjectRef==='home.one::sensor.conflict').knowledgeState,'conflicted');results.push('mapped read-session cache reuse with fresh authority replay');
+ const past=await session.queryContext({mode:'asOf',externalEntityId:'sensor.history',property:'state',asOf:historicalBoundary,limit:1});
+ assert.equal(past.value.items[0].value,1);assert.equal(past.isCurrent(),true);results.push('historical session reads retain as-of validity separately from present time');
+ const evidenceRef=first.value.items.find(item=>item.evidenceRefs.length).evidenceRefs[0];
+ const one=await session.getEvidence(evidenceRef),two=await session.getEvidence(evidenceRef);assert.equal(one.value.status,'known');assert.equal(two.isCurrent(),true);assert.equal(operations.filter(op=>op==='evidence.get').length,2);results.push('session evidence expansion reauthorizes each read');
+ ownerCurrent=false;assert.equal(first.isCurrent(),false);await assert.rejects(session.getPreparedInputs());results.push('host scope change fences cached and new session reads');
+}finally{session.close();}
 console.log(JSON.stringify({syntheticScenario:'qualified-context',liveEffects:false,casesPassed:results.length,checks:results}));

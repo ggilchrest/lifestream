@@ -83,6 +83,10 @@
     "./endpoints/handoff": {
       "types": "./dist/endpoints/handoff.d.ts",
       "import": "./dist/endpoints/handoff.js"
+    },
+    "./context/pwce-mapping": {
+      "types": "./dist/context/pwce-mapping.d.ts",
+      "import": "./dist/context/pwce-mapping.js"
     }
   },
   "scripts": {

@@ -1,0 +1,152 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-CACHE-RECOVERY-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "357e4aec45e925ccb35ca8460bbabb5b18a80ef1",
+  "sourceBinding": "Implementation base plus exact changed-source digests; the enclosing commit contains the verified read-session component.",
+  "specificationRevision": "d6713e1f26c650a8c023c12538bdbe41fb23000f",
+  "recordedAt": "2026-09-15T07:53:57.624950Z",
+  "sourceFiles": [
+    {
+      "path": "packages/providers-pwce/src/cache.ts",
+      "sha256": "d781ca1d8f192a3826fc16ea23da1d35ec89aef88a8abbf9e110565a3a9c101a"
+    },
+    {
+      "path": "packages/providers-pwce/src/context-session.ts",
+      "sha256": "ae3685a788a2435ae6ad10361c8bb3fe3586a8ae8555334c4dc8754ca836da24"
+    },
+    {
+      "path": "packages/providers-pwce/src/index.ts",
+      "sha256": "ef4e6eb3034bc800e18d002509b7fba620456b487604dd01c0e8e7d23287161b"
+    },
+    {
+      "path": "packages/providers-pwce/test/cache.test.ts",
+      "sha256": "2e13ee1cb9c34502213d46d7f01a76845f8228d63938e9e5cf33195826533f5d"
+    },
+    {
+      "path": "packages/providers-pwce/test/context-session.test.ts",
+      "sha256": "229728789701ce2509fbc16ec5216cc5edf5da053d4a5df731620218ad0451d6"
+    },
+    {
+      "path": "packages/providers-pwce/package.json",
+      "sha256": "7f3c9ed7e1c0bade5383926f9868c9932ad97b7620ea5a9ac5a80f4a3b157c33"
+    },
+    {
+      "path": "packages/providers-pwce/tsconfig.json",
+      "sha256": "256cfc323341ed178245de6ecad4c9a29ca745cc4729661a1178a8a796532806"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "360d17102b59f4e07a9400aedc40593e54f171129e7d06b88126f92d17691c37"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "651821a2f0d7dd46ada43b0bc6d1fd4bc2c98ec2f10d6d8084310176539bdced"
+    },
+    {
+      "path": "scripts/check-pwce-context.mjs",
+      "sha256": "063b6fafddc52b4751524b4711bd5430e1fe9f25bceadad7258c5a1a713de575"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "b7f169d18b74ed289d9913ee62a2a9dfceb23183",
+    "batch": "DEVELOPMENT-BATCH-166.md",
+    "sourceUnchangedSince": "0ef22bab70ac24a4461e4c57fd667b5e14bccdb6",
+    "newProducerImplementationTestRun": false
+  },
+  "claims": [
+    "A volatile per-session PWCE cache binds immutable foreign World/mode/site/authority/principal/Assistant/endpoint/participant/audience scope and Lifestream session/deployment identifiers, with a host current-owner predicate. Returned leases recheck owner scope, wall-clock and monotonic expiry, cache generation and entry identity before protected use.",
+    "Expiry, scope/authority change, stream termination, malformed/unscoped/reordered invalidations, conflicting duplicate identities and incomplete replay invalidate cached data and in-flight read tickets. Exact duplicates are ignored. Global cursor jumps from unrelated sites remain valid. Only consumed event delivery or replay boundaries advance the acknowledged event cursor; read response cursors do not acknowledge unseen events.",
+    "The async PwceContextSession maps prepared and queried context through the existing qualified mapper and checks current authenticated replay before cache reuse and after a fresh read. An intervening invalidation rejects the read without an automatic retry. Replay pages are checked against the exact World, mode, site, principal, request and correlation binding. At most 100 pages of 100 events share one finite ordinary-call deadline; cancellation shortens it.",
+    "Evidence is expanded under current authentication every time and is not stored as cached world facts. A short result lease expires or becomes invalid on a scope/invalidation change. Historical as-of results retain historical qualification instead of applying present-time observation expiry.",
+    "Cache bounds are 32 entries, 262144 UTF-8 bytes per entry, 1048576 bytes total, 128 duplicate hashes and 65536 bytes per semantic invalidation. Default cache age is 1000 ms, configurable up to 30000 ms and bounded by authority and declared current-item validity. Evidence leases are at most 1000 ms. These bounds do not certify foreground performance.",
+    "Nineteen separate-process HTTP checks pass against the in-memory synthetic PWCE host. Added checks prove repeated prepared-read cache reuse with current-authority replay, historical validity, repeated evidence reauthorization, and rejection after owner scope change. No producer internals are imported by the consumer fixture."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "pwce-cache-build-delivery.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "pwce-cache-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "pwce-cache-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "pwce-cache-source.log",
+      "logSha256": "bab1779d2f645b245394f39980bd83b432774213320ec36c5b473b7cfbbd5876"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/client.test.ts packages/providers-pwce/test/transport.test.ts packages/providers-pwce/test/cache.test.ts packages/providers-pwce/test/context-session.test.ts packages/runtime/test/pwce-mapping.test.ts",
+      "result": "pass",
+      "log": "pwce-cache-all-focused.log",
+      "logSha256": "23d4d5f536c76bb961dbffa09b1b97e6179f46348a2387939c909cb36e890abf"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "pwce-cache-process-final.log",
+      "logSha256": "58cd6116793d833022d60a6b7d76fd308658550eac7f43a8bdbeb374909c2504"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "pwce-cache-tooling.log",
+      "logSha256": "bb3473228f0579567238e12f930a6aa4d7a70ddae0884c75d21fb8d1b3d06263"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "pwce-cache-private.log",
+      "logSha256": "1ab97415fb4eb18c431352425e7794fa2126310d85e2b8f22fae8d200f8fed6f"
+    },
+    {
+      "command": "python3 check-docs.py",
+      "result": "pass",
+      "log": "pwce-cache-docs.log",
+      "logSha256": "590b6520c262884dbab05485fd2e07fd359930dbcfc9024b649c8d93d11701bc"
+    }
+  ],
+  "counts": {
+    "lifestreamSourceTestsPassed": 460,
+    "focusedAdapterTestsPassed": 66,
+    "newCacheAndSessionTestsPassed": 20,
+    "lifestreamToolingTestsPassed": 45,
+    "separateProcessHttpChecksPassed": 19,
+    "producerDocumentationPagesChecked": 25
+  },
+  "preservedFailures": [
+    {
+      "log": "pwce-cache-focused.log",
+      "sha256": "9b87086c4f68e43563f9e3f1cfb4d6407f24ea53874cd025d4cb974cc4647763",
+      "result": "16 of 17 passed during development; cache invalidation was wrongly wrapped as a transport outage. The session deadline wrapper was corrected to preserve mapping/cache error codes, and later suites pass."
+    }
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-cache/2026-09-15",
+  "unchangedBoundaries": [
+    "Published PWCE bundle, catalog, seven schema artifacts and generated-client identities are unchanged.",
+    "The four approved S083/S084 schemas and six preserved artifacts match their recorded hashes.",
+    "No saved service was restarted or reconfigured. No deployment, provider/model selection, live effect, import, training or new Human acceptance occurred.",
+    "SYNPRJ_Q7M4 telemetry was not rerun or relabeled. No new selected-provider or performance acceptance is claimed."
+  ],
+  "remaining": [
+    "Wire a selected WorldContext provider through validated server configuration, host lifecycle and ordinary prompt assembly.",
+    "Complete async Authority/Capability ports and PWCE admission/outcome mapping without standalone grant fallback.",
+    "Complete full mapping-profile schema/fixture digest qualification and joint LS-S028/PV1-T5 scenarios.",
+    "Continue remaining S083 presentation/restore fencing/provider prerequisites and S084 semantic/exploration/full performance work."
+  ],
+  "disposition": "continue"
+}
