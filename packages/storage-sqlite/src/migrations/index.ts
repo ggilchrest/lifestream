@@ -30,7 +30,8 @@ export function loadMigrations(): Migration[] {
     [20, "understanding", "0020_understanding.sql"],
     [21, "understanding_review", "0021_understanding_review.sql"],
     [22, "understanding_candidates", "0022_understanding_candidates.sql"],
-    [23, "initiative_delivery", "0023_initiative_delivery.sql"]
+    [23, "initiative_delivery", "0023_initiative_delivery.sql"],
+    [24, "initiative_inference", "0024_initiative_inference.sql"]
   ].map(([id, name, file]) => {
     const sql = readFileSync(join(migrationDirectory, file as string), "utf8");
     return { id: id as number, name: name as string, sql, digest: createHash("sha256").update(sql).digest("hex") };

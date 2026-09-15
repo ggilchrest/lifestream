@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { createContractValidator } from "@lifestream/contracts";
 import type { Database, Transaction } from "./database.ts";
 
@@ -25,6 +25,8 @@ export type InitiativeDeliveryOutcome = InitiativeScope & {
 };
 export type InitiativeDeliveryRecord = { opportunity: InitiativeOpportunity; outcome: InitiativeDeliveryOutcome; version: number; budget: "none" | "held" | "charged" | "released" };
 export type InitiativeOpeningLimits = { perHour: number; perDay: number; minimumGapMs: number };
+export type InitiativeInferenceLimits = { perRelationshipHour: number; perRuntimeHour: number };
+export type InitiativeInferenceUsage = { relationshipHour: number; runtimeHour: number; active: boolean };
 /** These are host calls, never request bodies. The current callback must synchronously
  * recheck current scope, consent/configuration, source, endpoint and lease ownership. */
 export type InitiativeDeliveryAction =
@@ -70,6 +72,44 @@ export class InitiativeDeliveryRepository {
   }
   list(scope: InitiativeScope): InitiativeDeliveryRecord[] {
     return (this.database.connection.prepare("SELECT * FROM initiative_delivery WHERE scope_key=? ORDER BY updated_ms DESC,opportunity_id LIMIT 64").all(scopeKey(scope)) as Row[]).map(decode);
+  }
+  private inferenceCounts(tx:Transaction,scope:InitiativeScope,now:number):InitiativeInferenceUsage {
+    const relationshipHour=tx.get<{n:number}>("SELECT count(*) AS n FROM initiative_inference_calls WHERE scope_key=? AND started_ms>?",scopeKey(scope),now-3_600_000)!.n;
+    const runtimeHour=tx.get<{n:number}>("SELECT count(*) AS n FROM initiative_inference_calls WHERE started_ms>?",now-3_600_000)!.n;
+    const busy=tx.get("SELECT 1 FROM initiative_inference_calls WHERE settled_ms IS NULL");
+    return {relationshipHour,runtimeHour,active:!!busy};
+  }
+  inferenceUsage(scope:InitiativeScope):InitiativeInferenceUsage {
+    return this.database.transaction(tx=>this.inferenceCounts(tx,scope,this.clock(tx)));
+  }
+  /** Persist before the only provider call. A reservation is never refunded: an
+   * uncertain crash between this commit and provider invocation must not permit retry.
+   * current includes the host's ordinary-turn priority and current policy fences. */
+  reserveInference(scope:InitiativeScope,id:string,expectedVersion:number,limits:InitiativeInferenceLimits,current:(tx:Transaction)=>boolean):string {
+    if(!Number.isInteger(limits.perRelationshipHour)||limits.perRelationshipHour<0||limits.perRelationshipHour>24||!Number.isInteger(limits.perRuntimeHour)||limits.perRuntimeHour<0||limits.perRuntimeHour>48)throw new Error("Invalid Initiative inference limits");
+    return this.database.transaction(tx=>{
+      const row=this.row(tx,scope,id),{opportunity,outcome}=decode(row),now=this.clock(tx);
+      if(row.version!==expectedVersion)throw new Error("Initiative revision conflict");
+      if(outcome.state!=="eligible"||opportunity.executionMode==="replay")throw new Error("Invalid Initiative inference admission");
+      if(Date.parse(opportunity.expiresAt)<=now)throw new Error("Initiative opportunity expired");
+      if(current(tx)!==true)throw new Error("Initiative boundary changed");
+      if(tx.get("SELECT 1 FROM initiative_inference_calls WHERE opportunity_id=?",id))throw new Error("Initiative inference already reserved");
+      const usage=this.inferenceCounts(tx,scope,now);
+      if(usage.active)throw new Error("Initiative inference is occupied");
+      if(usage.relationshipHour>=limits.perRelationshipHour||usage.runtimeHour>=limits.perRuntimeHour)throw new Error("Initiative inference budget exhausted");
+      const claimId=randomUUID();
+      tx.run("INSERT INTO initiative_inference_calls (opportunity_id,scope_key,claim_id,started_ms) VALUES (?,?,?,?)",id,scopeKey(scope),claimId,now);
+      return claimId;
+    });
+  }
+  /** Only the actual provider iterator's settlement releases the runtime slot.
+   * Cancelling/expiring an opportunity alone cannot free an unsettled call. */
+  settleInference(scope:InitiativeScope,id:string,claimId:string):void {
+    this.database.transaction(tx=>{
+      const now=this.clock(tx),call=tx.get<{settled_ms:number|null}>("SELECT settled_ms FROM initiative_inference_calls WHERE opportunity_id=? AND scope_key=? AND claim_id=?",id,scopeKey(scope),claimId);
+      if(!call)throw new Error("Invalid Initiative inference claim");
+      if(call.settled_ms===null)tx.run("UPDATE initiative_inference_calls SET settled_ms=? WHERE opportunity_id=? AND claim_id=? AND settled_ms IS NULL",now,id,claimId);
+    });
   }
   /** Admission is after host qualification. Identity strings in a record are not authority.
    * Strict source watermarks intentionally coalesce simultaneous/out-of-order events. */
@@ -162,6 +202,9 @@ export class InitiativeDeliveryRepository {
   private settlePending(restart:boolean):number {
     return this.database.transaction(tx=>{
       const now=this.clock(tx),rows=tx.all<Row>(`SELECT * FROM initiative_delivery WHERE state IN ${active}${restart?"":" AND expires_ms<=?"}`,...(restart?[]:[now]));
+      // Exclusive startup only: the prior process no longer owns an executing call.
+      // Preserve every reservation for rolling budgets and one-call deduplication.
+      if(restart)tx.run("UPDATE initiative_inference_calls SET settled_ms=? WHERE settled_ms IS NULL",now);
       for(const row of rows){
         const {opportunity,outcome}=decode(row);
         outcome.state=outcome.state==="emitted"?"unknown":row.emission_started?"failed":"expired";
@@ -178,5 +221,9 @@ export class InitiativeDeliveryRepository {
   resetSessionTopics(scope:InitiativeScope,sessionId:string):void {this.database.transaction(tx=>{this.clock(tx);tx.run("DELETE FROM initiative_unanswered_topics WHERE scope_key=? AND session_id=?",scopeKey(scope),sessionId);});}
   /** Outside the hot path. Keep source high-water marks, session unanswered keys and
    * clock fencing after the fixed 24-hour record horizon. No output payloads to replay. */
-  prune():void {this.database.transaction(tx=>{const now=this.clock(tx);tx.run(`DELETE FROM initiative_delivery WHERE opportunity_id IN (SELECT opportunity_id FROM initiative_delivery WHERE state NOT IN ${active} AND updated_ms<=? AND (reserved_ms IS NULL OR reserved_ms<=?) LIMIT 128)`,now-86_400_000,now-86_400_000);});}
+  prune():void {this.database.transaction(tx=>{
+    const now=this.clock(tx);
+    tx.run("DELETE FROM initiative_inference_calls WHERE opportunity_id IN (SELECT opportunity_id FROM initiative_inference_calls WHERE settled_ms<=? AND NOT EXISTS (SELECT 1 FROM initiative_delivery WHERE initiative_delivery.opportunity_id=initiative_inference_calls.opportunity_id AND state IN ('pending','eligible','generated','queued','emitted')) LIMIT 128)",now-86_400_000);
+    tx.run(`DELETE FROM initiative_delivery WHERE opportunity_id IN (SELECT opportunity_id FROM initiative_delivery WHERE state NOT IN ${active} AND updated_ms<=? AND (reserved_ms IS NULL OR reserved_ms<=?) AND NOT EXISTS (SELECT 1 FROM initiative_inference_calls WHERE initiative_inference_calls.opportunity_id=initiative_delivery.opportunity_id) LIMIT 128)`,now-86_400_000,now-86_400_000);
+  });}
 }

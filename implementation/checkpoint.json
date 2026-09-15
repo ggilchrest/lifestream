@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "f93520c2c758df8a4a2587af64711a05fad67248",
+  "currentRevision": "c0523b780114e9006ecdb5b489ebf374eeaa482f",
   "activeSlice": "LS-S083",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -133,70 +133,67 @@
     "implementation/evidence/S083-BOUNDED-CANDIDATE-GENERATION-1.json",
     "apps/server/src/admin/initiative-policy.ts",
     "apps/server/test/initiative-policy.test.ts",
-    "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+    "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json",
+    "packages/storage-sqlite/src/migrations/0024_initiative_inference.sql",
+    "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json"
   ],
   "changedFiles": [
-    "apps/control-web/DESIGN.md",
-    "apps/control-web/relationship-extensions.js",
-    "apps/control-web/test/relationship-extensions.test.mjs",
-    "apps/server/src/admin/initiative-policy.ts",
-    "apps/server/src/index.ts",
-    "apps/server/src/relationship-extensions.ts",
-    "apps/server/test/initiative-policy.test.ts",
-    "apps/server/test/relationship-extensions.test.ts",
+    "apps/server/src/runtime/initiative.ts",
+    "apps/server/test/initiative.test.ts",
+    "apps/server/test/server.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+    "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/src/initiative-delivery.ts",
+    "packages/storage-sqlite/src/migrations/0024_initiative_inference.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/test/initiative-delivery.test.ts"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+      "evidence": "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+      "evidence": "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+      "evidence": "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+      "evidence": "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json"
     },
     {
-      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
-    },
-    {
-      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/relationship-extensions.test.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+      "evidence": "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+      "evidence": "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json"
     },
     {
-      "command": "node --test apps/server/test/initiative-policy.test.ts apps/server/test/relationship-extensions.test.ts",
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/initiative-delivery.test.ts packages/storage-sqlite/test/database.test.ts apps/server/test/initiative.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+      "evidence": "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+      "evidence": "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-EFFECTIVE-POLICY-REVIEW-1.json"
+      "evidence": "implementation/evidence/S083-DURABLE-INFERENCE-BUDGETS-1.json"
     }
   ],
   "decisions": [
@@ -211,8 +208,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Wire effective Initiative policy, candidate generation and durable delivery ledger into protected session/synthetic opportunity ingress, runtime inference budgets, temporary-mode commands and ordinary output-only text/speech transport. Apply one expression-warmth value, readiness/lease/cancellation/privacy fences, and Assistant transcript linkage. Complete opportunity inspector and gradient Lab, then remaining S084 semantic Discovery/exploration/qualified analysis/actual output and performance; refresh source-bound prerequisites and finish PWCE Personal V1 T5 full core mapping. Full S083/S084 and Human acceptance remain open.",
-  "updatedAt": "2026-09-15T01:20:39.009674Z",
+  "nextAction": "Join effective Initiative policy, the durable generator and delivery ledger into protected session/synthetic opportunity ingress and ordinary output-only text/speech transport. Add temporary-mode commands, runtime foreground preemption, readiness/lease/cancellation/privacy fences, one expression-warmth value and Assistant transcript linkage. Complete opportunity inspector and gradient Lab, then remaining S084 semantic Discovery/exploration/qualified analysis/actual output and performance; refresh source-bound prerequisites and finish PWCE Personal V1 T5 full core mapping. Full S083/S084 and Human acceptance remain open.",
+  "updatedAt": "2026-09-15T01:36:12.237875Z",
   "updatedBy": "Codex",
-  "notes": "Effective Initiative policy is connected to protected configuration preview and numeric-bound activation checks. Independent advanced controls, readable restrictions and mobile/desktop review are verified. Full runtime ingress/output and slice acceptance remain pending."
+  "notes": "Durable Initiative inference accounting is joined to the candidate-generator component and verified for budgets, one-call admission, concurrency, cancellation, storage failures, migration upgrade and restart. Protected runtime ingress/output and complete slice acceptance remain pending."
 }

@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-DURABLE-INFERENCE-BUDGETS-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "c0523b780114e9006ecdb5b489ebf374eeaa482f",
+  "specificationRevision": "a7f8d950e888d766d45858cbbea6a785d22972dd",
+  "recordedAt": "2026-09-15T01:36:12.237875Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/runtime/initiative.ts",
+      "sha256": "0caba5f79819213a61b5dafe45d502c68addb402901ce32b96000921c4853cd7"
+    },
+    {
+      "path": "apps/server/test/initiative.test.ts",
+      "sha256": "b0aa137cf8a87557c9ff0dd6b017b519adb457361acf77751d98564162cbb501"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "8527f8a1e7a6d5dee587bdfa1359203b266ab27e74415b4405e11e00c340e8a2"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "040548621c3cb407672587f07c75dd896618d2ea496c5420a060345456c40bc2"
+    },
+    {
+      "path": "packages/storage-sqlite/src/initiative-delivery.ts",
+      "sha256": "293dae4cdb3e1c0edab4949eed2df442cd011b1eb0a740c6761013f6a27527a2"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0024_initiative_inference.sql",
+      "sha256": "a98504933261771183a0b8820e5fd334bd6e2fddb76c218663eaa323a986c1de"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "f3f65b67e7fcec24e286dc33142244aa8bc7e1a3577c8a60d8b1816eea8f231f"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "0cdf182620d1893e97e191b53bc6a5e254abdda13cbeda8076f17cf0d2703dda"
+    }
+  ],
+  "claims": [
+    "Durable one-call admission now joins the candidate generator to owner-local SQLite accounting. Each eligible opportunity can reserve one provider attempt; completed, failed, empty and uncertain pre-call reservations consume rolling capacity and cannot retry. The generator checks that the entire opportunity equals the admitted record before consuming a call.",
+    "Transactional per-relationship and per-runtime rolling-hour counters enforce explicit bounded ceilings, including zero. A unique active runtime slot serializes independent SQLite clients and separate generator instances. Host current-policy and foreground-priority callbacks must pass before reservation.",
+    "Cancellation, expiry and delivery outcomes do not release an unsettled provider. The actual iterator settlement releases its exact claim; late, wrong-scope or wrong-claim settlement cannot release another call. A failed settlement write leaves capacity occupied and exposes the failure.",
+    "Exclusive startup closes abandoned opportunities and releases prior-process slots while preserving consumed counters. Retention preserves unsettled claims and their records; source watermarks continue to reject old input after settled metadata pruning. This is normal restart evidence, not older-backup restore proof.",
+    "Additive migration 0024 preserves existing delivery records and earlier migration identities/digests. Injected storage failures roll back without granting a call or freeing capacity. No candidate or provider payload is stored in the new accounting table."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "3cfdbf45103546850f114f249b7b19bed9a9c45a16e27dc48debe70fab7ccd7c"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "50810c6dc11c0f723b8404a1be4cc36dff6964bfc642ea6c514f1d8234760789"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "56be9b5b59a819d7ecfad3187fba894841275d8c1b95d87a49fc45d06d7618c5"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/initiative-delivery.test.ts packages/storage-sqlite/test/database.test.ts apps/server/test/initiative.test.ts",
+      "result": "pass",
+      "logSha256": "df7bf440cb1a71aad9ed3e0b3e55e98db31eb74cd114b2865f6a44300e3898d1"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "f9d675ad890581e7a19bacf8c9ca0446cfb796a7032f8488844a06306f3e7059"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 344,
+    "browserTests": 29,
+    "toolingTests": 45,
+    "focusedSourceTests": 32,
+    "privateValidatorUnitTests": 53
+  },
+  "validationNotes": [
+    "The final full source suite and focused suite include the migration-upgrade and exact admitted-opportunity binding checks.",
+    "Browser regressions exercised disposable authenticated fixture servers before the final internal generator binding check; that generator is not yet reachable from browser routes. No UI change or new visual acceptance is claimed."
+  ],
+  "limitations": [
+    "The durable generator entry point is implemented and exercised through actual fixture-provider iterators. Production server opportunity ingress, effective-policy admission, temporary-mode operations and final output transport still need joining; this receipt does not claim full S083 acceptance.",
+    "Foreground priority is a strict host callback at durable admission. Runtime user-turn preemption, output-only text/speech delivery, readiness/lease ownership, expression warmth and Assistant transcript linkage remain pending integration.",
+    "Exclusive recovery assumes the prior runtime process is stopped; it is not a distributed-provider execution lease. External older-database-restore fencing remains pending.",
+    "Call reservations are charged conservatively even if a boundary changes immediately before provider invocation. This avoids retry after an uncertain crash and is explicitly tested; counters are not advertised as measured provider completions.",
+    "No live activation, deployment, capture, personal-data import, training, model selection, selected-provider qualification or new model-quality observation occurred. S083/S084, their current-source prerequisites and PWCE continuation remain open."
+  ],
+  "qualificationPending": {
+    "slices": [
+      "LS-S071",
+      "LS-S072",
+      "LS-S073",
+      "LS-S076",
+      "LS-S078"
+    ],
+    "reason": "Final preflight reports effective input changed since prerequisite qualification. Preserve historical receipts and regenerate current-source successors after the joined implementation; component verification does not satisfy these qualification gates."
+  }
+}

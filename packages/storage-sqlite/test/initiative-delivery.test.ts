@@ -8,6 +8,7 @@ import { Worker } from "node:worker_threads";
 import { once } from "node:events";
 import { createContractValidator } from "@lifestream/contracts";
 import { Database } from "../src/database.ts";
+import { loadMigrations } from "../src/migrations/index.ts";
 import { InitiativeDeliveryRepository, type InitiativeScope, type InitiativeOpportunity, type InitiativeDeliveryRecord, type InitiativeDeliveryAction } from "../src/initiative-delivery.ts";
 
 const scope:InitiativeScope={assistantId:randomUUID(),userId:randomUUID(),relationshipId:randomUUID(),deploymentId:randomUUID()};
@@ -188,4 +189,123 @@ test("S083 simultaneous workers admit one occurrence through the durable SQLite 
   const outcomes=await Promise.all(results);assert.equal(outcomes.filter(([x])=>x.admitted).length,1);
   const readback=new Database({path});try{assert.equal(new InitiativeDeliveryRepository(readback).list(scope).length,1);}finally{readback.close();}
  }finally{await Promise.all(workers.map(w=>w.terminate()));rmSync(directory,{recursive:true,force:true});}
+});
+
+const inferenceLimits={perRelationshipHour:12,perRuntimeHour:24};
+function eligible(ledger:InitiativeDeliveryRepository,item:InitiativeOpportunity){const r=ledger.admit(item,item,current);return ledger.transition(item,item.opportunityId,r.version,{type:"eligible"});}
+
+test("S083 inference counts consumed calls independently of delivery, cancellation and rolling windows",()=>{
+ const f=fixture();try{
+  let r=eligible(f.ledger,opportunity(f.now()));const id=r.opportunity.opportunityId;
+  const claim=f.ledger.reserveInference(scope,id,r.version,{perRelationshipHour:1,perRuntimeHour:2},current);
+  assert.deepEqual(f.ledger.inferenceUsage(scope),{relationshipHour:1,runtimeHour:1,active:true});
+  r=change(f.ledger,r,{type:"finish",state:"failed",reasons:["generationFailed"]});
+  assert.equal(f.ledger.inferenceUsage(scope).active,true,"finishing an opportunity does not settle its provider");
+  f.ledger.settleInference(scope,id,claim);f.ledger.settleInference(scope,id,claim);
+  assert.deepEqual(f.ledger.inferenceUsage(scope),{relationshipHour:1,runtimeHour:1,active:false});
+  f.advance(1);const other=eligible(f.ledger,opportunity(f.now()));
+  assert.throws(()=>f.ledger.reserveInference(scope,other.opportunity.opportunityId,other.version,{perRelationshipHour:1,perRuntimeHour:2},current),/budget exhausted/u);
+  f.advance(3_600_000);f.ledger.expirePending();const fresh=eligible(f.ledger,opportunity(f.now()));
+  f.ledger.reserveInference(scope,fresh.opportunity.opportunityId,fresh.version,{perRelationshipHour:1,perRuntimeHour:2},current);
+  assert.deepEqual(f.ledger.inferenceUsage(scope),{relationshipHour:1,runtimeHour:1,active:true});
+ }finally{f.database.close();}
+});
+
+test("S083 inference admission enforces scope, revision, current priority, lifecycle, zero limits, expiry and no retry",()=>{
+ const f=fixture();try{
+  const item=opportunity(f.now());let r=f.ledger.admit(scope,item,current);
+  const reserve=(overrides:Partial<typeof inferenceLimits>={},nowCurrent=current)=>f.ledger.reserveInference(scope,item.opportunityId,r.version,{...inferenceLimits,...overrides},nowCurrent);
+  assert.throws(()=>reserve(),/admission/u);r=change(f.ledger,r,{type:"eligible"});
+  assert.throws(()=>f.ledger.reserveInference({...scope,userId:randomUUID()},item.opportunityId,r.version,inferenceLimits,current),/Unknown/u);
+  assert.throws(()=>f.ledger.reserveInference(scope,item.opportunityId,r.version-1,inferenceLimits,current),/revision/u);
+  assert.throws(()=>reserve({},()=>false),/boundary/u);
+  for(const x of [{perRelationshipHour:0},{perRuntimeHour:0}])assert.throws(()=>reserve(x),/budget exhausted/u);
+  for(const x of [{perRelationshipHour:25},{perRuntimeHour:49},{perRelationshipHour:0.5},{perRuntimeHour:-1}])assert.throws(()=>reserve(x),/Invalid/u);
+  assert.deepEqual(f.ledger.inferenceUsage(scope),{relationshipHour:0,runtimeHour:0,active:false});
+  const claim=reserve();f.ledger.settleInference(scope,item.opportunityId,claim);assert.throws(()=>reserve(),/already reserved/u);
+  f.advance(1);const replay=eligible(f.ledger,opportunity(f.now(),{executionMode:"replay"}));assert.throws(()=>f.ledger.reserveInference(scope,replay.opportunity.opportunityId,replay.version,inferenceLimits,current),/admission/u);
+  f.advance(1);const expires=eligible(f.ledger,opportunity(f.now()));f.advance(300_000);assert.throws(()=>f.ledger.reserveInference(scope,expires.opportunity.opportunityId,expires.version,inferenceLimits,current),/expired/u);
+ }finally{f.database.close();}
+});
+
+test("S083 inference limits share a runtime across relationships but preserve each relationship budget",()=>{
+ const f=fixture();try{
+  const own=eligible(f.ledger,opportunity(f.now()));const id=own.opportunity.opportunityId;
+  const claim=f.ledger.reserveInference(scope,id,own.version,inferenceLimits,current);
+  f.advance(1);const otherScope={...scope,userId:randomUUID(),relationshipId:randomUUID()},other=eligible(f.ledger,opportunity(f.now(),otherScope));
+  assert.throws(()=>f.ledger.reserveInference(otherScope,other.opportunity.opportunityId,other.version,inferenceLimits,current),/occupied/u);
+  assert.throws(()=>f.ledger.settleInference(otherScope,id,claim),/claim/u);assert.throws(()=>f.ledger.settleInference(scope,id,randomUUID()),/claim/u);
+  f.ledger.settleInference(scope,id,claim);
+  assert.throws(()=>f.ledger.reserveInference(otherScope,other.opportunity.opportunityId,other.version,{perRelationshipHour:12,perRuntimeHour:1},current),/budget exhausted/u);
+  const second=f.ledger.reserveInference(otherScope,other.opportunity.opportunityId,other.version,{perRelationshipHour:1,perRuntimeHour:2},current);
+  assert.deepEqual(f.ledger.inferenceUsage(otherScope),{relationshipHour:1,runtimeHour:2,active:true});
+  f.ledger.settleInference(scope,id,claim);assert.equal(f.ledger.inferenceUsage(scope).active,true,"late settlement cannot free the new call");
+  f.ledger.settleInference(otherScope,other.opportunity.opportunityId,second);
+ }finally{f.database.close();}
+});
+
+test("S083 inference write failures and clock reversal cannot grant a call or release capacity",()=>{
+ const f=fixture();try{
+  const r=eligible(f.ledger,opportunity(f.now())),id=r.opportunity.opportunityId;
+  f.database.exec("CREATE TRIGGER fail_call BEFORE INSERT ON initiative_inference_calls BEGIN SELECT RAISE(ABORT,'call storage failure'); END;");
+  assert.throws(()=>f.ledger.reserveInference(scope,id,r.version,inferenceLimits,current),/storage failure/u);
+  assert.deepEqual(f.ledger.inferenceUsage(scope),{relationshipHour:0,runtimeHour:0,active:false});f.database.exec("DROP TRIGGER fail_call");
+  const claim=f.ledger.reserveInference(scope,id,r.version,inferenceLimits,current);
+  f.database.exec("CREATE TRIGGER fail_settle BEFORE UPDATE ON initiative_inference_calls BEGIN SELECT RAISE(ABORT,'settlement storage failure'); END;");
+  assert.throws(()=>f.ledger.settleInference(scope,id,claim),/storage failure/u);assert.equal(f.ledger.inferenceUsage(scope).active,true);f.database.exec("DROP TRIGGER fail_settle");
+  f.advance(-1);assert.throws(()=>f.ledger.settleInference(scope,id,claim),/clock discontinuity/u);f.advance(1);
+  f.ledger.settleInference(scope,id,claim);assert.equal(f.ledger.inferenceUsage(scope).relationshipHour,1);
+ }finally{f.database.close();}
+});
+
+test("S083 inference reservations survive reopen; exclusive recovery expires work and retains consumed budget",()=>{
+ const directory=mkdtempSync(join(tmpdir(),"initiative-inference-restart-")),path=join(directory,"db.sqlite");let db=new Database({path});db.migrate();let ledger=new InitiativeDeliveryRepository(db,()=>start);
+ try{
+  const r=eligible(ledger,opportunity(start)),id=r.opportunity.opportunityId;ledger.reserveInference(scope,id,r.version,inferenceLimits,current);
+  db.close();db=new Database({path});db.migrate();ledger=new InitiativeDeliveryRepository(db,()=>start);
+  assert.deepEqual(ledger.inferenceUsage(scope),{relationshipHour:1,runtimeHour:1,active:true});
+  assert.equal(ledger.recover(),1);assert.deepEqual(ledger.inferenceUsage(scope),{relationshipHour:1,runtimeHour:1,active:false});
+  assert.equal(ledger.get(scope,id)!.outcome.state,"expired");assert.equal(ledger.recover(),0);
+  assert.throws(()=>ledger.reserveInference(scope,id,ledger.get(scope,id)!.version,inferenceLimits,current),/admission/u);
+ }finally{db.close();rmSync(directory,{recursive:true,force:true});}
+});
+
+test("S083 retention never releases an unsettled inference call and preserves source fencing after settlement",()=>{
+ const f=fixture();try{
+  const item=opportunity(f.now()),r=eligible(f.ledger,item),claim=f.ledger.reserveInference(scope,item.opportunityId,r.version,inferenceLimits,current);
+  change(f.ledger,r,{type:"finish",state:"cancelled",reasons:["userTurn"]});
+  f.advance(86_400_001);f.ledger.prune();assert.ok(f.ledger.get(scope,item.opportunityId));assert.equal(f.ledger.inferenceUsage(scope).active,true);
+  f.ledger.settleInference(scope,item.opportunityId,claim);f.ledger.prune();assert.ok(f.ledger.get(scope,item.opportunityId));
+  f.advance(86_400_001);f.ledger.prune();assert.equal(f.ledger.get(scope,item.opportunityId),undefined);assert.equal(f.ledger.inferenceUsage(scope).active,false);
+  assert.equal(f.database.connection.prepare("SELECT count(*) AS n FROM initiative_inference_calls").get()!.n,0);
+  assert.throws(()=>f.ledger.admit(scope,item,current),/Stale/u);
+ }finally{f.database.close();}
+});
+
+test("S083 independent SQLite workers race for one runtime inference slot",{timeout:15_000},async()=>{
+ const directory=mkdtempSync(join(tmpdir(),"initiative-inference-race-")),path=join(directory,"db.sqlite"),db=new Database({path});db.migrate();let time=start;const ledger=new InitiativeDeliveryRepository(db,()=>time);
+ const first=eligible(ledger,opportunity(time));time++;const second=eligible(ledger,opportunity(time));db.close();
+ const source=`import {parentPort,workerData} from 'node:worker_threads';
+ import {Database} from ${JSON.stringify(new URL("../src/database.ts",import.meta.url).href)};
+ import {InitiativeDeliveryRepository} from ${JSON.stringify(new URL("../src/initiative-delivery.ts",import.meta.url).href)};
+ const database=new Database({path:workerData.path});const ledger=new InitiativeDeliveryRepository(database,()=>workerData.now);
+ parentPort.once('message',()=>{try{const claim=ledger.reserveInference(workerData.scope,workerData.id,workerData.version,workerData.limits,()=>true);parentPort.postMessage({claim});}catch(error){parentPort.postMessage({error:error.message});}finally{database.close();}});parentPort.postMessage('ready');`;
+ const workers=[first,second].map(r=>new Worker(new URL(`data:text/javascript,${encodeURIComponent(source)}`),{workerData:{path,scope,id:r.opportunity.opportunityId,version:r.version,limits:inferenceLimits,now:time}}));
+ try{
+  await Promise.all(workers.map(w=>once(w,"message")));const results=workers.map(w=>once(w,"message"));workers.forEach(w=>w.postMessage("start"));const outcomes=await Promise.all(results);
+  assert.equal(outcomes.filter(([x])=>x.claim).length,1);assert.match(outcomes.find(([x])=>x.error)![0].error,/occupied/u);
+  const readback=new Database({path});try{assert.deepEqual(new InitiativeDeliveryRepository(readback,()=>time).inferenceUsage(scope),{relationshipHour:1,runtimeHour:1,active:true});}finally{readback.close();}
+ }finally{await Promise.all(workers.map(w=>w.terminate()));rmSync(directory,{recursive:true,force:true});}
+});
+
+test("S083 inference migration upgrades an existing delivery database without rewriting its records or migrations",()=>{
+ const directory=mkdtempSync(join(tmpdir(),"initiative-inference-upgrade-")),path=join(directory,"db.sqlite");let db=new Database({path,migrations:loadMigrations().filter(m=>m.id<=23)});const oldMigrations=db.migrate();
+ try{
+  const oldLedger=new InitiativeDeliveryRepository(db,()=>start),r=eligible(oldLedger,opportunity(start));db.close();db=new Database({path});
+  const upgraded=db.migrate();assert.deepEqual(upgraded.slice(0,-1),oldMigrations);assert.equal(upgraded.at(-1)!.id,24);
+  const ledger=new InitiativeDeliveryRepository(db,()=>start);assert.deepEqual(ledger.get(scope,r.opportunity.opportunityId),r);
+  assert.deepEqual(ledger.inferenceUsage(scope),{relationshipHour:0,runtimeHour:0,active:false});
+  const claim=ledger.reserveInference(scope,r.opportunity.opportunityId,r.version,inferenceLimits,current);ledger.settleInference(scope,r.opportunity.opportunityId,claim);
+  assert.deepEqual(db.migrate(),upgraded);assert.equal(ledger.inferenceUsage(scope).relationshipHour,1);
+ }finally{db.close();rmSync(directory,{recursive:true,force:true});}
 });

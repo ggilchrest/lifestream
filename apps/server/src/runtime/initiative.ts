@@ -1,5 +1,6 @@
 import { createContractValidator } from "@lifestream/contracts";
-import type { InitiativeOpportunity } from "@lifestream/storage-sqlite";
+import { isDeepStrictEqual } from "node:util";
+import type { InitiativeOpportunity, InitiativeDeliveryRepository, InitiativeInferenceLimits, Transaction } from "@lifestream/storage-sqlite";
 import type { InferenceProvider, InferenceRequest, InferenceChunk } from "@lifestream/runtime/inference";
 import { buildCanonicalPrompt, type InitiativePrompt } from "@lifestream/runtime/inference/prompt";
 import type { HostRuntimeInput } from "./inference.ts";
@@ -10,6 +11,8 @@ export type InitiativeGenerationInput = {
   conversation: string; voiceMode: boolean; signal: AbortSignal;
   /** Durable one-call admission, inference budgets and pinned owner scope. No body grants. */
   admit: (request: InferenceRequest) => boolean;
+  /** Host cleanup, after the provider iterator actually settles, never just on abort. */
+  settled?: () => void;
 };
 export type InitiativeCandidate = { status: "generated"; text: string; request: InferenceRequest; outputBytes: number } | { status: "noCandidate"; request: InferenceRequest; outputBytes: number };
 const validator=createContractValidator();
@@ -19,7 +22,21 @@ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
  * output or a user turn. The host still owns policy, durable admission and delivery. */
 export class InitiativeCandidateGenerator {
   private busy=false;
+  private releaseFailure:unknown;
   get active():boolean{return this.busy;}
+  get settlementFailure():unknown{return this.releaseFailure;}
+  /** Host-facing path: the same ledger serializes different generators/SQLite clients.
+   * The caller owns eligible-state preparation and final delivery policy. */
+  generateDurably(provider:InferenceProvider,input:Omit<InitiativeGenerationInput,"admit"|"settled">,admission:{ledger:InitiativeDeliveryRepository;expectedVersion:number;limits:InitiativeInferenceLimits;current:(tx:Transaction)=>boolean}):Promise<InitiativeCandidate>{
+    let claimId:string|undefined;
+    return this.generate(provider,{...input,admit:()=>{
+      if(!isDeepStrictEqual(admission.ledger.get(input.opportunity,input.opportunity.opportunityId)?.opportunity,input.opportunity))throw new Error("Initiative opportunity does not match its admitted record");
+      claimId=admission.ledger.reserveInference(input.opportunity,input.opportunity.opportunityId,admission.expectedVersion,admission.limits,admission.current);
+      return true;
+    },settled:()=>{
+      if(claimId)admission.ledger.settleInference(input.opportunity,input.opportunity.opportunityId,claimId);
+    }});
+  }
   async generate(provider:InferenceProvider,input:InitiativeGenerationInput):Promise<InitiativeCandidate>{
     if(this.busy)throw new Error("Initiative generation is occupied");
     const {opportunity,prepared}=input,view=prepared.preparedRelationshipContext,self=prepared.runtimeSelfContext;
@@ -35,10 +52,11 @@ export class InitiativeCandidateGenerator {
     const request=buildCanonicalPrompt({assistantId:opportunity.assistantId,sessionId:opportunity.sessionId,interactionId:input.interactionId,endpointId:opportunity.endpointId,origin:"relationalOpportunity",initiative:{...input.dimensions,opportunityId:opportunity.opportunityId,kind:opportunity.kind},runtimeSelfContext:self,profileProjection:prepared.profileProjection,preparedRelationshipContext:view,conversation:input.conversation,capabilities:"No tools, acquisition, configuration changes or additional contact are available for this social opening.",voiceMode:input.voiceMode,maximumOutputTokens:input.maximumOutputTokens,deadlineAt:new Date(deadline).toISOString()});
     this.busy=true;
     const controller=new AbortController(),signal=AbortSignal.any([input.signal,controller.signal]);
-    let iterator:AsyncIterator<InferenceChunk>|undefined,pending:Promise<IteratorResult<InferenceChunk>>|undefined;
+    let iterator:AsyncIterator<InferenceChunk>|undefined,pending:Promise<IteratorResult<InferenceChunk>>|undefined,admitted=false;
     let timeout:ReturnType<typeof setTimeout>|undefined,abortListener:(()=>void)|undefined;
     try{
       if(input.admit(request)!==true)throw new Error("Initiative durable generation admission denied");
+      admitted=true;
       if(signal.aborted||prepared.isCurrent()!==true||Date.now()>=deadline)throw new Error("Initiative context changed before inference");
       const aborted=new Promise<never>((_,reject)=>{abortListener=()=>reject(new Error("Initiative generation cancelled or timed out"));signal.addEventListener("abort",abortListener,{once:true});});
       // Admission bookkeeping can itself abort before the first iterator wait.
@@ -68,8 +86,12 @@ export class InitiativeCandidateGenerator {
       if(timeout)clearTimeout(timeout);if(abortListener)signal.removeEventListener("abort",abortListener);controller.abort();
       // An uncooperative provider must not free the shared social slot merely because
       // the caller's deadline elapsed. Release only after actual iterator settlement.
-      if(iterator){const stream=iterator;void (pending??Promise.resolve()).catch(()=>undefined).then(()=>stream.return?.()).catch(()=>undefined).finally(()=>{this.busy=false;});}
-      else this.busy=false;
+      const release=()=>{
+        try{if(admitted)input.settled?.();this.busy=false;}
+        catch(error){this.releaseFailure=error;/* Keep the slot occupied if durable settlement failed. */}
+      };
+      if(iterator){const stream=iterator;void (pending??Promise.resolve()).catch(()=>undefined).then(()=>stream.return?.()).catch(()=>undefined).then(release);}
+      else release();
     }
   }
 }

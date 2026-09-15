@@ -1,4 +1,5 @@
 export { Database } from "./database.js";
+export type { Transaction } from "./database.js";
 export { AssistantProfileRepository } from "./assistant-profile.js";
 export type { AssistantProfile } from "./assistant-profile.js";
 export { MemoryRepository } from "./memory.js";
@@ -14,4 +15,4 @@ export { UnderstandingRepository, understandingDigest, hypothesisFingerprint, ca
 export type { UnderstandingScope, UnderstandingRecord } from "./understanding.js";
 
 export { InitiativeDeliveryRepository } from "./initiative-delivery.js";
-export type { InitiativeScope, InitiativeOpportunity, InitiativeDeliveryOutcome, InitiativeDeliveryRecord, InitiativeDeliveryAction, InitiativeOpeningLimits } from "./initiative-delivery.js";
+export type { InitiativeScope, InitiativeOpportunity, InitiativeDeliveryOutcome, InitiativeDeliveryRecord, InitiativeDeliveryAction, InitiativeOpeningLimits, InitiativeInferenceLimits, InitiativeInferenceUsage } from "./initiative-delivery.js";
