@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { CapabilityResolver } from "../src/capabilities/resolver.ts";
+import { CapabilityResolver, capabilityInputDigest } from "../src/capabilities/resolver.ts";
 import { CapabilitySnapshotCache } from "../src/capabilities/cache.ts";
 import { FixtureCapabilityProvider } from "../../providers-fixture/src/capability/provider.ts";
 import type { CapabilityDefinition, CapabilityInvocation, CapabilityCallContext } from "../src/capabilities/ports.ts";
@@ -111,4 +111,20 @@ test('input mutation while admission is pending cannot change the dispatched ope
 test('a replay discovery snapshot cannot be promoted into live invocation authority',async()=>{
  const provider=new FixtureCapabilityProvider([capability]),resolver=resolverFor(provider);await resolver.snapshot(scope,{...call(),executionMode:'replay'});
  assert.equal((await resolver.invoke(invocation(),call())).lifecycle,'denied');assert.equal(provider.invocationCount('invocation'),0);
+});
+
+
+test('a previously claimed durable dispatch stays unknown without invoking again', async () => {
+  const provider = new FixtureCapabilityProvider([capability]);
+  const resolver = new CapabilityResolver(provider, undefined, async request => ({ invocationId: request.invocationId, status: 'unknown', grantRevision: 2 }));
+  await resolver.snapshot(scope, call());
+  assert.equal((await resolver.invoke(invocation(), call())).lifecycle, 'outcomeUnknown');
+  assert.equal((await resolver.invoke(invocation(), call())).lifecycle, 'outcomeUnknown');
+  assert.equal(provider.invocationCount('invocation'), 0);
+});
+
+test('admission input digest is stable under JSON object key order and rejects lossy values', () => {
+  assert.equal(capabilityInputDigest({b: 2, a: {d: 4, c: 3}}), capabilityInputDigest({a: {c: 3, d: 4}, b: 2}));
+  assert.notEqual(capabilityInputDigest({a: 1}), capabilityInputDigest({a: 2}));
+  assert.throws(() => capabilityInputDigest({a: undefined}));
 });

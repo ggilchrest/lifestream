@@ -4,7 +4,7 @@ import type { Database } from "@lifestream/storage-sqlite";
 import { GrantRepository, AdmissionRepository } from "@lifestream/storage-sqlite";
 import { createContractValidator } from "@lifestream/contracts";
 import { SkillExecutor, validateSkill, type Skill } from "@lifestream/runtime/skills";
-import { CapabilityResolver } from "@lifestream/runtime/capabilities/resolver";
+import { CapabilityResolver, capabilityInputDigest } from "@lifestream/runtime/capabilities/resolver";
 import type { CapabilityProvider, CapabilityScope, CapabilityCallContext } from "@lifestream/runtime/capabilities/ports";
 import { AuthenticationError, type LocalAuthentication, type LocalContext } from "../auth/local-auth.ts";
 export type SecurityResult = { status: number; body: Record<string, unknown> };
@@ -34,10 +34,33 @@ export class SecurityAdministration {
     if (parts[5] === "tools") {
       if (!this.provider) return { status: 200, body: { ...base, tools: [], status: "unavailable", reason: "No capability provider is attached to this local administration instance; no live dispatch is inferred." } };
       const scope: CapabilityScope = { assistantId, endpointId: "administration", sessionId: context.sessionId, environment: "local-administration", authorityContextRef: { providerRef: "local-human", contextId: context.principalId, revision: 1 } };
-      const resolver = new CapabilityResolver(this.provider, undefined, async invocation => {
-        if (typeof body.grantId!=="string") return undefined;
-        try { const admission=this.admissions.admitGoverned({grantId:body.grantId,principalId:context.principalId,assistantId,sessionId:context.sessionId,capabilityId:invocation.capabilityId,invocationId:invocation.invocationId,inputDigest:createHash("sha256").update(JSON.stringify(invocation.input)).digest("hex"),now:new Date(this.now()).toISOString(),assertCurrent:()=>{this.auth.assertCurrent(context);if(!this.auth.canAdminister(context,assistantId))throw new AuthenticationError(403,"assistant_scope_denied");}});return {invocationId:admission.invocationId,status:"admitted",grantRevision:admission.grantRevision};} catch {return undefined;}
-      }, () => new Date(this.now()).toISOString(),this.schemas);
+      const resolver = new CapabilityResolver(this.provider, undefined, async (invocation, capability, dispatchCall) => {
+        if (typeof body.grantId !== "string") return undefined;
+        let admittedRevision: number | undefined;
+        try {
+          const admissionInput = {
+            grantId: body.grantId, principalId: context.principalId, assistantId, sessionId: context.sessionId,
+            capabilityId: invocation.capabilityId, invocationId: invocation.invocationId, inputDigest: capabilityInputDigest(invocation.input),
+            now: new Date(this.now()).toISOString(),
+            binding: { endpointId: invocation.endpointId, environment: invocation.environment, capabilityVersion: invocation.capabilityVersion,
+              providerRoute: capability.route, capabilityDefinitionDigest: capabilityInputDigest(capability), snapshotId: invocation.snapshotId, snapshotRevision: invocation.snapshotRevision,
+              interactionId: invocation.interactionId, authorityContextRef: invocation.authorityContextRef,
+              executionMode: dispatchCall.executionMode, deadlineAt: dispatchCall.deadlineAt },
+            assertCurrent: () => {
+              dispatchCall.signal.throwIfAborted();
+              if (!dispatchCall.isCurrent() || Date.parse(dispatchCall.deadlineAt) <= this.now()) throw new Error('dispatch scope changed');
+              this.auth.assertCurrent(context);
+              if (!this.auth.canAdminister(context, assistantId)) throw new AuthenticationError(403, "assistant_scope_denied");
+            }
+          };
+          const admission = this.admissions.admitGoverned(admissionInput);
+          admittedRevision = admission.grantRevision;
+          const claimed = this.admissions.claimGovernedDispatch({ ...admissionInput, now: new Date(this.now()).toISOString() });
+          return { invocationId: admission.invocationId, status: claimed ? "admitted" : "unknown", grantRevision: admission.grantRevision };
+        } catch {
+          return admittedRevision === undefined ? undefined : { invocationId: invocation.invocationId, status: "unknown", grantRevision: admittedRevision };
+        }
+      }, () => new Date(this.now()).toISOString(), this.schemas);
       const grantCurrent=()=>{if(typeof body.grantId!=="string")return true;const grant=this.grants.get(body.grantId,context.principalId);return !!grant&&grant.assistantId===assistantId&&["active","consumed"].includes(grant.status)&&Date.parse(String(grant.terms.expiresAt))>this.now();};
       const scopedCall={...call,isCurrent:()=>call.isCurrent()&&grantCurrent()};
       const snapshot = await resolver.snapshot(scope, call);

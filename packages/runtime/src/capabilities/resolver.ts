@@ -7,6 +7,10 @@ import type {CapabilityDefinition,CapabilityInvocation,CapabilityInvocationResul
 import {CapabilitySnapshotCache} from './cache.ts';
 import {CapabilityCall,CapabilityCallError} from './call.ts';
 export type AuthorityDispatcher=(invocation:CapabilityInvocation,capability:CapabilityDefinition,context:CapabilityCallContext)=>Promise<DispatchReceipt|undefined>;
+export function capabilityInputDigest(input: unknown): string {
+  if (!boundedJson(input)) throw new CapabilityCallError('invalidResponse');
+  return createHash('sha256').update(canonicalJson(input)).digest('hex');
+}
 const scopeKey=(scope:CapabilityScope)=>JSON.stringify([scope.assistantId,scope.endpointId,scope.sessionId,scope.environment,scope.authorityContextRef.providerRef,scope.authorityContextRef.contextId,scope.authorityContextRef.revision]);
 const statusRequest=(scope:CapabilityScope,invocationId:string):CapabilityStatusRequest=>({assistantId:scope.assistantId,endpointId:scope.endpointId,sessionId:scope.sessionId,environment:scope.environment,authorityContextRef:structuredClone(scope.authorityContextRef),invocationId});
 type Attempt={fingerprint:string;attempted:boolean;capability?:CapabilityDefinition;pending?:Promise<CapabilityInvocationResult>};
@@ -79,6 +83,10 @@ export class CapabilityResolver {
     if(capability.sideEffect!=='none'||capability.authorization==='required'){
       const receipt=await call.wait(()=>this.dispatch(structuredClone(invocation),structuredClone(capability),call.context));fresh();
       if(!receipt)return this.result(invocation,'approvalRequired','current_authority_decision_required');
+      if(receipt.invocationId===invocation.invocationId&&receipt.status==='unknown'){
+        entry.attempted=true;
+        return this.result(invocation,'outcomeUnknown','prior_dispatch_requires_reconciliation');
+      }
       if(receipt.invocationId!==invocation.invocationId||receipt.status!=='admitted'||!Number.isInteger(receipt.grantRevision)||receipt.grantRevision<0)return this.result(invocation,'denied','dispatch_not_admitted');
       dispatchReceipt=structuredClone(receipt);
     }

@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-GOVERNED-ADMISSION-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "3f0dd87f2385d7b5e52b0fe9479424c5532ab31a",
+  "sourceBinding": "Base revision and changed-source hashes; the enclosing commit contains the durable governed-admission repair.",
+  "specificationRevision": "5c43383456c75507295bc1ec90d0e21593e22910",
+  "recordedAt": "2026-09-15T10:20:36.390285Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/admin/security-administration.ts",
+      "sha256": "ee030b635648ad9d9edb5e8b78d1dc6fa7b07bec01768bc41218a20974c968a4"
+    },
+    {
+      "path": "apps/server/test/security-administration.test.ts",
+      "sha256": "68f4e62204ab1e6e01d7fc78266ac7b04a448a50741c41f9a1fc656d145cb91e"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "5d8fe89babe7adb162f10576e2747bf7d82ce926a35065f69e21c6cb704e12e8"
+    },
+    {
+      "path": "docs/canonical-provider-boundary.md",
+      "sha256": "a6ce49f1c5f6589ab20eee459d220f7a367c1535b7082caea23a6a0f806fa3a6"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/resolver.ts",
+      "sha256": "e00d5c6320a1945d502629e89c415fd857b8b866e624886a70e0d2cb6ce16c60"
+    },
+    {
+      "path": "packages/runtime/test/capabilities.test.ts",
+      "sha256": "4e51aaa44e0c14888be5b8ab4141260a3b4d4f8e0adfa8ff412d47cc9c1a9d88"
+    },
+    {
+      "path": "packages/storage-sqlite/src/authority/admission.ts",
+      "sha256": "4737b34bb6f448488f43bb289f398eced03f6e11cec628c9babb8be639ae52c4"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0027_governed_admissions.sql",
+      "sha256": "a520150697b04aa04cac81e585c24ea0ba220de5a439951134afc7925db724a3"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "5738990a31fc00ba311ae564a240004201376b93030f1adb696aa3d6de1e60f8"
+    },
+    {
+      "path": "packages/storage-sqlite/test/governed-admission.test.ts",
+      "sha256": "b8d4513a8178b03fece8ab7568f9e2914161e476f4ceea1efca98adaef543225"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "4576a3127cf8e5603e39056af790982c9c83fe762b65ae060ac3408d5ccb9f1b"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "2cb815f2a1d2c15c60acf16069a6018547368359b5f9823a5d0bdda57b76aafc"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "4d20039187766ecf4261e9ed6173ad96a9961359",
+    "producerSourceChanged": false,
+    "newProducerSuiteRun": false
+  },
+  "baselineRegression": {
+    "revision": "3f0dd87f2385d7b5e52b0fe9479424c5532ab31a",
+    "testsRun": 3,
+    "testsFailed": 3,
+    "log": "governed-baseline.log",
+    "logSha256": "3c40cc01bdc7061f01084d6755456002ea46705604e80c363048e1bab3ec347f",
+    "observedFailures": [
+      "Exact one-use retry rejected after its grant had been consumed.",
+      "Same invocation/input could reuse an admission for another capability allowed by the same broad grant.",
+      "An invalid clock bypassed the grant expiration comparison."
+    ]
+  },
+  "claims": [
+    "Additive migration 27 preserves historical admission rows, adds checked-identity evidence and initial-dispatch claims, and does not backfill missing identity from subsequent requests. Fresh, sparse and historical migration paths remain covered.",
+    "Governed admission copies checked principal/Assistant/session/capability/input identity. The actual server supplies endpoint/environment, capability version and complete definition digest, provider route, snapshot, interaction, authority context, execution mode and deadline. Changed identity conflicts, and invalid clocks or new non-live/expired bindings cannot consume grants.",
+    "Grant consumption, admitted record, actual evidence bytes and audit commit atomically. Exact retries recover the recorded receipt without another consumption. Missing historical identity and altered evidence fail closed. The scoped evidence accessor verifies digest and returns actual bytes with matching artifact metadata; no invocation arguments are stored.",
+    "Initial provider I/O requires a durable claim with current owner, grant scope/revision/session/expiry and original mode/deadline checks. Two independent Node processes produced exactly one claim. Reopened repositories retain admission/evidence/claim state after a missing response; no automatic second I/O is admitted.",
+    "Authenticated HTTP tooling verifies the persisted checked binding and claim before entering its fixture provider. The runtime preserves a previously claimed invocation as outcomeUnknown without invoking again. Admission input digests use canonical JSON key order.",
+    "Storage/audit failure and final owner-check failure roll back their transaction; a failed claim never restores a consumed grant. Existing grant, Skill, logout, context and PWCE no-local-fallback behavior remains covered."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "governed-build.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "governed-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "governed-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "governed-full-tests.log",
+      "logSha256": "49dba0852fcbd40bb78b8117e4499586171e928df3161456493fa1924953af02",
+      "testsPassed": 543
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/governed-admission.test.ts packages/runtime/test/capabilities.test.ts apps/server/test/security-administration.test.ts",
+      "result": "pass",
+      "log": "governed-focused.log",
+      "logSha256": "4c07f2ff5c8c9ca0b31c9e87fbdef981a82f08ab2be06b235202db658b9bdacf",
+      "testsPassed": 34
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "governed-tooling.log",
+      "logSha256": "fc45dddfe9a6546b5d9131b86e591988b851c390164ace84a671347f0bb7f206",
+      "testsPassed": 45
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "governed-process.log",
+      "logSha256": "c7b19da66e42ed505f035bb8ad9c7e4c56c693106d6e7ecb2307b5992647e34d"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "governed-private.log",
+      "logSha256": "f12695651eca0ff2a90923c3f8109e0b3a65aaafd3cbe868c5b91a2640308924"
+    }
+  ],
+  "regressionCounts": {
+    "sourceTestsPassed": 543,
+    "newSourceTests": 16,
+    "focusedTestsPassed": 34,
+    "toolingTestsPassed": 45,
+    "separateProcessContextChecksPassed": 19,
+    "separateProcessRuntimeChecksPassed": 7
+  },
+  "exclusions": [
+    "This repairs the current internal server/resolver admission path; it is not a canonical HumanAuthorityDecision or completed provider-consumer migration.",
+    "Coarse capability grant terms and internal endpoint/environment labels still need full canonical operation/scope and host-owned UUID mapping. HTTP request/idempotency identity is not yet migrated; the claim is once per original invocation, not deduplication of newly allocated invocation IDs.",
+    "No historical-backup restore fencing, real-provider action recovery, PWCE action/schema publication, trusted external authority mapping or joint LS-S028/PV1-T5 qualification is claimed.",
+    "No saved-service restart, live configuration change, personal-data import, training, real-world effect, new model/provider choice or Human acceptance occurred. Existing model-quality observations and historical receipts remain unchanged."
+  ],
+  "nextAction": "Complete canonical runtime consumer and HTTP idempotency/scope migration using actual bound authority evidence, then PWCE capability schema publication, trusted approval/admission/invocation/status/reconciliation and joint scenarios. Continue remaining S083/S084 work."
+}
