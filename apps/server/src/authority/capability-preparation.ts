@@ -123,10 +123,34 @@ export class CanonicalCapabilityPreparation implements CanonicalAuthorityHost {
   }
   private async snapshot(scope: BoundScope, capabilityId: string, call: CapabilityCall): Promise<capabilitySnapshot_Root> {
     const request: CapabilitySnapshotRequest = { schemaVersion: '1.0.0', operation: 'CapabilityProvider.getSnapshot', requestId: call.context.requestId, correlationId: call.context.correlationId,
-      deadlineAt: call.context.deadlineAt, cancellationId: randomUUID(), executionMode: 'normal', scope, idempotencyKey: null, payload: { requestedCapabilityIds: [capabilityId] } };
+      deadlineAt: call.context.deadlineAt, cancellationId: randomUUID(), executionMode: 'normal', scope, idempotencyKey: null, payload: { requestedCapabilityIds: capabilityId ? [capabilityId] : [] } };
     const result: CapabilitySnapshotResult = await call.wait(() => this.provider.getSnapshot(request, { signal: call.context.signal, isCurrent: candidate => isDeepStrictEqual(candidate, scope) && call.context.isCurrent() }));
     if (result.outcome.status !== 'succeeded') return unavailable();
     return result.outcome.payload;
+  }
+  async catalog(assistantId: string, local: LocalContext, inputCall: CapabilityCallContext) {
+    const guard = () => { this.auth.assertCurrent(local); if (!this.auth.canAdminister(local, assistantId)) unavailable('assistant_scope_denied', 403); };
+    guard(); const endpoint = readSessionEndpoint(this.database, local.sessionId).endpoint;
+    if (!endpoint) unavailable('authority_scope_changed', 409);
+    const binding = { assistantId, endpointId: endpoint.endpointId, sessionId: local.sessionId, environmentId: this.environmentId };
+    const revision = this.ownerRevision(binding, local.principalId);
+    const call = new CapabilityCall({ ...inputCall, isCurrent: () => { guard(); return inputCall.isCurrent() && this.ownerRevision(binding, local.principalId) === revision; } });
+    try {
+      call.check();
+      const session = this.database.connection.prepare("SELECT conversation_id,interaction_id FROM sessions WHERE id=? AND status='active'").get(local.sessionId) as { conversation_id: string; interaction_id: string } | undefined;
+      if (!session) unavailable('authority_scope_changed', 409);
+      const scope: BoundScope = { ...binding, conversationId: session.conversation_id, interactionTraceId: session.interaction_id, authorityContextRef: this.authorityContext(binding, local.principalId, revision) };
+      const snapshot = await this.snapshot(scope, '', call), tools = [];
+      for (const definition of snapshot.capabilities) {
+        const adapter = this.adapters.get(keyFor(definition.capabilityId, definition.version));
+        if (!adapter || definition.providerRouteRef !== adapter.providerRouteRef || definition.inputSchemaRef !== adapter.inputSchema.reference || definition.outputSchemaRef !== adapter.outputSchema.reference) unavailable('capability_adapter_unavailable');
+        const schemaScope = { assistantId, endpointId: endpoint.endpointId, sessionId: local.sessionId, environment: this.environmentId, authorityContextRef: scope.authorityContextRef! };
+        const inputSchema = await resolveCapabilitySchema(adapter.inputSchema, schemaScope, call, this.schemas);
+        await resolveCapabilitySchema(adapter.outputSchema, schemaScope, call, this.schemas);
+        tools.push({ capabilityId: definition.capabilityId, version: definition.version, sideEffectClass: definition.sideEffectClass, authorization: definition.authorization, inputSchema, inputSchemaRef: adapter.inputSchema, outputSchemaRef: adapter.outputSchema });
+      }
+      call.check(); return { status: 'available', protocol: 'canonical', providerRef: this.providerRef, environmentId: this.environmentId, tools, grantsAuthority: false, dispatchStarted: false };
+    } catch (error) { if (error instanceof AuthenticationError) throw error; return unavailable(); } finally { call.close(); }
   }
   async prepare(assistantId: string, capabilityId: string, local: LocalContext, raw: unknown, inputCall: CapabilityCallContext) {
     const guard = () => { this.auth.assertCurrent(local); if (!this.auth.canAdminister(local, assistantId)) unavailable('assistant_scope_denied', 403); };

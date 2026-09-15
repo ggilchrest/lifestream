@@ -11,7 +11,7 @@ import { createLifestreamServer } from '../../src/index.ts';
 import { loadProfile } from '../../src/config/loader.ts';
 export const envelope = (payload: unknown) => ({ schemaVersion: '1.0.0', requestId: randomUUID(), correlationId: randomUUID(), idempotencyKey: randomUUID(), payload });
 const secret = () => `Synthetic-${randomBytes(24).toString('hex')}`;
-export async function setup(t: { after(callback: () => unknown): void }, configured = true) {
+export async function setup(t: { after(callback: () => unknown): void }, configured: boolean | 'startup' = true) {
   const root = mkdtempSync(join(tmpdir(), 'ls-real-preparation-'));
   let now = Date.now(), allowed = true, deriveKind: 'validatedArguments' | 'inputBoundOnly' = 'validatedArguments', variant = 0, calls = 0, wait: Promise<void> | undefined;
   let materialChanged = false, catalogCalls = 0, evaluationCalls = 0, statusCalls = 0;
@@ -58,8 +58,8 @@ export async function setup(t: { after(callback: () => unknown): void }, configu
     async readEvidence() { return invokeMode === 'corruptEvidence' ? Buffer.from('wrong') : evidence; }
   }, adapters: [{ capabilityId: 'synthetic.echo', version: '1.0.0', providerRouteRef: 'synthetic:echo-route', revision: '1', inputSchema: input.artifact, outputSchema: output.artifact,
     derive(args: unknown) { const value = args as { target: string; text: string }; return { scope: { capabilityId: 'synthetic.echo', capabilityVersion: '1.0.0', operation: 'echo', targetRefs: [value.target], dataScopeRefs: [] }, effectSummary: `Echo ${value.text.length} characters to ${value.target}.`, scopeDerivation: deriveKind }; } }] };
-  const installerToken = secret(), localAuth = { stateDirectory: join(root, 'safety'), installerToken, now: () => now };
-  let app = createLifestreamServer({ config, localAuth, ...(configured ? { canonicalCapabilities: composition } : {}) }); await app.start();
+  const installerToken = secret(), localAuth = { stateDirectory: join(root, 'safety'), installerToken, now: () => configured === 'startup' ? Date.now() : now };
+  let app = createLifestreamServer({ config, localAuth, ...(configured === 'startup' ? {} : { canonicalCapabilities: configured ? composition : null }) }); await app.start();
   const port = app.address().port, base = `http://127.0.0.1:${port}`, headers: Record<string, string> = { origin: base, 'content-type': 'application/json' };
   const send = async (path: string, body?: unknown, extra: Record<string, string> = {}) => {
     const response = await fetch(base + path, { method: body === undefined ? 'GET' : 'POST', headers: { ...headers, ...extra }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(10_000) });
@@ -86,7 +86,7 @@ export async function setup(t: { after(callback: () => unknown): void }, configu
     changeProvider() { config.providers.capability = 'unavailable'; },
     advance(ms: number) { now += ms; }, denySchemas() { allowed = false; }, changeCatalog() { variant++; }, inputBoundOnly() { deriveKind = 'inputBoundOnly'; },
     block() { let release!: () => void; const started = new Promise<void>(resolve => { entered = resolve; }); wait = new Promise<void>(resolve => { release = resolve; }); return { started, release }; },
-    async restart() { await app.shutdown(); app = createLifestreamServer({ config, localAuth, port, ...(configured ? { canonicalCapabilities: composition } : {}) }); await app.start(); }
+    async restart() { await app.shutdown(); app = createLifestreamServer({ config, localAuth, port, ...(configured === 'startup' ? {} : { canonicalCapabilities: configured ? composition : null }) }); await app.start(); }
   };
 }
 export const prepared = async (f: Awaited<ReturnType<typeof setup>>, body = f.body()) => { const result = await f.send(f.path, body); assert.equal(result.status, 201, JSON.stringify(result.body)); return result.body.preparation; };

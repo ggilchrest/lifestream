@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-CONFIGURED-FIXTURE-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "71267f61b08846a81556a9a664f1250eb76ef5ca",
+  "specificationRevision": "c8a9e779de6ed2a71be272233a14410bdd31a0de",
+  "recordedAt": "2026-09-15T15:40:51.836064Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/admin/user-profile.ts",
+        "sha256": "95c2e84cb2f02e002fe63d25697ab19930606ee88a3dd8f8ccd16faaab2e159a"
+      },
+      {
+        "path": "apps/server/src/authority/capability-preparation.ts",
+        "sha256": "b0148808251d38f291f0926d683a75ce07eaafcbc525dafda116b759545823ae"
+      },
+      {
+        "path": "apps/server/src/composition/fixture-capabilities.ts",
+        "sha256": "175bcaed30cb9d2fa786985132e1f81083dd9a14676e666428ecb2115f217a7b"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "fd765705d13b995eed3482fbb852a936d535f926305a443b4b7b85d5d7e29680"
+      },
+      {
+        "path": "apps/server/test/configured-capabilities.test.ts",
+        "sha256": "6a507ecd5a127d498b8fcfdfa8579a867822306b6493f6dd322087a154454d25"
+      },
+      {
+        "path": "apps/server/test/fixtures/canonical-capability.ts",
+        "sha256": "7963e842cb357df206d866609e28593041d72feda08d210c3f53e55fb64ce661"
+      },
+      {
+        "path": "apps/server/test/server.test.ts",
+        "sha256": "3fb22eed9771e9fe078bbd8d8c4a900ad40f543ed0a1e1cc25820b122a2cc098"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "205c8f86ccf44fe6851e2e703d22aee8149703c146808c5bb48a98f7ce4aabe5"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0035_fixture_capability_snapshots.sql",
+        "sha256": "46a6f20e1af64ec80ebe28737ab64393577656db2c7558fe60415805773fde26"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/index.ts",
+        "sha256": "3a937ae1e80cd80b402059458b9848fc926b493904857b735f7aaeab8eec78a2"
+      },
+      {
+        "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+        "sha256": "7daf0813225a2214dbea377189a22af0db07bda4a499ac9ae8160541b52b408f"
+      },
+      {
+        "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+        "sha256": "2e5f664b8e1d2d508220a2af6326a7c3d04c38c3c1a0ec26077897a226c4732c"
+      }
+    ]
+  },
+  "claim": "The explicitly configured fixture capability provider is composed at ordinary authenticated startup without test injection. Scoped catalog discovery, exact preparation, actual Human grant, durable final admission, one initial dispatch and original-result replay traverse the real HTTP server. Restart preserves catalog identity, local deployment binding and stored confirmed results.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "configured-capability-full-isolated.log",
+      "logSha256": "a021a8b28fc07a1f5b7481afa0d656f749014f691fb3906b66042a1696e0d42a"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "configured-capability-typecheck-verified.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "configured-capability-build-verified.log",
+      "logSha256": "369d11caae2c746086ce4aa67eab92506a76d0931a299b9bdd424517c8a3cfbc"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "configured-capability-lint-final.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "configured-capability-workspace-tests.log",
+      "logSha256": "a7687c98aa42f8fe101d4554f442cd0f75b04ed44df131e6241f0f1d7f46c18a"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "configured-capability-private-final.log",
+      "logSha256": "e270b8d88f3d08716e81da289173ce4e2ccc37550934ecea4a82d380f31138ee"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "configured-capability-preflight-final.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "configured-capability-workspace-final.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "regressionCounts": {
+    "applicationTestsPassed": 671,
+    "newConfiguredCapabilityTests": 9,
+    "workspaceToolTestsPassed": 43
+  },
+  "boundaries": [
+    "Only local-password authentication with configured fixture capabilities and fixture/local-human authority enables automatic composition. PWCE and unknown provider selections cannot acquire it as a fallback. Explicit legacy/canonical overrides retain their behavior; explicit null disables automatic composition.",
+    "The only action is synthetic.echo@1.0.0 with two synthetic targets and at most 80 Unicode characters. It requires Human approval despite having no external effect. Returned output and provider evidence are labeled fixture.",
+    "The existing local deployment identity derives a separate fixture environment UUID. Migration 35 persists at most 256 unexpired scoped catalog snapshots with integrity checks; expiry purges old snapshots without evicting current ones.",
+    "Provider observations remain bounded in memory: 4096 unexpired dispositions and 4096 outcomes. Verified initial result/evidence is durable in the canonical host ledger. Unknown observations after restart are not fabricated or retried.",
+    "Static fixture invalidation explicitly emits a scoped gap and finite terminal; it does not claim resumable notification history or complete authority-provider subscription support."
+  ],
+  "preservedFailures": [
+    {
+      "log": "configured-capability-focused.log",
+      "reason": "Initial startup test used a fixed test clock against real-time provider timestamps. Startup harness now uses the real clock; explicit injected-clock tests remain unchanged.",
+      "logSha256": "4f509d821b7ed00a890a23c080564651e2e3c595297f0e558660020b4583471d"
+    },
+    {
+      "log": "configured-capability-startup2.log",
+      "reason": "Actual startup provider returned a new catalog identity on every read; durable scoped snapshots now preserve identity throughout review and ordinary restart.",
+      "logSha256": "9f79d7349facab655bb9394ec211d98df562b81be48ae60aa9f27cee49e67263"
+    },
+    {
+      "log": "configured-capability-full-verified.log",
+      "reason": "Two existing Lab timing checks did not complete while the separate workspace subprocess suite ran concurrently. No deadline or assertion changed. The unchanged full suite subsequently passed alone; this remains an observed contention failure, not broad performance certification.",
+      "logSha256": "c753cab9f695acc26b438cb7d883b374e0a06711dd07df10cec46d953872c414"
+    }
+  ],
+  "exclusions": [
+    "No canonical control-web workflow migration or full configured PWCE capability/authority mapping is completed by this fixture increment.",
+    "No full backup-restore fencing, selected-provider rerun, broad source/performance qualification, physical-device effect or new Human acceptance. The existing Lab timing failures remain recorded.",
+    "No saved-service restart, deployment, live configuration change, personal-data import, training or model/provider substitution. Unrelated artifacts, approved schemas, historical evidence and model-quality observations remain unchanged."
+  ],
+  "nextAction": "Migrate LS-S044 control-web from coarse grants to the actual canonical catalog, exact preparation/review/grants, dispatch and result workflows. Complete configured PWCE capability/authority composition and full authority getGrants/invalidation support, joint action/restore scenarios, remaining S083/S084 development and broad source qualification."
+}

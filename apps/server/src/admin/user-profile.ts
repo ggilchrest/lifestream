@@ -16,6 +16,12 @@ export class UserProfileAdministration {
     const row = this.db.connection.prepare("SELECT user_id AS userId, deployment_id AS deploymentId FROM user_subject_mappings WHERE principal_id=?").get(principalId) as { userId: string; deploymentId: string } | undefined;
     return row ? { principalId, ...row, participant: "authenticatedPrincipal", currentSpeaker: "unverified", audience: "sessionSelectedSeparately" } : null;
   }
+  deploymentId(): string {
+    return this.db.transaction(tx => {
+      tx.run("INSERT OR IGNORE INTO user_profile_deployment (singleton, deployment_id) VALUES (1, ?)", randomUUID());
+      return tx.get<{ deploymentId: string }>("SELECT deployment_id AS deploymentId FROM user_profile_deployment WHERE singleton=1")!.deploymentId;
+    });
+  }
   establish(principalId: string): NonNullable<ReturnType<UserProfileAdministration["identity"]>> {
     let identity = this.identity(principalId); if (identity) return identity;
     requireValue(/^[0-9a-f]{8}-[0-9a-f-]{27}$/iu.test(principalId), "Stable authenticated UUID principal required; legacy fixture identities are not inferred profile subjects", 409);

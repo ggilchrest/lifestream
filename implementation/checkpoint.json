@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "441c67db7805e83e6c621073ca87c77c66694395",
+  "currentRevision": "71267f61b08846a81556a9a664f1250eb76ef5ca",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -167,52 +167,71 @@
     "implementation/evidence/LS-S028-PRODUCER-RECONCILIATION-1.json",
     "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json",
     "implementation/evidence/LS-S028-PRODUCER-APPROVAL-1.json",
-    "implementation/evidence/LS-S028-PRODUCER-PRECONDITIONS-1.json"
+    "implementation/evidence/LS-S028-PRODUCER-PRECONDITIONS-1.json",
+    "apps/server/src/composition/fixture-capabilities.ts",
+    "apps/server/test/configured-capabilities.test.ts",
+    "apps/server/src/admin/user-profile.ts",
+    "apps/server/test/fixtures/canonical-capability.ts",
+    "implementation/evidence/LS-S028-CONFIGURED-FIXTURE-1.json",
+    "packages/storage-sqlite/src/migrations/0035_fixture_capability_snapshots.sql",
+    "apps/server/src/authority/capability-preparation.ts"
   ],
   "changedFiles": [
+    "apps/server/src/admin/user-profile.ts",
+    "apps/server/src/authority/capability-preparation.ts",
+    "apps/server/src/composition/fixture-capabilities.ts",
+    "apps/server/src/index.ts",
+    "apps/server/test/configured-capabilities.test.ts",
+    "apps/server/test/fixtures/canonical-capability.ts",
+    "apps/server/test/server.test.ts",
+    "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-PRODUCER-PRECONDITIONS-1.json"
+    "implementation/evidence/LS-S028-CONFIGURED-FIXTURE-1.json",
+    "packages/storage-sqlite/src/migrations/0035_fixture_capability_snapshots.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/test/initiative-delivery.test.ts",
+    "packages/storage-sqlite/test/initiative-expression.test.ts"
   ],
   "validation": [
     {
-      "command": "node --test",
+      "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-PRECONDITIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CONFIGURED-FIXTURE-1.json"
     },
     {
-      "command": "npm run validate",
+      "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-PRECONDITIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CONFIGURED-FIXTURE-1.json"
     },
     {
-      "command": "python3 /private/tmp/check-pwce-preconditions-docs.py",
+      "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-PRECONDITIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CONFIGURED-FIXTURE-1.json"
     },
     {
-      "command": "node scripts/check-pwce-context-process.mjs",
+      "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-PRECONDITIONS-1.json"
-    },
-    {
-      "command": "pnpm --dir .private validate",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-PRECONDITIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CONFIGURED-FIXTURE-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-PRECONDITIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CONFIGURED-FIXTURE-1.json"
     },
     {
-      "command": "node scripts/workspace.mjs check",
+      "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-PRECONDITIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CONFIGURED-FIXTURE-1.json"
     },
     {
       "command": "node scripts/workspace.mjs preflight LS-S028",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-PRECONDITIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-CONFIGURED-FIXTURE-1.json"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-CONFIGURED-FIXTURE-1.json"
     }
   ],
   "decisions": [
@@ -227,8 +246,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Connect the canonical capability/authority path to configured fixture/PWCE adapters and the LS-S044 control-web workflow. Finish canonical getGrants/invalidation subscriptions, joint action and backup-restore scenarios; continue remaining S083/S084 development and broad source qualification. Producer target availability checks are verified separately; physical and Human acceptance remain distinct.",
-  "updatedAt": "2026-09-15T15:18:42.771977Z",
+  "nextAction": "Migrate LS-S044 control-web from coarse grants to the actual canonical catalog, exact preparation/review/grants, dispatch and result workflows. Complete configured PWCE capability/authority composition and full authority getGrants/invalidation support, joint action/restore scenarios, remaining S083/S084 development and broad source qualification.",
+  "updatedAt": "2026-09-15T15:40:51.836064Z",
   "updatedBy": "Codex",
-  "notes": "PWCE fresh target-state preconditions verified as a bounded producer component. Recording the published producer revision and current consumer world-context regressions; no Lifestream runtime source changed. Run disposition: continue."
+  "notes": "Startup-selected canonical fixture capability path verified through authenticated HTTP, durable catalogs, Human approval, admission and stored results. 671 application and 43 workspace tests pass. Two concurrent-suite Lab timing failures are preserved and broad performance remains separate. Run disposition: continue."
 }
