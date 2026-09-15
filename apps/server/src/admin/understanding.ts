@@ -69,7 +69,7 @@ export class DiscoveryAdministration {
             ...entry.report.rows.flatMap(row=>{
               if(row.memory.length>3600)throw new Error('Comparison input exceeds the bounded inspector capacity');
               const prefix=`lab:${row.id}:${row.variant}`;
-              return [{code:prefix+':checks',summary:`${row.split==='heldOut'?'Held-out':'Comparison'} · ${row.note}\n${row.checks.map(check=>`${check.pass?'PASS':'FAIL'}: ${check.name}`).join('\n')}\nSelection: ${row.disposition}; ${row.selectedItems} items; ${row.tokenUpperBound} estimated tokens (UTF-8 byte upper bound); ${row.elapsedMs.toFixed(3)} ms local selection. This is not a performance certification.`,sourceRefs:[`manifest:${row.manifestDigest}`,...row.sourceRefs]},
+              return [{code:prefix+':checks',summary:`${row.split==='heldOut'?'Held-out':'Comparison'} · ${row.note}\n${row.checks.map(check=>`${check.pass?'PASS':'FAIL'}: ${check.name}`).join('\n')}\nSelection: ${row.disposition}; ${row.selectedItems} items; ${row.tokenUpperBound} estimated tokens (UTF-8 byte upper bound); ${row.elapsedMs.toFixed(3)} ms total local selection (${row.lookupElapsedMs.toFixed(3)} ms lookup/filter; ${row.selectionElapsedMs.toFixed(3)} ms inner selection). This is not a performance certification.`,sourceRefs:[`manifest:${row.manifestDigest}`,...row.sourceRefs]},
                 {code:prefix+':input',summary:`Prompt: ${row.prompt}\nPrepared memory (part 1):\n${row.memory.slice(0,1700)}`,sourceRefs:[]},...(row.memory.length>1700?[{code:prefix+':more',summary:`Prepared memory (continued):\n${row.memory.slice(1700)}`,sourceRefs:[]}]:[])];
             })];
         }

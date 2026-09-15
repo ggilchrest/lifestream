@@ -1,0 +1,346 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-SELECTION-TIMING-DIAGNOSTICS-1",
+  "slice": "LS-S084",
+  "status": "componentVerifiedRegressionFailureOutstanding",
+  "sourceRevision": "5c0079ce141478edbe32f6b821d31d11c774a76b",
+  "specificationRevision": "e175e6329632cf7be305cd8ea49b21b22633a674",
+  "recordedAt": "2026-09-15T05:32:41.521370Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/admin/discovery-selection.ts",
+      "sha256": "6d3e49ab3f3ad8f70322b80d65ea2baba7a412cec6569fae037dbce2573b59c6"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-lab-worker.ts",
+      "sha256": "2360b6a755acee0f0c46e12c9cfe77396d573d7119f630301df0f877ad99b036"
+    },
+    {
+      "path": "apps/server/src/admin/understanding.ts",
+      "sha256": "cbbd5f18c20e94c15dd5bf45ef205d7e0029c6478fd10c68a607ad680138c3a7"
+    },
+    {
+      "path": "apps/server/test/discovery-selection.test.ts",
+      "sha256": "a13b143de2708e435e1d4ce4b36a55e9d6aa663ccea3fc5b239771909bd4097b"
+    },
+    {
+      "path": "apps/server/test/discovery-lab.test.ts",
+      "sha256": "6dcc9d0f0ac91f3311e6e832c658b1f510fac70fb8dbca2f05e959dcfd886e0b"
+    }
+  ],
+  "claims": [
+    "The shared ordinary-turn and isolated-Lab selector now reports complete monotonic elapsed time, including lookup/filter and freshness assembly. The previous elapsedMs only reported the inner selection duration even though the existing deadline already included lookup. Separate lookup/filter and inner-selection measurements explain this discrepancy in protected Lab inspection through the unchanged bounded explanation schema.",
+    "The 10 ms deadline, contextual-detail expectation and all selection/privacy/correction criteria remain unchanged. Negative or nonfinite total/lookup elapsed time withholds optional content. Two new deterministic unit tests prove total accounting, exact deadline refusal, clock reversal and scope revocation; these tests do not certify latency.",
+    "Actual Lab runs still use the real performance clock. The source and browser suites ran concurrently with unchanged suite concurrency. Source assertions now preserve full failing synthetic rows; diagnostics retain complete real row measurements on successes and failures.",
+    "The newly instrumented run reproduced a deadline miss: ambiguous-pair/enabled took 29.345875 ms total, with 28.583708 ms lookup/filter and 0.691042 ms inner selection. It returned no optional detail and retained the failed expected-context check. The protected API case passed in the same suite and reported 1.929 ms total. This establishes a deadline failure in this run, not the precise SQL/CPU/scheduling cause or the cause of the older failure."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "369d11caae2c746086ce4aa67eab92506a76d0931a299b9bdd424517c8a3cfbc"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "fail",
+      "logSha256": "4dbb5632b2470f903f8715c2a135e39f34366668a51b028af181eabd6b057577"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "0e2d73dc1f39986561e5bb2709f9522c3d82cdeccd63e4b5b63b489bfcc67170"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "22802b6a0ba421045890b0dc03a4a0ab117e2d13b22856598aaeedd0d1847278"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "d93f30b541cc317ed710d31d1e8265dc52606284b1c3011e2be077ab77d13d41"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 401,
+    "sourcePassed": 400,
+    "sourceFailed": 1,
+    "newSourceTestsPassed": 2,
+    "browserTestsPassed": 48,
+    "toolingTestsPassed": 45
+  },
+  "realClockObservations": {
+    "directLabRows": [
+      {
+        "id": "ambiguous-pair",
+        "variant": "baseline",
+        "disposition": "disabled",
+        "elapsedMs": 0.11866600000030303,
+        "lookupElapsedMs": 0.004208000000289758,
+        "selectionElapsedMs": 0.01895899999908579,
+        "failed": []
+      },
+      {
+        "id": "ambiguous-pair",
+        "variant": "enabled",
+        "disposition": "deadline",
+        "elapsedMs": 29.345875000000888,
+        "lookupElapsedMs": 28.583708000000115,
+        "selectionElapsedMs": 0.6910420000003796,
+        "failed": [
+          "expected contextual detail"
+        ]
+      },
+      {
+        "id": "ambiguous-pair",
+        "variant": "selected",
+        "disposition": "included",
+        "elapsedMs": 2.0898749999996653,
+        "lookupElapsedMs": 2.057582999999795,
+        "selectionElapsedMs": 0.018582999999125605,
+        "failed": []
+      },
+      {
+        "id": "current-domain",
+        "variant": "baseline",
+        "disposition": "disabled",
+        "elapsedMs": 0.010167000000365078,
+        "lookupElapsedMs": 0.002375000000029104,
+        "selectionElapsedMs": 0.00204200000007404,
+        "failed": []
+      },
+      {
+        "id": "current-domain",
+        "variant": "enabled",
+        "disposition": "included",
+        "elapsedMs": 0.5191670000003796,
+        "lookupElapsedMs": 0.46612500000082946,
+        "selectionElapsedMs": 0.03237500000068394,
+        "failed": []
+      },
+      {
+        "id": "current-domain",
+        "variant": "selected",
+        "disposition": "included",
+        "elapsedMs": 0.187792000000627,
+        "lookupElapsedMs": 0.16908300000068266,
+        "selectionElapsedMs": 0.009625000000596629,
+        "failed": []
+      },
+      {
+        "id": "current-correction",
+        "variant": "baseline",
+        "disposition": "disabled",
+        "elapsedMs": 0.008332999999765889,
+        "lookupElapsedMs": 0.0022909999988769414,
+        "selectionElapsedMs": 0.001374999999825377,
+        "failed": []
+      },
+      {
+        "id": "current-correction",
+        "variant": "enabled",
+        "disposition": "disabled",
+        "elapsedMs": 0.022958999999900698,
+        "lookupElapsedMs": 0.007834000000002561,
+        "selectionElapsedMs": 0.003957999999329331,
+        "failed": []
+      },
+      {
+        "id": "current-correction",
+        "variant": "selected",
+        "disposition": "disabled",
+        "elapsedMs": 0.03441699999893899,
+        "lookupElapsedMs": 0.015874999999141437,
+        "selectionElapsedMs": 0.0038330000006681075,
+        "failed": []
+      },
+      {
+        "id": "source-detail",
+        "variant": "baseline",
+        "disposition": "disabled",
+        "elapsedMs": 0.013875000000552973,
+        "lookupElapsedMs": 0.004957999999533058,
+        "selectionElapsedMs": 0.0017920000009326031,
+        "failed": []
+      },
+      {
+        "id": "source-detail",
+        "variant": "enabled",
+        "disposition": "included",
+        "elapsedMs": 1.0015000000003056,
+        "lookupElapsedMs": 0.9442909999997937,
+        "selectionElapsedMs": 0.021833999999216758,
+        "failed": []
+      },
+      {
+        "id": "source-detail",
+        "variant": "selected",
+        "disposition": "included",
+        "elapsedMs": 0.2565410000006523,
+        "lookupElapsedMs": 0.21920800000043528,
+        "selectionElapsedMs": 0.03125,
+        "failed": []
+      },
+      {
+        "id": "heldout-alternate",
+        "variant": "baseline",
+        "disposition": "disabled",
+        "elapsedMs": 0.005165999999007909,
+        "lookupElapsedMs": 0.0004579999986162875,
+        "selectionElapsedMs": 0.0010419999998703133,
+        "failed": []
+      },
+      {
+        "id": "heldout-alternate",
+        "variant": "enabled",
+        "disposition": "included",
+        "elapsedMs": 0.1504160000004049,
+        "lookupElapsedMs": 0.1398750000007567,
+        "selectionElapsedMs": 0.007292000000234111,
+        "failed": []
+      },
+      {
+        "id": "heldout-alternate",
+        "variant": "selected",
+        "disposition": "included",
+        "elapsedMs": 0.4305420000000595,
+        "lookupElapsedMs": 0.4038749999999709,
+        "selectionElapsedMs": 0.017249999998966814,
+        "failed": []
+      },
+      {
+        "id": "heldout-mineral",
+        "variant": "baseline",
+        "disposition": "disabled",
+        "elapsedMs": 0.005042000000685221,
+        "lookupElapsedMs": 0.0007920000007288763,
+        "selectionElapsedMs": 0.001374999999825377,
+        "failed": []
+      },
+      {
+        "id": "heldout-mineral",
+        "variant": "enabled",
+        "disposition": "included",
+        "elapsedMs": 0.32954199999949196,
+        "lookupElapsedMs": 0.3045829999991838,
+        "selectionElapsedMs": 0.016125000000101863,
+        "failed": []
+      },
+      {
+        "id": "heldout-mineral",
+        "variant": "selected",
+        "disposition": "included",
+        "elapsedMs": 0.2913330000010319,
+        "lookupElapsedMs": 0.27045800000087183,
+        "selectionElapsedMs": 0.013084000000162632,
+        "failed": []
+      }
+    ],
+    "protectedApiEnabledRows": [
+      {
+        "code": "lab:ambiguous-pair:enabled:checks",
+        "summary": "Comparison \u00b7 Explicit favorite should constrain an otherwise ambiguous reference; activity is not preference.\nPASS: total prepared context within limit\nPASS: independent enrichment bound\nPASS: mandatory evidence retained when personalization enabled\nPASS: forbidden alternate detail absent\nPASS: expected contextual detail\nSelection: included; 1 items; 236 estimated tokens (UTF-8 byte upper bound); 1.929 ms total local selection (1.867 ms lookup/filter; 0.032 ms inner selection). This is not a performance certification.",
+        "sourceRefs": [
+          "manifest:44dd97ddac46d8260ccd69c12cda405d102667acc8ddd90d444d69908277523d",
+          "discovery-candidate:00000000-0000-4000-8000-000000000400"
+        ]
+      },
+      {
+        "code": "lab:current-domain:enabled:checks",
+        "summary": "Comparison \u00b7 Current explicit domain takes precedence over the favorite.\nPASS: total prepared context within limit\nPASS: independent enrichment bound\nPASS: mandatory evidence retained when personalization enabled\nPASS: forbidden alternate detail absent\nPASS: expected contextual detail\nSelection: included; 1 items; 236 estimated tokens (UTF-8 byte upper bound); 0.198 ms total local selection (0.185 ms lookup/filter; 0.008 ms inner selection). This is not a performance certification.",
+        "sourceRefs": [
+          "manifest:da176223099ab0d409ab8b7c51a58bbbb6b2388c13a78a48018ba33e178536e0",
+          "discovery-candidate:00000000-0000-4000-8000-000000000410"
+        ]
+      },
+      {
+        "code": "lab:current-correction:enabled:checks",
+        "summary": "Comparison \u00b7 Current correction withholds optional stale priors immediately.\nPASS: total prepared context within limit\nPASS: independent enrichment bound\nPASS: mandatory evidence retained when personalization enabled\nPASS: forbidden alternate detail absent\nPASS: expected contextual detail\nSelection: disabled; 0 items; 0 estimated tokens (UTF-8 byte upper bound); 0.010 ms total local selection (0.005 ms lookup/filter; 0.001 ms inner selection). This is not a performance certification.",
+        "sourceRefs": [
+          "manifest:f3cb082ec3261dd84881245cf8101e815a186648d9022b3e86a86750b67bb5f2"
+        ]
+      },
+      {
+        "code": "lab:source-detail:enabled:checks",
+        "summary": "Comparison \u00b7 Source attribution is optional contextual material, never an established personal motive.\nPASS: total prepared context within limit\nPASS: independent enrichment bound\nPASS: mandatory evidence retained when personalization enabled\nPASS: forbidden alternate detail absent\nPASS: expected contextual detail\nSelection: included; 1 items; 236 estimated tokens (UTF-8 byte upper bound); 0.149 ms total local selection (0.133 ms lookup/filter; 0.007 ms inner selection). This is not a performance certification.",
+        "sourceRefs": [
+          "manifest:02290bef85cccee5a842240254c39582361ef617ca57e451e0551b535d8aaf2f",
+          "discovery-candidate:00000000-0000-4000-8000-000000000400"
+        ]
+      },
+      {
+        "code": "lab:heldout-alternate:enabled:checks",
+        "summary": "Held-out \u00b7 Frozen alternate wording; no tuning or memory reinforcement occurs in the comparison.\nPASS: total prepared context within limit\nPASS: independent enrichment bound\nPASS: mandatory evidence retained when personalization enabled\nPASS: forbidden alternate detail absent\nPASS: expected contextual detail\nSelection: included; 1 items; 236 estimated tokens (UTF-8 byte upper bound); 0.118 ms total local selection (0.109 ms lookup/filter; 0.007 ms inner selection). This is not a performance certification.",
+        "sourceRefs": [
+          "manifest:88de1a8736d8d64889ac910592290fcadfc6d90b4356e909c228bb9470dc829e",
+          "discovery-candidate:00000000-0000-4000-8000-000000000410"
+        ]
+      },
+      {
+        "code": "lab:heldout-mineral:enabled:checks",
+        "summary": "Held-out \u00b7 Independent non-game source family and prompt, using the same selector.\nPASS: total prepared context within limit\nPASS: independent enrichment bound\nPASS: mandatory evidence retained when personalization enabled\nPASS: forbidden alternate detail absent\nPASS: expected contextual detail\nSelection: included; 1 items; 243 estimated tokens (UTF-8 byte upper bound); 0.099 ms total local selection (0.091 ms lookup/filter; 0.005 ms inner selection). This is not a performance certification.",
+        "sourceRefs": [
+          "manifest:3ced616c3f48a4bab79f1387890f644f5191f6a657dbfc60e91fe3af1e3c28f0",
+          "discovery-candidate:00000000-0000-4000-8000-000000000420"
+        ]
+      }
+    ]
+  },
+  "outstandingRegression": {
+    "test": "Discovery Lab retains failing expectations and uses bounded canonical input across frozen variants",
+    "criterion": "ambiguous-pair/enabled expected contextual detail",
+    "disposition": "deadline",
+    "causeBoundary": "lookup/filter duration exceeded the complete selection deadline; exact contributor unresolved",
+    "failedRows": [
+      {
+        "id": "ambiguous-pair",
+        "variant": "enabled",
+        "disposition": "deadline",
+        "elapsedMs": 29.345875000000888,
+        "lookupElapsedMs": 28.583708000000115,
+        "selectionElapsedMs": 0.6910420000003796,
+        "failed": [
+          "expected contextual detail"
+        ]
+      }
+    ],
+    "logSha256": "4dbb5632b2470f903f8715c2a135e39f34366668a51b028af181eabd6b057577"
+  },
+  "historicalFailuresPreserved": [
+    {
+      "path": "implementation/evidence/S083-TIMING-ADAPTATION-1.json",
+      "sha256": "3649b979bc9a4e1ccc7c46d0456f394f9d845918223c084ec0abcad2bf9e9ef7",
+      "interpretation": "Unmodified historical failure lacks row disposition. This successor cannot retroactively label its cause."
+    }
+  ],
+  "prerequisiteQualification": {
+    "status": "pending",
+    "slices": [
+      "LS-S073",
+      "LS-S076",
+      "LS-S078",
+      "LS-S080"
+    ],
+    "reason": "Current effective inputs differ from qualification. Historical receipts remain unchanged."
+  },
+  "limitations": [
+    "Full source regression verification and S084 latency qualification remain incomplete. This is a verified diagnostic correction, not a performance fix, S084 acceptance, or a declaration that enrichment will always meet its deadline. Further bounded lookup profiling and the canonical paired performance campaign remain available work.",
+    "The selected-provider, canonical Discovery demonstrations, larger synthetic corpora, semantic/exploration work, reserved Initiative presentation transport, older-database restore fencing and PWCE Personal V1 T5 core mapping remain open. Development continues through independent authorized work without reclassifying the failure as a pass.",
+    "No saved Human review service/data restart or live configuration change, personal-data import, training, new provider selection, research or deployment occurred. Four approved schema bytes and unrelated dirty artifacts remain unchanged. No Human acceptance or new model-quality observation is claimed."
+  ]
+}
