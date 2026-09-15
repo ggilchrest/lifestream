@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-GRADIENT-LAB-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "59b924fca2fe6367aa9f209630b5f06c062bdfc0",
+  "specificationRevision": "ca5b112f790c29e362ad499b3644c637a94e2cf3",
+  "recordedAt": "2026-09-15T05:08:17.567026Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/admin/initiative-lab.ts",
+      "sha256": "d3885d220060782f73ac66e9b0a2a8a25c4cd00432cdb9708c7f1a041e8e7d48"
+    },
+    {
+      "path": "apps/server/src/admin/initiative-lab-worker.ts",
+      "sha256": "2f8aa0873bca8cffe9e439ea57e5eafe531b705cf872ae4aa7db4a9dce434251"
+    },
+    {
+      "path": "apps/server/test/initiative-lab.test.ts",
+      "sha256": "f85dd52da61f4d7da95f1b54de8ac8114b77e3ffbb4d07f13ccef9138cd4e6e6"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "736e95252f475aaee86081ced894877295790980014e64c71f4f280d6ff84c48"
+    },
+    {
+      "path": "apps/server/src/runtime/initiative-host.ts",
+      "sha256": "f66a6d6e283f33fd5b63c575e2a935e08b40f1e46c2951bd0ac04f1fea4a22d4"
+    },
+    {
+      "path": "apps/server/src/runtime/initiative.ts",
+      "sha256": "f39da7baf0b42758e1d656c1502c49232e9ffdd95c4cb76005a4d326c1cc3ab9"
+    },
+    {
+      "path": "apps/control-web/initiative-lab.js",
+      "sha256": "1fe9d294435022ce8a6d0105aaa1b6e8b642d8d4bdb3a719267946b27055462d"
+    },
+    {
+      "path": "apps/control-web/relationship-extensions.js",
+      "sha256": "91621ba6518379c29f2a9d04681ce0873a42d012f0e3b5a4de5909410463af2d"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "f23d5a69c78367fcf4927bb0a5395dfbc8c2e4f037146e7149ba942d3e3040b2"
+    },
+    {
+      "path": "apps/control-web/test/initiative-lab.test.mjs",
+      "sha256": "a464f2f77caadd82dac0b7b00b2495fca0e37e9788037f6a90742955e2a1f64a"
+    },
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "acf0d72415d01676acd9eeb720d49a7760d637695d0fe1850f83a7007de6dd12"
+    },
+    {
+      "path": "docs/initiative-synthetic-review.md",
+      "sha256": "62c0231c6c9419e6fbbe7324f6dd140faace55fbeda7beea26b4935ee159f8b7"
+    }
+  ],
+  "claims": [
+    "The previously unavailable compare operation now runs an owned nonquarantined selected Initiative configuration through a protected, isolated synthetic Lab. Real local authentication, CSRF, request validation and owned configuration selection apply. Comparison is read-only with respect to runtime inputs, activation and canonical memory; no session output-readiness grant or audience change is made.",
+    "One worker per host runs twelve identical events over fifty pinned virtual minutes through the actual InitiativeHost, effective policy, scoped prepared-context compiler, bounded candidate generator and durable delivery ledger. The same fixed synthetic evidence, neutral persona and deterministic fixture provider are used for reserved 2, friendly 5, highly engaged 11 and selected-settings variants. Reference tuning yields 0, 2 and 7 simulated openings and distinct topics, with equal fixture-call counts. Quiet, shared audience, cooldown, opening ceilings and unanswered-topic fencing are observed in the actual ledger.",
+    "The worker has a ten-second deadline and 128 MiB old-generation heap limit, uses only in-memory SQLite, and receives settings with account endpoint and consent references replaced by permission-presence markers. No application provider handle, live database, account evidence, microphone or external output enters the worker. The Lab records acceptance by its synthetic text sink; it never reports physical playback or Human reception. Generated wording is not retained in the report.",
+    "Completed reports are bounded by the existing response schema and cached as volatile ten-minute entries tied to account/relationship/configuration key, settings digest and current relationship boundary. A changed boundary or expired entry cannot retrieve the prior report. Shutdown clears report state and terminates the worker. Selected speech-only permission does not become text permission.",
+    "A clock injection seam lets the isolated host, ledger, expression metadata and generator share the virtual time. Default runtime clocks remain dynamically read. Existing temporary-companionship expiry, ordinary output, cancellation and replay tests pass after correcting an initial default-clock binding regression.",
+    "The final one-selector mobile table-header correction was verified with the focused browser workflow after the full suite; no runtime source changed after the final full source run.",
+    "The first-party UI places comparison controls and results after revision preview. Labeled rows show counts and distinct topics; disclosures show event times, plain-language reasons and observed simulation stages. Mobile summary columns scroll within the table. Sign-out clears displayed results. The isolated review guide explains the workflow and fixture/selected-provider boundaries."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "9e1844dd53df827af64fd2e7d165442f78ba74287c59bd180acfed26d06562a2"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "27ee71ca0478ad1bfcda41571aec954110589086e91c89e49d4375a415b5a7a1"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "0b939a812aa536809a5a38ded192893e2cb49850eb2634bdb316c59dbe7d5d1f"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "afca52054b3fe9b64b620308d9bd9d83efe7167b4f52123d4a546efda3621863"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test apps/control-web/test/initiative-lab.test.mjs",
+      "result": "pass",
+      "logSha256": "d1a02f8478a698d6b8587931fbbf04a257d6d484930a3a171aea942327a52e77"
+    }
+  ],
+  "counts": {
+    "sourceTests": 395,
+    "newSourceTests": 3,
+    "browserAndLauncherTests": 47,
+    "newBrowserTests": 1,
+    "toolingTests": 45,
+    "referenceOpenings": {
+      "reserved2": 0,
+      "friendly5": 2,
+      "highlyEngaged11": 7
+    },
+    "eventsPerVariant": 12,
+    "variants": 4
+  },
+  "initialVerificationFailures": [
+    {
+      "kind": "integrationBuild",
+      "description": "Initial endpoint fixture fields and comparison route imports/active configuration lookup did not match existing types; corrected before successful build.",
+      "logSha256": "b632d30634c12bacc77b7080783b05f74428c517d7ae31dc0dae70b60eefc4c0"
+    },
+    {
+      "kind": "isolatedDatabaseSetup",
+      "description": "The first direct Lab run lacked the host idempotency table in its in-memory database; added that existing empty table to isolated setup.",
+      "logSha256": "aff86b14d2cd47027aadcaf8818d8f6251421458df373fdf4df729fb7b4955b2"
+    },
+    {
+      "kind": "browserHiddenLocator",
+      "description": "The first browser test completed comparison but its sign-out assertion excluded the now-hidden region; corrected the locator.",
+      "logSha256": "9eb50b1d8b93cb88f2df0bffc182ea5296ef469ab912809dcfcd725cb9ed6baf"
+    },
+    {
+      "kind": "clockBindingRegression",
+      "description": "The first full source suite passed 394 of 395; capturing Date.now too early broke the existing temporary-companionship expiry test. Default clocks now read Date.now dynamically. The final full suite passes 395.",
+      "logSha256": "4fee0e4e0320872666999d7e63440609f0ed20e82210ce3bf2c954c2cb570979"
+    }
+  ],
+  "prerequisiteQualification": {
+    "status": "pending",
+    "slices": [
+      "LS-S071",
+      "LS-S072",
+      "LS-S073",
+      "LS-S076",
+      "LS-S078"
+    ],
+    "reason": "Current effective inputs differ from historical qualification; receipts remain unchanged."
+  },
+  "limitations": [
+    "The Lab is a fixture qualification of the shared runtime gradient, not selected-model or voiced-expression qualification. Reference output permissions are synthetic; the selected-settings row is hypothetical and does not establish real consent or current Assistant bounds. No new model-quality observations were added.",
+    "Reserved noninterrupting presentation acknowledgments, bounded timing adaptation, older-database restore fencing, selected-provider/current-source qualifications, S084 Discovery/analysis/performance and PWCE Personal V1 T5 mapping remain open. Full S083/S084 completion is not claimed.",
+    "The saved Human review service and data were not restarted, deployed or reconfigured. No personal-data import, training, new provider selection or external research occurred. Approved schema bytes, historical evidence and unrelated dirty artifacts remain preserved."
+  ],
+  "visualEvidence": {
+    "kind": "syntheticBrowserCapture",
+    "name": "lifestream-initiative-lab-mobile.png",
+    "sha256": "edc9e8c3177481d75b0742cd9ab4b3ee4e355555ef7c207726a602f21604a3d0",
+    "observation": "Comparison controls, results, readable scrolling summary columns and separate event disclosures are grouped after revision preview."
+  }
+}

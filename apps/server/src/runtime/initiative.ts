@@ -21,6 +21,8 @@ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 /** One existing-provider call at a time. This produces a volatile candidate, never
  * output or a user turn. The host still owns policy, durable admission and delivery. */
 export class InitiativeCandidateGenerator {
+  private readonly now:()=>number;
+  constructor(now:()=>number=()=>Date.now()){this.now=now;}
   private busy=false;
   private releaseFailure:unknown;
   get active():boolean{return this.busy;}
@@ -45,7 +47,7 @@ export class InitiativeCandidateGenerator {
     // Binding formats are those emitted by the existing relationship owner.
     if(!view.relationshipRevision.startsWith(`${opportunity.relationshipId}:`)||view.configurationRevision!==`${opportunity.configurationId}:${opportunity.configurationRevision}`)throw new Error("Initiative prepared relationship or configuration mismatch");
     if(!Number.isInteger(input.maximumOutputTokens)||input.maximumOutputTokens<32||input.maximumOutputTokens>256||!Number.isInteger(input.deadlineMs)||input.deadlineMs<1000||input.deadlineMs>15000)throw new Error("Invalid Initiative generation limits");
-    const now=Date.now(),expires=Date.parse(opportunity.expiresAt),viewExpiry=Date.parse(String("freshUntil" in view?view.freshUntil:""));
+    const now=this.now(),expires=Date.parse(opportunity.expiresAt),viewExpiry=Date.parse(String("freshUntil" in view?view.freshUntil:""));
     if(!Number.isFinite(viewExpiry)||viewExpiry<=now)throw new Error("Initiative prepared context expired");
     const deadline=Math.min(now+input.deadlineMs,expires,viewExpiry);
     if(Date.parse(opportunity.observedAt)>now||Date.parse(opportunity.receivedAt)>now||deadline<=now)throw new Error("Initiative opportunity expired");
@@ -57,18 +59,18 @@ export class InitiativeCandidateGenerator {
     try{
       if(input.admit(request)!==true)throw new Error("Initiative durable generation admission denied");
       admitted=true;
-      if(signal.aborted||prepared.isCurrent()!==true||Date.now()>=deadline)throw new Error("Initiative context changed before inference");
+      if(signal.aborted||prepared.isCurrent()!==true||this.now()>=deadline)throw new Error("Initiative context changed before inference");
       const aborted=new Promise<never>((_,reject)=>{abortListener=()=>reject(new Error("Initiative generation cancelled or timed out"));signal.addEventListener("abort",abortListener,{once:true});});
       // Admission bookkeeping can itself abort before the first iterator wait.
       void aborted.catch(()=>undefined);
-      timeout=setTimeout(()=>controller.abort(),Math.max(1,deadline-Date.now()));
+      timeout=setTimeout(()=>controller.abort(),Math.max(1,deadline-this.now()));
       try{prepared.onInferenceRequest?.(request);}catch{/* Optional inclusion bookkeeping grants no delivery authority. */}
       if(signal.aborted||prepared.isCurrent()!==true)throw new Error("Initiative context changed before inference");
       iterator=provider.generate(request,{signal})[Symbol.asyncIterator]();
       let text="",done=false;
       while(true){
         pending=Promise.resolve(iterator.next());const item=await Promise.race([pending,aborted]);
-        if(signal.aborted||prepared.isCurrent()!==true||Date.now()>=deadline)throw new Error("Initiative context changed during generation");
+        if(signal.aborted||prepared.isCurrent()!==true||this.now()>=deadline)throw new Error("Initiative context changed during generation");
         if(item.done)break;
         if(done)throw new Error("Initiative output after terminal event");
         const chunk=item.value;

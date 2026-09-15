@@ -29,7 +29,7 @@ const active=new Set(['pending','eligible','generated','queued','emitted']);
  * inspection and idempotent retries return metadata, never replayable output. */
 export class InitiativeHost {
  readonly ledger:InitiativeDeliveryRepository;private readonly expressions:InitiativeExpressionRepository;
- private readonly generator=new InitiativeCandidateGenerator();private readonly maintenance:InitiativeMaintenance;
+ private readonly generator:InitiativeCandidateGenerator;private readonly now:()=>number;private readonly maintenance:InitiativeMaintenance;
  private readonly readiness=new Map<string,{revision:number;endpointId:string;text:boolean;speech:boolean;transport?:object}>();
  private readonly modes=new Map<string,InitiativeTemporaryMode>();
  private readonly jobs=new Map<string,Job>();
@@ -37,7 +37,7 @@ export class InitiativeHost {
  private closed=false;
  private readonly database:Database;
  private readonly simulation:InitiativeSimulation|undefined;
- constructor(database:Database,simulation?:InitiativeSimulation){this.database=database;this.expressions=new InitiativeExpressionRepository(database);this.simulation=simulation;this.ledger=new InitiativeDeliveryRepository(database);this.ledger.recover();this.maintenance=new InitiativeMaintenance(()=>this.ledger.prune());}
+ constructor(database:Database,simulation?:InitiativeSimulation,now:()=>number=()=>Date.now()){this.now=now;this.generator=new InitiativeCandidateGenerator(now);this.database=database;this.expressions=new InitiativeExpressionRepository(database,now);this.simulation=simulation;this.ledger=new InitiativeDeliveryRepository(database,now);this.ledger.recover();this.maintenance=new InitiativeMaintenance(()=>this.ledger.prune());}
  runtimeExplanations(owner?:InitiativeOwner,sessionId?:string){
   const explanations=[{code:this.simulation?'synthetic_ingress_enabled':'synthetic_ingress_disabled',summary:this.simulation?'This test host accepts only its prepared synthetic occurrences for the bound subject and session.':'Synthetic ingress is disabled on this host.',sourceRefs:[] as string[]}];
   explanations.push({code:'initiative_retention',summary:this.maintenance.state()==='degraded'?'Automatic metadata cleanup is temporarily unavailable. Records and replay protections are retained; cleanup will retry.':'Automatic metadata cleanup is scheduled after the 24-hour eligibility horizon, in bounded batches. Active work, pending playback and replay fences remain protected.',sourceRefs:[]});
@@ -45,7 +45,7 @@ export class InitiativeHost {
   explanations.push({code:'synthetic_catalog_enabled',summary:'Choose a host-prepared synthetic case. Listing neither enables output nor creates or replays an event. Refresh after the host prepares new cases.',sourceRefs:[]});
   const catalogStart=explanations.length;
   try{
-   const ids=this.simulation.list(owner.scope,sessionId),now=Date.now(),seen=new Set<string>(),used=new Set(this.ledger.list(owner.scope).filter(r=>r.opportunity.sessionId===sessionId).flatMap(r=>r.opportunity.sourceRefs));
+   const ids=this.simulation.list(owner.scope,sessionId),now=this.now(),seen=new Set<string>(),used=new Set(this.ledger.list(owner.scope).filter(r=>r.opportunity.sessionId===sessionId).flatMap(r=>r.opportunity.sourceRefs));
    let count=0;
    for(const id of ids.slice(0,64)){
     if(count>=16)break;
@@ -79,11 +79,11 @@ export class InitiativeHost {
  }
  expressionWarmth(owner:InitiativeOwner|undefined,sessionId:string,endpointId:string):number|undefined {
   if(!owner?.configuration)return undefined;
-  const temporary=this.mode(owner.scope,sessionId),now=Date.now();
+  const temporary=this.mode(owner.scope,sessionId),now=this.now();
   return resolveInitiativePolicy({scope:owner.scope,configuration:owner.configuration,profile:owner.profile,...(temporary?{temporary}:{}),now,facts:{sessionId,endpointId,modality:'text',kind:'availableCheckIn',context:'unknown',authorized:true,identityQualified:false,privateAudience:false,consentCurrent:owner.consentCurrent,sourceQualified:false,sourceExpiresAt:now,outputReady:false,leaseAvailable:false}}).expressionWarmth;
  }
  private mode(scope:InitiativeScope,sessionId:string):InitiativeTemporaryMode|undefined {
-  const k=key(scope,sessionId),mode=this.modes.get(k);if(mode?.expiresAt!==null&&mode&&mode.expiresAt<=Date.now()){this.modes.delete(k);return undefined;}return mode;
+  const k=key(scope,sessionId),mode=this.modes.get(k);if(mode?.expiresAt!==null&&mode&&mode.expiresAt<=this.now()){this.modes.delete(k);return undefined;}return mode;
  }
  invalidate(reason='configurationChanged'):void {
   for(const job of this.jobs.values())if(this.closed||this.foreground>0||!job.current()){job.reason=this.foreground>0?'userTurn':reason;job.controller.abort();}
@@ -105,7 +105,7 @@ export class InitiativeHost {
   if(!validator.validate(`${api}#/$defs/Request`,raw).valid)return extensionError(422,'invalid_extension_request','Unsupported version, operation or fields.');
   const owner=context.owner(),session=context.session(),operation=String(raw.operation);
   if(this.closed||!context.authorized()||!owner||!session||raw.sessionId!==session.sessionId)return extensionError(409,'initiative_session_scope','Use the current authenticated session and bind its audience in Conversation first.');
-  const scope=owner.scope,k=key(scope,session.sessionId),now=Date.now();
+  const scope=owner.scope,k=key(scope,session.sessionId),now=this.now();
   this.ledger.expirePending();this.invalidate();
   if(raw.idempotencyKey){const retry=this.retry(scope,raw);if(retry==='conflict')return extensionError(409,'idempotency_conflict','This retry key identifies a different request.');if(retry==='same')return this.response(owner,operation,[{code:'already_processed',summary:'This request was already processed. Current metadata is shown; output and temporary modes are never replayed.',sourceRefs:[]}]);}
   if(operation==='outputReadiness'){
@@ -155,7 +155,7 @@ export class InitiativeHost {
   const expires=Math.min(event.expiresAt,event.observedAt+ttl!*1000,mode?.expiresAt??Infinity),id=randomUUID();
   let speechActive=false;
   const facts=():InitiativeFacts=>{const s=context.session(),o=context.owner(),ready=this.readiness.get(k);return {sessionId:session.sessionId,endpointId:session.endpoint.endpointId,modality:event.modality,kind:event.kind,context:event.context,authorized:context.authorized()&&!!s&&s.revision===session.revision,identityQualified:true,privateAudience:s?.endpoint.privacyClass==='personal',consentCurrent:o?.consentCurrent===true,sourceQualified:hash(this.simulation!.resolve(scope,session.sessionId,event.sourceEventId)??null)===hash(event),sourceExpiresAt:expires,outputReady:!!s&&ready?.revision===s.revision&&ready.endpointId===s.endpoint.endpointId&&(event.modality==='text'?ready.text&&s.endpoint.outputModalities.includes('text'):ready.speech&&s.endpoint.outputModalities.includes('audio')&&ready.transport===context.speech?.identity&&!!context.speech?.current()&&(speechActive||context.speech.available())),leaseAvailable:this.foreground===0&&!this.closed,...(event.dwellSeconds===undefined?{}:{dwellSeconds:event.dwellSeconds}),...(event.absenceSeconds===undefined?{}:{absenceSeconds:event.absenceSeconds}),unfinishedEvidenceCurrent:event.unfinishedEvidenceCurrent===true&&event.topicRef!==null&&!!o?.evidenceRefs.includes(event.topicRef)};};
-  const policy=()=>{const o=context.owner();return resolveInitiativePolicy({scope,...(o?.configuration?{configuration:o.configuration}:{}),profile:o?.profile,facts:facts(),...(this.mode(scope,session.sessionId)?{temporary:this.mode(scope,session.sessionId)!}:{}),now:Date.now()});};
+  const policy=()=>{const o=context.owner();return resolveInitiativePolicy({scope,...(o?.configuration?{configuration:o.configuration}:{}),profile:o?.profile,facts:facts(),...(this.mode(scope,session.sessionId)?{temporary:this.mode(scope,session.sessionId)!}:{}),now:this.now()});};
   const selected=policy();
   const opportunity:InitiativeOpportunity={...scope,schemaVersion:'1.0.0',recordType:'opportunity',opportunityId:id,correlationId:randomUUID(),conversationId:session.conversationId,sessionId:session.sessionId,endpointId:session.endpoint.endpointId,configurationId:String(config.configurationId),configurationRevision:Number(config.revision),policyRevision:selected.revision,kind:event.kind,category:'social',urgency:'low',sourceKind:'simulatedBrowser',sourceRefs:[`synthetic-event:${event.sourceEventId}`,...(event.topicRef?[event.topicRef]:[])],executionMode:'simulation',observedAt:new Date(event.observedAt).toISOString(),receivedAt:new Date(now).toISOString(),expiresAt:new Date(expires).toISOString(),dedupKey:hash([scope,session.sessionId,event.sourceEventId]),topicKey:event.topicRef??`social:${event.kind}`};
   let row:InitiativeDeliveryRecord;
@@ -173,7 +173,7 @@ export class InitiativeHost {
   let prepared:HostRuntimeInput|undefined,preparedViewId:string,preparedCurrent=()=>true;
   const current=()=>!signal.aborted&&context.authorized()&&context.owner()?.boundary===owner.boundary&&policy().allowed&&policy().revision===selected.revision&&preparedCurrent();
   const job:Job={scope,sessionId:session.sessionId,controller,current,reason:'cancelled'};this.jobs.set(id,job);
-  const expiry=setTimeout(()=>{job.reason=job.speech?'ackTimeout':'expired';controller.abort();},Math.max(1,expires-Date.now()));
+  const expiry=setTimeout(()=>{job.reason=job.speech?'ackTimeout':'expired';controller.abort();},Math.max(1,expires-this.now()));
   try{
    if(!current())throw new Error('boundary changed');
    row=this.ledger.transition(scope,id,row.version,{type:'eligible'});prepared=context.prepare();preparedCurrent=prepared.isCurrent;prepared={...prepared,isCurrent:current};preparedViewId=randomUUID();

@@ -1,3 +1,5 @@
+import {createContractValidator} from '@lifestream/contracts';
+import {InitiativeLab} from './admin/initiative-lab.ts';
 import {ConversationHistory,type ConversationPort} from './runtime/conversation.ts';
 import {SessionHandoffService} from "@lifestream/runtime/endpoints/handoff";
 import {InitiativeHost,type InitiativeOwner,type InitiativeSimulation} from './runtime/initiative-host.ts';
@@ -49,7 +51,7 @@ export type ServerOptions = { initiativeSimulation?:InitiativeSimulation; config
 type Json = Record<string, unknown>;
 type AuthContext = { principalId: string; sessionId: string; expiresAt: string; origin: string };
 const validUuid = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(value);
-const extensionReadOnly = (path: string, body: unknown): boolean => /\/relationships\/[^/]+\/(?:initiative|understanding)\/v1$/u.test(path) && ["inspect", "preview"].includes(String((body as {operation?: unknown} | null)?.operation));
+const extensionReadOnly = (path: string, body: unknown): boolean => /\/relationships\/[^/]+\/(?:initiative|understanding)\/v1$/u.test(path) && ["inspect", "preview", ...(path.endsWith("/initiative/v1")?["compare"]:[])].includes(String((body as {operation?: unknown} | null)?.operation));
 const json = (response: ServerResponse, status: number, body: Json) => { const payload = JSON.stringify(body); response.writeHead(status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "content-length": Buffer.byteLength(payload) }); response.end(payload); };
 const text = (response: ServerResponse, status: number, contentType: string, body: string) => { response.writeHead(status, { "content-type": contentType, "cache-control": "no-store", "content-length": Buffer.byteLength(body) }); response.end(body); };
 const originFor = (request: IncomingMessage): string => { const origin = request.headers.origin; return typeof origin === "string" && origin.length > 0 ? origin : `http://${request.headers.host ?? "localhost"}`; };
@@ -89,7 +91,9 @@ const profileDiff = (before: AssistantProfile | null, after: AssistantProfile): 
   return [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]));
 };
 const isolatedLabRuntime=(providers:ProviderRegistry,config:RuntimeConfig):LabRuntime=>{if(!providers.inference)throw new Error("Selected inference provider unavailable");return {provider:providers.inference,identity:{implementation:providers.providers.inference!.implementation,model:config.inferenceProfile?.model??"fixture",revision:config.inferenceProfile?.modelRevision??"workspace",configurationDigest:redactedDigest(config),fixture:providers.providers.inference!.fixture}};};
+const initiativeComparisonValidator=createContractValidator();
 class AssistantAdminApi {
+  private readonly initiativeLab=new InitiativeLab();
   readonly discovery: DiscoveryAdministration;
   private readonly recovery:RelationshipRecovery;
   private readonly labTasks = new Map<string,AbortController>();
@@ -196,7 +200,7 @@ class AssistantAdminApi {
       const result=this.privacy(relationship,{action:"revoke-processing",expectedRevision:relationship.revision,idempotencyKey:`user-profile-revoke:${profile.profileId}:${profile.revision}`,targets:[{kind:"userProfile",id:profile.profileId,revision:profile.revision}]});if(result.status!==200)return result;return {status:200,body:{profiles:this.userProfiles.list(actor),activeStateChanged:true,receipt:result.body.receipt}};
     }
     const result = this.userProfiles.handle(method, operation, actor, body, canUse); if (method !== "GET" && result.status < 400) this.preparedCache.invalidateDependencies([`user-profile:${actor}`]); return result; }
-  close(): void { for(const controller of this.labTasks.values())controller.abort();this.closed = true; this.discovery.close(); this.profileBuilder.close(); }
+  close(): void { for(const controller of this.labTasks.values())controller.abort();this.closed = true; this.initiativeLab.close(); this.discovery.close(); this.profileBuilder.close(); }
   getActivePersona(assistantId: string, actor: string, authorizedAssistant = false): AssistantPersonaProjection | undefined {
     if(this.recovery.journal.currency!=="current")return undefined;
     const profiles = this.profiles.list(assistantId);
@@ -282,6 +286,19 @@ class AssistantAdminApi {
       if (!relationshipId) return { status: 404, body: { code: "not_found", message: "relationship not found" } };
       if(this.recoveryPending(relationship)&&parts[7]!=="privacy"&&!(parts[7]==="understanding"&&parts[8]==="v1"&&["forgetTopic","excludeSource","rejectHypothesis","suppressCandidate"].includes(String(asObject(body)?.decision))))return {status:503,body:{code:"privacy_cleanup_pending",message:"Affected use is withheld. Retry the recorded privacy operation to complete cleanup."}};
       if ((parts[7] === "initiative" || parts[7] === "understanding") && parts[8] === "v1" && parts.length === 9 && method === "POST") {
+        if(parts[7]==="initiative"&&asObject(body)?.operation==="compare"){
+          const request=asObject(body)!;
+          if(!initiativeComparisonValidator.validate('https://lifestream.dev/contracts/initiative-api/1.0.0#/$defs/ComparisonRequest',request).valid)return extensionError(422,'invalid_extension_request','Unsupported comparison request.');
+          const parent=this.relationshipConfigurations.get(String(request.configurationId));
+          if(!parent||parent.relationshipId!==relationshipId||parent.quarantined||!parent.extensions?.initiative)return extensionError(404,'configuration_unavailable','Select an available Initiative revision in this relationship.');
+          if(!authorizationCurrent())return extensionError(403,'current_scope_required','Current authorization is required.');
+          try{
+            const entry=this.initiativeLab.readOrStart(JSON.stringify([actor,assistantId,relationshipId,parent.configurationId]),this.contextBoundary(assistantId,relationshipId,actor),parent.extensions.initiative);
+            if(entry.error)return extensionError(409,'initiative_lab_failed',entry.error);
+            const report=entry.report;
+            return {status:report?200:202,body:{schemaVersion:'1.0.0',relationshipId,operation:'compare',activeConfigurationId:([...this.relationshipConfigurations.values()].find(c=>c.relationshipId===relationshipId&&c.status==="active"&&!c.quarantined)?.configurationId??null),records:report?.records??[],explanations:report?[...report.explanations,{code:'initiative_lab_basis',summary:`Selected revision ${parent.revision}; hypothetical settings projection only. Reference permissions are synthetic. Current live consent, Assistant bounds, speech and model quality require their own verification.`,sourceRefs:[`relationship-configuration:${parent.configurationId}:${parent.revision}`,`settings:${entry.settingsDigest}`]}]:[{code:'initiative_lab_running',summary:'Pinned synthetic comparison is running in isolated storage. Check results shortly. No live output or settings change occurs.',sourceRefs:[]}],activeStateChanged:false,executionMode:'simulation',nextCursor:null,delivery:null}};
+          }catch{return extensionError(409,'initiative_lab_busy','One isolated Initiative comparison is already running. Retry after it finishes.');}
+        }
         if(parts[7]==="understanding" && !["inspect","draft","preview","activate","rollback"].includes(String(asObject(body)?.operation))) {
           if(!relationship.deploymentId)return extensionError(409,"identity_mapping_required","A current deployment identity is required.");
           return this.discovery.handle(relationship as UnderstandingScope,body,authorizationCurrent);
@@ -571,7 +588,7 @@ export class LifestreamServer {
       const body = method === "GET" ? {} : asObject(await readBody(request)); if (!body) throw new AuthenticationError(422, "invalid_request");
       if (method !== "GET") { this.localAuth.csrf(context, String(request.headers["x-lifestream-csrf"] ?? "")); if (body.authoredBy === "ai" || body.authoredBy === "model") throw new AuthenticationError(403, "ai_change_requires_proposal_review"); }
       const initiativePath=/^\/api\/admin\/v1\/assistants\/[^/]+\/relationships\/[^/]+\/initiative\/v1$/u.test(path);
-      if(method==="POST"&&initiativePath&&!["inspect","draft","preview","activate","rollback"].includes(String(body.operation)))return this.handleInitiative(request,response,path,context,body);
+      if(method==="POST"&&initiativePath&&!["inspect","draft","preview","activate","rollback","compare"].includes(String(body.operation)))return this.handleInitiative(request,response,path,context,body);
       const result = this.applyProtected(method, path, context, body);
       if(initiativePath&&body.operation==="inspect"&&result.status===200){const parts=path.split("/").filter(Boolean),owner=this.admin.initiativeOwner(parts[4]!,parts[6]!,context.principalId);if(owner){this.initiativeHost.augmentInspection(owner,context.sessionId,result.body);}}
       if (method !== "GET" && result.status < 400) { this.localAuth.touch(context); if (!extensionReadOnly(path, body)) this.invalidateRuntimeInputs(); }

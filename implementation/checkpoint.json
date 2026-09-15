@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "62f3947d5cb6b13eddcdcf16c9fd54e4a6f66c31",
+  "currentRevision": "59b924fca2fe6367aa9f209630b5f06c062bdfc0",
   "activeSlice": "LS-S083",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -169,56 +169,75 @@
     "implementation/evidence/S083-EXPRESSION-INSPECTION-1.json",
     "apps/server/src/runtime/initiative-maintenance.ts",
     "apps/server/test/initiative-maintenance.test.ts",
-    "implementation/evidence/S083-RETENTION-MAINTENANCE-1.json"
+    "implementation/evidence/S083-RETENTION-MAINTENANCE-1.json",
+    "apps/server/src/admin/initiative-lab.ts",
+    "apps/server/src/admin/initiative-lab-worker.ts",
+    "apps/server/test/initiative-lab.test.ts",
+    "apps/control-web/initiative-lab.js",
+    "apps/control-web/test/initiative-lab.test.mjs",
+    "implementation/evidence/S083-GRADIENT-LAB-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/runtime/initiative-maintenance.ts",
+    "apps/server/src/admin/initiative-lab.ts",
+    "apps/server/src/admin/initiative-lab-worker.ts",
+    "apps/server/test/initiative-lab.test.ts",
+    "apps/server/src/index.ts",
     "apps/server/src/runtime/initiative-host.ts",
-    "apps/server/test/initiative-maintenance.test.ts",
-    "packages/storage-sqlite/src/initiative-delivery.ts",
-    "implementation/evidence/S083-RETENTION-MAINTENANCE-1.json",
+    "apps/server/src/runtime/initiative.ts",
+    "apps/control-web/initiative-lab.js",
+    "apps/control-web/relationship-extensions.js",
+    "apps/control-web/styles.css",
+    "apps/control-web/test/initiative-lab.test.mjs",
+    "apps/control-web/DESIGN.md",
+    "docs/initiative-synthetic-review.md",
+    "implementation/evidence/S083-GRADIENT-LAB-1.json",
     "implementation/checkpoint.json"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-RETENTION-MAINTENANCE-1.json"
+      "evidence": "implementation/evidence/S083-GRADIENT-LAB-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-RETENTION-MAINTENANCE-1.json"
+      "evidence": "implementation/evidence/S083-GRADIENT-LAB-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-RETENTION-MAINTENANCE-1.json"
+      "evidence": "implementation/evidence/S083-GRADIENT-LAB-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-RETENTION-MAINTENANCE-1.json"
+      "evidence": "implementation/evidence/S083-GRADIENT-LAB-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-RETENTION-MAINTENANCE-1.json"
+      "evidence": "implementation/evidence/S083-GRADIENT-LAB-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-RETENTION-MAINTENANCE-1.json"
+      "evidence": "implementation/evidence/S083-GRADIENT-LAB-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-RETENTION-MAINTENANCE-1.json"
+      "evidence": "implementation/evidence/S083-GRADIENT-LAB-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-RETENTION-MAINTENANCE-1.json"
+      "evidence": "implementation/evidence/S083-GRADIENT-LAB-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test apps/control-web/test/initiative-lab.test.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/S083-GRADIENT-LAB-1.json"
     }
   ],
   "decisions": [
@@ -233,8 +252,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Complete pinned gradient Lab, reserved acknowledgments, bounded timing adaptation and older-database restore fencing. Qualify the existing ai5090 synthetic review path and refresh current-source prerequisites. Continue S084 semantic Discovery/exploration/qualified analysis/actual-output/performance and PWCE Personal V1 T5 core mapping. Preserve historical failures and separate Human/provider/physical claims.",
-  "updatedAt": "2026-09-15T04:49:58.357303Z",
+  "nextAction": "Complete reserved noninterrupting acknowledgments, bounded timing adaptation and older-database restore fencing. Qualify the existing ai5090 synthetic review/gradient path and refresh current-source prerequisites. Continue S084 semantic Discovery/exploration/qualified analysis/actual-output/performance and PWCE Personal V1 T5 core mapping. Preserve historical failures and separate Human/provider/physical claims.",
+  "updatedAt": "2026-09-15T05:08:17.567026Z",
   "updatedBy": "Codex",
-  "notes": "Automatic bounded Initiative retention maintenance is connected and verified, including pending playback, unsettled inference, cascading expression cleanup, restart fences and shutdown. Full S083/S084/PWCE work remains active."
+  "notes": "Pinned isolated Initiative gradient Lab is implemented and verified through the shared runtime, protected API and first-party browser. Reference counts 0/2/7 are fixture evidence, not selected-provider or physical acceptance. Full S083/S084/PWCE work remains active."
 }
