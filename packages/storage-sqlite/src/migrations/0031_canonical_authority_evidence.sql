@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS canonical_authority_artifacts (reference TEXT PRIMARY KEY, principal_id TEXT NOT NULL, assistant_id TEXT NOT NULL, binding_json TEXT NOT NULL, schema_ref TEXT NOT NULL, payload_json TEXT NOT NULL, sha256 TEXT NOT NULL);

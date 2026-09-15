@@ -22,6 +22,10 @@ const seeds = [
 ];
 const names = new Map(seeds.map(name => [`${provider}#/$defs/${name}`, name]));
 for (const name of ['ArtifactRef', 'CallScope', 'Problem', 'SourceRevision']) names.set(`${common}#/$defs/${name}`, name);
+const api = 'https://lifestream.dev/contracts/runtime-api/1.0.0';
+for (const operation of ['ListAuthorityRequests', 'GetAuthorityRequest', 'CreateAuthorityRequest', 'ApproveAuthorityRequest', 'DenyAuthorityRequest', 'CancelAuthorityRequest', 'ListAuthorityGrants', 'GetAuthorityGrant', 'RevokeAuthorityGrant']) {
+  for (const suffix of ['Request', 'Response']) names.set(`${api}#/$defs/${operation}${suffix}`, `${operation}${suffix}`);
+}
 const bodies = new Map();
 const used = new Set();
 const identifier = value => value.replace(/[^a-zA-Z0-9]+(.)?/g, (_, c) => c?.toUpperCase() ?? '');

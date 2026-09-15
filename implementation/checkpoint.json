@@ -3,8 +3,8 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "e0e9609258a7754a704d81ebfa8565dbaadba04b",
-  "activeSlice": "LS-S069",
+  "currentRevision": "cd72203a50219fac065c188aabd1dcf542e0f503",
+  "activeSlice": "LS-S043",
   "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
@@ -75,116 +75,101 @@
     "LS-S081"
   ],
   "allowedFiles": [
-    "apps/server/src/auth/local-auth.ts",
-    "apps/server/src/admin/security-administration.ts",
-    "apps/server/src/admin/personalization-capabilities.ts",
-    "apps/server/src/index.ts",
-    "apps/server/src/composition/authority.ts",
-    "apps/server/test/local-auth.test.ts",
-    "apps/server/test/local-auth-http.test.ts",
-    "apps/server/test/security-administration.test.ts",
-    "apps/server/test/server.test.ts",
-    "apps/control-web/auth.js",
-    "apps/control-web/security.js",
-    "apps/control-web/security.html",
-    "apps/control-web/app.js",
-    "apps/control-web/index.html",
-    "apps/control-web/test/local-auth.test.mjs",
-    "packages/storage-sqlite/src/authority/grants.ts",
-    "packages/storage-sqlite/src/migrations/0017_local_auth.sql",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/test/database.test.ts",
-    "docs/local-authentication.md",
-    "scripts/start-isolated-auth.mjs",
+    "apps/server/src/authority/api.ts",
+    "apps/server/test/authority-api.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S069-recovery-technical.json",
-    "package.json",
-    "packages/runtime/package.json",
+    "implementation/evidence/LS-S043.json",
+    "apps/server/src/authority/canonical-api.ts",
+    "apps/server/test/canonical-authority-api.test.ts",
+    "apps/server/src/index.ts",
+    "apps/server/test/server.test.ts",
+    "scripts/generate-provider-types.mjs",
+    "packages/contracts/src/provider-messages.ts",
+    "packages/storage-sqlite/src/authority/canonical-grants.ts",
+    "packages/storage-sqlite/src/migrations/0031_canonical_authority_evidence.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
     "packages/storage-sqlite/src/index.ts",
-    "packages/storage-sqlite/src/authority/admission.ts",
-    "apps/server/package.json",
-    "pnpm-lock.yaml",
-    "packages/contracts/package.json",
-    "apps/control-web/test/approval-ui.test.mjs",
-    "packages/storage-sqlite/test/rehearsal.test.ts",
-    "packages/storage-sqlite/test/skills.test.ts",
-    "implementation/evidence/LS-S062-recovery-technical.json",
-    "implementation/evidence/LS-S062-qualification-resume-2.json",
-    "implementation/evidence/LS-S062-current-qualification.json",
-    "implementation/evidence/LS-S069.json",
-    "implementation/evidence/LS-S069-qualification-resume-1.json",
-    "implementation/evidence/LS-S069-current-qualification.json",
-    "implementation/evidence/LS-S069-qualification-review-1.json",
-    "implementation/evidence/LS-S069-qualification-review-2.json",
-    "implementation/evidence/LS-S069-qualification-certification-1.json",
-    "implementation/evidence/RECOVERY-V2-CERTIFICATION-2026-09-14.json",
-    "implementation/evidence/LS-S069-qualification-certification-2.json",
-    "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
-    "apps/server/test/local-auth-context.test.ts",
-    "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+    "packages/storage-sqlite/test/initiative-delivery.test.ts",
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
+    "packages/storage-sqlite/test/canonical-grants.test.ts",
+    "docs/canonical-provider-boundary.md",
+    "implementation/evidence/LS-S043-CANONICAL-API-1.json",
+    "packages/runtime/package.json",
+    "scripts/check-pwce-runtime.mjs"
   ],
   "changedFiles": [
-    "apps/server/src/auth/local-auth.ts",
-    "apps/server/test/local-auth-context.test.ts",
-    "docs/local-authentication.md",
+    "apps/server/src/authority/canonical-api.ts",
+    "apps/server/src/index.ts",
+    "apps/server/test/canonical-authority-api.test.ts",
+    "apps/server/test/server.test.ts",
+    "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+    "implementation/evidence/LS-S043-CANONICAL-API-1.json",
+    "packages/contracts/src/provider-messages.ts",
+    "packages/runtime/package.json",
+    "packages/storage-sqlite/src/authority/canonical-grants.ts",
+    "packages/storage-sqlite/src/migrations/0031_canonical_authority_evidence.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/test/initiative-delivery.test.ts",
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
+    "scripts/check-pwce-runtime.mjs",
+    "scripts/generate-provider-types.mjs"
   ],
   "validation": [
     {
-      "command": "node --test --experimental-strip-types apps/server/test/local-auth-context.test.ts apps/server/test/local-auth.test.ts",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
-    },
-    {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S043-CANONICAL-API-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S043-CANONICAL-API-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S043-CANONICAL-API-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S043-CANONICAL-API-1.json"
     },
     {
-      "command": "pnpm test:browser-surface",
+      "command": "node --test --experimental-strip-types apps/server/test/canonical-authority-api.test.ts packages/storage-sqlite/test/canonical-grants.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S043-CANONICAL-API-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S043-CANONICAL-API-1.json"
     },
     {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S043-CANONICAL-API-1.json"
+    },
+    {
+      "command": "node scripts/generate-provider-types.mjs --check",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S043-CANONICAL-API-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S043-CANONICAL-API-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S043-CANONICAL-API-1.json"
     },
     {
-      "command": "node scripts/workspace.mjs preflight LS-S069",
-      "result": "fail",
-      "evidence": "implementation/evidence/LS-S069-CONTEXT-BINDING-1.json"
+      "command": "node scripts/workspace.mjs preflight LS-S043",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S043-CANONICAL-API-1.json"
     }
   ],
   "decisions": [
@@ -199,8 +184,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Continue canonical grant administration integration under LS-S040-S045: exact owned list/get, authenticated proof and audit custody, host-owned endpoint/environment and validated invocation scope, canonical API/UI and final dispatch. Refresh broad current-source qualifications before acceptance; continue independent PWCE and S083/S084 work.",
-  "updatedAt": "2026-09-15T12:06:02.053510Z",
+  "nextAction": "Connect the canonical authority API to the actual deployment and validated original-invocation adapter, migrate the control-web request/grant workflow under LS-S044, and integrate canonical final admission, consumption, invocation history and invalidation under LS-S042. Continue independent PWCE and S083/S084 development; refresh broad current-source qualifications before acceptance.",
+  "updatedAt": "2026-09-15T12:42:27.779184Z",
   "updatedBy": "Codex",
-  "notes": "Local authentication context correction component verified with 601 source tests. S062 current qualification has stale effective inputs; historical selectors remain unchanged and full S069 requalification is not claimed. Independent canonical authority integration remains in progress."
+  "notes": "Canonical grant HTTP administration component verified through real local-password synthetic HTTP tests. Actual deployment/capability proposal adapter, canonical UI and final dispatch remain unfinished; broad qualifications and Human acceptance remain separate."
 }

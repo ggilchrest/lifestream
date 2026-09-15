@@ -1,0 +1,169 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S043-CANONICAL-API-1",
+  "slice": "LS-S043",
+  "status": "componentVerified",
+  "sourceRevision": "cd72203a50219fac065c188aabd1dcf542e0f503",
+  "sourceBinding": "Exact changed source hashes below bind this API increment relative to sourceRevision; the enclosing commit contains the implementation. This is not a successor whole-slice or selected-provider qualification.",
+  "specificationRevision": "ef3fb29655a0f3f5e939269b10b0aee35e14db5c",
+  "recordedAt": "2026-09-15T12:42:27.779184Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/authority/canonical-api.ts",
+      "sha256": "4fdb1e6308ec2dd673857e3c69a3a0af0c85b32b45aaefa175ede953b8fd45fd"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "01ea8b99a7a2b291956d4a1ff9ebf612bdbdddd58e2adf4fbe8f52ea4eb4cc35"
+    },
+    {
+      "path": "apps/server/test/canonical-authority-api.test.ts",
+      "sha256": "44625974344105212da8947935e84f197ad85a27988e00521a5512e916e21c12"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "fea4dea04f2f3a649cacc051b3cf500962fd87587dc609064159a6efadb1e1f3"
+    },
+    {
+      "path": "docs/canonical-provider-boundary.md",
+      "sha256": "3a29cdddd013feea7db782ad453eb34b606a25d86454f6bb1b115a1427508623"
+    },
+    {
+      "path": "packages/contracts/src/provider-messages.ts",
+      "sha256": "fd90ac1206d861ab28652efe45b8cfd5212ba1f48efde732420b179dc047d637"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "6844f945bc26c7207fdac071acf3dae33545f5020f1f1fcc0b26a5d75f67dd6c"
+    },
+    {
+      "path": "packages/storage-sqlite/src/authority/canonical-grants.ts",
+      "sha256": "1b048fdcba90780a1ad11ba102205c629aff97ef58e12cc91f0b2cbe813024f7"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0031_canonical_authority_evidence.sql",
+      "sha256": "f6067e6431f3321aea136eaad7decd3540ba426a2b6b394a91215399a36bd75d"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "e11594b908888d8fe3ecd88a4b1dcbdb60d8b99f9313b05da111ea222901def2"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "d92ce15f2b7d80884abe81ca56edf4053ac576d477ef43c493dbe65b32a39ffa"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "7af3a9e3c40ed3c5fea17505e60bf822f86b97488b9602c2e6c9843a568409bf"
+    },
+    {
+      "path": "scripts/check-pwce-runtime.mjs",
+      "sha256": "9f74dd10692f90e98f13eb78f38c49790fc1d9dde2df41e0b29b334aaf9b48d2"
+    },
+    {
+      "path": "scripts/generate-provider-types.mjs",
+      "sha256": "21137d4d3afae68cd4f7e9dffeefb3832be7dd273d8282a446c66b38c3ebe213"
+    }
+  ],
+  "claims": [
+    "The real local-password server handles all nine published canonical request/grant administration routes with exact envelope validation, current Human/Assistant ownership, CSRF and origin protection.",
+    "Creation compares all submitted terms against a trusted asynchronous original-invocation proposal and rechecks the actual session endpoint and configured environment before commit. Missing host composition cannot create or approve grants; PWCE governance never substitutes local authority.",
+    "Approval commits credential-free authentication proof, request decision, grant, event, immutable record snapshot, audit and idempotency response atomically. Evidence references resolve to actual owned digest-checked bytes; an audit insertion failure rolls back the whole approval.",
+    "Identical commands replay the original recorded decision after later revocation or proposal unavailability, with current read authorization and evidence integrity required. Changed intent under the same key conflicts.",
+    "Owned pagination binds Human, Assistant, filters, limit and source revision. Canonical GETs do not mutate lifecycle state; grant eligibility separately checks current time, session, endpoint, host scope and proof.",
+    "Strict decoding rejects invalid UTF-8, malformed JSON, duplicate escaped keys and bodies above 128 KiB before proposal resolution or database mutation."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "canonical-api-build.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "canonical-api-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "canonical-api-lint-final.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "canonical-api-full-final.log",
+      "logSha256": "38ccf17917d15d9b4eda62bee224444c5a6491ce12add733997193ac93b86cef",
+      "testsPassed": 614
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/canonical-authority-api.test.ts packages/storage-sqlite/test/canonical-grants.test.ts",
+      "result": "pass",
+      "log": "canonical-api-focused-final.log",
+      "logSha256": "c267402d1298ff63bc0d700c09b32eb6bc48f2335a8d3c7eb8d3036879506ea7",
+      "testsPassed": 32
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "canonical-api-tooling.log",
+      "logSha256": "e2a956f5eec160d1afcbc8b039067d2d78c96fa84d1ee95b64623f23de0b3720",
+      "testsPassed": 45
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "canonical-api-pwce-process-final.log",
+      "logSha256": "c37b3ea5aa279f59d1e9a2330fa2d550203d592c425bb7093394b3e2ca558875"
+    },
+    {
+      "command": "node scripts/generate-provider-types.mjs --check",
+      "result": "pass",
+      "log": "canonical-api-generated-final.log",
+      "logSha256": "5cb96c1dd2424c7975592dcb075362423e40eb522b7e934343a1bcf24c1a963f"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "canonical-api-private-final.log",
+      "logSha256": "a0c1c04243b28609e287cff305f36e354bf3ee6f0f6fb47aae9c524f2ade0c76"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "canonical-api-workspace-final.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S043",
+      "result": "pass",
+      "log": "canonical-api-preflight-final.log",
+      "logSha256": "f238d15171e718050c6658c0fd89e067f8b03e7b9fce89e887304c272cb90994"
+    }
+  ],
+  "regressionCounts": {
+    "sourceTestsPassed": 614,
+    "newSourceTests": 13,
+    "focusedTestsPassed": 32,
+    "toolingTestsPassed": 45,
+    "separateProcessContextChecksPassed": 19,
+    "separateProcessRuntimeChecksPassed": 7
+  },
+  "preservedFailure": {
+    "command": "node scripts/check-pwce-context-process.mjs",
+    "log": "canonical-api-pwce-process.log",
+    "logSha256": "8ed9c4626bb93b8ee18ec12d17b1798a3abc9be1cdc63ac54427c28d6139dab4",
+    "cause": "The older compatibility checker read the previous top-level error code. The canonical API nests it under error.code. The updated checker validates the exact published response schema, failed status, null result, HTTP 503 and unchanged pwce_authority_unavailable code; no fallback criterion was relaxed."
+  },
+  "exclusions": [
+    "The HTTP tests use isolated databases, actual local-password sessions and a synthetic trusted proposal source. The real deployment/capability adapter supplying validated original invocation scope remains unfinished.",
+    "The saved control-web workflow still uses the legacy Assistant-scoped grant endpoints. Canonical UI migration, final dispatch/admission, consumption, invalidation and admitted-invocation ledger are pending; current canonical grants have no admitted invocations because dispatch is not connected.",
+    "Existing coarse grants retain their original records. Historical responses missing required audit custody are not upgraded by fabricated evidence. Broad S062/S069 and other current-source qualifications remain outstanding; no historical qualification selector was changed.",
+    "PWCE snapshot/precondition and approval integration, joint action scenarios and remaining S083/S084 development and qualification are not completed by this increment.",
+    "No saved-service restart, live configuration, deployment, personal-data import, training, live effect, provider/model change, model-quality rerun, browser or new Human acceptance is claimed. Approved schema bytes and historical observations remain unchanged."
+  ],
+  "nextAction": "Connect the canonical authority API to the actual deployment and validated original-invocation adapter, migrate the control-web request/grant workflow under LS-S044, and integrate canonical final admission, consumption, invocation history and invalidation under LS-S042. Continue independent PWCE and S083/S084 development; refresh broad current-source qualifications before acceptance."
+}

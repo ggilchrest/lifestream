@@ -103,6 +103,10 @@
     "./ports/provider-boundary": {
       "types": "./dist/ports/provider-boundary.d.ts",
       "import": "./dist/ports/provider-boundary.js"
+    },
+    "./capabilities/call": {
+      "types": "./dist/capabilities/call.d.ts",
+      "import": "./dist/capabilities/call.js"
     }
   },
   "scripts": {

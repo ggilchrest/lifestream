@@ -7,6 +7,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {createLifestreamServer} from '../apps/server/src/index.ts';
 import {loadProfile} from '../apps/server/src/config/loader.ts';
 import {FixtureInferenceProvider} from '../packages/runtime/dist/inference/fixture.js';
+import {createContractValidator} from '../packages/contracts/dist/index.js';
 const endpoint=process.env.PWCE_GATEWAY_URL,token=process.env.PWCE_GATEWAY_TOKEN;
 if(!endpoint||!token||new URL(endpoint).hostname!=='127.0.0.1')throw new Error('An isolated loopback PWCE fixture and synthetic token are required.');
 const root=await mkdtemp(join(tmpdir(),'ls-pwce-runtime-')),config=loadProfile('local-dev'),results=[];
@@ -32,7 +33,9 @@ try{
  const slices=JSON.parse(world.content).slices;assert.deepEqual(slices.map(s=>s.siteRefs),[['home.one'],['home.two']]);assert.ok(slices.every(s=>s.executionEnvironmentRef==='replay'));
  const items=slices.flatMap(s=>s.items);assert.equal(items.find(i=>i.subjectRef==='home.one::sensor.conflict').knowledgeState,'conflicted');assert.deepEqual(items.find(i=>i.subjectRef==='home.one::sensor.conflict').contradictions.map(i=>i.value),[false,true]);assert.equal(items.find(i=>i.subjectRef==='home.one::sensor.stale').knowledgeState,'stale');assert.equal(items.find(i=>i.subjectRef==='home.two::sensor.foreign').value,999);results.push('actual provider prompt preserves multiple sites, replay mode, conflicts and stale state');
  assert.match(text,/input.prompt-preview/);assert.ok(text.includes(world.sourceRevision));results.push('inspection reflects actual world source digest');
- const denied=await request('/api/authority/v1/grants');assert.equal(denied.status,503);assert.equal((await denied.json()).code,'pwce_authority_unavailable');results.push('no local grant fallback under PWCE selection');
+ const denied=await request('/api/authority/v1/grants');assert.equal(denied.status,503);const deniedBody=await denied.json();
+ const deniedContract=createContractValidator().validate('https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/ListAuthorityGrantsResponse',deniedBody);
+ assert.equal(deniedContract.valid,true,JSON.stringify(deniedContract));assert.equal(deniedBody.status,'failed');assert.equal(deniedBody.result,null);assert.equal(deniedBody.error.code,'pwce_authority_unavailable');results.push('no local grant fallback under PWCE selection; canonical failure envelope');
  hold=true;text=await stream();assert.match(text,/interaction.completed/);results.push('admitted generation survives one-second cache reuse age');
  const started=new Promise(resolve=>{entered=resolve;});const active=stream();await started;entered=undefined;
  await api('/api/runtime/v1/session-context',{expectedRevision:1,mode:'text',audienceScope:'unknown'});

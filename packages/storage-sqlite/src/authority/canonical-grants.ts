@@ -1,25 +1,27 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { createContractValidator } from '@lifestream/contracts';
-import type { GrantRequest, GrantLifecycleEvent, humanAuthorityGrant_Root as CanonicalGrant } from '@lifestream/contracts/provider-messages';
+import type { GrantRequest, GrantLifecycleEvent, ArtifactRef, SourceRevision, humanAuthorityGrant_Root as CanonicalGrant } from '@lifestream/contracts/provider-messages';
 import type { Database, Transaction } from '../database.js';
 export type { CanonicalGrant, GrantRequest, GrantLifecycleEvent };
 const providerSchema = 'https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/';
 const grantSchema = 'https://lifestream.dev/contracts/human-authority-grant/1.0.0';
 const common = 'https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/';
 const validator = createContractValidator();
-export type AuthorityCommand = { requestId: string; correlationId: string; idempotencyKey: string };
+export type AuthorityCommand = { requestId: string; correlationId: string; idempotencyKey: string; intent?: unknown };
 export type GrantOwnerBinding = { assistantId: string; endpointId: string; environmentId: string; sessionId: string | null };
 /** Supplied only by the authenticated host, never deserialized from an API body. */
 export type CanonicalHumanContext = {
   principalId: string; providerRef: string; authenticationEvidenceRef: string;
   now(): string; assertCurrent(binding: GrantOwnerBinding): void;
+  assertAssistant?(assistantId: string): void;
+  authenticationEvidence?: { data: string; schemaRef: string };
 };
 /** The capability adapter supplies validated scope/digest and deterministic display text. */
 export type TrustedGrantProposal = {
   request: Omit<GrantRequest, 'schemaVersion' | 'requestId' | 'revision' | 'principalId' | 'authorityProviderRef' | 'confirmationDigest' | 'state' | 'grantId' | 'createdAt'>;
   scopeDerivation: 'validatedArguments' | 'inputBoundOnly';
 };
-export type AuthorityMutation = { request: GrantRequest | null; grant: CanonicalGrant | null; events: GrantLifecycleEvent[] };
+export type AuthorityMutation = { request: GrantRequest | null; grant: CanonicalGrant | null; events: GrantLifecycleEvent[]; auditRef?: ArtifactRef; sourceRevision?: SourceRevision };
 export class CanonicalGrantError extends Error {
   readonly code: 'invalid' | 'notFound' | 'conflict' | 'expired' | 'unavailable' | 'capacity' | 'scopeDerivationRequired';
   constructor(code: CanonicalGrantError['code']) { super(`Canonical authority ${code}`); this.code = code; }
@@ -99,7 +101,7 @@ export class CanonicalGrantRepository {
     apply: (tx: Transaction) => AuthorityMutation, finalCheck?: (result: AuthorityMutation) => void): AuthorityMutation {
     command = structuredClone(command);
     for (const value of [command.requestId, command.correlationId, command.idempotencyKey, context.principalId]) check(common + 'UUID', value);
-    const inputDigest = hash(canonical(input)), principalId = context.principalId;
+    const inputDigest = hash(canonical(command.intent ?? input)), principalId = context.principalId;
     return this.database.transaction(tx => {
       clock(context);
       if (context.providerRef !== this.providerRef || context.principalId !== principalId) fail('notFound');
@@ -123,9 +125,86 @@ export class CanonicalGrantRepository {
       if (result.request) this.guard(context, result.request);
       if (result.grant) this.guard(context, result.grant);
       finalCheck?.(result);
+      const subject = result.request ?? result.grant;
+      if (!subject) fail('unavailable');
+      const schema = result.request ? providerSchema + 'GrantRequest' : grantSchema;
+      const recordRef = this.saveArtifact(tx, `urn:lifestream:authority-record:${command.idempotencyKey}`, subject!, schema, JSON.stringify(subject));
+      const intent = command.intent as { payload?: { reason?: { code: string; summary: string } } } | undefined;
+      const reason = check(common + 'Reason', intent?.payload?.reason ?? { code: `authority_${operation}`, summary: `Recorded authority operation ${operation}` });
+      const audit = { schemaVersion: '1.0.0', operation, requestId: command.requestId, correlationId: command.correlationId,
+        principalId, assistantId: subject!.assistantId, commandDigest: inputDigest, occurredAt: clock(context),
+        grantRequestId: result.request?.requestId ?? result.grant?.grantRequestId ?? null, grantId: result.grant?.grantId ?? null,
+        revision: subject!.revision, disposition: result.request?.state ?? result.grant!.status, reason, recordRef,
+        lifecycleEventIds: result.events.map(event => event.eventId) };
+      result.auditRef = this.saveArtifact(tx, `urn:lifestream:authority-audit:${command.idempotencyKey}`, subject!, 'urn:lifestream:local-authority-audit:1', JSON.stringify(audit));
+      result.sourceRevision = this.revision(tx, subject!.principalId, subject!.assistantId);
+      this.guard(context, subject!); finalCheck?.(result);
       const json = JSON.stringify(result); if (Buffer.byteLength(json) > 524288) fail('capacity');
       tx.run('INSERT INTO canonical_authority_commands VALUES (?,?,?,?,?,?)', command.idempotencyKey, principalId, operation, inputDigest, json, hash(json));
       return structuredClone(result);
+    });
+  }
+  private revision(tx: Transaction, principalId: string, assistantId: string): SourceRevision {
+    const requests = tx.all<{ request_id: string; sha256: string }>('SELECT request_id,sha256 FROM canonical_grant_requests WHERE principal_id=? AND assistant_id=? ORDER BY request_id', principalId, assistantId);
+    const grants = tx.all<{ grant_id: string; sha256: string }>('SELECT grant_id,sha256 FROM canonical_grants WHERE principal_id=? AND assistant_id=? ORDER BY grant_id', principalId, assistantId);
+    return { providerRef: this.providerRef, revision: hash(JSON.stringify({ requests, grants })), highWaterMark: null };
+  }
+  sourceRevision(assistantId: string, context: CanonicalHumanContext): SourceRevision {
+    check(common + 'UUID', assistantId); clock(context);
+    if (context.providerRef !== this.providerRef || !context.assertAssistant) fail('unavailable');
+    context.assertAssistant!(assistantId);
+    return this.database.transaction(tx => { const result = this.revision(tx, context.principalId, assistantId); context.assertAssistant!(assistantId); return result; });
+  }
+  private saveArtifact(tx: Transaction, reference: string, binding: GrantOwnerBinding & { principalId: string; authorityProviderRef: string }, schemaRef: string, bytes: string): ArtifactRef {
+    if (Buffer.byteLength(bytes) > 131072 || !schemaRef || schemaRef.length > 500) fail('capacity');
+    const owner = { principalId: binding.principalId, assistantId: binding.assistantId, endpointId: binding.endpointId, environmentId: binding.environmentId, sessionId: binding.sessionId, authorityProviderRef: binding.authorityProviderRef };
+    const artifact: ArtifactRef = { reference, sha256: hash(bytes), mediaType: 'application/json', schemaRef, byteLength: Buffer.byteLength(bytes) };
+    check(common + 'ArtifactRef', artifact);
+    tx.run('INSERT INTO canonical_authority_artifacts VALUES (?,?,?,?,?,?,?)', reference, binding.principalId, binding.assistantId, JSON.stringify(owner), schemaRef, bytes, artifact.sha256);
+    return artifact;
+  }
+  artifact(reference: string, context: CanonicalHumanContext): { artifact: ArtifactRef; bytes: Uint8Array } {
+    return this.database.transaction(tx => {
+      const row = tx.get<{ binding_json: string; schema_ref: string; payload_json: string; sha256: string }>('SELECT * FROM canonical_authority_artifacts WHERE reference=? AND principal_id=?', reference, context.principalId);
+      if (!row) return fail('notFound');
+      if (hash(row.payload_json) !== row.sha256) fail('unavailable');
+      this.guard(context, JSON.parse(row.binding_json));
+      return { artifact: { reference, sha256: row.sha256, mediaType: 'application/json', schemaRef: row.schema_ref, byteLength: Buffer.byteLength(row.payload_json) }, bytes: new Uint8Array(Buffer.from(row.payload_json)) };
+    });
+  }
+  /** Identical transport intent can replay without consulting a changed capability catalog. */
+  replay(operation: string, intent: unknown, command: AuthorityCommand, context: CanonicalHumanContext): AuthorityMutation | undefined {
+    check(common + 'UUID', command.idempotencyKey); clock(context);
+    const row = this.database.connection.prepare('SELECT 1 FROM canonical_authority_commands WHERE idempotency_key=?').get(command.idempotencyKey);
+    if (!row) return undefined;
+    return this.mutate(operation, intent, { ...command, intent }, context, () => fail('unavailable'));
+  }
+  list(kind: 'requests' | 'grants', assistantId: string, states: string[], page: { limit: number; cursor: string | null }, context: CanonicalHumanContext): { records: Array<GrantRequest | CanonicalGrant>; sourceRevision: SourceRevision; nextCursor: string | null } {
+    check(common + 'UUID', assistantId); check(common + 'Page', page); clock(context);
+    const allowed = kind === 'requests' ? ['pending','approved','denied','cancelled','expired'] : ['active','consumed','revoked','expired'];
+    if (!Array.isArray(states) || states.length > allowed.length || states.some(state => !allowed.includes(state)) || !context.assertAssistant || context.providerRef !== this.providerRef) fail('invalid');
+    states = [...new Set(states)].sort(); page = structuredClone(page); const principal = context.principalId;
+    context.assertAssistant!(assistantId);
+    return this.database.transaction(tx => {
+      const sourceRevision = this.revision(tx, principal, assistantId);
+      const query = hash(canonical({ principal, assistantId, kind, states, limit: page.limit })); let after = '';
+      if (page.cursor !== null) {
+        try { const cursor = JSON.parse(Buffer.from(page.cursor, 'base64url').toString('utf8'));
+          if (Object.keys(cursor).sort().join(',') !== 'after,query,revision' || cursor.query !== query || cursor.revision !== sourceRevision.revision || !validator.validate(common + 'UUID', cursor.after).valid) fail('conflict');
+          after = cursor.after;
+        } catch { fail('conflict'); }
+      }
+      const table = kind === 'requests' ? 'canonical_grant_requests' : 'canonical_grants', id = kind === 'requests' ? 'request_id' : 'grant_id', state = kind === 'requests' ? 'state' : 'status';
+      const filter = states.length ? ` AND json_extract(payload_json,'$.${state}') IN (${states.map(() => '?').join(',')})` : '';
+      const rows = tx.all<Row & { record_id: string }>(`SELECT ${id} AS record_id,payload_json,sha256 FROM ${table} WHERE principal_id=? AND assistant_id=? AND ${id}>?${filter} ORDER BY ${id} LIMIT ?`, principal, assistantId, after, ...states, page.limit + 1);
+      const selected = rows.slice(0, page.limit);
+      const records = selected.map(row => {
+        const record = stored<GrantRequest | CanonicalGrant>(row, kind === 'requests' ? providerSchema + 'GrantRequest' : grantSchema);
+        if (('requestId' in record ? record.requestId : record.grantId) !== row.record_id || record.assistantId !== assistantId) fail('unavailable');
+        this.guard(context, record); return record;
+      });
+      context.assertAssistant!(assistantId); if (context.principalId !== principal) fail('notFound');
+      return { records, sourceRevision, nextCursor: rows.length > page.limit ? Buffer.from(JSON.stringify({ after: selected.at(-1)!.record_id, query, revision: sourceRevision.revision })).toString('base64url') : null };
     });
   }
   createRequest(proposal: TrustedGrantProposal, command: AuthorityCommand, context: CanonicalHumanContext): AuthorityMutation {
@@ -154,18 +233,25 @@ export class CanonicalGrantRepository {
         issuedAt: now, expiresAt: request.grantExpiresAt, reviewAfter: request.reviewAfter, issuedBy: context.principalId,
         grantRequestId: request.requestId, authenticationEvidenceRef: context.authenticationEvidenceRef, consumedDecisionId: null };
       const event = this.event(grant, 'issued', command, context, now), decided: GrantRequest = { ...request, state: 'approved', revision: request.revision + 1, grantId: grant.grantId };
+      if (context.authenticationEvidence) this.saveArtifact(tx, grant.authenticationEvidenceRef, grant, context.authenticationEvidence.schemaRef, context.authenticationEvidence.data);
       this.saveGrant(tx, grant, event); this.saveRequest(tx, decided); return { request: decided, grant, events: [event] };
     }, result => dates(result.request!, clock(context)));
   }
-  decideRequest(input: { requestId: string; expectedRevision: number; decision: 'denied' | 'cancelled' }, command: AuthorityCommand, context: CanonicalHumanContext): AuthorityMutation {
+  decideRequest(input: { requestId: string; expectedRevision: number; decision: 'denied' | 'cancelled'; confirmationDigest?: string; reason?: { code: string; summary: string } }, command: AuthorityCommand, context: CanonicalHumanContext): AuthorityMutation {
     input = structuredClone(input); command = structuredClone(command);
     if (!['denied','cancelled'].includes(input.decision)) fail('invalid');
     return this.mutate('decideRequest', input, command, context, tx => {
       const request = this.request(tx, input.requestId, context);
-      if (request.state !== 'pending' || request.revision !== input.expectedRevision) fail('conflict');
+      if (request.state !== 'pending' || request.revision !== input.expectedRevision || (input.confirmationDigest !== undefined && (input.confirmationDigest !== request.confirmationDigest || request.confirmationDigest !== confirmation(request)))) fail('conflict');
       if (Date.parse(request.expiresAt) <= Date.parse(clock(context))) fail('expired');
       const next = { ...request, state: input.decision, revision: request.revision + 1 }; this.saveRequest(tx, next); return { request: next, grant: null, events: [] };
     });
+  }
+  inspectRequest(id: string, context: CanonicalHumanContext): GrantRequest {
+    return this.database.transaction(tx => this.request(tx, id, context));
+  }
+  inspectGrant(id: string, context: CanonicalHumanContext): CanonicalGrant {
+    return this.database.transaction(tx => this.grant(tx, id, context));
   }
   getRequest(id: string, context: CanonicalHumanContext): GrantRequest {
     return this.database.transaction(tx => {
@@ -188,7 +274,7 @@ export class CanonicalGrantRepository {
   getGrant(id: string, context: CanonicalHumanContext): CanonicalGrant {
     return this.database.transaction(tx => { const grant = this.currentGrant(tx, id, context); this.guard(context, grant); return grant; });
   }
-  revokeGrant(input: { grantId: string; expectedRevision: number }, command: AuthorityCommand, context: CanonicalHumanContext): AuthorityMutation {
+  revokeGrant(input: { grantId: string; expectedRevision: number; reason?: { code: string; summary: string } }, command: AuthorityCommand, context: CanonicalHumanContext): AuthorityMutation {
     input = structuredClone(input); command = structuredClone(command);
     return this.mutate('revokeGrant', input, command, context, tx => {
       const grant = this.currentGrant(tx, input.grantId, context);
