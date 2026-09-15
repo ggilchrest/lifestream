@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-14T23:59:42.690781Z",
+  "slice": "LS-S084",
+  "status": "inProgress",
+  "claim": "Bounded contextual candidate compilation, scoped current-turn selection, session request inclusion history and restore-safe individual suppression. Full Discovery and Initiative remain incomplete.",
+  "baseRevision": "5ed569e32324785c4d789223a0e25a21856c6f29",
+  "specificationRevision": "79150e7dc9c7715a34f6d28254de45d6105e147a",
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "bd7b67bbec3b7f59466024083d6d82618d41b40b63076b0591c05d75c8f42815"
+    },
+    {
+      "path": "apps/control-web/discovery-workflows.js",
+      "sha256": "43701356b23a07a345481d57a52acda409325e48de530e9a4e0e3012df999579"
+    },
+    {
+      "path": "apps/control-web/relationship-extensions.js",
+      "sha256": "2a739a1b1b22e08e4575c1b712ed743833407b8feb0bdf36357246644bf228f8"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "df33b0bac7f5a90a25e2e5fa68f0f66e69189182b44160913ab23b02293cfdab"
+    },
+    {
+      "path": "apps/control-web/test/understanding.test.mjs",
+      "sha256": "d600c45578d7ac7673a08fd9a2eb5453950bbefd6bc90eabf5a0d63979148cf8"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-candidates.ts",
+      "sha256": "a5112fc81b0791d5b2449463e240d0d1bcee8b7beee964fa356a64fe0a6f4692"
+    },
+    {
+      "path": "apps/server/src/admin/recovery-journal.ts",
+      "sha256": "774f5b698e4c45522b60fdd6e5687cf91b6af0356df7c9d6e965882f2e8ca221"
+    },
+    {
+      "path": "apps/server/src/admin/relationship-recovery.ts",
+      "sha256": "bf31af4dba4d5180268f1d97006a8b9eed509907850dd4eb66055c90e23fbd67"
+    },
+    {
+      "path": "apps/server/src/admin/understanding.ts",
+      "sha256": "97c39826d80cef0f741a3681ee93b08cbe078cc4939cca545694dd0044ec1e80"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "15a1ef1515ed77c00b21c8859f7eb3ebc0d416b381400babb6444827ab654bac"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "c5af6f7cc1996c099eaee62893d97d09356fd65225b429e753b8c1794be149c1"
+    },
+    {
+      "path": "apps/server/src/runtime/inference.ts",
+      "sha256": "4f87a1cab8a005e63d35b9e979afc7f069b24582094bdfc44bbe6ac80f69e9f1"
+    },
+    {
+      "path": "apps/server/test/discovery-candidates.test.ts",
+      "sha256": "4aae6c6d63f51241dc66f5336863f2525b6bf0bba57a684823b568589ef2dcaf"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "0c5398a8e6c10cf8d1d49038d528dea5a3ef10c20f3420da048c25addea9b6f0"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "27729aaddfdf3dbbac0012571d8982c1bd17f92a1a91d9e181010a227330a58e"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0022_understanding_candidates.sql",
+      "sha256": "ea414e0fdb887f0622e323ffb1e57cdf4da5a4bc14df4f1aa53347975373e8f2"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "64f831c99ac214231cd2f251d1d534fda24074cb5c438ffdfca28a97af9d8796"
+    },
+    {
+      "path": "packages/storage-sqlite/src/understanding.ts",
+      "sha256": "08286d808d5d7512322ebc2644eae46081e0f7c92d4dcdb27abd6faeb404a65f"
+    },
+    {
+      "path": "packages/storage-sqlite/test/understanding.test.ts",
+      "sha256": "749cfc4371fad7bede5ea03f3c5aa314c45424a88f9d6e4c7618ab6cbfeec1b0"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "306 passed",
+      "logSha256": "998890e7837e9edc5ad7a2288ce070b73517e5eb5f6ef413555fe610d7b1e859"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "28 passed",
+      "logSha256": "dc8f4a60b752f25f787d84622309cedeb1d984105be30b4dc3fe95e830781fac"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "45 passed",
+      "logSha256": "cb6984695ca7ebf8023955626963e1869be22b8e524a20cb569e2e4a79348b9d"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass; specification checks only",
+      "logSha256": "e81480730d2d1f9050249b2b7d1eab5c546d87d302292e0c1e0cbeff50cf9ded"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass; structure only",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "verifiedComponentBehavior": [
+    "Preparation atomically publishes a current TopicBrief or tentative hypothesis with schema-validated, scoped candidates. Candidates expire within ten minutes and no later than their prepared parent.",
+    "Candidate publication rejects unavailable parents, expired or mismatched dependencies, invalid lifetime and suppressed identities or matching fingerprints.",
+    "Live optional lookup reads at most 32 indexed rows; explicit topic matches precede weaker lexical overlap. An explicitly named domain withholds mismatched topic candidates. Current correction wording withholds optional enrichment.",
+    "Authenticated synthetic provider-request inspection confirms the current domain detail is included and the alternate-domain detail excluded. A repeated request in the same session excludes the already-submitted candidate.",
+    "Typed and voice provider calls share bounded inclusion bookkeeping. Inclusion is not reported as generation, delivery, consumption or model use.",
+    "Individual suppression records a minimal owner-local journal intent before SQLite application. Failed storage application withholds affected use and accepts an identical retry.",
+    "Restoring the pre-suppression database reapplies suppression before use. Supporting source briefs remain retained. Scope and retry conflicts fail closed.",
+    "The browser workflow exposes separate candidate records with full identifiers, expiry, grounding, uncertainty, alternatives and independent scores. Unknown scores remain visibly unknown.",
+    "Preview and confirmation identify the selected candidate and revision. A suppressed record stays visible and unavailable for selection. Mobile capture was visually inspected."
+  ],
+  "screenshots": [
+    {
+      "label": "Mobile candidate inspector after suppression",
+      "sha256": "ea12d5ed74675d659e658af9e52d57d0d2f4789289481c96e4b4ae36c4435fc1"
+    }
+  ],
+  "limitations": [
+    "Input and recovery checks use synthetic material and a fixture provider. No selected-provider model behavior or physical voice delivery is certified.",
+    "Selection is bounded lexical and explicit-topic matching, not a general semantic domain resolver. Multi-domain ambiguity, richer candidate kinds, personal-interest strength, calibrated scoring and exploration allocation remain incomplete.",
+    "Candidate suppression fingerprints detect matching structured content and pinned source/evidence versions, not semantic paraphrases.",
+    "Session inclusion history is volatile and bounded to 128 scope/session entries and 32 identifiers per entry. It records attempted provider submission, not successful output; it does not provide durable cross-session repetition policy.",
+    "Existing topic briefs remain inspectable, but legacy brief projections are withheld from the new candidate-only selector until preparation is explicitly rerun. Mandatory relationship context remains available.",
+    "Suppression advances the existing recovery boundary, conservatively withholding other derived suggestions until rebuilt while retaining their source evidence.",
+    "Live model analysis admission, isolated Discovery Lab, S083 opportunity/output lifecycle, corpus/provider/voice performance qualification and current-source prerequisite successor receipts remain pending.",
+    "No saved review service restart, live configuration, personal-data import, network research, provider selection, training or new Human acceptance occurred."
+  ],
+  "schemaExportChanged": false,
+  "modelQualityObservationsChanged": false,
+  "humanAcceptanceClaim": false
+}

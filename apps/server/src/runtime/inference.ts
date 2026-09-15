@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import { buildCanonicalPrompt, type RuntimeSelfContext, type AssistantPersonaProjection } from "@lifestream/runtime/inference/prompt";
-import type { InferenceProvider } from "@lifestream/runtime/inference";
+import type { InferenceProvider,InferenceRequest } from "@lifestream/runtime/inference";
 
 type Body = Record<string, unknown>;
 export type InferenceRuntimeIdentity = { profile: string; implementation: string; model: string; revision: string; fixture: boolean };
-export type HostRuntimeInput = { inspection?: { fullPromptPreview: boolean }; endpointId?: string | null; assistantId: string; runtimeSelfContext: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection; preparedRelationshipContext?: NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]>; isCurrent: () => boolean };
+export type HostRuntimeInput = { onInferenceRequest?: (request:InferenceRequest)=>void; inspection?: { fullPromptPreview: boolean }; endpointId?: string | null; assistantId: string; runtimeSelfContext: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection; preparedRelationshipContext?: NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]>; isCurrent: () => boolean };
 const writeEvent = (response: ServerResponse, event: string, data: unknown) => response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 
 export async function streamMessage(response: ServerResponse, provider: InferenceProvider | undefined, body: Body, sessionId: string, aborted: AbortSignal, providerIdentity?: InferenceRuntimeIdentity, runtimeSelfContext?: RuntimeSelfContext, hostInput?: HostRuntimeInput): Promise<void> {
@@ -25,6 +25,8 @@ export async function streamMessage(response: ServerResponse, provider: Inferenc
   const abortCode = () => controller.signal.reason instanceof Error && controller.signal.reason.message === "deadline" ? "deadline_exceeded" : "cancelled";
   let terminal = false;
   try {
+    if(controller.signal.aborted||hostInput&&!hostInput.isCurrent()){writeEvent(response,'interaction.error',{code:controller.signal.aborted?abortCode():'runtime_context_changed',message:'Current request scope is unavailable.'});terminal=true;return;}
+    try{hostInput?.onInferenceRequest?.(request);}catch{/* Optional repetition bookkeeping cannot block an ordinary reply. */}
     for await (const chunk of provider.generate(request, { signal: controller.signal })) {
       if (response.destroyed) break;
       if (hostInput && !hostInput.isCurrent()) { terminal = true; controller.abort(); writeEvent(response, "interaction.error", { code: "runtime_input_stale", message: "The interaction context changed. Please retry with the current scope." }); break; }

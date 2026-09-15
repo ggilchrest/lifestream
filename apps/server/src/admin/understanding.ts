@@ -1,9 +1,10 @@
+import {compileDiscoveryCandidates} from './discovery-candidates.ts';
 import {analyzeDiscoveryEvidence,type DiscoveryAnalysisPort,type DiscoveryEvidence} from "./discovery-analysis.ts";
 import { recoveryDigest } from "./recovery-journal.ts";
 import { randomUUID } from "node:crypto";
 import { createContractValidator } from "@lifestream/contracts";
-import { UnderstandingRepository, understandingDigest, hypothesisFingerprint, type Database, type UnderstandingRecord, type UnderstandingScope } from "@lifestream/storage-sqlite";
-import type {HypothesisRejection} from './recovery-journal.ts';
+import { UnderstandingRepository, understandingDigest, hypothesisFingerprint, candidateFingerprint, type Database, type UnderstandingRecord, type UnderstandingScope } from "@lifestream/storage-sqlite";
+import type {HypothesisRejection,CandidateSuppression} from './recovery-journal.ts';
 import { UnderstandingWorkCoordinator } from "@lifestream/runtime/understanding/coordinator";
 import { selectPreparedEnrichment } from "@lifestream/runtime/understanding/selection";
 import { extensionError, type RelationshipConfiguration } from "../relationship-extensions.ts";
@@ -13,7 +14,7 @@ type Snapshot = { boundary:string; configuration:RelationshipConfiguration|undef
 type Claim = {claimId:string;text:string;sourceRefs:string[];qualifier:string;versionScope:string;spoilerClass:string;contradictionRefs:string[]};
 type Source = {sourceRef:string;sourceFamily:string;sourceRevision:string;topicRef:string;policyRef:string;retrievedAt:string;reliability:string;reliabilityBasis:string;content:string;claims:Claim[];aliasClaims:Claim[];knowledgeGaps:string[]};
 type Settings = {enabled:boolean;researchMode:string;policyRefs:string[];approvedTopicRefs:string[];excludedSourceRefs:string[];excludedTopicRefs:string[];spoilerPolicy:string;progressBoundaryRef:string|null;budget:Record<string,number>};
-type DiscoveryHost={rejectHypothesis?:(scope:UnderstandingScope,target:HypothesisRejection|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};analysis?:()=>DiscoveryAnalysisPort|undefined;evidence?:(scope:UnderstandingScope,refs:string[])=>DiscoveryEvidence[];changed:()=>void};
+type DiscoveryHost={suppressCandidate?:(scope:UnderstandingScope,target:CandidateSuppression|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';rejectHypothesis?:(scope:UnderstandingScope,target:HypothesisRejection|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};analysis?:()=>DiscoveryAnalysisPort|undefined;evidence?:(scope:UnderstandingScope,refs:string[])=>DiscoveryEvidence[];changed:()=>void};
 const validator=createContractValidator();
 const schema="https://lifestream.dev/contracts/understanding-api/1.0.0";
 export class DiscoveryAdministration {
@@ -21,6 +22,7 @@ export class DiscoveryAdministration {
   private readonly coordinator=new UnderstandingWorkCoordinator({pressureAllowsWork:()=>process.memoryUsage().heapUsed<256*1024*1024});
   private readonly tasks=new Map<string,{relationshipId:string;scope:UnderstandingScope;promise:Promise<unknown>}>();
   private closed=false;
+  private readonly recent=new Map<string,{revision:number;ids:Map<string,number>}>();
   private readonly cleanupTimer:ReturnType<typeof setInterval>;
   private readonly host:DiscoveryHost;
   constructor(database:Database,host:DiscoveryHost){
@@ -28,8 +30,15 @@ export class DiscoveryAdministration {
     this.cleanupTimer=setInterval(()=>{try{this.repository.cleanupExpired();}catch{/* Expired data remains denied; retry bounded maintenance on the next interval. */}},30000);
     this.cleanupTimer.unref();
   }
+  private recentKey(scope:UnderstandingScope,sessionId:string):string{return understandingDigest([scope.assistantId,scope.userId,scope.relationshipId,scope.deploymentId,sessionId]);}
+  selectionRevision(scope:UnderstandingScope,sessionId?:string):number{return sessionId?this.recent.get(this.recentKey(scope,sessionId))?.revision??0:0;}
+  noteRequest(scope:UnderstandingScope,sessionId:string,ids:string[]):void {
+    if(!ids.length)return;const key=this.recentKey(scope,sessionId),entry=this.recent.get(key)??{revision:0,ids:new Map<string,number>()};
+    for(const id of ids.slice(0,8))if(/^discovery-candidate:[a-f0-9-]{36}$/u.test(id))entry.ids.set(id,Date.now()+600000);
+    while(entry.ids.size>32)entry.ids.delete(entry.ids.keys().next().value!);entry.revision++;this.recent.delete(key);this.recent.set(key,entry);while(this.recent.size>128)this.recent.delete(this.recent.keys().next().value!);
+  }
   foregroundStarted():()=>void{return this.coordinator.foregroundStarted();}
-  close():void{if(this.closed)return;this.closed=true;clearInterval(this.cleanupTimer);for(const [key,task] of this.tasks){this.coordinator.cancel(key);this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
+  close():void{if(this.closed)return;this.closed=true;this.recent.clear();clearInterval(this.cleanupTimer);for(const [key,task] of this.tasks){this.coordinator.cancel(key);this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
   invalidate(relationshipId:string):void{for(const [key,task]of this.tasks)if(task.relationshipId===relationshipId)this.coordinator.cancel(key);}
   records(scope:UnderstandingScope):UnderstandingRecord[]{return this.repository.list(scope,this.host.snapshot(scope).boundary);}
   private response(scope:UnderstandingScope,operation:string,records:UnderstandingRecord[],message:string,status=200):Result{
@@ -49,6 +58,22 @@ export class DiscoveryAdministration {
         const response=this.response(scope,operation,[],result.replay?"Existing feedback admission; inspect its current review state in Records. No statement was recreated.":"Explicit scoped feedback is pending review in Records. Previous Discovery projections are withheld until rebuilt under the current evidence boundary.",result.replay?200:201);
         (response.body.explanations as {sourceRefs:string[]}[])[0]!.sourceRefs=[result.recordRef];return response;
       }catch(error){return extensionError(409,"feedback_conflict",error instanceof Error?error.message:"Scoped feedback could not be recorded.");}
+    }
+    if(operation==='disposition'&&request.decision==='suppressCandidate'){
+      try{
+        if(!this.host.suppressCandidate)throw new Error('Owner-local candidate suppression is unavailable');
+        this.repository.assertCandidateRetry(scope,String(request.idempotencyKey),understandingDigest(request));
+        let outcome=this.host.suppressCandidate(scope,undefined,request);
+        if(outcome==='missing'){
+          const candidate=this.records(scope).find(record=>record.recordType==='candidate'&&record.candidateId===request.recordId&&record.revision===request.expectedRevision&&record.status==='proposed');
+          if(!candidate)throw new Error('Select a current proposed candidate at its current revision');
+          this.invalidate(scope.relationshipId);outcome=this.host.suppressCandidate(scope,{deploymentId:scope.deploymentId,candidateId:String(candidate.candidateId),expectedRevision:Number(candidate.revision),fingerprint:candidateFingerprint(candidate)},request);
+        }
+        this.host.changed();if(outcome==='conflict')throw new Error('Candidate suppression retry conflict');
+        if(outcome!=='applied')return extensionError(409,'candidate_suppression_pending','Suppression intent withholds derived use. Retry the same request to finish cleanup.');
+        const candidate=this.records(scope).find(record=>record.candidateId===request.recordId);
+        return this.response(scope,operation,candidate?[candidate]:[],'Optional candidate suppressed. Supporting evidence is unchanged; suppression survives database rollback.');
+      }catch(error){return extensionError(409,'candidate_suppression_conflict',error instanceof Error?error.message:'Candidate suppression conflict');}
     }
     if(operation==='disposition'&&['reviewHypothesis','rejectHypothesis'].includes(String(request.decision))){
       try{
@@ -132,7 +157,7 @@ export class DiscoveryAdministration {
             const freshUntil=Math.min(now+budget.briefFreshnessSeconds!*1000,...sources.map(source=>Date.parse(source.retrievedAt)+budget.briefFreshnessSeconds!*1000));
             const brief:UnderstandingRecord={...scope,schemaVersion:"1.0.0",recordType:"topicBrief",briefId:randomUUID(),revision:1,topicRef:topic,derived:true,status:"prepared",sources:sources.map(({content:_content,claims:_claims,aliasClaims:_aliases,knowledgeGaps:_gaps,topicRef:_topic,...source})=>({...source,kind:"providedFixture"})),claims,aliasClaims,knowledgeGaps:[...new Set(sources.flatMap(source=>source.knowledgeGaps))].slice(0,16),deeperMaterialRefs:[],builtAt:new Date().toISOString(),freshUntil:new Date(freshUntil).toISOString(),compilerRef:"provided-source-attribution:1",dependencyRefs,configurationRef};
             return brief;
-          }],publish:brief=>this.repository.publish(scope,key,snapshot.boundary,[brief],()=>current())});
+          }],publish:brief=>this.repository.publish(scope,key,snapshot.boundary,[brief,...compileDiscoveryCandidates(brief,snapshot.boundary)],()=>current())});
         if(!this.closed&&result.state!=="published")this.repository.finish(scope,key,result.state==="failed"?"failed":"cancelled",result.reason);
         if(!this.closed&&result.state==="published")this.host.changed();
       }).catch(()=>{if(!this.closed)this.repository.finish(scope,key,"failed","Preparation failed without publication or automatic retry.");}).finally(()=>this.tasks.delete(key));
@@ -161,19 +186,19 @@ export class DiscoveryAdministration {
         if(this.closed)return;
         const result=await this.coordinator.run({key,deadlineAt:Date.parse(String(work.deadlineAt)),current,admitOnce:()=>this.repository.start(scope,key),sharedInference:true,providerPreemptionBoundMs:port.preemptionBoundMs!,
           steps:[async signal=>(await analyzeDiscoveryEvidence({scope,topicRef:topic,workId:key,configurationRef,dependencyRefs,evidence,port,maximumOutputTokens:budget.outputTokensPerCall!,maximumInputBytes:Math.min(budget.inputBytesPerJob!,budget.sourceTokensPerJob!),deadlineAt:String(work.deadlineAt),signal,current})).record],
-          publish:record=>this.repository.publish(scope,key,snapshot.boundary,[record],()=>current())});
+          publish:record=>this.repository.publish(scope,key,snapshot.boundary,[record,...compileDiscoveryCandidates(record,snapshot.boundary)],()=>current())});
         if(!this.closed&&result.state!=="published")this.repository.finish(scope,key,result.state==="failed"?"failed":"cancelled",result.reason);
         if(!this.closed&&result.state==="published")this.host.changed();
       }).catch(()=>{if(!this.closed)this.repository.finish(scope,key,"failed","Analysis failed without publication or automatic retry.");}).finally(()=>this.tasks.delete(key));
       this.tasks.set(key,{relationshipId:scope.relationshipId,scope,promise});return this.response(scope,"prepare",[work],"Analysis admitted. Its explanations remain tentative and require review.",202);
     }catch(error){return extensionError(409,"analysis_admission_denied",error instanceof Error?error.message:"Analysis admission denied");}
   }
-  select(scope:UnderstandingScope,input:string,audience:"authenticatedSession"|"unknown",remainingBytes:number){
+  select(scope:UnderstandingScope,input:string,audience:"authenticatedSession"|"unknown",remainingBytes:number,sessionId?:string){
     const start=performance.now(),snapshot=this.host.snapshot(scope),settings=snapshot.configuration?.extensions?.understanding as Settings|undefined;
     const enabled=!!settings?.enabled&&audience==="authenticatedSession"&&!/\b(?:actually|instead|not|never|correction|stop)\b|don't|no longer/iu.test(input);
     const budget={tokens:Math.max(0,Math.min(settings?.budget.enrichmentTokens??0,remainingBytes-1)),items:settings?.budget.selectedItems??0,deadlineMs:settings?.budget.optionalSelectionDeadlineMs??10};
     let candidates:ReturnType<UnderstandingRepository["select"]>=[];
-    try{if(enabled)candidates=this.repository.select(scope,snapshot.boundary,input);}catch{/* Optional index failure withholds enrichment; the ordinary reply remains available. */}
+    try{if(enabled){candidates=this.repository.select(scope,snapshot.boundary,input);const recent=sessionId?this.recent.get(this.recentKey(scope,sessionId)):undefined;if(recent)candidates=candidates.filter(item=>(recent.ids.get(item.id)??0)<=Date.now());}}catch{/* Optional index failure withholds enrichment; the ordinary reply remains available. */}
     const selected=selectPreparedEnrichment({candidates,enabled,budget,boundaryCurrent:()=>snapshot.boundary===this.host.snapshot(scope).boundary,now:()=>performance.now()});
     if(performance.now()-start>=budget.deadlineMs)return {...selected,items:[],content:"",tokenUpperBound:0,freshUntil:Date.now(),disposition:"deadline" as const};
     return {...selected,freshUntil:Math.min(Date.now()+120000,...candidates.filter(item=>selected.items.some(chosen=>chosen.id===item.id)).map(item=>item.freshUntil))};

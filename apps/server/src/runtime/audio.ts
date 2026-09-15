@@ -141,6 +141,8 @@ export class AudioSession {
 
         };
         const generation = (async () => {
+        this.invalidateIfStale();if(controller.signal.aborted)throw new Error('audio turn interrupted');
+        try{this.currentInput?.onInferenceRequest?.(prompt);}catch{/* Optional inclusion bookkeeping is not speech authority. */}
         for await (const chunk of this.deps.inference.generate(prompt, { signal: controller.signal })) {
           this.invalidateIfStale();
           if (controller.signal.aborted) throw new Error("audio turn interrupted");

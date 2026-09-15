@@ -10,8 +10,9 @@ function fixture(){
  const repo=new UnderstandingRepository(db,()=>now),scope:UnderstandingScope={assistantId:randomUUID(),userId:randomUUID(),relationshipId:randomUUID(),deploymentId:randomUUID()},boundary=understandingDigest("current");
  const work=(key=randomUUID()):UnderstandingRecord=>({...scope,schemaVersion:"1.0.0",recordType:"work",workId:randomUUID(),revision:1,topicRef:"topic:quartz",purpose:"briefRebuild",state:"queued",executionMode:"normal",idempotencyKey:key,configurationRef:"config:1",policyRefs:["policy:synthetic"],dependencyRefs:["source:synthetic:1"],capabilityInvocationRef:null,admissionReceiptRef:null,createdAt:new Date(now).toISOString(),deadlineAt:new Date(now+120000).toISOString(),expiresAt:new Date(now+86400000).toISOString(),budget:extensionSettings.understanding.budget,producedRefs:[],lastOutcome:"notRun",reason:"Synthetic preparation"});
  const brief=():UnderstandingRecord=>({...scope,schemaVersion:"1.0.0",recordType:"topicBrief",briefId:randomUUID(),revision:1,topicRef:"topic:quartz",derived:true,status:"prepared",sources:[{sourceRef:"source:synthetic",sourceFamily:"family:synthetic",sourceRevision:"revision:1",policyRef:"policy:synthetic",retrievedAt:new Date(now).toISOString(),reliability:"unknown",reliabilityBasis:"Synthetic test source",kind:"providedFixture"}],claims:[{claimId:randomUUID(),text:"Quartz calibration uses QTZ_MARKER_482.",sourceRefs:["source:synthetic"],qualifier:"attributed",versionScope:"synthetic",spoilerClass:"none",contradictionRefs:[]}],aliasClaims:[],knowledgeGaps:[],deeperMaterialRefs:[],builtAt:new Date(now).toISOString(),freshUntil:new Date(now+3600000).toISOString(),compilerRef:"compiler:synthetic:1",dependencyRefs:["source:synthetic:1"],configurationRef:"config:1"});
+ const candidate=(parent:UnderstandingRecord):UnderstandingRecord=>({...scope,schemaVersion:'1.0.0',recordType:'candidate',candidateId:randomUUID(),revision:1,kind:'discovery',status:'proposed',content:'Quartz calibration uses QTZ_MARKER_482.',topicRefs:['topic:quartz'],groundingRefs:[`topic-brief:${parent.briefId}:1`],hypothesisRefs:[],alternatives:[],limitations:['Synthetic attributed source'],contextRef:`snapshot:${boundary}`,builtAt:new Date(now).toISOString(),expiresAt:new Date(now+600000).toISOString(),configurationRef:'config:1',dependencyRefs:[`topic-brief:${parent.briefId}:1`],scores:{interestStrength:null,evidenceConfidence:null,sourceCoverage:null,knowledgeCoverage:null,knowledgeReliability:null,expectedUsefulness:null,novelty:null,repetitionRisk:null,researchCost:0,resourcePressure:null,methodRef:'synthetic:1',limitations:[]},confersAuthority:false});
  const admit=(w:UnderstandingRecord)=>repo.admit(scope,w,understandingDigest(w.idempotencyKey),understandingDigest([w.idempotencyKey,boundary]),boundary,()=>true);
- return {db,repo,scope,boundary,work,brief,admit,advance:(ms:number)=>{now+=ms;}};
+ return {db,repo,scope,boundary,work,brief,candidate,admit,advance:(ms:number)=>{now+=ms;}};
 }
 
 test("Discovery publication is atomic, scope-bound and denied after cancellation",t=>{
@@ -29,7 +30,7 @@ test("Discovery publication is atomic, scope-bound and denied after cancellation
 });
 
 test("Discovery lookup and expiry preserve scope isolation and minimal replay receipts",t=>{
- const f=fixture();t.after(()=>f.db.close());const w=f.work();f.admit(w);f.repo.start(f.scope,String(w.workId));assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[f.brief()],()=>true),true);
+ const f=fixture();t.after(()=>f.db.close());const w=f.work();f.admit(w);f.repo.start(f.scope,String(w.workId));const parent=f.brief();assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[parent,f.candidate(parent)],()=>true),true);
  assert.equal(f.repo.select(f.scope,f.boundary,"quartz").length,1);
  assert.equal(f.repo.select({...f.scope,deploymentId:randomUUID()},f.boundary,"quartz").length,0);
  assert.equal(f.repo.select(f.scope,understandingDigest("changed"),"quartz").length,0);
