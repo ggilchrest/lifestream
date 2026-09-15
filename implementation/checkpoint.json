@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "2923ea6e775176c40547f965408f107cc2453cc9",
+  "currentRevision": "5dd5d9268ffdc82a6cc521638a06faa24f53d1de",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -214,100 +214,129 @@
     "packages/providers-pwce/src/invalidation-streams.ts",
     "packages/providers-pwce/test/invalidation-streams.test.ts",
     "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json",
-    "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+    "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json",
+    "apps/server/src/composition/pwce-capabilities.ts",
+    "apps/server/src/composition/pwce-identity.ts",
+    "apps/server/test/pwce-capabilities.test.ts",
+    "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json",
+    "apps/control-web/capability-permissions.js",
+    "apps/server/test/fixtures/pwce-light-input.schema.json",
+    "apps/server/test/fixtures/pwce-light-result.schema.json",
+    "scripts/check-pwce-host-process.mjs",
+    "apps/control-web/DESIGN.md"
   ],
   "changedFiles": [
+    "apps/control-web/DESIGN.md",
+    "apps/control-web/capability-permissions.js",
+    "apps/server/src/composition/providers.ts",
+    "apps/server/src/composition/pwce-capabilities.ts",
+    "apps/server/src/composition/pwce-identity.ts",
+    "apps/server/src/composition/pwce-world.ts",
+    "apps/server/src/index.ts",
+    "apps/server/test/fixtures/pwce-light-input.schema.json",
+    "apps/server/test/fixtures/pwce-light-result.schema.json",
+    "apps/server/test/pwce-capabilities.test.ts",
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json",
-    "packages/providers-pwce/src/authority-admission.ts",
-    "packages/providers-pwce/src/authority-preview.ts",
-    "packages/providers-pwce/src/dispatch.ts",
-    "packages/providers-pwce/src/invocation.ts",
-    "packages/providers-pwce/test/authority-admission.test.ts",
-    "packages/providers-pwce/test/dispatch.test.ts",
-    "packages/providers-pwce/test/invocation.test.ts"
+    "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json",
+    "scripts/check-pwce-host-process.mjs",
+    "scripts/generate-pwce-capability-pin.mjs"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
-      "command": "node --test --experimental-strip-types packages/providers-pwce/test/authority-admission.test.ts packages/providers-pwce/test/invocation.test.ts packages/providers-pwce/test/authority-preview.test.ts packages/providers-pwce/test/dispatch.test.ts",
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-candidates.test.ts apps/server/test/pwce-capabilities.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "node scripts/check-pwce-dispatch-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-canonical-control-browser.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "node scripts/workspace.mjs preflight LS-S028",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     },
     {
       "command": "node scripts/generate-pwce-admission-recovery-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-DISCOVERY-1.json"
     }
   ],
   "decisions": [
@@ -323,8 +352,8 @@
     "2026-09-15: operator explicitly authorizes continued development and supersedes the previous implementation restriction; existing scoped push authorization continues."
   ],
   "blockers": [],
-  "nextAction": "Continue configured PWCE canonical host composition and lifecycle around catalog, preview, admission, invocation and invalidations. Preserve the external-grant schema gap; no standalone authority fallback.",
-  "updatedAt": "2026-09-15T21:09:38.122866Z",
+  "nextAction": "Connect retained PWCE action preparation and explicit Human confirmation to existing preview/admission/invocation components. Keep external-grant representation and restored-authority gaps visible; never substitute local grants.",
+  "updatedAt": "2026-09-15T21:34:27.349543Z",
   "updatedBy": "Codex",
-  "notes": "Final PWCE send fences verified: 812 application tests (12 new regressions), 67 focused tests, 43 workspace tests and 67 separate-process checks. Seven initial regressions demonstrably failed against the previous implementation. Reserved or claimed intents remain immutable when the final send is prevented. Full host integration remains outstanding."
+  "notes": "Authenticated PWCE host discovery verified: 823 application tests (11 new), 14 focused tests, 43 workspace tests, existing 67 separate-process checks and 11 host/Chrome checks, plus two existing Chrome approval/authentication regressions. The initial 822/823 run and non-reproducing memory diagnostic remain preserved. No complete action administration or saved service activation is claimed."
 }

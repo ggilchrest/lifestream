@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pwce.local/contracts/home-light-set-level-result-1.0.0.schema.json",
+  "title": "Original producer light-action result; only succeeded confirms an effect",
+  "type": "object",
+  "required": [
+    "status",
+    "externalEffectOccurred"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "enum": [
+        "succeeded",
+        "partially_succeeded",
+        "failed",
+        "rejected",
+        "denied",
+        "timed_out",
+        "cancelled",
+        "outcome_unknown"
+      ]
+    },
+    "externalEffectOccurred": {
+      "enum": [
+        true,
+        false,
+        "unknown"
+      ]
+    },
+    "reasonCode": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_.-]{1,128}$"
+    },
+    "observed": {},
+    "dispatchAcknowledged": {
+      "type": "boolean"
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reconciledAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "succeeded",
+              "partially_succeeded"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "externalEffectOccurred": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "outcome_unknown"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "externalEffectOccurred": {
+            "const": "unknown"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "denied",
+              "rejected"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "externalEffectOccurred": {
+            "const": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -97,7 +97,7 @@ Use record tables with full selectable request/grant/invocation identifiers, nam
 
 ### Actual data and action flow
 
-- Read the actual canonical catalog from the authenticated Assistant tools resource. An unavailable or externally governed provider stays unavailable; the UI cannot replace it with a fixture or coarse local grant.
+- Read the actual canonical catalog from the authenticated Assistant tools resource. An unavailable provider stays unavailable. PWCE discovery can expose schema inspection while `actionAdministration: unavailable` disables preparation; the UI cannot replace external governance with a fixture or coarse local grant.
 - A missing or unknown session audience links directly to the existing Session disclosure control. Do not silently select an audience for the user.
 - Prepare with a stable request key, then create the pending canonical authority request. Show the server-derived target, effect and expiry. Preparation and pending-request creation do not dispatch anything.
 - The existing GrantRequest does not contain the original arguments or preparation key. Add a scoped, read-only prepared-invocation inspection resource before implementing reload/resume in the UI. It must return the original input/key only to the owning authenticated session, recheck current Assistant/endpoint/provider/schema access, and grant or dispatch nothing. This resource is implemented and scoped to the original authenticated session.

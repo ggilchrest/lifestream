@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pwce.local/contracts/home-light-set-level-input-1.0.0.schema.json",
+  "title": "Set an absolute light brightness at one scoped target",
+  "type": "object",
+  "required": [
+    "siteRef",
+    "targetEntityId",
+    "parameters"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "siteRef": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "targetEntityId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "parameters": {
+      "type": "object",
+      "required": [
+        "level"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    }
+  }
+}

@@ -19,3 +19,12 @@ const source=`// Generated exclusively from PWCE's public capability contract bu
 const path='packages/providers-pwce/src/capability-bundle.ts',matches=await readFile(path,'utf8').catch(()=>'')===source;
 if(process.argv.includes('--write'))await writeFile(path,source);else if(!matches)process.exitCode=1;
 console.log(JSON.stringify({source:'public-PWCE-contract',bundleDigest:manifest.bundleDigest,byteIdentical:matches||process.argv.includes('--write')}));
+
+// Test fixtures are exact public producer bytes, checked by the same generator.
+// They are not a second canonical contract and must never be edited by hand.
+for(const [i,name] of [[2,'input'],[3,'result']]){
+ const target=`apps/server/test/fixtures/pwce-light-${name}.schema.json`;
+ const identical=(await readFile(target).catch(()=>Buffer.alloc(0))).equals(sources[i]);
+ if(process.argv.includes('--write'))await writeFile(target,sources[i]);else if(!identical)process.exitCode=1;
+ console.log(JSON.stringify({fixture:target,sha256:manifest.artifacts[i].sha256,byteIdentical:identical||process.argv.includes('--write')}));
+}

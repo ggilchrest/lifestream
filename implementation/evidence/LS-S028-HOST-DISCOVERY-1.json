@@ -1,0 +1,273 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-HOST-DISCOVERY-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "5dd5d9268ffdc82a6cc521638a06faa24f53d1de",
+  "specificationRevision": "d73909a31287b556e780aec5584f0c6b36d0b7c1",
+  "producerRevision": "33fd48cea56e5352211db0b948fb760c13db8c27",
+  "recordedAt": "2026-09-15T21:34:27.349543Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/control-web/DESIGN.md",
+        "sha256": "edbdeb7362ed8e267f21927cdd3e3875b8333f93404f8d260b23cef2fce6d4dc"
+      },
+      {
+        "path": "apps/control-web/capability-permissions.js",
+        "sha256": "6007961e16677abc8e13de73b275aa1c087885cfac33259072f0eec731680519"
+      },
+      {
+        "path": "apps/server/src/composition/providers.ts",
+        "sha256": "8c1e6b71d34a32b171bb6a74539923e703fce05ff9132988ea63686eb0600150"
+      },
+      {
+        "path": "apps/server/src/composition/pwce-world.ts",
+        "sha256": "2fd68dddf5213845baf772654b2748c830e6f121cf8e0b2ff35cd3632e804d6c"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "ae7b3bca8abf32404a53e434ffb124e6697071d2f11fe850d9c576966ef6a728"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "ee812f6518016efd90c00abd475b5c807283a91a138689ed726809cec4dd995e"
+      },
+      {
+        "path": "scripts/generate-pwce-capability-pin.mjs",
+        "sha256": "b6417f9ff0f69abd378ca49d500daa9d2c2e6b678078c5c0e7c31773090d9335"
+      },
+      {
+        "path": "apps/server/src/composition/pwce-capabilities.ts",
+        "sha256": "9b9f4d2a37b4b40da275f9251acbc7fafa4039037b077cef40d7b238dd100f41"
+      },
+      {
+        "path": "apps/server/src/composition/pwce-identity.ts",
+        "sha256": "d8fb6f4a064a847713b146f23f7c1fb4f759c2aed85e57de7bde3984396c60d1"
+      },
+      {
+        "path": "apps/server/test/fixtures/pwce-light-input.schema.json",
+        "sha256": "cafb6e1ced3bbaa386ec6a59980eda545ab44f410ed9e1de809509be48bc7b6f"
+      },
+      {
+        "path": "apps/server/test/fixtures/pwce-light-result.schema.json",
+        "sha256": "98ffa74264afed417b87d4cd385129508e2b90768d579002b6237298cc9460fc"
+      },
+      {
+        "path": "apps/server/test/pwce-capabilities.test.ts",
+        "sha256": "cfd15630828cf1bdb65b6b301118b09400074af37fa1ce338bff462cf6843aa2"
+      },
+      {
+        "path": "scripts/check-pwce-host-process.mjs",
+        "sha256": "86c508f0c72c30eec2bdd858a8932e43e238cfff302b718434396d6c0f907e60"
+      }
+    ]
+  },
+  "claim": "Configured PWCE capability discovery is connected to the authenticated Lifestream Assistant tools resource. Host-derived foreign identity, actual authority, complete site invalidation coverage and exact public schema bytes govern disclosure. The control page exposes read-only schema inspection while action preparation remains unavailable.",
+  "results": {
+    "applicationTests": 823,
+    "newHostTests": 11,
+    "focusedHostAndDiscoveryTests": 14,
+    "joinedExistingChecks": 67,
+    "joinedHostAndChromeChecks": 11,
+    "syntheticTargetCalls": 4,
+    "newHostTargetCalls": 0,
+    "browserSurfacePassed": 19,
+    "browserSurfaceSkipped": 30,
+    "preservedDirtyArtifacts": 6,
+    "workspaceTests": 43,
+    "canonicalChromeRegressionTests": 2
+  },
+  "earlierResults": "The first full run passed 822/823. An existing Discovery candidate test received discovery_admission_denied / Discovery boundary changed. An unchanged isolated diagnostic run passed and observed heap usage below its existing 256 MiB guard, so the exact original failing guard condition was not established. The new PWCE validator was made lazy to avoid unnecessary full-registry compilation in unselected deployments; isolated import measurements were 35.146 MiB before and 34.142 MiB after. The final full suite passed 823/823. The memory limit and test criterion were not weakened. Initial TypeScript narrowing errors were also corrected. All original logs remain archived.",
+  "exclusions": [
+    "Action preparation, Human confirmation, PWCE dispatch and recovery are not yet connected through this server host.",
+    "Current external-grant representation and restored authority bindings remain outstanding.",
+    "No saved service or configuration was changed, and the saved Human-review checkout was not updated.",
+    "No physical effects, personal import, training, selected-model qualification, SYNPRJ_Q7M4 trial or new Human acceptance.",
+    "Import heap measurements are diagnostic only; no S084 performance certification is claimed."
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-discovery/2026-09-15T213427Z",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-host-discovery-full-final.log",
+      "logSha256": "890efb3c42d63b37ad64366873145b11503855bbbba77850e3def52cc7d53ae6"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-host-discovery-typecheck-final-2.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-host-discovery-build-final.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-host-discovery-lint-final.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-candidates.test.ts apps/server/test/pwce-capabilities.test.ts",
+      "result": "pass",
+      "log": "ls-host-discovery-focused-final.log",
+      "logSha256": "2b66f8ece22e839768e266d883e32ee9d1e2fe6facaa5871fa35c2ccce6c25a1"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "log": "ls-host-discovery-joined-dispatch.log",
+      "logSha256": "d7853a2a4b55049f5babf62341ebcd794aa2cd95970534f94be163a62a872a70"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "ls-host-discovery-joined-context.log",
+      "logSha256": "8147446c16444c70be4d383e469cc5daa4de8f3eb77bc56442fbf029e24b3a6f"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-host-discovery-joined-browser-final.log",
+      "logSha256": "eafa92e5b6f9678d735fbf51b10d62c1d3950e04298652c488b57c238653e111"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-canonical-control-browser.mjs",
+      "result": "pass",
+      "log": "ls-host-discovery-canonical-browser-final.log",
+      "logSha256": "e9af3d8e193e6671f0d544c595f3ad5bfaf67aac4805694e3c5a34e458ffe830"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "log": "ls-host-discovery-browser.log",
+      "logSha256": "51a14ea5677eb4d9d640d81bbf7866f18e8da05a29dfb514d46b6d003fc7f28e",
+      "notes": "19 passed; 30 optional browser tests skipped. Actual affected Chrome checks were run separately without skips."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-host-discovery-spec.log",
+      "logSha256": "3133dd86096c1553c8006c3573924f2c4805c4719f08d5b6c0d981d84797853c"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-host-discovery-workspace-tests.log",
+      "logSha256": "854dc5d61cbb2253c39c951928d8d8cef54add9334c94d616bda51ea9ea2c8bd"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "ls-host-discovery-workspace-check.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-host-discovery-preflight.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-host-discovery-pin-dispatch.log",
+      "logSha256": "7799cc7b7e6b5549e994e5cef2ccba3b115d973b57349f7bf933be0d14482b29"
+    },
+    {
+      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-host-discovery-pin-capability.log",
+      "logSha256": "795269b4de8a0f97fc6626d36129495d8facf7ade0ea81d49a8f9f6d2beb6b3a"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-host-discovery-pin-admission.log",
+      "logSha256": "1ea6850d9e2e4905eaa564322be8ca06ee7101ccb057e81a16cd2d3576264fa2"
+    },
+    {
+      "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-host-discovery-pin-invocation.log",
+      "logSha256": "3fee32e6e63c209794993635f4e39e08b84ce0d830ec9048603c09846292b79b"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-recovery-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-host-discovery-pin-admission-recovery.log",
+      "logSha256": "975333cd9170f3d011f25613c2ce6ee61f24f749c5abbf3ccc6bca7823a41f0a"
+    }
+  ],
+  "earlierLogs": [
+    {
+      "log": "ls-host-discovery-build.log",
+      "sha256": "e2a22759c1ed542f258a938bec41d3f010f37edf0df5b374d732f57fc8c7db71"
+    },
+    {
+      "log": "ls-host-discovery-canonical-browser.log",
+      "sha256": "37f4705f728f4fd5e0292609413ab968c18caccad3e97b829647ad18f6624f87"
+    },
+    {
+      "log": "ls-host-discovery-focused-1.log",
+      "sha256": "915d294b43e2f4968ed054b67bea9f487ed72ce74cf517eb6a3168d9aabe3451"
+    },
+    {
+      "log": "ls-host-discovery-focused-2.log",
+      "sha256": "a14147ce29997f35b6aad07ccfb1db52e2275bf773658e722b8e855a7f29d692"
+    },
+    {
+      "log": "ls-host-discovery-full.log",
+      "sha256": "915dd44d204bfc80f569c526a68fc8dce32cddf6bb0a4df6691c218a59e6536e"
+    },
+    {
+      "log": "ls-host-discovery-import-memory-after.log",
+      "sha256": "eba70e3cde1ebc37630553d006c0ed072b6bc7b0b525a700b6f61c97dcb593e0"
+    },
+    {
+      "log": "ls-host-discovery-import-memory-before.log",
+      "sha256": "316623f76c2497b42b191feb21649071d182f738d0bdc59a5593fb07083a796a"
+    },
+    {
+      "log": "ls-host-discovery-joined-browser-1.log",
+      "sha256": "8f548fbf3b527c34dc6232a9a094a2df90fa33f83d56e538ac4dfbe2460890e0"
+    },
+    {
+      "log": "ls-host-discovery-joined-host-1.log",
+      "sha256": "2d21b5eb772b8dbbe84057988083cd9deecae181092c7af1c231c695519b160f"
+    },
+    {
+      "log": "ls-host-discovery-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "log": "ls-host-discovery-memory-before.log",
+      "sha256": "04943881ac22fbaf570f84cbd48918e2cfbd7b0e43df39d8121d8a19946c4dfd"
+    },
+    {
+      "log": "ls-host-discovery-typecheck-1.log",
+      "sha256": "03bd6d4952614057b4597c889f274b1183127c593e2172b5c4ed7aa610047a62"
+    },
+    {
+      "log": "ls-host-discovery-typecheck-2.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-host-discovery-typecheck-final.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    }
+  ],
+  "diagnosticScripts": [
+    {
+      "path": "ls-host-memory-probe.mjs",
+      "sha256": "5a6de04299edf616da295643a8d8456681ecce2e181d4d5d15607f739a445b72"
+    }
+  ]
+}

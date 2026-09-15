@@ -1,3 +1,4 @@
+import { pwceIdentity } from './pwce-identity.ts';
 import { createHash } from "node:crypto";
 import { PwceContextSession, PwceGatewayClient } from "@lifestream/providers-pwce";
 import { formatWorldContext, unavailableWorldContext } from "@lifestream/runtime/context/world";
@@ -36,8 +37,7 @@ export class PwceWorldContext {
     try {
       let entry = this.entries.get(key);
       if (!entry) {
-        const qualify = (kind: string, values: unknown[]) => reference(kind, [this.profile.lifestreamEnvironmentId, ...values]);
-        const identity = { assistantRef: qualify("assistant", [owner.assistantId]), endpointRef: qualify("endpoint", [owner.endpointId]), participantRefs: [qualify("participant", [owner.principalId])], audienceRef: qualify("audience", [owner.sessionId, owner.endpointId, owner.revision]) };
+        const identity = pwceIdentity(this.profile.lifestreamEnvironmentId, { ...owner, endpointId: owner.endpointId });
         const authority = await this.client.authority(this.profile.siteRefs, combined, identity);
         if (!this.current(owner) || combined.aborted || typeof authority.authorityContextRef !== "string" || typeof authority.expiresAt !== "string"
           || !Array.isArray(authority.siteRefs) || JSON.stringify(authority.siteRefs) !== JSON.stringify(this.profile.siteRefs)) throw new Error("World authority is unavailable");

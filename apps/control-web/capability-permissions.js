@@ -29,6 +29,7 @@
     const tool = tools[Number($('cap-select').value)]; $('cap-prepare').disabled = !tool;
     if (!tool || $('cap-select').value === '') { $('cap-prepare').disabled = true; return; }
     const schema = tool.inputSchema;
+    if (tool.administrationAvailable === false) { $('cap-prepare').disabled = true; disclosure($('cap-arguments'),'Input schema', { Schema: schema }); status('PWCE capability discovered. Action preparation and permission management are not yet connected.'); return; }
     if (schema.type === 'object' && schema.properties && Object.keys(schema.properties).length <= 32) {
       for (const [key, spec] of Object.entries(schema.properties)) {
         const label = el('label', spec.title || key), required = schema.required?.includes(key);
@@ -58,9 +59,9 @@
   $('cap-refresh').onclick = run(async () => {
     $('cap-refresh').disabled = true; tools = []; argumentsForm(); status('Loading the selected provider’s capabilities…');
     try { const result = await S.request(`${S.base()}/tools`); if (result.protocol !== 'canonical' || result.status !== 'available') throw new Error('Canonical capabilities are unavailable for this selected provider.');
-      tools = result.tools; catalogExpiresAt = Date.parse(result.expiresAt); $('cap-provider').textContent = `Provider: ${result.providerRef} · Environment: ${result.environmentId}`;
+      tools = result.tools.map(tool => ({ ...tool, administrationAvailable: result.actionAdministration !== 'unavailable' })); catalogExpiresAt = Date.parse(result.expiresAt); $('cap-provider').textContent = `Provider: ${result.providerRef} · Environment: ${result.environmentId}`;
       $('cap-select').replaceChildren(new Option('Choose a capability','')); tools.forEach((t,i) => $('cap-select').append(new Option(`${t.capabilityId} · ${t.version}`,String(i))));
-      status(tools.length ? 'Choose a capability and enter the exact action arguments.' : 'No capabilities are available in this scope.');
+      status(result.actionAdministration === 'unavailable' ? 'PWCE capability discovery is available. Select a capability to inspect its schema; action preparation is not yet connected.' : tools.length ? 'Choose a capability and enter the exact action arguments.' : 'No capabilities are available in this scope.');
     } finally { $('cap-refresh').disabled = false; }
   });
   const prepare = async () => {

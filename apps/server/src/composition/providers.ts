@@ -8,6 +8,7 @@ import { OllamaInferenceProvider } from "@lifestream/providers-ollama";
 import { SglangInferenceProvider } from "@lifestream/providers-sglang";
 import { VoxCpmProvider } from "@lifestream/providers-voxcpm";
 import { WebSocket } from "ws";
+import { PwceCapabilityDiscovery } from './pwce-capabilities.ts';
 import { PwceWorldContext } from "./pwce-world.ts";
 import { validatePwceProfile } from "../config/pwce.ts";
 
@@ -53,6 +54,7 @@ export class ProviderRegistry {
   readonly stt?: SpeechToTextProvider;
   readonly tts?: VoxCpmProvider;
   readonly world?: PwceWorldContext;
+  readonly pwceCapabilities?: PwceCapabilityDiscovery;
   private readonly config: RuntimeConfig;
   private probing: Promise<void> | undefined;
   constructor(config: RuntimeConfig) {
@@ -68,9 +70,9 @@ export class ProviderRegistry {
     const pwce = validatePwceProfile(config.pwceProfile, config.providers, config.authority, config.secretRefs);
     if (pwce) {
       const token = process.env[config.secretRefs[pwce.tokenSecretRef]!.name];
-      if (token) this.world = new PwceWorldContext(pwce, token);
+      if (token) { this.world = new PwceWorldContext(pwce, token); this.pwceCapabilities = new PwceCapabilityDiscovery(pwce, token); }
       else this.providers.world = Object.freeze({ ...this.providers.world!, status: "unavailable", reason: "PWCE credential is not loaded" });
-      this.providers.capability = Object.freeze({ ...this.providers.capability!, status: "unavailable", reason: "PWCE action adapter composition remains unavailable; standalone grants cannot substitute" });
+      this.providers.capability = Object.freeze({ ...this.providers.capability!, status: "unavailable", reason: "PWCE action administration remains unavailable; authenticated capability discovery is separate and cannot grant actions" });
     }
     if (config.providers.inference === "fixture") this.inference = new FixtureInferenceProvider();
     if (config.providers.inference === "ai5090-development" && config.inferenceProfile) this.inference = new SglangInferenceProvider({ endpoint: config.inferenceProfile.endpoint, model: config.inferenceProfile.servedModelName, ...(process.env.LIFESTREAM_INFERENCE_API_KEY ? { apiKey: process.env.LIFESTREAM_INFERENCE_API_KEY } : {}) });
