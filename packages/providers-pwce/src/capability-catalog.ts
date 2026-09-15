@@ -119,6 +119,12 @@ export class PwceCapabilityCatalog {
     if(!record||this.sourceDigests.get(hash([record.binding,record.producerSnapshotRef]))?.poisoned||!isDeepStrictEqual(record.scope,scope)||!this.options.isCurrent(structuredClone(record.binding),structuredClone(scope)))return undefined;
     return structuredClone(record);
   }
+  /** Current host ownership for read-only original-action access. This neither
+   * renews an expired snapshot nor permits a new invocation after restart. */
+  assertReadScope(record:PwceCatalogRecord,scope:M.CallScope,mode:M.CapabilityStatusRequest['executionMode'],context:ProviderCallContext):void {
+    validateBinding(record.binding);
+    if(!isDeepStrictEqual(record.scope,scope)||scope.authorityContextRef?.providerRef!==this.options.providerRef||record.executionMode!==mode||!modeMatches(mode,record.binding.executionEnvironmentRef)||context.signal.aborted||!context.isCurrent(structuredClone(scope))||!this.options.isCurrent(structuredClone(record.binding),structuredClone(scope)))fail('scope_changed');
+  }
   /** Revalidate original custody without discovering or replacing its snapshot. */
   async revalidate(request: Pick<M.AuthorityRequest, 'scope' | 'requestId' | 'correlationId' | 'deadlineAt' | 'executionMode'> & { payload: { snapshotId: string; snapshotRevision: number } }, context: ProviderCallContext): Promise<PwceCatalogRecord> {
     if (!boundedJson(request) || !isUuid(request.requestId) || !isUuid(request.correlationId)) return fail('invalid_request');

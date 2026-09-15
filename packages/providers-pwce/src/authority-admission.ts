@@ -6,7 +6,7 @@ import type {ProviderCallContext} from '@lifestream/runtime/ports/provider-messa
 import {boundedJson,canonicalJson,validateCapabilitySchema} from '@lifestream/runtime/capabilities/schema-validation';
 import {PwceGatewayClient} from './client.ts';
 import {PwceTrustedDispatchClient} from './dispatch.ts';
-import {PwceCapabilityCatalog,type PwceCatalogRecord} from './capability-catalog.ts';
+import {PwceCapabilityCatalog,PWCE_LIGHT_CAPABILITY_ID,type PwceCatalogRecord} from './capability-catalog.ts';
 import {PwceAuthorityPreview,pwceLightOperation,type PwcePreparedAction} from './authority-preview.ts';
 import {EXPECTED_PWCE_ADMISSION_BUNDLE as bundle,PWCE_ADMISSION_SCHEMA as proofSchema} from './admission-bundle.ts';
 import {PWCE_DISPATCH_RESPONSE_SCHEMA} from './dispatch-bundle.ts';
@@ -114,7 +114,7 @@ export class PwceAuthorityAdmission {
       this.current(request,context,call);return this.result(request,outcome);
     }finally{call.close();}
   }
-  private async checkOutcome(record:PwceAdmissionRecord,request:M.AuthorityDispatchRequest,context:ProviderCallContext,call:PwceCallScope,unexpired:boolean):Promise<void>{
+  private async checkOutcome(record:PwceAdmissionRecord,request:M.AuthorityDispatchRequest,context:ProviderCallContext,call:PwceCallScope,unexpired:boolean,requireCatalog=true):Promise<void>{
     const outcome=record.outcome;if(!outcome||!validator.validate(base+'AuthorityDispatchResult',this.result(record.intent.request,outcome)).valid||byteHash(outcome.evidenceJson)!==outcome.decision.evidenceRef.sha256||Buffer.byteLength(outcome.evidenceJson)!==outcome.decision.evidenceRef.byteLength)return fail('admission_custody_failed');
     if(unexpired&&Date.parse(outcome.decision.expiresAt)<=Date.now())return fail('admission_expired');
     const decision=outcome.decision,original=record.intent.request;
@@ -123,8 +123,21 @@ export class PwceAuthorityAdmission {
       const proof=await verifyProof(JSON.parse(outcome.evidenceJson),record.intent,call);
       if(decision.admittedAt!==proof.admittedAt||decision.evidenceRef.schemaRef!==bundle.schemaRef||Date.parse(decision.expiresAt)>Math.min(Date.parse(proof.deadlineAt),Date.parse(original.payload.requiredProviderDisposition.expiresAt),Date.parse(original.deadlineAt)))return fail('admission_custody_failed');
     }else{const raw=JSON.parse(outcome.evidenceJson);await schema(raw,PWCE_DISPATCH_RESPONSE_SCHEMA,call);if(raw.requestId!==original.requestId||raw.correlationId!==original.correlationId||raw.worldRef!==record.intent.catalog.binding.worldRef||raw.executionEnvironmentRef!==record.intent.catalog.binding.executionEnvironmentRef||raw.outcome!==(decision.disposition==='denied'?'denied':'approval_required')||raw.status!==raw.outcome||raw.admissionEvidence!==undefined||raw.admission!==undefined||raw.actionRef!==undefined||decision.admittedAt!==null||decision.evidenceRef.schemaRef!==PWCE_DISPATCH_RESPONSE_SCHEMA.$id)return fail('admission_custody_failed');}
-    const currentCatalog=await call.wait(this.options.catalog.revalidate(request,{...context,signal:call.signal}));this.current(request,context,call);
-    if(!isDeepStrictEqual(currentCatalog,record.intent.catalog))return fail('admission_custody_failed');
+    if(requireCatalog){const currentCatalog=await call.wait(this.options.catalog.revalidate(request,{...context,signal:call.signal}));this.current(request,context,call);if(!isDeepStrictEqual(currentCatalog,record.intent.catalog))return fail('admission_custody_failed');}
+    else this.options.catalog.assertReadScope(record.intent.catalog,request.scope,request.executionMode,context);
+  }
+  async resolveInvocation(input:M.CapabilityInvocationRequest,context:ProviderCallContext,mode:'dispatch'|'read'):Promise<{record:PwceAdmissionRecord;proof:Proof}> {
+    if(!['dispatch','read'].includes(mode)||!boundedJson(input)||!validator.validate(base+'CapabilityInvocationRequest',input).valid)return fail('invalid_request');
+    const request=structuredClone(input),retained=this.options.custody.read(request.idempotencyKey);
+    if(!retained?.outcome)return fail('admission_evidence_unavailable');
+    const original=retained.intent.request,authorityRequest={...original,requestId:request.requestId,deadlineAt:request.deadlineAt,cancellationId:request.cancellationId},call=this.call(authorityRequest,context);
+    try{
+      this.current(authorityRequest,context,call);const record=this.stored(authorityRequest)!;
+      if(!isDeepStrictEqual(request.scope,original.scope)||request.correlationId!==original.correlationId||request.executionMode!==original.executionMode||request.payload.invocationId!==original.payload.invocationId||request.payload.snapshotId!==original.payload.snapshotId||request.payload.snapshotRevision!==original.payload.snapshotRevision||request.payload.inputDigest!==original.payload.inputDigest||!isDeepStrictEqual(request.payload.input,record.intent.prepared.input)||!isDeepStrictEqual(request.payload.operationScope,original.payload.scope)||request.payload.capabilityId!==PWCE_LIGHT_CAPABILITY_ID||request.payload.capabilityVersion!==descriptor.schemaVersion||!isDeepStrictEqual(request.payload.inputSchema,descriptor.inputSchemaArtifact)||!isDeepStrictEqual(request.payload.dispatchReceipt,record.outcome!.decision.evidenceRef)||record.outcome!.decision.disposition!=='authorized')return fail('admission_binding_mismatch');
+      if(mode==='dispatch'&&!await call.wait(this.options.authorize(structuredClone(authorityRequest),structuredClone(record.intent.prepared),{...context,signal:call.signal})))return fail('host_admission_required');
+      this.current(authorityRequest,context,call);await this.checkOutcome(record,authorityRequest,context,call,mode==='dispatch',mode==='dispatch');
+      this.current(authorityRequest,context,call);return {record,proof:JSON.parse(record.outcome!.evidenceJson) as Proof};
+    }finally{call.close();}
   }
   async readEvidence(reference:M.ArtifactRef,input:M.AuthorityDispatchRequest,context:ProviderCallContext):Promise<Uint8Array>{
     if(!boundedJson(input)||!validator.validate(base+'AuthorityDispatchRequest',input).valid)return fail('invalid_request');

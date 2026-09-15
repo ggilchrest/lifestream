@@ -1,4 +1,5 @@
 import { EXPECTED_PWCE_ADMISSION_BUNDLE } from "./admission-bundle.ts";
+import { EXPECTED_PWCE_INVOCATION_BUNDLE } from "./invocation-bundle.ts";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import type { SchemaArtifactRef } from "@lifestream/runtime/capabilities/schema-artifacts";
@@ -75,6 +76,14 @@ export class PwceGatewayClient {
       const received = await this.json<Record<string, unknown>>("/gateway/v1/admission-contracts", scope);
       if (!isDeepStrictEqual(received, EXPECTED_PWCE_ADMISSION_BUNDLE)) throw new Error("PWCE admission contract bundle is incompatible");
       scope.check(); return structuredClone(EXPECTED_PWCE_ADMISSION_BUNDLE);
+    });
+  }
+  invocationContracts(signal?: AbortSignal): Promise<typeof EXPECTED_PWCE_INVOCATION_BUNDLE> {
+    return this.call(signal, async scope => {
+      await this.readNegotiation(scope);
+      const received = await this.json<Record<string,unknown>>("/gateway/v1/invocation-contracts",scope);
+      if (!isDeepStrictEqual(received,EXPECTED_PWCE_INVOCATION_BUNDLE)) throw new Error("PWCE invocation contract bundle is incompatible");
+      scope.check();return structuredClone(EXPECTED_PWCE_INVOCATION_BUNDLE);
     });
   }
   capabilityContracts(signal?: AbortSignal): Promise<typeof EXPECTED_PWCE_CAPABILITY_BUNDLE> {

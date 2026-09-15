@@ -1,0 +1,226 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-INVOCATION-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "d07d6efc637ecbc2febaccd7f0056fc7e70fb90f",
+  "specificationRevision": "5e76fa18df1dfc7864bf922d24571915ea60c422",
+  "producerRevision": "aa108b1fe9e02adf8fd832c47faeec9b88aa811d",
+  "recordedAt": "2026-09-15T19:26:10.121900Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/authority/pwce-invocation-custody.ts",
+        "sha256": "67c4cd5192eaecc71aaa3c68e0f01330636a0040f32788889354cd3059531059"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "0b233787d60b20cc347a46b14b261b63646ce8d6b46b1341ca0c17d8e013e5c5"
+      },
+      {
+        "path": "apps/server/test/pwce-invocation-custody.test.ts",
+        "sha256": "f8a639e6ee822c79d592c41562ee4ce2dcd625c06f049b67c0c138905e18d4ee"
+      },
+      {
+        "path": "apps/server/test/server.test.ts",
+        "sha256": "ac8bc7e3b442612486f3900accb395a8784cd103440399fa38264a0c167595a1"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "c59dd2a585919b1f14fefe201d9538aa81240a874eb3831becac700084b79ac8"
+      },
+      {
+        "path": "packages/providers-pwce/src/authority-admission.ts",
+        "sha256": "d2ffaccd8d180323dd4d4bd394eb269be5dc67cb05b7707c5eb0415a1daa19e8"
+      },
+      {
+        "path": "packages/providers-pwce/src/capability-catalog.ts",
+        "sha256": "7b5465f3a3cb9e15bb1afbc4b69bb55315b997bf4510e1b557f0dca11c3712ed"
+      },
+      {
+        "path": "packages/providers-pwce/src/client.ts",
+        "sha256": "9328e8ee277951b8d21b56af2b6084cdaf84a58934aa6f221e981ee85cb69073"
+      },
+      {
+        "path": "packages/providers-pwce/src/index.ts",
+        "sha256": "e9a7a9af9cbac2ff622a4bc87ecfee3978a7ee3e4833f4b7459ab33d57b0b247"
+      },
+      {
+        "path": "packages/providers-pwce/src/invocation-bundle.ts",
+        "sha256": "b46144d696611e1596bbaca77453fa2aa53981f099a780e520868c927326de31"
+      },
+      {
+        "path": "packages/providers-pwce/src/invocation.ts",
+        "sha256": "13a923c9d8d8c63fdd199b49c80a0c1a43e2dc8abc5bf96cfbafdee995502cae"
+      },
+      {
+        "path": "packages/providers-pwce/test/invocation.test.ts",
+        "sha256": "dcc498d187c5259bca8e927705762f0636c045e0b1e85fe2f548fd1ebaf7ce96"
+      },
+      {
+        "path": "packages/runtime/src/capabilities/schema-validation.ts",
+        "sha256": "ba6d34443d04e4946322cbca40d10e77ea3ce5db52348e19dcd9d85711de7bd9"
+      },
+      {
+        "path": "packages/runtime/test/capability-schema.test.ts",
+        "sha256": "aab4dc3eb3f7b7da20df5f2789e4fac5b9dcc7b967b6ed9c9b0ad3bfcd2f287f"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0037_pwce_invocation_custody.sql",
+        "sha256": "b816d6ed82f4bec14ee37ee80e225403928e68dd60cb44b79d23b297ebc7437c"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/index.ts",
+        "sha256": "cc0191318ecb6b2732fc5c20f4a2454c07123391bfd3a23cc9cc2196cb252942"
+      },
+      {
+        "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+        "sha256": "6b94541e8ff2a2fcb14ecc560a58b49e7ee8e42632dbc2319cad49b9c7e18f04"
+      },
+      {
+        "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+        "sha256": "4850d317d99b62a4c7002f5b794e54dd7a9020bbe1040e9d009d6eb3dab5cfb7"
+      },
+      {
+        "path": "scripts/check-pwce-dispatch-process.mjs",
+        "sha256": "003a17960974686aa8266924dd8bf7050a9c8fd261a6ef06bbaeb53b88696ce7"
+      },
+      {
+        "path": "scripts/generate-pwce-invocation-pin.mjs",
+        "sha256": "24d580704c372b3630994c33b19eb7dfcdb5aabd9663b62ae6b4acd61eb334d1"
+      }
+    ]
+  },
+  "producerContract": {
+    "bundleId": "pwce-action-invocation.bundle.v1",
+    "bundleVersion": "1.0.1",
+    "bundleDigest": "dafcdadf33216ae5c27429a7687f46b4bad442eac0baf2eded683cc2e122ecc6"
+  },
+  "claim": "Canonical invocation binds the exact original PWCE admission, action, input and deadline. A durable initial claim precedes dispatch; retries use original scoped status only, including after a missing reply and SQLite reopen. Actual producer proof controls result mapping; historical observations and uncertainty are retained without fallback to older success.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-invocation-full.log",
+      "logSha256": "0cf876f2307e5fd5eac3f9617d60b906823a87fbe35ab3481807c6e7d7c92c34"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-invocation-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-invocation-build-final.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-invocation-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-invocation-workspace-tests.log",
+      "logSha256": "8b5fc076cfea695cfeaf2d8f60617dcb356ccaed588e8c65a4d090a0acca826e"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/invocation.test.ts apps/server/test/pwce-invocation-custody.test.ts packages/runtime/test/capability-schema.test.ts",
+      "result": "pass",
+      "log": "ls-invocation-focused.log",
+      "logSha256": "8efd3081c23dd64af2397c860eada5f3c9a304b04c9f9843c3b3615f4280bcef"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "log": "ls-invocation-joined-final.log",
+      "logSha256": "04ca34229c2017779cec96753c3ab2da766423c318c23cd5b4eaa60b2dfea2aa"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "ls-invocation-context.log",
+      "logSha256": "6423a40d8df36f80dba271d9696dd4757b55ca788ca97332a6088d99c5a4d6c2"
+    },
+    {
+      "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-invocation-pin.log",
+      "logSha256": "3fee32e6e63c209794993635f4e39e08b84ce0d830ec9048603c09846292b79b"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-invocation-admission-pin.log",
+      "logSha256": "1ea6850d9e2e4905eaa564322be8ca06ee7101ccb057e81a16cd2d3576264fa2"
+    },
+    {
+      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-invocation-capability-pin.log",
+      "logSha256": "12a961678e4187057f78756f2e2e50550c255bb75fc164a4ae54ed13eb545205"
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-invocation-dispatch-pin.log",
+      "logSha256": "7799cc7b7e6b5549e994e5cef2ccba3b115d973b57349f7bf933be0d14482b29"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-invocation-private.log",
+      "logSha256": "97f06a0c476897877e3fcd4da4af2c7d9505156c6c7f547c127b0808b5408ff1"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "ls-invocation-workspace-check.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-invocation-preflight-final.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "counts": {
+    "applicationTests": 749,
+    "newInvocationUnitTestsIncludedInApplicationTotal": 13,
+    "newSqliteCustodyTestsIncludedInApplicationTotal": 7,
+    "newCompositeBoundTestIncludedInApplicationTotal": 1,
+    "focusedTests": 33,
+    "workspaceTests": 43,
+    "joinedInvocationChecks": 7,
+    "joinedFinalAdmissionChecks": 6,
+    "joinedAuthorityPreviewChecks": 5,
+    "joinedCatalogChecks": 6,
+    "joinedDispatchChecks": 7,
+    "joinedContextChecks": 19,
+    "joinedRuntimeChecks": 7,
+    "syntheticTargetCallsInDispatchRunner": 4
+  },
+  "verificationNotes": [
+    "The initial unit run passed 11 of 12 checks. Its foreign-scope fixture mutated the original request through a shared scope object; the adapter correctly withheld access. The fixture now clones the query. The failed log is retained; the final focused run passed 33 tests.",
+    "Composite proof and historical evidence are strictly revalidated against the original admission, artifact metadata and canonical projection. Default capability input/output and schema bounds remain unchanged.",
+    "Actual SQLite reopen, independent database owners, transaction failures, byte corruption, immutable original identity and bounded observation history are covered. This is not power-loss or backup/restore certification.",
+    "The joined runner discards an actual successful invocation HTTP reply, reopens the database and confirms the original result through status lookup without another invoke request or target call.",
+    "The first checkpoint check omitted its evidence pointer and the first final preflight preceded receipt creation. The final checks verify the corrected scope metadata. These were metadata failures, not runtime failures.",
+    "No selected-model qualification was run; SYNPRJ_Q7M4 historical telemetry remains unchanged and nonblocking."
+  ],
+  "exclusions": [
+    "Complete canonical AuthorityProvider/CapabilityProvider composition and invalidation streams",
+    "Read-only recovery of an incomplete admission reply and catalog/context restoration",
+    "External grant-query representation and configured PWCE runtime/control-plane activation",
+    "Power-loss, backup/restore, real physical effects, deployment, model selection and new Human acceptance"
+  ],
+  "continuation": "Continue incomplete-admission read-only recovery and canonical invalidation/composition; preserve independent work when another item needs a decision.",
+  "localLogArchive": "lifestream/.lifestream/benchmarks/pwce-invocation/2026-09-15"
+}

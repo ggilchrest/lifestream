@@ -141,3 +141,14 @@ test('failed refreshed schema discovery cannot fall back to a previous valid sna
   assert.equal((await e.resolver.invoke(invocation({ level: 0.5, labels: [] }), call())).lifecycle, 'denied');
   assert.equal(e.admissions(), 0);
 });
+
+test('published composite evidence has an explicit finite bound without widening ordinary values or schemas', async () => {
+  const signal = new AbortController().signal, schema = {type:'string'};
+  const composite = 'x'.repeat(70_000);
+  assert.equal(await validateCapabilitySchema(schema, composite, signal), false);
+  assert.equal(await validateCapabilitySchema(schema, composite, signal, false, 131_072), true);
+  assert.equal(await validateCapabilitySchema(schema, 'x'.repeat(131_071), signal, false, 131_072), false);
+  assert.equal(await validateCapabilitySchema({type:'string',description:'x'.repeat(16_384)}, 'small', signal, false, 131_072), false);
+  assert.equal(await validateCapabilitySchema(schema, 'small', signal, false, 999_999 as 131_072), false);
+  assert.equal(await validateCapabilitySchema(schema, composite, signal), false);
+});

@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "394a73b054d5dc128ebb3d5dc3e3111885c0bded",
+  "currentRevision": "d07d6efc637ecbc2febaccd7f0056fc7e70fb90f",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -197,100 +197,115 @@
     "apps/server/test/pwce-admission-custody.test.ts",
     "packages/storage-sqlite/src/migrations/0036_pwce_admission_custody.sql",
     "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json",
-    "package.json"
+    "package.json",
+    "scripts/generate-pwce-invocation-pin.mjs",
+    "packages/providers-pwce/src/invocation-bundle.ts",
+    "packages/providers-pwce/src/invocation.ts",
+    "packages/providers-pwce/test/invocation.test.ts",
+    "apps/server/src/authority/pwce-invocation-custody.ts",
+    "apps/server/test/pwce-invocation-custody.test.ts",
+    "packages/storage-sqlite/src/migrations/0037_pwce_invocation_custody.sql",
+    "implementation/evidence/LS-S028-INVOCATION-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/authority/pwce-admission-custody.ts",
+    "apps/server/src/authority/pwce-invocation-custody.ts",
     "apps/server/src/index.ts",
-    "apps/server/test/pwce-admission-custody.test.ts",
+    "apps/server/test/pwce-invocation-custody.test.ts",
     "apps/server/test/server.test.ts",
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json",
-    "package.json",
-    "packages/providers-pwce/src/admission-bundle.ts",
+    "implementation/evidence/LS-S028-INVOCATION-1.json",
     "packages/providers-pwce/src/authority-admission.ts",
-    "packages/providers-pwce/src/authority-preview.ts",
+    "packages/providers-pwce/src/capability-catalog.ts",
     "packages/providers-pwce/src/client.ts",
     "packages/providers-pwce/src/index.ts",
-    "packages/providers-pwce/test/authority-admission.test.ts",
-    "packages/storage-sqlite/src/migrations/0036_pwce_admission_custody.sql",
+    "packages/providers-pwce/src/invocation-bundle.ts",
+    "packages/providers-pwce/src/invocation.ts",
+    "packages/providers-pwce/test/invocation.test.ts",
+    "packages/runtime/src/capabilities/schema-validation.ts",
+    "packages/runtime/test/capability-schema.test.ts",
+    "packages/storage-sqlite/src/migrations/0037_pwce_invocation_custody.sql",
     "packages/storage-sqlite/src/migrations/index.ts",
     "packages/storage-sqlite/test/initiative-delivery.test.ts",
     "packages/storage-sqlite/test/initiative-expression.test.ts",
     "scripts/check-pwce-dispatch-process.mjs",
-    "scripts/generate-pwce-admission-pin.mjs"
+    "scripts/generate-pwce-invocation-pin.mjs"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
-      "command": "node scripts/workspace.mjs check",
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/invocation.test.ts apps/server/test/pwce-invocation-custody.test.ts packages/runtime/test/capability-schema.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
-    },
-    {
-      "command": "node --test --experimental-strip-types packages/providers-pwce/test/authority-admission.test.ts apps/server/test/pwce-admission-custody.test.ts",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
       "command": "node scripts/check-pwce-dispatch-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
+    },
+    {
+      "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
       "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
       "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
       "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     },
     {
       "command": "node scripts/workspace.mjs preflight LS-S028",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-AUTHORITY-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-INVOCATION-1.json"
     }
   ],
   "decisions": [
@@ -306,8 +321,8 @@
     "2026-09-15: operator explicitly authorizes continued development and supersedes the previous implementation restriction; existing scoped push authorization continues."
   ],
   "blockers": [],
-  "nextAction": "Continue canonical original invocation and read-only status mapping under LS-S028; preserve producer-owned effect semantics and unknown outcomes.",
-  "updatedAt": "2026-09-15T18:45:14.885Z",
+  "nextAction": "Continue incomplete-admission read-only recovery and canonical authority/capability invalidation/composition under LS-S028; do not repeat an effect or manufacture external Human grants.",
+  "updatedAt": "2026-09-15T19:26:10.121900Z",
   "updatedBy": "Codex",
-  "notes": "PWCE final-admission component verified: 728 application tests (18 new), 43 workspace tests and 50 separate-process checks across admission, preview, catalog, dispatch and context/runtime. Durable original intent precedes I/O; actual producer proof is bound to scope/input/grant/snapshot/approval. Restart, write-failure and lost-reply tests preserve uncertainty without resend. Full-suite concurrency is bounded to four; historical failed attempts are retained. Full canonical adapter remains in progress. Saved services, dirty artifacts, Human decisions and nonblocking model-quality telemetry are unchanged."
+  "notes": "PWCE invocation/status component verified: 749 application tests (21 new), 43 workspace tests and 57 separate-process checks. Durable initial claims precede dispatch; missing replies recover the original producer result through status only after SQLite reopen. History, scope, original admission and exact evidence are enforced. Full canonical adapter remains in progress. Saved services, dirty artifacts, Human decisions and nonblocking model telemetry are unchanged."
 }

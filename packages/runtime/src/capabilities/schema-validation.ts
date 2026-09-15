@@ -66,8 +66,10 @@ function currentWorker(): Worker {
 // Validation runs off the conversation thread: even a pathological regular
 // expression, recursive schema or compiler failure has a finite lifetime.
 // No remote schema loading, custom code or format registration is exposed.
-export function validateCapabilitySchema(schema: unknown, value: unknown, signal: AbortSignal, compileOnly = false): Promise<boolean> {
-  if (signal.aborted || !boundedJson(schema, 16_384) || (!compileOnly && !boundedJson(value)) || pending.size >= 32) return Promise.resolve(false);
+export function validateCapabilitySchema(schema: unknown, value: unknown, signal: AbortSignal, compileOnly = false, maxValueBytes: 65_536 | 131_072 = 65_536): Promise<boolean> {
+  // The larger explicit ceiling is reserved for published composite evidence;
+  // ordinary capability input/output and schema limits remain unchanged.
+  if (![65_536,131_072].includes(maxValueBytes) || signal.aborted || !boundedJson(schema, 16_384) || (!compileOnly && !boundedJson(value,maxValueBytes)) || pending.size >= 32) return Promise.resolve(false);
   return new Promise(resolve => {
     const active = currentWorker(), id = ++sequence;
     const expiresAt = performance.now() + 2000;
