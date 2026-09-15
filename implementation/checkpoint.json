@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "e873d45729b42d226808de6ec4461b1e0a99f4cd",
+  "currentRevision": "02a7dd3261692e1dcaa02a3fcbce54084f71c132",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -165,52 +165,53 @@
     "packages/storage-sqlite/src/migrations/0029_tool_recovery.sql",
     "implementation/evidence/LS-S028-TOOL-STATUS-1.json",
     "implementation/evidence/LS-S028-PRODUCER-RECONCILIATION-1.json",
-    "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json"
+    "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json",
+    "implementation/evidence/LS-S028-PRODUCER-APPROVAL-1.json"
   ],
   "changedFiles": [
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json"
+    "implementation/evidence/LS-S028-PRODUCER-APPROVAL-1.json"
   ],
   "validation": [
     {
       "command": "PWCE: npm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-APPROVAL-1.json"
     },
     {
-      "command": "PWCE: node --test test/capability-snapshots.test.js",
+      "command": "PWCE: node scripts/check-gateway-review-browser.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-APPROVAL-1.json"
     },
     {
       "command": "PWCE: npm run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-APPROVAL-1.json"
     },
     {
-      "command": "python3 /private/tmp/check-pwce-snapshot-docs.py",
+      "command": "python3 /private/tmp/check-pwce-approval-docs.py",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-APPROVAL-1.json"
     },
     {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-APPROVAL-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-APPROVAL-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-APPROVAL-1.json"
     },
     {
       "command": "node scripts/workspace.mjs preflight LS-S028",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-SNAPSHOTS-1.json"
+      "evidence": "implementation/evidence/LS-S028-PRODUCER-APPROVAL-1.json"
     }
   ],
   "decisions": [
@@ -225,8 +226,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Continue actual canonical Lifestream capability/authority consumption, trusted host proposal scope, grant UI and final dispatch. Finish PWCE target-state preconditions and Gateway-scoped Human approval, then joint action scenarios. Continue remaining S083/S084 development and refresh broad source qualifications; no new Human acceptance is implied.",
-  "updatedAt": "2026-09-15T13:00:16.586033Z",
+  "nextAction": "Continue actual canonical Lifestream capability/authority adapter, trusted host proposal source, grant UI and final dispatch. Finish PWCE target-state preconditions and complete joint action scenarios. Continue remaining S083/S084 development and refresh broad source qualifications; no new Human acceptance is implied.",
+  "updatedAt": "2026-09-15T13:33:19.012554Z",
   "updatedBy": "Codex",
-  "notes": "Verified producing PWCE snapshot retention and admission/dispatch guards; 209 producer tests and 26 existing consumer process checks pass. Actual canonical Lifestream consumption and full joint acceptance remain open."
+  "notes": "Verified producer Gateway-to-Human approval flow: 222 producer tests, 13 new HTTP cases, ten browser workflow checks and 26 existing consumer process checks. Canonical Lifestream action integration and full joint acceptance remain open."
 }

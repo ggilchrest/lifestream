@@ -1,0 +1,209 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-PRODUCER-APPROVAL-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "02a7dd3261692e1dcaa02a3fcbce54084f71c132",
+  "specificationRevision": "09946b533762633d877ef83c68ed97c2c0d8f6e9",
+  "recordedAt": "2026-09-15T13:33:19.012554Z",
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "50d9a0b9f3919d810e356feadb24509277d0a7ca",
+    "baselineRevision": "04b01abf1c5da5acec8247648c978b4ff07bea4c",
+    "evidence": "DEVELOPMENT-BATCH-170.md",
+    "sourceFiles": [
+      {
+        "path": "DESIGN.md",
+        "sha256": "baeaa9e5a03c51960da2dafdbca16cc8a89ded3d799e4bd1f0ab4368d579f390"
+      },
+      {
+        "path": "DEVELOPMENT-BATCH-170.md",
+        "sha256": "f40f9bd03aa18a2fc7b81bccb6b7e3fdede8149888c02e81afcd661ad9d4d16e"
+      },
+      {
+        "path": "PV1-T5-CHECKLIST.md",
+        "sha256": "314938ed86177d8f6a87df6eeed16fc8dcb4b7e7c2a87b8409bc56e7937df695"
+      },
+      {
+        "path": "docs/user-docs/assets/screenshots/inspect-local-context/gateway-review-02-scope-desktop.png",
+        "sha256": "08531fc05a3a47fe4443ac3e07394250b6cd77ea0ac70afb7b87dcf4bc542dde"
+      },
+      {
+        "path": "docs/user-docs/assets/screenshots/inspect-local-context/gateway-review-03-scope-mobile.png",
+        "sha256": "2486cf4c00ca27a4e5e39d86f8f3e6dc5539579d631d98ba9d02742ba1025d96"
+      },
+      {
+        "path": "docs/user-docs/assets/screenshots/inspect-local-context/gateway-review-04-approved.png",
+        "sha256": "c31737de6c7ab5ceaeca205470fbf987259f622627d6d32846dfed0da0fa81dc"
+      },
+      {
+        "path": "docs/user-docs/assets/screenshots/inspect-local-context/inspect-local-context-01-studio-overview.png",
+        "sha256": "3c99660bf0dff111367099752e05e59c3a2c9fde9fb964b7eea3da37fb395736"
+      },
+      {
+        "path": "docs/user-docs/feature-map.md",
+        "sha256": "fc8eab520a224a513b1eab202cb36c09c9da69c4f2471dd148bf42a65fa65579"
+      },
+      {
+        "path": "docs/user-docs/manual/inspect-local-context.html",
+        "sha256": "35506593ee397b689d1d6f0a42ecf63b07992993fffb3e4d3785e7f0e66b3b90"
+      },
+      {
+        "path": "docs/user-docs/qa/inspect-local-context.html",
+        "sha256": "8f83c6348e9c6ce7129f112ff054185f3bd02954054c438f160eea4764a4b0ef"
+      },
+      {
+        "path": "docs/user-docs/releases/2026-09-15-assistant-request-review.html",
+        "sha256": "0d32c9689061a95bb42cfa9aa872697ff424af4a356995472f7ccfee14bcba64"
+      },
+      {
+        "path": "docs/user-docs/releases/index.html",
+        "sha256": "7fb86e5adef233ce380f693363ae364999feceba74434fd369346c1c42fc968a"
+      },
+      {
+        "path": "scripts/check-gateway-review-browser.mjs",
+        "sha256": "b300e6333671553a2d5138e94d41dd7f41cb81c08e42152c6c131445d4d20424"
+      },
+      {
+        "path": "scripts/fixtures/gateway-approval.mjs",
+        "sha256": "0566bfd5b9140dba8e2cd477963133b568c74bc991effb4628648aa4febe036e"
+      },
+      {
+        "path": "src/actions/action-service.js",
+        "sha256": "33f62b55cb51f3ce2b4400d708cb2b7c9f50767f9af59cb3c4544259e97eb669"
+      },
+      {
+        "path": "src/actions/approval-service.js",
+        "sha256": "12fd8fb30effb79bd6e939cf41d293779d483d93ec47c6e942a961b0d4af6fd8"
+      },
+      {
+        "path": "src/gateway/gateway-service.js",
+        "sha256": "c05edd0c69888c5b04dcc8cefddfcc5556e0a398e587fc2c1448b713a7dfb5e6"
+      },
+      {
+        "path": "src/http/dev-server.js",
+        "sha256": "5deffdceaa71020f6ea91a935ac5c8279f1c9a043dc15abfd878a98f606f3be6"
+      },
+      {
+        "path": "src/http/studio-auth.js",
+        "sha256": "2712c632a50592acc57f1adc254952a69e469443efe278e6c190d9ba772bc043"
+      },
+      {
+        "path": "src/studio/app.js",
+        "sha256": "5812e717b9ad38556b471392a14448b3b550de806cf2c252641ef62be5efe333"
+      },
+      {
+        "path": "src/studio/gateway-approvals.js",
+        "sha256": "9d58a557e5fd4f8cd7b2233a43effe9d4f3c563c113c77d66f52ceb7a02718a5"
+      },
+      {
+        "path": "src/studio/index.html",
+        "sha256": "43267b6e640d281ea45f300fc509de00bb4cfb10fee793199de15fbfa6b0e160"
+      },
+      {
+        "path": "src/studio/styles.css",
+        "sha256": "750a1695dcd9bf4ee3407304b9970ae4bc78672afe48ee1701c730c1ac680d70"
+      },
+      {
+        "path": "test/gateway-approvals.test.js",
+        "sha256": "ed99357f85637b613328d1f08d07c09c53e7c6d55225753aac9d4512af92d91b"
+      }
+    ]
+  },
+  "claims": [
+    "Gateway capability invocation requiring approval creates one inert request bound to its exact target, arguments, version, principal, complete scope, original request key and retained capability snapshot. Evaluation alone creates no approval.",
+    "Studio provides site-scoped bounded review pages with structured fields, a full request identifier and explicit confirmation. Approval requires a current password or recovery-code Human session, rechecked in the serialized transaction. Workload and Studio bearer credentials cannot act as Human approval.",
+    "Human approval persists credential-free authentication evidence and an audit entry without dispatch. Explicit resume of the unchanged original Gateway request rechecks approval and snapshot; duplicate resume calls the synthetic target only once.",
+    "Expired approvals, changed scope or request keys, revoked access and missing or inconsistent approval evidence cannot authorize a new target call. Reload preserves a valid Human session; sign-out clears the displayed requests.",
+    "The actual Studio browser workflow passes keyboard and desktop/phone checks, text-safety, pagination and logout. Four synthetic screenshots document the new workflow; this is agent verification, not Human acceptance."
+  ],
+  "checks": [
+    {
+      "command": "PWCE: npm test",
+      "result": "pass",
+      "log": "pwce-approval-full-verified.log",
+      "logSha256": "5bb245526b0a9a62567b3582c74ef91909b56cb730dc24b2ba0102b62e024fcd",
+      "testsPassed": 222
+    },
+    {
+      "command": "PWCE: node scripts/check-gateway-review-browser.mjs",
+      "result": "pass",
+      "log": "pwce-approval-browser-verified.log",
+      "logSha256": "32170b1d133b68c7dbc1ff9b1c77758a86adcdc238326434399ac26cb5a2b6b3"
+    },
+    {
+      "command": "PWCE: npm run validate",
+      "result": "pass",
+      "log": "pwce-approval-validate.log",
+      "logSha256": "e31118fd431327a2355113d49120584018feac09e64cf4bcd476ecd7e5ec0cbb"
+    },
+    {
+      "command": "python3 /private/tmp/check-pwce-approval-docs.py",
+      "result": "pass",
+      "log": "pwce-approval-docs.log",
+      "logSha256": "b94f19d87d3d4d59943c9b9c265b841c596dc22fa611266f83aa0bc06fb3140e"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "pwce-approval-ls-process.log",
+      "logSha256": "474893f2378da8194b88813e77f8fa2fce80be15469f63db1ab0c9031db80e4e"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "pwce-approval-private.log",
+      "logSha256": "9d3f4ad4150135c94d017612f8d6b4244da8c2d6b2b3c3098267dd4557f0782b"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "pwce-approval-ls-workspace.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "pwce-approval-ls-preflight.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "regressionCounts": {
+    "producerTestsPassed": 222,
+    "newApprovalHttpTests": 13,
+    "browserWorkflowChecks": 10,
+    "consumerContextChecksPassed": 19,
+    "consumerRuntimeChecksPassed": 7,
+    "documentationPagesChecked": 30
+  },
+  "compatibility": {
+    "bundleChanged": false,
+    "bundleId": "pwce-agent-gateway.bundle.v1",
+    "bundleVersion": "1.0.0",
+    "bundleSha256": "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2",
+    "note": "Existing open V1 invoke payload returns pending approval metadata; no new Gateway operation, schema artifact or generated-client pin. Studio review routes are producer-owned. Lifestream code is unchanged by this receipt."
+  },
+  "limits": [
+    "Pending approvals expire within 120 seconds or earlier snapshot expiry. Capacity is 4096 stored approvals with no silent eviction. API pages contain at most 50 records; UI pages contain five.",
+    "StateStore remains single-writer. Approval evidence checks detect inconsistent trusted storage, not coordinated malicious rewriting. Gateway snapshot/authority restart requires a fresh request; prior pending approvals cannot resume.",
+    "This is the current brightness approval path. The broader policy lifecycle including explicit rejection/modification and richer explanations remains separate work."
+  ],
+  "preservedFailures": [
+    {
+      "log": "pwce-approval-browser-diagnostic.log",
+      "reason": "Actual site selector overflow at 390px; repaired by wrapping the site bar.",
+      "logSha256": "0a4bd3c3fa75379961206614e1e024d1e884a590e35e4b77d51eb0fd3a824be3"
+    },
+    {
+      "log": "pwce-approval-browser-final.log",
+      "reason": "Harness asserted sign-out before HTTP logout completed; corrected to await visible sign-in state.",
+      "logSha256": "d43f5ff5a6048dd97bbc7b880587fe28b799c0affe4db3d906d6d67755d0c1b9"
+    }
+  ],
+  "exclusions": [
+    "No actual canonical Lifestream capability/authority adapter, trusted host proposal source, canonical grant UI or final dispatch is completed by this producer increment.",
+    "Physical target-state preconditions, complete joint action scenarios, remaining S083/S084 development and broad source requalification remain open.",
+    "No saved-service restart, deployment, live configuration/effect, personal-data import, training, model/provider selection, selected-provider rerun or new Human acceptance. Historical receipts, unrelated dirty artifacts, approved schema bytes and model-quality observations remain unchanged."
+  ],
+  "nextAction": "Continue actual canonical Lifestream capability/authority adapter, trusted host proposal source, grant UI and final dispatch. Finish PWCE target-state preconditions and complete joint action scenarios. Continue remaining S083/S084 development and refresh broad source qualifications; no new Human acceptance is implied."
+}
