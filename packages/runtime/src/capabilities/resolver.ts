@@ -14,6 +14,29 @@ export function capabilityInputDigest(input: unknown): string {
 const scopeKey=(scope:CapabilityScope)=>JSON.stringify([scope.assistantId,scope.endpointId,scope.sessionId,scope.environment,scope.authorityContextRef.providerRef,scope.authorityContextRef.contextId,scope.authorityContextRef.revision]);
 const statusRequest=(scope:CapabilityScope,invocationId:string):CapabilityStatusRequest=>({assistantId:scope.assistantId,endpointId:scope.endpointId,sessionId:scope.sessionId,environment:scope.environment,authorityContextRef:structuredClone(scope.authorityContextRef),invocationId});
 type Attempt={fingerprint:string;attempted:boolean;capability?:CapabilityDefinition;pending?:Promise<CapabilityInvocationResult>};
+async function checkedCapabilityResult(result:CapabilityInvocationResult,request:CapabilityStatusRequest,call:CapabilityCall,schemaStore?:CapabilitySchemaStore,capability?:CapabilityDefinition):Promise<CapabilityInvocationResult>{
+    if(result.invocationId!==request.invocationId||!['authorized','denied','approvalRequired','started','succeeded','failed','outcomeUnknown'].includes(result.lifecycle))throw new CapabilityCallError('invalidResponse');
+    if(!boundedJson(result)||result.lifecycle!=='succeeded'&&(Object.hasOwn(result,'output')||Object.hasOwn(result,'outputSchema')))throw new CapabilityCallError('invalidResponse');
+    const copy=structuredClone(result);
+    if(copy.lifecycle==='succeeded'){
+      let schema=capability?.outputSchema;
+      if(copy.outputSchema!==undefined){
+        if(capability?.outputSchemaRef&&canonicalJson(copy.outputSchema)!==canonicalJson(capability.outputSchemaRef))throw new CapabilityCallError('invalidResponse');
+        const resolved=await resolveCapabilitySchema(copy.outputSchema,request,call,schemaStore);
+        if(schema!==undefined&&canonicalJson(schema)!==canonicalJson(resolved))throw new CapabilityCallError('invalidResponse');
+        schema=resolved;
+      }else if(capability?.outputSchemaRef)throw new CapabilityCallError('invalidResponse');
+      if(schema===undefined||!await call.wait(()=>validateCapabilitySchema(schema,copy.output,call.context.signal)))throw new CapabilityCallError('invalidResponse');
+    }
+    call.check();return copy;
+
+}
+/** Revalidate recorded output under current scope without rediscovery or I/O. */
+export async function validateRecordedCapabilityResult(result:CapabilityInvocationResult,request:CapabilityStatusRequest,context:CapabilityCallContext,schemaStore?:CapabilitySchemaStore):Promise<CapabilityInvocationResult>{
+  const call=new CapabilityCall(context);
+  try{return await checkedCapabilityResult(result,request,call,schemaStore);}finally{call.close();}
+}
+
 export class CapabilityResolver {
   private readonly provider:CapabilityProvider;
   private readonly cache:CapabilitySnapshotCache;
@@ -99,20 +122,7 @@ export class CapabilityResolver {
     try{const result=await call.wait(()=>this.provider.getInvocation(owned,call.context));return result?await this.checkedResult(result,owned,call,this.attempts.get(scopeKey(owned)+':'+owned.invocationId)?.capability):undefined;}finally{call.close();}
   }
   private async checkedResult(result:CapabilityInvocationResult,request:CapabilityStatusRequest,call:CapabilityCall,capability?:CapabilityDefinition):Promise<CapabilityInvocationResult>{
-    if(result.invocationId!==request.invocationId||!['authorized','denied','approvalRequired','started','succeeded','failed','outcomeUnknown'].includes(result.lifecycle))throw new CapabilityCallError('invalidResponse');
-    if(!boundedJson(result)||result.lifecycle!=='succeeded'&&(Object.hasOwn(result,'output')||Object.hasOwn(result,'outputSchema')))throw new CapabilityCallError('invalidResponse');
-    const copy=structuredClone(result);
-    if(copy.lifecycle==='succeeded'){
-      let schema=capability?.outputSchema;
-      if(copy.outputSchema!==undefined){
-        if(capability?.outputSchemaRef&&canonicalJson(copy.outputSchema)!==canonicalJson(capability.outputSchemaRef))throw new CapabilityCallError('invalidResponse');
-        const resolved=await resolveCapabilitySchema(copy.outputSchema,request,call,this.schemaStore);
-        if(schema!==undefined&&canonicalJson(schema)!==canonicalJson(resolved))throw new CapabilityCallError('invalidResponse');
-        schema=resolved;
-      }else if(capability?.outputSchemaRef)throw new CapabilityCallError('invalidResponse');
-      if(schema===undefined||!await call.wait(()=>validateCapabilitySchema(schema,copy.output,call.context.signal)))throw new CapabilityCallError('invalidResponse');
-    }
-    call.check();return copy;
+    return checkedCapabilityResult(result,request,call,this.schemaStore,capability);
   }
   private async checkSchemaBinding(reference:CapabilityDefinition['inputSchemaRef'],schema:CapabilityDefinition['inputSchema'],scope:CapabilityScope,call:CapabilityCall):Promise<void>{
     if(reference!==undefined&&canonicalJson(await resolveCapabilitySchema(reference,scope,call,this.schemaStore))!==canonicalJson(schema))throw new CapabilityCallError('invalidResponse');

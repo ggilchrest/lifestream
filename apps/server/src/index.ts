@@ -598,7 +598,7 @@ export class LifestreamServer {
       try {result=path.startsWith("/api/authority/v1/")&&this.config.authority.provider!=="pwce" ? await this.securityAdmin!.handle(method,path,context,body,call) : this.applyProtected(method,path,context,body);}
       finally{response.removeListener("close",onClose);cancellation.abort();}
       if(initiativePath&&body.operation==="inspect"&&result.status===200){const parts=path.split("/").filter(Boolean),owner=this.admin.initiativeOwner(parts[4]!,parts[6]!,context.principalId);if(owner){this.initiativeHost.augmentInspection(owner,context.sessionId,result.body);}}
-      if (method !== "GET" && result.status < 400) { this.localAuth.touch(context); if (!extensionReadOnly(path, body)) this.invalidateRuntimeInputs(); }
+      if (method !== "GET" && result.status < 400) { this.localAuth.touch(context); if (!extensionReadOnly(path, body) && !("replayed" in result && result.replayed === true)) this.invalidateRuntimeInputs(); }
       return json(response, result.status, result.body);
     }
     if (path === "/api/runtime/v1/session-context") {

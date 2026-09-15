@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "3f0dd87f2385d7b5e52b0fe9479424c5532ab31a",
+  "currentRevision": "05f01ad6fb2de99cc20408c878184a4fa76235a5",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -155,64 +155,73 @@
     "implementation/evidence/LS-S028-GOVERNED-ADMISSION-1.json",
     "packages/storage-sqlite/test/initiative-delivery.test.ts",
     "packages/storage-sqlite/test/initiative-expression.test.ts",
-    "apps/server/test/server.test.ts"
+    "apps/server/test/server.test.ts",
+    "packages/storage-sqlite/src/tool-invocations.ts",
+    "packages/storage-sqlite/src/migrations/0028_tool_invocations.sql",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/test/tool-invocations.test.ts",
+    "apps/server/test/tool-idempotency.test.ts",
+    "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json"
   ],
   "changedFiles": [
     "apps/server/src/admin/security-administration.ts",
+    "apps/server/src/index.ts",
     "apps/server/test/security-administration.test.ts",
     "apps/server/test/server.test.ts",
+    "apps/server/test/tool-idempotency.test.ts",
     "docs/canonical-provider-boundary.md",
+    "docs/local-authentication.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-GOVERNED-ADMISSION-1.json",
+    "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json",
     "packages/runtime/src/capabilities/resolver.ts",
-    "packages/runtime/test/capabilities.test.ts",
-    "packages/storage-sqlite/src/authority/admission.ts",
-    "packages/storage-sqlite/src/migrations/0027_governed_admissions.sql",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/src/migrations/0028_tool_invocations.sql",
     "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/test/governed-admission.test.ts",
+    "packages/storage-sqlite/src/tool-invocations.ts",
     "packages/storage-sqlite/test/initiative-delivery.test.ts",
-    "packages/storage-sqlite/test/initiative-expression.test.ts"
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
+    "packages/storage-sqlite/test/tool-invocations.test.ts"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GOVERNED-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GOVERNED-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GOVERNED-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GOVERNED-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json"
     },
     {
-      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/governed-admission.test.ts packages/runtime/test/capabilities.test.ts apps/server/test/security-administration.test.ts",
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/tool-invocations.test.ts apps/server/test/tool-idempotency.test.ts apps/server/test/security-administration.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GOVERNED-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GOVERNED-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json"
     },
     {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GOVERNED-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GOVERNED-ADMISSION-1.json"
+      "evidence": "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json"
     }
   ],
   "decisions": [
@@ -227,8 +236,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Complete canonical runtime consumer and HTTP idempotency/scope migration using actual bound authority evidence, then PWCE capability schema publication, trusted approval/admission/invocation/status/reconciliation and joint scenarios. Continue remaining S083/S084 work.",
-  "updatedAt": "2026-09-15T10:20:36.390285Z",
+  "nextAction": "Migrate the canonical runtime consumer and precise grant/scope contracts, expose scoped original-invocation status reconciliation, and complete PWCE capability schema publication, trusted approval/admission/invocation/status mapping and joint scenarios. Continue remaining S083/S084 development.",
+  "updatedAt": "2026-09-15T10:40:14.261877Z",
   "updatedBy": "Codex",
-  "notes": "Durable governed admission identity and initial I/O claim are verified in the actual authenticated tool path; canonical consumer/grant/API migration and PWCE action mapping remain in progress."
+  "notes": "Authenticated HTTP tool retries now retain one durable invocation and replay only currently authorized verified output. Canonical grant/scope/consumer migration, status reconciliation and PWCE action mapping remain in progress."
 }

@@ -1,0 +1,170 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-TOOL-IDEMPOTENCY-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "05f01ad6fb2de99cc20408c878184a4fa76235a5",
+  "sourceBinding": "Base revision and changed-source hashes; the enclosing commit contains the actual local HTTP tool retry repair.",
+  "specificationRevision": "cb65f7705a23e195ce737e44ec0c56cdc1fa2f66",
+  "recordedAt": "2026-09-15T10:40:14.261877Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/admin/security-administration.ts",
+      "sha256": "60bdb90f34d369fce9229393764fb1d10b7dbfcf1c9fd64d713bb6b7894a7d49"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "725f263cec8084a82bd3d4cbcc87c508873c6a2201a5997b6164486228ec7bed"
+    },
+    {
+      "path": "apps/server/test/security-administration.test.ts",
+      "sha256": "82f688cfd2e7c547e204c0c8c5d7da0c8ec086279993f1917d0917afcc23472a"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "1e7dcf471f63d9b95159007bbcb5e4e24e5d3e6930c7dd40db83675adfdc1fae"
+    },
+    {
+      "path": "apps/server/test/tool-idempotency.test.ts",
+      "sha256": "f67070309649c59f6943cd7e231bd0a1a3c83760d8326f0da700e2d1f1bd4d3c"
+    },
+    {
+      "path": "docs/canonical-provider-boundary.md",
+      "sha256": "da43d6ecff342df95a8485dd61701ec9c2055494d4db34c1a5da5eb7cb847025"
+    },
+    {
+      "path": "docs/local-authentication.md",
+      "sha256": "16cddb6abb17c13025cabd076b7c20d834bb6ddfd7fb6365be4f2fae442e6207"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/resolver.ts",
+      "sha256": "44c884f2fe577118c4683f99a417e7f5d0a4265d17b33e3190ef532fedea39a7"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "142a5110bd5a4007fa184503c06e1d4721dbf18030f07db1c6c7f426f8a7a26a"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0028_tool_invocations.sql",
+      "sha256": "320c85e1ac160d4ed709ae642b00ddc5bbe10b04d02ba41a9a6b5b737086dbdf"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "009e0375ad9e14fbfac73ae2a6196e4a1569a16fc41e96d1b3524f94511be880"
+    },
+    {
+      "path": "packages/storage-sqlite/src/tool-invocations.ts",
+      "sha256": "3d23adafb952255704a3379e59d6bc2f46dedaf873343e89dc908e95a6eba17b"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "cdb7a99d412019669ea55b8071d14d1f1c5bc33d8995e0997dc94d146954ce2f"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "81e18fa379bc3937df2b4e26f86c1ec96d7e288d9d63347b67c591b960c7a5aa"
+    },
+    {
+      "path": "packages/storage-sqlite/test/tool-invocations.test.ts",
+      "sha256": "96f9f46415cc7ff31f07edd7424aa1b0ce4b28bfbe79bfa71f1a08f13cae6a04"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "4d20039187766ecf4261e9ed6173ad96a9961359",
+    "producerSourceChanged": false,
+    "newProducerSuiteRun": false
+  },
+  "baselineRegression": {
+    "revision": "05f01ad6fb2de99cc20408c878184a4fa76235a5",
+    "testsRun": 1,
+    "testsFailed": 1,
+    "observedFailure": "Identical authenticated HTTP key/input returned successful responses with different invocation IDs.",
+    "log": "tool-idempotency-baseline.log",
+    "logSha256": "8763581b075d92e3267d3df7ce59e246b9787ae3bb1950e0f6ba7d07636c0fe8"
+  },
+  "claims": [
+    "Local tool invocation requires a UUID idempotencyKey; missing keys and unknown body fields are rejected. An additive SQLite migration durably binds the key to authenticated Human/Assistant/session scope, capability, grant, canonical input digest and execution mode before any provider await.",
+    "Only the first request allocates an invocation/interaction and owns completion. Matching retries preserve original request/correlation/invocation identity and return the existing outcome; changed content or owner scope cannot reuse it. Cross-Human repository lookup is non-disclosing.",
+    "Concurrent HTTP retry while discovery is held returns the original uncertain invocation with no second discovery or dispatch. Completion is replayed without another action; actual server restart with an empty provider result cache preserves the same verified response.",
+    "Responses are size-bounded and digest-checked. A stale finisher cannot overwrite a recorded outcome or complete another request. Allocation owner-check failure rolls back; failed result persistence retains the original uncertain identity and does not permit redispatch.",
+    "Every HTTP replay rechecks current authentication and Assistant permission. Recorded successful output also revalidates through its original pinned schema and currently authorized store without provider discovery or invocation. Revoked schema access withholds output while preserving the original record; restored access can read it again without I/O.",
+    "Replayed tool requests do not cause a second conversation-context invalidation. Existing grant/Skill/logout, storage migration, artifact validation and separate-process PWCE no-local-fallback behavior remains green."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "tool-idempotency-build.log",
+      "logSha256": "3b0cf22b87e20c2ed1d5d4bdf1250a92654fc67d1e6e23145a25009cb28aa224"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "tool-idempotency-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "tool-idempotency-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "tool-idempotency-full-tests.log",
+      "logSha256": "5075af86ea328e928a5da9e6488994a6b44e3ed4449833a86cbfb597be52a019",
+      "testsPassed": 557
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/tool-invocations.test.ts apps/server/test/tool-idempotency.test.ts apps/server/test/security-administration.test.ts",
+      "result": "pass",
+      "log": "tool-idempotency-focused.log",
+      "logSha256": "a5f8c2655ef75ea8f6f84cdc87c52cc0446e1c6c5a06bd1b08e04621c24119e4",
+      "testsPassed": 18
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "tool-idempotency-tooling.log",
+      "logSha256": "c0133419c835529c43ea27ee4f232efa32350fb1490fb31caefeb2158b68a362",
+      "testsPassed": 45
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "tool-idempotency-process.log",
+      "logSha256": "9ba5fdda9b94556a89dd7b4a54f1573576f1e800e59e05923344be6ffc184594"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "tool-idempotency-private.log",
+      "logSha256": "3ba42933d71dfec50c8fb6f6425d0328070706823823acb82ffb3a952220457c"
+    }
+  ],
+  "limits": {
+    "requestLedgerRecords": 4096,
+    "recordedResponseBytes": 131072,
+    "capacityStatus": 429,
+    "automaticEviction": false,
+    "automaticRedispatch": false
+  },
+  "regressionCounts": {
+    "sourceTestsPassed": 557,
+    "newSourceTests": 14,
+    "focusedTestsPassed": 18,
+    "toolingTestsPassed": 45,
+    "separateProcessContextChecksPassed": 19,
+    "separateProcessRuntimeChecksPassed": 7
+  },
+  "exclusions": [
+    "This is the existing authenticated local tool route, not the complete canonical runtime API. Host-owned UUID scope mapping and precise canonical grant/operation terms remain outstanding.",
+    "Incomplete or uncertain records preserve their original invocation; this component does not implement original-provider status reconciliation, historical backup restore fencing or replacement dispatch.",
+    "Inline-only legacy output without a recoverable original schema reference is withheld during cold replay. Current read authorization and original schema validation remain required.",
+    "No PWCE action/schema publication, trusted external authority/action adapter or joint LS-S028/PV1-T5 qualification is claimed.",
+    "No saved-service restart, live configuration change, personal-data import, training, real-world effect, model/provider selection or Human acceptance occurred. Historical receipts and model-quality observations remain unchanged."
+  ],
+  "nextAction": "Migrate the canonical runtime consumer and precise grant/scope contracts, expose scoped original-invocation status reconciliation, and complete PWCE capability schema publication, trusted approval/admission/invocation/status mapping and joint scenarios. Continue remaining S083/S084 development."
+}

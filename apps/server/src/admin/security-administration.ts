@@ -1,18 +1,19 @@
 import type {CapabilitySchemaStore} from "@lifestream/runtime/capabilities/schema-artifacts";
 import { randomUUID, createHash } from "node:crypto";
-import type { Database } from "@lifestream/storage-sqlite";
-import { GrantRepository, AdmissionRepository } from "@lifestream/storage-sqlite";
+import type { Database, ToolRequestIdentity } from "@lifestream/storage-sqlite";
+import { GrantRepository, AdmissionRepository, ToolInvocationRepository, ToolInvocationError } from "@lifestream/storage-sqlite";
 import { createContractValidator } from "@lifestream/contracts";
 import { SkillExecutor, validateSkill, type Skill } from "@lifestream/runtime/skills";
-import { CapabilityResolver, capabilityInputDigest } from "@lifestream/runtime/capabilities/resolver";
-import type { CapabilityProvider, CapabilityScope, CapabilityCallContext } from "@lifestream/runtime/capabilities/ports";
+import { CapabilityResolver, capabilityInputDigest, validateRecordedCapabilityResult } from "@lifestream/runtime/capabilities/resolver";
+import type { CapabilityProvider, CapabilityScope, CapabilityCallContext, CapabilityInvocationResult } from "@lifestream/runtime/capabilities/ports";
 import { AuthenticationError, type LocalAuthentication, type LocalContext } from "../auth/local-auth.ts";
-export type SecurityResult = { status: number; body: Record<string, unknown> };
+export type SecurityResult = { status: number; body: Record<string, unknown>; replayed?: boolean };
 const object = (value: unknown): Record<string, unknown> => { if (!value || typeof value !== "object" || Array.isArray(value)) throw new AuthenticationError(422, "invalid_request"); return value as Record<string, unknown>; };
 export class SecurityAdministration {
   private readonly schemas:CapabilitySchemaStore|undefined;
+  private readonly toolRequests: ToolInvocationRepository;
   private readonly database: Database; private readonly auth: LocalAuthentication; private readonly grants: GrantRepository; private readonly admissions: AdmissionRepository; private readonly provider: CapabilityProvider | undefined; private readonly now: () => number; private readonly validator = createContractValidator();
-  constructor(database: Database, auth: LocalAuthentication, provider?: CapabilityProvider, now: () => number = Date.now, schemas?:CapabilitySchemaStore) { this.schemas=schemas; this.database = database; this.auth = auth; this.grants = new GrantRepository(database); this.admissions = new AdmissionRepository(database); this.provider = provider; this.now = now; }
+  constructor(database: Database, auth: LocalAuthentication, provider?: CapabilityProvider, now: () => number = Date.now, schemas?:CapabilitySchemaStore) { this.toolRequests = new ToolInvocationRepository(database); this.schemas=schemas; this.database = database; this.auth = auth; this.grants = new GrantRepository(database); this.admissions = new AdmissionRepository(database); this.provider = provider; this.now = now; }
   handleLocal(method: string, path: string, context: LocalContext, input: unknown): SecurityResult {
     this.auth.assertCurrent(context); const parts = path.split("/").filter(Boolean), assistantId = parts[4], body = object(input);
     if (parts[3] !== "assistants" || !assistantId || !this.auth.canAdminister(context, assistantId)) throw new AuthenticationError(403, "assistant_scope_denied");
@@ -27,6 +28,69 @@ export class SecurityAdministration {
     return { status: 404, body: { code: "not_found", message: "administration operation not found" } };
   }
   async handle(method: string, path: string, context: LocalContext, input: unknown, call: CapabilityCallContext): Promise<SecurityResult> {
+    const parts = path.split('/').filter(Boolean);
+    if (!(method === 'POST' && parts.length === 8 && parts[3] === 'assistants' && parts[5] === 'tools' && parts[7] === 'invoke')) {
+      return this.perform(method, path, context, input, call);
+    }
+    const assistantId = parts[4]!, capabilityId = parts[6]!;
+    const assertCurrent = () => {
+      this.auth.assertCurrent(context);
+      if (!this.auth.canAdminister(context, assistantId)) throw new AuthenticationError(403, 'assistant_scope_denied');
+      if (call.signal.aborted || !call.isCurrent() || !Number.isFinite(Date.parse(call.deadlineAt)) || Date.parse(call.deadlineAt) <= Date.now()) throw new AuthenticationError(503, 'capability_unavailable');
+    };
+    assertCurrent();
+    const body = object(input);
+    if (!this.validator.validate('https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID', body.idempotencyKey).valid ||
+      Object.keys(body).some(key => !['idempotencyKey', 'grantId', 'input'].includes(key)) ||
+      (body.grantId !== undefined && body.grantId !== null && (typeof body.grantId !== 'string' || body.grantId.length > 128))) throw new AuthenticationError(422, 'invalid_tool_request');
+    let requestDigest: string;
+    try { requestDigest = capabilityInputDigest({ principalId: context.principalId, assistantId, sessionId: context.sessionId, capabilityId,
+      endpointId: 'administration', environment: 'local-administration', grantId: body.grantId ?? null, input: body.input, executionMode: call.executionMode }); }
+    catch { throw new AuthenticationError(422, 'invalid_tool_request'); }
+    const owned = structuredClone(body);
+    let identity: ToolRequestIdentity;
+    try {
+      identity = this.toolRequests.begin({ idempotencyKey: owned.idempotencyKey as string, principalId: context.principalId,
+        assistantId, sessionId: context.sessionId, requestDigest, requestId: call.requestId, correlationId: call.correlationId,
+        now: new Date(this.now()).toISOString() }, assertCurrent);
+    } catch (error) {
+      if (error instanceof ToolInvocationError) {
+        const status = error.code === 'notFound' ? 404 : error.code === 'conflict' ? 409 : error.code === 'capacity' ? 429 : 503;
+        throw new AuthenticationError(status, error.code === 'conflict' ? 'authority_idempotency_conflict' : 'tool_request_unavailable');
+      }
+      throw error;
+    }
+    if (!identity.fresh) {
+      assertCurrent();
+      if (identity.response && identity.response.body.result) {
+        try {
+          await validateRecordedCapabilityResult(identity.response.body.result as CapabilityInvocationResult,
+            { assistantId, endpointId: 'administration', sessionId: context.sessionId, environment: 'local-administration',
+              authorityContextRef: { providerRef: 'local-human', contextId: context.principalId, revision: 1 }, invocationId: identity.invocationId }, call, this.schemas);
+          assertCurrent();
+        } catch { return { status: 503, replayed: true, body: { code: 'recorded_tool_result_unavailable', invocationId: identity.invocationId,
+          message: 'The original result cannot be released under the current scope and schema access. No action was repeated.' } }; }
+      }
+      return identity.response ? { ...identity.response, replayed: true } : { status: 202, replayed: true, body: { assistantId, principalId: context.principalId, grantsAuthority: false,
+        requestId: identity.requestId, correlationId: identity.correlationId, invocationId: identity.invocationId,
+        result: { invocationId: identity.invocationId, lifecycle: 'outcomeUnknown', reason: 'original_request_pending_or_requires_reconciliation' } } };
+    }
+    let result: SecurityResult;
+    try {
+      result = this.provider ? await this.perform(method, path, context, owned, call, identity) :
+        { status: 503, body: { code: 'capability_unavailable', message: 'No capability provider is attached.' } };
+      assertCurrent();
+    } catch (error) {
+      result = { status: error instanceof AuthenticationError ? error.status : 503,
+        body: { code: error instanceof AuthenticationError ? error.code : 'capability_unavailable', message: 'The original tool request could not finish under the current scope.' } };
+    }
+    result = { status: result.status, body: { ...result.body, requestId: identity.requestId, correlationId: identity.correlationId, invocationId: identity.invocationId } };
+    try { this.toolRequests.complete(identity, result); }
+    catch { return { status: 503, body: { code: 'tool_result_unavailable', invocationId: identity.invocationId,
+      message: 'The original request may require reconciliation. Retry only with the same idempotency key.' } }; }
+    return result;
+  }
+  private async perform(method: string, path: string, context: LocalContext, input: unknown, call: CapabilityCallContext, identity?: ToolRequestIdentity): Promise<SecurityResult> {
     this.auth.assertCurrent(context);const parts=path.split("/").filter(Boolean),assistantId=parts[4],body=object(input);
     if(parts[3]!=="assistants"||!assistantId||!this.auth.canAdminister(context,assistantId))throw new AuthenticationError(403,"assistant_scope_denied");
     const base={assistantId,principalId:context.principalId,grantsAuthority:false};
@@ -66,7 +130,7 @@ export class SecurityAdministration {
       const snapshot = await resolver.snapshot(scope, call);
       if (method === "GET" && parts.length === 6) return { status: 200, body: { ...base, tools: snapshot.capabilities, snapshotRevision: snapshot.revision, expiresAt: snapshot.expiresAt, status: "available", limitation: "Discovery and Skill activation do not grant invocation authority." } };
       if (method === "POST" && parts.length === 8 && parts[7] === "simulate") { const capability = snapshot.capabilities.find(item => item.id === parts[6]); return { status: 200, body: { ...base, status: capability?.simulationSupported ? "simulated" : "unknown", providerInvoked: false, liveEffects: false } }; }
-      if (method === "POST" && parts.length === 8 && parts[7] === "invoke") { const capability = snapshot.capabilities.find(item => item.id === parts[6]); if (!capability) throw new AuthenticationError(404, "capability_not_found"); const result = await resolver.invoke({ ...scope, invocationId: randomUUID(), interactionId: randomUUID(), capabilityId: capability.id, capabilityVersion: capability.version, snapshotId: snapshot.snapshotId, snapshotRevision: snapshot.revision, input: body.input },scopedCall); return { status: result.lifecycle === "succeeded" ? 200 : 403, body: { ...base, result } }; }
+      if (method === "POST" && parts.length === 8 && parts[7] === "invoke") { const capability = snapshot.capabilities.find(item => item.id === parts[6]); if (!capability) throw new AuthenticationError(404, "capability_not_found"); const result = await resolver.invoke({ ...scope, invocationId: identity!.invocationId, interactionId: identity!.interactionId, idempotencyKey: identity!.idempotencyKey, capabilityId: capability.id, capabilityVersion: capability.version, snapshotId: snapshot.snapshotId, snapshotRevision: snapshot.revision, input: body.input },scopedCall); return { status: result.lifecycle === "succeeded" ? 200 : 403, body: { ...base, result } }; }
     }
 
     if(parts[5]==="skills"&&parts[7]==="simulate"&&parts.length===8&&method==="POST"){
