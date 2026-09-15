@@ -1,0 +1,167 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S041-CANONICAL-GRANTS-1",
+  "slice": "LS-S041",
+  "status": "componentVerified",
+  "sourceRevision": "959b59e908a218d1817c8edb5d804ff42bccdf67",
+  "sourceBinding": "Changes relative to sourceRevision are identified by the exact source hashes below; the enclosing commit carries the implementation. Full canonical administration/dispatch integration remains in progress.",
+  "specificationRevision": "fc407c740c23563fd0d717ee2449d0ce9926afec",
+  "recordedAt": "2026-09-15T11:54:17.906357Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "e6834722a946280b08b53aa6f21e3be4e49c729ea5e78cf1bb869177450470f5"
+    },
+    {
+      "path": "docs/canonical-provider-boundary.md",
+      "sha256": "1f6438e6a6e19212c871038ca23c1649d5791722dbf306b1423efcbd6221e224"
+    },
+    {
+      "path": "packages/contracts/src/provider-messages.ts",
+      "sha256": "4942f6e215b29b6cdfc60e6ed1f5b8135d9d17bb266cdb6d875fb194c5551cbe"
+    },
+    {
+      "path": "packages/runtime/src/authority/grants.ts",
+      "sha256": "5343989409ef0a12a14ef92f9c1a73121fc6f68133de1ccd28b26f10e16c302b"
+    },
+    {
+      "path": "packages/storage-sqlite/src/authority/canonical-grants.ts",
+      "sha256": "413c72f98a40dd81bcbd9e5180a4f6a97acfa946dc5cb094ba9a198ba2aea279"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "4c49c71b2cb165d49f0f47af6267b7e16104438e9659096097dcf4d9d3f59671"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0030_canonical_grants.sql",
+      "sha256": "a9c72d04412724621e8dfe68939c55d11998d6d0e6c6734926bc4408c194458c"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "a95cbd795601a0b80f4811176cde89c2e6d1cced30e438918307acab85870c67"
+    },
+    {
+      "path": "packages/storage-sqlite/test/canonical-grants.test.ts",
+      "sha256": "21983518e7236095711db516f2c4070f36743ad0e01080539b8fcab2c842d499"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "f1e9c9c2976c75a25eca2f22583ef7f255f82b0302d84c1b61573c0bf07f93d5"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "ed198293786a3fb7abc59e8e6856700765554f4021bf2ac97755776eb0f3f714"
+    },
+    {
+      "path": "scripts/generate-provider-types.mjs",
+      "sha256": "d3a3c54fa2631921dd519c0574a13973fac9e592b8e854edb6ecf020c5f5996c"
+    }
+  ],
+  "claims": [
+    "Canonical pending creation, exact-term approval and grant issuance are durable and separate from capability execution. Request decision, grant, lifecycle event and retry result commit together.",
+    "Independent SQLite workers race two approvals and one denial. Exactly one terminal request decision wins, with exactly one grant only if approval wins. Injected event-write failure rolls back all approval changes.",
+    "Approval binds the existing request revision, confirmation digest, class and explicit deadlines. Invalid/current-owner/provider scope, stale terms and backwards or expired time prevent issuance.",
+    "Recorded approve/deny/revoke commands replay their original results without new mutation; changed content conflicts. Reopening the database and replaying approval after revocation cannot revive the grant.",
+    "Canonical eligibility is non-consuming and validates the selected grant, authenticated context, exact Assistant/endpoint/environment/operation/version, target/data subsets, class bindings and time/lifecycle restrictions. Empty data scope grants no data access. Callback inputs are isolated and changed authority context is rejected.",
+    "Request history and grant events preserve original bytes and hashes. Corrupt or transplanted record contents and inconsistent grant event histories are withheld. Legacy coarse grant rows are unchanged."
+  ],
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/canonical-grants.test.ts",
+      "result": "pass",
+      "log": "canonical-grants-focused.log",
+      "logSha256": "ed4b02ee841cf51dd5b33d3828aa62759168a14e23e5135de4f4f0550f7ac0e3",
+      "testsPassed": 19
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "canonical-grants-build.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "canonical-grants-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "canonical-grants-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "canonical-grants-full.log",
+      "logSha256": "ecd3908f050fbf8c93b59dc84fd0c04790010e047395f4c5b711bde4c712e996",
+      "testsPassed": 593
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "canonical-grants-tooling.log",
+      "logSha256": "2c0e1826ee94c6b921e85bbd6aeeb0c3ce6061fdc9c7afc9336338a40da06d30",
+      "testsPassed": 45
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "canonical-grants-pwce-process.log",
+      "logSha256": "26851937e0172c2e11bbf4dedc462cff2f767526256d1c768b1b1d6ca9cb1553"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "canonical-grants-private.log",
+      "logSha256": "3b0c6882616d40ca4a852a55774911a3d5ed209df606306c39012b70b68c6c2c"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "canonical-grants-workspace.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S041",
+      "result": "pass",
+      "log": "canonical-grants-preflight.log",
+      "logSha256": "7392114d4131f77e9d88911b2a38eca886880e721abf0392683037ac9420183f"
+    }
+  ],
+  "regressionCounts": {
+    "sourceTestsPassed": 593,
+    "newSourceTests": 19,
+    "focusedTestsPassed": 19,
+    "toolingTestsPassed": 45,
+    "separateProcessContextChecksPassed": 19,
+    "separateProcessRuntimeChecksPassed": 7
+  },
+  "limits": {
+    "maximumRequests": 4096,
+    "maximumCommandResults": 16384,
+    "maximumRecordBytes": 131072,
+    "maximumCommandResponseBytes": 524288,
+    "historyEviction": false
+  },
+  "acceptanceCoverage": {
+    "supportingCases": [
+      "LS-AUTH-T002",
+      "LS-AUTH-T003",
+      "LS-AUTH-T006",
+      "LS-AUTH-T007",
+      "LS-AUTH-T011",
+      "LS-AUTH-T024",
+      "LS-AUTH-T025"
+    ],
+    "claim": "Component evidence only. Canonical API/UI, real authenticated session lifecycle, persistent renewal through that surface, snapshot invalidation and final dispatch remain required for complete scenario acceptance."
+  },
+  "exclusions": [
+    "Canonical grant listing/API/UI and actual server consumer migration are not implemented by this component. Host-owned UUID scope, validated-argument derivation and authentication-evidence custody remain integration obligations.",
+    "Eligibility returns a disposition, not a canonical HumanAuthorityDecision, audit artifact or dispatch receipt. Canonical consumption, revocation/admission serialization, invalidation and admitted invocation reporting remain outstanding.",
+    "PWCE retained snapshot/precondition binding, gateway-scoped approval transport and complete LS-S028/PV1-T5 joint action qualification remain outstanding.",
+    "No saved-service restart/migration, live effect, deployment, personal-data import, training, provider/model selection, selected-provider rerun or new Human acceptance. Historical evidence, approved schema bytes and model-quality observations are preserved."
+  ],
+  "nextAction": "Integrate canonical grants with authenticated administration and host-owned scope under LS-S040-S045, then complete canonical dispatch and capability consumers. Continue PWCE snapshot/precondition/approval and joint action scenarios plus remaining S083/S084 work."
+}

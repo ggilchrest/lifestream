@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS canonical_grant_requests (request_id TEXT PRIMARY KEY, principal_id TEXT NOT NULL, assistant_id TEXT NOT NULL, payload_json TEXT NOT NULL, sha256 TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS canonical_grant_request_history (request_id TEXT NOT NULL REFERENCES canonical_grant_requests(request_id), revision INTEGER NOT NULL, payload_json TEXT NOT NULL, sha256 TEXT NOT NULL, PRIMARY KEY (request_id,revision));
+CREATE TABLE IF NOT EXISTS canonical_grants (grant_id TEXT PRIMARY KEY, principal_id TEXT NOT NULL, assistant_id TEXT NOT NULL, payload_json TEXT NOT NULL, sha256 TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS canonical_grant_events (event_id TEXT PRIMARY KEY, grant_id TEXT NOT NULL REFERENCES canonical_grants(grant_id), payload_json TEXT NOT NULL, sha256 TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS canonical_authority_commands (idempotency_key TEXT PRIMARY KEY, principal_id TEXT NOT NULL, operation TEXT NOT NULL, input_digest TEXT NOT NULL, response_json TEXT NOT NULL, sha256 TEXT NOT NULL);

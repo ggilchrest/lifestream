@@ -21,3 +21,5 @@ export type { InitiativeScope, InitiativeOpportunity, InitiativeDeliveryOutcome,
 
 export { InitiativeExpressionRepository } from './initiative-expression.js';
 export type { InitiativeExpression, InitiativeExpressionObservation } from './initiative-expression.js';
+export { CanonicalGrantRepository, CanonicalGrantError } from './authority/canonical-grants.js';
+export type { CanonicalGrant, CanonicalHumanContext, TrustedGrantProposal, AuthorityCommand, AuthorityMutation, GrantOwnerBinding } from './authority/canonical-grants.js';

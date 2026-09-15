@@ -1,0 +1,212 @@
+import { createHash, randomUUID } from 'node:crypto';
+import { createContractValidator } from '@lifestream/contracts';
+import type { GrantRequest, GrantLifecycleEvent, humanAuthorityGrant_Root as CanonicalGrant } from '@lifestream/contracts/provider-messages';
+import type { Database, Transaction } from '../database.js';
+export type { CanonicalGrant, GrantRequest, GrantLifecycleEvent };
+const providerSchema = 'https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/';
+const grantSchema = 'https://lifestream.dev/contracts/human-authority-grant/1.0.0';
+const common = 'https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/';
+const validator = createContractValidator();
+export type AuthorityCommand = { requestId: string; correlationId: string; idempotencyKey: string };
+export type GrantOwnerBinding = { assistantId: string; endpointId: string; environmentId: string; sessionId: string | null };
+/** Supplied only by the authenticated host, never deserialized from an API body. */
+export type CanonicalHumanContext = {
+  principalId: string; providerRef: string; authenticationEvidenceRef: string;
+  now(): string; assertCurrent(binding: GrantOwnerBinding): void;
+};
+/** The capability adapter supplies validated scope/digest and deterministic display text. */
+export type TrustedGrantProposal = {
+  request: Omit<GrantRequest, 'schemaVersion' | 'requestId' | 'revision' | 'principalId' | 'authorityProviderRef' | 'confirmationDigest' | 'state' | 'grantId' | 'createdAt'>;
+  scopeDerivation: 'validatedArguments' | 'inputBoundOnly';
+};
+export type AuthorityMutation = { request: GrantRequest | null; grant: CanonicalGrant | null; events: GrantLifecycleEvent[] };
+export class CanonicalGrantError extends Error {
+  readonly code: 'invalid' | 'notFound' | 'conflict' | 'expired' | 'unavailable' | 'capacity' | 'scopeDerivationRequired';
+  constructor(code: CanonicalGrantError['code']) { super(`Canonical authority ${code}`); this.code = code; }
+}
+const fail = (code: CanonicalGrantError['code']): never => { throw new CanonicalGrantError(code); };
+const hash = (bytes: string) => createHash('sha256').update(bytes).digest('hex');
+function canonical(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+  return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical((value as Record<string, unknown>)[key])}`).join(',')}}`;
+}
+function check<T>(schema: string, value: T): T {
+  if (!validator.validate(schema, value).valid || Buffer.byteLength(JSON.stringify(value)) > 131072) fail('invalid');
+  return structuredClone(value);
+}
+function clock(context: CanonicalHumanContext): string { return check(common + 'Time', context.now()); }
+function confirmation(request: GrantRequest): string {
+  const fields = ['requestId','revision','principalId','assistantId','endpointId','environmentId','authorityProviderRef','scope','inputDigest','invocationId','sessionId','requestedClass','grantExpiresAt','reviewAfter','expiresAt'] as const;
+  return hash(canonical(Object.fromEntries(fields.map(key => [key, request[key]]))));
+}
+function dates(request: GrantRequest, now: string): void {
+  if (Date.parse(request.createdAt) > Date.parse(now)) fail('unavailable');
+  if (Date.parse(request.expiresAt) <= Date.parse(now) || Date.parse(request.grantExpiresAt) <= Date.parse(now) ||
+    (request.reviewAfter !== null && (Date.parse(request.reviewAfter) <= Date.parse(now) || Date.parse(request.reviewAfter) > Date.parse(request.grantExpiresAt)))) fail('expired');
+}
+type Row = { payload_json: string; sha256: string };
+function stored<T>(row: Row | undefined, schema: string): T {
+  if (!row) return fail('notFound');
+  if (hash(row.payload_json) !== row.sha256) fail('unavailable');
+  try { return check(schema, JSON.parse(row.payload_json)) as T; } catch { return fail('unavailable'); }
+}
+
+/** Canonical request approval and immutable grant lifecycle. Legacy coarse grants
+ * remain separate historical records; none acquire missing scope by migration. */
+export class CanonicalGrantRepository {
+  private readonly database: Database;
+  private readonly providerRef: string;
+  constructor(database: Database, providerRef: string) {
+    if (!providerRef || providerRef.length > 500) fail('invalid'); this.database = database; this.providerRef = providerRef;
+  }
+  private guard(context: CanonicalHumanContext, value: GrantOwnerBinding & { principalId: string; authorityProviderRef: string }): void {
+    check(common + 'UUID', context.principalId); clock(context);
+    if (context.providerRef !== this.providerRef || value.authorityProviderRef !== this.providerRef || value.principalId !== context.principalId) fail('notFound');
+    context.assertCurrent({ assistantId: value.assistantId, endpointId: value.endpointId, environmentId: value.environmentId, sessionId: value.sessionId });
+    if (context.providerRef !== this.providerRef || value.principalId !== context.principalId) fail('notFound');
+  }
+  private request(tx: Transaction, id: string, context: CanonicalHumanContext): GrantRequest {
+    check(common + 'UUID', id);
+    const request = stored<GrantRequest>(tx.get<Row>('SELECT * FROM canonical_grant_requests WHERE request_id=? AND principal_id=?', id, context.principalId), providerSchema + 'GrantRequest');
+    if (request.requestId !== id) fail('unavailable');
+    this.guard(context, request); return request;
+  }
+  private grant(tx: Transaction, id: string, context: CanonicalHumanContext): CanonicalGrant {
+    check(common + 'UUID', id);
+    const grant = stored<CanonicalGrant>(tx.get<Row>('SELECT * FROM canonical_grants WHERE grant_id=? AND principal_id=?', id, context.principalId), grantSchema);
+    if (grant.grantId !== id) fail('unavailable');
+    this.guard(context, grant); return grant;
+  }
+  private saveRequest(tx: Transaction, request: GrantRequest): void {
+    check(providerSchema + 'GrantRequest', request); const json = JSON.stringify(request);
+    tx.run('INSERT INTO canonical_grant_requests VALUES (?,?,?,?,?) ON CONFLICT(request_id) DO UPDATE SET payload_json=excluded.payload_json,sha256=excluded.sha256', request.requestId, request.principalId, request.assistantId, json, hash(json));
+    tx.run('INSERT INTO canonical_grant_request_history VALUES (?,?,?,?)', request.requestId, request.revision, json, hash(json));
+  }
+  private saveGrant(tx: Transaction, grant: CanonicalGrant, event: GrantLifecycleEvent): void {
+    check(grantSchema, grant); check(providerSchema + 'GrantLifecycleEvent', event);
+    const json = JSON.stringify(grant), eventJson = JSON.stringify(event);
+    tx.run('INSERT INTO canonical_grants VALUES (?,?,?,?,?) ON CONFLICT(grant_id) DO UPDATE SET payload_json=excluded.payload_json,sha256=excluded.sha256', grant.grantId, grant.principalId, grant.assistantId, json, hash(json));
+    tx.run('INSERT INTO canonical_grant_events VALUES (?,?,?,?)', event.eventId, grant.grantId, eventJson, hash(eventJson));
+  }
+  private event(grant: CanonicalGrant, type: GrantLifecycleEvent['type'], command: AuthorityCommand, context: CanonicalHumanContext, now: string): GrantLifecycleEvent {
+    return { schemaVersion: '1.0.0', eventId: randomUUID(), grantId: grant.grantId, oldRevision: grant.revision - 1, newRevision: grant.revision,
+      type, occurredAt: now, actorRef: context.principalId, reasonCode: `authority_grant_${type}`, correlationId: command.correlationId,
+      invocationId: null, decisionId: null, approvalRequestId: type === 'issued' ? grant.grantRequestId : null,
+      authenticationEvidenceRef: type === 'issued' ? grant.authenticationEvidenceRef : null };
+  }
+  private mutate(operation: string, input: unknown, command: AuthorityCommand, context: CanonicalHumanContext,
+    apply: (tx: Transaction) => AuthorityMutation, finalCheck?: (result: AuthorityMutation) => void): AuthorityMutation {
+    command = structuredClone(command);
+    for (const value of [command.requestId, command.correlationId, command.idempotencyKey, context.principalId]) check(common + 'UUID', value);
+    const inputDigest = hash(canonical(input)), principalId = context.principalId;
+    return this.database.transaction(tx => {
+      clock(context);
+      if (context.providerRef !== this.providerRef || context.principalId !== principalId) fail('notFound');
+      const previous = tx.get<{ principal_id: string; operation: string; input_digest: string; response_json: string; sha256: string }>('SELECT * FROM canonical_authority_commands WHERE idempotency_key=?', command.idempotencyKey);
+      if (previous) {
+        if (previous.principal_id !== principalId) fail('notFound');
+        if (previous.operation !== operation || previous.input_digest !== inputDigest) fail('conflict');
+        if (hash(previous.response_json) !== previous.sha256) fail('unavailable');
+        const result = JSON.parse(previous.response_json) as AuthorityMutation;
+        if (result.request) this.guard(context, check(providerSchema + 'GrantRequest', result.request));
+        if (result.grant) this.guard(context, check(grantSchema, result.grant));
+        if (!Array.isArray(result.events)) fail('unavailable');
+        for (const event of result.events) {
+          check(providerSchema + 'GrantLifecycleEvent', event);
+          if (!result.grant || event.grantId !== result.grant.grantId || event.newRevision > result.grant.revision) fail('unavailable');
+        }
+        return structuredClone(result);
+      }
+      if (tx.get<{ count: number }>('SELECT COUNT(*) AS count FROM canonical_authority_commands')!.count >= 16384) fail('capacity');
+      const result = apply(tx);
+      if (result.request) this.guard(context, result.request);
+      if (result.grant) this.guard(context, result.grant);
+      finalCheck?.(result);
+      const json = JSON.stringify(result); if (Buffer.byteLength(json) > 524288) fail('capacity');
+      tx.run('INSERT INTO canonical_authority_commands VALUES (?,?,?,?,?,?)', command.idempotencyKey, principalId, operation, inputDigest, json, hash(json));
+      return structuredClone(result);
+    });
+  }
+  createRequest(proposal: TrustedGrantProposal, command: AuthorityCommand, context: CanonicalHumanContext): AuthorityMutation {
+    proposal = structuredClone(proposal); command = structuredClone(command);
+    if (!['validatedArguments','inputBoundOnly'].includes(proposal.scopeDerivation)) fail('invalid');
+    if (proposal.scopeDerivation === 'inputBoundOnly' && proposal.request.requestedClass !== 'allowOnce') fail('scopeDerivationRequired');
+    return this.mutate('createRequest', proposal, command, context, tx => {
+      if (tx.get<{ count: number }>('SELECT COUNT(*) AS count FROM canonical_grant_requests')!.count >= 4096) fail('capacity');
+      const request: GrantRequest = { ...proposal.request, schemaVersion: '1.0.0', requestId: randomUUID(), revision: 1,
+        principalId: context.principalId, authorityProviderRef: this.providerRef, confirmationDigest: '0'.repeat(64), state: 'pending', grantId: null, createdAt: clock(context) };
+      check(providerSchema + 'GrantRequest', request); this.guard(context, request); dates(request, clock(context)); request.confirmationDigest = confirmation(request);
+      this.saveRequest(tx, request); return { request, grant: null, events: [] };
+    }, result => dates(result.request!, clock(context)));
+  }
+  approveRequest(input: { requestId: string; expectedRevision: number; confirmationDigest: string; grantClass: CanonicalGrant['grantClass']; expiresAt: string; reviewAfter: string | null }, command: AuthorityCommand, context: CanonicalHumanContext): AuthorityMutation {
+    input = structuredClone(input); command = structuredClone(command);
+    return this.mutate('approveRequest', input, command, context, tx => {
+      const request = this.request(tx, input.requestId, context), now = clock(context);
+      if (request.state !== 'pending' || request.revision !== input.expectedRevision || request.confirmationDigest !== confirmation(request) || request.confirmationDigest !== input.confirmationDigest ||
+        request.requestedClass !== input.grantClass || request.grantExpiresAt !== input.expiresAt || request.reviewAfter !== input.reviewAfter) fail('conflict');
+      dates(request, now); check(grantSchema + '#/$defs/scopeRef', context.authenticationEvidenceRef);
+      const grant: CanonicalGrant = { schemaVersion: '1.0.0', grantId: randomUUID(), revision: 1, status: 'active', grantClass: request.requestedClass,
+        principalId: context.principalId, assistantId: request.assistantId, endpointId: request.endpointId, environmentId: request.environmentId,
+        authorityProviderRef: this.providerRef, scope: request.scope, sessionId: request.requestedClass === 'allowPersistent' ? null : request.sessionId,
+        invocationId: request.requestedClass === 'allowOnce' ? request.invocationId : null, inputDigest: request.requestedClass === 'allowOnce' ? request.inputDigest : null,
+        issuedAt: now, expiresAt: request.grantExpiresAt, reviewAfter: request.reviewAfter, issuedBy: context.principalId,
+        grantRequestId: request.requestId, authenticationEvidenceRef: context.authenticationEvidenceRef, consumedDecisionId: null };
+      const event = this.event(grant, 'issued', command, context, now), decided: GrantRequest = { ...request, state: 'approved', revision: request.revision + 1, grantId: grant.grantId };
+      this.saveGrant(tx, grant, event); this.saveRequest(tx, decided); return { request: decided, grant, events: [event] };
+    }, result => dates(result.request!, clock(context)));
+  }
+  decideRequest(input: { requestId: string; expectedRevision: number; decision: 'denied' | 'cancelled' }, command: AuthorityCommand, context: CanonicalHumanContext): AuthorityMutation {
+    input = structuredClone(input); command = structuredClone(command);
+    if (!['denied','cancelled'].includes(input.decision)) fail('invalid');
+    return this.mutate('decideRequest', input, command, context, tx => {
+      const request = this.request(tx, input.requestId, context);
+      if (request.state !== 'pending' || request.revision !== input.expectedRevision) fail('conflict');
+      if (Date.parse(request.expiresAt) <= Date.parse(clock(context))) fail('expired');
+      const next = { ...request, state: input.decision, revision: request.revision + 1 }; this.saveRequest(tx, next); return { request: next, grant: null, events: [] };
+    });
+  }
+  getRequest(id: string, context: CanonicalHumanContext): GrantRequest {
+    return this.database.transaction(tx => {
+      let request = this.request(tx, id, context);
+      if (request.state === 'pending' && Date.parse(request.expiresAt) <= Date.parse(clock(context))) {
+        request = { ...request, state: 'expired', revision: request.revision + 1 }; this.saveRequest(tx, request);
+      }
+      if (request.requestId !== id) fail('unavailable');
+    this.guard(context, request); return request;
+    });
+  }
+  private currentGrant(tx: Transaction, id: string, context: CanonicalHumanContext): CanonicalGrant {
+    let grant = this.grant(tx, id, context);
+    if (grant.status === 'active' && Date.parse(grant.expiresAt) <= Date.parse(clock(context))) {
+      grant = { ...grant, status: 'expired', revision: grant.revision + 1 };
+      this.saveGrant(tx, grant, this.event(grant, 'expired', { requestId: randomUUID(), correlationId: randomUUID(), idempotencyKey: randomUUID() }, context, clock(context)));
+    }
+    return grant;
+  }
+  getGrant(id: string, context: CanonicalHumanContext): CanonicalGrant {
+    return this.database.transaction(tx => { const grant = this.currentGrant(tx, id, context); this.guard(context, grant); return grant; });
+  }
+  revokeGrant(input: { grantId: string; expectedRevision: number }, command: AuthorityCommand, context: CanonicalHumanContext): AuthorityMutation {
+    input = structuredClone(input); command = structuredClone(command);
+    return this.mutate('revokeGrant', input, command, context, tx => {
+      const grant = this.currentGrant(tx, input.grantId, context);
+      if (grant.status !== 'active') return { request: null, grant, events: [] };
+      if (grant.revision !== input.expectedRevision) fail('conflict');
+      const next: CanonicalGrant = { ...grant, status: 'revoked', revision: grant.revision + 1 }, event = this.event(next, 'revoked', command, context, clock(context));
+      this.saveGrant(tx, next, event); return { request: null, grant: next, events: [event] };
+    });
+  }
+  events(id: string, context: CanonicalHumanContext): GrantLifecycleEvent[] {
+    return this.database.transaction(tx => { const grant = this.grant(tx, id, context);
+      const events = tx.all<Row>('SELECT * FROM canonical_grant_events WHERE grant_id=? ORDER BY rowid', id).map(row => stored<GrantLifecycleEvent>(row, providerSchema + 'GrantLifecycleEvent'));
+      for (const [index, event] of events.entries()) {
+        if (event.grantId !== id || event.oldRevision !== index || event.newRevision !== index + 1 ||
+          (index === 0 ? event.type !== 'issued' : event.type === 'issued')) fail('unavailable');
+      }
+      const last = events.at(-1);
+      if (!last || last.newRevision !== grant.revision || (last.type === 'issued' ? grant.status !== 'active' : last.type !== grant.status)) fail('unavailable');
+      this.guard(context, grant); return events; });
+  }
+}

@@ -3,8 +3,8 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "11bc7318b1840cff96d86fd898630bc1b820b34a",
-  "activeSlice": "LS-S028",
+  "currentRevision": "959b59e908a218d1817c8edb5d804ff42bccdf67",
+  "activeSlice": "LS-S041",
   "sliceStatus": "inProgress",
   "completedSlices": [
     "LS-S001",
@@ -75,111 +75,91 @@
     "LS-S081"
   ],
   "allowedFiles": [
-    "packages/providers-pwce/src/client.ts",
-    "packages/providers-pwce/test/client.test.ts",
+    "packages/storage-sqlite/src/authority/grants.ts",
+    "packages/runtime/src/authority/grants.ts",
+    "packages/storage-sqlite/src/migrations/0009_human_authority.sql",
+    "packages/runtime/test/grants.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028.json",
-    "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json",
-    "packages/providers-pwce/src/transport.ts",
-    "packages/providers-pwce/test/transport.test.ts",
-    "packages/providers-pwce/src/index.ts",
-    "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json",
-    "implementation/evidence/LS-S028-PRODUCER-CONTEXT-1.json",
-    "packages/runtime/src/context/pwce-mapping.ts",
-    "packages/runtime/test/pwce-mapping.test.ts",
-    "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json",
-    "scripts/check-pwce-context.mjs",
-    "scripts/check-pwce-context-process.mjs",
-    "implementation/evidence/LS-S028-SCOPED-STREAM-1.json",
-    "packages/providers-pwce/src/cache.ts",
-    "packages/providers-pwce/src/context-session.ts",
-    "packages/providers-pwce/test/cache.test.ts",
-    "packages/providers-pwce/test/context-session.test.ts",
-    "packages/providers-pwce/package.json",
-    "packages/providers-pwce/tsconfig.json",
-    "packages/runtime/package.json",
-    "pnpm-lock.yaml",
-    "implementation/evidence/LS-S028-CACHE-RECOVERY-1.json",
-    "apps/server/src/config/schema.ts",
-    "apps/server/src/config/loader.ts",
-    "apps/server/src/config/pwce.ts",
-    "apps/server/src/composition/pwce-world.ts",
-    "apps/server/src/composition/providers.ts",
-    "apps/server/src/runtime/inference.ts",
-    "apps/server/src/runtime/audio.ts",
-    "apps/server/src/index.ts",
-    "apps/server/package.json",
-    "apps/server/tsconfig.json",
-    "apps/server/test/pwce-world.test.ts",
-    "apps/server/test/config.test.ts",
-    "apps/server/test/inference.test.ts",
-    "packages/runtime/src/context/world.ts",
-    "packages/runtime/src/inference/prompt.ts",
-    "packages/runtime/test/world.test.ts",
-    "scripts/check-pwce-runtime.mjs",
-    "implementation/evidence/LS-S028-WORLD-RUNTIME-1.json",
-    "apps/server/test/audio.test.ts",
-    "packages/runtime/src/capabilities/ports.ts",
-    "packages/runtime/src/capabilities/resolver.ts",
-    "packages/runtime/src/capabilities/cache.ts",
-    "packages/runtime/src/capabilities/call.ts",
-    "packages/runtime/src/skills/skill.ts",
-    "packages/runtime/test/capabilities.test.ts",
-    "packages/runtime/test/skills.test.ts",
-    "packages/providers-fixture/src/capability/provider.ts",
-    "apps/server/src/admin/security-administration.ts",
-    "apps/server/test/security-administration.test.ts",
-    "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json",
-    "docs/local-authentication.md",
-    "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json",
-    "packages/runtime/src/capabilities/schema-validation.ts",
-    "packages/runtime/src/capabilities/schema-worker.ts",
-    "packages/runtime/test/capability-schema.test.ts",
-    "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json",
-    "packages/runtime/src/capabilities/schema-artifacts.ts",
-    "packages/runtime/test/capability-artifacts.test.ts",
-    "implementation/evidence/LS-S028-CAPABILITY-ARTIFACTS-1.json",
+    "implementation/evidence/LS-S041.json",
     "scripts/generate-provider-types.mjs",
     "packages/contracts/src/provider-messages.ts",
-    "packages/contracts/test/provider-types.test.ts",
-    "packages/runtime/src/ports/provider-messages.ts",
-    "packages/runtime/src/ports/provider-boundary.ts",
-    "packages/runtime/test/provider-boundary.test.ts",
-    "implementation/evidence/LS-S028-PROVIDER-MESSAGES-1.json",
-    "packages/contracts/package.json",
-    "docs/canonical-provider-boundary.md",
-    "packages/storage-sqlite/src/authority/admission.ts",
-    "packages/storage-sqlite/src/migrations/0027_governed_admissions.sql",
+    "packages/storage-sqlite/src/authority/canonical-grants.ts",
+    "packages/storage-sqlite/src/migrations/0030_canonical_grants.sql",
     "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/test/governed-admission.test.ts",
-    "implementation/evidence/LS-S028-GOVERNED-ADMISSION-1.json",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/test/canonical-grants.test.ts",
     "packages/storage-sqlite/test/initiative-delivery.test.ts",
     "packages/storage-sqlite/test/initiative-expression.test.ts",
     "apps/server/test/server.test.ts",
-    "packages/storage-sqlite/src/tool-invocations.ts",
-    "packages/storage-sqlite/src/migrations/0028_tool_invocations.sql",
-    "packages/storage-sqlite/src/index.ts",
-    "packages/storage-sqlite/test/tool-invocations.test.ts",
-    "apps/server/test/tool-idempotency.test.ts",
-    "implementation/evidence/LS-S028-TOOL-IDEMPOTENCY-1.json",
-    "packages/storage-sqlite/src/migrations/0029_tool_recovery.sql",
-    "implementation/evidence/LS-S028-TOOL-STATUS-1.json",
-    "implementation/evidence/LS-S028-PRODUCER-RECONCILIATION-1.json"
+    "docs/canonical-provider-boundary.md",
+    "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json"
   ],
   "changedFiles": [
+    "apps/server/test/server.test.ts",
+    "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-PRODUCER-RECONCILIATION-1.json"
+    "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json",
+    "packages/contracts/src/provider-messages.ts",
+    "packages/runtime/src/authority/grants.ts",
+    "packages/storage-sqlite/src/authority/canonical-grants.ts",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/src/migrations/0030_canonical_grants.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/test/canonical-grants.test.ts",
+    "packages/storage-sqlite/test/initiative-delivery.test.ts",
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
+    "scripts/generate-provider-types.mjs"
   ],
   "validation": [
     {
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/canonical-grants.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json"
+    },
+    {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-RECONCILIATION-1.json"
+      "evidence": "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-RECONCILIATION-1.json"
+      "evidence": "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S041",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S041-CANONICAL-GRANTS-1.json"
     }
   ],
   "decisions": [
@@ -194,8 +174,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Complete the canonical Lifestream authority/capability consumer, precise grant and host scope mapping, PWCE snapshot/precondition binding and gateway-scoped approval transport; run the joint action lifecycle scenarios. Continue remaining S083/S084 independent development.",
-  "updatedAt": "2026-09-15T11:26:23.888373Z",
+  "nextAction": "Integrate canonical grants with authenticated administration and host-owned scope under LS-S040-S045, then complete canonical dispatch and capability consumers. Continue PWCE snapshot/precondition/approval and joint action scenarios plus remaining S083/S084 work.",
+  "updatedAt": "2026-09-15T11:54:17.906357Z",
   "updatedBy": "Codex",
-  "notes": "PWCE original-target reconciliation is component verified and scoped status checks run through its existing Gateway. Canonical consumers, precise grants/scope, snapshot preconditions and approval transport remain in progress."
+  "notes": "Canonical grant storage and non-consuming exact-scope eligibility are component verified (593 source tests). Canonical administration/API/UI, scope/evidence integration and final dispatch remain in progress."
 }

@@ -17,7 +17,8 @@ const seeds = [
   'CapabilitySnapshotRequest', 'CapabilitySnapshotResult', 'CapabilityInvocationRequest', 'CapabilityInvocationResult',
   'CapabilityStatusRequest', 'CapabilityStatusResult', 'CapabilityInvalidationRequest', 'CapabilityInvalidationEvent',
   'AuthorityRequest', 'AuthorityResult', 'AuthorityDispatchRequest', 'AuthorityDispatchResult',
-  'GrantQueryRequest', 'GrantQueryResult', 'AuthorityInvalidationRequest', 'AuthorityInvalidationEvent'
+  'GrantQueryRequest', 'GrantQueryResult', 'AuthorityInvalidationRequest', 'AuthorityInvalidationEvent',
+  'GrantRequest', 'GrantLifecycleEvent'
 ];
 const names = new Map(seeds.map(name => [`${provider}#/$defs/${name}`, name]));
 for (const name of ['ArtifactRef', 'CallScope', 'Problem', 'SourceRevision']) names.set(`${common}#/$defs/${name}`, name);
