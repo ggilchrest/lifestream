@@ -28,16 +28,17 @@ host.stderr.on('data',chunk=>{stderr+=String(chunk);if(stderr.length>8192)host.k
 async function readLine(){let timer;try { const item=await Promise.race([iterator.next(),exit.then(()=>{throw new Error('synthetic producer exited');}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('synthetic producer response deadline exceeded')),10000);})]);assert.equal(item.done,false);assert.ok(item.value.length<4096);return JSON.parse(item.value); }finally{clearTimeout(timer);}}
 async function stats(){host.stdin.write('stats\n');const result=await readLine();assert.equal(result.fixtureStats,true);return result.calls;}
 const ajv=new Ajv2020({strict:false});addFormats(ajv);const validateRequest=ajv.compile(PWCE_DISPATCH_REQUEST_SCHEMA),validateResponse=ajv.compile(PWCE_DISPATCH_RESPONSE_SCHEMA);
-let calls=0, wireCalls=0, catalogChecks=0, authorityChecks=0, admissionChecks=0, invocationChecks=0;
+let calls=0, wireCalls=0, catalogChecks=0, authorityChecks=0, admissionChecks=0, invocationChecks=0, recoveryChecks=0, recoveryQueries=0;
 const custodyDir=mkdtempSync(join(tmpdir(),'pwce-joined-admission-')),custodyPath=join(custodyDir,'state.sqlite');
 let database=new Database({path:custodyPath});database.migrate();
 try {
  const ready=await readLine();assert.equal(ready.fixture,true);assert.equal(ready.liveEffects,false);assert.equal(ready.scenario,'trusted-dispatch');
  const url=new URL(ready.url);assert.equal(url.protocol,'http:');assert.equal(url.hostname,'127.0.0.1');
- const core=new PwceGatewayClient({baseUrl:ready.url,token});
- let discardReply=false;
+ const core=new PwceGatewayClient({baseUrl:ready.url,token,fetchImpl:async(url,init)=>{if(String(url).endsWith('/gateway/v1/admission-recovery')){recoveryQueries++;assert.equal(init.headers['X-PWCE-Dispatcher-Token'],undefined);}return fetch(url,init);}});
+ let discardReply=false,dropBeforeSend=false;
  const client=new PwceTrustedDispatchClient({baseUrl:ready.url,token,dispatcherToken,fetchImpl:async (url,init)=>{
   const action=String(url).endsWith('/gateway/v1/dispatch');if(action){wireCalls++;assert.ok(validateRequest(JSON.parse(init.body)),JSON.stringify(validateRequest.errors));}
+  if(action&&dropBeforeSend){dropBeforeSend=false;throw new Error('synthetic request never reached producer');}
   const response=await fetch(url,init);
   if(action&&discardReply){discardReply=false;await response.arrayBuffer();throw new Error('synthetic discarded completed HTTP reply');}
   return response;
@@ -88,7 +89,18 @@ try {
  const lostPreviewRequest=previewRequest(),lostPreview=await preview.evaluate(lostPreviewRequest,callContext),lostRequest=dispatchRequest(lostPreviewRequest,lostPreview.outcome.payload);
  discardReply=true;await assert.rejects(admission().authorizeDispatch(lostRequest,callContext),{code:'unavailable'});const afterLost=wireCalls;
  database.close();database=new Database({path:custodyPath});database.migrate();
- await assert.rejects(admission().authorizeDispatch({...lostRequest,requestId:randomUUID()},callContext),{code:'admission_outcome_unknown'});assert.equal(wireCalls,afterLost);assert.equal(await stats(),0);admissionChecks++;
+ const recoveredAdmissions=await Promise.all([admission().authorizeDispatch({...lostRequest,requestId:randomUUID()},callContext),admission().authorizeDispatch({...lostRequest,requestId:randomUUID()},callContext)]);assert.equal(recoveredAdmissions[0].outcome.payload.disposition,'authorized');assert.deepEqual(recoveredAdmissions[0].outcome.payload,recoveredAdmissions[1].outcome.payload);assert.equal(wireCalls,afterLost);assert.equal(await stats(),0);admissionChecks++;recoveryChecks++;
+ database.close();database=new Database({path:custodyPath});database.migrate();hostApproved=false;
+ const originalRecovery=await admission().recoverAdmission({...lostRequest,requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString()},callContext);assert.deepEqual(originalRecovery.outcome.decision,recoveredAdmissions[0].outcome.payload);assert.equal(createHash('sha256').update(originalRecovery.outcome.evidenceJson).digest('hex'),originalRecovery.outcome.decision.evidenceRef.sha256);assert.equal(Buffer.byteLength(originalRecovery.outcome.evidenceJson),originalRecovery.outcome.decision.evidenceRef.byteLength);
+ await assert.rejects(admission().authorizeDispatch({...lostRequest,requestId:randomUUID()},callContext),{code:'host_admission_required'});hostApproved=true;assert.equal(wireCalls,afterLost);recoveryChecks++;
+ const missingPreviewRequest=previewRequest(),missingPreview=await preview.evaluate(missingPreviewRequest,callContext),missingRequest=dispatchRequest(missingPreviewRequest,missingPreview.outcome.payload);
+ dropBeforeSend=true;await assert.rejects(admission().authorizeDispatch(missingRequest,callContext),{code:'unavailable'});const afterMissing=wireCalls;
+ await assert.rejects(admission().authorizeDispatch({...missingRequest,requestId:randomUUID()},callContext),{code:'admission_outcome_unknown'});assert.equal(wireCalls,afterMissing);assert.equal(new SqlitePwceAdmissionCustody(database).read(missingRequest.idempotencyKey).outcome,null);assert.equal(await stats(),0);recoveryChecks++;
+ const beforeForeign=recoveryQueries;await assert.rejects(admission().recoverAdmission({...lostRequest,scope:{...lostRequest.scope,sessionId:randomUUID()},requestId:randomUUID()},callContext),{code:'admission_conflict'});assert.equal(recoveryQueries,beforeForeign);recoveryChecks++;
+ const expiringPreviewRequest=previewRequest(),expiringPreview=await preview.evaluate(expiringPreviewRequest,callContext),expiringRequest={...dispatchRequest(expiringPreviewRequest,expiringPreview.outcome.payload),deadlineAt:new Date(Date.now()+1500).toISOString()};
+ discardReply=true;await assert.rejects(admission().authorizeDispatch(expiringRequest,callContext),{code:'unavailable'});const afterExpiring=wireCalls;await new Promise(resolve=>setTimeout(resolve,1600));
+ const freshExpiryQuery={...expiringRequest,requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString()},expiredRecovery=await admission().recoverAdmission(freshExpiryQuery,callContext);assert.ok(Date.parse(expiredRecovery.outcome.decision.expiresAt)<Date.now());assert.equal(JSON.parse(expiredRecovery.outcome.evidenceJson).deadlineAt,expiringRequest.deadlineAt);await assert.rejects(admission().authorizeDispatch(freshExpiryQuery,callContext),{code:'admission_expired'});assert.equal(wireCalls,afterExpiring);assert.equal(await stats(),0);recoveryChecks++;
+
 
  const invocation=()=>new PwceInvocation({providerRef:'pwce.synthetic',client:core,dispatcher:client,admission:admission(),custody:new SqlitePwceInvocationCustody(database)});
  const invocationRequest=(request,decision)=>({...request,operation:'CapabilityProvider.invoke',requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString(),payload:{invocationId:request.payload.invocationId,capabilityId:PWCE_LIGHT_CAPABILITY_ID,capabilityVersion:'1.0.0',snapshotId:request.payload.snapshotId,snapshotRevision:request.payload.snapshotRevision,operationScope:request.payload.scope,input:preparedActions.get(request.payload.invocationId).input,inputSchema:EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0].inputSchemaArtifact,inputDigest:request.payload.inputDigest,dispatchReceipt:decision.evidenceRef}});
@@ -118,6 +130,7 @@ try {
  await assert.rejects(catalog.schemas.read(EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0].inputSchemaArtifact,schemaScope,schemaContext()),{code:'authority_context_invalidated'});catalogChecks++;
  await assert.rejects(catalog.getSnapshot(catalogRequest(),callContext),{code:'authority_context_invalidated'});catalogChecks++;
  await assert.rejects(invocation().getInvocation(queryFor(invocationInput),callContext),{code:'authority_context_invalidated'});invocationChecks++;
+ await assert.rejects(admission().recoverAdmission({...lostRequest,requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString()},callContext),{code:'authority_context_invalidated'});recoveryChecks++;
  await assert.rejects(admission().readEvidence(final.outcome.payload.evidenceRef,finalRequest,callContext),{code:'authority_context_invalidated'});admissionChecks++;
  await assert.rejects(preview.readEvidence(allowed.outcome.payload.evidenceRef,allowedRequest,callContext),{code:'authority_context_invalidated'});authorityChecks++;
  const deniedAuthority=await core.authority(['home.one'],undefined,identity),deniedBinding={...binding,authorityContextRef:deniedAuthority.authorityContextRef},deniedScope={...localScope,authorityContextRef:{...localScope.authorityContextRef,contextId:randomUUID()}};
@@ -126,7 +139,7 @@ try {
  assert.equal(denied.outcome.payload.disposition,'denied');assert.equal(denied.outcome.payload.admittedAt,null);assert.equal(await stats(),baselineCalls+2);authorityChecks++;
 
  await assert.rejects(client.invoke(authority.authorityContextRef,{...pendingInput,actionRef:pending.actionRef}),{code:'authority_context_invalidated'});assert.equal(await stats(),baselineCalls+2);calls++;
- console.log(JSON.stringify({checks:calls,catalogChecks,authorityChecks,admissionChecks,invocationChecks,wireCalls,targetCalls:baselineCalls+2,fixtures:true,scope:'separate-process canonical catalog, preview and durable final admission plus pinned dispatch transport; canonical original invocation/status custody; no configured runtime activation, real effects or Human acceptance'}));
+ console.log(JSON.stringify({checks:calls,catalogChecks,authorityChecks,admissionChecks,invocationChecks,recoveryChecks,recoveryQueries,wireCalls,targetCalls:baselineCalls+2,fixtures:true,scope:'separate-process canonical catalog, preview and durable final admission plus pinned dispatch transport; canonical original invocation/status custody and read-only pending admission recovery; no configured runtime activation, real effects or Human acceptance'}));
 }finally{
  database.close();rmSync(custodyDir,{recursive:true,force:true});
  host.stdin.end('stop\n');let timer;

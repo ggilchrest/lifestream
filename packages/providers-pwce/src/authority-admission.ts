@@ -1,3 +1,4 @@
+import {PWCE_ADMISSION_RECOVERY_RESPONSE_SCHEMA} from './admission-recovery-bundle.ts';
 import {createHash} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {createContractValidator} from '@lifestream/contracts';
@@ -71,12 +72,21 @@ export class PwceAuthorityAdmission {
   private result(request:M.AuthorityDispatchRequest,outcome:PwceAdmissionOutcome):M.AuthorityDispatchResult{
     return {schemaVersion:'1.0.0',operation:request.operation,requestId:request.requestId,correlationId:request.correlationId,providerRef:this.options.providerRef,completedAt:new Date().toISOString(),outcome:{status:'succeeded',payload:structuredClone(outcome.decision),error:null}};
   }
+  private project(request:M.AuthorityDispatchRequest,evidenceJson:string,schemaRef:string,admittedAt:string|null,expiresAt:string,disposition:Decision['disposition']):PwceAdmissionOutcome {
+    const decisionId=uuid(['pwce-final-admission',request.scope,request.payload.invocationId,byteHash(evidenceJson)]);
+    const decision:Decision={schemaVersion:'1.0.0',authorityKind:'external',decisionId,kind:'dispatch',providerRef:this.options.providerRef,invocationId:request.payload.invocationId,inputDigest:request.payload.inputDigest,scopeDigest:hash(request.payload.scope),authorityContextRef:request.scope.authorityContextRef!,executionMode:request.executionMode,disposition,
+      reason:{code:`pwce_admission_${disposition}`,summary:`PWCE final admission returned ${disposition}; original producer evidence is retained.`},evaluatedAt:admittedAt??new Date().toISOString(),admittedAt,expiresAt:new Date(Math.min(Date.parse(expiresAt),Date.parse(request.payload.requiredProviderDisposition.expiresAt),Date.parse(request.deadlineAt))).toISOString(),
+      evidenceRef:{reference:`pwce:admission:${decisionId}`,sha256:byteHash(evidenceJson),byteLength:Buffer.byteLength(evidenceJson),mediaType:'application/json',schemaRef},scope:request.scope,correlationId:request.correlationId,snapshotId:request.payload.snapshotId,snapshotRevision:request.payload.snapshotRevision};
+    const outcome={decision,evidenceJson};if(!validator.validate(base+'AuthorityDispatchResult',this.result(request,outcome)).valid)return fail('invalid_projection');
+    return outcome;
+  }
   async authorizeDispatch(input:M.AuthorityDispatchRequest,context:ProviderCallContext):Promise<M.AuthorityDispatchResult>{
     if(!boundedJson(input)||!validator.validate(base+'AuthorityDispatchRequest',input).valid)return fail('invalid_request');
     const request=structuredClone(input),call=this.call(request,context);
     try{
       this.current(request,context,call);
-      const existing=this.stored(request);
+      let existing=this.stored(request);
+      if(existing&&!existing.outcome)existing=await call.wait(this.recoverAdmission(request,{...context,signal:call.signal}));
       if(existing){if(!existing.outcome)return fail('admission_outcome_unknown');if(!await call.wait(this.options.authorize(structuredClone(request),structuredClone(existing.intent.prepared),{...context,signal:call.signal})))return fail('host_admission_required');this.current(request,context,call);await this.checkOutcome(existing,request,context,call,true);return this.result(request,existing.outcome);}
       const prepared=await call.wait(this.options.preview.resolveDispatch(request,{...context,signal:call.signal}));this.current(request,context,call);
       const catalog=await call.wait(this.options.catalog.revalidate(request,{...context,signal:call.signal}));this.current(request,context,call);
@@ -102,16 +112,41 @@ export class PwceAuthorityAdmission {
         evidenceJson=canonicalJson(raw);schemaRef=PWCE_DISPATCH_RESPONSE_SCHEMA.$id;disposition=raw.outcome==='approval_required'?'approvalRequired':'denied';
       }
       await call.wait(this.options.catalog.revalidate(request,{...context,signal:call.signal}));this.current(request,context,call);
-      const decisionId=uuid(['pwce-final-admission',request.scope,request.payload.invocationId,byteHash(evidenceJson)]);
-      const decision:Decision={schemaVersion:'1.0.0',authorityKind:'external',decisionId,kind:'dispatch',providerRef:this.options.providerRef,invocationId:request.payload.invocationId,inputDigest:request.payload.inputDigest,scopeDigest:hash(request.payload.scope),authorityContextRef:request.scope.authorityContextRef!,executionMode:request.executionMode,disposition,
-        reason:{code:`pwce_admission_${disposition}`,summary:`PWCE final admission returned ${disposition}; original producer evidence is retained.`},evaluatedAt:new Date().toISOString(),admittedAt,expiresAt:new Date(Math.min(Date.parse(expiresAt),Date.parse(request.payload.requiredProviderDisposition.expiresAt),Date.parse(request.deadlineAt))).toISOString(),
-        evidenceRef:{reference:`pwce:admission:${decisionId}`,sha256:byteHash(evidenceJson),byteLength:Buffer.byteLength(evidenceJson),mediaType:'application/json',schemaRef},scope:request.scope,correlationId:request.correlationId,snapshotId:request.payload.snapshotId,snapshotRevision:request.payload.snapshotRevision};
-      if(Date.parse(decision.expiresAt)<=Date.now())return fail('admission_expired');
-      const outcome={decision,evidenceJson};if(!validator.validate(base+'AuthorityDispatchResult',this.result(request,outcome)).valid)return fail('invalid_projection');
+      const outcome=this.project(request,evidenceJson,schemaRef,admittedAt,expiresAt,disposition);
+      if(Date.parse(outcome.decision.expiresAt)<=Date.now())return fail('admission_expired');
       this.current(request,context,call);
       const saved=this.options.custody.complete(request.idempotencyKey,structuredClone(outcome));
       if(!isDeepStrictEqual(saved.intent,intent)||!isDeepStrictEqual(saved.outcome,outcome))return fail('admission_custody_failed');
       this.current(request,context,call);return this.result(request,outcome);
+    }finally{call.close();}
+  }
+  /** Historical producer lookup, not a canonical dispatch permission result.
+   * Expired evidence may be retained; authorizeDispatch still checks expiry. */
+  async recoverAdmission(input:M.AuthorityDispatchRequest,context:ProviderCallContext):Promise<PwceAdmissionRecord> {
+    if(!boundedJson(input)||!validator.validate(base+'AuthorityDispatchRequest',input).valid)return fail('invalid_request');
+    const request=structuredClone(input),call=this.call(request,context);
+    try{
+      this.current(request,context,call);const record=this.stored(request);if(!record)return fail('admission_evidence_unavailable');
+      const {intent}=record,{binding}=intent.catalog;
+      if(request.executionMode!=='normal'||intent.catalog.executionMode!=='normal')return fail('admission_binding_mismatch');
+      this.options.catalog.assertReadScope(intent.catalog,request.scope,request.executionMode,context);
+      const fingerprint={principalRef:binding.principalRef,capabilityRef:descriptor.capabilityRef,capabilityVersion:descriptor.schemaVersion,operation:descriptor.operation,...intent.prepared.input,executionEnvironmentRef:binding.executionEnvironmentRef,gatewayScope:{worldRef:binding.worldRef,...binding.identity}};
+      const wire={...binding.identity,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,requestId:request.requestId,correlationId:request.correlationId,deadline:request.deadlineAt,idempotencyKey:intent.producerKey,requestFingerprint:canonicalJson(fingerprint),originalSnapshotRef:intent.catalog.producerSnapshotRef,approvalRequired:intent.prepared.approval.required,approvalRef:intent.prepared.approval.reference};
+      const raw=await call.wait(this.options.client.recoverAdmission(binding.authorityContextRef,wire,call.signal));this.current(request,context,call);
+      if(!await call.wait(validateCapabilitySchema(PWCE_ADMISSION_RECOVERY_RESPONSE_SCHEMA,raw,call.signal,false,131072)))return fail('invalid_admission_evidence');
+      for(const field of ['requestId','correlationId','worldRef','executionEnvironmentRef']as const)if(raw[field]!==wire[field])return fail('admission_binding_mismatch');
+      if(raw.status!=='known')return fail('admission_outcome_unknown');
+      const proof=await verifyProof(raw.admissionEvidence,intent,call);if(raw.actionRef!==proof.actionRef)return fail('admission_binding_mismatch');
+      this.options.catalog.assertReadScope(intent.catalog,request.scope,request.executionMode,context);this.current(request,context,call);
+      const latest=this.stored(request)!;
+      if(latest.outcome){
+        if(latest.outcome.decision.disposition!=='authorized'||latest.outcome.evidenceJson!==canonicalJson(proof))return fail('admission_conflict');
+        await this.checkOutcome(latest,request,context,call,false,false);this.current(request,context,call);return latest;
+      }
+      const outcome=this.project(intent.request,canonicalJson(proof),bundle.schemaRef,proof.admittedAt,proof.deadlineAt,'authorized');
+      const saved=this.options.custody.complete(request.idempotencyKey,structuredClone(outcome));
+      if(!isDeepStrictEqual(saved.intent,intent)||!isDeepStrictEqual(saved.outcome,outcome))return fail('admission_custody_failed');
+      this.current(request,context,call);return structuredClone(saved);
     }finally{call.close();}
   }
   private async checkOutcome(record:PwceAdmissionRecord,request:M.AuthorityDispatchRequest,context:ProviderCallContext,call:PwceCallScope,unexpired:boolean,requireCatalog=true):Promise<void>{

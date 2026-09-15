@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-ADMISSION-RECOVERY-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "f05636a82b0d9bb7b687d05e87ef7b400ffe2a87",
+  "specificationRevision": "4799cee6377c77a988ba4e94aced6a7e386f3c5b",
+  "producerRevision": "2ae4f8b3aa46264457797724f00d34088e5cc500",
+  "recordedAt": "2026-09-15T19:57:06.847072Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/test/server.test.ts",
+        "sha256": "0989e137c4136c95b4e2cbf464074e6312d387053d02416966f2f0ed6fe0b65c"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "55118e9d82ceb17dbf6552c1b379ac919cbfbb9a52bd3dac89caa94a1e55e6aa"
+      },
+      {
+        "path": "packages/providers-pwce/src/admission-recovery-bundle.ts",
+        "sha256": "403a7ad2975d56ff94c6b59a90a58ea62430895383dfd430520eebbf27420010"
+      },
+      {
+        "path": "packages/providers-pwce/src/authority-admission.ts",
+        "sha256": "344a4731612e5417ccd21f97b88f0e70bd0656a3df24673a15132052be0d4255"
+      },
+      {
+        "path": "packages/providers-pwce/src/client.ts",
+        "sha256": "9b164441a8084ec17be6f86bbb12922dba237e5f3ae3c1c98256f08c41a5d8a1"
+      },
+      {
+        "path": "packages/providers-pwce/test/admission-recovery-client.test.ts",
+        "sha256": "e399f0303eec9c517330dadb89eb46ca661b88165dab58e1a2327a342d92a6ca"
+      },
+      {
+        "path": "packages/providers-pwce/test/authority-admission.test.ts",
+        "sha256": "99fc3ddf84b76a4694770013589b884748e9afe181e7caf9921a651f782468e0"
+      },
+      {
+        "path": "scripts/check-pwce-dispatch-process.mjs",
+        "sha256": "b1fd1797cb587e129ac7e74b22ae4eb1c99bb04e034e39228d5dc1d3cdb9a2c2"
+      },
+      {
+        "path": "scripts/generate-pwce-admission-recovery-pin.mjs",
+        "sha256": "cf85fc1b6e1a5647f691e4a9998c03c660b1b8f35b1a984cec7a85763fd44efa"
+      }
+    ]
+  },
+  "producerContract": {
+    "bundleId": "pwce-admission-recovery.bundle.v1",
+    "bundleVersion": "1.0.0",
+    "bundleDigest": "43d1d8e574bf09a92bf1cd24ac69ffbb6a2e6a56c7628ae8dfe35d18854a5ab3"
+  },
+  "claim": "Pending original PWCE admission is recovered by a separately pinned scoped read-only lookup, without another admission or target call. Durable original request identity and actual producer proof control completion. Expired admission can be preserved as history but cannot become fresh dispatch permission.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-admission-recovery-full-final.log",
+      "logSha256": "ab57c15dad6918ce86887bd42f4383f2245db1ccbf1bbbea74af499bcd6eb3a8"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-admission-recovery-typecheck-final.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-admission-recovery-build-final.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-admission-recovery-lint-final.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/authority-admission.test.ts packages/providers-pwce/test/admission-recovery-client.test.ts",
+      "result": "pass",
+      "log": "ls-admission-recovery-focused.log",
+      "logSha256": "41c7261e986b8298e6acbe4e00476201938b1bcd8e88ab5c748dd5b56c099dc5"
+    },
+    {
+      "command": "node --test --experimental-strip-types --test-name-pattern='bounded shutdown' apps/server/test/server.test.ts",
+      "result": "pass",
+      "log": "ls-admission-recovery-shutdown.log",
+      "logSha256": "195e9e59d461e96260f8dce62f3fe71fe72788e962e0d427e71c134e64d387ed"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "log": "ls-admission-recovery-joined-final.log",
+      "logSha256": "b4603190af423c78044850fe06723ba39cfd3378f7eb339593875894c6f8e06a"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "ls-admission-recovery-context.log",
+      "logSha256": "6461279e9e3bcd94ee43ff710394fbf6ea18a29c6ac748be508c6ef603e1a509"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-recovery-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-admission-recovery-pin.log",
+      "logSha256": "975333cd9170f3d011f25613c2ce6ee61f24f749c5abbf3ccc6bca7823a41f0a"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-admission-recovery-admission-pin.log",
+      "logSha256": "1ea6850d9e2e4905eaa564322be8ca06ee7101ccb057e81a16cd2d3576264fa2"
+    },
+    {
+      "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-admission-recovery-invocation-pin.log",
+      "logSha256": "3fee32e6e63c209794993635f4e39e08b84ce0d830ec9048603c09846292b79b"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-admission-recovery-private.log",
+      "logSha256": "da6a634cfcf41d06e74382d7e187b920b613ada246ec8df94a7958867558a746"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-admission-recovery-preflight.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-admission-recovery-workspace-tests.log",
+      "logSha256": "ace6c9b232d0b174e445264164ae5bb4720fd85ecf4dc036814a941b55f726fc"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "ls-admission-recovery-workspace-check.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-admission-recovery-preflight-final.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "counts": {
+    "applicationTests": 764,
+    "newAdmissionRecoveryTestsIncludedInApplicationTotal": 9,
+    "newClientRecoveryTestsIncludedInApplicationTotal": 6,
+    "focusedTests": 28,
+    "joinedRecoveryChecks": 6,
+    "joinedInvocationChecks": 7,
+    "joinedFinalAdmissionChecks": 6,
+    "joinedAuthorityPreviewChecks": 5,
+    "joinedCatalogChecks": 6,
+    "joinedDispatchChecks": 7,
+    "joinedContextChecks": 19,
+    "joinedRuntimeChecks": 7,
+    "syntheticTargetCallsInDispatchRunner": 4,
+    "workspaceTests": 43
+  },
+  "verificationNotes": [
+    "The first full run passed 763/764; the existing shutdown test rejected ECONNRESET from the intentional forced shutdown. Its event waiter now permits that reset while still requiring actual socket closure and same-port HTTP restart within the original deadlines. Focused shutdown and the full 764-test rerun pass. The failed log is retained.",
+    "The first joined-run attempt had a duplicate local variable name and failed before starting a service. The name was corrected and both later joined runs pass.",
+    "Actual producer HTTP replies are discarded; actual SQLite is closed/reopened. Concurrent recovery produces one immutable original decision without renewed admission. A separate request is stopped before reaching PWCE and remains unknown on lookup.",
+    "A real original admission deadline expires before recovery. Historical lookup succeeds with unchanged expiry; canonical authorizeDispatch still rejects the expired decision. Host refusal, foreign session and producer revocation are independently checked.",
+    "No selected-model qualification ran; historical SYNPRJ_Q7M4 telemetry remains unchanged and nonblocking."
+  ],
+  "exclusions": [
+    "Complete canonical AuthorityProvider/CapabilityProvider composition and logical invalidation streams",
+    "External grant-query representation; no local Human grant is fabricated",
+    "Authority-context restoration, catalog rotation, power-loss and backup/restore certification",
+    "Configured runtime activation, saved-service restart, physical effects, deployment, model selection and new Human acceptance"
+  ],
+  "continuation": "Continue canonical PWCE capability and authority invalidation streams and full host composition. Preserve the external grant-query schema gap rather than fabricate local Human grants; continue independent work.",
+  "localLogArchive": "lifestream/.lifestream/benchmarks/pwce-admission-recovery-consumer/2026-09-15"
+}

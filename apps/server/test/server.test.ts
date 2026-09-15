@@ -328,7 +328,9 @@ test('bounded shutdown closes lingering HTTP connections before a same-port rest
   t.after(() => app.shutdown()); const socket = connect(port,'127.0.0.1'); socket.on('error',() => {}); t.after(() => socket.destroy()); await once(socket,'connect'); socket.resume();
   // A partly transmitted request keeps the connection out of the idle pool.
   socket.write(`POST /api/runtime/v1/turn HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nContent-Type: application/json\r\nContent-Length: 100\r\n\r\n{`);
-  const closed = once(socket,'close'); await app.shutdown(20);
+  // Forced shutdown may reset a partially transmitted request. The required
+  // outcome is socket closure and a successful same-port restart, not TCP FIN.
+  const closed = new Promise<void>((resolve,reject) => { socket.once('close',() => resolve()); socket.on('error',(error:NodeJS.ErrnoException) => { if(error.code!=='ECONNRESET')reject(error); }); }); await app.shutdown(20);
   const deadline = AbortSignal.timeout(1000); await Promise.race([closed, new Promise((_,reject) => deadline.addEventListener('abort',() => reject(new Error('Old HTTP connection survived shutdown')),{once:true}))]);
   app = createLifestreamServer({config:config(root),port}); await app.start();
   const response = await fetch(`http://127.0.0.1:${port}/control/security.html`); assert.equal(response.status,200); assert.match(await response.text(),/Permissions/);

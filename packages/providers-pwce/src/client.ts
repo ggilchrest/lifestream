@@ -1,3 +1,5 @@
+import {EXPECTED_PWCE_ADMISSION_RECOVERY_BUNDLE as recoveryBundle,PWCE_ADMISSION_RECOVERY_REQUEST_SCHEMA,PWCE_ADMISSION_RECOVERY_RESPONSE_SCHEMA} from './admission-recovery-bundle.ts';
+import {boundedJson,validateCapabilitySchema} from '@lifestream/runtime/capabilities/schema-validation';
 import { EXPECTED_PWCE_ADMISSION_BUNDLE } from "./admission-bundle.ts";
 import { EXPECTED_PWCE_INVOCATION_BUNDLE } from "./invocation-bundle.ts";
 import { createHash } from "node:crypto";
@@ -84,6 +86,22 @@ export class PwceGatewayClient {
       const received = await this.json<Record<string,unknown>>("/gateway/v1/invocation-contracts",scope);
       if (!isDeepStrictEqual(received,EXPECTED_PWCE_INVOCATION_BUNDLE)) throw new Error("PWCE invocation contract bundle is incompatible");
       scope.check();return structuredClone(EXPECTED_PWCE_INVOCATION_BUNDLE);
+    });
+  }
+  async recoverAdmission(authorityContextRef:string,input:Record<string,unknown>,signal?:AbortSignal):Promise<PwceClientResult> {
+    if(typeof authorityContextRef!=='string'||!authorityContextRef||!objectInput(input)||!boundedJson(input)||['operation','authorityContextRef','token','profileId','profileVersion','recoveryProfileId','recoveryProfileVersion'].some(field=>Object.hasOwn(input,field)))throw new Error('PWCE recovery input cannot replace bound identity or credentials');
+    const request={...structuredClone(input),authorityContextRef,operation:'authority.recoverAdmission',profileId:EXPECTED_PWCE_PROFILE.profileId,profileVersion:EXPECTED_PWCE_PROFILE.profileVersion,recoveryProfileId:recoveryBundle.profileId,recoveryProfileVersion:recoveryBundle.profileVersion};
+    return this.call(signal,async scope=>{
+      if(!await scope.wait(validateCapabilitySchema(PWCE_ADMISSION_RECOVERY_REQUEST_SCHEMA,request,scope.signal)))throw new Error('PWCE recovery request is invalid');
+      const body=encodeRequest(request);if(Buffer.byteLength(body)>recoveryBundle.maximumRequestBytes)throw new Error('PWCE recovery request is too large');
+      await this.readNegotiation(scope);
+      const received=await this.json('/gateway/v1/admission-recovery/bundle',scope);
+      if(!isDeepStrictEqual(received,recoveryBundle))throw new Error('PWCE recovery contract bundle is incompatible');
+      scope.check();
+      const response=await this.json<PwceClientResult>('/gateway/v1/admission-recovery',scope,{method:'POST',body,recoveryContract:recoveryBundle.bundleDigest});
+      if(!await scope.wait(validateCapabilitySchema(PWCE_ADMISSION_RECOVERY_RESPONSE_SCHEMA,response,scope.signal,false,131072)))throw new Error('PWCE recovery response is invalid');
+      for(const [field,value] of Object.entries({profileId:request.profileId,profileVersion:request.profileVersion,recoveryProfileId:request.recoveryProfileId,recoveryProfileVersion:request.recoveryProfileVersion,...Object.fromEntries(['requestId','correlationId','worldRef','executionEnvironmentRef'].map(key=>[key,request[key as keyof typeof request]]))}))if(response[field]!==value)throw new Error('PWCE recovery response binding differs');
+      scope.check();return structuredClone(response);
     });
   }
   capabilityContracts(signal?: AbortSignal): Promise<typeof EXPECTED_PWCE_CAPABILITY_BUNDLE> {
@@ -182,9 +200,9 @@ export class PwceGatewayClient {
     } finally { clearTimeout(headersDeadline); scope.close(); }
   }
   health(authorityContextRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "health.get", authorityContextRef }, signal); }
-  private async json<T extends object>(path: string, scope: PwceCallScope, options: { readonly method?: string; readonly body?: string } = {}): Promise<T> {
+  private async json<T extends object>(path: string, scope: PwceCallScope, options: { readonly method?: string; readonly body?: string; readonly recoveryContract?: string } = {}): Promise<T> {
     const response = await boundedFetch(this.fetchImpl, `${this.baseUrl}${path}`, {
-      method: options.method ?? "GET", headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json" },
+      method: options.method ?? "GET", headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json", ...(options.recoveryContract ? {"X-PWCE-Admission-Recovery-Contract":options.recoveryContract} : {}) },
       ...(options.body === undefined ? {} : { body: options.body }),
     }, scope);
     const value = await readJsonObject(response, scope);

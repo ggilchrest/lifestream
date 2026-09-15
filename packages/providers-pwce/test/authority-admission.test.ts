@@ -14,9 +14,9 @@ async function fixture(){
  const prepared={input:{siteRef:'home.one',targetEntityId:'light.synthetic',parameters:{level:0.5}},approval:{required:false,reference:null}};
  const body={snapshotRef:randomUUID(),principalRef:binding.principalRef,siteRefs:binding.siteRefs,sourceRevision:1,invalidationSequence:1,issuedAt:new Date(Date.now()-100).toISOString(),expiresAt:new Date(Date.now()+60000).toISOString(),capabilities:[{...EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0],available:true,authorization:'grant_required'}],availability:'configured',limitations:[]};
  const record={scope,binding,snapshot:{snapshotId:randomUUID(),revision:1,issuedAt:body.issuedAt,expiresAt:body.expiresAt,capabilities:[{capabilityId:'pwce.home.light.set-level'}]},executionMode:'normal',producerSnapshotRef:body.snapshotRef,producerRevision:1,producerDigest:hash(body)};
- const state={current:true,bound:true,approved:true,reserveFail:false,completeFail:false,sent:[],records:new Map(),hook:async()=>{},mutate:()=>{}};
- const catalog={retained:()=>structuredClone(record),revalidate:async()=>{await state.hook('catalog');if(!state.bound)throw new PwceTransportError('snapshot_unavailable','synthetic');return structuredClone(record);}};
- const client={request:async request=>({profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',requestId:request.requestId,correlationId:request.correlationId,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,outcome:'allowed',capabilityRef:'home.light.set_level',effectClass:'reversible',rationaleCodes:['explicit_grant_active'],requirements:[],limitations:[]}),admissionContracts:async()=>{await state.hook('contracts');}};
+ const state={recoveryKnown:false,recoveryProof:null,recoveryCalls:[],recoveryMutate:()=>{},current:true,bound:true,approved:true,reserveFail:false,completeFail:false,sent:[],records:new Map(),hook:async()=>{},mutate:()=>{}};
+ const catalog={assertReadScope:()=>{if(!state.current||!state.bound)throw new PwceTransportError('scope_changed','synthetic');},retained:()=>structuredClone(record),revalidate:async()=>{await state.hook('catalog');if(!state.bound)throw new PwceTransportError('snapshot_unavailable','synthetic');return structuredClone(record);}};
+ const client={recoverAdmission:async(_ref,wire)=>{state.recoveryCalls.push(structuredClone(wire));await state.hook('recovery');const raw={profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',recoveryProfileId:'pwce-admission-recovery.v1',recoveryProfileVersion:'1.0.0',requestId:wire.requestId,correlationId:wire.correlationId,worldRef:wire.worldRef,executionEnvironmentRef:wire.executionEnvironmentRef,...(state.recoveryKnown?{status:'known',reason:null,actionRef:state.recoveryProof.actionRef,admissionEvidence:structuredClone(state.recoveryProof)}:{status:'unknown',reason:'admission_not_found',actionRef:null,admissionEvidence:null})};state.recoveryMutate(raw);return raw;},request:async request=>({profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',requestId:request.requestId,correlationId:request.correlationId,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,outcome:'allowed',capabilityRef:'home.light.set_level',effectClass:'reversible',rationaleCodes:['explicit_grant_active'],requirements:[],limitations:[]}),admissionContracts:async()=>{await state.hook('contracts');}};
  const preview=new PwceAuthorityPreview({providerRef:'pwce.synthetic',client,catalog,resolve:async()=>prepared,isCurrent:()=>state.current});
  const previewRequest={schemaVersion:'1.0.0',operation:'AuthorityProvider.evaluate',requestId:randomUUID(),correlationId:randomUUID(),cancellationId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString(),executionMode:'normal',scope,idempotencyKey:null,payload:{grantId:null,invocationId:randomUUID(),inputDigest:hash(prepared.input),snapshotId:record.snapshot.snapshotId,snapshotRevision:1,scope:pwceLightOperation(prepared.input,binding.worldRef)}};
  const context={signal:new AbortController().signal,isCurrent:()=>state.current},decision=(await preview.evaluate(previewRequest,context)).outcome.payload;
@@ -27,10 +27,11 @@ async function fixture(){
   const fingerprint={principalRef:binding.principalRef,capabilityRef:'home.light.set_level',capabilityVersion:'1.0.0',operation:'light.set_level',...prepared.input,executionEnvironmentRef:binding.executionEnvironmentRef,gatewayScope:{worldRef:binding.worldRef,...binding.identity}};
   const snapshotJson=JSON.stringify({scope:[binding.authorityContextRef,binding.principalRef,1,1,binding.siteRefs,binding.identity.assistantRef,binding.identity.endpointRef,binding.identity.participantRefs,binding.identity.audienceRef,binding.worldRef,binding.executionEnvironmentRef],sourceDigest:'a'.repeat(64),snapshot:{profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',...body}});
   const proof={schemaVersion:'1.0.0',kind:'pwce.action.admission',actionRef:randomUUID(),idempotencyKey:wire.idempotencyKey,requestFingerprint:canonicalJson(fingerprint),...fingerprint,grantRevision:1,targetIdentity:'synthetic:light.one',deadlineAt:wire.deadline,approvalRequired:prepared.approval.required,approvalRef:prepared.approval.reference,capabilitySnapshot:{snapshotRef:body.snapshotRef,sha256:bytesHash(snapshotJson),expiresAt:body.expiresAt,snapshotJson},precondition:null,admittedAt:new Date().toISOString(),decision:{outcome:'allowed',rationaleCodes:['explicit_grant_active']}};
+  state.recoveryProof=structuredClone(proof);
   const raw={dispatchProfileId:'pwce-trusted-dispatch.v1',dispatchProfileVersion:'1.0.0',profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',requestId:wire.requestId,correlationId:wire.correlationId,worldRef:wire.worldRef,executionEnvironmentRef:wire.executionEnvironmentRef,status:'admitted',actionRef:proof.actionRef,admissionEvidence:proof};state.mutate(raw);return raw;
  }};
  const create=()=>new PwceAuthorityAdmission({providerRef:'pwce.synthetic',client,dispatcher,catalog,preview,custody,authorize:async()=>{await state.hook('host');return state.approved;}});
- return {request,context,state,record,prepared,custody,create};
+ return {request,context,state,record,prepared,custody,create,catalog};
 }
 
 test('final admission retains original proof, returns canonical evidence and reuses the immutable result without I/O',async()=>{
@@ -111,4 +112,55 @@ test('a completed key cannot change invocation, scope, input or evidence metadat
  const f=await fixture(),result=await f.create().authorizeDispatch(f.request,f.context),reference=result.outcome.payload.evidenceRef;
  for(const change of [r=>r.payload.invocationId=randomUUID(),r=>r.scope.sessionId=randomUUID(),r=>r.payload.inputDigest='0'.repeat(64),r=>r.correlationId=randomUUID()]){const other=structuredClone(f.request);change(other);await assert.rejects(f.create().authorizeDispatch(other,f.context),{code:'admission_conflict'});await assert.rejects(f.create().readEvidence(reference,other,f.context),{code:'admission_conflict'});}
  await assert.rejects(f.create().readEvidence({...reference,sha256:'0'.repeat(64)},f.request,f.context),{code:'admission_evidence_unavailable'});assert.equal(f.state.sent.length,1);
+});
+
+async function pendingRecovery(){
+ const f=await fixture();f.state.mutate=()=>{throw new Error('synthetic discarded reply');};await assert.rejects(f.create().authorizeDispatch(f.request,f.context));f.state.recoveryKnown=true;return f;
+}
+const recoveryRequest=f=>({...structuredClone(f.request),requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString()});
+
+test('pending admission recovers its original proof through status only and keeps host dispatch guards',async()=>{
+ const f=await pendingRecovery();f.state.approved=false;
+ const original=await f.create().recoverAdmission(recoveryRequest(f),f.context);assert.equal(original.outcome.evidenceJson,canonicalJson(f.state.recoveryProof));assert.equal(original.outcome.decision.admittedAt,f.state.recoveryProof.admittedAt);assert.equal(original.outcome.decision.evaluatedAt,f.state.recoveryProof.admittedAt);
+ await assert.rejects(f.create().authorizeDispatch(recoveryRequest(f),f.context),{code:'host_admission_required'});f.state.approved=true;
+ const result=await f.create().authorizeDispatch(recoveryRequest(f),f.context);assert.deepEqual(result.outcome.payload,original.outcome.decision);assert.equal(f.state.sent.length,1);assert.equal(f.state.recoveryCalls.length,1);
+});
+
+test('ordinary retry of incomplete admission uses the new lookup and never repeats admission',async()=>{
+ const f=await pendingRecovery(),result=await f.create().authorizeDispatch(recoveryRequest(f),f.context);assert.equal(result.outcome.payload.disposition,'authorized');assert.equal(f.state.sent.length,1);assert.equal(f.state.recoveryCalls.length,1);assert.equal(f.state.recoveryCalls[0].idempotencyKey,f.custody.read(f.request.idempotencyKey).intent.producerKey);
+});
+
+test('unknown recovery remains pending and a later read can discover the original admission',async()=>{
+ const f=await pendingRecovery();f.state.recoveryKnown=false;
+ for(let i=0;i<2;i++){await assert.rejects(f.create().authorizeDispatch(recoveryRequest(f),f.context),{code:'admission_outcome_unknown'});assert.equal(f.custody.read(f.request.idempotencyKey).outcome,null);}
+ f.state.recoveryKnown=true;assert.ok((await f.create().recoverAdmission(recoveryRequest(f),f.context)).outcome);assert.equal(f.state.sent.length,1);
+});
+
+test('expired admission is retained historically but never becomes a fresh dispatch decision',async t=>{
+ t.mock.timers.enable({apis:['Date'],now:Date.now()});const f=await pendingRecovery(),originalDeadline=f.state.recoveryProof.deadlineAt;t.mock.timers.tick(31000);
+ f.catalog.revalidate=async()=>{throw new Error('expired process-local catalog must not be needed for historical lookup');};
+ const result=await f.create().recoverAdmission(recoveryRequest(f),f.context);assert.ok(Date.parse(result.outcome.decision.expiresAt)<Date.now());assert.ok(Date.parse(result.outcome.decision.expiresAt)<=Date.parse(originalDeadline));assert.equal(JSON.parse(result.outcome.evidenceJson).deadlineAt,originalDeadline);
+ await assert.rejects(f.create().authorizeDispatch(recoveryRequest(f),f.context),{code:'admission_expired'});assert.equal(f.state.sent.length,1);
+});
+
+test('recovery rejects substituted proof and mismatched response envelopes without completing custody',async()=>{
+ for(const mutate of [r=>r.actionRef=randomUUID(),r=>r.requestId=randomUUID(),r=>r.admissionEvidence.idempotencyKey='changed',r=>r.admissionEvidence.capabilitySnapshot.sha256='0'.repeat(64),r=>r.admissionEvidence.approvalRequired=true,r=>r.extra='forged']){const f=await pendingRecovery();f.state.recoveryMutate=mutate;await assert.rejects(f.create().recoverAdmission(recoveryRequest(f),f.context));assert.equal(f.custody.read(f.request.idempotencyKey).outcome,null);assert.equal(f.state.sent.length,1);}
+});
+
+test('local foreign scope and withdrawn current scope release no recovered evidence',async()=>{
+ const f=await pendingRecovery(),foreign=recoveryRequest(f);foreign.scope.sessionId=randomUUID();await assert.rejects(f.create().recoverAdmission(foreign,f.context),{code:'admission_conflict'});assert.equal(f.state.recoveryCalls.length,0);
+ f.state.hook=async phase=>{if(phase==='recovery')f.state.current=false;};await assert.rejects(f.create().recoverAdmission(recoveryRequest(f),f.context),{code:'scope_changed'});assert.equal(f.custody.read(f.request.idempotencyKey).outcome,null);
+});
+
+test('failed recovery persistence stays incomplete and can be read again without resend',async()=>{
+ const f=await pendingRecovery();f.state.completeFail=true;await assert.rejects(f.create().recoverAdmission(recoveryRequest(f),f.context));assert.equal(f.custody.read(f.request.idempotencyKey).outcome,null);
+ f.state.completeFail=false;assert.ok((await f.create().recoverAdmission(recoveryRequest(f),f.context)).outcome);assert.equal(f.state.sent.length,1);
+});
+
+test('concurrent recovery preserves one deterministic original decision',async()=>{
+ const f=await pendingRecovery(),results=await Promise.all([f.create().recoverAdmission(recoveryRequest(f),f.context),f.create().recoverAdmission(recoveryRequest(f),f.context)]);assert.deepEqual(results[0],results[1]);assert.equal(f.state.sent.length,1);assert.deepEqual(f.custody.read(f.request.idempotencyKey),results[0]);
+});
+
+test('later missing producer proof cannot fall back to locally retained successful recovery',async()=>{
+ const f=await pendingRecovery(),known=await f.create().recoverAdmission(recoveryRequest(f),f.context);f.state.recoveryKnown=false;await assert.rejects(f.create().recoverAdmission(recoveryRequest(f),f.context),{code:'admission_outcome_unknown'});assert.deepEqual(f.custody.read(f.request.idempotencyKey),known);assert.equal(f.state.sent.length,1);
 });
