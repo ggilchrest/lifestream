@@ -14,7 +14,7 @@ import type {InitiativeSimulationEvent} from '../src/runtime/initiative-host.ts'
 import {extensionSettings} from '../../../tests/fixtures/extension-settings.ts';
 const validator=createContractValidator(),apiId='https://lifestream.dev/contracts/initiative-api/1.0.0';
 
-async function fixture(t:TestContext,enabled=true,modality:'text'|'speech'='text',catalog=false){
+async function fixture(t:TestContext,enabled=true,modality:'text'|'speech'='text',catalog=false,adaptation=false){
  const root=await mkdtemp(join(tmpdir(),'initiative-host-'));t.after(()=>rm(root,{recursive:true,force:true}));
  const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};
  const events=new Map<string,InitiativeSimulationEvent>(),installerToken=randomUUID();
@@ -30,7 +30,7 @@ async function fixture(t:TestContext,enabled=true,modality:'text'|'speech'='text
  const endpoint=(await send('/api/runtime/v1/session-context',{expectedRevision:0,mode:modality==='speech'?'audio':'text',audienceScope:'authenticatedSession'})).body.endpoint;
  const declaration=(await send(path+'/candidates',{content:'Allow a synthetic social opening in this explicitly reviewed test session.',category:'declaration',contextUse:'baseline',source:'authored',sourceFamily:'synthetic-owner',uncertainty:'low',expectedRevision:rel.revision,idempotencyKey:randomUUID()})).body;
  assert.equal((await send(path+`/candidates/${declaration.candidate.candidateId}/decision`,{decision:'approved',expectedRevision:(await send(path)).body.relationship.revision,idempotencyKey:randomUUID()})).status,200);
- const settings={...structuredClone(extensionSettings.initiative),preset:'custom',proactiveness:5,dimensions:{initiative:5,warmth:5,curiosity:3,followThrough:3,persistence:0},allowedContexts:['privateAvailable'],endpointIds:[endpoint.endpointId],allowedModalities:[modality],allowedKinds:['arrivalReturn','availableCheckIn','groundedFollowUp'],consentRefs:[declaration.candidate.candidateId],tuning:{...extensionSettings.initiative.tuning,openingsPerHour:2,openingsPerDay:8,minimumGapSeconds:120,checkInIntervalSeconds:300}};
+ const settings={...structuredClone(extensionSettings.initiative),adaptation:{enabled:adaptation,maximumDeferralSeconds:adaptation?1:0},preset:'custom',proactiveness:5,dimensions:{initiative:5,warmth:5,curiosity:3,followThrough:3,persistence:0},allowedContexts:['privateAvailable'],endpointIds:[endpoint.endpointId],allowedModalities:[modality],allowedKinds:['arrivalReturn','availableCheckIn','groundedFollowUp'],consentRefs:[declaration.candidate.candidateId],tuning:{...extensionSettings.initiative.tuning,openingsPerHour:2,openingsPerDay:8,minimumGapSeconds:120,checkInIntervalSeconds:300}};
  const extension=async(body:Record<string,unknown>,extra:Record<string,string>={})=>{const r=await send(route,{schemaVersion:'1.0.0',...body},extra);assert.equal(validator.validate(apiId,r.body).valid,true,JSON.stringify(r));return r;};
  const draft=await extension({operation:'draft',idempotencyKey:randomUUID(),expectedActiveConfigurationId:null,settings});assert.equal(draft.status,201,JSON.stringify(draft));const active=draft.body.records[0];assert.equal((await extension({operation:'activate',idempotencyKey:randomUUID(),configurationId:active.configurationId,expectedRevision:active.revision,confirmed:true})).status,200);
  let n=0;const event=(overrides:Partial<InitiativeSimulationEvent>={})=>{const e:InitiativeSimulationEvent={userId:auth.principalId,sessionId:auth.sessionId,sourceEventId:randomUUID(),kind:'availableCheckIn',topicRef:null,observedAt:Date.now()-10000+n++,expiresAt:Date.now()+60000,context:'privateAvailable',modality,...overrides};events.set(e.sourceEventId,e);return {schemaVersion:'1.0.0',operation:'simulate',idempotencyKey:randomUUID(),sessionId:auth.sessionId,sourceEventId:e.sourceEventId,kind:e.kind,topicRef:e.topicRef};};
@@ -227,4 +227,31 @@ test('bounded Initiative inspection keeps each returned opportunity paired with 
  const f=await fixture(t);for(let n=0;n<66;n++){const result=await f.extension(f.event());assert.equal(result.status,200);assert.equal(result.body.explanations.length<=64,true);}
  const inspected=await f.extension({operation:'inspect'}),ops=inspected.body.records.filter((r:any)=>r.recordType==='opportunity');assert.ok(ops.length>0&&ops.length<64);assert.ok(inspected.body.records.length<=128);assert.ok(inspected.body.explanations.length<=64);
  for(const op of ops)assert.equal(inspected.body.explanations.filter((e:any)=>e.code==='initiative_expression'&&e.sourceRefs.includes(op.opportunityId)).length,1);assert.equal(calls(f.db),0);
+});
+
+
+test('explicit dismissal defers one fresh opening before preparation, without changing settings or admission ceilings',{timeout:15000},async t=>{
+ const f=await fixture(t,true,'text',false,true);await f.ready();const first=await f.extension(f.event()),id=outcome(first).opportunityId;
+ await f.extension({operation:'dismiss',sessionId:f.auth.sessionId,opportunityId:id,idempotencyKey:randomUUID()});
+ let inspected=await f.extension({operation:'inspect'});assert.ok(inspected.body.explanations.some((e:any)=>e.code==='initiative_timing_feedback'));
+ const before=String(f.db.connection.prepare('SELECT payload_json FROM assistant_relationship_configurations WHERE configuration_id=?').get(f.active.configurationId)!.payload_json),realNow=Date.now;
+ // Advance beyond the existing opening gap; keep wall-clock progress during the wait.
+ t.mock.method(Date,'now',()=>realNow()+180000);
+ const request=f.event({kind:'arrivalReturn',dwellSeconds:10,absenceSeconds:600}),start=performance.now(),pending=f.extension(request);
+ await new Promise(r=>setTimeout(r,80));assert.equal(calls(f.db),1);const delayed=f.db.connection.prepare("SELECT state FROM initiative_delivery WHERE state='pending'").get();assert.ok(delayed);
+ const result=await pending;assert.ok(performance.now()-start>=950);assert.equal(calls(f.db),2);assert.equal(outcome(result).state,'emitted');assert.ok(result.body.records.find((r:any)=>r.recordType==='opportunity'&&r.opportunityId===outcome(result).opportunityId).sourceRefs.includes(`timing-plan:${id}:1`));
+ inspected=await f.extension({operation:'inspect'});assert.equal(inspected.body.explanations.some((e:any)=>e.code==='initiative_timing_feedback'),false);assert.ok(inspected.body.explanations.some((e:any)=>e.summary.includes('one-use deferral plan of 1 seconds')));
+ assert.equal(String(f.db.connection.prepare('SELECT payload_json FROM assistant_relationship_configurations WHERE configuration_id=?').get(f.active.configurationId)!.payload_json),before);
+});
+
+test('quiet and ordinary engagement cancel timing waits; short freshness discards work before any new Initiative call',{timeout:15000},async t=>{
+ for(const mode of ['quiet','reply','expires']){
+  const f=await fixture(t,true,'text',false,true);await f.ready();const first=await f.extension(f.event());await f.extension({operation:'dismiss',sessionId:f.auth.sessionId,opportunityId:outcome(first).opportunityId,idempotencyKey:randomUUID()});
+  const original=Date.now;t.mock.method(Date,'now',()=>original()+180000);
+  const request=f.event({kind:'arrivalReturn',dwellSeconds:10,absenceSeconds:600,...(mode==='expires'?{expiresAt:Date.now()+500}:{})}),pending=f.extension(request);
+  if(mode==='quiet'){await new Promise(r=>setTimeout(r,80));assert.equal(calls(f.db),1);await f.extension({operation:'temporaryMode',idempotencyKey:randomUUID(),sessionId:f.auth.sessionId,mode:'quiet',endsAt:null,dimensions:null});}
+  if(mode==='reply'){await new Promise(r=>setTimeout(r,80));const reply=await fetch(f.base+'/api/runtime/v1/messages',{method:'POST',headers:f.headers,body:JSON.stringify({assistantId:f.assistant.assistantId,relationshipId:f.rel.relationshipId,userInput:'Resume the ordinary conversation.'})});assert.equal(reply.status,200);assert.match(await reply.text(),/interaction.completed/);}
+  const result=await pending;assert.equal(outcome(result).state,mode==='expires'?'expired':'cancelled');assert.equal(outcome(result).lastDeliveryStage,'none');assert.equal(result.body.delivery,null);assert.equal(calls(f.db),1);
+  assert.equal((await f.extension({operation:'inspect'})).body.explanations.some((e:any)=>e.code==='initiative_timing_feedback'),false);t.mock.restoreAll();
+ }
 });

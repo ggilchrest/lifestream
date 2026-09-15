@@ -1,3 +1,4 @@
+import {InitiativeTiming,waitForInitiativeTiming} from './initiative-timing.ts';
 import {InitiativeMaintenance} from './initiative-maintenance.ts';
 import {createHash,randomUUID} from 'node:crypto';
 import {createContractValidator} from '@lifestream/contracts';
@@ -29,7 +30,7 @@ const active=new Set(['pending','eligible','generated','queued','emitted']);
  * inspection and idempotent retries return metadata, never replayable output. */
 export class InitiativeHost {
  readonly ledger:InitiativeDeliveryRepository;private readonly expressions:InitiativeExpressionRepository;
- private readonly generator:InitiativeCandidateGenerator;private readonly now:()=>number;private readonly maintenance:InitiativeMaintenance;
+ private readonly timing:InitiativeTiming;private readonly generator:InitiativeCandidateGenerator;private readonly now:()=>number;private readonly maintenance:InitiativeMaintenance;
  private readonly readiness=new Map<string,{revision:number;endpointId:string;text:boolean;speech:boolean;transport?:object}>();
  private readonly modes=new Map<string,InitiativeTemporaryMode>();
  private readonly jobs=new Map<string,Job>();
@@ -37,10 +38,11 @@ export class InitiativeHost {
  private closed=false;
  private readonly database:Database;
  private readonly simulation:InitiativeSimulation|undefined;
- constructor(database:Database,simulation?:InitiativeSimulation,now:()=>number=()=>Date.now()){this.now=now;this.generator=new InitiativeCandidateGenerator(now);this.database=database;this.expressions=new InitiativeExpressionRepository(database,now);this.simulation=simulation;this.ledger=new InitiativeDeliveryRepository(database,now);this.ledger.recover();this.maintenance=new InitiativeMaintenance(()=>this.ledger.prune());}
+ constructor(database:Database,simulation?:InitiativeSimulation,now:()=>number=()=>Date.now()){this.now=now;this.timing=new InitiativeTiming(now);this.generator=new InitiativeCandidateGenerator(now);this.database=database;this.expressions=new InitiativeExpressionRepository(database,now);this.simulation=simulation;this.ledger=new InitiativeDeliveryRepository(database,now);this.ledger.recover();this.maintenance=new InitiativeMaintenance(()=>{this.timing.prune();return this.ledger.prune();});}
  runtimeExplanations(owner?:InitiativeOwner,sessionId?:string){
   const explanations=[{code:this.simulation?'synthetic_ingress_enabled':'synthetic_ingress_disabled',summary:this.simulation?'This test host accepts only its prepared synthetic occurrences for the bound subject and session.':'Synthetic ingress is disabled on this host.',sourceRefs:[] as string[]}];
   explanations.push({code:'initiative_retention',summary:this.maintenance.state()==='degraded'?'Automatic metadata cleanup is temporarily unavailable. Records and replay protections are retained; cleanup will retry.':'Automatic metadata cleanup is scheduled after the 24-hour eligibility horizon, in bounded batches. Active work, pending playback and replay fences remain protected.',sourceRefs:[]});
+  if(owner&&sessionId){const plan=this.timing.peek(key(owner.scope,sessionId),owner.boundary,owner.configuration?.adaptation);if(plan)explanations.push({code:'initiative_timing_feedback',summary:`Your explicit dismissal may defer the next eligible fresh opportunity by ${plan.delayMs/1000} seconds under the selected adaptation setting. This hint is used once; an ordinary reply or clearing temporary mode removes it. It changes no preference, budget or channel.`,sourceRefs:[plan.sourceRef]});}
   if(!this.simulation?.list||!owner||!sessionId)return explanations;
   explanations.push({code:'synthetic_catalog_enabled',summary:'Choose a host-prepared synthetic case. Listing neither enables output nor creates or replays an event. Refresh after the host prepares new cases.',sourceRefs:[]});
   const catalogStart=explanations.length;
@@ -63,6 +65,7 @@ export class InitiativeHost {
  private expressionExplanation(scope:InitiativeScope,id:string){
   const observed=this.expressions.get(scope,id);if(!observed)return {code:'initiative_expression',summary:'Observation: No expression metadata was recorded for this historical opportunity.',sourceRefs:[id]};
   const r=observed.report,labels=[`Requested wording warmth: ${Math.round(r.requestedWarmth*100)}% (a setting, not a measured response)`,`Wording output: ${r.wording==='emitted'?'Text emitted; style quality unverified':'No text emission observed'}`,`Speech stage: ${r.speechStage}`,`Prosodic warmth: ${r.modality==='speech'?'Unsupported by the current speech mapping':'Not requested for text output'}`,`Renderer cues: Unsupported; no renderer mapping configured`,`Provider disposition: ${r.disposition} (provider report, not audible verification)`,`Applied controls: ${Object.entries(r.appliedDelivery).map(([k,v])=>`${k} = ${v}`).join(', ')||'Not observed'}`,`Degraded dimensions: ${r.degradedDimensions.join(', ')||'None reported; absence is not proof of support'}`,`Mapping: ${r.mappingRevision??'Not observed'}`,`Observed: ${observed.observedAt}`];
+  const plan=this.ledger.get(scope,id)?.opportunity.sourceRefs.find(ref=>ref.startsWith('timing-plan:'));if(plan)labels.push(`Timing: one-use deferral plan of ${plan.split(':').at(-1)} seconds after explicit dismissal; current stage records whether the opportunity stopped or emitted.`);
   return {code:'initiative_expression',summary:labels.join('\n'),sourceRefs:[id,`initiative-expression:${id}:${observed.revision}`]};
  }
  private snapshot(owner:InitiativeOwner,baseRecords:unknown[],explanations:Array<{code:string;summary:string;sourceRefs:string[]}>){
@@ -90,10 +93,10 @@ export class InitiativeHost {
  }
  foregroundStarted(engagement?:{scope:InitiativeScope;sessionId:string}):()=>void {
   this.foreground++;this.invalidate('userTurn');
-  if(engagement){const {scope,sessionId}=engagement;this.ledger.resetSessionTopics(scope,sessionId);const prior=this.ledger.list(scope).find(r=>r.opportunity.sessionId===sessionId&&['emitted','acknowledged'].includes(r.outcome.lastDeliveryStage)&&['notObserved','noResponse'].includes(r.outcome.response));if(prior)this.ledger.transition(scope,prior.opportunity.opportunityId,prior.version,{type:'respond',sessionId,response:'replied'});}
+  if(engagement){const {scope,sessionId}=engagement;this.timing.clear(key(scope,sessionId));this.ledger.resetSessionTopics(scope,sessionId);const prior=this.ledger.list(scope).find(r=>r.opportunity.sessionId===sessionId&&['emitted','acknowledged'].includes(r.outcome.lastDeliveryStage)&&['notObserved','noResponse'].includes(r.outcome.response));if(prior)this.ledger.transition(scope,prior.opportunity.opportunityId,prior.version,{type:'respond',sessionId,response:'replied'});}
   let released=false;return ()=>{if(!released){released=true;this.foreground--;}};
  }
- close():void{this.closed=true;this.maintenance.close();this.invalidate('cancelled');this.readiness.clear();this.modes.clear();}
+ close():void{this.closed=true;this.maintenance.close();this.invalidate('cancelled');this.readiness.clear();this.modes.clear();this.timing.clear();}
  private retry(scope:InitiativeScope,request:Record<string,unknown>):'new'|'same'|'conflict'{
   const row=this.database.connection.prepare('SELECT relationship_id,operation FROM assistant_relationship_idempotency WHERE idempotency_key=?').get(String(request.idempotencyKey)) as {relationship_id:string;operation:string}|undefined;
   return !row?'new':row.relationship_id===scope.relationshipId&&row.operation===`initiative-runtime:${hash([scope,request])}`?'same':'conflict';
@@ -126,7 +129,7 @@ export class InitiativeHost {
     if(p.reasons.some(reason=>['invalidScope','notOptedIn','consentRevoked','configurationChanged'].includes(reason))||p.limitations.some(s=>s.startsWith('Selected '))||Object.entries(temporary.dimensions!).some(([dimension,value])=>!p.sources.some(s=>s.dimension===dimension&&s.sourceRef.startsWith('temporary-companionship:')&&s.value===value)))return extensionError(409,'companionship_bounds','The temporary dimensions exceed the Assistant’s protected bounds.');
    }
    if(this.modes.size>=256&&!this.modes.has(k))return extensionError(409,'initiative_capacity','Temporary-mode capacity is full.');
-   this.saveRetry(scope,raw);
+   this.saveRetry(scope,raw);if(mode==='quiet'||mode==='clear')this.timing.clear(k);
    if(mode==='clear')this.modes.delete(k);else this.modes.set(k,{kind:mode as 'quiet'|'companionship',sessionId:session.sessionId,configurationId:String(owner.configuration?.configurationId??''),createdAt:now,expiresAt:expiry,...(raw.dimensions?{dimensions:raw.dimensions as NonNullable<InitiativeTemporaryMode['dimensions']>}: {})});
    this.invalidate(mode==='quiet'?'quiet':'configurationChanged');return this.response(owner,operation,[{code:'temporary_mode',summary:mode==='clear'?'Temporary mode cleared. Old opportunities will not resume.':`${mode==='quiet'?'Quiet':'Companionship'} applies only to this session ${expiry===null?'until cleared':`until ${new Date(expiry).toISOString()}`}. It ends on restart. Durable settings are unchanged.`,sourceRefs:[]}],true);
   }
@@ -141,6 +144,7 @@ export class InitiativeHost {
      if(operation==='dismiss')this.ledger.transition(scope,r.opportunity.opportunityId,r.version,{type:'respond',sessionId:session.sessionId,response:'dismissed'},()=>this.saveRetry(scope,raw));
      else if(active.has(r.outcome.state)||job?.speech&&r.outcome.state==='acknowledged'&&r.outcome.acknowledgmentKind==='endpointAccepted')this.ledger.transition(scope,r.opportunity.opportunityId,r.version,{type:'finish',state:'cancelled',reasons:['cancelled']},()=>this.saveRetry(scope,raw));
      else return extensionError(409,'initiative_terminal','The opportunity is already terminal.');
+     if(operation==='dismiss'&&(owner.configuration?.adaptation as {enabled?:boolean}|undefined)?.enabled===true)this.timing.note(k,owner.boundary,r.opportunity.opportunityId);
      if(job){job.reason='cancelled';job.controller.abort();}
     }
     return this.response(owner,operation);
@@ -156,8 +160,8 @@ export class InitiativeHost {
   let speechActive=false;
   const facts=():InitiativeFacts=>{const s=context.session(),o=context.owner(),ready=this.readiness.get(k);return {sessionId:session.sessionId,endpointId:session.endpoint.endpointId,modality:event.modality,kind:event.kind,context:event.context,authorized:context.authorized()&&!!s&&s.revision===session.revision,identityQualified:true,privateAudience:s?.endpoint.privacyClass==='personal',consentCurrent:o?.consentCurrent===true,sourceQualified:hash(this.simulation!.resolve(scope,session.sessionId,event.sourceEventId)??null)===hash(event),sourceExpiresAt:expires,outputReady:!!s&&ready?.revision===s.revision&&ready.endpointId===s.endpoint.endpointId&&(event.modality==='text'?ready.text&&s.endpoint.outputModalities.includes('text'):ready.speech&&s.endpoint.outputModalities.includes('audio')&&ready.transport===context.speech?.identity&&!!context.speech?.current()&&(speechActive||context.speech.available())),leaseAvailable:this.foreground===0&&!this.closed,...(event.dwellSeconds===undefined?{}:{dwellSeconds:event.dwellSeconds}),...(event.absenceSeconds===undefined?{}:{absenceSeconds:event.absenceSeconds}),unfinishedEvidenceCurrent:event.unfinishedEvidenceCurrent===true&&event.topicRef!==null&&!!o?.evidenceRefs.includes(event.topicRef)};};
   const policy=()=>{const o=context.owner();return resolveInitiativePolicy({scope,...(o?.configuration?{configuration:o.configuration}:{}),profile:o?.profile,facts:facts(),...(this.mode(scope,session.sessionId)?{temporary:this.mode(scope,session.sessionId)!}:{}),now:this.now()});};
-  const selected=policy();
-  const opportunity:InitiativeOpportunity={...scope,schemaVersion:'1.0.0',recordType:'opportunity',opportunityId:id,correlationId:randomUUID(),conversationId:session.conversationId,sessionId:session.sessionId,endpointId:session.endpoint.endpointId,configurationId:String(config.configurationId),configurationRevision:Number(config.revision),policyRevision:selected.revision,kind:event.kind,category:'social',urgency:'low',sourceKind:'simulatedBrowser',sourceRefs:[`synthetic-event:${event.sourceEventId}`,...(event.topicRef?[event.topicRef]:[])],executionMode:'simulation',observedAt:new Date(event.observedAt).toISOString(),receivedAt:new Date(now).toISOString(),expiresAt:new Date(expires).toISOString(),dedupKey:hash([scope,session.sessionId,event.sourceEventId]),topicKey:event.topicRef??`social:${event.kind}`};
+  const selected=policy(),timingPlan=selected.allowed?this.timing.peek(k,owner.boundary,config.adaptation):undefined;
+  const opportunity:InitiativeOpportunity={...scope,schemaVersion:'1.0.0',recordType:'opportunity',opportunityId:id,correlationId:randomUUID(),conversationId:session.conversationId,sessionId:session.sessionId,endpointId:session.endpoint.endpointId,configurationId:String(config.configurationId),configurationRevision:Number(config.revision),policyRevision:selected.revision,kind:event.kind,category:'social',urgency:'low',sourceKind:'simulatedBrowser',sourceRefs:[`synthetic-event:${event.sourceEventId}`,...(event.topicRef?[event.topicRef]:[]),...(timingPlan?[timingPlan.sourceRef]:[])],executionMode:'simulation',observedAt:new Date(event.observedAt).toISOString(),receivedAt:new Date(now).toISOString(),expiresAt:new Date(expires).toISOString(),dedupKey:hash([scope,session.sessionId,event.sourceEventId]),topicKey:event.topicRef??`social:${event.kind}`};
   let row:InitiativeDeliveryRecord;
   try{row=this.ledger.admit(scope,opportunity,()=>{if(!context.authorized()||context.owner()?.boundary!==owner.boundary)return false;this.saveRetry(scope,raw);return true;},{perRelationship:tuning.pendingPerRelationship!,perRuntime:tuning.pendingPerRuntime!});}
   catch(error){return extensionError(409,'initiative_admission_denied',error instanceof Error?error.message:'Opportunity was not admitted.');}
@@ -166,8 +170,8 @@ export class InitiativeHost {
   this.expressions.note(scope,id,expression,expressionCurrent);
   if(!selected.allowed){this.ledger.transition(scope,id,row.version,{type:'finish',state:'suppressed',reasons:selected.reasons});return this.response(owner,operation,[{code:'initiative_suppressed',summary:`Opening suppressed: ${selected.reasons.join(', ')}.`,sourceRefs:[]}]);}
   if(!context.provider){this.ledger.transition(scope,id,row.version,{type:'finish',state:'suppressed',reasons:['endpointUnavailable']});return this.response(owner,operation);}
-  const opening=this.ledger.openingRestriction(scope,{perHour:tuning.openingsPerHour!,perDay:tuning.openingsPerDay!,minimumGapMs:tuning.minimumGapSeconds!*1000}),usage=this.ledger.inferenceUsage(scope);
-  const resourceReason=opening??(usage.active||usage.relationshipHour>=tuning.inferenceCallsPerRelationshipHour!||usage.runtimeHour>=tuning.inferenceCallsPerRuntimeHour!?'inferenceBudget':undefined);
+  const resourceRestriction=()=>{const opening=this.ledger.openingRestriction(scope,{perHour:tuning.openingsPerHour!,perDay:tuning.openingsPerDay!,minimumGapMs:tuning.minimumGapSeconds!*1000}),usage=this.ledger.inferenceUsage(scope);return opening??(usage.active||usage.relationshipHour>=tuning.inferenceCallsPerRelationshipHour!||usage.runtimeHour>=tuning.inferenceCallsPerRuntimeHour!?'inferenceBudget':undefined);};
+  const resourceReason=resourceRestriction();
   if(resourceReason){this.ledger.transition(scope,id,row.version,{type:'finish',state:'suppressed',reasons:[resourceReason]});return this.response(owner,operation);}
   const controller=new AbortController(),signal=AbortSignal.any([controller.signal,context.signal]);
   let prepared:HostRuntimeInput|undefined,preparedViewId:string,preparedCurrent=()=>true;
@@ -176,6 +180,12 @@ export class InitiativeHost {
   const expiry=setTimeout(()=>{job.reason=job.speech?'ackTimeout':'expired';controller.abort();},Math.max(1,expires-this.now()));
   try{
    if(!current())throw new Error('boundary changed');
+   const deferral=this.timing.take(k,owner.boundary,config.adaptation);
+   if(deferral){
+    if(this.now()+deferral.delayMs>=expires){this.ledger.transition(scope,id,row.version,{type:'finish',state:'expired',reasons:['expired']});return this.response(owner,operation,[{code:'initiative_timing_expired',summary:'The fresh opportunity would expire during its configured timing delay, so it was discarded without generation.',sourceRefs:[deferral.sourceRef]}]);}
+    await waitForInitiativeTiming(deferral.delayMs,signal);if(!current())throw new Error('boundary changed');
+    const restriction=resourceRestriction();if(restriction){this.ledger.transition(scope,id,row.version,{type:'finish',state:'suppressed',reasons:[restriction]});return this.response(owner,operation);}
+   }
    row=this.ledger.transition(scope,id,row.version,{type:'eligible'});prepared=context.prepare();preparedCurrent=prepared.isCurrent;prepared={...prepared,isCurrent:current};preparedViewId=randomUUID();
    const candidate=await this.generator.generateDurably(context.provider,{opportunity,prepared,interactionId:randomUUID(),dimensions:selected.dimensions,maximumOutputTokens:tuning.generationMaxTokens!,deadlineMs:tuning.generationDeadlineSeconds!*1000,conversation:prepared.conversation?.read()??'',voiceMode:event.modality==='speech',signal},{ledger:this.ledger,expectedVersion:row.version,limits:{perRelationshipHour:tuning.inferenceCallsPerRelationshipHour!,perRuntimeHour:tuning.inferenceCallsPerRuntimeHour!},current});
    if(candidate.status==='noCandidate'){this.ledger.transition(scope,id,row.version,{type:'finish',state:'suppressed',reasons:['noCandidate']});return this.response(owner,operation);}

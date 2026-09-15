@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-TIMING-ADAPTATION-1",
+  "slice": "LS-S083",
+  "status": "componentVerifiedRegressionFailureOutstanding",
+  "sourceRevision": "995ff27a4cbf1e33fd8d306ea229286f0a845214",
+  "specificationRevision": "ed1198dd52ff6e87d3a6c416dbb3cf28fcf18704",
+  "recordedAt": "2026-09-15T05:20:35.923360Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/runtime/initiative-timing.ts",
+      "sha256": "5309851628a227e0cf3e3613de935d1802466cdc5ea3c86cc840467c9785f0ac"
+    },
+    {
+      "path": "apps/server/test/initiative-timing.test.ts",
+      "sha256": "833e863516abd73afc0885bbad40a453ee44485bb874f02e87ded751ed94015e"
+    },
+    {
+      "path": "apps/server/src/runtime/initiative-host.ts",
+      "sha256": "0220095c8f78ce17692738c863f085c373dae57312728bd800225878307fbd29"
+    },
+    {
+      "path": "apps/server/test/initiative-host.test.ts",
+      "sha256": "301d93e0092767e28dbc578fd2e0e23c61021ef62dd89114d6d16b1257fe7c92"
+    },
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "33d092b6fe9e7e2bcd48605bd32e792b78c3e940fe2aa67a797e70a7dd58a7e0"
+    },
+    {
+      "path": "apps/control-web/test/initiative-conversation.test.mjs",
+      "sha256": "94a6933246d5848dbd68bd2ceb51261663691d164f2810cb348e0edb7cfcb74b"
+    },
+    {
+      "path": "docs/initiative-synthetic-review.md",
+      "sha256": "235410a8e48b86c5f2cdddbf628764d750784fd2b5542fcc904be047b5b74695"
+    }
+  ],
+  "claims": [
+    "When adaptation is explicitly enabled, a committed dismissal may create one volatile hint for the same subject/session and owner/configuration boundary. Only the configured 1\u201360 second bound affects the next otherwise eligible fresh opportunity. Disabled/zero/invalid settings add no delay. Silence creates no hint; no durable preference, model training or settings change occurs.",
+    "The hint is consumed once. Scope/configuration change, ordinary engagement, quiet/clear, clock reversal, shutdown and the fixed metadata expiry remove or invalidate it. Up to 256 session hints retain only an opportunity reference, boundary and timestamp; existing automatic maintenance prunes stale hints.",
+    "Deferral occurs before preparation and inference, never extends source/mode expiry, and never bypasses original pending limits, cooldown, source/topic fences or opening/inference ceilings. An opportunity that would expire during the delay is discarded without generation. Normal job invalidation aborts the wait, and cheap policy/resource checks repeat afterward.",
+    "Admitted records carry a timing-plan source reference without claiming waiting or delivery succeeded. Protected inspection labels a pending hint and the plan beside the actual delivery stage. Conversation refreshes this feedback after dismissal and exposes correction through the existing quiet/clear controls; ordinary replies clear the displayed hint.",
+    "All four new source tests pass, including explicit one-use/owner/bounds/expiry/capacity behavior, timer cancellation, a measured one-second wait before new Initiative calls, unchanged durable settings, quiet/ordinary-turn cancellation and source expiry. The new browser workflow passes and proves feedback visibility/clearing without capture or extra model calls."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "fail",
+      "logSha256": "778c052366b1e2df8b597ad2518fd050e121d104201f63f10ef1be19eb209550"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "34a361ea41c4e9a33b7c441cfe736229a9128c51d844303290ce1f1709242108"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "f6506cc0d0672053fa183e56b2fe850b62052d80df4b10991034d00f8d7a939f"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "d2189d77fc2d9b300f1a1b19c1706de534e3b1fa4af5dab4dde0ac617ff90266"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 399,
+    "sourcePassed": 398,
+    "sourceFailed": 1,
+    "newSourceTestsPassed": 4,
+    "browserAndLauncherTestsPassed": 48,
+    "newBrowserTestsPassed": 1,
+    "toolingTestsPassed": 45
+  },
+  "outstandingRegression": {
+    "slice": "LS-S084",
+    "test": "protected Discovery comparison has no live artifact/configuration writes or provider calls and rejects foreign scope",
+    "path": "apps/server/test/discovery-lab.test.ts",
+    "criterion": "lab:ambiguous-pair:enabled:checks must not include FAIL",
+    "observation": "The full source suite failed this one existing Discovery Lab check. All timing tests passed. The failure log does not include the row disposition or failed-detail text, so a deadline cause is plausible from the bounded selector but unverified. The Discovery files were not changed in this component. Preserve this failure and diagnose it next; no full-suite pass is claimed.",
+    "logSha256": "778c052366b1e2df8b597ad2518fd050e121d104201f63f10ef1be19eb209550"
+  },
+  "prerequisiteQualification": {
+    "status": "pending",
+    "slices": [
+      "LS-S071",
+      "LS-S072",
+      "LS-S073",
+      "LS-S076",
+      "LS-S078"
+    ],
+    "reason": "Current effective inputs differ from historical qualification; receipts remain unchanged."
+  },
+  "limitations": [
+    "Full regression verification remains incomplete because the existing Discovery Lab criterion failed. This scoped timing receipt cannot certify full S083/S084 readiness.",
+    "Reserved noninterrupting presentation needs an additive transport because the unchanged approved delivery/readiness contract currently supports only text and speech. Older-database restore fencing, selected-provider/current-source qualifications, S084 Discovery/analysis/performance and PWCE Personal V1 T5 mapping remain open.",
+    "The saved Human review service and data were not restarted, deployed or reconfigured. No personal-data import, training, new provider selection or external research occurred. Approved schema bytes, historical evidence and unrelated dirty artifacts remain preserved. No new model-quality observations were added."
+  ]
+}

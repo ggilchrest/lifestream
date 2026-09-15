@@ -28,7 +28,7 @@ test('output matcher accepts either connection order and rejects stopped, foreig
  const count=sources.length;ordinary.receive({type:'audio',interactionTraceId:replyTrace,chunk:{segmentId:'late',frame:frame()}});assert.equal(sources.length,count);ordinary.close();
 });
 
-async function fixture(t,browser,catalog=false){
+async function fixture(t,browser,catalog=false,adaptation=false){
  const root=await mkdtemp(join(tmpdir(),'ls-initiative-conversation-'));t.after(()=>rm(root,{recursive:true,force:true}));const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};const installerToken=randomUUID(),events=new Map();
  const app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'safety'),installerToken},initiativeSimulation:{...(catalog?{list:()=>[...events.keys()]}:{}),resolve:(_scope,_session,id)=>events.get(id)}});await app.start();t.after(()=>app.shutdown());
  let sttCalls=0,inferenceCalls=0;const requests=[];
@@ -46,7 +46,7 @@ async function fixture(t,browser,catalog=false){
   settings={...settings,preset:'custom',proactiveness:5,dimensions:{initiative:5,warmth:5,curiosity:3,followThrough:3,persistence:0},allowedContexts:['privateAvailable'],endpointIds:[endpoint.endpointId],allowedModalities:['text','speech'],allowedKinds:['availableCheckIn'],consentRefs:[candidate.candidateId],tuning:{...settings.tuning,openingsPerHour:2,openingsPerDay:8,minimumGapSeconds:120,checkInIntervalSeconds:300}};
   const route=path+'/initiative/v1',draft=await req(route,{schemaVersion:'1.0.0',operation:'draft',idempotencyKey:crypto.randomUUID(),expectedActiveConfigurationId:null,settings}),configuration=draft.records[0];await req(route,{schemaVersion:'1.0.0',operation:'activate',idempotencyKey:crypto.randomUUID(),configurationId:configuration.configurationId,expectedRevision:configuration.revision,confirmed:true});
   return {assistantId:assistant.assistantId,relationshipId:rel.relationshipId,sessionId:window.lifestreamAuth.session.sessionId,userId:window.lifestreamAuth.session.principalId};
- },structuredClone(extensionSettings.initiative));
+ },{...structuredClone(extensionSettings.initiative),adaptation:{enabled:adaptation,maximumDeferralSeconds:adaptation?1:0}});
  await page.reload();await page.waitForFunction(()=>!!window.lifestreamUI&&document.querySelector('#room-scope')?.textContent.includes('Relationship '));
  const nav=async id=>{const link=page.locator(`[data-destination="${id}"]`);if(!await link.isVisible())await page.locator('.nav-toggle').click();await link.click();};await nav('conversation');await page.locator('#room-refresh').click();
  const sourceEventId=randomUUID();events.set(sourceEventId,{...seed,sourceEventId,kind:'availableCheckIn',topicRef:null,observedAt:Date.now()-10000,expiresAt:Date.now()+60000,context:'privateAvailable',modality:'speech'});
@@ -152,4 +152,12 @@ test('prepared synthetic picker fills source details, runs a labeled case and ex
  await f.page.setViewportSize({width:1360,height:960});await f.page.locator('#room-case-enable').click();await f.page.locator('#room-output-state').filter({hasText:'Text openings ready'}).waitFor();await f.page.locator('#room-run').click();await f.page.locator('.room-turn-state').filter({hasText:'Endpoint accepted'}).waitFor();assert.equal(f.counts().inferenceCalls,1);
  await f.page.locator('#room-sources-refresh').click();await f.page.locator('#room-case-status').filter({hasText:'No current prepared cases'}).waitFor();assert.equal(await f.page.locator('#room-run').isDisabled(),true);assert.equal(await f.page.locator('#room-case').isDisabled(),true);assert.equal(await f.page.locator('#room-source').inputValue(),'');assert.equal(f.counts().inferenceCalls,1);assert.equal(await f.page.evaluate(()=>window.captureRequests),0);assert.deepEqual(f.errors,[]);
  await f.page.screenshot({path:'/private/tmp/lifestream-synthetic-picker-desktop.png',fullPage:true});
+});
+
+
+test('Conversation shows explicit one-use timing feedback and clears it through the existing session control',{skip:!process.env.PLAYWRIGHT_MODULE,timeout:45000},async t=>{
+ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE),browser=await chromium.launch({channel:'chrome',headless:true});t.after(()=>browser.close());const f=await fixture(t,browser,false,true);f.events.get(f.sourceEventId).modality='text';
+ await f.page.locator('#room-modality').selectOption('text');await f.page.locator('#room-enable').click();await f.page.locator('#room-output-state').filter({hasText:'Text openings ready'}).waitFor();await f.page.locator('.room-simulation > summary').click();await f.page.locator('#room-source').fill(f.sourceEventId);await f.page.locator('#room-run').click();await f.page.locator('.room-turn-state').filter({hasText:'Endpoint accepted'}).waitFor();
+ await f.page.getByRole('button',{name:'Dismiss this opening',exact:true}).click();await f.page.locator('#room-timing').filter({hasText:'explicit dismissal'}).waitFor();assert.match(await f.page.locator('#room-timing').textContent(),/1 seconds/);assert.equal(f.counts().inferenceCalls,1);assert.equal(await f.page.evaluate(()=>window.captureRequests),0);
+ await f.page.getByText('Temporary attention',{exact:true}).click();await f.page.locator('#room-clear-mode').click();await f.page.locator('#room-timing').filter({hasText:'No pending timing adjustment'}).waitFor();await f.page.locator('#room-refresh').click();await f.page.locator('#room-history-status').filter({hasText:'Snapshot'}).waitFor();assert.equal(await f.page.locator('#room-timing').textContent(),'No pending timing adjustment.');assert.equal(f.counts().inferenceCalls,1);assert.deepEqual(f.errors,[]);
 });
