@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-BOUNDED-TRANSPORT-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "90c797e02bda825ca61209e39338f2147e824d01",
+  "sourceBinding": "Implementation base revision plus the exact changed source-file digests below; the enclosing commit contains these bytes.",
+  "specificationRevision": "b0048cd9a2c756d1a54101bcc4ab9f0b96c4ce1f",
+  "recordedAt": "2026-09-15T06:31:14.738087Z",
+  "sourceFiles": [
+    {
+      "path": "packages/providers-pwce/src/client.ts",
+      "sha256": "7a2886f280d383128da37d100d6953e1c4b8bc198fa86582d0ffd59bae5598ec"
+    },
+    {
+      "path": "packages/providers-pwce/src/transport.ts",
+      "sha256": "acd08ef0381fdc48351540599da57109447e747f8beef601b7ff6610257c3e8d"
+    },
+    {
+      "path": "packages/providers-pwce/src/index.ts",
+      "sha256": "339932be6a5b5bdfdf44b7221ff807ed27b26024050b031ab662bcb939a92744"
+    },
+    {
+      "path": "packages/providers-pwce/test/transport.test.ts",
+      "sha256": "327185ce30c09915ed25a7ef13ab79d2f818ec40f21e4286d1610de2302e7d38"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "e7b73b4f7773be39b4788417631937d51aed3d8b",
+    "changed": false,
+    "fixtureScript": "scripts/gateway-fixture-server.mjs",
+    "fixtureScriptSha256": "0d86d7fa0c01ee761a2c5afaed5eecd433efafe72f3d1856cfa4c5190415ecf5"
+  },
+  "claims": [
+    "Ordinary HTTP operations use one host-owned 5000 ms default deadline across profile/bundle negotiation, response headers and the operation body. Configuration is restricted to integer 1\u201330000 ms; caller cancellation can shorten but cannot extend the budget. Timers and monotonic checks reject late results; a transport that ignores AbortSignal cannot keep the client call pending indefinitely.",
+    "Requests are JSON-encoded and capped at 1048576 UTF-8 bytes before networking. JSON responses are read incrementally with a 1048576-byte cap on declared and actual bytes; valid UTF-8 and an object root are required. Oversize, malformed and aborted bodies cancel and release their readers.",
+    "SSE requires text/event-stream and bounds each complete frame to 1048576 bytes across all lines and transport chunks. Split UTF-8, CRLF, multiline data and per-frame IDs are preserved. Incomplete frames fail without emitting partial invalidations. Large chunks are processed in bounded slices; this does not control the allocation already made by the underlying transport.",
+    "SSE negotiation and headers share the ordinary deadline; the entire connection has a finite 35000 ms default lifetime (configured integer range 1\u201360000 ms). Consumer break, abort and deadline release the reader and cancel the connection, including while the generator is suspended. Buffered events cannot be delivered after cancellation. No automatic retry, reconnect, provider replacement, replay or authority fallback is added.",
+    "Authenticated fetches reject redirects; host URLs require HTTP(S) without embedded credentials, query or fragment. Typed errors preserve bounded producer codes and status while local cancellation, deadline, size limit, malformed data and unavailable transport remain distinguishable. Arbitrary producer prose and raw fetch failure URLs are not echoed.",
+    "Twenty new transport tests pass, including actual loopback HTTP redirect rejection, oversized-body rejection and observed SSE socket closure. Existing exact bundle/artifact/generated-client and request-binding tests pass. The separate-process synthetic producer fixture still passes five authentication-boundary checks and sixteen client/contract/mapping tests; intentionally mocked negative and parser cases remain fixture proof."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "9b13d349eff63f27d49ac7e69d6a5ec580a9041403858eeae408a0a4a87cd61b"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/client.test.ts packages/providers-pwce/test/transport.test.ts",
+      "result": "pass",
+      "logSha256": "0f4fe123bfeb9430bdef43cec82ba6d3aeb22f4952b84aeb1e2ba72435538a26"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "87eda4b7af5aa9c6d0aa8f9afab5318a9c63c944fff75713ec171aea5e4bcade"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "28a3d7d636c59f22154b416f93c81d91a7d1db58200586a616c995540f57f13f"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node /private/tmp/pwce-transport-network.mjs",
+      "result": "pass",
+      "logSha256": "858181b695805ae54b807a18d0aedc981a335199174d78f0fd6f7a0fd5dfd0cc"
+    }
+  ],
+  "counts": {
+    "lifestreamSourceTestsPassed": 428,
+    "newTransportTestsPassed": 20,
+    "focusedClientTransportTestsPassed": 32,
+    "lifestreamToolingTestsPassed": 45,
+    "consumerContractClientMappingTestsPassed": 16,
+    "actualProducerAuthenticationChecksPassed": 5
+  },
+  "preservedAttempts": [
+    {
+      "kind": "sandboxEnvironmentFailure",
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/*.test.ts",
+      "reason": "30 focused cases passed; the actual loopback server test failed with listen EPERM in the restricted sandbox. The approved local-network rerun passed.",
+      "logSha256": "f755e994449ae7e5e9f8faf0d725eb1c130f0610f1dc8b3c3a32b3282932ddff"
+    },
+    {
+      "kind": "sandboxEnvironmentFailure",
+      "command": "pnpm test",
+      "reason": "The first broad run used the restricted sandbox and encountered listen EPERM in existing and new local-server cases. It is not a successful qualification. Separate permitted-network runs passed 427 and then 428 cases after the final test addition.",
+      "logSha256": "e93b91d61ccc8073d7ce92f94ec1468d4621d5f00ce79061468d2a55fc30f2b9"
+    }
+  ],
+  "rawEvidence": {
+    "localDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-transport/2026-09-15",
+    "networkDriverSha256": "ade6da9104929fb8be0aa3ecffc8b19ace638fef8dddce847775baaa5f679c40"
+  },
+  "bundle": {
+    "profileId": "pwce-agent-gateway.v1",
+    "profileVersion": "1.0.0",
+    "bundleDigest": "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2",
+    "changed": false
+  },
+  "historicalEvidencePreserved": [
+    {
+      "path": "implementation/evidence/LS-S028.json",
+      "sha256": "7e76d9d8dc10764b313f553dd60c3cef6c509d29350102848dce8669295f139c"
+    },
+    {
+      "path": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json",
+      "sha256": "fd96b8dcc7ceac96c2071b4f60ebe873048639743a85ffa85197118b780a39a0"
+    },
+    {
+      "path": "implementation/evidence/LS-S046.json",
+      "sha256": "71209f29306bad998a02416227e3d90ae27c9d52df87118f9c55e3765f5e1ebe"
+    }
+  ],
+  "limitations": [
+    "This verifies one consumer transport component, not full LS-S028 or PWCE PV1-T5 acceptance. Qualified response mapping, ordered invalidation/cache resynchronization, async authority/capability ports, runtime server composition and joint scenarios remain to implement and verify.",
+    "The existing producer-generated client bytes and published digest pins were not changed. Its separate buffering behavior is not certified by this consumer implementation.",
+    "No provider/model selection, live world effect, external research, deployment, service restart, live configuration, personal-data import, training or new Human acceptance occurred. S083/S084 remaining development and provider/performance qualifications remain open; model compliance telemetry and historical failures remain unchanged.",
+    "The runtime still does not instantiate this adapter and no control-plane UI behavior changed, so no new browser or physical/perceptual acceptance is claimed. Original dirty artifacts and all approved schema bytes remain preserved."
+  ]
+}

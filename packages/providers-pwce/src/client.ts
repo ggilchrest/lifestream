@@ -1,8 +1,10 @@
+import { boundedFetch, cancelBody, checkStatus, deadlineExceeded, encodeRequest, PwceCallScope, readEventStream, readJsonObject, transportLimit } from "./transport.ts";
+import type { PwceInvalidationEvent } from "./transport.ts";
+export type { PwceInvalidationEvent } from "./transport.ts";
 export type PwceProfile = { readonly profileId: string; readonly profileVersion: string; readonly bundleId: string; readonly bundleVersion: string; readonly schemaStatus: string; readonly schemaDigest: string; readonly operationCatalogVersion: string; readonly operationCatalogDigest: string; readonly compatibilityRange?: { readonly minimum: string; readonly maximum: string }; readonly operationCatalog: readonly { readonly operation: string; readonly kind?: string; readonly availability?: string }[] };
 export type PwceBundle = { readonly bundleId: string; readonly bundleVersion: string; readonly bundleDigest: string; readonly artifacts: readonly { readonly path: string; readonly sha256: string }[]; readonly generatedClient: { readonly path: string; readonly sha256: string } };
-export type PwceClientOptions = { readonly baseUrl: string; readonly token: string; readonly fetchImpl?: typeof fetch };
+export type PwceClientOptions = { readonly baseUrl: string; readonly token: string; readonly fetchImpl?: typeof fetch; readonly requestTimeoutMs?: number; readonly streamLifetimeMs?: number };
 export type PwceClientResult = { readonly status: string; readonly [key: string]: unknown };
-export type PwceInvalidationEvent = { readonly id: string | null; readonly event: string; readonly data: string };
 const CORE_OPERATIONS = Object.freeze(["context.getPreparedInputs", "context.query", "evidence.get", "events.subscribe", "authority.evaluate", "authority.authorizeDispatch", "authority.getGrants", "capabilities.getSnapshot", "capabilities.invoke", "capabilities.getInvocation", "trace.publish", "health.get"]);
 const objectInput=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
 
@@ -19,25 +21,59 @@ export const EXPECTED_PWCE_ARTIFACTS = Object.freeze([
 export const EXPECTED_PWCE_GENERATED_CLIENT_SHA256 = "fdb2a5a425b1a54e0d41c923e6ae701eb865e710334869c885b499f06abde175";
 
 export class PwceGatewayClient {
-  private readonly baseUrl: string; private readonly token: string; private readonly fetchImpl: typeof fetch;
-  constructor(options: PwceClientOptions) { if (!options.baseUrl || !options.token) throw new Error("PWCE gateway URL and token are required"); this.baseUrl = options.baseUrl.replace(/\/$/, ""); this.token = options.token; this.fetchImpl = options.fetchImpl ?? fetch; }
-  async profile(signal?: AbortSignal): Promise<PwceProfile> { const profile = await this.json<PwceProfile>("/gateway/v1/profile", { ...(signal ? { signal } : {}) }); if (profile.profileId !== EXPECTED_PWCE_PROFILE.profileId || profile.profileVersion !== EXPECTED_PWCE_PROFILE.profileVersion || profile.bundleId !== EXPECTED_PWCE_PROFILE.bundleId || profile.bundleVersion !== EXPECTED_PWCE_PROFILE.bundleVersion || profile.schemaDigest !== EXPECTED_PWCE_PROFILE.schemaDigest || profile.operationCatalogVersion !== EXPECTED_PWCE_PROFILE.operationCatalogVersion || profile.operationCatalogDigest !== EXPECTED_PWCE_PROFILE.operationCatalogDigest || profile.schemaStatus !== "published") throw new Error("PWCE gateway profile is incompatible");
+  private readonly baseUrl: string;
+  private readonly token: string;
+  private readonly fetchImpl: typeof fetch;
+  private readonly requestTimeoutMs: number;
+  private readonly streamLifetimeMs: number;
+  constructor(options: PwceClientOptions) {
+    if (!options.baseUrl || !options.token) throw new Error("PWCE gateway URL and token are required");
+    let url: URL;
+    try { url = new URL(options.baseUrl); } catch { throw new Error("PWCE gateway URL is invalid"); }
+    if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error("PWCE gateway URL is invalid");
+    this.baseUrl = url.href.replace(/\/$/, "");
+    this.token = options.token;
+    this.fetchImpl = options.fetchImpl ?? fetch;
+    this.requestTimeoutMs = transportLimit(options.requestTimeoutMs, 5000, 30_000);
+    this.streamLifetimeMs = transportLimit(options.streamLifetimeMs, 35_000, 60_000);
+  }
+  private async call<T>(signal: AbortSignal | undefined, operation: (scope: PwceCallScope) => Promise<T>): Promise<T> {
+    const scope = new PwceCallScope(this.requestTimeoutMs, signal);
+    try { scope.check(); return await operation(scope); } finally { scope.close(); }
+  }
+  profile(signal?: AbortSignal): Promise<PwceProfile> { return this.call(signal, scope => this.readProfile(scope)); }
+  private async readProfile(scope: PwceCallScope): Promise<PwceProfile> { const profile = await this.json<PwceProfile>("/gateway/v1/profile", scope); if (profile.profileId !== EXPECTED_PWCE_PROFILE.profileId || profile.profileVersion !== EXPECTED_PWCE_PROFILE.profileVersion || profile.bundleId !== EXPECTED_PWCE_PROFILE.bundleId || profile.bundleVersion !== EXPECTED_PWCE_PROFILE.bundleVersion || profile.schemaDigest !== EXPECTED_PWCE_PROFILE.schemaDigest || profile.operationCatalogVersion !== EXPECTED_PWCE_PROFILE.operationCatalogVersion || profile.operationCatalogDigest !== EXPECTED_PWCE_PROFILE.operationCatalogDigest || profile.schemaStatus !== "published") throw new Error("PWCE gateway profile is incompatible");
     if (!Array.isArray(profile.operationCatalog) || profile.operationCatalog.length !== CORE_OPERATIONS.length
       || new Set(profile.operationCatalog.map(entry=>entry?.operation)).size !== CORE_OPERATIONS.length
       || CORE_OPERATIONS.some(operation=>!profile.operationCatalog.some(entry=>entry?.operation===operation)))
       throw new Error("PWCE gateway required core operation catalog is incompatible");
     return profile; }
-  async bundle(signal?: AbortSignal): Promise<PwceBundle> { const bundle = await this.json<PwceBundle>("/gateway/v1/bundle", { ...(signal ? { signal } : {}) }); if (bundle.bundleId !== EXPECTED_PWCE_PROFILE.bundleId || bundle.bundleVersion !== EXPECTED_PWCE_PROFILE.bundleVersion || bundle.bundleDigest !== EXPECTED_PWCE_PROFILE.schemaDigest || bundle.generatedClient.path !== "src/gateway/generated-client.js" || bundle.generatedClient.sha256 !== EXPECTED_PWCE_GENERATED_CLIENT_SHA256 || JSON.stringify(bundle.artifacts) !== JSON.stringify(EXPECTED_PWCE_ARTIFACTS)) throw new Error("PWCE gateway bundle is incompatible"); return bundle; }
-  async negotiate(signal?: AbortSignal): Promise<{ readonly profile: PwceProfile; readonly bundle: PwceBundle }> { const [profile, bundle] = await Promise.all([this.profile(signal), this.bundle(signal)]); return { profile, bundle }; }
-  async authority(siteRefs: readonly string[], signal?: AbortSignal): Promise<PwceClientResult> { const body = { siteRefs: [...siteRefs] }; await this.negotiate(signal); return this.json("/gateway/v1/authority", { method: "POST", body, ...(signal ? { signal } : {}) }); }
+  bundle(signal?: AbortSignal): Promise<PwceBundle> { return this.call(signal, scope => this.readBundle(scope)); }
+  private async readBundle(scope: PwceCallScope): Promise<PwceBundle> { const bundle = await this.json<PwceBundle>("/gateway/v1/bundle", scope); if (bundle.bundleId !== EXPECTED_PWCE_PROFILE.bundleId || bundle.bundleVersion !== EXPECTED_PWCE_PROFILE.bundleVersion || bundle.bundleDigest !== EXPECTED_PWCE_PROFILE.schemaDigest || bundle.generatedClient?.path !== "src/gateway/generated-client.js" || bundle.generatedClient?.sha256 !== EXPECTED_PWCE_GENERATED_CLIENT_SHA256 || JSON.stringify(bundle.artifacts) !== JSON.stringify(EXPECTED_PWCE_ARTIFACTS)) throw new Error("PWCE gateway bundle is incompatible"); return bundle; }
+  negotiate(signal?: AbortSignal): Promise<{ readonly profile: PwceProfile; readonly bundle: PwceBundle }> { return this.call(signal, scope => this.readNegotiation(scope)); }
+  private async readNegotiation(scope: PwceCallScope): Promise<{ readonly profile: PwceProfile; readonly bundle: PwceBundle }> {
+    const [profile, bundle] = await Promise.all([this.readProfile(scope), this.readBundle(scope)]);
+    scope.check();
+    return { profile, bundle };
+  }
+  async authority(siteRefs: readonly string[], signal?: AbortSignal): Promise<PwceClientResult> {
+    const body = encodeRequest({ siteRefs: [...siteRefs] });
+    return this.call(signal, async scope => {
+      await this.readNegotiation(scope);
+      return this.json("/gateway/v1/authority", scope, { method: "POST", body });
+    });
+  }
   async request(payload: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> {
     if(!objectInput(payload)||Object.hasOwn(payload,'token'))throw new Error('PWCE request body cannot supply transport credentials');
     // Snapshot before asynchronous negotiation; later caller mutation cannot change
     // the operation, authority or normalized input that was admitted here.
     const body=structuredClone(payload);
     if(typeof body.operation!=='string'||!CORE_OPERATIONS.includes(body.operation))throw new Error('PWCE operation is not advertised');
-    await this.negotiate(signal);
-    return this.json("/gateway/v1/request", { method: "POST", body, ...(signal ? { signal } : {}) });
+    const encoded = encodeRequest(body);
+    return this.call(signal, async scope => {
+      await this.readNegotiation(scope);
+      return this.json("/gateway/v1/request", scope, { method: "POST", body: encoded });
+    });
   }
   private async boundRequest(operation:string,authorityContextRef:string,input:Record<string,unknown>,signal?:AbortSignal):Promise<PwceClientResult> {
     if(typeof authorityContextRef!=='string'||!authorityContextRef.trim())throw new Error('PWCE authority reference is required');
@@ -56,19 +92,37 @@ export class PwceGatewayClient {
   publishTrace(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<PwceClientResult> { return this.boundRequest("trace.publish", authorityContextRef, input, signal); }
   eventsUrl(authorityContextRef: string, siteRef: string, afterCursor = "0", limit = 100): string { const params = new URLSearchParams({ authorityContextRef, siteRef, afterCursor, limit: String(limit) }); return `${this.baseUrl}/gateway/v1/events?${params}`; }
   async *subscribeInvalidations(authorityContextRef: string, siteRef: string, options: { readonly afterCursor?: string; readonly limit?: number; readonly signal?: AbortSignal } = {}): AsyncGenerator<PwceInvalidationEvent> {
-    await this.negotiate(options.signal);
-    const response = await this.fetchImpl(this.eventsUrl(authorityContextRef, siteRef, options.afterCursor ?? "0", options.limit ?? 100), { method: "GET", headers: { Authorization: `Bearer ${this.token}`, Accept: "text/event-stream" }, ...(options.signal ? { signal: options.signal } : {}) });
-    if (!response.ok || !response.body) throw new Error(`PWCE gateway event stream failed with status ${response.status}`);
-    const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = ""; let event: { id?: string; event?: string; data: string[] } = { data: [] };
-    const emit = (): PwceInvalidationEvent | null => { if (!event.data.length) return null; const value = { id: event.id ?? null, event: event.event ?? "message", data: event.data.join("\n") }; event = { data: [] }; return value; };
+    const url = this.eventsUrl(authorityContextRef, siteRef, options.afterCursor ?? "0", options.limit ?? 100);
+    const scope = new PwceCallScope(this.streamLifetimeMs, options.signal);
+    const headersExpiresAt = performance.now() + this.requestTimeoutMs;
+    const checkHeadersDeadline = () => {
+      if (performance.now() >= headersExpiresAt) scope.abort(deadlineExceeded());
+      scope.check();
+    };
+    const headersDeadline = setTimeout(() => scope.abort(deadlineExceeded()), this.requestTimeoutMs);
     try {
-      while (true) {
-        const chunk = await reader.read(); buffer += decoder.decode(chunk.value ?? new Uint8Array(), { stream: !chunk.done }); const lines = buffer.split("\n"); buffer = lines.pop() ?? "";
-        for (const rawLine of lines) { const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine; if (!line) { const parsed = emit(); if (parsed) yield parsed; continue; } if (line.startsWith(":")) continue; const separator = line.indexOf(":"); const field = separator < 0 ? line : line.slice(0, separator); const value = separator < 0 ? "" : line.slice(separator + 1).replace(/^ /, ""); if (field === "id") event.id = value; else if (field === "event") event.event = value; else if (field === "data") event.data.push(value); }
-        if (chunk.done) { const parsed = emit(); if (parsed) yield parsed; break; }
-      }
-    } finally { reader.releaseLock(); }
+      scope.check();
+      await this.readNegotiation(scope);
+      checkHeadersDeadline();
+      const response = await boundedFetch(this.fetchImpl, url, {
+        method: "GET", headers: { Authorization: `Bearer ${this.token}`, Accept: "text/event-stream" },
+      }, scope);
+      try {
+        if (!response.ok) checkStatus(response, await readJsonObject(response, scope));
+        checkHeadersDeadline();
+        clearTimeout(headersDeadline);
+        yield* readEventStream(response, scope);
+      } finally { cancelBody(response.body); }
+    } finally { clearTimeout(headersDeadline); scope.close(); }
   }
   health(authorityContextRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "health.get", authorityContextRef }, signal); }
-  private async json<T extends object>(path: string, options: { readonly method?: string; readonly body?: unknown; readonly signal?: AbortSignal } = {}): Promise<T> { const response = await this.fetchImpl(`${this.baseUrl}${path}`, { method: options.method ?? "GET", headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json" }, ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }), ...(options.signal ? { signal: options.signal } : {}) }); const value = await response.json() as T & { readonly error?: { readonly message?: string } }; if (!response.ok) throw new Error(value.error?.message ?? "PWCE gateway request failed"); return value; }
+  private async json<T extends object>(path: string, scope: PwceCallScope, options: { readonly method?: string; readonly body?: string } = {}): Promise<T> {
+    const response = await boundedFetch(this.fetchImpl, `${this.baseUrl}${path}`, {
+      method: options.method ?? "GET", headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json" },
+      ...(options.body === undefined ? {} : { body: options.body }),
+    }, scope);
+    const value = await readJsonObject(response, scope);
+    checkStatus(response, value);
+    return value as T;
+  }
 }

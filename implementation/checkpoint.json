@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "906e9fbe4ae01ad46c00f34792c0e42fc97e0390",
+  "currentRevision": "90c797e02bda825ca61209e39338f2147e824d01",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -79,59 +79,70 @@
     "packages/providers-pwce/test/client.test.ts",
     "implementation/checkpoint.json",
     "implementation/evidence/LS-S028.json",
-    "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
+    "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json",
+    "packages/providers-pwce/src/transport.ts",
+    "packages/providers-pwce/test/transport.test.ts",
+    "packages/providers-pwce/src/index.ts",
+    "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json"
   ],
   "changedFiles": [
+    "implementation/checkpoint.json",
     "packages/providers-pwce/src/client.ts",
-    "packages/providers-pwce/test/client.test.ts",
-    "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json",
-    "implementation/checkpoint.json"
+    "packages/providers-pwce/src/transport.ts",
+    "packages/providers-pwce/src/index.ts",
+    "packages/providers-pwce/test/transport.test.ts",
+    "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json"
     },
     {
-      "command": "node --test packages/providers-pwce/test/client.test.ts",
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/client.test.ts packages/providers-pwce/test/transport.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json"
     },
     {
-      "command": "node /private/tmp/pwce-boundary-network-final.mjs",
+      "command": "node /private/tmp/pwce-transport-network.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-GATEWAY-REQUEST-BINDING-1.json"
+      "evidence": "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "evidence": "No whitespace errors in scoped public/private changes."
     }
   ],
   "decisions": [
@@ -146,8 +157,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Complete the PWCE adapter with bounded transport, qualified response mapping, invalidation/resynchronization, async authority/capability ports and server composition through existing public contracts. Continue S083 presentation/restore fencing and existing ai5090/current prerequisites; S084 semantic/exploration/analysis/full performance remains open. No whole-goal blocker: independent work remains.",
-  "updatedAt": "2026-09-15T06:10:01.732273Z",
+  "nextAction": "Complete PWCE qualified response mapping, ordered invalidation/resynchronization, async authority/capability ports and server composition through the existing published contracts. Continue S083 presentation/restore fencing and existing ai5090/current prerequisites; S084 semantic/exploration/analysis/full performance remains open. No whole-goal blocker: independent work remains.",
+  "updatedAt": "2026-09-15T06:31:14.738087Z",
   "updatedBy": "Codex",
-  "notes": "Closed PWCE request-binding prerequisites across independent producer and consumer repositories. Producer 139 tests, consumer 408 source/45 tooling, 16 client-contract-mapping tests with the disposable real gateway, and 5 actual HTTP boundary checks pass. No full runtime adapter or T5 acceptance is claimed. Historical source/model/deadline receipts remain unchanged."
+  "notes": "PWCE bounded HTTP/SSE transport component verified: 428 source tests, 32 focused client/transport cases, 45 tooling cases and separate-process producer conformance pass. Request deadlines cover negotiation; response/frame byte limits, cancellation/socket release, safe errors and redirect rejection are implemented. Full adapter/runtime acceptance remains in progress. Receipt LS-S028-BOUNDED-TRANSPORT-1 preserves sandbox failures separately; no live configuration or provider changes."
 }
