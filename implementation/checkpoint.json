@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "52545a8a4537e6c92ef5cd25ab10cff93e718ff9",
+  "currentRevision": "f8e565c79ecc23920890440bb4aea0d308356fd4",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -167,75 +167,64 @@
     "apps/server/test/discovery-lab.test.ts",
     "apps/control-web/discovery-lab.js",
     "apps/control-web/test/discovery-lab.test.mjs",
-    "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+    "implementation/evidence/S084-DISCOVERY-LAB-1.json",
+    "apps/server/src/admin/discovery-preference.ts",
+    "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json"
   ],
   "changedFiles": [
     "apps/control-web/DESIGN.md",
-    "apps/control-web/discovery-lab.js",
-    "apps/control-web/discovery-workflows.js",
-    "apps/control-web/relationship-extensions.js",
-    "apps/control-web/styles.css",
     "apps/control-web/test/discovery-lab.test.mjs",
-    "apps/control-web/test/discovery-review.test.mjs",
+    "apps/server/src/admin/discovery-candidates.ts",
     "apps/server/src/admin/discovery-lab-worker.ts",
-    "apps/server/src/admin/discovery-lab.ts",
-    "apps/server/src/admin/discovery-selection.ts",
+    "apps/server/src/admin/discovery-preference.ts",
     "apps/server/src/admin/understanding.ts",
     "apps/server/src/index.ts",
+    "apps/server/test/discovery-candidates.test.ts",
     "apps/server/test/discovery-lab.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+    "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json",
+    "packages/storage-sqlite/src/understanding.ts"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+      "evidence": "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+      "evidence": "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+      "evidence": "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+      "evidence": "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
-    },
-    {
-      "command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/discovery-lab.test.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
-    },
-    {
-      "command": "node /private/tmp/s084-lab-built-worker.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+      "evidence": "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+      "evidence": "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+      "evidence": "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-DISCOVERY-LAB-1.json"
+      "evidence": "implementation/evidence/S084-EXPLICIT-PREFERENCE-SELECTION-1.json"
     }
   ],
   "decisions": [
@@ -250,8 +239,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Close preference-aware ambiguity selection using current permitted evidence while preserving explicit-domain/correction precedence; complete remaining canonical Discovery demonstrations, semantic hypothesis/connection policy, exploration and qualified analysis/output evaluation. Continue S083 opportunity/output lifecycle, real corpus/provider/voice qualification, current-source prerequisites and remaining dependency-ready Lifestream/PWCE scope before stopping for Human review.",
-  "updatedAt": "2026-09-15T00:19:46.308387Z",
+  "nextAction": "Complete remaining Discovery semantic hypotheses/connections and canonical demonstrations, bounded exploration, qualified analysis admission and actual output evaluation. Continue S083 opportunity/output lifecycle, corpus/provider/voice performance and current-source prerequisite successors. PWCE Personal V1 T5 full core mapping acceptance remains open; inspect current runtime integration and complete dependency-ready work before stopping for Human review.",
+  "updatedAt": "2026-09-15T00:30:24.950992Z",
   "updatedBy": "Codex",
-  "notes": "Isolated Discovery input Lab is implemented and verified as a component. Its real shared selector exposes failed ambiguity expectations: alternate-domain details are included despite explicit favorite evidence. This remains actionable S084 implementation work, not Human/model acceptance. Full S083/S084 remain in progress."
+  "notes": "Explicit whole favorite declarations now provide evidence-bound ambiguity priority during source preparation and bounded selection. Current-domain and correction precedence remain intact; correction and rebuild cannot restore the old hint. Source/browser/tooling checks pass; full S083/S084 and provider/Human qualification remain incomplete."
 }

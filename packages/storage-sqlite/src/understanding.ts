@@ -178,9 +178,9 @@ export class UnderstandingRepository {
     const ranked=rows.flatMap((row,index)=>{const candidate=JSON.parse(row.payload) as UnderstandingRecord;if(this.candidateSuppressed(scope,candidate))return [];
       const topics=(candidate.topicRefs as string[]).map(ref=>words(ref.replace(/^topic:/u,''))),direct=topics.some(topic=>topic.length>0&&topic.every(word=>inputWords.has(word)));
       if(domain&&!topics.some(topic=>{const required=words(domain);return required.length>0&&required.every(word=>topic.includes(word));}))return [];
-      return [{id:`discovery-candidate:${row.id}`,content:row.content,rank:(direct?0:100)+index,freshUntil:row.freshUntil,direct}];
+      return [{id:`discovery-candidate:${row.id}`,content:row.content,rank:(direct?0:100)+index,freshUntil:row.freshUntil,direct,topics:candidate.topicRefs as string[],favorite:(candidate.scores as Record<string,unknown>).methodRef==='discovery-explicit-favorite:1'&&(candidate.scores as Record<string,unknown>).interestStrength===1}];
     });
-    const explicit=ranked.some(row=>row.direct),seen=new Set<string>();return ranked.filter(row=>{if(explicit&&!row.direct)return false;const fingerprint=understandingDigest(row.content);if(seen.has(fingerprint))return false;seen.add(fingerprint);return true;}).map(({direct:_direct,...row})=>row).sort((a,b)=>a.rank-b.rank);
+    const explicit=ranked.some(row=>row.direct),favorites=new Set(ranked.filter(row=>row.favorite).flatMap(row=>row.topics)),preferred=!explicit&&favorites.size===1?[...favorites][0]:undefined,seen=new Set<string>();return ranked.filter(row=>{if(explicit&&!row.direct||preferred&&(!row.favorite||!row.topics.includes(preferred)))return false;const fingerprint=understandingDigest(row.content);if(seen.has(fingerprint))return false;seen.add(fingerprint);return true;}).map(({direct:_direct,topics:_topics,favorite:_favorite,...row})=>row).sort((a,b)=>a.rank-b.rank);
 
   }
   candidateSuppressed(scope:UnderstandingScope,record:UnderstandingRecord):boolean {

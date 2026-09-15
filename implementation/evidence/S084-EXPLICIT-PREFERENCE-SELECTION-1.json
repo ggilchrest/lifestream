@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-15T00:30:24.950992Z",
+  "slice": "LS-S084",
+  "status": "inProgress",
+  "claim": "Current approved favorite declarations can prioritize bounded ambiguous Discovery candidates, while explicit current topics, corrections and owner-local privacy remain authoritative. This is a component claim, not full semantic understanding or S084 acceptance.",
+  "baseRevision": "f8e565c79ecc23920890440bb4aea0d308356fd4",
+  "specificationRevision": "e9db7faeaff8bef1207835120237231b791141a0",
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "b7f5c071474ba44f0de4513eac60e45b6b7b86b41cefc7ce0f1c6f8817cff74c"
+    },
+    {
+      "path": "apps/control-web/test/discovery-lab.test.mjs",
+      "sha256": "0a079534340a98a20baf459bbb76230559b7f3fe6569f921e701836cbcf74741"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-candidates.ts",
+      "sha256": "17d5ac0fe7d4930ae4e8a97688e38b3dbedab074a65281f46b94a262857a5e23"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-lab-worker.ts",
+      "sha256": "b392369622bbab686f976c95326b3c500436805b1b492040b0806b388d7093c8"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-preference.ts",
+      "sha256": "86fd31789921f8590623ed2f69f8de20bd4ba5ad91bc26eadbf5de4a234edcc3"
+    },
+    {
+      "path": "apps/server/src/admin/understanding.ts",
+      "sha256": "d37c5c00d86f378d77f1606dfc76c5e7744bc9101f68154eccf568634306a528"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "2b8dfa49aa653ed45207b6cc8699de6cdd8396fb59b3228c414a91c1ae4a3659"
+    },
+    {
+      "path": "apps/server/test/discovery-candidates.test.ts",
+      "sha256": "772d85f9625f2606e275539b285beec3311c16325021c25d0b94a655402c48dc"
+    },
+    {
+      "path": "apps/server/test/discovery-lab.test.ts",
+      "sha256": "2a69c8fe43d1942e150c6b744eb343f19e4f7c8c80dab61276e015e175641bcc"
+    },
+    {
+      "path": "packages/storage-sqlite/src/understanding.ts",
+      "sha256": "796d88a25dd29c9ba6face82b51d77e42a4811bbabba4f69eaef92608fbeb5bf"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "310 passed",
+      "logSha256": "3c7273023a9bed8890e71a637061f80f7f96a912d2149566e2cce0074189daaa"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "29 passed",
+      "logSha256": "0845021dba7c124a8bf7a832bd96d2a756eee0763abf63fc755e21af718993e3"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "45 passed",
+      "logSha256": "4fe577ce2f9bb31957bccf76cfd6e839cf917eff7cf4f1e02f2065ad8f59a391"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass; specification validation only",
+      "logSha256": "8a6d383ce0b42ea2edec91c499eab6ae69e477d82c5c2bb27a24eb2525b5cbbf"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass; structural validation only",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "verifiedComponentBehavior": [
+    "Supplied-source preparation automatically finds eligible, current, approved favorite declarations for its topic through the existing relationship owner; no manual copying of evidence IDs is required.",
+    "An exact, whole userDeclaration statement matching the topic may produce an ordinal interest-strength hint of 1. Observation, inference, unknown basis, stale revision, negation, quotation, hypothetical text and extra qualifications cannot manufacture that hint.",
+    "Candidate grounding retains the original evidence reference. Work and candidate dependencies bind the evidence content, basis and revision with a digest; source assertion text does not increase personal confidence.",
+    "The live selector applies explicit current-domain filtering before the favorite hint. It uses a favorite only when the bounded candidate set has one favored topic; multiple favored topics do not produce an invented winner.",
+    "Only candidates carrying the matching versioned favorite method and their own evidence grounding receive the priority. Unknown confidence, coverage and other score dimensions remain independent.",
+    "The protected local-auth API test exercises automatic evidence joining, actual assembled ambiguous input, explicit alternate-domain precedence, ordinary completion, suppression, database rollback, correction and rebuild.",
+    "Correcting the owning favorite declaration immediately invalidates its derived detail; rebuilding from permitted sources leaves interest strength unknown and cannot revive the superseded statement.",
+    "The isolated input Lab and browser use the same production selector. The revised equivalent favorite scenario passes with the alternate topic absent. Excluded expected details still remain visibly unmet rather than being fabricated."
+  ],
+  "priorFailureDisposition": {
+    "historicalReceipt": "implementation/evidence/S084-DISCOVERY-LAB-1.json",
+    "historicalReceiptChanged": false,
+    "previous": "Both Forest Chronicle and Stellar Saga details appeared for an ambiguous Orin/Vale prompt.",
+    "current": "The favorite-grounded Forest Chronicle candidate is selected; explicit Stellar Saga context still selects Stellar Saga.",
+    "fixtureClarification": "The synthetic favorite is now represented as a separate, direct user declaration and source-coverage qualification is a separate baseline record. The original decorated prose is not silently stripped. Scenario digest includes this changed evidence. Independent protected API proof creates and approves the real declaration before preparation.",
+    "claimBoundary": "This closes the explicit-favorite component gap for the supported grammar; it does not assert byte-identical fixture comparison or general semantic/model-output acceptance."
+  },
+  "limitations": [
+    "The favorite recognizer supports exact whole English statements in the forms X is my favorite/favourite and My favorite/favourite is X, with bounded punctuation and normalized case/spacing. Unsupported phrasing remains unknown; this is not a general sentiment, motive or multilingual inference engine.",
+    "Interest strength 1 is a provisional ordinal priority hint, not a calibrated probability or independent factual verification. Knowledge coverage/reliability, evidence confidence, usefulness, novelty and resource dimensions are not fabricated.",
+    "The existing source-preparation lifecycle must rebuild expired or invalidated candidates. No foreground analysis or research is introduced.",
+    "All verification in this receipt uses synthetic data and fixture providers. Actual selected-provider conversational output, performance/corpus/voice qualification and new Human review remain pending.",
+    "Complete cross-domain hypotheses/connections, all canonical demonstrations, bounded exploration allocation, qualified model analysis, S083 opportunity/output integration and current-source prerequisite successors remain required.",
+    "PWCE public HEAD 39aae7fc742630ca2f2ed92747bcaa00f94ed6c4 was read-only inspected and clean. Its T5 checklist still records full core mapping acceptance as deferred; historical consumer-handshake proof is not upgraded here. No PWCE changes were made.",
+    "No saved review service restart, live configuration change, personal-data import, network research, model/provider selection, training, deployment or new Human acceptance occurred."
+  ],
+  "schemaExportChanged": false,
+  "modelQualityObservationsChanged": false,
+  "humanAcceptanceClaim": false
+}

@@ -1,3 +1,4 @@
+import {evidenceDependency,type FavoriteEvidence} from './discovery-preference.ts';
 import {parentPort,workerData} from 'node:worker_threads';
 import {Database,UnderstandingRepository,understandingDigest,type UnderstandingRecord} from '@lifestream/storage-sqlite';
 import {compileRelationshipContext,relationshipControlDefaults,type RelationshipContextRecord} from '@lifestream/runtime/context';
@@ -9,6 +10,7 @@ import type {RelationshipConfiguration} from '../relationship-extensions.ts';
 const uid=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const scope={assistantId:uid(1),userId:uid(2),relationshipId:uid(3),deploymentId:uid(4)};
 const policy='policy:discovery-lab-v1';
+const preference:FavoriteEvidence={ref:'relationship-record:00000000-0000-4000-8000-000000000050:1',revision:1,content:'Forest Chronicle is my favorite.',basis:'userDeclaration'};
 // Independently authored public synthetic data. No account evidence is supplied to this worker.
 const facts=[
  {topic:'topic:forest-chronicle',text:'Orin and Vale explore Forest Chronicle. FOREST_DETAIL_281.'},
@@ -31,12 +33,12 @@ export function runDiscoveryInputLab(configuration:RelationshipConfiguration):Di
  const budget={...selected.budget,jobsPerDay:8,pendingJobsPerRuntime:16};
  try {
   for(const [index,fact]of facts.entries()){
-   const source=`source:discovery-lab:${index+1}`,brief:UnderstandingRecord={...scope,schemaVersion:'1.0.0',recordType:'topicBrief',briefId:uid(100+index),revision:1,topicRef:fact.topic,derived:true,status:'prepared',sources:[{sourceRef:source,sourceFamily:`family:lab:${index+1}`,sourceRevision:'revision:1',policyRef:policy,retrievedAt:new Date(now).toISOString(),reliability:'unknown',reliabilityBasis:'Synthetic authored assertion; no independent corroboration.',kind:'providedFixture'}],claims:[{claimId:uid(200+index),text:fact.text,sourceRefs:[source],qualifier:'attributed',versionScope:'Synthetic edition 1',spoilerClass:'none',contradictionRefs:[]}],aliasClaims:[],knowledgeGaps:['Fictional data; no factual-world or personal-motive assertion.'],deeperMaterialRefs:[],builtAt:new Date(now).toISOString(),freshUntil:new Date(now+3600000).toISOString(),compilerRef:'discovery-lab-sources:1',dependencyRefs:[`source:${source}:revision:1`],configurationRef:'configuration:lab:1'};
+   const source=`source:discovery-lab:${index+1}`,brief:UnderstandingRecord={...scope,schemaVersion:'1.0.0',recordType:'topicBrief',briefId:uid(100+index),revision:1,topicRef:fact.topic,derived:true,status:'prepared',sources:[{sourceRef:source,sourceFamily:`family:lab:${index+1}`,sourceRevision:'revision:1',policyRef:policy,retrievedAt:new Date(now).toISOString(),reliability:'unknown',reliabilityBasis:'Synthetic authored assertion; no independent corroboration.',kind:'providedFixture'}],claims:[{claimId:uid(200+index),text:fact.text,sourceRefs:[source],qualifier:'attributed',versionScope:'Synthetic edition 1',spoilerClass:'none',contradictionRefs:[]}],aliasClaims:[],knowledgeGaps:['Fictional data; no factual-world or personal-motive assertion.'],deeperMaterialRefs:[],builtAt:new Date(now).toISOString(),freshUntil:new Date(now+3600000).toISOString(),compilerRef:'discovery-lab-sources:1',dependencyRefs:[`source:${source}:revision:1`,evidenceDependency(preference)],configurationRef:'configuration:lab:1'};
    const work:UnderstandingRecord={...scope,schemaVersion:'1.0.0',recordType:'work',workId:uid(300+index),revision:1,topicRef:fact.topic,purpose:'briefRebuild',state:'queued',executionMode:'simulation',idempotencyKey:`lab:${index}`,configurationRef:'configuration:lab:1',policyRefs:[policy],dependencyRefs:brief.dependencyRefs,capabilityInvocationRef:null,admissionReceiptRef:null,createdAt:new Date(now).toISOString(),deadlineAt:new Date(now+120000).toISOString(),expiresAt:new Date(now+3600000).toISOString(),budget,producedRefs:[],lastOutcome:'notRun',reason:'Isolated synthetic preparation; no acquisition.'};
-   const candidates=compileDiscoveryCandidates(brief,boundary,now).map((record,n)=>({...record,candidateId:uid(400+index*10+n)}));
+   const candidates=compileDiscoveryCandidates(brief,boundary,now,[preference]).map((record,n)=>({...record,candidateId:uid(400+index*10+n)}));
    repository.admit(scope,work,understandingDigest(work),understandingDigest(index),boundary,()=>true);repository.start(scope,String(work.workId));if(!repository.publish(scope,String(work.workId),boundary,[brief,...candidates],()=>true))throw new Error('Synthetic preparation was not published');
   }
-  const records:RelationshipContextRecord[]=[{id:'lab-evidence:explicit',content:'Explicit synthetic statement: Forest Chronicle is my favorite. Activity is not proof of enjoyment. Missing imports do not establish dislike.',revision:1,sourceFamily:'family:lab:explicit',status:'approved',use:'baseline',personalization:true,mention:true}];
+  const records:RelationshipContextRecord[]=[{id:'lab-evidence:explicit',content:preference.content,revision:1,sourceFamily:'family:lab:explicit',status:'approved',use:'baseline',personalization:true,mention:true},{id:'lab-evidence:coverage',content:'Activity is not proof of enjoyment. Missing imports do not establish dislike.',revision:1,sourceFamily:'family:lab:coverage',status:'approved',use:'baseline',personalization:true,mention:true}];
   const rows:DiscoveryLabRow[]=[];
   for(const scenario of scenarios)for(const variant of ['baseline','enabled','selected']){
    const settings=variant==='selected'?selected:{...selected,enabled:variant==='enabled',budget:{...selected.budget,enrichmentTokens:512,selectedItems:4,optionalSelectionDeadlineMs:10}};
@@ -50,7 +52,7 @@ export function runDiscoveryInputLab(configuration:RelationshipConfiguration):Di
    const checks=[{name:'total prepared context within limit',pass:Buffer.byteLength(memory)<=view.budget.maximumBytes},{name:'independent enrichment bound',pass:enrichment.tokenUpperBound<=settings.budget.enrichmentTokens!&&enrichment.items.length<=settings.budget.selectedItems!},{name:'mandatory evidence retained when personalization enabled',pass:(variant==='selected'?configuration.controls.personalizationIntensity:relationshipControlDefaults.personalizationIntensity)===0||memory.includes('Missing imports do not establish dislike')},{name:'forbidden alternate detail absent',pass:scenario.forbidden.every(value=>!memory.includes(value))},{name:'expected contextual detail',pass:!shouldEnrich||scenario.required.every(value=>memory.includes(value))}];
    rows.push({id:scenario.id,split:scenario.split,variant,prompt:scenario.prompt,note:scenario.note,memory,manifestDigest:understandingDigest(request.manifest),sourceRefs:enrichment.items.map(item=>item.id),disposition:enrichment.disposition,selectedItems:enrichment.items.length,tokenUpperBound:enrichment.tokenUpperBound,elapsedMs:enrichment.elapsedMs,checks});
   }
-  return {scenarioRevision:understandingDigest({facts,scenarios}),configurationDigest:understandingDigest(configuration),rows,canonicalRequestCount:rows.length,providerCalls:0};
+  return {scenarioRevision:understandingDigest({facts,scenarios,preference}),configurationDigest:understandingDigest(configuration),rows,canonicalRequestCount:rows.length,providerCalls:0};
  }finally {database.close();}
 }
 if(parentPort){try{parentPort.postMessage({report:runDiscoveryInputLab(workerData.configuration)});}catch(error){parentPort.postMessage({error:error instanceof Error?error.message:'Comparison failed'});}}

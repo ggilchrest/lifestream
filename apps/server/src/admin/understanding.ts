@@ -1,3 +1,4 @@
+import {evidenceDependency} from './discovery-preference.ts';
 import {DiscoveryInputLab} from './discovery-lab.ts';
 import {compileDiscoveryCandidates} from './discovery-candidates.ts';
 import {analyzeDiscoveryEvidence,type DiscoveryAnalysisPort,type DiscoveryEvidence} from "./discovery-analysis.ts";
@@ -15,7 +16,7 @@ type Snapshot = { boundary:string; configuration:RelationshipConfiguration|undef
 type Claim = {claimId:string;text:string;sourceRefs:string[];qualifier:string;versionScope:string;spoilerClass:string;contradictionRefs:string[]};
 type Source = {sourceRef:string;sourceFamily:string;sourceRevision:string;topicRef:string;policyRef:string;retrievedAt:string;reliability:string;reliabilityBasis:string;content:string;claims:Claim[];aliasClaims:Claim[];knowledgeGaps:string[]};
 type Settings = {enabled:boolean;researchMode:string;policyRefs:string[];approvedTopicRefs:string[];excludedSourceRefs:string[];excludedTopicRefs:string[];spoilerPolicy:string;progressBoundaryRef:string|null;budget:Record<string,number>};
-type DiscoveryHost={configuration?:(scope:UnderstandingScope,id:string)=>RelationshipConfiguration|undefined;suppressCandidate?:(scope:UnderstandingScope,target:CandidateSuppression|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';rejectHypothesis?:(scope:UnderstandingScope,target:HypothesisRejection|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};analysis?:()=>DiscoveryAnalysisPort|undefined;evidence?:(scope:UnderstandingScope,refs:string[])=>DiscoveryEvidence[];changed:()=>void};
+type DiscoveryHost={preferenceRefs?:(scope:UnderstandingScope,topic:string)=>string[];configuration?:(scope:UnderstandingScope,id:string)=>RelationshipConfiguration|undefined;suppressCandidate?:(scope:UnderstandingScope,target:CandidateSuppression|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';rejectHypothesis?:(scope:UnderstandingScope,target:HypothesisRejection|undefined,request:Record<string,unknown>)=>'missing'|'applied'|'pending'|'conflict';snapshot:(scope:UnderstandingScope)=>Snapshot;evidenceAllowed:(scope:UnderstandingScope,refs:string[])=>boolean;sourceAllowed:(scope:UnderstandingScope,value:string)=>boolean;forget:(scope:UnderstandingScope,targets:{refs:string[];contentDigests:string[]}|undefined,request:Record<string,unknown>)=>"missing"|"applied"|"pending"|"conflict";feedback?:(scope:UnderstandingScope,request:Record<string,unknown>)=>{recordRef:string;replay:boolean};analysis?:()=>DiscoveryAnalysisPort|undefined;evidence?:(scope:UnderstandingScope,refs:string[])=>DiscoveryEvidence[];changed:()=>void};
 const validator=createContractValidator();
 const schema="https://lifestream.dev/contracts/understanding-api/1.0.0";
 export class DiscoveryAdministration {
@@ -150,10 +151,11 @@ export class DiscoveryAdministration {
     const snapshot=this.host.snapshot(scope),settings=snapshot.configuration?.extensions?.understanding as Settings|undefined;
     if(!settings?.enabled||settings.researchMode==="off")return extensionError(409,"discovery_disabled","Activate an enabled Discovery configuration before preparing sources.");
     if(request.purpose==="hypothesisAnalysis")return this.prepareAnalysis(scope,request,snapshot,settings,authorizationCurrent);
-    const sources=request.sources as Source[],refs=request.evidenceRefs as string[],topic=String(request.topicRef),budget=settings.budget;
+    const sources=request.sources as Source[],topic=String(request.topicRef),refs=[...new Set([...request.evidenceRefs as string[],...this.host.preferenceRefs?.(scope,topic)??[]])],budget=settings.budget;
     if(!sources.length)return extensionError(409,"acquisition_unavailable","No configured network acquisition capability is available. Select and supply authorized source material.");
     const current=()=>!this.closed&&process.memoryUsage().heapUsed<budget.workerMemoryMiB!*1024*1024&&authorizationCurrent()&&snapshot.boundary===this.host.snapshot(scope).boundary&&this.host.evidenceAllowed(scope,refs)&&this.host.sourceAllowed(scope,topic)&&sources.every(source=>this.host.sourceAllowed(scope,source.sourceRef)&&this.host.sourceAllowed(scope,source.content));
     try{
+      if(refs.length>24)throw new Error("Too many current evidence references");
       if(!current()||settings.excludedTopicRefs.includes(topic)||sources.some(source=>settings.excludedSourceRefs.includes(source.sourceRef)))throw new Error("Current source, evidence or topic use is denied");
       if(settings.researchMode==="approvedTopics"&&!settings.approvedTopicRefs.includes(topic))throw new Error("Topic is not approved");
       const sourceBytes=Buffer.byteLength(JSON.stringify(sources));
@@ -164,8 +166,9 @@ export class DiscoveryAdministration {
         for(const claim of [...source.claims,...source.aliasClaims])if(!claim.sourceRefs.includes(source.sourceRef)||claim.sourceRefs.some(ref=>!sources.some(s=>s.sourceRef===ref))||!source.content.includes(claim.text))throw new Error("A claim must be an attributed excerpt present in its selected source");
       }
       const configurationRef=`relationship-configuration:${snapshot.configuration!.configurationId}:${snapshot.configuration!.revision}`;
-      const dependencyRefs=[`snapshot:${snapshot.boundary}`,...refs,...sources.map(source=>`source:${understandingDigest([source.sourceRef,source.sourceRevision,source.content])}`),...new Set(sources.map(source=>`source-content:${recoveryDigest(source.content)}`))];
-      if(dependencyRefs.length>32)throw new Error("Too many dependency references");
+      const evidence=this.host.evidence?.(scope,refs)??[];
+      const dependencyRefs=[`snapshot:${snapshot.boundary}`,...refs.map(ref=>{const item=evidence.find(item=>item.ref===ref);return item?evidenceDependency(item):ref;}),...sources.map(source=>`source:${understandingDigest([source.sourceRef,source.sourceRevision,source.content])}`),...new Set(sources.map(source=>`source-content:${recoveryDigest(source.content)}`))];
+      if(dependencyRefs.length>31)throw new Error("Too many dependency references for parent and candidates");
       const work:UnderstandingRecord={...scope,schemaVersion:"1.0.0",recordType:"work",workId:randomUUID(),revision:1,topicRef:topic,purpose:request.purpose,state:"queued",executionMode:"normal",idempotencyKey:request.idempotencyKey,configurationRef,policyRefs:[...new Set(sources.map(source=>source.policyRef))],dependencyRefs,capabilityInvocationRef:null,admissionReceiptRef:null,createdAt:new Date(now).toISOString(),deadlineAt:new Date(now+budget.jobDeadlineSeconds!*1000).toISOString(),expiresAt:new Date(now+budget.pendingJobTtlSeconds!*1000).toISOString(),budget:structuredClone(budget),producedRefs:[],lastOutcome:"notRun",reason:"Queued supplied-source preparation; no external acquisition."};
       const {idempotencyKey:_key,...semanticRequest}=request;
       const admitted=this.repository.admit(scope,work,understandingDigest(request),understandingDigest([semanticRequest,snapshot.boundary]),snapshot.boundary,()=>current());
@@ -183,7 +186,7 @@ export class DiscoveryAdministration {
             const freshUntil=Math.min(now+budget.briefFreshnessSeconds!*1000,...sources.map(source=>Date.parse(source.retrievedAt)+budget.briefFreshnessSeconds!*1000));
             const brief:UnderstandingRecord={...scope,schemaVersion:"1.0.0",recordType:"topicBrief",briefId:randomUUID(),revision:1,topicRef:topic,derived:true,status:"prepared",sources:sources.map(({content:_content,claims:_claims,aliasClaims:_aliases,knowledgeGaps:_gaps,topicRef:_topic,...source})=>({...source,kind:"providedFixture"})),claims,aliasClaims,knowledgeGaps:[...new Set(sources.flatMap(source=>source.knowledgeGaps))].slice(0,16),deeperMaterialRefs:[],builtAt:new Date().toISOString(),freshUntil:new Date(freshUntil).toISOString(),compilerRef:"provided-source-attribution:1",dependencyRefs,configurationRef};
             return brief;
-          }],publish:brief=>this.repository.publish(scope,key,snapshot.boundary,[brief,...compileDiscoveryCandidates(brief,snapshot.boundary)],()=>current())});
+          }],publish:brief=>this.repository.publish(scope,key,snapshot.boundary,[brief,...compileDiscoveryCandidates(brief,snapshot.boundary,Date.now(),evidence)],()=>current())});
         if(!this.closed&&result.state!=="published")this.repository.finish(scope,key,result.state==="failed"?"failed":"cancelled",result.reason);
         if(!this.closed&&result.state==="published")this.host.changed();
       }).catch(()=>{if(!this.closed)this.repository.finish(scope,key,"failed","Preparation failed without publication or automatic retry.");}).finally(()=>this.tasks.delete(key));
