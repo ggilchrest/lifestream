@@ -1,0 +1,143 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S069-CONTEXT-BINDING-1",
+  "slice": "LS-S069",
+  "status": "componentVerified",
+  "sourceRevision": "e0e9609258a7754a704d81ebfa8565dbaadba04b",
+  "sourceBinding": "Exact changed source hashes below bind this correction relative to sourceRevision; the enclosing commit contains the implementation. This is not a successor selected-provider qualification.",
+  "specificationRevision": "47b10e10f240a7e3b51f32ca937259f9bf8f0217",
+  "recordedAt": "2026-09-15T12:06:02.053510Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/auth/local-auth.ts",
+      "sha256": "4f8c5018ced3f6766e6d4a0be4536ec6235ac2f3980b0d993628debe8c20803f"
+    },
+    {
+      "path": "apps/server/test/local-auth-context.test.ts",
+      "sha256": "1ec52ca8452c8b1d3a09d553769c94de78e80e095586aad3bf445dd35da89cdd"
+    },
+    {
+      "path": "docs/local-authentication.md",
+      "sha256": "7661a110c299684551533a3f0b9d7e170b2e12cfb72effa269016a95d5c5f2de"
+    }
+  ],
+  "baselineRegression": {
+    "revision": "e0e9609258a7754a704d81ebfa8565dbaadba04b",
+    "testsRun": 5,
+    "testsFailed": 4,
+    "testsPassed": 1,
+    "log": "auth-context-baseline.log",
+    "logSha256": "35ce3c3986f58a504ec43361b0e2f1d5bd7e4f11d6d20823b5071b3582a3eef3",
+    "scope": "Initial five-case harness before correction. The final harness expands to eight tests. Failures showed altered identity accepted by current-context revalidation, forged Owner account listing, changed-session grant creation, and non-finite clock acceptance."
+  },
+  "claims": [
+    "Current local authentication binds the stored token-hash session to the same principal, session ID, origin, authentication time and current Owner flag, with account epoch, safety state and revocation rechecked.",
+    "Issued contexts are frozen. Mutation of a copied context during revalidation is rejected. Context expiry metadata cannot extend the stored administration deadline.",
+    "Finite valid clock checks reject time before authentication or latest administration activity for both administration and conversation. The 1800-second idle limit still applies only to administration.",
+    "Creator permission assignment requires a current Owner. Rejected contexts cannot create grants or Assistant permissions, refresh activity, renew CSRF material or revoke another session. Tests inspect the actual durable tables.",
+    "Unchanged identities remain usable after valid activity refresh and adapter reopening. A current conversation identity can still sign out after its administration idle deadline.",
+    "Full source regression, existing authenticated HTTP isolation and PWCE process checks remain passing with the stricter guard."
+  ],
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/local-auth-context.test.ts apps/server/test/local-auth.test.ts",
+      "result": "pass",
+      "log": "auth-context-focused-final.log",
+      "logSha256": "3def5008305f69f6db744aaa43bbdc576338c9cb1a733d473787ac945ad38af7",
+      "testsPassed": 16
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "auth-context-build.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "auth-context-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "auth-context-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "auth-context-full.log",
+      "logSha256": "c0584a184107be7d45c79c583cb074ee2a9f2d0398b34c905edf4dc10d79119b",
+      "testsPassed": 601
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "log": "auth-context-browser-final.log",
+      "logSha256": "5136113e230d1d61af8bb06ea42ce362117a74cd6daa806d3ec00b925844010e",
+      "testsPassed": 19,
+      "testsSkipped": 29,
+      "limitation": "PLAYWRIGHT_MODULE was not configured; rendered browser cases were not executed. Static and synthetic review-host checks passed."
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "auth-context-tooling.log",
+      "logSha256": "d3d2bc622217437a68d7875b48bb3426191deee8851832586cbbbd43cbf80e8c",
+      "testsPassed": 45
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "auth-context-pwce-process.log",
+      "logSha256": "fb61fcca88046002a200995f6649cf387819c54864f024775b2cffff503d0604"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "auth-context-private.log",
+      "logSha256": "323635e048e0d5c64f5d2e0a51bd4dd02be6641ad46763111355cf79841259b5"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "auth-context-workspace.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S069",
+      "result": "fail",
+      "log": "auth-context-preflight.log",
+      "logSha256": "6df2c4989b417bbb5f82782f244e7f9021eebfb3a8ee71a46cfcd52c1d1c28b7"
+    }
+  ],
+  "regressionCounts": {
+    "sourceTestsPassed": 601,
+    "newSourceTests": 8,
+    "focusedTestsPassed": 16,
+    "toolingTestsPassed": 45,
+    "browserSurfaceTestsPassed": 19,
+    "renderedBrowserTestsSkipped": 29,
+    "separateProcessContextChecksPassed": 19,
+    "separateProcessRuntimeChecksPassed": 7
+  },
+  "qualificationStatus": {
+    "currentS062": "stale effective inputs",
+    "selectionPreserved": "implementation/evidence/LS-S062-current-qualification.json",
+    "action": "Refresh broad current-source qualification before claiming full S062/S069 certification. Continue independent implementation; do not replace historical receipts or claim this correction refreshes them."
+  },
+  "exclusions": [
+    "The public HTTP path already derives context from its authenticated cookie. These tests demonstrate a server-internal context-binding correction, not a demonstrated remote HTTP exploit.",
+    "Canonical request/list/approve/deny/cancel/revoke API integration, trusted host endpoint/environment and invocation scope, authentication/audit artifact custody, UI integration and final canonical dispatch remain outstanding.",
+    "PWCE snapshot/precondition binding, scoped approval transport, joint action scenarios and remaining S083/S084 development/qualification are not completed by this change.",
+    "No saved service restart, configuration change, deployment, personal-data import, training, live effect, model/provider change, selected-provider rerun or new Human acceptance. Approved schema bytes, historical qualification receipts and model-quality observations remain unchanged."
+  ],
+  "environmentRetry": {
+    "initialBrowserCommand": "pnpm test:browser-surface",
+    "initialLog": "auth-context-browser.log",
+    "initialLogSha256": "5387ace8e9687d63a636bc7594906d51f007b4c016012c99f8687bf19dae612f",
+    "reason": "Sandbox disallowed 127.0.0.1 listeners. Repeated the authorized synthetic suite with loopback access; final result passed with 29 rendered cases skipped."
+  },
+  "nextAction": "Continue canonical grant administration integration under LS-S040-S045: exact owned list/get, authenticated proof and audit custody, host-owned endpoint/environment and validated invocation scope, canonical API/UI and final dispatch. Refresh broad current-source qualifications before acceptance; continue independent PWCE and S083/S084 work."
+}
