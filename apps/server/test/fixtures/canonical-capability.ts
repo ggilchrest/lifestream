@@ -80,4 +80,3 @@ export async function setup(t: { after(callback: () => unknown): void }, configu
   };
 }
 export const prepared = async (f: Awaited<ReturnType<typeof setup>>, body = f.body()) => { const result = await f.send(f.path, body); assert.equal(result.status, 201, JSON.stringify(result.body)); return result.body.preparation; };
-
