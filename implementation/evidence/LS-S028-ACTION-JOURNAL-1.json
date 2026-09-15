@@ -1,0 +1,171 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-ACTION-JOURNAL-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "5d31a0860260a78c26a294817807ecbff880c2a1",
+  "specificationRevision": "c7d9943ada8522cf45bb7334e741ab13a2202b12",
+  "producerRevision": "33fd48cea56e5352211db0b948fb760c13db8c27",
+  "recordedAt": "2026-09-15T21:56:32.060488Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/authority/pwce-action-journal.ts",
+        "sha256": "6a7918d29a802ba697d3db3703fd2fffd8d3ee7ea0c7d81c7eb196137fc78b6c"
+      },
+      {
+        "path": "apps/server/test/pwce-action-journal.test.ts",
+        "sha256": "4cc97066c4797c95f2c4c4be082099b7100bff1e073c935a43388e03460b1b76"
+      },
+      {
+        "path": "packages/storage-sqlite/src/index.ts",
+        "sha256": "6b7e2c7cec546f2b6a7315a6a39fe22037dc71ae40a0aaec8b81524a936ed5bd"
+      },
+      {
+        "path": "scripts/check-pwce-dispatch-process.mjs",
+        "sha256": "fc9eb3cf351e84fe347c012b7853c29cd76f41e26499766464aca4550943753a"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "a2d2fa4321f725081fd755344a19a8f0ad2687627c0ba655c39536eb29fc42a8"
+      }
+    ]
+  },
+  "claim": "A separately provisioned PWCE action journal preserves original admission intent, invocation claims and outcomes across ordinary application database restoration. Current safety identity checks fence missing/replaced journal files; FULL SQLite write durability and unique claims precede action I/O. Five actual synthetic application restores recover existing producer results without repeating action sends.",
+  "results": {
+    "applicationTests": 837,
+    "newJournalTests": 14,
+    "focusedStorageTests": 26,
+    "workspaceTests": 43,
+    "joinedDispatchChecks": 46,
+    "joinedContextChecks": 26,
+    "applicationRestoresInJoinedDispatch": 5,
+    "syntheticTargetCallsInJoinedDispatch": 4,
+    "preservedDirtyArtifacts": 6
+  },
+  "earlierResults": "Initial type checking reported constructor definite-assignment errors, corrected by an explicit throwing catch. The first focused suite passed 24 of 25: the new post-commit fault test incorrectly used an input getter, which the existing bounded JSON guard rejected before the fault occurred. The test now injects file loss after a real committed transaction. An additional active WAL/shared-memory loss regression was added. Final focused storage suite passed 26 of 26 and full application suite passed 837 of 837. All initial logs are preserved.",
+  "exclusions": [
+    "Only ordinary application restore with a retained current separate safety journal is covered. Coordinated safety-state rollback, destroyed-journal recovery and administrator storage edits are not certified.",
+    "Host action preparation, confirmation, dispatch/recovery configuration and provisioning remain to be connected; the saved host does not use this component yet.",
+    "External grant representation and lost foreign authority restoration remain outstanding.",
+    "No saved service/configuration change, deployment, physical effects, personal import, training, selected-provider qualification, SYNPRJ_Q7M4 trial or new Human acceptance."
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-action-journal/2026-09-15T215632Z",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-action-journal-tests.log",
+      "sha256": "fafe8f9be20b182e8059c9b9e79c6f12ede0dd74cc3da05a19e3d25ac1c40779"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/pwce-action-journal.test.ts apps/server/test/pwce-admission-custody.test.ts apps/server/test/pwce-invocation-custody.test.ts",
+      "result": "pass",
+      "log": "ls-action-journal-focused-final.log",
+      "sha256": "d9ad60d1ad35184a712e42722a4285b7084513fed1125048958d775065a083aa"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-action-journal-workspace-tests.log",
+      "sha256": "b03c312351484c17239e7ef696cda4ce21b91f198f742450158fd1517b405be0"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-action-journal-typecheck-final.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-action-journal-build-final.log",
+      "sha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-action-journal-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-action-journal-private-validate.log",
+      "sha256": "a01f8f44295aa19aafa294ded03407036aab25b0e5aec710b8c14ccb91ba584a"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "log": "ls-action-journal-joined-final.log",
+      "sha256": "6373a0bbc881791c558d29d8c6b4c50db5c91d05e85b179eb8617c130c283e13"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "ls-action-journal-context.log",
+      "sha256": "fcbb6d7d72ac03acb2fe1597ff7e35b2d21a4f70c00ddaf8f2f8c626a6fed2c2"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "evidence": "Observed command output."
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "evidence": "Observed command output."
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "Observed command output; all five published pins and two public schema fixtures remain byte-identical."
+    },
+    {
+      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "Observed command output; all five published pins and two public schema fixtures remain byte-identical."
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "Observed command output; all five published pins and two public schema fixtures remain byte-identical."
+    },
+    {
+      "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "Observed command output; all five published pins and two public schema fixtures remain byte-identical."
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-recovery-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "Observed command output; all five published pins and two public schema fixtures remain byte-identical."
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-action-journal-preflight.log",
+      "sha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "earlierLogs": [
+    {
+      "log": "ls-action-journal-build.log",
+      "sha256": "e2a22759c1ed542f258a938bec41d3f010f37edf0df5b374d732f57fc8c7db71"
+    },
+    {
+      "log": "ls-action-journal-focused.log",
+      "sha256": "88ada0a34e7c95d0df0ffacc71f64012e28dc8e7cd9f9f73c25bdc56011a1b11"
+    },
+    {
+      "log": "ls-action-journal-joined.log",
+      "sha256": "0537fda3a16b0af8e11965467ee0fb2b7dc4dc5885c6ec5b273a53a3f0e60702"
+    },
+    {
+      "log": "ls-action-journal-typecheck.log",
+      "sha256": "a998a0e51cf47b3aa284ca3158a29b85d3924d3ea23b37d9f9e5767643616801"
+    }
+  ]
+}

@@ -4,12 +4,11 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { createInterface } from 'node:readline';
 import { resolve, join } from 'node:path';
-import {mkdtempSync,rmSync} from 'node:fs';
+import {copyFileSync,mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {Database} from '../packages/storage-sqlite/src/database.ts';
-import {SqlitePwceAdmissionCustody} from '../apps/server/src/authority/pwce-admission-custody.ts';
+import {PwceActionJournal} from '../apps/server/src/authority/pwce-action-journal.ts';
 import {PwceInvocation} from '../packages/providers-pwce/src/invocation.ts';
-import {SqlitePwceInvocationCustody} from '../apps/server/src/authority/pwce-invocation-custody.ts';
 import {PwceAuthorityAdmission} from '../packages/providers-pwce/src/authority-admission.ts';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
@@ -30,9 +29,18 @@ host.stderr.on('data',chunk=>{stderr+=String(chunk);if(stderr.length>8192)host.k
 async function readLine(){let timer;try { const item=await Promise.race([iterator.next(),exit.then(()=>{throw new Error('synthetic producer exited');}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('synthetic producer response deadline exceeded')),10000);})]);assert.equal(item.done,false);assert.ok(item.value.length<4096);return JSON.parse(item.value); }finally{clearTimeout(timer);}}
 async function stats(){host.stdin.write('stats\n');const result=await readLine();assert.equal(result.fixtureStats,true);return result.calls;}
 const ajv=new Ajv2020({strict:false});addFormats(ajv);const validateRequest=ajv.compile(PWCE_DISPATCH_REQUEST_SCHEMA),validateResponse=ajv.compile(PWCE_DISPATCH_RESPONSE_SCHEMA);
-let calls=0, wireCalls=0, catalogChecks=0, authorityChecks=0, admissionChecks=0, invocationChecks=0, recoveryChecks=0, recoveryQueries=0, invalidationChecks=0;
+let calls=0, wireCalls=0, catalogChecks=0, authorityChecks=0, admissionChecks=0, invocationChecks=0, recoveryChecks=0, recoveryQueries=0, invalidationChecks=0, journalChecks=0;
 const custodyDir=mkdtempSync(join(tmpdir(),'pwce-joined-admission-')),custodyPath=join(custodyDir,'state.sqlite');
 let database=new Database({path:custodyPath});database.migrate();
+const backupPath=join(custodyDir,'before-actions.sqlite'),journalOptions={stateDirectory:custodyDir,deploymentId:randomUUID()};
+database.exec('CREATE TABLE synthetic_restore_marker (id INTEGER)');await database.backup(backupPath);
+let journal=new PwceActionJournal({...journalOptions,create:true});
+function restoreApplication(){
+ database.exec('INSERT INTO synthetic_restore_marker VALUES (1)');database.close();copyFileSync(backupPath,custodyPath);
+ database=new Database({path:custodyPath});database.migrate();
+ for(const table of ['synthetic_restore_marker','pwce_admission_custody','pwce_invocation_custody'])assert.equal(database.connection.prepare(`SELECT count(*) AS n FROM ${table}`).get().n,0);
+ journal.close();journal=new PwceActionJournal(journalOptions);journalChecks++;
+}
 try {
  const ready=await readLine();assert.equal(ready.fixture,true);assert.equal(ready.liveEffects,false);assert.equal(ready.scenario,'trusted-dispatch');
  const url=new URL(ready.url);assert.equal(url.protocol,'http:');assert.equal(url.hostname,'127.0.0.1');
@@ -89,39 +97,39 @@ try {
 
  const dispatchRequest=(request,decision)=>({...request,operation:'AuthorityProvider.authorizeDispatch',requestId:randomUUID(),idempotencyKey:randomUUID(),payload:{...request.payload,expectedGrantRevision:catalog.retained(request.payload.snapshotId,request.scope).producerRevision,requiredProviderDisposition:pwceGovernedDisposition(decision)}});
  let hostApproved=true;
- const admission=()=>new PwceAuthorityAdmission({providerRef:'pwce.synthetic',client:core,dispatcher:client,catalog,preview,custody:new SqlitePwceAdmissionCustody(database),authorize:async()=>hostApproved});
+ const admission=()=>new PwceAuthorityAdmission({providerRef:'pwce.synthetic',client:core,dispatcher:client,catalog,preview,custody:journal.admissions,authorize:async()=>hostApproved});
  const finalRequest=dispatchRequest(allowedRequest,allowed.outcome.payload),final=await admission().authorizeDispatch(finalRequest,callContext);
  assert.ok(contracts.validate('https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityDispatchResult',final).valid);assert.equal(final.outcome.payload.disposition,'authorized');assert.equal(final.outcome.payload.kind,'dispatch');assert.ok(final.outcome.payload.admittedAt);assert.equal(await stats(),0);admissionChecks++;
  const finalEvidence=await admission().readEvidence(final.outcome.payload.evidenceRef,finalRequest,callContext),proof=JSON.parse(new TextDecoder().decode(finalEvidence));
  assert.equal(createHash('sha256').update(finalEvidence).digest('hex'),final.outcome.payload.evidenceRef.sha256);assert.equal(proof.admittedAt,final.outcome.payload.admittedAt);assert.equal(proof.kind,'pwce.action.admission');assert.equal(proof.capabilitySnapshot.snapshotRef,snapshot.snapshotRef);admissionChecks++;
- database.close();database=new Database({path:custodyPath});database.migrate();
+ restoreApplication();
  const beforeReplay=wireCalls,replayed=await admission().authorizeDispatch({...finalRequest,requestId:randomUUID()},callContext);assert.deepEqual(replayed.outcome.payload,final.outcome.payload);assert.equal(wireCalls,beforeReplay);admissionChecks++;
  hostApproved=false;await assert.rejects(admission().authorizeDispatch(finalRequest,callContext),{code:'host_admission_required'});hostApproved=true;assert.equal(wireCalls,beforeReplay);admissionChecks++;
  const lostPreviewRequest=previewRequest(),lostPreview=await preview.evaluate(lostPreviewRequest,callContext),lostRequest=dispatchRequest(lostPreviewRequest,lostPreview.outcome.payload);
  discardReply=true;await assert.rejects(admission().authorizeDispatch(lostRequest,callContext),{code:'unavailable'});const afterLost=wireCalls;
- database.close();database=new Database({path:custodyPath});database.migrate();
+ restoreApplication();
  const recoveredAdmissions=await Promise.all([admission().authorizeDispatch({...lostRequest,requestId:randomUUID()},callContext),admission().authorizeDispatch({...lostRequest,requestId:randomUUID()},callContext)]);assert.equal(recoveredAdmissions[0].outcome.payload.disposition,'authorized');assert.deepEqual(recoveredAdmissions[0].outcome.payload,recoveredAdmissions[1].outcome.payload);assert.equal(wireCalls,afterLost);assert.equal(await stats(),0);admissionChecks++;recoveryChecks++;
- database.close();database=new Database({path:custodyPath});database.migrate();hostApproved=false;
+ restoreApplication();hostApproved=false;
  const originalRecovery=await admission().recoverAdmission({...lostRequest,requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString()},callContext);assert.deepEqual(originalRecovery.outcome.decision,recoveredAdmissions[0].outcome.payload);assert.equal(createHash('sha256').update(originalRecovery.outcome.evidenceJson).digest('hex'),originalRecovery.outcome.decision.evidenceRef.sha256);assert.equal(Buffer.byteLength(originalRecovery.outcome.evidenceJson),originalRecovery.outcome.decision.evidenceRef.byteLength);
  await assert.rejects(admission().authorizeDispatch({...lostRequest,requestId:randomUUID()},callContext),{code:'host_admission_required'});hostApproved=true;assert.equal(wireCalls,afterLost);recoveryChecks++;
  const missingPreviewRequest=previewRequest(),missingPreview=await preview.evaluate(missingPreviewRequest,callContext),missingRequest=dispatchRequest(missingPreviewRequest,missingPreview.outcome.payload);
  dropBeforeSend=true;await assert.rejects(admission().authorizeDispatch(missingRequest,callContext),{code:'unavailable'});const afterMissing=wireCalls;
- await assert.rejects(admission().authorizeDispatch({...missingRequest,requestId:randomUUID()},callContext),{code:'admission_outcome_unknown'});assert.equal(wireCalls,afterMissing);assert.equal(new SqlitePwceAdmissionCustody(database).read(missingRequest.idempotencyKey).outcome,null);assert.equal(await stats(),0);recoveryChecks++;
+ await assert.rejects(admission().authorizeDispatch({...missingRequest,requestId:randomUUID()},callContext),{code:'admission_outcome_unknown'});assert.equal(wireCalls,afterMissing);assert.equal(journal.admissions.read(missingRequest.idempotencyKey).outcome,null);assert.equal(await stats(),0);recoveryChecks++;
  const beforeForeign=recoveryQueries;await assert.rejects(admission().recoverAdmission({...lostRequest,scope:{...lostRequest.scope,sessionId:randomUUID()},requestId:randomUUID()},callContext),{code:'admission_conflict'});assert.equal(recoveryQueries,beforeForeign);recoveryChecks++;
  const expiringPreviewRequest=previewRequest(),expiringPreview=await preview.evaluate(expiringPreviewRequest,callContext),expiringRequest={...dispatchRequest(expiringPreviewRequest,expiringPreview.outcome.payload),deadlineAt:new Date(Date.now()+1500).toISOString()};
  discardReply=true;await assert.rejects(admission().authorizeDispatch(expiringRequest,callContext),{code:'unavailable'});const afterExpiring=wireCalls;await new Promise(resolve=>setTimeout(resolve,1600));
  const freshExpiryQuery={...expiringRequest,requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString()},expiredRecovery=await admission().recoverAdmission(freshExpiryQuery,callContext);assert.ok(Date.parse(expiredRecovery.outcome.decision.expiresAt)<Date.now());assert.equal(JSON.parse(expiredRecovery.outcome.evidenceJson).deadlineAt,expiringRequest.deadlineAt);await assert.rejects(admission().authorizeDispatch(freshExpiryQuery,callContext),{code:'admission_expired'});assert.equal(wireCalls,afterExpiring);assert.equal(await stats(),0);recoveryChecks++;
 
 
- const invocation=()=>new PwceInvocation({providerRef:'pwce.synthetic',client:core,dispatcher:client,admission:admission(),custody:new SqlitePwceInvocationCustody(database)});
+ const invocation=()=>new PwceInvocation({providerRef:'pwce.synthetic',client:core,dispatcher:client,admission:admission(),custody:journal.invocations});
  const invocationRequest=(request,decision)=>({...request,operation:'CapabilityProvider.invoke',requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString(),payload:{invocationId:request.payload.invocationId,capabilityId:PWCE_LIGHT_CAPABILITY_ID,capabilityVersion:'1.0.0',snapshotId:request.payload.snapshotId,snapshotRevision:request.payload.snapshotRevision,operationScope:request.payload.scope,input:preparedActions.get(request.payload.invocationId).input,inputSchema:EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0].inputSchemaArtifact,inputDigest:request.payload.inputDigest,dispatchReceipt:decision.evidenceRef}});
  const queryFor=request=>({...request,operation:'CapabilityProvider.getInvocation',requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString(),payload:{invocationId:request.payload.invocationId}});
  const invocationInput=invocationRequest(finalRequest,final.outcome.payload),effect=await invocation().invoke(invocationInput,callContext);assert.ok(contracts.validate('https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/CapabilityInvocationResult',effect).valid);assert.equal(effect.outcome.payload.type,'succeeded');assert.equal(await stats(),1);invocationChecks++;
  const invocationEvidence=await invocation().readEvidence(effect.outcome.payload.evidenceRef,queryFor(invocationInput),callContext);assert.equal(createHash('sha256').update(invocationEvidence).digest('hex'),effect.outcome.payload.evidenceRef.sha256);assert.equal(JSON.parse(new TextDecoder().decode(invocationEvidence)).actionRef,proof.actionRef);invocationChecks++;
- const originalInvokes=wireCalls;database.close();database=new Database({path:custodyPath});database.migrate();const repeatedEffect=await invocation().invoke({...invocationInput,requestId:randomUUID()},callContext);assert.deepEqual(repeatedEffect.outcome.payload,effect.outcome.payload);assert.equal(wireCalls,originalInvokes);assert.equal(await stats(),1);invocationChecks++;
+ const originalInvokes=wireCalls;restoreApplication();const repeatedEffect=await invocation().invoke({...invocationInput,requestId:randomUUID()},callContext);assert.deepEqual(repeatedEffect.outcome.payload,effect.outcome.payload);assert.equal(wireCalls,originalInvokes);assert.equal(await stats(),1);invocationChecks++;
  const secondPreviewRequest=previewRequest(),secondPreview=await preview.evaluate(secondPreviewRequest,callContext),secondFinalRequest=dispatchRequest(secondPreviewRequest,secondPreview.outcome.payload),secondFinal=await admission().authorizeDispatch(secondFinalRequest,callContext),secondInvocation=invocationRequest(secondFinalRequest,secondFinal.outcome.payload);
  discardReply=true;await assert.rejects(invocation().invoke(secondInvocation,callContext),{code:'unavailable'});assert.equal(await stats(),2);invocationChecks++;
- const afterMissingInvocation=wireCalls;database.close();database=new Database({path:custodyPath});database.migrate();const recoveredInvocation=await invocation().getInvocation(queryFor(secondInvocation),callContext);assert.equal(recoveredInvocation.outcome.payload.type,'succeeded');assert.equal(wireCalls,afterMissingInvocation);assert.equal(await stats(),2);invocationChecks++;
+ const afterMissingInvocation=wireCalls;restoreApplication();const recoveredInvocation=await invocation().getInvocation(queryFor(secondInvocation),callContext);assert.equal(recoveredInvocation.outcome.payload.type,'succeeded');assert.equal(wireCalls,afterMissingInvocation);assert.equal(await stats(),2);invocationChecks++;
  const foreignQuery=queryFor(secondInvocation);foreignQuery.scope={...foreignQuery.scope,sessionId:randomUUID()};await assert.rejects(invocation().getInvocation(foreignQuery,callContext),{code:'invocation_unavailable'});assert.equal(wireCalls,afterMissingInvocation);invocationChecks++;
  const baselineCalls=await stats();
 
@@ -167,9 +175,9 @@ try {
  assert.equal(denied.outcome.payload.disposition,'denied');assert.equal(denied.outcome.payload.admittedAt,null);assert.equal(await stats(),baselineCalls+2);authorityChecks++;
 
  await assert.rejects(client.invoke(authority.authorityContextRef,{...pendingInput,actionRef:pending.actionRef}),{code:'authority_context_invalidated'});assert.equal(await stats(),baselineCalls+2);calls++;
- console.log(JSON.stringify({checks:calls,catalogChecks,authorityChecks,admissionChecks,invocationChecks,recoveryChecks,recoveryQueries,invalidationChecks,wireCalls,targetCalls:baselineCalls+2,fixtures:true,scope:'separate-process canonical catalog, authority, invocation and pending admission recovery; authenticated canonical capability/authority streams invalidate retained state on revocation; no configured runtime activation, real effects or Human acceptance'}));
+ console.log(JSON.stringify({checks:calls,catalogChecks,authorityChecks,admissionChecks,invocationChecks,recoveryChecks,recoveryQueries,invalidationChecks,journalChecks,wireCalls,targetCalls:baselineCalls+2,fixtures:true,scope:'separate-process canonical catalog, authority, invocation and pending admission recovery across restored application databases with retained safety journal; authenticated canonical capability/authority streams invalidate retained state on revocation; no configured runtime activation, real effects or Human acceptance'}));
 }finally{
- database.close();rmSync(custodyDir,{recursive:true,force:true});
+ journal.close();database.close();rmSync(custodyDir,{recursive:true,force:true});
  host.stdin.end('stop\n');let timer;
  try{await Promise.race([exit,new Promise(resolve=>{timer=setTimeout(()=>{host.kill('SIGTERM');resolve();},3000);})]);}finally{clearTimeout(timer);lines.close();}
  assert.ok(!stderr.includes(token)&&!stderr.includes(dispatcherToken),'synthetic credentials must not appear in producer diagnostics');
