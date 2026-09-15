@@ -41,20 +41,31 @@ export class PwceTrustedDispatchClient {
     const scope = new PwceCallScope(this.timeoutMs, signal);
     try { await this.negotiateWithin(scope); } finally { scope.close(); }
   }
-  authorizeDispatch(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<Record<string, unknown>> {
-    return this.request('authority.authorizeDispatch', authorityContextRef, input, signal);
+  authorizeDispatch(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal, isCurrent?: () => boolean): Promise<Record<string, unknown>> {
+    return this.request('authority.authorizeDispatch', authorityContextRef, input, signal, isCurrent);
   }
-  invoke(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<Record<string, unknown>> {
-    return this.request('capabilities.invoke', authorityContextRef, input, signal);
+  invoke(authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal, isCurrent?: () => boolean): Promise<Record<string, unknown>> {
+    return this.request('capabilities.invoke', authorityContextRef, input, signal, isCurrent);
   }
-  private async request(operation: 'authority.authorizeDispatch' | 'capabilities.invoke', authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal): Promise<Record<string, unknown>> {
+  private async request(operation: 'authority.authorizeDispatch' | 'capabilities.invoke', authorityContextRef: string, input: Record<string, unknown>, signal?: AbortSignal, isCurrent?: () => boolean): Promise<Record<string, unknown>> {
     if (typeof authorityContextRef !== 'string' || !authorityContextRef || authorityContextRef.length > 128 || !object(input) ||
+      isCurrent!==undefined&&typeof isCurrent!=='function' ||
       ['operation','authorityContextRef','token','dispatcherToken','profileId','profileVersion','dispatchProfileId','dispatchProfileVersion'].some(key => Object.hasOwn(input,key))) throw invalid();
     // Freeze the wire bytes before the first await. No automatic retry or fallback.
     const request = { ...structuredClone(input), operation, authorityContextRef, profileId: 'pwce-agent-gateway.v1', profileVersion: '1.0.0', dispatchProfileId: bundle.dispatchProfileId, dispatchProfileVersion: bundle.dispatchProfileVersion };
     const encoded = encodeRequest(request), scope = new PwceCallScope(this.timeoutMs, signal);
+    // Host-only synchronous fence, kept out of the wire request. A promise or
+    // thrown callback cannot accidentally authorize a send.
+    const checkCurrent=()=>{
+      if(!isCurrent)return;
+      let allowed:unknown;try{allowed=isCurrent();}catch{throw new PwceTransportError('scope_changed','PWCE dispatch host scope changed');}
+      if(allowed!==true){
+        if(allowed instanceof Promise)void allowed.catch(()=>undefined);
+        throw new PwceTransportError('scope_changed','PWCE dispatch host scope changed');
+      }
+    };
     try {
-      await this.negotiateWithin(scope);
+      checkCurrent();await this.negotiateWithin(scope);scope.check();checkCurrent();
       const response = await this.json('/gateway/v1/dispatch', scope, encoded);
       for (const key of ['profileId','profileVersion','dispatchProfileId','dispatchProfileVersion','requestId','correlationId','worldRef','executionEnvironmentRef'] as const) {
         if (response[key] !== request[key as keyof typeof request] || response[key] === undefined) throw new PwceTransportError('malformed_response', 'PWCE trusted dispatch response does not match the original request');

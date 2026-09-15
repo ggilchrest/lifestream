@@ -83,3 +83,23 @@ test('caller cancellation and oversized input stop before sending the action', a
 test('dispatcher credential must be distinct, bounded and safe for a header', () => {
   for(const secret of [token,'short','x'.repeat(513),'x'.repeat(32)+'\n']) assert.throws(()=>new PwceTrustedDispatchClient({baseUrl:'http://synthetic',token,dispatcherToken:secret}),{code:'invalid_configuration'});
 });
+
+
+test('host scope withdrawal during transport negotiation stops both dispatch operations before POST',async()=>{
+ for(const operation of ['authorizeDispatch','invoke']){
+  let current=true;const f=fixture({fetch:async path=>{if(path.endsWith('/dispatch/bundle'))current=false;return undefined;}});
+  await assert.rejects(f.client[operation]('authority.synthetic',input(),undefined,()=>current),{code:'scope_changed'});
+  assert.ok(f.sent.some(x=>x.path.endsWith('/dispatch/bundle')));assert.equal(f.sent.some(x=>x.path.endsWith('/dispatch')),false);
+ }
+});
+
+test('host send fence rejects nonboolean, asynchronous and throwing answers without leaking prose',async()=>{
+ for(const guard of [()=>false,()=>undefined,()=>Promise.resolve(true),()=>Promise.reject(new Error('synthetic secret')),()=>{throw new Error('synthetic secret');}]){
+  const f=fixture();await assert.rejects(f.client.invoke('authority.synthetic',input(),undefined,guard),error=>error.code==='scope_changed'&&!error.message.includes('synthetic secret'));assert.equal(f.sent.length,0);
+ }
+});
+
+test('a valid host send fence is checked twice and never serialized',async()=>{
+ let calls=0;const f=fixture();await f.client.invoke('authority.synthetic',input(),undefined,()=>{calls++;return true;});
+ assert.equal(calls,2);const sent=f.sent.find(x=>x.path.endsWith('/dispatch'));assert.ok(sent);assert.ok(!String(sent.init.body).includes('isCurrent'));
+});

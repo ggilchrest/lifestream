@@ -96,11 +96,11 @@ export class PwceInvocation {
       this.current(request,context,call);const prior=this.stored(request.payload.invocationId);
       if(prior){if(prior.requestDigest!==pwceInvocationDigest(request))return fail('invocation_conflict');const status=await call.wait(this.getInvocation(this.statusRequest(request),{...context,signal:call.signal}));this.current(request,context,call);if(status.outcome.status!=='succeeded')return fail('invocation_unavailable');return this.envelope(request,status.outcome.payload) as M.CapabilityInvocationResult;}
       const original=await call.wait(this.options.admission.resolveInvocation(request,{...context,signal:call.signal},'dispatch'));this.current(request,context,call);
-      await call.wait(this.options.client.invocationContracts(call.signal));this.current(request,context,call);
+      await call.wait(this.options.client.invocationContracts(call.signal));this.current(request,context,call);original.assertCurrent();
       if(!this.options.custody.claim(structuredClone(request)))return fail('invocation_outcome_unknown');
-      this.current(request,context,call);const {binding}=original.record.intent.catalog,prepared=original.record.intent.prepared;
+      this.current(request,context,call);original.assertCurrent();const {binding}=original.record.intent.catalog,prepared=original.record.intent.prepared;
       const wire={...binding.identity,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,requestId:request.requestId,correlationId:request.correlationId,deadline:original.proof.deadlineAt,snapshotRef:original.record.intent.catalog.producerSnapshotRef,capabilityRef:descriptor.capabilityRef,capabilityVersion:descriptor.schemaVersion,capabilityOperation:descriptor.operation,...prepared.input,idempotencyKey:original.proof.idempotencyKey,approvalRequired:prepared.approval.required,approvalRef:prepared.approval.reference,actionRef:original.proof.actionRef};
-      const raw=await call.wait(this.options.dispatcher.invoke(binding.authorityContextRef,wire,call.signal));this.current(request,context,call);
+      const raw=await call.wait(this.options.dispatcher.invoke(binding.authorityContextRef,wire,call.signal,()=>{this.current(request,context,call);original.assertCurrent();return true;}));this.current(request,context,call);
       const proof=await this.proof(raw.invocationEvidence,original,call);
       if(raw.actionRef!==proof.actionRef||raw.status!==(proof.status==='succeeded'?'completed':proof.status)||proof.result!==null&&!isDeepStrictEqual(raw.result,proof.result))return fail('invocation_binding_mismatch');
       await call.wait(this.options.admission.resolveInvocation(request,{...context,signal:call.signal},'read'));this.current(request,context,call);
@@ -113,7 +113,7 @@ export class PwceInvocation {
     try{
       this.current(request,context,call);const stored=this.stored(request.payload.invocationId);if(!stored)return fail('invocation_unavailable');
       const originalRequest=this.original(stored,request),original=await call.wait(this.options.admission.resolveInvocation(originalRequest,{...context,signal:call.signal},'read'));this.current(request,context,call);
-      await call.wait(this.options.client.invocationContracts(call.signal));this.current(request,context,call);
+      await call.wait(this.options.client.invocationContracts(call.signal));this.current(request,context,call);original.assertCurrent();
       const {binding}=original.record.intent.catalog,raw=await call.wait(this.options.client.request({...binding.identity,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,authorityContextRef:binding.authorityContextRef,requestId:request.requestId,correlationId:request.correlationId,deadline:request.deadlineAt,operation:'capabilities.getInvocation',actionRef:original.proof.actionRef},call.signal));this.current(request,context,call);
       for(const [key,value] of Object.entries({profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',requestId:request.requestId,correlationId:request.correlationId,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef}))if(raw[key]!==value)return fail('invocation_binding_mismatch');
       if(raw.status!=='known'||raw.invocationEvidenceUnavailable!==undefined)return fail('invocation_evidence_unavailable');

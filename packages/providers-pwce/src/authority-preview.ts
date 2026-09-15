@@ -130,6 +130,16 @@ export class PwceAuthorityPreview {
       return new Uint8Array(record.bytes);
     } finally { call.close(); }
   }
+  /** Last synchronous fence for a previously resolved preview; no new authority. */
+  assertDispatchCurrent(input: M.AuthorityDispatchRequest, prepared: PwcePreparedAction, context: ProviderCallContext): void {
+    if (!boundedJson(input) || !validator.validate(base+'AuthorityDispatchRequest',input).valid) return fail('invalid_request');
+    const request=structuredClone(input), required=request.payload.requiredProviderDisposition;
+    this.prune();const record=this.decisions.get(required.evidenceRef.reference);
+    const {expectedGrantRevision:_revision,requiredProviderDisposition:_disposition,...payload}=request.payload;
+    if(!record || !isDeepStrictEqual(pwceGovernedDisposition(record.decision),required) || required.disposition!=='authorized' || !isDeepStrictEqual(record.prepared,prepared) || !isDeepStrictEqual(record.request.scope,request.scope) || !isDeepStrictEqual(record.request.payload,payload) || record.request.executionMode!==request.executionMode || record.request.correlationId!==request.correlationId) return fail('preview_unavailable');
+    const evaluation: M.AuthorityRequest={...request,operation:'AuthorityProvider.evaluate',payload}, call=this.call(evaluation,context);
+    try { this.current(evaluation,record.prepared,context,call); } finally { call.close(); }
+  }
   /** Resolve only this adapter's original, currently authorized preview. */
   async resolveDispatch(input: M.AuthorityDispatchRequest, context: ProviderCallContext): Promise<PwcePreparedAction> {
     if (!boundedJson(input) || !validator.validate(base+'AuthorityDispatchRequest',input).valid) return fail('invalid_request');

@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "f364079046fda504c78b42f976b96577296254cb",
+  "currentRevision": "2923ea6e775176c40547f965408f107cc2453cc9",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -213,100 +213,101 @@
     "implementation/evidence/LS-S028-CATALOG-INVALIDATION-1.json",
     "packages/providers-pwce/src/invalidation-streams.ts",
     "packages/providers-pwce/test/invalidation-streams.test.ts",
-    "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+    "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json",
+    "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
   ],
   "changedFiles": [
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json",
-    "packages/providers-pwce/src/capability-catalog.ts",
-    "packages/providers-pwce/src/client.ts",
-    "packages/providers-pwce/src/index.ts",
-    "packages/providers-pwce/src/invalidation-streams.ts",
-    "packages/providers-pwce/src/transport.ts",
-    "packages/providers-pwce/test/invalidation-streams.test.ts",
-    "scripts/check-pwce-dispatch-process.mjs"
+    "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json",
+    "packages/providers-pwce/src/authority-admission.ts",
+    "packages/providers-pwce/src/authority-preview.ts",
+    "packages/providers-pwce/src/dispatch.ts",
+    "packages/providers-pwce/src/invocation.ts",
+    "packages/providers-pwce/test/authority-admission.test.ts",
+    "packages/providers-pwce/test/dispatch.test.ts",
+    "packages/providers-pwce/test/invocation.test.ts"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
     },
     {
-      "command": "node --test --experimental-strip-types packages/providers-pwce/test/invalidation-streams.test.ts",
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/authority-admission.test.ts packages/providers-pwce/test/invocation.test.ts packages/providers-pwce/test/authority-preview.test.ts packages/providers-pwce/test/dispatch.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
     },
     {
       "command": "node scripts/check-pwce-dispatch-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
     },
     {
       "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
-    },
-    {
-      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
-    },
-    {
-      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
-    },
-    {
-      "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
-    },
-    {
-      "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
-    },
-    {
-      "command": "node scripts/generate-pwce-admission-recovery-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
     },
     {
       "command": "node scripts/workspace.mjs preflight LS-S028",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-CANONICAL-INVALIDATIONS-1.json"
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+    },
+    {
+      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+    },
+    {
+      "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-recovery-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-DISPATCH-FENCES-1.json"
     }
   ],
   "decisions": [
@@ -322,8 +323,8 @@
     "2026-09-15: operator explicitly authorizes continued development and supersedes the previous implementation restriction; existing scoped push authorization continues."
   ],
   "blockers": [],
-  "nextAction": "Complete configured PWCE canonical host composition and lifecycle around catalog, preview, admission, invocation and invalidations. Preserve the external-grant schema gap; continue independent scope without standalone authority fallback.",
-  "updatedAt": "2026-09-15T20:54:12.186960Z",
+  "nextAction": "Continue configured PWCE canonical host composition and lifecycle around catalog, preview, admission, invocation and invalidations. Preserve the external-grant schema gap; no standalone authority fallback.",
+  "updatedAt": "2026-09-15T21:09:38.122866Z",
   "updatedBy": "Codex",
-  "notes": "Canonical PWCE invalidation component verified: 800 application tests (25 new stream tests), 43 workspace tests and 67 separate-process checks. Both canonical streams react to actual producer revocation, reject completion and remove retained catalog custody. All 128 sites are covered for both logical ports; replay, connection readiness, cursor identity, cancellation and bounded queues are tested. No saved host activation or complete external-grant query is claimed."
+  "notes": "Final PWCE send fences verified: 812 application tests (12 new regressions), 67 focused tests, 43 workspace tests and 67 separate-process checks. Seven initial regressions demonstrably failed against the previous implementation. Reserved or claimed intents remain immutable when the final send is prevented. Full host integration remains outstanding."
 }

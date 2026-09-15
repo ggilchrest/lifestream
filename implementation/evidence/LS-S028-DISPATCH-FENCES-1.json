@@ -1,0 +1,178 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-DISPATCH-FENCES-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "2923ea6e775176c40547f965408f107cc2453cc9",
+  "specificationRevision": "53a9d712beb5a4987ac68cf782c30a3270bdf279",
+  "producerRevision": "33fd48cea56e5352211db0b948fb760c13db8c27",
+  "recordedAt": "2026-09-15T21:09:38.122866Z",
+  "claim": "PWCE canonical admission and invocation recheck original catalog custody, preparation and authority expiry immediately before mutation, including after transport negotiation. Invalidated work cannot reach the action POST; original reserved or claimed intents remain preserved without resend.",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "a835a2a5b9582f29ccb1b5ecd405c779b048b61eecac41e66cdbd103af4c1dc0"
+      },
+      {
+        "path": "packages/providers-pwce/src/authority-admission.ts",
+        "sha256": "7878a8a4f6d1a2faa32c8e1e5111e9b4471617ac9460d74b6f5c26afaf725ef5"
+      },
+      {
+        "path": "packages/providers-pwce/src/authority-preview.ts",
+        "sha256": "6c9030df6b95063000151ac0e1e5c9a159978f062813f5310b4299c44d75ffec"
+      },
+      {
+        "path": "packages/providers-pwce/src/dispatch.ts",
+        "sha256": "a8ad0192078e3b9ee32962042c78e3448bd85911f54ee9adf74930abb339775a"
+      },
+      {
+        "path": "packages/providers-pwce/src/invocation.ts",
+        "sha256": "bcc0f8fbf7eeb40228dc47f426aff071a4ee6d16bee8fbb59a564d537aa2b28a"
+      },
+      {
+        "path": "packages/providers-pwce/test/authority-admission.test.ts",
+        "sha256": "0816a07b88ec0c06e36b1679c94d6aa4d5b88226766d02b32a60934168af4a13"
+      },
+      {
+        "path": "packages/providers-pwce/test/dispatch.test.ts",
+        "sha256": "14f87063851d01e72f2f0bb7fd70558c6be771fc86d56115d5928e581fcc43e4"
+      },
+      {
+        "path": "packages/providers-pwce/test/invocation.test.ts",
+        "sha256": "03c090027971e00a13be79bb88b784b74870cb4896d789abc3a68a266ff59b29"
+      }
+    ]
+  },
+  "results": {
+    "applicationTests": 812,
+    "newRegressionTests": 12,
+    "focusedTests": 67,
+    "joinedChecks": 67,
+    "syntheticTargetCalls": 4,
+    "preservedDirtyArtifacts": 6,
+    "workspaceTests": 43
+  },
+  "earlierResults": "The seven initial new regression cases all failed against the previous implementation. All now pass. Twelve new cases cover expiry during awaits, catalog/preparation/custody withdrawal, synchronous claim changes, and the final transport callback. Historical failed baseline output is preserved.",
+  "exclusions": [
+    "Full canonical PWCE server host composition and external-grant query representation remain outstanding.",
+    "No saved runtime or live configuration change, physical effects, deployment, personal import, training, model selection or new Human acceptance.",
+    "No SYNPRJ_Q7M4 trial was run; its prior telemetry remains unchanged.",
+    "No public producer wire contract or schema changed."
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-dispatch-fences/2026-09-15T210938Z",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-dispatch-fences-test.log",
+      "logSha256": "c9f35b1ac8a062ab0253ccfd71365bc8dde9e718dd0527acedf9c9ca5557ce80"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-dispatch-fences-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-dispatch-fences-build.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-dispatch-fences-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/authority-admission.test.ts packages/providers-pwce/test/invocation.test.ts packages/providers-pwce/test/authority-preview.test.ts packages/providers-pwce/test/dispatch.test.ts",
+      "result": "pass",
+      "log": "ls-dispatch-fences-focused-final.log",
+      "logSha256": "e34ad40806a89fe8b789f9e563192ba399a92baae22414ed14a31bcd3fe9a117"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "log": "ls-dispatch-fences-joined-dispatch.log",
+      "logSha256": "5edd913629861a952fa4451c348dd50010765fe19a809ac159dd03deaaf48fb4"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "ls-dispatch-fences-joined-context.log",
+      "logSha256": "df4ed5531f06fb1e05d413e024618c667fac277b4980cb03dfb0b0029218a799"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-dispatch-fences-spec.log",
+      "logSha256": "e461cdc00a2dc7ef3efa378bcef571b0d43a79dd30b5545d5d780af0dc759c1e"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-dispatch-fences-workspace-tests.log",
+      "logSha256": "ca713244b88664dc9abff5f93ae7782be7d221214d5705939ce598d57191a435"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "ls-dispatch-fences-workspace-check.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-dispatch-fences-preflight.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-dispatch-fences-pin-dispatch.log",
+      "logSha256": "7799cc7b7e6b5549e994e5cef2ccba3b115d973b57349f7bf933be0d14482b29"
+    },
+    {
+      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-dispatch-fences-pin-capability.log",
+      "logSha256": "12a961678e4187057f78756f2e2e50550c255bb75fc164a4ae54ed13eb545205"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-dispatch-fences-pin-admission.log",
+      "logSha256": "1ea6850d9e2e4905eaa564322be8ca06ee7101ccb057e81a16cd2d3576264fa2"
+    },
+    {
+      "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-dispatch-fences-pin-invocation.log",
+      "logSha256": "3fee32e6e63c209794993635f4e39e08b84ce0d830ec9048603c09846292b79b"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-recovery-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-dispatch-fences-pin-admission-recovery.log",
+      "logSha256": "975333cd9170f3d011f25613c2ce6ee61f24f749c5abbf3ccc6bca7823a41f0a"
+    }
+  ],
+  "earlierLogs": [
+    {
+      "log": "ls-dispatch-fences-baseline.log",
+      "sha256": "4017b5262f0c744d35cafa18d60f0d99149a926da927054805ae68d50a20cedb"
+    },
+    {
+      "log": "ls-dispatch-fences-focused-1.log",
+      "sha256": "c8406e301caa2e221fef7eb9799fd2c0be0522d9183b41fa60f1f8d6d778c42f"
+    },
+    {
+      "log": "ls-dispatch-fences-focused-2.log",
+      "sha256": "0e8a212a59222df74ceea2e0a5a63a20d8275e493cd38896e061e770a8bc9efd"
+    }
+  ]
+}

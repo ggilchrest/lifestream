@@ -16,7 +16,7 @@ async function admissionFixture(){
  const body={snapshotRef:randomUUID(),principalRef:binding.principalRef,siteRefs:binding.siteRefs,sourceRevision:1,invalidationSequence:1,issuedAt:new Date(Date.now()-100).toISOString(),expiresAt:new Date(Date.now()+60000).toISOString(),capabilities:[{...EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0],available:true,authorization:'grant_required'}],availability:'configured',limitations:[]};
  const record={scope,binding,snapshot:{snapshotId:randomUUID(),revision:1,issuedAt:body.issuedAt,expiresAt:body.expiresAt,capabilities:[{capabilityId:'pwce.home.light.set-level'}]},executionMode:'normal',producerSnapshotRef:body.snapshotRef,producerRevision:1,producerDigest:hash(body)};
  const state={current:true,bound:true,approved:true,reserveFail:false,completeFail:false,sent:[],records:new Map(),hook:async()=>{},mutate:()=>{}};
- const catalog={retained:()=>structuredClone(record),revalidate:async()=>{await state.hook('catalog');if(!state.bound)throw new PwceTransportError('snapshot_unavailable','synthetic');return structuredClone(record);}};
+ const catalog={retained:()=>state.bound?structuredClone(record):undefined,revalidate:async()=>{await state.hook('catalog');if(!state.bound)throw new PwceTransportError('snapshot_unavailable','synthetic');return structuredClone(record);}};
  const client={request:async request=>({profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',requestId:request.requestId,correlationId:request.correlationId,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,outcome:'allowed',capabilityRef:'home.light.set_level',effectClass:'reversible',rationaleCodes:['explicit_grant_active'],requirements:[],limitations:[]}),admissionContracts:async()=>{await state.hook('contracts');}};
  const preview=new PwceAuthorityPreview({providerRef:'pwce.synthetic',client,catalog,resolve:async()=>prepared,isCurrent:()=>state.current});
  const previewRequest={schemaVersion:'1.0.0',operation:'AuthorityProvider.evaluate',requestId:randomUUID(),correlationId:randomUUID(),cancellationId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString(),executionMode:'normal',scope,idempotencyKey:null,payload:{grantId:null,invocationId:randomUUID(),inputDigest:hash(prepared.input),snapshotId:record.snapshot.snapshotId,snapshotRevision:1,scope:pwceLightOperation(prepared.input,binding.worldRef)}};
@@ -41,7 +41,7 @@ async function fixture(){
  const records=new Map(),history=new Map(),state={sent:[],queries:[],proof:null,status:'succeeded',effect:true,lost:false,claimFailure:false,writeFailure:false,missing:false,hook:async()=>{},mutate:()=>{}};
  const custody={read:id=>structuredClone(records.get(id)),claim:request=>{if(state.claimFailure)throw new Error('synthetic claim failure');const id=request.payload.invocationId;if(records.has(id))return false;records.set(id,{request:structuredClone(request),requestDigest:pwceInvocationDigest(request),latest:null,observationCount:0});history.set(id,[]);return true;},observe:(id,observation)=>{if(state.writeFailure)throw new Error('synthetic observation failure');const record=records.get(id);record.latest=structuredClone(observation);record.observationCount++;history.get(id).push(structuredClone(observation));return structuredClone(record);},readObservation:(id,ref)=>structuredClone(history.get(id)?.find(item=>canonicalJson(item.evidenceRef)===canonicalJson(ref)))};
  f.client.invocationContracts=async()=>{await state.hook('contracts');};
- f.dispatcher.invoke=async(_binding,wire)=>{assert.ok(records.has(request.payload.invocationId),'initial dispatch claim precedes I/O');state.sent.push(structuredClone(wire));const now=new Date().toISOString(),result={status:state.status,externalEffectOccurred:state.effect,observed:{synthetic:true},completedAt:now};state.proof={schemaVersion:'1.0.0',kind:'pwce.action.invocation',actionRef:originalProof.actionRef,admissionEvidence:structuredClone(originalProof),status:state.status,attemptRef:randomUUID(),startedAt:now,dispatchResult:structuredClone(result),result:structuredClone(result),reconciliationRef:null};state.mutate(state.proof);await state.hook('invoke');if(state.lost)throw new Error('synthetic missing reply');return {actionRef:state.proof.actionRef,status:state.proof.status==='succeeded'?'completed':state.proof.status,result:state.proof.result,invocationEvidence:structuredClone(state.proof)};};
+ f.dispatcher.invoke=async(_binding,wire,_signal,isCurrent)=>{await state.hook('transport');isCurrent?.();assert.ok(records.has(request.payload.invocationId),'initial dispatch claim precedes I/O');state.sent.push(structuredClone(wire));const now=new Date().toISOString(),result={status:state.status,externalEffectOccurred:state.effect,observed:{synthetic:true},completedAt:now};state.proof={schemaVersion:'1.0.0',kind:'pwce.action.invocation',actionRef:originalProof.actionRef,admissionEvidence:structuredClone(originalProof),status:state.status,attemptRef:randomUUID(),startedAt:now,dispatchResult:structuredClone(result),result:structuredClone(result),reconciliationRef:null};state.mutate(state.proof);await state.hook('invoke');if(state.lost)throw new Error('synthetic missing reply');return {actionRef:state.proof.actionRef,status:state.proof.status==='succeeded'?'completed':state.proof.status,result:state.proof.result,invocationEvidence:structuredClone(state.proof)};};
  f.client.request=async request=>{state.queries.push(structuredClone(request));await state.hook('status');return {profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',requestId:request.requestId,correlationId:request.correlationId,worldRef:request.worldRef,executionEnvironmentRef:request.executionEnvironmentRef,...(state.missing?{status:'unknown'}:{status:'known',invocationEvidence:structuredClone(state.proof),action:{actionRef:state.proof.actionRef,status:state.proof.status,attemptRef:state.proof.attemptRef,startedAt:state.proof.startedAt,dispatchResult:structuredClone(state.proof.dispatchResult),result:structuredClone(state.proof.result)}})};};
  const create=()=>new PwceInvocation({providerRef:'pwce.synthetic',client:f.client,dispatcher:f.dispatcher,admission,custody});
  const query=()=>({...structuredClone(request),operation:'CapabilityProvider.getInvocation',requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString(),payload:{invocationId:request.payload.invocationId}});
@@ -119,4 +119,30 @@ test('historical evidence metadata and original binding are revalidated before d
   await assert.rejects(f.create().readEvidence(first.evidenceRef,f.query(),f.context),{code:change==='binding'?'invocation_binding_mismatch':'invocation_evidence_unavailable'});
   assert.equal(f.state.sent.length,1);
  }
+});
+
+
+test('catalog invalidation during invocation negotiation prevents the initial claim and send',async()=>{
+ const f=await fixture();f.state.hook=async phase=>{if(phase==='contracts')f.f.state.bound=false;};
+ await assert.rejects(f.create().invoke(f.request,f.context),{code:'snapshot_unavailable'});
+ assert.equal(f.records.size,0);assert.equal(f.state.sent.length,0);
+});
+
+test('admission custody changes during invocation negotiation cannot reuse the resolved proof',async()=>{
+ const f=await fixture();f.state.hook=async phase=>{if(phase==='contracts')f.f.state.records.get(f.request.idempotencyKey).outcome.evidenceJson='{}';};
+ await assert.rejects(f.create().invoke(f.request,f.context),{code:'admission_custody_failed'});
+ assert.equal(f.records.size,0);assert.equal(f.state.sent.length,0);
+});
+
+test('withdrawal during synchronous claim leaves an uncertain claim and never sends',async()=>{
+ const f=await fixture(),claim=f.custody.claim;f.custody.claim=request=>{const result=claim(request);f.f.state.bound=false;return result;};
+ await assert.rejects(f.create().invoke(f.request,f.context),{code:'snapshot_unavailable'});
+ assert.equal(f.records.size,1);assert.equal(f.state.sent.length,0);assert.equal(f.custody.read(f.request.payload.invocationId).latest,null);
+});
+
+
+test('invocation transport fence catches invalidation after claiming without sending or resetting custody',async()=>{
+ const f=await fixture();f.state.hook=async phase=>{if(phase==='transport')f.f.state.bound=false;};
+ await assert.rejects(f.create().invoke(f.request,f.context),{code:'snapshot_unavailable'});
+ assert.equal(f.state.sent.length,0);assert.equal(f.records.size,1);assert.equal(f.custody.read(f.request.payload.invocationId).latest,null);
 });

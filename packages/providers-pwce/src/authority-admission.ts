@@ -62,6 +62,12 @@ export class PwceAuthorityAdmission {
   constructor(options:PwceAuthorityAdmissionOptions){if(!options.providerRef||options.providerRef.length>500||typeof options.authorize!=='function')fail('invalid_configuration');this.options={...options};}
   private call(request:M.AuthorityDispatchRequest,context:ProviderCallContext):PwceCallScope{const duration=Date.parse(request.deadlineAt)-Date.now();if(!Number.isFinite(duration)||duration<=0)return fail('deadline_exceeded');if(duration>30000)return fail('invalid_request');return new PwceCallScope(duration,context.signal);}
   private current(request:M.AuthorityDispatchRequest,context:ProviderCallContext,call:PwceCallScope):void{call.check();if(!context.isCurrent(structuredClone(request.scope))||request.scope.authorityContextRef?.providerRef!==this.options.providerRef||request.payload.grantId!==null)fail('scope_changed');}
+  /** Synchronous fence after asynchronous work; never discovers a replacement snapshot. */
+  private catalogCurrent(request:M.AuthorityDispatchRequest,catalog:PwceCatalogRecord,requirePreview=true):void {
+    const retained=this.options.catalog.retained(request.payload.snapshotId,request.scope);
+    if(!retained||!isDeepStrictEqual(retained,catalog)||Date.parse(catalog.snapshot.expiresAt)<=Date.now())fail('snapshot_unavailable');
+    if(requirePreview&&Date.parse(request.payload.requiredProviderDisposition.expiresAt)<=Date.now())fail('preview_expired');
+  }
   private stored(request:M.AuthorityDispatchRequest):PwceAdmissionRecord|undefined {
     const record=this.options.custody.read(request.idempotencyKey);if(!record)return undefined;
     if(!boundedJson(record,262144)||!validator.validate(base+'AuthorityDispatchRequest',record.intent.request).valid||record.intent.intentDigest!==requestDigest(record.intent.request)||record.intent.intentDigest!==requestDigest(request))return fail('admission_conflict');
@@ -93,13 +99,14 @@ export class PwceAuthorityAdmission {
       if(catalog.producerRevision!==request.payload.expectedGrantRevision||catalog.executionMode!=='normal'||hash(prepared.input)!==request.payload.inputDigest||!isDeepStrictEqual(pwceLightOperation(prepared.input,catalog.binding.worldRef),request.payload.scope))return fail('admission_binding_mismatch');
       if(!await call.wait(this.options.authorize(structuredClone(request),structuredClone(prepared),{...context,signal:call.signal})))return fail('host_admission_required');this.current(request,context,call);
       await call.wait(this.options.client.admissionContracts(call.signal));this.current(request,context,call);
+      this.catalogCurrent(request,catalog);this.options.preview.assertDispatchCurrent(request,prepared,context);
       const producerKey=`lifestream:${hash({providerRef:this.options.providerRef,scope:request.scope,invocationId:request.payload.invocationId,idempotencyKey:request.idempotencyKey})}`;
       const intent:PwceAdmissionIntent={request,prepared,catalog,producerKey,intentDigest:requestDigest(request)};
       if(!this.options.custody.reserve(structuredClone(intent)))return fail('admission_outcome_unknown');
-      this.current(request,context,call);
+      this.current(request,context,call);this.catalogCurrent(request,catalog);this.options.preview.assertDispatchCurrent(request,prepared,context);
       const binding=catalog.binding,wire={...binding.identity,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,requestId:request.requestId,correlationId:request.correlationId,deadline:request.deadlineAt,
         snapshotRef:catalog.producerSnapshotRef,capabilityRef:descriptor.capabilityRef,capabilityVersion:descriptor.schemaVersion,capabilityOperation:descriptor.operation,...prepared.input,idempotencyKey:producerKey,approvalRequired:prepared.approval.required,approvalRef:prepared.approval.reference};
-      const raw=await call.wait(this.options.dispatcher.authorizeDispatch(binding.authorityContextRef,wire,call.signal));this.current(request,context,call);
+      const raw=await call.wait(this.options.dispatcher.authorizeDispatch(binding.authorityContextRef,wire,call.signal,()=>{this.current(request,context,call);this.catalogCurrent(request,catalog);this.options.preview.assertDispatchCurrent(request,prepared,context);return true;}));this.current(request,context,call);
       await schema(raw,PWCE_DISPATCH_RESPONSE_SCHEMA,call);
       for(const field of ['requestId','correlationId','worldRef','executionEnvironmentRef']as const)if(raw[field]!==wire[field])return fail('admission_binding_mismatch');
       let evidenceJson:string,schemaRef:string,admittedAt:string|null=null,expiresAt=catalog.snapshot.expiresAt,disposition:Decision['disposition'];
@@ -160,8 +167,11 @@ export class PwceAuthorityAdmission {
     }else{const raw=JSON.parse(outcome.evidenceJson);await schema(raw,PWCE_DISPATCH_RESPONSE_SCHEMA,call);if(raw.requestId!==original.requestId||raw.correlationId!==original.correlationId||raw.worldRef!==record.intent.catalog.binding.worldRef||raw.executionEnvironmentRef!==record.intent.catalog.binding.executionEnvironmentRef||raw.outcome!==(decision.disposition==='denied'?'denied':'approval_required')||raw.status!==raw.outcome||raw.admissionEvidence!==undefined||raw.admission!==undefined||raw.actionRef!==undefined||decision.admittedAt!==null||decision.evidenceRef.schemaRef!==PWCE_DISPATCH_RESPONSE_SCHEMA.$id)return fail('admission_custody_failed');}
     if(requireCatalog){const currentCatalog=await call.wait(this.options.catalog.revalidate(request,{...context,signal:call.signal}));this.current(request,context,call);if(!isDeepStrictEqual(currentCatalog,record.intent.catalog))return fail('admission_custody_failed');}
     else this.options.catalog.assertReadScope(record.intent.catalog,request.scope,request.executionMode,context);
+    this.current(request,context,call);
+    if(unexpired&&Date.parse(outcome.decision.expiresAt)<=Date.now())return fail('admission_expired');
+    if(requireCatalog)this.catalogCurrent(request,record.intent.catalog,unexpired);
   }
-  async resolveInvocation(input:M.CapabilityInvocationRequest,context:ProviderCallContext,mode:'dispatch'|'read'):Promise<{record:PwceAdmissionRecord;proof:Proof}> {
+  async resolveInvocation(input:M.CapabilityInvocationRequest,context:ProviderCallContext,mode:'dispatch'|'read'):Promise<{record:PwceAdmissionRecord;proof:Proof;assertCurrent:()=>void}> {
     if(!['dispatch','read'].includes(mode)||!boundedJson(input)||!validator.validate(base+'CapabilityInvocationRequest',input).valid)return fail('invalid_request');
     const request=structuredClone(input),retained=this.options.custody.read(request.idempotencyKey);
     if(!retained?.outcome)return fail('admission_evidence_unavailable');
@@ -171,7 +181,20 @@ export class PwceAuthorityAdmission {
       if(!isDeepStrictEqual(request.scope,original.scope)||request.correlationId!==original.correlationId||request.executionMode!==original.executionMode||request.payload.invocationId!==original.payload.invocationId||request.payload.snapshotId!==original.payload.snapshotId||request.payload.snapshotRevision!==original.payload.snapshotRevision||request.payload.inputDigest!==original.payload.inputDigest||!isDeepStrictEqual(request.payload.input,record.intent.prepared.input)||!isDeepStrictEqual(request.payload.operationScope,original.payload.scope)||request.payload.capabilityId!==PWCE_LIGHT_CAPABILITY_ID||request.payload.capabilityVersion!==descriptor.schemaVersion||!isDeepStrictEqual(request.payload.inputSchema,descriptor.inputSchemaArtifact)||!isDeepStrictEqual(request.payload.dispatchReceipt,record.outcome!.decision.evidenceRef)||record.outcome!.decision.disposition!=='authorized')return fail('admission_binding_mismatch');
       if(mode==='dispatch'&&!await call.wait(this.options.authorize(structuredClone(authorityRequest),structuredClone(record.intent.prepared),{...context,signal:call.signal})))return fail('host_admission_required');
       this.current(authorityRequest,context,call);await this.checkOutcome(record,authorityRequest,context,call,mode==='dispatch',mode==='dispatch');
-      this.current(authorityRequest,context,call);return {record,proof:JSON.parse(record.outcome!.evidenceJson) as Proof};
+      this.current(authorityRequest,context,call);
+      // Capture private copies: callers may inspect the returned proof, but cannot
+      // alter the custody or lifetime checked just before the initial send.
+      const owned=structuredClone(record),bound=structuredClone(request);
+      const assertCurrent=()=>{
+        if(context.signal.aborted||!context.isCurrent(structuredClone(bound.scope))||Date.parse(bound.deadlineAt)<=Date.now())fail('scope_changed');
+        const latest=this.stored(authorityRequest);
+        if(!isDeepStrictEqual(latest,owned))fail('admission_custody_failed');
+        if(mode==='dispatch'){
+          this.catalogCurrent(authorityRequest,owned.intent.catalog);
+          if(Date.parse(owned.outcome!.decision.expiresAt)<=Date.now())fail('admission_expired');
+        }else this.options.catalog.assertReadScope(owned.intent.catalog,bound.scope,bound.executionMode,context);
+      };
+      assertCurrent();return {record,proof:JSON.parse(record.outcome!.evidenceJson) as Proof,assertCurrent};
     }finally{call.close();}
   }
   async readEvidence(reference:M.ArtifactRef,input:M.AuthorityDispatchRequest,context:ProviderCallContext):Promise<Uint8Array>{

@@ -8,21 +8,22 @@ import {EXPECTED_PWCE_CAPABILITY_BUNDLE} from '../src/capability-bundle.ts';
 import {PwceTransportError} from '../src/transport.ts';
 const hash=value=>createHash('sha256').update(canonicalJson(value)).digest('hex');
 const bytesHash=value=>createHash('sha256').update(value).digest('hex');
-async function fixture(){
+async function fixture(previewLifetime=30000){
  const scope={assistantId:randomUUID(),endpointId:randomUUID(),sessionId:randomUUID(),environmentId:randomUUID(),conversationId:randomUUID(),interactionTraceId:null,authorityContextRef:{providerRef:'pwce.synthetic',contextId:randomUUID(),revision:1}};
  const binding={authorityContextRef:randomUUID(),principalRef:'agent.synthetic',siteRefs:['home.one'],worldRef:'world.personal.v1',executionEnvironmentRef:'test',identity:{assistantRef:'assistant.synthetic',endpointRef:'endpoint.synthetic',participantRefs:['participant.synthetic'],audienceRef:'audience.synthetic'}};
  const prepared={input:{siteRef:'home.one',targetEntityId:'light.synthetic',parameters:{level:0.5}},approval:{required:false,reference:null}};
  const body={snapshotRef:randomUUID(),principalRef:binding.principalRef,siteRefs:binding.siteRefs,sourceRevision:1,invalidationSequence:1,issuedAt:new Date(Date.now()-100).toISOString(),expiresAt:new Date(Date.now()+60000).toISOString(),capabilities:[{...EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0],available:true,authorization:'grant_required'}],availability:'configured',limitations:[]};
  const record={scope,binding,snapshot:{snapshotId:randomUUID(),revision:1,issuedAt:body.issuedAt,expiresAt:body.expiresAt,capabilities:[{capabilityId:'pwce.home.light.set-level'}]},executionMode:'normal',producerSnapshotRef:body.snapshotRef,producerRevision:1,producerDigest:hash(body)};
  const state={recoveryKnown:false,recoveryProof:null,recoveryCalls:[],recoveryMutate:()=>{},current:true,bound:true,approved:true,reserveFail:false,completeFail:false,sent:[],records:new Map(),hook:async()=>{},mutate:()=>{}};
- const catalog={assertReadScope:()=>{if(!state.current||!state.bound)throw new PwceTransportError('scope_changed','synthetic');},retained:()=>structuredClone(record),revalidate:async()=>{await state.hook('catalog');if(!state.bound)throw new PwceTransportError('snapshot_unavailable','synthetic');return structuredClone(record);}};
+ const catalog={assertReadScope:()=>{if(!state.current||!state.bound)throw new PwceTransportError('scope_changed','synthetic');},retained:()=>state.bound?structuredClone(record):undefined,revalidate:async()=>{await state.hook('catalog');if(!state.bound)throw new PwceTransportError('snapshot_unavailable','synthetic');return structuredClone(record);}};
  const client={recoverAdmission:async(_ref,wire)=>{state.recoveryCalls.push(structuredClone(wire));await state.hook('recovery');const raw={profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',recoveryProfileId:'pwce-admission-recovery.v1',recoveryProfileVersion:'1.0.0',requestId:wire.requestId,correlationId:wire.correlationId,worldRef:wire.worldRef,executionEnvironmentRef:wire.executionEnvironmentRef,...(state.recoveryKnown?{status:'known',reason:null,actionRef:state.recoveryProof.actionRef,admissionEvidence:structuredClone(state.recoveryProof)}:{status:'unknown',reason:'admission_not_found',actionRef:null,admissionEvidence:null})};state.recoveryMutate(raw);return raw;},request:async request=>({profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',requestId:request.requestId,correlationId:request.correlationId,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,outcome:'allowed',capabilityRef:'home.light.set_level',effectClass:'reversible',rationaleCodes:['explicit_grant_active'],requirements:[],limitations:[]}),admissionContracts:async()=>{await state.hook('contracts');}};
- const preview=new PwceAuthorityPreview({providerRef:'pwce.synthetic',client,catalog,resolve:async()=>prepared,isCurrent:()=>state.current});
- const previewRequest={schemaVersion:'1.0.0',operation:'AuthorityProvider.evaluate',requestId:randomUUID(),correlationId:randomUUID(),cancellationId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString(),executionMode:'normal',scope,idempotencyKey:null,payload:{grantId:null,invocationId:randomUUID(),inputDigest:hash(prepared.input),snapshotId:record.snapshot.snapshotId,snapshotRevision:1,scope:pwceLightOperation(prepared.input,binding.worldRef)}};
+ const preview=new PwceAuthorityPreview({providerRef:'pwce.synthetic',client,catalog,resolve:async()=>prepared,isCurrent:(_request,value)=>state.current&&canonicalJson(value)===canonicalJson(prepared)});
+ const previewRequest={schemaVersion:'1.0.0',operation:'AuthorityProvider.evaluate',requestId:randomUUID(),correlationId:randomUUID(),cancellationId:randomUUID(),deadlineAt:new Date(Date.now()+previewLifetime).toISOString(),executionMode:'normal',scope,idempotencyKey:null,payload:{grantId:null,invocationId:randomUUID(),inputDigest:hash(prepared.input),snapshotId:record.snapshot.snapshotId,snapshotRevision:1,scope:pwceLightOperation(prepared.input,binding.worldRef)}};
  const context={signal:new AbortController().signal,isCurrent:()=>state.current},decision=(await preview.evaluate(previewRequest,context)).outcome.payload;
- const request={...previewRequest,operation:'AuthorityProvider.authorizeDispatch',requestId:randomUUID(),idempotencyKey:randomUUID(),payload:{...previewRequest.payload,expectedGrantRevision:1,requiredProviderDisposition:pwceGovernedDisposition(decision)}};
+ const request={...previewRequest,operation:'AuthorityProvider.authorizeDispatch',requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString(),idempotencyKey:randomUUID(),payload:{...previewRequest.payload,expectedGrantRevision:1,requiredProviderDisposition:pwceGovernedDisposition(decision)}};
  const custody={read:key=>structuredClone(state.records.get(key)),reserve:intent=>{if(state.reserveFail)throw new Error('synthetic write failure');if(state.records.has(intent.request.idempotencyKey))return false;state.records.set(intent.request.idempotencyKey,{intent:structuredClone(intent),outcome:null});return true;},complete:(key,outcome)=>{if(state.completeFail)throw new Error('synthetic write failure');const saved=state.records.get(key);saved.outcome=structuredClone(outcome);return structuredClone(saved);}};
- const dispatcher={authorizeDispatch:async(_context,wire)=>{
+ const dispatcher={authorizeDispatch:async(_context,wire,_signal,isCurrent)=>{
+  await state.hook('transport');isCurrent?.();
   assert.ok(state.records.get(request.idempotencyKey),'original intent must be committed before admission I/O');state.sent.push(structuredClone(wire));await state.hook('dispatch');
   const fingerprint={principalRef:binding.principalRef,capabilityRef:'home.light.set_level',capabilityVersion:'1.0.0',operation:'light.set_level',...prepared.input,executionEnvironmentRef:binding.executionEnvironmentRef,gatewayScope:{worldRef:binding.worldRef,...binding.identity}};
   const snapshotJson=JSON.stringify({scope:[binding.authorityContextRef,binding.principalRef,1,1,binding.siteRefs,binding.identity.assistantRef,binding.identity.endpointRef,binding.identity.participantRefs,binding.identity.audienceRef,binding.worldRef,binding.executionEnvironmentRef],sourceDigest:'a'.repeat(64),snapshot:{profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',...body}});
@@ -163,4 +164,42 @@ test('concurrent recovery preserves one deterministic original decision',async()
 
 test('later missing producer proof cannot fall back to locally retained successful recovery',async()=>{
  const f=await pendingRecovery(),known=await f.create().recoverAdmission(recoveryRequest(f),f.context);f.state.recoveryKnown=false;await assert.rejects(f.create().recoverAdmission(recoveryRequest(f),f.context),{code:'admission_outcome_unknown'});assert.deepEqual(f.custody.read(f.request.idempotencyKey),known);assert.equal(f.state.sent.length,1);
+});
+
+
+test('catalog withdrawal during host approval or negotiation prevents any admission reservation or send',async()=>{
+ for(const phase of ['host','contracts']){
+  const f=await fixture();f.state.hook=async current=>{if(current===phase)f.state.bound=false;};
+  await assert.rejects(f.create().authorizeDispatch(f.request,f.context),{code:'snapshot_unavailable'});
+  assert.equal(f.state.sent.length,0);assert.equal(f.state.records.size,0);
+ }
+});
+
+test('changed retained preparation after approval is caught before reservation',async()=>{
+ const f=await fixture();f.state.hook=async phase=>{if(phase==='contracts')f.prepared.approval.required=true;};
+ // The host retained input changes independently of the already copied preview.
+ await assert.rejects(f.create().authorizeDispatch(f.request,f.context),{code:'scope_changed'});
+ assert.equal(f.state.sent.length,0);assert.equal(f.state.records.size,0);
+});
+
+test('preview expiry during negotiation prevents admission even with a longer request deadline',async t=>{
+ const f=await fixture(5000),now=Date.now();let elapsed=0;t.mock.method(Date,'now',()=>now+elapsed);
+ f.state.hook=async phase=>{if(phase==='contracts')elapsed=6000;};
+ await assert.rejects(f.create().authorizeDispatch(f.request,f.context),{code:'preview_expired'});
+ assert.equal(f.state.sent.length,0);assert.equal(f.state.records.size,0);
+});
+
+test('a completed admission that expires during duplicate validation is not returned as current permission',async t=>{
+ const f=await fixture(5000);await f.create().authorizeDispatch(f.request,f.context);
+ const now=Date.now();let elapsed=0;t.mock.method(Date,'now',()=>now+elapsed);
+ f.state.hook=async phase=>{if(phase==='catalog')elapsed=6000;};
+ await assert.rejects(f.create().authorizeDispatch(f.request,f.context),{code:'admission_expired'});
+ assert.equal(f.state.sent.length,1);assert.ok(f.custody.read(f.request.idempotencyKey).outcome);
+});
+
+
+test('admission transport fence catches invalidation after reservation and preserves the original intent',async()=>{
+ const f=await fixture();f.state.hook=async phase=>{if(phase==='transport')f.state.bound=false;};
+ await assert.rejects(f.create().authorizeDispatch(f.request,f.context),{code:'snapshot_unavailable'});
+ assert.equal(f.state.sent.length,0);assert.equal(f.state.records.size,1);assert.equal(f.custody.read(f.request.idempotencyKey).outcome,null);
 });
