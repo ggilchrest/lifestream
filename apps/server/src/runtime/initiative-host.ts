@@ -1,3 +1,4 @@
+import {InitiativeMaintenance} from './initiative-maintenance.ts';
 import {createHash,randomUUID} from 'node:crypto';
 import {createContractValidator} from '@lifestream/contracts';
 import {InitiativeExpressionRepository,type InitiativeExpression,InitiativeDeliveryRepository,type Database,type InitiativeScope,type InitiativeOpportunity,type InitiativeDeliveryRecord} from '@lifestream/storage-sqlite';
@@ -28,7 +29,7 @@ const active=new Set(['pending','eligible','generated','queued','emitted']);
  * inspection and idempotent retries return metadata, never replayable output. */
 export class InitiativeHost {
  readonly ledger:InitiativeDeliveryRepository;private readonly expressions:InitiativeExpressionRepository;
- private readonly generator=new InitiativeCandidateGenerator();
+ private readonly generator=new InitiativeCandidateGenerator();private readonly maintenance:InitiativeMaintenance;
  private readonly readiness=new Map<string,{revision:number;endpointId:string;text:boolean;speech:boolean;transport?:object}>();
  private readonly modes=new Map<string,InitiativeTemporaryMode>();
  private readonly jobs=new Map<string,Job>();
@@ -36,11 +37,13 @@ export class InitiativeHost {
  private closed=false;
  private readonly database:Database;
  private readonly simulation:InitiativeSimulation|undefined;
- constructor(database:Database,simulation?:InitiativeSimulation){this.database=database;this.expressions=new InitiativeExpressionRepository(database);this.simulation=simulation;this.ledger=new InitiativeDeliveryRepository(database);this.ledger.recover();}
+ constructor(database:Database,simulation?:InitiativeSimulation){this.database=database;this.expressions=new InitiativeExpressionRepository(database);this.simulation=simulation;this.ledger=new InitiativeDeliveryRepository(database);this.ledger.recover();this.maintenance=new InitiativeMaintenance(()=>this.ledger.prune());}
  runtimeExplanations(owner?:InitiativeOwner,sessionId?:string){
   const explanations=[{code:this.simulation?'synthetic_ingress_enabled':'synthetic_ingress_disabled',summary:this.simulation?'This test host accepts only its prepared synthetic occurrences for the bound subject and session.':'Synthetic ingress is disabled on this host.',sourceRefs:[] as string[]}];
+  explanations.push({code:'initiative_retention',summary:this.maintenance.state()==='degraded'?'Automatic metadata cleanup is temporarily unavailable. Records and replay protections are retained; cleanup will retry.':'Automatic metadata cleanup is scheduled after the 24-hour eligibility horizon, in bounded batches. Active work, pending playback and replay fences remain protected.',sourceRefs:[]});
   if(!this.simulation?.list||!owner||!sessionId)return explanations;
   explanations.push({code:'synthetic_catalog_enabled',summary:'Choose a host-prepared synthetic case. Listing neither enables output nor creates or replays an event. Refresh after the host prepares new cases.',sourceRefs:[]});
+  const catalogStart=explanations.length;
   try{
    const ids=this.simulation.list(owner.scope,sessionId),now=Date.now(),seen=new Set<string>(),used=new Set(this.ledger.list(owner.scope).filter(r=>r.opportunity.sessionId===sessionId).flatMap(r=>r.opportunity.sourceRefs));
    let count=0;
@@ -53,7 +56,7 @@ export class InitiativeHost {
     explanations.push({code:`synthetic_occurrence_${event.kind}_${event.modality}`,summary:`${label} · ${event.modality==='speech'?'Speech and transcript':'Text'} · expires ${new Date(event.expiresAt).toISOString()}`,sourceRefs:[id,...(event.topicRef?[event.topicRef]:[])]});count++;
    }
    if(!count)explanations.push({code:'synthetic_catalog_empty',summary:'No current prepared cases are available for this subject and session. Ask the test host operator to prepare a case, then refresh. No output was requested.',sourceRefs:[]});
-  }catch{explanations.splice(2);explanations.push({code:'synthetic_catalog_unavailable',summary:'The test host could not list prepared cases. Refresh to retry inspection; no output was requested.',sourceRefs:[]});}
+  }catch{explanations.splice(catalogStart);explanations.push({code:'synthetic_catalog_unavailable',summary:'The test host could not list prepared cases. Refresh to retry inspection; no output was requested.',sourceRefs:[]});}
   return explanations;
  }
 
@@ -90,7 +93,7 @@ export class InitiativeHost {
   if(engagement){const {scope,sessionId}=engagement;this.ledger.resetSessionTopics(scope,sessionId);const prior=this.ledger.list(scope).find(r=>r.opportunity.sessionId===sessionId&&['emitted','acknowledged'].includes(r.outcome.lastDeliveryStage)&&['notObserved','noResponse'].includes(r.outcome.response));if(prior)this.ledger.transition(scope,prior.opportunity.opportunityId,prior.version,{type:'respond',sessionId,response:'replied'});}
   let released=false;return ()=>{if(!released){released=true;this.foreground--;}};
  }
- close():void{this.closed=true;this.invalidate('cancelled');this.readiness.clear();this.modes.clear();}
+ close():void{this.closed=true;this.maintenance.close();this.invalidate('cancelled');this.readiness.clear();this.modes.clear();}
  private retry(scope:InitiativeScope,request:Record<string,unknown>):'new'|'same'|'conflict'{
   const row=this.database.connection.prepare('SELECT relationship_id,operation FROM assistant_relationship_idempotency WHERE idempotency_key=?').get(String(request.idempotencyKey)) as {relationship_id:string;operation:string}|undefined;
   return !row?'new':row.relationship_id===scope.relationshipId&&row.operation===`initiative-runtime:${hash([scope,request])}`?'same':'conflict';

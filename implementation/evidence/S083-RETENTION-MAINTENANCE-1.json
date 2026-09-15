@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-RETENTION-MAINTENANCE-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "62f3947d5cb6b13eddcdcf16c9fd54e4a6f66c31",
+  "specificationRevision": "20044741034773acf2716d8bde5fec40805bc732",
+  "recordedAt": "2026-09-15T04:49:58.357303Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/runtime/initiative-maintenance.ts",
+      "sha256": "dfdc67d865c53abaacad00a5eeeb11256a5503e08e58dc2f1eadad8676fe62f6"
+    },
+    {
+      "path": "apps/server/src/runtime/initiative-host.ts",
+      "sha256": "b7d8f682944b29647ec20deba69e079aaab4d927ef4f5a7a20fa50fc24bdd3ab"
+    },
+    {
+      "path": "apps/server/test/initiative-maintenance.test.ts",
+      "sha256": "bd8ae074a99a2bfdd7cf39baf3aff2d9d13d7f497dea8bfbb16d8f0b6a2dcfec"
+    },
+    {
+      "path": "packages/storage-sqlite/src/initiative-delivery.ts",
+      "sha256": "32b56a934659eed8fa4350ec66bf0f395f93938a5cfbc98e1b5014c75b24a1ff"
+    }
+  ],
+  "claims": [
+    "The runtime starts a single unreferenced maintenance timer after startup recovery and cancels it before database close. Each transaction removes at most 128 eligible settled inference rows and 128 eligible terminal delivery rows; a full batch yields one second before continuing, otherwise maintenance checks every sixty seconds. The 24-hour horizon is eligibility with bounded cleanup lag.",
+    "Active deliveries, pending playback and unsettled inference accounting remain protected. Expression metadata follows parent deletion. Source high-water marks, unanswered-topic keys and monotonic clock fences remain; cleanup cannot create output, call a provider or refund uncertain work.",
+    "Failure leaves cleanup transactional, exposes only generic degraded status and retries on the normal cadence. Synthetic-catalog failure preserves base inspection explanations independently of their count.",
+    "Three new tests verify catch-up/idle timing and shutdown, degraded retry, and an actual migrated host with 132 records. Automatic cleanup removes 128 then two eligible records, preserving endpoint-accepted pending playback and cancelled unsettled inference; expression metadata cascades, and stale-source and unanswered-topic replay remain denied. No user request or model call drives this cleanup.",
+    "This successor closes the automatic retention scheduling gap recorded in S083-EXPRESSION-INSPECTION-1; that historical receipt remains unchanged."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "e7af88120e7618e15c7bfb2d1efe54c596232093c7944ea52b31981e304045c0"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "0869b79f7d03a9ed3a8823e09a4241e3cda02b1723a63e6b3eeec329b029a125"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "213baa31f9ee3ac79a4ab80ffab78653f135e84412934c48dc07a4c991f8b76b"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "f3bf2a93f3247b2e06fa85e1a2eb04bef5179bfdefd204f8ef851bcd7914e6e7"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 392,
+    "newSourceTests": 3,
+    "browserAndLauncherTests": 46,
+    "toolingTests": 45
+  },
+  "initialVerificationFailures": [
+    {
+      "kind": "syntheticFixtureTimestamp",
+      "description": "The first host fixture accidentally placed observedAt ahead of the test clock; source admission correctly rejected it. Corrected the fixture to use current synthetic time.",
+      "logSha256": "0c1b658c02c5257bb46963d48a441acc37f4c7c7726664a134d84435d6400c07"
+    },
+    {
+      "kind": "testErrorMatcher",
+      "description": "A subsequent assertion expected lowercase unanswered while the existing error starts uppercase Unanswered. Corrected the matcher without changing runtime criteria.",
+      "logSha256": "fe9b75fab7d9d9ea3168c5bd238e3f86362e02688b1804a431b3b184e23170b7"
+    }
+  ],
+  "prerequisiteQualification": {
+    "status": "pending",
+    "slices": [
+      "LS-S071",
+      "LS-S072",
+      "LS-S073",
+      "LS-S076",
+      "LS-S078"
+    ],
+    "reason": "Current effective inputs differ from historical qualification; receipts remain unchanged."
+  },
+  "limitations": [
+    "Pinned gradient Lab, reserved acknowledgments, bounded timing adaptation, older-database restore fencing, selected-provider/current-source qualifications, S084 Discovery/analysis/performance and PWCE Personal V1 T5 mapping remain open. Full S083/S084 completion is not claimed.",
+    "Output checks used synthetic providers. Physical audibility/presence, model quality and Human acceptance remain separate. No new model-quality observations were added.",
+    "The saved Human review service and data were not restarted, deployed or reconfigured. No personal-data import, training, new provider selection or external research occurred. Approved schema bytes, historical evidence and unrelated dirty artifacts remain preserved."
+  ]
+}

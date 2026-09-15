@@ -232,9 +232,11 @@ export class InitiativeDeliveryRepository {
   resetSessionTopics(scope:InitiativeScope,sessionId:string):void {this.database.transaction(tx=>{this.clock(tx);tx.run("DELETE FROM initiative_unanswered_topics WHERE scope_key=? AND session_id=?",scopeKey(scope),sessionId);});}
   /** Outside the hot path. Keep source high-water marks, session unanswered keys and
    * clock fencing after the fixed 24-hour record horizon. No output payloads to replay. */
-  prune():void {this.database.transaction(tx=>{
+  prune():{inferenceRemoved:number;deliveryRemoved:number} {return this.database.transaction(tx=>{
     const now=this.clock(tx);
-    tx.run("DELETE FROM initiative_inference_calls WHERE opportunity_id IN (SELECT opportunity_id FROM initiative_inference_calls WHERE settled_ms<=? AND NOT EXISTS (SELECT 1 FROM initiative_delivery WHERE initiative_delivery.opportunity_id=initiative_inference_calls.opportunity_id AND state IN ('pending','eligible','generated','queued','emitted')) LIMIT 128)",now-86_400_000);
-    tx.run(`DELETE FROM initiative_delivery WHERE opportunity_id IN (SELECT opportunity_id FROM initiative_delivery WHERE state NOT IN ${active} AND updated_ms<=? AND (reserved_ms IS NULL OR reserved_ms<=?) AND NOT EXISTS (SELECT 1 FROM initiative_inference_calls WHERE initiative_inference_calls.opportunity_id=initiative_delivery.opportunity_id) LIMIT 128)`,now-86_400_000,now-86_400_000);
+    tx.run("DELETE FROM initiative_inference_calls WHERE opportunity_id IN (SELECT opportunity_id FROM initiative_inference_calls WHERE settled_ms<=? AND NOT EXISTS (SELECT 1 FROM initiative_delivery WHERE initiative_delivery.opportunity_id=initiative_inference_calls.opportunity_id AND (state IN ('pending','eligible','generated','queued','emitted') OR EXISTS (SELECT 1 FROM initiative_playback_pending p WHERE p.opportunity_id=initiative_delivery.opportunity_id))) LIMIT 128)",now-86_400_000);
+    const inferenceRemoved=tx.get<{n:number}>("SELECT changes() AS n")!.n;
+    tx.run(`DELETE FROM initiative_delivery WHERE opportunity_id IN (SELECT opportunity_id FROM initiative_delivery WHERE state NOT IN ${active} AND NOT EXISTS (SELECT 1 FROM initiative_playback_pending p WHERE p.opportunity_id=initiative_delivery.opportunity_id) AND updated_ms<=? AND (reserved_ms IS NULL OR reserved_ms<=?) AND NOT EXISTS (SELECT 1 FROM initiative_inference_calls WHERE initiative_inference_calls.opportunity_id=initiative_delivery.opportunity_id) LIMIT 128)`,now-86_400_000,now-86_400_000);
+    return {inferenceRemoved,deliveryRemoved:tx.get<{n:number}>("SELECT changes() AS n")!.n};
   });}
 }
