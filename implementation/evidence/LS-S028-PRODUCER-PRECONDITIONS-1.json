@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-PRODUCER-PRECONDITIONS-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "441c67db7805e83e6c621073ca87c77c66694395",
+  "specificationRevision": "517db62a40eb44eabf8e506f3e8ef853e9a83c7f",
+  "recordedAt": "2026-09-15T15:16:57.280421Z",
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "1518b5fb179d7c7406f6697367bdef23545c1f24",
+    "baselineRevision": "50d9a0b9f3919d810e356feadb24509277d0a7ca",
+    "evidence": "DEVELOPMENT-BATCH-171.md",
+    "sourceFiles": [
+      {
+        "path": "DEVELOPMENT-BATCH-171.md",
+        "sha256": "b96955e0026b1bfce556836656654cb4e47e5c1b6d01dbe41db9f2edaf0d026a"
+      },
+      {
+        "path": "PV1-T5-CHECKLIST.md",
+        "sha256": "017293efd071a66be0c37518c5e15e3763f4cf4827622ef13acb59f3f071e47d"
+      },
+      {
+        "path": "docs/user-docs/feature-map.md",
+        "sha256": "2bbd7a4a8f87f91b9e5da98e0120396378aec54325e409c5e3f0ffadd9c0ac0c"
+      },
+      {
+        "path": "docs/user-docs/manual/inspect-local-context.html",
+        "sha256": "e706e6cecfe9bc30351237d28de9a6b7be41327110a793e1f92061675713755f"
+      },
+      {
+        "path": "docs/user-docs/qa/inspect-local-context.html",
+        "sha256": "21c7cae75f6bdceafba102e60c49e9021592123df0cba8cdad30b8d326464f47"
+      },
+      {
+        "path": "docs/user-docs/releases/2026-09-15-light-target-checks.html",
+        "sha256": "0035fbd223517cea2dc7c524640bcd780ba3d4ba8641846b0e3a6e7ef2d85280"
+      },
+      {
+        "path": "docs/user-docs/releases/index.html",
+        "sha256": "43807ebbb8107c11a78573d354fc7df2e686920aa8a61dbef56e99ccad24b9d5"
+      },
+      {
+        "path": "scripts/fixtures/gateway-approval.mjs",
+        "sha256": "394e4d2a6b6a2cf0841f2c2d387655f57e054a98bf083b698a9e9d9cd817505f"
+      },
+      {
+        "path": "src/actions/action-service.js",
+        "sha256": "b0844864dbef70a637463db4e12bd033b187886308754905401702b58c8bb55d"
+      },
+      {
+        "path": "src/actions/fixture-target.js",
+        "sha256": "f092956456e33e75e5c89747e74f8e89a21b563fc873e60f2ea79e27f90dfc90"
+      },
+      {
+        "path": "src/actions/home-assistant-target.js",
+        "sha256": "adcbba13e281af47b8cbe9d5b950576a6ac6ba7ece8e017a5a5d396937bec3e8"
+      },
+      {
+        "path": "test/action-preconditions.test.js",
+        "sha256": "99c780b1097d830907e18b92e21f4bda7ea0f1278935cd6959575a4aa8f422bf"
+      }
+    ]
+  },
+  "claim": "Fresh scoped Home Assistant light availability checks before producer admission and dispatch, bounded and persisted before the command. Actual password-authenticated Studio approval and Gateway HTTP exercise simulated Home Assistant transport. Original request replay sends no new command.",
+  "checks": [
+    {
+      "command": "node --test",
+      "result": "pass",
+      "log": "pwce-preconditions-verified-final.log",
+      "logSha256": "98ed5549c0c7a9ca2de4d483d7c75dcce5a101f7b49d21884953136899a266d4"
+    },
+    {
+      "command": "npm run validate",
+      "result": "pass",
+      "log": "pwce-preconditions-validate.log",
+      "logSha256": "e31118fd431327a2355113d49120584018feac09e64cf4bcd476ecd7e5ec0cbb"
+    },
+    {
+      "command": "python3 /private/tmp/check-pwce-preconditions-docs.py",
+      "result": "pass",
+      "log": "pwce-preconditions-docs.log",
+      "logSha256": "d134b5ec13828fa5f3dd43b0cc27f9a6f6f4871c39233d6387d51912844f644e"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "pwce-preconditions-ls-process.log",
+      "logSha256": "67e2c125f112d69cd89e23d9c02d0fdfc64f66ade0d797dc56473da1a0b043e2"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "pwce-preconditions-private.log",
+      "logSha256": "9ee2c87542deb4bdd06ec44d9db3030c771b7ffe2657b3a0039b1bcd4840bae5"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "pwce-preconditions-workspace-tests.log",
+      "logSha256": "ba8fd863741b27ea87e3241488088fab6915486ee3d8bbde99a7bf7b5a67c242"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "pwce-preconditions-ls-workspace.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "pwce-preconditions-ls-preflight.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "regressionCounts": {
+    "producerTestsPassed": 241,
+    "newTargetPreconditionTests": 19,
+    "consumerContextChecksPassed": 19,
+    "consumerRuntimeChecksPassed": 7,
+    "documentationPagesChecked": 31,
+    "workspaceToolTestsPassed": 43
+  },
+  "compatibility": {
+    "bundleChanged": false,
+    "bundleId": "pwce-agent-gateway.bundle.v1",
+    "bundleVersion": "1.0.0",
+    "bundleSha256": "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2",
+    "note": "No published Gateway operation, schema artifact or generated-client pin changed. Lifestream runtime source is unchanged."
+  },
+  "limits": [
+    "Fresh state checks do not make Home Assistant state and admission atomic or prove that a physical effect occurred. Another controller can change state after the read.",
+    "The existing absolute brightness action is checked for target availability, not compare-and-set semantics or every device feature.",
+    "StateStore remains single-writer. Custody digests detect inconsistent trusted storage, not coordinated malicious rewriting. Legacy test-only targets lacking a precondition method establish no physical precondition evidence."
+  ],
+  "preservedFailures": [
+    {
+      "log": "pwce-preconditions-full.log",
+      "reason": "Sandbox denied loopback listeners in 16 HTTP cases; final permitted disposable run passed.",
+      "logSha256": "cbe7d2a1dc7fd62e08fb85b0e309c269ab98a919368c5d148b8da7ef9495c3c4"
+    },
+    {
+      "log": "pwce-preconditions-http-final.log",
+      "reason": "Joined test initially omitted mandatory Human approval; corrected fixture uses actual password sign-in and exact review.",
+      "logSha256": "6096aad6e477887e03e091b249b632545558ecad473f6076364312bf19f1fe47"
+    },
+    {
+      "log": "pwce-preconditions-verified.log",
+      "reason": "Explicit approvalRequired false correctly failed to override mandatory live-route approval; final fixture completes the required approval. No runtime rule weakened.",
+      "logSha256": "7abe049dad86a6d694631e62e485e503edf685883491aeb13110086483d1bbf6"
+    },
+    {
+      "log": "pwce-preconditions-compatibility.log",
+      "reason": "Compatibility CLI called without its required path returned usage; not a compatibility pass.",
+      "logSha256": "f727e5fcb21273a52c884169d8e144a442196c1f7c630af49c77dc82aced5db4"
+    }
+  ],
+  "exclusions": [
+    "No canonical Lifestream configured capability/authority adapter or control-web action workflow is completed by this producer increment. Separate-process consumer checks remain world-context regressions, not action integration proof.",
+    "Joint action scenarios, remaining S083/S084 work, broad source requalification, physical-device and separate Human acceptance remain open.",
+    "No saved-service restart, deployment, live configuration/effect, personal-data import, training, provider/model selection, selected-provider rerun or new Human acceptance. Approved schema bytes, historical receipts, unrelated dirty artifacts and model-quality observations remain unchanged."
+  ],
+  "nextAction": "Connect the canonical capability/authority path to configured fixture/PWCE adapters and the LS-S044 control-web workflow. Finish canonical getGrants/invalidation subscriptions, joint action and backup-restore scenarios; continue remaining S083/S084 development and broad source qualification. Producer target availability checks are verified separately; physical and Human acceptance remain distinct."
+}
