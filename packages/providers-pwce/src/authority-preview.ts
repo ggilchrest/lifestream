@@ -21,6 +21,10 @@ export type PwceAuthorityPreviewOptions = {
   isCurrent(request: M.AuthorityRequest, prepared: PwcePreparedAction): boolean;
 };
 type RetainedDecision = { request: M.AuthorityRequest; prepared: PwcePreparedAction; decision: Decision; bytes: Uint8Array };
+export function pwceGovernedDisposition(decision: Decision): M.providerMessages_DefsGovernedDisposition {
+  const {decisionId,providerRef,invocationId,inputDigest,scopeDigest,authorityContextRef,disposition,reason,evaluatedAt,expiresAt,evidenceRef}=decision;
+  return structuredClone({decisionId,providerRef,invocationId,inputDigest,scopeDigest,authorityContextRef,disposition,reason,evaluatedAt,expiresAt,evidenceRef});
+}
 const validator = createContractValidator(), descriptor = EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0];
 const base = 'https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/';
 const digest = (value: unknown) => createHash('sha256').update(canonicalJson(value)).digest('hex');
@@ -125,5 +129,16 @@ export class PwceAuthorityPreview {
       if (Date.parse(record.decision.expiresAt) <= Date.now()) return fail('evidence_unavailable');
       return new Uint8Array(record.bytes);
     } finally { call.close(); }
+  }
+  /** Resolve only this adapter's original, currently authorized preview. */
+  async resolveDispatch(input: M.AuthorityDispatchRequest, context: ProviderCallContext): Promise<PwcePreparedAction> {
+    if (!boundedJson(input) || !validator.validate(base+'AuthorityDispatchRequest',input).valid) return fail('invalid_request');
+    const request=structuredClone(input), required=request.payload.requiredProviderDisposition;
+    this.prune();const record=this.decisions.get(required.evidenceRef.reference);
+    const {expectedGrantRevision:_revision,requiredProviderDisposition:_disposition,...payload}=request.payload;
+    if(!record || !isDeepStrictEqual(pwceGovernedDisposition(record.decision),required) || required.disposition!=='authorized' || !isDeepStrictEqual(record.request.scope,request.scope) || !isDeepStrictEqual(record.request.payload,payload) || record.request.executionMode!==request.executionMode || record.request.correlationId!==request.correlationId) return fail('preview_unavailable');
+    const evaluation: M.AuthorityRequest={...request,operation:'AuthorityProvider.evaluate',payload};
+    await this.readEvidence(required.evidenceRef,evaluation,context);
+    return structuredClone(record.prepared);
   }
 }

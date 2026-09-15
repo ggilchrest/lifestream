@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-AUTHORITY-ADMISSION-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "394a73b054d5dc128ebb3d5dc3e3111885c0bded",
+  "specificationRevision": "9c358f10c391d67e7150b42123f73f0e688fe92b",
+  "producerRevision": "b0b8c93191570903088f6f248e817482678017fe",
+  "recordedAt": "2026-09-15T18:45:14.885Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/authority/pwce-admission-custody.ts",
+        "sha256": "c0176d228218999d29f4a5d5a587e6a975e3a066fed4d8d489005beabcfdc4ff"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "24c8509e4afcf3ca9152e2a02ff9802793b2a3879283c95cb245ec7e43b8f70c"
+      },
+      {
+        "path": "apps/server/test/pwce-admission-custody.test.ts",
+        "sha256": "20718f331a1d5e2bc8eaf4ac93cacc44fe8a7504b908d9244394455f6854ff5f"
+      },
+      {
+        "path": "apps/server/test/server.test.ts",
+        "sha256": "51ebcd9e369db5bd9a929cd826f6818f6d67b9dedf1a0fcc450371ec00c69393"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "27c4bfddae2aef06e118f5477a70acf613aa9d26f9a9fd46dd89b8837a4a2240"
+      },
+      {
+        "path": "package.json",
+        "sha256": "82bec43c50a3896098ac09b36fcfb89ae5a893b03b6027c31b2552ce5a7f2946"
+      },
+      {
+        "path": "packages/providers-pwce/src/admission-bundle.ts",
+        "sha256": "dfbd6c5b3bdcd0367d0e6246f2b8f5be0a61a2c44ca442a21003f89940082425"
+      },
+      {
+        "path": "packages/providers-pwce/src/authority-admission.ts",
+        "sha256": "375855786b4fafb431dec7fb843929b016c5148eee810a093248f986985ad660"
+      },
+      {
+        "path": "packages/providers-pwce/src/authority-preview.ts",
+        "sha256": "16600cc631cfd839638fc2c120d269b012fbdebf257199e86c71c840e33c6b83"
+      },
+      {
+        "path": "packages/providers-pwce/src/client.ts",
+        "sha256": "c9104d2947a42db47af41cca4c3f905dd6ed5266306ed81e90dbc80bb7ee7ca7"
+      },
+      {
+        "path": "packages/providers-pwce/src/index.ts",
+        "sha256": "956a5d3cedd841863ef817813fc2185a7117928f124d36c99e0cea62a06c199d"
+      },
+      {
+        "path": "packages/providers-pwce/test/authority-admission.test.ts",
+        "sha256": "a62218c15e971da6f79709ba58076ed3a8a24660903698efbb67d30fe621e1c9"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0036_pwce_admission_custody.sql",
+        "sha256": "022b12911419d0a61cc8c317f2163e260d34e4b6020a02b6a7e6d4452ce2e271"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/index.ts",
+        "sha256": "9273bb7c59aaffbfbd56da51f9fd59fe403fdca43ca0d6774398e3b14831e8a9"
+      },
+      {
+        "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+        "sha256": "5dd88b129646a8f50461532332e9d23bd80b3f7ea8714ef685b8d03f65ff3c20"
+      },
+      {
+        "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+        "sha256": "637484072ccadd6740924f7b2c3aa77d2593c11a402304145f72038e04114801"
+      },
+      {
+        "path": "scripts/check-pwce-dispatch-process.mjs",
+        "sha256": "794b6fa0673c0468e5333c78edb0b3e5baf3c5a05bbea0aa0e370bd4908aab76"
+      },
+      {
+        "path": "scripts/generate-pwce-admission-pin.mjs",
+        "sha256": "fd4fcc918a17473409dbffdabd7612c69967f9d28ecd92a38ed99d523c8ade69"
+      }
+    ]
+  },
+  "claim": "Canonical final PWCE admission validates the published producer proof against original prepared input, scope, grant revision, snapshot and approval terms; synchronous SQLite intent custody precedes I/O, immutable results survive process reopening, and incomplete admission replies are never automatically resent. Admission alone makes no target call.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-authority-admission-full.log",
+      "logSha256": "dbaa51a412497324f4b5cea47c4fb0e088f08d082aa469793bc998c2ff192cd2"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-authority-admission-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-authority-admission-build.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-authority-admission-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-authority-admission-workspace-tests.log",
+      "logSha256": "72a56ca6b40aed418f3426d9232d6815d47a19afdd2373a991b54867273adbc8"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "ls-authority-admission-workspace-check.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/authority-admission.test.ts apps/server/test/pwce-admission-custody.test.ts",
+      "result": "pass",
+      "log": "ls-authority-admission-unit.log",
+      "logSha256": "93afd174f5ed6ee8b8032a10db49b356219ffc187ff4cd5a8cc712487f80efe1"
+    },
+    {
+      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "result": "pass",
+      "log": "ls-authority-admission-joined.log",
+      "logSha256": "907ab208e2283838a704a964c751f901e37cb181ac4ebe928cff2a018842e76f"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "ls-authority-admission-context.log",
+      "logSha256": "351f9a5cd6634cf276c5de9b63b57d032aa304929b991907184f31397d89a755"
+    },
+    {
+      "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-authority-admission-pin.log",
+      "logSha256": "1ea6850d9e2e4905eaa564322be8ca06ee7101ccb057e81a16cd2d3576264fa2"
+    },
+    {
+      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-authority-admission-catalog-pin.log",
+      "logSha256": "12a961678e4187057f78756f2e2e50550c255bb75fc164a4ae54ed13eb545205"
+    },
+    {
+      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-authority-admission-dispatch-pin.log",
+      "logSha256": "7799cc7b7e6b5549e994e5cef2ccba3b115d973b57349f7bf933be0d14482b29"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-authority-admission-private.log",
+      "logSha256": "be01f6cc841104d364ade1ac0c29ef20ae5d8305b4c1c01d08e74ed0eac26449"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-authority-admission-preflight.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "counts": {
+    "applicationTests": 728,
+    "newAdmissionUnitTestsIncludedInApplicationTotal": 13,
+    "newSqliteCustodyTestsIncludedInApplicationTotal": 5,
+    "workspaceTests": 43,
+    "joinedFinalAdmissionChecks": 6,
+    "joinedAuthorityPreviewChecks": 5,
+    "joinedCatalogChecks": 6,
+    "joinedDispatchChecks": 7,
+    "joinedContextChecks": 19,
+    "joinedRuntimeChecks": 7
+  },
+  "verificationNotes": [
+    "The initial full run passed 726/728; its stale health migration expectation was corrected. The subsequent run passed 727/728 with the unchanged Discovery Lab completion-poll assertion timing out under unbounded file concurrency. Both affected files passed together in isolation (23 tests). The default full test runner now bounds concurrency to four files without changing assertions, production deadlines or performance criteria. Both failing logs are retained.",
+    "Initial new-test fixture/import wiring errors were corrected before focused and joined checks passed.",
+    "The separate-process runner validates real producer proof and preserved embedded JSON bytes; SQLite is actually closed and reopened. Six canonical admission checks make zero target calls; the existing raw dispatch scenarios still make exactly two synthetic target calls.",
+    "No new selected-model qualification was run; historical SYNPRJ_Q7M4 telemetry remains unchanged and nonblocking."
+  ],
+  "exclusions": [
+    "Complete canonical invocation/status/result mapping and incomplete-admission read recovery",
+    "External grant-query representation and logical authority/capability invalidation streams",
+    "Configured PWCE runtime/control-plane activation, catalog restoration, power-loss and backup/restore certification",
+    "Live physical effects, deployment, provider/model selection and new Human acceptance"
+  ],
+  "continuation": "Continue canonical original invocation and read-only status mapping under LS-S028; preserve producer-owned effect semantics and unknown outcomes.",
+  "localLogArchive": "lifestream/.lifestream/benchmarks/pwce-authority-admission/2026-09-15"
+}

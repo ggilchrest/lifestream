@@ -3,11 +3,16 @@ import { spawn } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { createInterface } from 'node:readline';
-import { resolve } from 'node:path';
+import { resolve, join } from 'node:path';
+import {mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {Database} from '../packages/storage-sqlite/src/database.ts';
+import {SqlitePwceAdmissionCustody} from '../apps/server/src/authority/pwce-admission-custody.ts';
+import {PwceAuthorityAdmission} from '../packages/providers-pwce/src/authority-admission.ts';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import { PwceGatewayClient } from '../packages/providers-pwce/src/client.ts';
-import { PwceAuthorityPreview, pwceLightOperation } from '../packages/providers-pwce/src/authority-preview.ts';
+import { PwceAuthorityPreview, pwceLightOperation, pwceGovernedDisposition } from '../packages/providers-pwce/src/authority-preview.ts';
 import { canonicalJson } from '../packages/runtime/src/capabilities/schema-validation.ts';
 import { PwceCapabilityCatalog, PWCE_LIGHT_CAPABILITY_ID } from '../packages/providers-pwce/src/capability-catalog.ts';
 import { EXPECTED_PWCE_CAPABILITY_BUNDLE } from '../packages/providers-pwce/src/capability-bundle.ts';
@@ -21,7 +26,9 @@ host.stderr.on('data',chunk=>{stderr+=String(chunk);if(stderr.length>8192)host.k
 async function readLine(){let timer;try { const item=await Promise.race([iterator.next(),exit.then(()=>{throw new Error('synthetic producer exited');}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('synthetic producer response deadline exceeded')),10000);})]);assert.equal(item.done,false);assert.ok(item.value.length<4096);return JSON.parse(item.value); }finally{clearTimeout(timer);}}
 async function stats(){host.stdin.write('stats\n');const result=await readLine();assert.equal(result.fixtureStats,true);return result.calls;}
 const ajv=new Ajv2020({strict:false});addFormats(ajv);const validateRequest=ajv.compile(PWCE_DISPATCH_REQUEST_SCHEMA),validateResponse=ajv.compile(PWCE_DISPATCH_RESPONSE_SCHEMA);
-let calls=0, wireCalls=0, catalogChecks=0, authorityChecks=0;
+let calls=0, wireCalls=0, catalogChecks=0, authorityChecks=0, admissionChecks=0;
+const custodyDir=mkdtempSync(join(tmpdir(),'pwce-joined-admission-')),custodyPath=join(custodyDir,'state.sqlite');
+let database=new Database({path:custodyPath});database.migrate();
 try {
  const ready=await readLine();assert.equal(ready.fixture,true);assert.equal(ready.liveEffects,false);assert.equal(ready.scenario,'trusted-dispatch');
  const url=new URL(ready.url);assert.equal(url.protocol,'http:');assert.equal(url.hostname,'127.0.0.1');
@@ -66,6 +73,21 @@ try {
  const approvalNeeded=await preview.evaluate(previewRequest(true),callContext);assert.equal(approvalNeeded.outcome.payload.disposition,'approvalRequired');assert.equal(approvalNeeded.outcome.payload.admittedAt,null);assert.equal(await stats(),0);authorityChecks++;
 
 
+ const dispatchRequest=(request,decision)=>({...request,operation:'AuthorityProvider.authorizeDispatch',requestId:randomUUID(),idempotencyKey:randomUUID(),payload:{...request.payload,expectedGrantRevision:catalog.retained(request.payload.snapshotId,request.scope).producerRevision,requiredProviderDisposition:pwceGovernedDisposition(decision)}});
+ let hostApproved=true;
+ const admission=()=>new PwceAuthorityAdmission({providerRef:'pwce.synthetic',client:core,dispatcher:client,catalog,preview,custody:new SqlitePwceAdmissionCustody(database),authorize:async()=>hostApproved});
+ const finalRequest=dispatchRequest(allowedRequest,allowed.outcome.payload),final=await admission().authorizeDispatch(finalRequest,callContext);
+ assert.ok(contracts.validate('https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityDispatchResult',final).valid);assert.equal(final.outcome.payload.disposition,'authorized');assert.equal(final.outcome.payload.kind,'dispatch');assert.ok(final.outcome.payload.admittedAt);assert.equal(await stats(),0);admissionChecks++;
+ const finalEvidence=await admission().readEvidence(final.outcome.payload.evidenceRef,finalRequest,callContext),proof=JSON.parse(new TextDecoder().decode(finalEvidence));
+ assert.equal(createHash('sha256').update(finalEvidence).digest('hex'),final.outcome.payload.evidenceRef.sha256);assert.equal(proof.admittedAt,final.outcome.payload.admittedAt);assert.equal(proof.kind,'pwce.action.admission');assert.equal(proof.capabilitySnapshot.snapshotRef,snapshot.snapshotRef);admissionChecks++;
+ database.close();database=new Database({path:custodyPath});database.migrate();
+ const beforeReplay=wireCalls,replayed=await admission().authorizeDispatch({...finalRequest,requestId:randomUUID()},callContext);assert.deepEqual(replayed.outcome.payload,final.outcome.payload);assert.equal(wireCalls,beforeReplay);admissionChecks++;
+ hostApproved=false;await assert.rejects(admission().authorizeDispatch(finalRequest,callContext),{code:'host_admission_required'});hostApproved=true;assert.equal(wireCalls,beforeReplay);admissionChecks++;
+ const lostPreviewRequest=previewRequest(),lostPreview=await preview.evaluate(lostPreviewRequest,callContext),lostRequest=dispatchRequest(lostPreviewRequest,lostPreview.outcome.payload);
+ discardReply=true;await assert.rejects(admission().authorizeDispatch(lostRequest,callContext),{code:'unavailable'});const afterLost=wireCalls;
+ database.close();database=new Database({path:custodyPath});database.migrate();
+ await assert.rejects(admission().authorizeDispatch({...lostRequest,requestId:randomUUID()},callContext),{code:'admission_outcome_unknown'});assert.equal(wireCalls,afterLost);assert.equal(await stats(),0);admissionChecks++;
+
  const input={...scope,requestId:randomUUID(),correlationId:randomUUID(),deadline:new Date(Date.now()+30_000).toISOString(),snapshotRef:snapshot.snapshotRef,capabilityRef:'home.light.set_level',capabilityVersion:'1.0.0',capabilityOperation:'light.set_level',siteRef:'home.one',targetEntityId:'light.synthetic',parameters:{level:0.5},idempotencyKey:randomUUID(),approvalRequired:false,approvalRef:null};
  const admitted=await client.authorizeDispatch(authority.authorityContextRef,input);assert.ok(validateResponse(admitted),JSON.stringify(validateResponse.errors));assert.equal(admitted.status,'admitted');assert.equal(await stats(),0);calls++;
  const duplicate=await client.authorizeDispatch(authority.authorityContextRef,input);assert.equal(duplicate.actionRef,admitted.actionRef);assert.equal(duplicate.duplicate,true);assert.equal(await stats(),0);calls++;
@@ -81,6 +103,7 @@ try {
  host.stdin.write('revoke\n');assert.equal((await readLine()).revoked,true);
  await assert.rejects(catalog.schemas.read(EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0].inputSchemaArtifact,schemaScope,schemaContext()),{code:'authority_context_invalidated'});catalogChecks++;
  await assert.rejects(catalog.getSnapshot(catalogRequest(),callContext),{code:'authority_context_invalidated'});catalogChecks++;
+ await assert.rejects(admission().readEvidence(final.outcome.payload.evidenceRef,finalRequest,callContext),{code:'authority_context_invalidated'});admissionChecks++;
  await assert.rejects(preview.readEvidence(allowed.outcome.payload.evidenceRef,allowedRequest,callContext),{code:'authority_context_invalidated'});authorityChecks++;
  const deniedAuthority=await core.authority(['home.one'],undefined,identity),deniedBinding={...binding,authorityContextRef:deniedAuthority.authorityContextRef},deniedScope={...localScope,authorityContextRef:{...localScope.authorityContextRef,contextId:randomUUID()}};
  const deniedCatalog=new PwceCapabilityCatalog({providerRef:'pwce.synthetic',client:core,resolve:async()=>deniedBinding,isCurrent:()=>true});
@@ -88,8 +111,9 @@ try {
  assert.equal(denied.outcome.payload.disposition,'denied');assert.equal(denied.outcome.payload.admittedAt,null);assert.equal(await stats(),2);authorityChecks++;
 
  await assert.rejects(client.invoke(authority.authorityContextRef,{...pendingInput,actionRef:pending.actionRef}),{code:'authority_context_invalidated'});assert.equal(await stats(),2);calls++;
- console.log(JSON.stringify({checks:calls,catalogChecks,authorityChecks,wireCalls,targetCalls:2,fixtures:true,scope:'separate-process canonical catalog, schema and authority-preview mapping plus pinned dispatch transport; no canonical admission/invocation adapter, real effects or Human acceptance'}));
+ console.log(JSON.stringify({checks:calls,catalogChecks,authorityChecks,admissionChecks,wireCalls,targetCalls:2,fixtures:true,scope:'separate-process canonical catalog, preview and durable final admission plus pinned dispatch transport; no canonical invocation adapter, real effects or Human acceptance'}));
 }finally{
+ database.close();rmSync(custodyDir,{recursive:true,force:true});
  host.stdin.end('stop\n');let timer;
  try{await Promise.race([exit,new Promise(resolve=>{timer=setTimeout(()=>{host.kill('SIGTERM');resolve();},3000);})]);}finally{clearTimeout(timer);lines.close();}
  assert.ok(!stderr.includes(token)&&!stderr.includes(dispatcherToken),'synthetic credentials must not appear in producer diagnostics');

@@ -11,3 +11,7 @@ export { PwceCapabilityCatalog, PWCE_LIGHT_CAPABILITY_ID } from './capability-ca
 export type { PwceCapabilityBinding, PwceCapabilityCatalogOptions, PwceCatalogRecord } from './capability-catalog.js';
 export { PwceAuthorityPreview, pwceLightOperation } from './authority-preview.ts';
 export type { PwceAuthorityPreviewOptions, PwcePreparedAction } from './authority-preview.ts';
+
+export { PwceAuthorityAdmission } from './authority-admission.ts';
+export type { PwceAuthorityAdmissionOptions, PwceAdmissionCustody, PwceAdmissionIntent, PwceAdmissionOutcome, PwceAdmissionRecord } from './authority-admission.ts';
+export { pwceGovernedDisposition } from './authority-preview.ts';
