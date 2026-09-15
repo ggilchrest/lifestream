@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-TOOL-STATUS-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "e2ef3733178606e171c6b79c97699f8c4e5208ce",
+  "sourceBinding": "Base revision and changed-source hashes; the enclosing commit contains the actual original-invocation HTTP status recovery implementation.",
+  "specificationRevision": "1475947bf2ac164654bc044cf430d9445eab34a6",
+  "recordedAt": "2026-09-15T11:05:55.717479Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/admin/security-administration.ts",
+      "sha256": "e9cb81e38129fa8d819afd0dba7bf17db34a15d59b64f9a66efcbcf1d88cca2a"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "69752a5adf58fae339da2b9f4d223cd2a525b0e41d121d2c60046bcb02269815"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "dd83223481e5a5d93b54364dc9b954873ea194eb91a9294ee7066d0feb823c5e"
+    },
+    {
+      "path": "apps/server/test/tool-idempotency.test.ts",
+      "sha256": "0158cf0f07f204c39e766634e56620a3ba68e1b6672dc4c27e90ce438026e261"
+    },
+    {
+      "path": "docs/canonical-provider-boundary.md",
+      "sha256": "9fc4abf089e6c433023b5cc516c98ee38472c3e02bbacbb00207a325aee1a747"
+    },
+    {
+      "path": "docs/local-authentication.md",
+      "sha256": "1de657b728b3af4cc240f6770f3d1cd212209e6218578d95256f403845244ebd"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "f1d1053585a42d033070d4df9bda2017ed620d0f3585f9bc6437f3d8abf2f420"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0029_tool_recovery.sql",
+      "sha256": "1f8aee4db25d7eb808e941c5d719dc9beff1eeafb28ec959bd88badf29f102d2"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "97c8f11f5fbba5bff39a3268d93538d960f447eb4f4b9627c195d347eeef6b7f"
+    },
+    {
+      "path": "packages/storage-sqlite/src/tool-invocations.ts",
+      "sha256": "4c07730b31d693fe4067a8513ed7353342dbffe1867b584491fac57e07101a0c"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "865367a92071a4c808d35f1d9fd42493f0742056737591b17f1c92f61344742d"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "e43532ba7f75b42861f34616c547433ae0f335f99fa62011fc97f132ca4f6e0f"
+    },
+    {
+      "path": "packages/storage-sqlite/test/tool-invocations.test.ts",
+      "sha256": "c8bf3a42a6d939b4cbf09f95f820bc22bc88304da4971451ed9b1f6fdd6ab8e6"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "4d20039187766ecf4261e9ed6173ad96a9961359",
+    "producerSourceChanged": false,
+    "newProducerSuiteRun": false
+  },
+  "baselineRegression": {
+    "revision": "e2ef3733178606e171c6b79c97699f8c4e5208ce",
+    "scope": "Committed security-administration.ts substituted into the current synthetic HTTP test harness; current storage migration and test setup retained. Handler restored before final verification.",
+    "testsRun": 1,
+    "testsFailed": 1,
+    "observedFailure": "The original provider retained a successful effect after its reply was lost, but the committed HTTP handler returned 503 rather than recovering status without discovery.",
+    "log": "tool-status-baseline.log",
+    "logSha256": "e4191eeb337b3a5498d1039b350b575a3616a9a153206b5d54944cf83e866b1f"
+  },
+  "claims": [
+    "Authenticated GET status reads only the original invocation owned by the current Human/Assistant/session; missing and cross-owner records do not allocate requests or expose another owner.",
+    "The original request owner pins trusted provider installation identity, actual capability/version/route, mode, scope and output schema before invocation. Completed historical requests cannot be rebound. Missing or changed bindings do not discover a newer catalog or contact a replacement provider.",
+    "Recovery calls the bounded original-provider getInvocation only. Synthetic lost replies and failed HTTP result storage recover a confirmed result with one total effect, unchanged authority events and no replacement dispatch.",
+    "Successful recovery requires the original output-schema reference and currently authorized digest-verified bytes; wrong invocation, wrong schema, revoked access, changed owner, deadline and storage failures withhold output.",
+    "Observations are stored separately with sequence, timestamp and exact response digest. Original HTTP response bytes remain immutable. Repeated identical observations are deduplicated, and late uncertainty cannot replace terminal confirmation.",
+    "Uncertain invocation bindings survive actual server restart; a previously confirmed observation also survives restart without provider result memory. Provider outcome loss remains unknown, never a reason to redispatch.",
+    "Additive sparse-ledger-compatible migration preserves original records. Bounded observations reserve one final confirmation entry. Existing source, authority, tooling and separate-process PWCE no-local-fallback checks pass."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "tool-status-build.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "tool-status-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "tool-status-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "tool-status-full-tests.log",
+      "logSha256": "2d3977ee483c0c73f5384fdfa4fa577873c59cd2a19ca25541048ecc176e4331",
+      "testsPassed": 574
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/tool-invocations.test.ts apps/server/test/tool-idempotency.test.ts apps/server/test/security-administration.test.ts",
+      "result": "pass",
+      "log": "tool-status-focused.log",
+      "logSha256": "c61fac72a994c32075ab570309e1f463e7527d8c31c7ccaec6bab65baa429ac4",
+      "testsPassed": 35
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "tool-status-tooling.log",
+      "logSha256": "0e3e2bbd79e9fa1469fb1e27908622b6a1822b71a40e86ac961372719c338110",
+      "testsPassed": 45
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "tool-status-process.log",
+      "logSha256": "a9f38d03e67528330a083e72093494f6881a722fd8b6813054ae0ce0edaa296c"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "tool-status-private.log",
+      "logSha256": "e6e996b20c91718d304467b1927c978adc32e6084440759cb2a429de8d208b98"
+    }
+  ],
+  "limits": {
+    "requestLedgerRecords": 4096,
+    "bindingBytes": 8192,
+    "recordedResponseBytes": 131072,
+    "nonterminalObservationsPerInvocation": 64,
+    "reservedTerminalObservation": 1,
+    "httpDeadlineMilliseconds": 5000,
+    "automaticRedispatch": false
+  },
+  "regressionCounts": {
+    "sourceTestsPassed": 574,
+    "newSourceTests": 17,
+    "focusedTestsPassed": 35,
+    "toolingTestsPassed": 45,
+    "separateProcessContextChecksPassed": 19,
+    "separateProcessRuntimeChecksPassed": 7
+  },
+  "resolvedValidationFailure": {
+    "log": "tool-status-full-tests-initial-failure.log",
+    "logSha256": "3c11edb08289071ed67605de8177201804bce001dee26c898eff3f62177ea79f",
+    "failure": "Existing sparse migration replay initially rejected an already-created recovery table.",
+    "resolution": "Use additive CREATE TABLE IF NOT EXISTS statements, preserving existing data; final full suite passes."
+  },
+  "exclusions": [
+    "This is the existing authenticated local administration projection. Full canonical provider/HTTP envelopes, precise grant/operation scope, host-owned UUID scope mapping and canonical authoritative effect-evidence references remain outstanding.",
+    "The trusted composition must explicitly identify the provider installation/outcome store. Historical unbound requests and missing provider outcomes remain unavailable or unknown. Provider state durability is not inferred from HTTP or server restart.",
+    "Status reads require the original authenticated session and current Assistant/schema access. No cross-session permission widening, saved-service configuration or new model/provider selection occurred.",
+    "No historical backup restore fencing, PWCE action/schema publication, trusted external authority/action adapter, joint LS-S028/PV1-T5 qualification or real-world effect is claimed.",
+    "No saved-service restart, live configuration, personal-data import, training or Human acceptance occurred. Historical receipts, approved schema bytes, unrelated dirty artifacts and model-quality observations remain unchanged."
+  ],
+  "nextAction": "Complete canonical runtime consumer, precise grant/operation and host scope migration; then finish PWCE action/schema publication, trusted authority/invocation/status mapping and joint scenarios. Continue remaining S083/S084 independent development."
+}

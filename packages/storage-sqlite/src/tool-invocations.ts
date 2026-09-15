@@ -7,6 +7,17 @@ export type ToolRequestIdentity = ToolRequestBinding & {
   invocationId: string; interactionId: string; requestId: string; correlationId: string;
   fresh: boolean; ownerToken?: string; response?: StoredToolResponse;
 };
+export type ToolStatusOwner = { invocationId: string; principalId: string; assistantId: string; sessionId: string };
+export type ToolRecoveryBinding = {
+  providerIdentity: string; capabilityId: string; capabilityVersion: string; providerRoute: string;
+  executionMode: 'live' | 'replay' | 'simulation';
+  scope: { assistantId: string; sessionId: string; endpointId: string; environment: string;
+    authorityContextRef: { providerRef: string; contextId: string; revision: number } };
+  outputSchema: { reference: string; sha256: string; mediaType: string; schemaRef: string; byteLength: number } | null;
+};
+export type ToolStatusRecord = ToolRequestIdentity & { recovery?: ToolRecoveryBinding;
+  observation?: { sequence: number; response: StoredToolResponse; observedAt: string } };
+const terminal = (value?: StoredToolResponse) => ['succeeded', 'failed', 'denied'].includes(String((value?.body.result as Record<string, unknown> | undefined)?.lifecycle));
 type Row = { idempotency_key: string; principal_id: string; assistant_id: string; session_id: string; request_digest: string;
   invocation_id: string; interaction_id: string; request_id: string; correlation_id: string; owner_token: string;
   response_json: string | null; response_sha256: string | null };
@@ -67,6 +78,76 @@ export class ToolInvocationRepository {
       return { ...checked, invocationId, interactionId, requestId, correlationId, ownerToken, fresh: true };
     });
   }
+  /** Lookup never creates a request and never exposes another owner's record. */
+  lookup(owner: ToolStatusOwner, assertCurrent: () => void): ToolStatusRecord {
+    owner = { invocationId: owner.invocationId, principalId: owner.principalId, assistantId: owner.assistantId, sessionId: owner.sessionId };
+    if (![owner.invocationId, owner.principalId, owner.assistantId, owner.sessionId].every(boundedString)) throw new ToolInvocationError('invalid');
+    return this.database.transaction(tx => {
+      assertCurrent();
+      const row = tx.get<Row>('SELECT * FROM tool_invocation_requests WHERE invocation_id=? AND principal_id=? AND assistant_id=? AND session_id=?',
+        owner.invocationId, owner.principalId, owner.assistantId, owner.sessionId);
+      if (!row) throw new ToolInvocationError('notFound');
+      const result: ToolStatusRecord = project(row);
+      const stored = tx.get<{ binding_json: string; sha256: string }>('SELECT * FROM tool_recovery_bindings WHERE invocation_id=?', owner.invocationId);
+      if (stored) {
+        if (hash(stored.binding_json) !== stored.sha256) throw new ToolInvocationError('corrupt');
+        try { result.recovery = checkedRecovery(JSON.parse(stored.binding_json), row); } catch { throw new ToolInvocationError('corrupt'); }
+      }
+      const observation = tx.get<{ sequence: number; response_json: string; sha256: string; observed_at: string }>(
+        'SELECT * FROM tool_recovery_observations WHERE invocation_id=? ORDER BY sequence DESC LIMIT 1', owner.invocationId);
+      if (observation) {
+        if (!stored || hash(observation.response_json) !== observation.sha256) throw new ToolInvocationError('corrupt');
+        try { result.observation = { sequence: observation.sequence, response: response(observation.response_json), observedAt: observation.observed_at }; }
+        catch { throw new ToolInvocationError('corrupt'); }
+      }
+      assertCurrent(); return result;
+    });
+  }
+  /** Only the original request owner can bind the provider before invoking it. */
+  bindRecovery(input: ToolRequestIdentity, recovery: ToolRecoveryBinding, assertCurrent: () => void): void {
+    const checked = binding(input), ownerToken = input.ownerToken, invocationId = input.invocationId;
+    if (!input.fresh || !boundedString(ownerToken)) throw new ToolInvocationError('conflict');
+    const owned = structuredClone(recovery);
+    this.database.transaction(tx => {
+      assertCurrent();
+      const row = tx.get<Row>('SELECT * FROM tool_invocation_requests WHERE idempotency_key=?', checked.idempotencyKey);
+      if (!row) throw new ToolInvocationError('notFound');
+      matches(row, checked);
+      if (row.owner_token !== ownerToken || row.invocation_id !== invocationId) throw new ToolInvocationError('conflict');
+      const json = JSON.stringify(checkedRecovery(owned, row));
+      const prior = tx.get<{ binding_json: string; sha256: string }>('SELECT * FROM tool_recovery_bindings WHERE invocation_id=?', row.invocation_id);
+      if (prior && (prior.sha256 !== hash(prior.binding_json) || prior.binding_json !== json)) throw new ToolInvocationError('conflict');
+      if (!prior && row.response_json !== null) throw new ToolInvocationError('conflict');
+      if (!prior) tx.run('INSERT INTO tool_recovery_bindings VALUES (?,?,?)', row.invocation_id, json, hash(json));
+      assertCurrent();
+    });
+  }
+  /** Append evidence separately; a late uncertain read cannot replace a terminal observation. */
+  observe(owner: ToolStatusOwner, result: StoredToolResponse, observedAt: string, assertCurrent: () => void): StoredToolResponse {
+    owner = { invocationId: owner.invocationId, principalId: owner.principalId, assistantId: owner.assistantId, sessionId: owner.sessionId };
+    const json = JSON.stringify(result), checked = response(json);
+    const lifecycle = (checked.body.result as Record<string, unknown> | undefined)?.lifecycle;
+    if ((checked.body.result as Record<string, unknown> | undefined)?.invocationId !== owner.invocationId ||
+      !['authorized','denied','approvalRequired','started','succeeded','failed','outcomeUnknown'].includes(String(lifecycle)) ||
+      !observedAt.endsWith('Z') || !Number.isFinite(Date.parse(observedAt))) throw new ToolInvocationError('invalid');
+    // lookup performs its own transaction, so capture and verify immutable ownership first.
+    this.lookup(owner, assertCurrent);
+    return this.database.transaction(tx => {
+      assertCurrent();
+      if (!tx.get('SELECT invocation_id FROM tool_recovery_bindings WHERE invocation_id=?', owner.invocationId)) throw new ToolInvocationError('conflict');
+      const prior = tx.get<{ sequence: number; response_json: string; sha256: string }>(
+        'SELECT * FROM tool_recovery_observations WHERE invocation_id=? ORDER BY sequence DESC LIMIT 1', owner.invocationId);
+      if (prior) {
+        if (hash(prior.response_json) !== prior.sha256) throw new ToolInvocationError('corrupt');
+        const previous = response(prior.response_json);
+        if (terminal(previous) || prior.response_json === json) { assertCurrent(); return previous; }
+        // Reserve a final slot for confirmation after the bounded uncertain history.
+        if (prior.sequence >= 64 && !terminal(checked)) throw new ToolInvocationError('capacity');
+      }
+      tx.run('INSERT INTO tool_recovery_observations VALUES (?,?,?,?,?)', owner.invocationId, (prior?.sequence ?? 0) + 1, json, hash(json), observedAt);
+      assertCurrent(); return checked;
+    });
+  }
   complete(input: ToolRequestIdentity, result: StoredToolResponse): void {
     const checked = binding(input), ownerToken = input.ownerToken, invocationId = input.invocationId;
     if (!input.fresh || !boundedString(ownerToken)) throw new ToolInvocationError('conflict');
@@ -84,4 +165,15 @@ export class ToolInvocationRepository {
       tx.run('UPDATE tool_invocation_requests SET response_json=?,response_sha256=? WHERE idempotency_key=?', json, hash(json), checked.idempotencyKey);
     });
   }
+}
+
+function checkedRecovery(value: ToolRecoveryBinding, row: Row): ToolRecoveryBinding {
+  if (!value || Buffer.byteLength(JSON.stringify(value)) > 8192 ||
+    ![value.providerIdentity, value.capabilityId, value.capabilityVersion, value.providerRoute,
+      value.scope?.endpointId, value.scope?.environment, value.scope?.authorityContextRef?.providerRef,
+      value.scope?.authorityContextRef?.contextId].every(boundedString) ||
+    !['live','replay','simulation'].includes(value.executionMode) || value.scope.assistantId !== row.assistant_id ||
+    value.scope.sessionId !== row.session_id || !Number.isInteger(value.scope.authorityContextRef.revision) || value.scope.authorityContextRef.revision < 1 ||
+    value.outputSchema === undefined) throw new ToolInvocationError('invalid');
+  return structuredClone(value);
 }
