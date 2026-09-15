@@ -186,3 +186,16 @@ test('lost speech playback acknowledgment expires unknown and never releases a r
  const f=await speechFixture(t);await f.ready();const request=f.event({expiresAt:Date.now()+1000}),r=await f.extension(request);await f.completed;await f.ack(r);
  await until(()=>f.pending()===0);const final=outcome(await f.extension({operation:'inspect'}));assert.equal(final.state,'unknown');assert.deepEqual(final.reasonCodes,['ackTimeout']);assert.equal(final.lastDeliveryStage,'acknowledged');assert.equal(final.acknowledgmentKind,'endpointAccepted');assert.equal((await f.extension(request)).body.delivery,null);assert.equal(f.model.length,1);assert.equal((await f.ack(r,'playbackCompleted')).status,409);
 });
+
+test('authenticated microphone start requires the current audio endpoint and closes when disclosure changes',{timeout:15000},async t=>{
+ const f=await fixture(t,true,'speech');let recognition=0;
+ (f.app as any).providers.stt={async *transcribe(){recognition++;yield {kind:'terminal',outcome:'failed'};}};
+ const endpoint=(await f.send('/api/runtime/v1/session-context')).body.endpoint;
+ const connect=async()=>{const wire:any[]=[];const socket=new WebSocket(f.base.replace('http:','ws:')+'/api/runtime/v1/audio',{origin:f.base,headers:{cookie:f.headers.cookie!}});t.after(()=>socket.close());socket.on('message',data=>wire.push(JSON.parse(data.toString())));await new Promise<void>((resolve,reject)=>{socket.once('open',resolve);socket.once('error',reject);});return {socket,wire};};
+ const request=(revision:number,endpointId=endpoint.endpointId)=>({schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId:f.auth.sessionId,expectedSessionRevision:revision,endpointId,audioInputId:randomUUID(),format:{encoding:'pcm_s16le',sampleRateHz:16000,channels:1},assistantId:f.assistant.assistantId,relationshipId:f.rel.relationshipId});
+ for(const invalid of [request(0),request(1,randomUUID())]){const c=await connect();c.socket.send(JSON.stringify({type:'start',request:invalid}));await until(()=>c.socket.readyState===WebSocket.CLOSED);assert.equal(c.wire.some(e=>e.type==='accepted'),false);assert.equal(c.wire.find(e=>e.type==='error').problem.code,'audio_input_scope_changed');}
+ const c=await connect(),input=request(1);c.socket.send(JSON.stringify({type:'start',request:input}));await until(()=>c.wire.some(e=>e.type==='accepted'));
+ c.socket.send(JSON.stringify({type:'frame',audioInputId:input.audioInputId,frame:{frameId:randomUUID(),sequence:0,format:input.format,sampleOffset:0,sampleCount:10,dataBase64:Buffer.alloc(20).toString('base64')}}));
+ assert.equal((await f.send('/api/runtime/v1/session-context',{expectedRevision:1,mode:'audio',audienceScope:'unknown'})).status,200);await until(()=>c.socket.readyState===WebSocket.CLOSED);assert.equal(recognition,0);assert.equal(c.wire.find(e=>e.type==='error').problem.code,'audio_input_scope_changed');
+ const fresh=await connect();fresh.socket.send(JSON.stringify({type:'start',request:request(2)}));await until(()=>fresh.wire.some(e=>e.type==='accepted'));assert.equal(fresh.wire.some(e=>e.type==='error'),false);
+});

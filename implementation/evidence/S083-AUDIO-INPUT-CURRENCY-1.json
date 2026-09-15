@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-AUDIO-INPUT-CURRENCY-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "6b3558602a7e8ecd311a82783cbc94a40e93e1b0",
+  "specificationRevision": "936bdf3ed920096d3ccc1bc2d4bec591522d060d",
+  "recordedAt": "2026-09-15T03:20:01.963558Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "93679855a93327aa1696c325573b98cb3664c2e2a2b0b5bd226f5829df080d28"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "547753f96a514f9e529ffe37012a5ea887b347819b4b2c0b76ff3409d1af92a3"
+    },
+    {
+      "path": "apps/server/test/audio.test.ts",
+      "sha256": "a21009cbb49ba134b3a1994b3d799e34f945d68f0a58dde9c80e37e03bc17ae5"
+    },
+    {
+      "path": "apps/server/test/initiative-host.test.ts",
+      "sha256": "ee9ba04fd38d7c129daa9e655de5a262c6757596bc32cf54b97d3e0b33627402"
+    }
+  ],
+  "claims": [
+    "Authenticated microphone input now checks its declared session revision and endpoint against the current active session, audio input modality, authenticated account and Assistant permission. The check runs before start admission, after asynchronous voice capability lookup, before accepting frames or committing a turn, and before queued recognition begins. Explicit fixture transport behavior is retained separately.",
+    "Input currency is rechecked as recognition consumes frames and before recognition results are published or passed to inference. Session disclosure changes invalidate an idle accepted microphone connection as well as an active response, abort the producer signal, clear buffered input and close the transport with an explicit reconnect reason. Queued input cannot start another recognition request after closure.",
+    "The same input check joins existing prepared-context and audio-output lease checks during generation, PCM delivery and final completion. Output-only sessions with no microphone start remain governed by their existing independent output currency checks.",
+    "Five new tests cover stale start/frame/commit admission, a revision change during asynchronous capability lookup, a late transcript after cancellation, queued capture after invalidation, and actual local-password WebSocket endpoint/revision checks with a disclosure change and fresh reconnect. No physical microphone or live provider was used."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "df3e9759928d7ec27034088f168c725afb511bf5bee330be2fcf24aa44915967"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "d1bc9c3666611dadc208dfbb9bfeb18468b709de70457d93b58983efb122ca31"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "6c87c139c2ab522868c6f19ec37eb5b7a68e26e6698c3cc2595a8a9ac2853103"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "904378f76b287c9e68f722cfdaea452824139f85c722f1a8f12b8d6e314b817f"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 376,
+    "newSourceTests": 5,
+    "browserTests": 35,
+    "toolingTests": 45
+  },
+  "limitations": [
+    "The main Conversation browser view still requires microphone capture, VAD-qualified interruption, ordinary speech playback and voice-reply context integration. This component closes a server prerequisite; it does not claim complete browser voice support.",
+    "Guided host-owned synthetic setup, expression inspection, pinned gradient Lab, reserved acknowledgments, bounded timing adaptation, older-database restore fencing and current-source prerequisite qualifications remain open. S084 semantic/output/performance and PWCE Personal V1 core work continue.",
+    "No selected-provider speech or performance, physical presence, physical audibility or Human acceptance was qualified. Saved review services and data remain untouched. No provider selection, deployment, live configuration change, personal import, training or new model-quality observation occurred."
+  ]
+}

@@ -23,7 +23,7 @@ export const hasAudioEnergy = (dataBase64: string, threshold = 0.015): boolean =
 export const VOICE_TURN_DEADLINE_MS = 180_000;
 export const SPEECH_SEGMENT_DEADLINE_MS = 45_000;
 export type AudioOutputLease={current:()=>boolean;release:()=>void};
-export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
+export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; inputCurrent?: (request: AudioRequest) => boolean; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
 export type OutputOnlySpeech={text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
 
 async function waitForPreviousOutput(previous:Promise<void>,signal:AbortSignal):Promise<void>{
@@ -102,7 +102,19 @@ export class AudioSession {
   }
 
   close(): void { this.closed = true;this.lifetime.abort(); this.frames = []; this.voiceSettings = { ...defaultVoiceSettings }; this.request = undefined; this.controller?.abort(); this.socket.close(1001, "audio session closed"); }
-  invalidateIfStale(): void { if (this.currentInput && !this.currentInput.isCurrent()) { this.controller?.abort(); if (this.interactionTraceId) send(this.socket, { type: "stopPlayback", interactionTraceId: this.interactionTraceId, reason: "runtime_input_stale" }); } }
+  private ensureInputCurrent(request = this.request): boolean {
+    if (!request) return !this.closed;
+    let current = false;
+    try { current = !this.closed && (this.deps.inputCurrent?.(request) ?? true); } catch { /* Failed authority lookup is not current input. */ }
+    if (current) return true;
+    if (!this.closed) {
+      send(this.socket, { type: "error", requestId: request.requestId, problem: problem("audio_input_scope_changed", "Audio session revision, endpoint or authority changed; reconnect microphone using the current session.", request.correlationId) });
+      if (this.interactionTraceId) send(this.socket, { type: "stopPlayback", interactionTraceId: this.interactionTraceId, reason: "audio_input_scope_changed" });
+      this.close();
+    }
+    return false;
+  }
+  invalidateIfStale(): void { if (!this.ensureInputCurrent()) return; if (this.currentInput && !this.currentInput.isCurrent()) { this.controller?.abort(); if (this.interactionTraceId) send(this.socket, { type: "stopPlayback", interactionTraceId: this.interactionTraceId, reason: "runtime_input_stale" }); } }
 
   async message(raw: string): Promise<void> {
     if (this.closed) return;
@@ -112,6 +124,7 @@ export class AudioSession {
     if (message.type === "interrupt") { if (message.interactionTraceId === this.interactionTraceId) { this.controller?.abort(); send(this.socket, { type: "stopPlayback", interactionTraceId: message.interactionTraceId, reason: message.reason }); } return; }
     const request = this.request;
     if (!request || ((message.type === "frame" || message.type === "commitTurn" || message.type === "stop") && message.audioInputId !== request.audioInputId)) return send(this.socket, { type: "error", requestId: request?.requestId ?? randomUUID(), problem: problem("audio_input_identity_changed", "audio input identity changed", request?.correlationId ?? randomUUID()) });
+    if (!this.ensureInputCurrent(request)) return;
     if (message.type === "frame") {
       const expectedSamples = this.sampleCount();
       if (message.frame.sequence !== this.frames.length || message.frame.sampleOffset !== expectedSamples || message.frame.format.encoding !== "pcm_s16le" || message.frame.format.sampleRateHz !== 16000 || message.frame.format.channels !== 1 || message.frame.sampleCount < 1 || message.frame.sampleCount > 4800 || Buffer.from(message.frame.dataBase64, "base64").length !== message.frame.sampleCount * 2) return send(this.socket, { type: "error", requestId: request.requestId, problem: problem("audio_frame_invalid", "audio frame sequence, format, offset, or payload is invalid", request.correlationId) });
@@ -136,6 +149,7 @@ export class AudioSession {
 
   private async start(request: AudioRequest): Promise<void> {
     if (this.starting || this.request || !request || request.sessionId !== this.sessionId || request.schemaVersion !== "1.0.0" || !validUuid(request.requestId) || !validUuid(request.correlationId) || !validUuid(request.sessionId) || !validUuid(request.endpointId) || !validUuid(request.audioInputId) || !Number.isInteger(request.expectedSessionRevision) || request.expectedSessionRevision < 0 || request.format?.encoding !== "pcm_s16le" || request.format.sampleRateHz !== 16000 || request.format.channels !== 1) { this.close(); return; }
+    if (!this.ensureInputCurrent(request)) return;
     this.starting = true;
     let settings: VoiceSettings;
     try { settings = parseVoiceSettings(request.voiceSettings); }
@@ -148,6 +162,7 @@ export class AudioSession {
     if (this.closed) return;
     this.voiceSettings = settings;
     if (this.deps.prepare) { try { const prepared = this.deps.prepare({ ...(request.assistantId ? { assistantId: request.assistantId } : {}), ...(request.relationshipId ? { relationshipId: request.relationshipId } : {}), endpointId: request.endpointId, userInput: "" }); this.identity.assistantId = prepared.assistantId; } catch { this.close(); return; } }
+    if (!this.ensureInputCurrent(request)) return;
     this.request = request;this.starting=false;
     send(this.socket, { type: "accepted", identity: { ...this.identity, sessionId: request.sessionId, endpointId: request.endpointId, interactionTraceId: request.correlationId }, audioInputId: request.audioInputId });
   }
@@ -155,7 +170,7 @@ export class AudioSession {
   private sampleCount(): number { return this.frames.reduce((total, frame) => total + frame.sampleCount, 0); }
 
   private async runTurn(frames: AudioFrame[]): Promise<void> {
-    const request = this.request!; if (this.controller || this.closed) return;
+    const request = this.request; if (!request || this.controller || !this.ensureInputCurrent(request)) return;
     this.controller = new AbortController(); this.interactionTraceId = randomUUID(); this.sequence = 0;
     const traceId = this.interactionTraceId; const deadlineAt = new Date(Date.now() + VOICE_TURN_DEADLINE_MS).toISOString();
     const controller = this.controller;
@@ -163,10 +178,12 @@ export class AudioSession {
     let outputLease:AudioOutputLease|undefined;
     const timer = setTimeout(() => { timedOut = true; controller.abort(); }, VOICE_TURN_DEADLINE_MS);
     send(this.socket, { type: "turnStarted", interactionTraceId: traceId });
-    const audio = async function* () { for (const frame of frames) yield { type: "frame" as const, audioInputId: request.audioInputId, frame }; yield { type: "end" as const, audioInputId: request.audioInputId, nextSequence: frames.length, sampleCount: frames.reduce((total, frame) => total + frame.sampleCount, 0) }; }();
+    const current = () => this.ensureInputCurrent(request);
+    const audio = async function* () { for (const frame of frames) { if (!current()) throw new Error("Audio input scope changed before recognition consumed the frame."); yield { type: "frame" as const, audioInputId: request.audioInputId, frame }; } yield { type: "end" as const, audioInputId: request.audioInputId, nextSequence: frames.length, sampleCount: frames.reduce((total, frame) => total + frame.sampleCount, 0) }; }();
     try {
       let transcript: string | undefined;
       for await (const stt of this.deps.stt.transcribe({ deadlineAt: new Date(Math.min(Date.parse(deadlineAt), Date.now() + 30_000)).toISOString(), now: () => new Date().toISOString() }, audio, this.controller.signal)) {
+        if (!current()) throw new Error("Audio input scope changed during recognition.");
         if (stt.kind === "terminal" && stt.outcome !== "succeeded") throw new Error(`Speech recognition ${stt.outcome}; check the selected STT service and retry this turn.`);
         if (stt.kind !== "data" || stt.payload.type !== "committed" || transcript !== undefined) continue;
         transcript = stt.payload.text;
@@ -175,6 +192,7 @@ export class AudioSession {
       // Finish recognition and its transport/deadline before starting the
       // independently bounded inference/speech phases. Never emit a completed
       // answer and only then discover a failed recognition terminal.
+      if (!current()) throw new Error("Audio input scope changed after recognition.");
       if (transcript === undefined || !transcript.trim()) throw new Error("speech input did not produce a committed transcript");
       if (controller.signal.aborted) throw new Error("audio turn interrupted");
         this.currentInput = this.deps.prepare?.({ ...(request.assistantId ? { assistantId: request.assistantId } : {}), ...(request.relationshipId ? { relationshipId: request.relationshipId } : {}), endpointId: request.endpointId, userInput: transcript });
@@ -226,6 +244,7 @@ export class AudioSession {
         const synthesis=async function*(){for await(const text of queue)yield* speak(text);};
         try { for await (const speech of bufferedStream(synthesis(),controller.signal,64,()=>{if(!controller.signal.aborted){internalFailure=true;controller.abort();}})) {await pacer.admit(speech.frame.sampleCount,speech.frame.format.sampleRateHz,controller.signal);this.invalidateIfStale();if(controller.signal.aborted||outputLease&&!outputLease.current())throw new Error("audio context or output lease changed");send(this.socket,{type:"audio",interactionTraceId:traceId,chunk:{segmentId:speech.segmentId,frame:speech.frame}});} await generation; }
         catch (error) { internalFailure ||= !controller.signal.aborted; controller.abort(); queue.close(error); await generation.catch(() => {}); throw error; }
+        this.invalidateIfStale();if(controller.signal.aborted)throw new Error("audio input changed before completion");
         response(this.socket, traceId, this.sequence++, { type: "terminal", state: "completed", finalResponse: null, error: null });
     } catch (error) {
       const interrupted = this.controller.signal.aborted && !timedOut && !internalFailure;

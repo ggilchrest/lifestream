@@ -173,3 +173,50 @@ test("committed speech is rendered as a user transcript before the Assistant res
   const deltas = events.filter((event) => event.type === "response").map((event) => (event.event as { payload?: { type?: string; text?: string } }).payload).filter((payload) => payload?.type === "textDelta");
   assert.equal(transcript?.text, "what is ready"); assert.deepEqual(deltas.map((delta) => delta?.text), ["The Assistant runtime is ready."]); assert.ok(events.some((event) => (event.event as { payload?: { state?: string } })?.payload?.state === "completed"));
 });
+
+test('stale input is rejected before start or buffered commit reaches recognition',async()=>{
+ for(const staleAt of ['start','frame','commit']){
+  const events:any[]=[];let current=staleAt!=='start',recognition=0,closed=0;
+  const socket={readyState:1,send:(value:string)=>events.push(JSON.parse(value)),close:()=>{closed++;}};
+  const stt={async *transcribe(){recognition++;yield {kind:'data',payload:{type:'committed',text:'Must not be recognized.'}};}};
+  const sessionId=randomUUID(),audioInputId=randomUUID(),session=new AudioSession(socket,{stt:stt as never,inference:{} as never,tts:{} as never,inputCurrent:()=>current},sessionId);
+  await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,expectedSessionRevision:1,endpointId:randomUUID(),audioInputId,format:frame(0).format}}));
+  if(staleAt==='frame')current=false;
+  await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(0)}));current=false;
+  await session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));
+  assert.equal(recognition,0,staleAt);assert.equal(closed,1);assert.equal(events.filter(e=>e.type==='error'&&e.problem.code==='audio_input_scope_changed').length,1);assert.equal(events.some(e=>e.type==='turnStarted'),false);
+ }
+});
+
+test('session revision changes during capability lookup cannot acknowledge a stale microphone start',async()=>{
+ const events:any[]=[];let current=true,release!:(value:any)=>void;
+ const socket={readyState:1,send:(value:string)=>events.push(JSON.parse(value)),close:()=>undefined},tts={voiceControls:()=>new Promise(r=>{release=r;})};
+ const sessionId=randomUUID(),session=new AudioSession(socket,{stt:{} as never,inference:{} as never,tts:tts as never,inputCurrent:()=>current},sessionId);
+ const start=session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,expectedSessionRevision:1,endpointId:randomUUID(),audioInputId:randomUUID(),format:frame(0).format,voiceSettings:{description:'calm'}}}));
+ current=false;release({description:true,reference:true});await start;assert.equal(events.some(e=>e.type==='accepted'),false);assert.equal(events.at(-1).problem.code,'audio_input_scope_changed');
+});
+
+test('recognition cannot publish a late transcript or invoke inference after input scope changes',async()=>{
+ const events:any[]=[];let current=true,inferenceCalls=0,entered!:()=>void,release!:()=>void,aborted=false;
+ const started=new Promise<void>(r=>{entered=r;}),gate=new Promise<void>(r=>{release=r;});
+ const socket={readyState:1,send:(value:string)=>events.push(JSON.parse(value)),close:()=>undefined};
+ const stt={async *transcribe(_context:unknown,_audio:unknown,signal:AbortSignal){entered();await gate;aborted=signal.aborted;yield {kind:'data',payload:{type:'committed',text:'STALE_CAPTURE_TRANSCRIPT'}};yield {kind:'terminal',outcome:'succeeded'};}};
+ const inference={async *generate(){inferenceCalls++;yield {kind:'text',text:'Must not run.'};}};
+ const sessionId=randomUUID(),audioInputId=randomUUID(),session=new AudioSession(socket,{stt:stt as never,inference:inference as never,tts:{} as never,inputCurrent:()=>current},sessionId);
+ await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,expectedSessionRevision:1,endpointId:randomUUID(),audioInputId,format:frame(0).format}}));
+ await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(0)}));const turn=session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));await started;
+ current=false;session.invalidateIfStale();release();await turn;assert.equal(aborted,true);assert.equal(inferenceCalls,0);assert.doesNotMatch(JSON.stringify(events),/STALE_CAPTURE_TRANSCRIPT/);assert.ok(events.some(e=>e.type==='stopPlayback'));
+});
+
+test('queued voice input cannot start recognition after the captured session is invalidated',async()=>{
+ const events:any[]=[];let current=true,recognition=0,entered!:()=>void,release!:()=>void;
+ const started=new Promise<void>(r=>{entered=r;}),gate=new Promise<void>(r=>{release=r;});
+ const socket={readyState:1,send:(value:string)=>events.push(JSON.parse(value)),close:()=>undefined};
+ const stt={async *transcribe(){recognition++;entered();await gate;yield {kind:'data',payload:{type:'committed',text:'QUEUED_STALE_CAPTURE'}};}};
+ const sessionId=randomUUID(),audioInputId=randomUUID(),session=new AudioSession(socket,{stt:stt as never,inference:{} as never,tts:{} as never,inputCurrent:()=>current},sessionId);
+ await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,expectedSessionRevision:1,endpointId:randomUUID(),audioInputId,format:frame(0).format}}));
+ const commit=JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800});
+ await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(0)}));const first=session.message(commit);await started;
+ await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(0)}));const second=session.message(commit);current=false;session.invalidateIfStale();release();await Promise.all([first,second]);
+ assert.equal(recognition,1);assert.doesNotMatch(JSON.stringify(events),/QUEUED_STALE_CAPTURE/);assert.equal(events.filter(e=>e.type==='turnStarted').length,1);
+});
