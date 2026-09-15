@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-PRODUCER-SNAPSHOTS-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "e873d45729b42d226808de6ec4461b1e0a99f4cd",
+  "specificationRevision": "676ca0395f15ac13788d50183fa0c9f4f6aa4e35",
+  "recordedAt": "2026-09-15T13:00:16.586033Z",
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "04b01abf1c5da5acec8247648c978b4ff07bea4c",
+    "baselineRevision": "bf4248cbbf31764fe1935788ecde7eee61f0c5c8",
+    "evidence": "DEVELOPMENT-BATCH-169.md",
+    "sourceFiles": [
+      {
+        "path": "DEVELOPMENT-BATCH-169.md",
+        "sha256": "19ec22800c17b32aac115ef4da1b816a85f762f97934a48f06ee2b2177abd81a"
+      },
+      {
+        "path": "PV1-T5-CHECKLIST.md",
+        "sha256": "e604055519bae0f1ea0e154b803c8aa31925a5e8313c17951c662e29eece2d6b"
+      },
+      {
+        "path": "docs/user-docs/feature-map.md",
+        "sha256": "3395e5f36ae2b920446347fc279a97ab976d9b3e1e4bd86b8a3e685c329a3b21"
+      },
+      {
+        "path": "docs/user-docs/manual/inspect-local-context.html",
+        "sha256": "8f2b94a86f25e89cbdb1ce768cc221c48827ccc26c16d45e6c053fa1e321cb10"
+      },
+      {
+        "path": "docs/user-docs/qa/inspect-local-context.html",
+        "sha256": "e58dfb9551d787e58af3b85b52ab6e84cf3cce779a50bc6fca028ad5781c57aa"
+      },
+      {
+        "path": "docs/user-docs/releases/2026-09-15-capability-snapshots.html",
+        "sha256": "17b4e3f87cdd1d0599fb2a4fc8642ec5d7dd3d8491f9bb5c6f23b0ee5d5eaf51"
+      },
+      {
+        "path": "docs/user-docs/releases/index.html",
+        "sha256": "e13b0c52eb78a88e9e7f99b0f19c3d7fb9f9c8fc76367e8bbb4355bf9919277c"
+      },
+      {
+        "path": "src/actions/action-service.js",
+        "sha256": "b6322e79131711334e1f9c0c8796ec571bc43c1337f4b81defda71dcdb1c5fbb"
+      },
+      {
+        "path": "src/gateway/gateway-service.js",
+        "sha256": "b2ca42ad5ae1f0da86091d3eccf2f78fdbb06b68dd99bd88b2adacfd3a268a4a"
+      },
+      {
+        "path": "test/action-gateway-http.test.js",
+        "sha256": "4b1fd05292f4858919ffc4fdb89d7a3efa1c994f6d348d9f95347e479e660795"
+      },
+      {
+        "path": "test/capability-snapshots.test.js",
+        "sha256": "c45a0e0d8724f8aebadc74fb24aecb098017ab3cc14d1a1a86ed5af876939d1f"
+      }
+    ]
+  },
+  "claims": [
+    "PWCE retains immutable capability snapshots under exact authority, principal, sites, Assistant, endpoint, participants, audience, World and execution-environment scope. Repeated current reads retain the original reference and issuance time.",
+    "Explicit unknown, foreign, expired or invalidated snapshot references fail without substitution. Calls omitting a reference pin a current server-selected snapshot; that pin does not prove prior client review.",
+    "Every Gateway effect requires catalog membership/version and current snapshot binding at admission and dispatch. Provider catalog/target/configuration changes and World changes invalidate observed prior references permanently; restoring old content cannot revive them.",
+    "The original snapshot bytes, captured scope, source digest and SHA-256 commit with an admitted action. Corrupt or missing retained evidence cannot support a later result. Snapshot-bound dispatch requires a trusted live guard, not just a stored reference.",
+    "A duplicate Gateway command reads its recorded disposition and cannot restart an action interrupted after admission. The authenticated HTTP action test exercises explicit snapshot selection, unknown-reference refusal and one total synthetic dispatch."
+  ],
+  "checks": [
+    {
+      "command": "PWCE: npm test",
+      "result": "pass",
+      "log": "pwce-snapshots-full-4.log",
+      "logSha256": "2aec7ee30f6d3dec219f67509731860740861b70410a360ece0c3d8b5971757a",
+      "testsPassed": 209
+    },
+    {
+      "command": "PWCE: node --test test/capability-snapshots.test.js",
+      "result": "pass",
+      "log": "pwce-snapshots-focused-4.log",
+      "logSha256": "5b977b64d9592d9012979054761e0e3c1d1cd54cea1fcd3b3000260ef53d00c2",
+      "testsPassed": 13
+    },
+    {
+      "command": "PWCE: npm run validate",
+      "result": "pass",
+      "log": "pwce-snapshots-validate.log",
+      "logSha256": "e31118fd431327a2355113d49120584018feac09e64cf4bcd476ecd7e5ec0cbb"
+    },
+    {
+      "command": "python3 /private/tmp/check-pwce-snapshot-docs.py",
+      "result": "pass",
+      "log": "pwce-snapshots-docs.log",
+      "logSha256": "a080f8b68190bbacedc3da3bc2e89dc3429ccbb571751a61a06bebe7d95c3e40"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "pwce-snapshots-ls-process-final.log",
+      "logSha256": "cb061adda7056820a15617a0453efb4c8224f083ce9ce27cd7a806c9a90193d9"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "pwce-snapshots-private.log",
+      "logSha256": "994a3b72bd8c7533174ec7cf13310d9560b2c56c67cfe9c87268ad169cc918de"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "pwce-snapshots-ls-workspace.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "pwce-snapshots-ls-preflight.log",
+      "logSha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "regressionCounts": {
+    "producerTestsPassed": 209,
+    "newSnapshotTests": 13,
+    "consumerContextChecksPassed": 19,
+    "consumerRuntimeChecksPassed": 7,
+    "documentationPagesChecked": 29
+  },
+  "compatibility": {
+    "bundleChanged": false,
+    "bundleId": "pwce-agent-gateway.bundle.v1",
+    "bundleVersion": "1.0.0",
+    "bundleSha256": "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2",
+    "note": "No published schema, catalog, generated-client or bundle artifact changed. Snapshot selection uses the existing open V1 operation payload; legacy omitted-reference requests acquire a server-held snapshot. The existing sourceRevision/invalidationSequence retain their grant-revision meaning; full catalog/scope binding uses the unique retained reference and preserved source/content digests."
+  },
+  "limits": [
+    "Process-local registry follows process-local Gateway authority; restart requires fresh authority and discovery. Default 256 retained entries, configurable 1-1024, with 16 KiB source catalogs and 32 KiB retained evidence. Unexpired entries are not evicted to hide capacity exhaustion.",
+    "The producer retains the existing single-writer JSON StateStore guarantee. Persistent catalog reconstruction and physical target-state preconditions are not established."
+  ],
+  "exclusions": [
+    "No actual Lifestream canonical capability/authority adapter, trusted host proposal source, canonical control-web migration or canonical final dispatch is completed by this producer increment.",
+    "Gateway-scoped Human approval transport, target-state preconditions, complete joint action scenarios and remaining S083/S084 development and certification remain open.",
+    "No saved-service restart, deployment, live configuration/effect, personal-data import, training, provider/model selection, new selected-provider run or Human acceptance. Historical evidence, dirty user artifacts, approved schemas and model-quality observations remain unchanged."
+  ],
+  "nextAction": "Continue actual canonical Lifestream capability/authority consumption, trusted host proposal scope, grant UI and final dispatch. Finish PWCE target-state preconditions and Gateway-scoped Human approval, then joint action scenarios. Continue remaining S083/S084 development and refresh broad source qualifications; no new Human acceptance is implied."
+}
