@@ -121,3 +121,9 @@ test('playback deadline remains expiry when its timer fires before the wall-cloc
  const pending=f.session.speakOutputOnly(f.input),rejected=assert.rejects(pending);await waiting;assert.ok(Date.now()<Date.parse(f.input.deadlineAt));t.mock.timers.tick(30000);await rejected;
  assert.equal(reason,'expired');assert.equal(f.events.at(-1).type,'stopPlayback');assert.equal(f.service.currentLease(f.sessionId),undefined);
 });
+
+
+test('speech expression observations retain provider metadata and actual emission stages without provider prose',async()=>{
+ const f=fixture(),observed:any[]=[];f.input.expressionObserved=report=>observed.push(report);f.tts.synthesize=async function*(request:any){yield {kind:'preAudio',mappingRevision:'synthetic-expression:1',disposition:'partiallyApplied',degradedDimensions:['affect'],delivery:{deliveryMode:'neutral',pace:0.5,energy:0.4,text:'PROVIDER_PROSE'}};yield {kind:'data',segmentId:request.segmentId,frame:f.frame(),mappingRevision:'synthetic-expression:1'};yield {kind:'terminal',outcome:'succeeded',outputSamples:10,frameCount:1,mappingRevision:'synthetic-expression:1',disposition:'partiallyApplied',degradedDimensions:['affect']};};
+ await f.session.speakOutputOnly(f.input);assert.deepEqual(observed.map(r=>r.speechStage),['providerReported','audioEmitted','audioEmitted','synthesized']);assert.deepEqual(observed.at(-1).appliedDelivery,{deliveryMode:'neutral',pace:0.5,energy:0.4});assert.deepEqual(observed.at(-1).degradedDimensions,['warmth','affect']);assert.equal(observed.at(-1).disposition,'partiallyApplied');assert.equal(JSON.stringify(observed).includes('PROVIDER_PROSE'),false);
+});

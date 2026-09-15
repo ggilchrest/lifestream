@@ -305,7 +305,7 @@ test("S083 inference migration upgrades an existing delivery database without re
   const oldLedger=new InitiativeDeliveryRepository(db,()=>start),admitted=oldLedger.admit(scope,opportunity(start),current);
   db.connection.prepare("UPDATE initiative_delivery SET state='eligible',outcome_json=?,version=version+1 WHERE opportunity_id=?").run(JSON.stringify({...admitted.outcome,state:'eligible'}),admitted.opportunity.opportunityId);
   const r=oldLedger.get(scope,admitted.opportunity.opportunityId)!;db.close();db=new Database({path});
-  const upgraded=db.migrate();assert.deepEqual(upgraded.slice(0,oldMigrations.length),oldMigrations);assert.deepEqual(upgraded.slice(oldMigrations.length).map(m=>m.id),[24,25]);
+  const upgraded=db.migrate();assert.deepEqual(upgraded.slice(0,oldMigrations.length),oldMigrations);assert.deepEqual(upgraded.slice(oldMigrations.length).map(m=>m.id),[24,25,26]);
   const ledger=new InitiativeDeliveryRepository(db,()=>start);assert.deepEqual(ledger.get(scope,r.opportunity.opportunityId),r);
   assert.deepEqual(ledger.inferenceUsage(scope),{relationshipHour:0,runtimeHour:0,active:false});
   const claim=ledger.reserveInference(scope,r.opportunity.opportunityId,r.version,inferenceLimits,current);ledger.settleInference(scope,r.opportunity.opportunityId,claim);

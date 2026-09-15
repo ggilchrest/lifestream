@@ -16,3 +16,6 @@ export type { UnderstandingScope, UnderstandingRecord } from "./understanding.js
 
 export { InitiativeDeliveryRepository } from "./initiative-delivery.js";
 export type { InitiativeScope, InitiativeOpportunity, InitiativeDeliveryOutcome, InitiativeDeliveryRecord, InitiativeDeliveryAction, InitiativeOpeningLimits, InitiativeInferenceLimits, InitiativeInferenceUsage } from "./initiative-delivery.js";
+
+export { InitiativeExpressionRepository } from './initiative-expression.js';
+export type { InitiativeExpression, InitiativeExpressionObservation } from './initiative-expression.js';

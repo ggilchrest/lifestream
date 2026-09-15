@@ -43,7 +43,7 @@ const calls=(db:Database)=>Number(db.connection.prepare('SELECT count(*) AS n FR
 test('protected synthetic Initiative joins approved scope, one generation, text emission, acknowledgment and ordinary reply',async t=>{
  const f=await fixture(t);assert.equal((await f.ready()).status,200);
  const request=f.event(),result=await f.extension(request);assert.equal(result.status,200,JSON.stringify(result));assert.equal(result.body.delivery.text,'Fixture response: ');assert.equal(result.body.delivery.captureEnabled,false);
- const record=outcome(result),op=result.body.records.find((r:any)=>r.recordType==='opportunity');assert.equal(record.state,'emitted');assert.equal(record.acknowledgmentKind,null);assert.equal(record.response,'notObserved');assert.ok(record.sourceRefs.some((ref:string)=>new RegExp('^prepared-context:'+record.preparedViewId+':[0-9a-f]{64}$','u').test(ref)));assert.equal(op.sessionId,f.auth.sessionId);assert.equal(op.conversationId,f.db.connection.prepare('SELECT conversation_id FROM sessions WHERE id=?').get(f.auth.sessionId)!.conversation_id);assert.equal(calls(f.db),1);
+ const record=outcome(result),op=result.body.records.find((r:any)=>r.recordType==='opportunity');assert.equal(record.state,'emitted');const expression=result.body.explanations.find((e:any)=>e.code==='initiative_expression'&&e.sourceRefs.includes(op.opportunityId));assert.match(expression.summary,/Text emitted/u);assert.match(expression.summary,/Not requested for text output/u);assert.equal(record.acknowledgmentKind,null);assert.equal(record.response,'notObserved');assert.ok(record.sourceRefs.some((ref:string)=>new RegExp('^prepared-context:'+record.preparedViewId+':[0-9a-f]{64}$','u').test(ref)));assert.equal(op.sessionId,f.auth.sessionId);assert.equal(op.conversationId,f.db.connection.prepare('SELECT conversation_id FROM sessions WHERE id=?').get(f.auth.sessionId)!.conversation_id);assert.equal(calls(f.db),1);
  assert.equal((await f.extension(request)).body.delivery,null);assert.equal(calls(f.db),1);assert.equal((await f.extension({...request,topicRef:'different'})).status,409);
  assert.equal((await f.extension({operation:'inspect'})).body.delivery,null);
  const ack={operation:'acknowledge',sessionId:f.auth.sessionId,opportunityId:op.opportunityId,receiptId:record.deliveryReceiptRef,kind:'endpointAccepted'};
@@ -221,4 +221,10 @@ test('prepared synthetic catalog is bounded, current, read-only and revalidated 
  for(let n=0;n<80;n++)f.event();assert.equal(rows((await inspect()).body).length,16);assert.equal(calls(f.db),0);
  const host=(f.app as any).initiativeHost;host.simulation.list=()=>{throw new Error('HOST_PRIVATE_DETAIL');};result=await inspect();assert.ok(result.body.explanations.some((e:any)=>e.code==='synthetic_catalog_unavailable'));assert.equal(JSON.stringify(result.body).includes('HOST_PRIVATE_DETAIL'),false);
  for(const req of [foreign,wrongSession,expired,future])assert.equal((await f.extension(req)).status,409);
+});
+
+test('bounded Initiative inspection keeps each returned opportunity paired with its expression summary',async t=>{
+ const f=await fixture(t);for(let n=0;n<66;n++){const result=await f.extension(f.event());assert.equal(result.status,200);assert.equal(result.body.explanations.length<=64,true);}
+ const inspected=await f.extension({operation:'inspect'}),ops=inspected.body.records.filter((r:any)=>r.recordType==='opportunity');assert.ok(ops.length>0&&ops.length<64);assert.ok(inspected.body.records.length<=128);assert.ok(inspected.body.explanations.length<=64);
+ for(const op of ops)assert.equal(inspected.body.explanations.filter((e:any)=>e.code==='initiative_expression'&&e.sourceRefs.includes(op.opportunityId)).length,1);assert.equal(calls(f.db),0);
 });

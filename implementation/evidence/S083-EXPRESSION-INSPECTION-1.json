@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-EXPRESSION-INSPECTION-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "3e764b3c5cc8cf4ddab76a2244170cc222394cc7",
+  "specificationRevision": "a0dc2dd531d83f9f6cdc50993f9059792d92bd4b",
+  "recordedAt": "2026-09-15T04:37:34.892745Z",
+  "sourceFiles": [
+    {
+      "path": "packages/storage-sqlite/src/initiative-expression.ts",
+      "sha256": "f98e4e8904cf1d0c332f7aab04c21991c4c0ae152610043fd4e4cc9390ba6a00"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "8c278588b496fb55ba755331b76c5ab2baba45e656a31e2e8ca63d36407d5a0e"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0026_initiative_expression.sql",
+      "sha256": "db4c3d81daf7ffaee02e1e7dffbb200e7821753133c47ff8072c3a4e51b9d4af"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "8fd4fec7f951ad122976635888f23a1874b758caa755dcc04e79a438b560d45c"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "cac423e87b90fd0573dc85461feef7305b47c81220bea339ee247354c93bc356"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "a4fc1278ccd899f693a9eef30359fcc0bd2ace4e00de52e84fe0c2bf31ef718c"
+    },
+    {
+      "path": "apps/server/src/runtime/initiative-host.ts",
+      "sha256": "828223f13a036e8b7c97b1ef067be09512608fa33adfe6dc1d03f329836c1aab"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "ecb2ae888ca5ac1d1b778e2b96d31bdded765f00eabfbab93da5ad5f62d1cfc7"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "a846bfc4f6ab0b83c6c23b07cb0f6d1c3043338014027549c85e34ff1e93f244"
+    },
+    {
+      "path": "apps/server/test/audio-output.test.ts",
+      "sha256": "922bbe63280dace4a4c85bbdef30bc3272b04c978b3c36b85ea00ae76e0e839b"
+    },
+    {
+      "path": "apps/server/test/initiative-host.test.ts",
+      "sha256": "d7c9c124e9c9615ed18514f12e6ea81ef71408b5d671ad0a7f45966e6a2eac04"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "6932d221f50d55d4c719001cdb5123907c57415efa4e1c9bafd49b13be83ef4f"
+    },
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "8e22276b9e336e21eff649f7a68ede6e5498332ac9393fb11c73fa9ecd5d4beb"
+    },
+    {
+      "path": "apps/control-web/test/initiative-conversation.test.mjs",
+      "sha256": "0ad7876eabcd46012dbea15120e41ac34819bb78e460501fe376755579178ac1"
+    },
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "ba17c93405366a30c6b479dbdfea6cdd7ca4288285940c75afd19cad744a180d"
+    }
+  ],
+  "claims": [
+    "An additive migration attaches bounded expression metadata to the existing opportunity, with owner scope and cascading deletion. Existing migrations and approved public record schemas are unchanged. Metadata contains requested wording warmth, modality, observed wording/speech stage, mapping reference, provider disposition, degraded dimensions and only the applied delivery mode/pace/energy. Generated wording, transcripts, PCM and arbitrary provider prose are excluded.",
+    "Expression writes require the matching owner, a current host guard, an unexpired nonterminal opportunity and an observed delivery stage before claiming emission. Requested settings, observed stages, known mapping, prior applied controls and degraded dimensions cannot be silently regressed. Input validation enforces closed fields, bounded references/dimensions and a 4096-byte report ceiling. Expression writes do not modify delivery versions or budget accounting.",
+    "Output-only speech forwards bounded observations from actual provider metadata, first audio emission and completed synthesis. Failed/interrupted delivery keeps the preceding observations; provider reports and observed delivery stages do not imply audibility, supported warmth or Human reception. Current prosodic warmth and renderer limitations are explicit.",
+    "Protected inspection and runtime responses join one labeled expression summary with every returned recent opportunity under the existing 64-explanation and 128-record limits. Historical opportunities without observations remain unobserved. The first-party outcome keeps status/reason first and exposes labeled expression fields in a separate disclosure.",
+    "Verification covers ownership isolation, invalid/free-form payload rejection, emission and revision/stage bounds, expiry/clock reversal, restart persistence, unchanged older migration records, parent-prune cascade, provider-prose exclusion, actual speech stages and first-party browser inspection. A 66-opportunity test verifies complete opportunity/summary pairing under response limits without an inference call."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "7908c2f2c84ee44209774b76a2c89043f74516666c5e97f0620cd532ed4cf68b"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "2077ccb7f1146c6529e7c58e35a98460f585bae4e21512a23a0bf47032bfd0fc"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "0aa3067df8c0dba801b4c78071d3f9a5feceabfa331e97e4eab40d24f1aa49a1"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "b30840bf2245701e9985f876d1c3bbfb690d9dc276e0c459a4a36f1dc52d7618"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 389,
+    "newSourceTests": 5,
+    "browserAndLauncherTests": 46,
+    "toolingTests": 45
+  },
+  "prerequisiteQualification": {
+    "status": "pending",
+    "slices": [
+      "LS-S071",
+      "LS-S072",
+      "LS-S073",
+      "LS-S076",
+      "LS-S078"
+    ],
+    "reason": "Current effective inputs differ from historical qualification; receipts remain unchanged."
+  },
+  "limitations": [
+    "The storage cleanup method and cascading expression deletion are tested, but runtime inspection found that InitiativeHost does not schedule ledger.prune. Automatic retention maintenance remains an explicit development gap; this receipt does not claim automatic 24-hour cleanup.",
+    "All executed output checks used synthetic providers. Provider disposition is the provider report; voiced warmth, physical audibility, physical presence, model quality and Human acceptance remain separate and unverified here. No new model-quality observations were added.",
+    "Pinned gradient Lab, reserved acknowledgments, bounded timing adaptation, older-database restore fencing, selected-provider/current-source qualifications, S084 Discovery/analysis/performance and PWCE Personal V1 T5 mapping remain open. Full S083/S084 completion is not claimed.",
+    "The saved Human review service and data were not restarted, deployed or reconfigured. No personal-data import, training, new provider selection or external research occurred. Approved schema bytes, historical evidence and unrelated dirty artifacts remain preserved."
+  ],
+  "visualEvidence": {
+    "kind": "syntheticBrowserCapture",
+    "name": "lifestream-conversation-mobile.png",
+    "sha256": "1fa81294ef92136d9552cc654b9be909ccaa5526bf3d0cf10d087ffd5c2bd94d",
+    "observation": "Status and reason lead the mobile outcome. Expression fields have a separate disclosure; browser verification opens and checks the synthesized-stage report."
+  }
+}

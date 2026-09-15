@@ -1,6 +1,6 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {createContractValidator} from '@lifestream/contracts';
-import {InitiativeDeliveryRepository,type Database,type InitiativeScope,type InitiativeOpportunity,type InitiativeDeliveryRecord} from '@lifestream/storage-sqlite';
+import {InitiativeExpressionRepository,type InitiativeExpression,InitiativeDeliveryRepository,type Database,type InitiativeScope,type InitiativeOpportunity,type InitiativeDeliveryRecord} from '@lifestream/storage-sqlite';
 import type {InferenceProvider} from '@lifestream/runtime/inference';
 import type {EndpointProfile} from '@lifestream/runtime/endpoints/registry';
 import {resolveInitiativePolicy,type InitiativeFacts,type InitiativeTemporaryMode} from '../admin/initiative-policy.ts';
@@ -27,7 +27,7 @@ const active=new Set(['pending','eligible','generated','queued','emitted']);
 /** Session-scoped orchestration. Candidate payloads only live on the in-flight call;
  * inspection and idempotent retries return metadata, never replayable output. */
 export class InitiativeHost {
- readonly ledger:InitiativeDeliveryRepository;
+ readonly ledger:InitiativeDeliveryRepository;private readonly expressions:InitiativeExpressionRepository;
  private readonly generator=new InitiativeCandidateGenerator();
  private readonly readiness=new Map<string,{revision:number;endpointId:string;text:boolean;speech:boolean;transport?:object}>();
  private readonly modes=new Map<string,InitiativeTemporaryMode>();
@@ -36,7 +36,7 @@ export class InitiativeHost {
  private closed=false;
  private readonly database:Database;
  private readonly simulation:InitiativeSimulation|undefined;
- constructor(database:Database,simulation?:InitiativeSimulation){this.database=database;this.simulation=simulation;this.ledger=new InitiativeDeliveryRepository(database);this.ledger.recover();}
+ constructor(database:Database,simulation?:InitiativeSimulation){this.database=database;this.expressions=new InitiativeExpressionRepository(database);this.simulation=simulation;this.ledger=new InitiativeDeliveryRepository(database);this.ledger.recover();}
  runtimeExplanations(owner?:InitiativeOwner,sessionId?:string){
   const explanations=[{code:this.simulation?'synthetic_ingress_enabled':'synthetic_ingress_disabled',summary:this.simulation?'This test host accepts only its prepared synthetic occurrences for the bound subject and session.':'Synthetic ingress is disabled on this host.',sourceRefs:[] as string[]}];
   if(!this.simulation?.list||!owner||!sessionId)return explanations;
@@ -57,9 +57,22 @@ export class InitiativeHost {
   return explanations;
  }
 
+ private expressionExplanation(scope:InitiativeScope,id:string){
+  const observed=this.expressions.get(scope,id);if(!observed)return {code:'initiative_expression',summary:'Observation: No expression metadata was recorded for this historical opportunity.',sourceRefs:[id]};
+  const r=observed.report,labels=[`Requested wording warmth: ${Math.round(r.requestedWarmth*100)}% (a setting, not a measured response)`,`Wording output: ${r.wording==='emitted'?'Text emitted; style quality unverified':'No text emission observed'}`,`Speech stage: ${r.speechStage}`,`Prosodic warmth: ${r.modality==='speech'?'Unsupported by the current speech mapping':'Not requested for text output'}`,`Renderer cues: Unsupported; no renderer mapping configured`,`Provider disposition: ${r.disposition} (provider report, not audible verification)`,`Applied controls: ${Object.entries(r.appliedDelivery).map(([k,v])=>`${k} = ${v}`).join(', ')||'Not observed'}`,`Degraded dimensions: ${r.degradedDimensions.join(', ')||'None reported; absence is not proof of support'}`,`Mapping: ${r.mappingRevision??'Not observed'}`,`Observed: ${observed.observedAt}`];
+  return {code:'initiative_expression',summary:labels.join('\n'),sourceRefs:[id,`initiative-expression:${id}:${observed.revision}`]};
+ }
+ private snapshot(owner:InitiativeOwner,baseRecords:unknown[],explanations:Array<{code:string;summary:string;sourceRefs:string[]}>){
+  const notes=explanations.slice(0,64),items=this.ledger.list(owner.scope).slice(0,Math.min(63,64-notes.length));
+  const room=128-items.length*2,configs=[...(owner.configuration?[owner.configuration]:[]),...baseRecords.filter(r=>(r as Record<string,unknown>).configurationId!==owner.configuration?.configurationId)].slice(0,room);
+  return {records:[...configs,...items.flatMap(r=>[r.opportunity,r.outcome])],explanations:[...notes,...items.map(r=>this.expressionExplanation(owner.scope,r.opportunity.opportunityId))]};
+ }
+ augmentInspection(owner:InitiativeOwner,sessionId:string,body:Record<string,unknown>):void{
+  Object.assign(body,this.snapshot(owner,body.records as unknown[],[...body.explanations as Array<{code:string;summary:string;sourceRefs:string[]}>,...this.runtimeExplanations(owner,sessionId)]));
+ }
  records(scope:InitiativeScope):unknown[]{return this.ledger.list(scope).slice(0,63).flatMap(r=>[r.opportunity,r.outcome]);}
  private response(owner:InitiativeOwner,operation:string,explanations:Array<{code:string;summary:string;sourceRefs:string[]}>=[],changed=false):Result {
-  return {status:200,body:{schemaVersion:'1.0.0',relationshipId:owner.scope.relationshipId,operation,activeConfigurationId:owner.configuration?.configurationId??null,records:[...(owner.configuration?[owner.configuration]:[]),...this.records(owner.scope)].slice(0,128),explanations:[{code:'bounded_runtime_history',summary:'Current configuration and at most 63 recent opportunities and outcomes. Simulation is synthetic; emission, endpoint acceptance and playback completion are separate. No microphone capture is started.',sourceRefs:[]},...explanations],activeStateChanged:changed,executionMode:this.simulation?'simulation':'live',nextCursor:null,delivery:null}};
+  return {status:200,body:{schemaVersion:'1.0.0',relationshipId:owner.scope.relationshipId,operation,activeConfigurationId:owner.configuration?.configurationId??null,...this.snapshot(owner,[],[{code:'bounded_runtime_history',summary:'Current configuration and recent opportunities within the response metadata limit. Expression observations, emission, endpoint acceptance and playback are separate. No microphone capture is started.',sourceRefs:[]},...explanations]),activeStateChanged:changed,executionMode:this.simulation?'simulation':'live',nextCursor:null,delivery:null}};
  }
  expressionWarmth(owner:InitiativeOwner|undefined,sessionId:string,endpointId:string):number|undefined {
   if(!owner?.configuration)return undefined;
@@ -145,6 +158,9 @@ export class InitiativeHost {
   let row:InitiativeDeliveryRecord;
   try{row=this.ledger.admit(scope,opportunity,()=>{if(!context.authorized()||context.owner()?.boundary!==owner.boundary)return false;this.saveRetry(scope,raw);return true;},{perRelationship:tuning.pendingPerRelationship!,perRuntime:tuning.pendingPerRuntime!});}
   catch(error){return extensionError(409,'initiative_admission_denied',error instanceof Error?error.message:'Opportunity was not admitted.');}
+  let expression:InitiativeExpression={requestedWarmth:selected.expressionWarmth,modality:event.modality,wording:'requested',speechStage:event.modality==='speech'?'notObserved':'notRequested',mappingRevision:null,disposition:'notObserved',degradedDimensions:[],appliedDelivery:{}};
+  const expressionCurrent=()=>context.authorized()&&context.owner()?.boundary===owner.boundary;
+  this.expressions.note(scope,id,expression,expressionCurrent);
   if(!selected.allowed){this.ledger.transition(scope,id,row.version,{type:'finish',state:'suppressed',reasons:selected.reasons});return this.response(owner,operation,[{code:'initiative_suppressed',summary:`Opening suppressed: ${selected.reasons.join(', ')}.`,sourceRefs:[]}]);}
   if(!context.provider){this.ledger.transition(scope,id,row.version,{type:'finish',state:'suppressed',reasons:['endpointUnavailable']});return this.response(owner,operation);}
   const opening=this.ledger.openingRestriction(scope,{perHour:tuning.openingsPerHour!,perDay:tuning.openingsPerDay!,minimumGapMs:tuning.minimumGapSeconds!*1000}),usage=this.ledger.inferenceUsage(scope);
@@ -165,7 +181,7 @@ export class InitiativeHost {
    const receiptId=randomUUID();
    const delivery={opportunityId:id,sessionId:session.sessionId,interactionId:candidate.request.scope.interactionId,modality:event.modality,text:candidate.text,expiresAt:opportunity.expiresAt,captureEnabled:false};
    const issued=()=>{
-    row=this.ledger.transition(scope,id,row.version,{type:'emitted',receiptId});prepared!.conversation?.remember({interactionId:candidate.request.scope.interactionId,role:'assistant',text:candidate.text,opportunityId:id,observation:'emitted'});
+    row=this.ledger.transition(scope,id,row.version,{type:'emitted',receiptId});expression={...expression,wording:'emitted'};this.expressions.note(scope,id,expression,current);prepared!.conversation?.remember({interactionId:candidate.request.scope.interactionId,role:'assistant',text:candidate.text,opportunityId:id,observation:'emitted'});
     const result=this.response(owner,operation,[{code:'synthetic_output',summary:`Synthetic ${event.modality} opening emitted. Endpoint acceptance and playback are separate. ${event.modality==='speech'?'Prosodic warmth is unsupported by the current speech mapping.':''}`,sourceRefs:[receiptId]}]);delete result.body.delivery;
     return JSON.stringify(result.body).slice(1);
    };
@@ -173,7 +189,7 @@ export class InitiativeHost {
     if(!context.speech?.available())throw new Error('Speech transport unavailable');
     speechActive=true;
     let complete:()=>void=()=>{};const played=new Promise<void>(resolve=>{complete=resolve;});job.speech={synthesized:false,complete};
-    await context.speech.speak({text:candidate.text,interactionId:candidate.request.scope.interactionId,endpointId:session.endpoint.endpointId,deadlineAt:opportunity.expiresAt,warmth:selected.expressionWarmth,signal,current,
+    await context.speech.speak({expressionObserved:observation=>{expression={...expression,...observation};this.expressions.note(scope,id,expression,current);},text:candidate.text,interactionId:candidate.request.scope.interactionId,endpointId:session.endpoint.endpointId,deadlineAt:opportunity.expiresAt,warmth:selected.expressionWarmth,signal,current,
      beforeEmission:()=>{row=this.ledger.transition(scope,id,row.version,{type:'beginEmission',receiptId,awaitPlayback:true,current});},
      emitted:()=>{const suffix=issued();context.emit(`{"delivery":${JSON.stringify(delivery)},`,()=>suffix);},
      synthesized:async playbackSignal=>{job.speech!.synthesized=true;await new Promise<void>((resolve,reject)=>{const abort=()=>reject(new Error('Playback stopped'));if(playbackSignal.aborted)return abort();playbackSignal.addEventListener('abort',abort,{once:true});void played.then(()=>{playbackSignal.removeEventListener('abort',abort);resolve();});});},

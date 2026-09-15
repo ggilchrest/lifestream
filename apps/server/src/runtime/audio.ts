@@ -24,7 +24,8 @@ export const VOICE_TURN_DEADLINE_MS = 180_000;
 export const SPEECH_SEGMENT_DEADLINE_MS = 45_000;
 export type AudioOutputLease={current:()=>boolean;release:()=>void};
 export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; inputCurrent?: (request: AudioRequest) => boolean; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
-export type OutputOnlySpeech={text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
+export type SpeechExpressionObservation={speechStage:"providerReported"|"audioEmitted"|"synthesized";mappingRevision:string;disposition:"notObserved"|"fullyApplied"|"partiallyApplied"|"providerFailure"|"cancelled"|"timedOut";degradedDimensions:string[];appliedDelivery:{deliveryMode?:string;pace?:number;energy?:number}};
+export type OutputOnlySpeech={expressionObserved?:(observation:SpeechExpressionObservation)=>void;text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
 
 async function waitForPreviousOutput(previous:Promise<void>,signal:AbortSignal):Promise<void>{
   let timer:ReturnType<typeof setTimeout>|undefined,abort=()=>{};
@@ -70,6 +71,9 @@ export class AudioSession {
     let deadlineElapsed=false;const timer=setTimeout(()=>{deadlineElapsed=true;controller.abort();},Math.max(1,deadline-Date.now()));
     let samples=0,frames=0,started=false,done=false,terminalSent=false,mappingRevision="unknown",settlement:Promise<void>|undefined,settled=false;
     const degraded=new Set<string>(["warmth"]),pacer=new PcmPacer(),segmentId=randomUUID(),decisionId=randomUUID();
+    let expressionStage:SpeechExpressionObservation['speechStage']='providerReported',disposition:SpeechExpressionObservation['disposition']='notObserved',appliedDelivery:SpeechExpressionObservation['appliedDelivery']={};
+    const observeExpression=()=>input.expressionObserved?.({speechStage:expressionStage,mappingRevision,disposition,degradedDimensions:[...degraded],appliedDelivery:{...appliedDelivery}});
+
     const current=()=>!this.closed&&this.socket.readyState===OPEN&&!signal.aborted&&Date.now()<deadline&&input.current()===true&&lease.current();
     const request={contractVersion:"2.0.0" as const,text:input.text,segmentId,format:{encoding:"pcm_s16le" as const,sampleRateHz:48000 as const,channels:1 as const},voiceProfile:{voiceRef:"fixture-voice-design",revision:1},decision:{decisionId,revision:1},delivery:{interactionId:input.interactionId,segmentId,decisionId,decisionRevision:1,deliveryMode:this.voiceSettings.deliveryMode,urgency:"low",pace:this.voiceSettings.pace,energy:this.voiceSettings.energy},deadlineAt:new Date(deadline).toISOString()};
     try{
@@ -78,8 +82,9 @@ export class AudioSession {
       for await(const event of bufferedStream(tts.synthesize(request,signal),signal,64,()=>controller.abort(),(pending,complete)=>{settlement=pending;settled=complete;})){
         if(!current()||done)throw new Error("Output-only speech became stale or emitted after terminal");
         if(mappingRevision!=="unknown"&&event.mappingRevision!==mappingRevision)throw new Error("Speech mapping changed");mappingRevision=event.mappingRevision;
-        if(event.kind==="preAudio"){for(const d of event.degradedDimensions)degraded.add(d);continue;}
+        if(event.kind==="preAudio"){for(const d of event.degradedDimensions)degraded.add(d);disposition=['fullyApplied','partiallyApplied'].includes(event.disposition)?event.disposition:'notObserved';const delivery=event.delivery??{};appliedDelivery={...(delivery.deliveryMode===undefined?{}:{deliveryMode:delivery.deliveryMode as string}),...(delivery.pace===undefined?{}:{pace:delivery.pace as number}),...(delivery.energy===undefined?{}:{energy:delivery.energy as number})};observeExpression();continue;}
         if(event.kind==="terminal"){
+          for(const d of event.degradedDimensions)degraded.add(d);if(['fullyApplied','partiallyApplied','providerFailure','cancelled','timedOut'].includes(event.disposition))disposition=event.disposition;observeExpression();
           if(event.outcome!=="succeeded"||event.outputSamples!==samples||event.frameCount!==frames||!samples)throw new Error("Speech did not produce complete audio");
           for(const d of event.degradedDimensions)degraded.add(d);done=true;continue;
         }
@@ -88,10 +93,10 @@ export class AudioSession {
         await pacer.admit(event.frame.sampleCount,event.frame.format.sampleRateHz,signal);if(!current())throw new Error("Audio lease or policy changed before emission");
         if(!started){input.beforeEmission();if(!current())throw new Error("Output-only admission changed");response(this.socket,input.interactionId,this.sequence++,{type:"textDelta",text:input.text});started=true;input.emitted();}
         if(!current())throw new Error("Output-only ownership changed");
-        send(this.socket,{type:"audio",interactionTraceId:input.interactionId,chunk:{segmentId:event.segmentId,frame:event.frame}});samples+=event.frame.sampleCount;frames++;
+        send(this.socket,{type:"audio",interactionTraceId:input.interactionId,chunk:{segmentId:event.segmentId,frame:event.frame}});samples+=event.frame.sampleCount;frames++;if(frames===1){expressionStage="audioEmitted";observeExpression();}
       }
       if(!done||!current())throw new Error("Output-only speech has no current successful terminal");
-      response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:"completed",finalResponse:null,error:null});terminalSent=true;
+      expressionStage="synthesized";observeExpression();response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:"completed",finalResponse:null,error:null});terminalSent=true;
       if(input.synthesized)await input.synthesized(signal);
       if(!current())throw new Error("Output-only playback was interrupted or expired");
       return {samples,frames,mappingRevision,warmth:"unsupported",degradedDimensions:[...degraded]};

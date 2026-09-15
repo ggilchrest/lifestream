@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "1bbfff96abf943dc0bc1a160696e4a45adc420e8",
+  "currentRevision": "3e764b3c5cc8cf4ddab76a2244170cc222394cc7",
   "activeSlice": "LS-S083",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -162,60 +162,71 @@
     "scripts/start-initiative-review.mjs",
     "apps/control-web/test/initiative-review-host.test.mjs",
     "docs/initiative-synthetic-review.md",
-    "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json"
+    "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json",
+    "packages/storage-sqlite/src/initiative-expression.ts",
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
+    "packages/storage-sqlite/src/migrations/0026_initiative_expression.sql",
+    "implementation/evidence/S083-EXPRESSION-INSPECTION-1.json"
   ],
   "changedFiles": [
-    "scripts/start-initiative-review.mjs",
-    "apps/control-web/test/initiative-review-host.test.mjs",
-    "docs/initiative-synthetic-review.md",
-    "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json",
+    "packages/storage-sqlite/src/initiative-expression.ts",
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
+    "packages/storage-sqlite/src/migrations/0026_initiative_expression.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/test/initiative-delivery.test.ts",
+    "apps/server/src/runtime/initiative-host.ts",
+    "apps/server/src/runtime/audio.ts",
+    "apps/server/src/index.ts",
+    "apps/server/test/audio-output.test.ts",
+    "apps/server/test/initiative-host.test.ts",
+    "apps/server/test/server.test.ts",
+    "apps/control-web/conversation-room.js",
+    "apps/control-web/test/initiative-conversation.test.mjs",
+    "apps/control-web/DESIGN.md",
+    "implementation/evidence/S083-EXPRESSION-INSPECTION-1.json",
     "implementation/checkpoint.json"
   ],
   "validation": [
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json"
+      "evidence": "implementation/evidence/S083-EXPRESSION-INSPECTION-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json"
+      "evidence": "implementation/evidence/S083-EXPRESSION-INSPECTION-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json"
+      "evidence": "implementation/evidence/S083-EXPRESSION-INSPECTION-1.json"
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json"
+      "evidence": "implementation/evidence/S083-EXPRESSION-INSPECTION-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json"
+      "evidence": "implementation/evidence/S083-EXPRESSION-INSPECTION-1.json"
     },
     {
       "command": "pnpm --dir .private validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json"
+      "evidence": "implementation/evidence/S083-EXPRESSION-INSPECTION-1.json"
     },
     {
       "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json"
-    },
-    {
-      "command": "node scripts/start-initiative-review.mjs --help",
-      "result": "pass",
-      "evidence": "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json"
+      "evidence": "implementation/evidence/S083-EXPRESSION-INSPECTION-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/S083-SYNTHETIC-REVIEW-HOST-1.json"
+      "evidence": "implementation/evidence/S083-EXPRESSION-INSPECTION-1.json"
     }
   ],
   "decisions": [
@@ -230,8 +241,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Implement expression-result inspection, pinned gradient Lab, reserved acknowledgments, bounded timing adaptation and older-database restore fencing. Qualify the existing ai5090 synthetic review path and refresh current-source prerequisites. Continue S084 semantic Discovery/exploration/qualified analysis/actual-output/performance and PWCE Personal V1 T5 core mapping. Preserve historical failures and separate Human/provider/physical claims.",
-  "updatedAt": "2026-09-15T04:21:54.490915Z",
+  "nextAction": "Wire bounded Initiative retention maintenance, then complete pinned gradient Lab, reserved acknowledgments, bounded timing adaptation and older-database restore fencing. Qualify the existing ai5090 synthetic review path and refresh current-source prerequisites. Continue S084 semantic Discovery/exploration/qualified analysis/actual-output/performance and PWCE Personal V1 T5 core mapping. Preserve historical failures and separate Human/provider/physical claims.",
+  "updatedAt": "2026-09-15T04:37:34.892745Z",
   "updatedBy": "Codex",
-  "notes": "Fresh synthetic review host, explicit numbered session setup and source preparation verified through protected APIs, a standalone process and the first-party browser. Existing ai5090 branch remains unqualified in this component. Full S083/S084/PWCE work continues."
+  "notes": "Bounded expression observations connected from speech provider metadata through owner-scoped storage to first-party outcome inspection; component tests pass. Automatic Initiative retention maintenance is newly recorded as still unwired. Full S083/S084/PWCE work remains active."
 }
