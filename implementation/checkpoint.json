@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "ea3e159d0a6a69c267203b760b4b4834af767f36",
+  "currentRevision": "bac64e0283a44ec57afcd6e41160fcd7b9d8edde",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -131,37 +131,58 @@
     "apps/server/test/security-administration.test.ts",
     "implementation/evidence/LS-S028-ASYNC-CAPABILITY-1.json",
     "docs/local-authentication.md",
-    "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
+    "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json",
+    "packages/runtime/src/capabilities/schema-validation.ts",
+    "packages/runtime/src/capabilities/schema-worker.ts",
+    "packages/runtime/test/capability-schema.test.ts",
+    "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
   ],
   "changedFiles": [
+    "docs/local-authentication.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
+    "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json",
+    "packages/runtime/package.json",
+    "packages/runtime/src/capabilities/resolver.ts",
+    "packages/runtime/src/capabilities/schema-validation.ts",
+    "packages/runtime/src/capabilities/schema-worker.ts",
+    "packages/runtime/test/capability-schema.test.ts",
+    "pnpm-lock.yaml"
   ],
   "validation": [
     {
-      "command": "PWCE: npm test",
+      "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
     },
     {
-      "command": "PWCE: npm run validate",
+      "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
     },
     {
-      "command": "Lifestream: node scripts/check-pwce-context-process.mjs",
+      "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
     },
     {
-      "command": "PWCE: documentation links, anchors, images, CSS, map and release check",
+      "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
     },
     {
-      "command": "Lifestream private: npm run validate",
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-ACTION-1.json"
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-CAPABILITY-SCHEMAS-1.json"
     }
   ],
   "decisions": [
@@ -176,8 +197,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Connect PWCE-owned action authority and scoped approval/invocation/reconciliation through public contracts, completing canonical envelopes, snapshot/precondition binding and full lifecycle/invalidation mapping. Then complete joint LS-S028/PV1-T5 and remaining S083/S084 tasks. No whole-goal blocker.",
-  "updatedAt": "2026-09-15T09:05:01.976459Z",
+  "nextAction": "Complete canonical capability/authority envelopes and ArtifactRef schema binding, including cold status recovery and lifecycle/invalidation semantics; connect PWCE-owned approval, admission, invocation and reconciliation through its public contracts. Continue joint LS-S028/PV1-T5 and remaining S083/S084 work. Independent development remains.",
+  "updatedAt": "2026-09-15T09:19:20.750258Z",
   "updatedBy": "Codex",
-  "notes": "PWCE producer action admission and interruption component verified and pushed. Lifestream implementation unchanged. Full LS-S028/PV1-T5 authority/capability mapping and remaining S083/S084 work continue."
+  "notes": "Declared capability argument/output schemas verified with bounded worker validation, canonical invocation identity and failed-refresh invalidation. Full canonical provider envelopes and PWCE action composition remain open."
 }

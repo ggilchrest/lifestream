@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-CAPABILITY-SCHEMAS-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "bac64e0283a44ec57afcd6e41160fcd7b9d8edde",
+  "sourceBinding": "Base revision and exact changed-source digests; the enclosing commit contains this runtime component.",
+  "specificationRevision": "d158601ade54cf584cbfefd89341b35c29233841",
+  "recordedAt": "2026-09-15T09:19:20.750258Z",
+  "sourceFiles": [
+    {
+      "path": "docs/local-authentication.md",
+      "sha256": "2a6921ece24a4ffdb03d548403b7eaa25590234cbf6a70c36ecea8bc6b019f58"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "7108baf848f306d415748c50e837c4580c5df30322edd73c324b87e1acb4ad05"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/resolver.ts",
+      "sha256": "acd872b7aea2075255c8e84b05987672f78980ca70fd4ed435445b118948f43a"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/schema-validation.ts",
+      "sha256": "8601d8d81a3d7ab16e35e5bbd1c70f4c16bc278af82ac42de310010a30f59f3f"
+    },
+    {
+      "path": "packages/runtime/src/capabilities/schema-worker.ts",
+      "sha256": "66e9f0e333da2b554d76748da49113723592eb32552b27ed5e28e7185203e8e6"
+    },
+    {
+      "path": "packages/runtime/test/capability-schema.test.ts",
+      "sha256": "daadbe6d56b22d21f27907db252ef1d6af862ad6f1cdc775faebed3d7b9b86d2"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "0d4ce899fd0f7f8721b90787c1642f99e6f906b33ac81901bf8f3274819f8eb6"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "4d20039187766ecf4261e9ed6173ad96a9961359",
+    "producerSourceChanged": false,
+    "newProducerSuiteRun": false
+  },
+  "claims": [
+    "The required-key-only check is replaced by strict JSON Schema 2020-12 compilation and validation. Types, numeric ranges, closed properties, nested arrays, alternatives, local references and formats are enforced before consuming admission. Validation never coerces inputs, fills defaults, strips properties or fetches unresolved references.",
+    "Snapshot publication compiles both declared schemas. Malformed or unresolved schemas and duplicate capability identities are rejected; failed current discovery invalidates the earlier snapshot instead of falling back.",
+    "Lossy JSON values, non-finite numbers, cycles, sparse/custom arrays, accessors, excessive depth or size are rejected before argument hashing or admission. Invocation identity uses canonical object-key order.",
+    "Validation runs in a bounded worker with 64 MiB heap and 4 MiB stack, 128-entry schema cache, 32 queued checks and a two-second check deadline inside the original call deadline. Cancellation terminates outstanding worker work; later calls can start a new worker. No payload or schema detail is returned in errors.",
+    "Successful output is checked against the originally discovered schema. Malformed post-dispatch output becomes unknown, is withheld and cannot cause redispatch. Non-success lifecycle results cannot carry undeclared output. Original definition binding is used for subsequent status validation.",
+    "The existing separate-process PWCE context and authenticated Lifestream conversation checks remain passing. This component does not implement PWCE action mapping or complete canonical provider envelopes."
+  ],
+  "limits": {
+    "inlineSchemaBytes": 16384,
+    "jsonValueBytes": 65536,
+    "maxDepth": 32,
+    "maxJsonNodes": 8192,
+    "validatorDeadlineMs": 2000,
+    "workerHeapMiB": 64,
+    "workerStackMiB": 4,
+    "compiledSchemaCacheEntries": 128,
+    "pendingChecks": 32
+  },
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "pwce-schemas-build-verified.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "pwce-schemas-typecheck.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "pwce-schemas-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "pwce-schemas-source-verified.log",
+      "logSha256": "9148f62d6c3f4227130499c1e3e096f1e7c7d923f9fddd14566cd9ce871709ae"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "log": "pwce-schemas-tooling.log",
+      "logSha256": "45ae7326327304356cc5c3caa72a5998d522fff452ed02c8320d5219b34c1da0"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "pwce-schemas-process.log",
+      "logSha256": "724a1cb1058709d3c0847f339690d283e911fd95b386a58ed701ae7d289f594f"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "pwce-schemas-private.log",
+      "logSha256": "1351fda146e07b1e5f872588a2d19e54dc50fbb61d43919e8a2874e4f53987df"
+    }
+  ],
+  "counts": {
+    "sourceTestsPassed": 493,
+    "newSchemaTests": 12,
+    "toolingTestsPassed": 45,
+    "separateProcessContextChecksPassed": 19,
+    "authenticatedWorldRuntimeChecksPassed": 7,
+    "baselineReproductionsFailed": 2
+  },
+  "preservedFailures": [
+    {
+      "log": "pwce-schemas-baseline.log",
+      "sha256": "57d969d58b4cff5ae215ca7f7278f564d7e559396f2490c480b1adbf0daee8d3",
+      "result": "Both argument-type and malformed-output assertions fail against the archived prior resolver, confirming the required-key-only gap."
+    },
+    {
+      "log": "pwce-schemas-build.log",
+      "sha256": "612ba3680e21fdad0bcbb8ae7c01293830a850731368fc0156ed1a1956426a2e",
+      "result": "Initial build exposed the Ajv synchronous/async validator type distinction; corrected the explicit union and reject async schema compilation."
+    }
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-schemas/2026-09-15",
+  "remaining": [
+    "Migrate complete canonical provider envelopes, schema ArtifactRef resolution and digest binding, typed result lifecycle and invalidation surfaces.",
+    "Cold status recovery needs an original provider-bound output schema; successful output is withheld when the current resolver has no original definition binding.",
+    "Implement asynchronous PWCE authority, scoped approval, snapshot/precondition binding, invocation and reconciliation through public gateway contracts.",
+    "Complete joint LS-S028/PV1-T5 qualification and the remaining S083/S084 work."
+  ],
+  "unchangedBoundaries": [
+    "Four approved S083/S084 schemas and preserved dirty artifacts retain exact hashes.",
+    "No saved-service restart, deployment, live configuration/effects, personal-data import, provider/model selection, training or new Human acceptance.",
+    "SYNPRJ_Q7M4 telemetry is unchanged. Published PWCE wire bundle and generated client remain unchanged."
+  ],
+  "disposition": "continue"
+}

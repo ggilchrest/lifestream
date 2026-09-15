@@ -1,4 +1,5 @@
 import {createHash} from 'node:crypto';
+import {boundedJson,canonicalJson,validateCapabilitySchema} from './schema-validation.ts';
 import type { DispatchReceipt } from '../authority/authorize-dispatch.js';
 import type {CapabilityDefinition,CapabilityInvocation,CapabilityInvocationResult,CapabilityProvider,CapabilityScope,CapabilitySnapshot,CapabilityCallContext,CapabilityStatusRequest} from './ports.js';
 import {CapabilitySnapshotCache} from './cache.ts';
@@ -6,7 +7,7 @@ import {CapabilityCall,CapabilityCallError} from './call.ts';
 export type AuthorityDispatcher=(invocation:CapabilityInvocation,capability:CapabilityDefinition,context:CapabilityCallContext)=>Promise<DispatchReceipt|undefined>;
 const scopeKey=(scope:CapabilityScope)=>JSON.stringify([scope.assistantId,scope.endpointId,scope.sessionId,scope.environment,scope.authorityContextRef.providerRef,scope.authorityContextRef.contextId,scope.authorityContextRef.revision]);
 const statusRequest=(scope:CapabilityScope,invocationId:string):CapabilityStatusRequest=>({assistantId:scope.assistantId,endpointId:scope.endpointId,sessionId:scope.sessionId,environment:scope.environment,authorityContextRef:structuredClone(scope.authorityContextRef),invocationId});
-type Attempt={fingerprint:string;attempted:boolean;pending?:Promise<CapabilityInvocationResult>};
+type Attempt={fingerprint:string;attempted:boolean;capability?:CapabilityDefinition;pending?:Promise<CapabilityInvocationResult>};
 export class CapabilityResolver {
   private readonly provider:CapabilityProvider;
   private readonly cache:CapabilitySnapshotCache;
@@ -27,13 +28,22 @@ export class CapabilityResolver {
       const result=await call.wait(()=>this.provider.getSnapshot({...owned,now:this.now()},call.context));
       if(epoch!==this.epoch||this.reads.get(key)!==ticket)throw new CapabilityCallError('scopeChanged');
       if(typeof result.snapshotId!=="string"||!result.snapshotId||!Number.isInteger(result.revision)||result.revision<0||Buffer.byteLength(JSON.stringify(result))>262144||scopeKey(result)!==key||!Number.isFinite(Date.parse(result.expiresAt))||Date.parse(result.expiresAt)<=Date.parse(this.now())||!Array.isArray(result.capabilities)||result.capabilities.length>100)throw new CapabilityCallError('invalidResponse');
-      this.modes.set(key,call.context.executionMode);return this.cache.put(result,this.now());
-    }finally{call.close();}
+      const definitions = structuredClone(result);
+      const identities = new Set<string>();
+      for (const capability of definitions.capabilities) {
+        const identity = capability.id + ':' + capability.version;
+        if (identities.has(identity) || !await call.wait(() => validateCapabilitySchema(capability.inputSchema, null, call.context.signal, true)) || !await call.wait(() => validateCapabilitySchema(capability.outputSchema, null, call.context.signal, true))) throw new CapabilityCallError('invalidResponse');
+        identities.add(identity);
+      }
+      if(epoch!==this.epoch||this.reads.get(key)!==ticket)throw new CapabilityCallError('scopeChanged');
+      this.modes.set(key,call.context.executionMode);return this.cache.put(definitions,this.now());
+    }catch(error){if(this.reads.get(key)===ticket)this.invalidate(owned);throw error;}finally{call.close();}
   }
   invalidate(scope?:CapabilityScope):void{this.epoch++;this.cache.invalidate(scope);if(scope){this.reads.delete(scopeKey(scope));this.modes.delete(scopeKey(scope));}else{this.reads.clear();this.modes.clear();}}
   async invoke(invocation:CapabilityInvocation,context:CapabilityCallContext):Promise<CapabilityInvocationResult>{
+    if (!boundedJson(invocation.input)) return this.result(invocation,'denied','capability_or_arguments_invalid');
     const owned=structuredClone(invocation),key=scopeKey(owned)+':'+owned.invocationId;
-    const fingerprint=createHash('sha256').update(JSON.stringify(owned)).digest('hex');
+    const fingerprint=createHash('sha256').update(canonicalJson(JSON.parse(JSON.stringify(owned)))).digest('hex');
     let entry=this.attempts.get(key);
     if(entry&&entry.fingerprint!==fingerprint)return this.result(owned,'denied','invocation_identity_reused');
     if(!entry){if(this.attempts.size>=1024)return this.result(owned,'denied','invocation_tracking_full');entry={fingerprint,attempted:false};this.attempts.set(key,entry);}
@@ -52,10 +62,11 @@ export class CapabilityResolver {
     if(this.modes.get(scopeKey(invocation))!==call.context.executionMode||!snapshot||snapshot.snapshotId!==invocation.snapshotId||snapshot.revision!==invocation.snapshotRevision)return this.result(invocation,'denied','capability_snapshot_stale_or_unbound');
     if(call.context.executionMode!=='live')return this.result(invocation,'denied','non_live_dispatch_denied');
     const capability=snapshot.capabilities.find(item=>item.id===invocation.capabilityId&&item.version===invocation.capabilityVersion);
-    if(!capability||!validInput(capability.inputSchema,invocation.input))return this.result(invocation,'denied','capability_or_arguments_invalid');
+    if(!capability||!await call.wait(()=>validateCapabilitySchema(capability.inputSchema,invocation.input,call.context.signal)))return this.result(invocation,'denied','capability_or_arguments_invalid');
+    fresh();entry.capability=capability;
     // Status is read under current scope before consuming any one-use admission.
     const prior=await call.wait(()=>this.provider.getInvocation(statusRequest(invocation,invocation.invocationId),call.context));fresh();
-    if(prior)return this.checkedResult(prior,invocation);
+    if(prior){entry.attempted||=['started','succeeded','outcomeUnknown'].includes(prior.lifecycle);const checked=await this.checkedResult(prior,invocation,call,capability);fresh();return checked;}
     if(entry.attempted)return this.result(invocation,'outcomeUnknown','prior_dispatch_requires_reconciliation');
     let dispatchReceipt:DispatchReceipt|null=null;
     if(capability.sideEffect!=='none'||capability.authorization==='required'){
@@ -66,21 +77,18 @@ export class CapabilityResolver {
     }
     fresh();
     const outcome=await call.wait(()=>{entry.attempted=true;return this.provider.invoke({...structuredClone(invocation),dispatchReceipt},structuredClone(capability),call.context);});
-    fresh();return this.checkedResult(outcome,invocation);
+    fresh();const checked=await this.checkedResult(outcome,invocation,call,capability);fresh();return checked;
   }
   async getInvocation(request:CapabilityStatusRequest,context:CapabilityCallContext):Promise<CapabilityInvocationResult|undefined>{
     const owned=statusRequest(request,request.invocationId),call=new CapabilityCall(context);
-    try{const result=await call.wait(()=>this.provider.getInvocation(owned,call.context));return result?this.checkedResult(result,owned):undefined;}finally{call.close();}
+    try{const result=await call.wait(()=>this.provider.getInvocation(owned,call.context));return result?await this.checkedResult(result,owned,call,this.attempts.get(scopeKey(owned)+':'+owned.invocationId)?.capability):undefined;}finally{call.close();}
   }
-  private checkedResult(result:CapabilityInvocationResult,request:CapabilityStatusRequest):CapabilityInvocationResult{
+  private async checkedResult(result:CapabilityInvocationResult,request:CapabilityStatusRequest,call:CapabilityCall,capability?:CapabilityDefinition):Promise<CapabilityInvocationResult>{
     if(result.invocationId!==request.invocationId||!['authorized','denied','approvalRequired','started','succeeded','failed','outcomeUnknown'].includes(result.lifecycle))throw new CapabilityCallError('invalidResponse');
-    return structuredClone(result);
+    if(!boundedJson(result)||result.lifecycle!=='succeeded'&&Object.hasOwn(result,'output'))throw new CapabilityCallError('invalidResponse');
+    const copy=structuredClone(result);
+    if(copy.lifecycle==='succeeded'&&(!capability||!await call.wait(()=>validateCapabilitySchema(capability.outputSchema,copy.output,call.context.signal))))throw new CapabilityCallError('invalidResponse');
+    call.check();return copy;
   }
   private result(invocation:CapabilityStatusRequest,lifecycle:CapabilityInvocationResult['lifecycle'],reason:string):CapabilityInvocationResult{return {invocationId:invocation.invocationId,lifecycle,reason};}
-}
-function validInput(schema:Record<string,unknown>,input:unknown):boolean{
-  if(schema.type==='object'&&(input===null||typeof input!=='object'||Array.isArray(input)))return false;
-  const required=Array.isArray(schema.required)?schema.required:[];
-  if(typeof input!=='object'||input===null||Array.isArray(input))return required.length===0;
-  return required.every(name=>typeof name==='string'&&Object.prototype.hasOwnProperty.call(input,name));
 }
