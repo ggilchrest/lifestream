@@ -1,0 +1,165 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-QUALIFIED-MAPPING-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "0608d6fc8ad1c5419ddcb24fe1fa4b2177b39b78",
+  "sourceBinding": "Implementation base plus exact changed-source digests; the enclosing commit contains the mapped component bytes.",
+  "specificationRevision": "a09a3292fa2f0f5f85e9c6fe564e3fb236739489",
+  "recordedAt": "2026-09-15T07:11:31.928844Z",
+  "sourceFiles": [
+    {
+      "path": "packages/runtime/src/context/pwce-mapping.ts",
+      "sha256": "f2c96ce4b3de126ec310f900120234bc7679a41055982ec8bdb2e992ff0b2aff"
+    },
+    {
+      "path": "packages/runtime/test/pwce-mapping.test.ts",
+      "sha256": "16fa63f201ce913e04f5a8d8c7c288a6f714c0c016b1b3219ceeba137e4328bc"
+    },
+    {
+      "path": "scripts/check-pwce-context.mjs",
+      "sha256": "16416a41f1eca3e2442acd8c328877d8ab34977653ad4feb9b5647a302256047"
+    },
+    {
+      "path": "scripts/check-pwce-context-process.mjs",
+      "sha256": "d837665ca39f9b611e52e1b26e54a4c6dac946d2332949479608c00313e647d5"
+    }
+  ],
+  "producer": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "209cdf42f926f9efc478454980079d15d96d2b46",
+    "batch": "DEVELOPMENT-BATCH-164.md",
+    "fixtureScriptSha256": "ac094fea30dea1fe242433ac2db475a8c930be248942c1f12cf597d7f6615fcb"
+  },
+  "claims": [
+    "The consumer maps actual prepared/current/explain/history/as-of/search/evidence responses against host-owned World, execution-mode, exact requested-site/subject, authority-expiry and request/correlation bindings. Optional authority echoes cannot contradict the request. Multi-site subjects remain separately bound. A reference is never treated as permission to expand evidence.",
+    "Qualified read items retain knowledge state, basis, evidence and contradiction references, missing versus false/null values, event/receipt time, freshness/age, limitations, source identity and per-projection revision. Numeric source revisions normalize to opaque strings. Current items cannot silently omit their value, evidence or basis. Unknown, stale, conflicted, unavailable and notDetected states are not flattened into a boolean or current truth.",
+    "Historical observations and registered-entity search matches occupy separate collections from current items. Historical observations are explicitly not qualified as current facts. As-of selection preserves the requested time and selected state independently of the accompanying history page and opaque continuation. A conflicted boundary cannot contain an arbitrarily selected fact.",
+    "Evidence mapping preserves exact observation identity, site, value and qualification, classification, transformations, provenance and observation environment separately from the current request environment. Integrity is explicitly producerReported, not independently verified; its digest is labeled as the evidence content revision. Unknown evidence stays unknown. Canonical producer records are not persisted or imported into a shared store.",
+    "Mapping snapshots the received JSON and bounds input/output to at most 262144 UTF-8 bytes, with caller item/byte bounds, finite typed numeric fields, explicit timestamp zones/calendar validation, authority expiry and bounded arrays. Malformed mapped fields fail explicitly. Unselected media/watch references on mapped items or the root response are rejected rather than becoming a selected feature. Legacy typed projections now deep-copy nested values.",
+    "A public consumer command starts the producer-owned CLI as a separate disposable process, supplies only a generated synthetic token and seeded scenario, and checks all read modes through HTTP. Thirteen semantic checks pass, including original boolean contradictions, withheld old values, known/unknown multi-site subjects, historical pagination and scoped evidence denial. The producer stores only in-memory synthetic data and shuts down after the run or at its finite lifetime."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "b275211e6abd0e48da479679b399dca56e79ac29698533f77a5b28be5fa81e2c"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/client.test.ts packages/providers-pwce/test/transport.test.ts packages/runtime/test/pwce-mapping.test.ts",
+      "result": "pass",
+      "logSha256": "bcde22ba65c218722a8c47762412a3a8183d8f5f9fcdc6b4a7b418f4d08d83a1"
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "logSha256": "e8444cd22c8c717305be495e5740a87cb62d4008d0f1e3e1f02d9fee1690f564"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "077bd1f0a7fa7a001bfad155c04efd96364baf8883eb48cdac75c149de828a1c"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "eac9ac758a24822378e158176d3cf92cb9f9a9d669389eb74c2b572ba1510765"
+    },
+    {
+      "command": "node /private/tmp/pwce-mapping-default-network.mjs",
+      "result": "pass",
+      "logSha256": "858181b695805ae54b807a18d0aedc981a335199174d78f0fd6f7a0fd5dfd0cc"
+    }
+  ],
+  "counts": {
+    "lifestreamSourceTestsPassed": 438,
+    "newMappingTestsPassed": 10,
+    "focusedClientTransportMappingTestsPassed": 44,
+    "lifestreamToolingTestsPassed": 45,
+    "actualHttpReadMappingChecksPassed": 13,
+    "producerTestsPassed": 147,
+    "defaultFixtureClientContractMappingCasesPassed": 26,
+    "defaultFixtureAuthenticationChecksPassed": 5,
+    "producerDocumentationPagesChecked": 23
+  },
+  "producerChecks": [
+    {
+      "command": "npm test",
+      "result": "pass",
+      "logSha256": "04a6df50df1ccf4fc3838186857b5d5cd69570dcd0b598cbdbf0aa636c4980c0"
+    },
+    {
+      "command": "npm run validate",
+      "result": "pass",
+      "logSha256": "e31118fd431327a2355113d49120584018feac09e64cf4bcd476ecd7e5ec0cbb"
+    },
+    {
+      "command": "python3 /private/tmp/check-pwce-context-docs.py",
+      "result": "pass",
+      "logSha256": "9774b2f872678821b1b71943e6b8518cad97950a0cf97b75b4d9b61158921b71"
+    }
+  ],
+  "preservedAttempts": [
+    {
+      "result": "fail",
+      "stage": "initialBuild",
+      "reason": "TypeScript initially did not narrow values through the arrow-declared failure helper; a named never-returning function fixed the control-flow typing.",
+      "logSha256": "7e7dcf0682f68924d1cdfc4ecbe82694e747b7d3471421239aa821a00be32079"
+    },
+    {
+      "result": "fail",
+      "stage": "initialMappingCases",
+      "reason": "Eleven cases passed and one multi-site case failed because a single subject binding could not represent multiple site-qualified subjects. Explicit per-site subject bindings corrected the mapping.",
+      "logSha256": "2c5fe9287d7af431f0ac75b5322dcd5f18271de7d977d80ca030f4b17dc1197f"
+    }
+  ],
+  "rawEvidence": {
+    "localDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-mapping/2026-09-15"
+  },
+  "bundle": {
+    "profileId": "pwce-agent-gateway.v1",
+    "profileVersion": "1.0.0",
+    "bundleDigest": "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2",
+    "changed": false
+  },
+  "historicalEvidencePreserved": [
+    {
+      "path": "implementation/evidence/LS-S046.json",
+      "sha256": "71209f29306bad998a02416227e3d90ae27c9d52df87118f9c55e3765f5e1ebe"
+    },
+    {
+      "path": "implementation/evidence/LS-S028.json",
+      "sha256": "7e76d9d8dc10764b313f553dd60c3cef6c509d29350102848dce8669295f139c"
+    },
+    {
+      "path": "implementation/evidence/LS-S028-PRODUCER-CONTEXT-1.json",
+      "sha256": "3f0825bcc24006f539c1e9fb30c7ea5592ba2ef135d5964de169edee155e9afa"
+    },
+    {
+      "path": "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json",
+      "sha256": "ee0f1470deee509c8afbc853a9df3b11c640b4875733e17bc90635fe119842e1"
+    }
+  ],
+  "limitations": [
+    "This is a read-mapping component verification, not complete LS-S028 or PV1-T5 acceptance. The server still does not instantiate the PWCE provider. Scope-bound SSE identity/mode propagation, ordered invalidation/cache resynchronization, async authority/capability ports, runtime composition and joint scenarios remain required.",
+    "Full mapping-profile schema/fixture digest qualification must be refreshed after the remaining profile components are implemented. Existing foundational prepared-context and fixture pins, published Gateway bundle artifacts and original slice receipts remain unchanged; they are not relabeled as complete mapped-profile acceptance.",
+    "The mapper expects its authority, request identity, scope, clock and budget binding from the trusted caller; it does not itself authenticate a network response. The process checks use the existing authenticated client; model-reachable input cannot be promoted to that host binding by this component.",
+    "No optional presence, media, renderer or shared-space profile is selected. States unavailable and notDetected have deterministic mapping coverage, not a new real-provider scenario claim. Final prompt/token budgeting and fresh-cache use remain Lifestream runtime responsibilities.",
+    "No live configuration, saved review service restart, provider/model selection, deployment, personal-data import, training, physical effect or new Human acceptance occurred. Browser layout did not change and no new browser/perceptual acceptance is claimed. All approved schema copies and unrelated dirty artifacts remain preserved; model-quality telemetry was not changed."
+  ]
+}

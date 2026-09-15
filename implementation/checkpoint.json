@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "0fcb7dad5348ea4367cbb3f82fc50d893b6f5b63",
+  "currentRevision": "0608d6fc8ad1c5419ddcb24fe1fa4b2177b39b78",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -84,42 +84,66 @@
     "packages/providers-pwce/test/transport.test.ts",
     "packages/providers-pwce/src/index.ts",
     "implementation/evidence/LS-S028-BOUNDED-TRANSPORT-1.json",
-    "implementation/evidence/LS-S028-PRODUCER-CONTEXT-1.json"
+    "implementation/evidence/LS-S028-PRODUCER-CONTEXT-1.json",
+    "packages/runtime/src/context/pwce-mapping.ts",
+    "packages/runtime/test/pwce-mapping.test.ts",
+    "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json",
+    "scripts/check-pwce-context.mjs",
+    "scripts/check-pwce-context-process.mjs"
   ],
   "changedFiles": [
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-PRODUCER-CONTEXT-1.json"
+    "packages/runtime/src/context/pwce-mapping.ts",
+    "packages/runtime/test/pwce-mapping.test.ts",
+    "scripts/check-pwce-context.mjs",
+    "scripts/check-pwce-context-process.mjs",
+    "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json"
   ],
   "validation": [
     {
-      "command": "PWCE: npm test",
+      "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-CONTEXT-1.json"
+      "evidence": "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json"
     },
     {
-      "command": "PWCE: node --test test/gateway-context-qualification.test.js test/gateway-service.test.js test/adapter-and-query.test.js",
+      "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-CONTEXT-1.json"
+      "evidence": "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json"
     },
     {
-      "command": "PWCE: npm run validate",
+      "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-CONTEXT-1.json"
+      "evidence": "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json"
     },
     {
-      "command": "PWCE: python3 /private/tmp/check-pwce-context-docs.py",
+      "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-CONTEXT-1.json"
+      "evidence": "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json"
     },
     {
-      "command": "Lifestream: node /private/tmp/pwce-context-network.mjs",
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/client.test.ts packages/providers-pwce/test/transport.test.ts packages/runtime/test/pwce-mapping.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-CONTEXT-1.json"
+      "evidence": "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json"
     },
     {
-      "command": "Lifestream: pnpm --dir .private validate",
+      "command": "node scripts/check-pwce-context-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-PRODUCER-CONTEXT-1.json"
+      "evidence": "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json"
+    },
+    {
+      "command": "node /private/tmp/pwce-mapping-default-network.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-QUALIFIED-MAPPING-1.json"
     }
   ],
   "decisions": [
@@ -134,8 +158,8 @@
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion."
   ],
   "blockers": [],
-  "nextAction": "Implement complete Lifestream PWCE qualified response mapping from the corrected producer at 74dad87f12fab95d5da3e87197e37d553ae3de3a, then scope-bound SSE identity/mode propagation, ordered invalidation/cache resynchronization, async authority/capability ports and server composition. Continue remaining S083 presentation/restore fencing and existing ai5090/current prerequisites, plus S084 semantic/exploration/analysis/full performance. No whole-goal blocker: independent work remains.",
-  "updatedAt": "2026-09-15T06:45:44.832542Z",
+  "nextAction": "Implement scope-bound PWCE SSE Assistant/endpoint/participant/audience and execution-mode propagation, then ordered invalidation/cache resynchronization and an async runtime WorldContext/Authority/Capability provider wired into server composition. Finish full mapping-profile schema/fixture digests and joint scenario qualification. Continue S083 presentation/restore fencing and existing ai5090/current prerequisites, plus S084 semantic/exploration/analysis/full performance. No whole-goal blocker: independent work remains.",
+  "updatedAt": "2026-09-15T07:11:31.928844Z",
   "updatedBy": "Codex",
-  "notes": "Producer context prerequisite repaired and pushed: prepared qualification, conflict plus age, independent as-of selection, historical freshness/revisions and Basic Agent evidence references. Six original failures preserved; 147 producer cases, 16 current consumer cases and 22 documentation pages pass. No Lifestream runtime source or live configuration changed."
+  "notes": "Qualified PWCE read mapping and separate-process conformance verified: 438 Lifestream source tests, 44 focused adapter cases, 45 tooling cases, thirteen actual HTTP semantic checks, 147 producer tests and 23 documentation pages pass. Producer and specification changes are published separately. Runtime adapter composition remains incomplete; no live configuration or provider changes."
 }
