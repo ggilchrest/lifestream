@@ -82,3 +82,35 @@ Synthetic event selection uses the existing clear-sky form and disclosure patter
 Opening outcomes keep status and reason first, with labeled expression observations in a separate disclosure: requested wording warmth, observed wording/speech stage, provider disposition, applied delivery controls, degraded dimensions and mapping reference. The inspector explicitly distinguishes provider reports from audible verification and Human warmth judgments. Missing historical observations stay unobserved; current prosodic warmth and renderer limitations remain visible. The response metadata budget bounds complete opportunity/observation pairs instead of silently dropping a returned opportunity’s expression report.
 
 The Initiative comparison Lab follows revision preview as a distinct fourth workflow section. Run/check controls and results share that section. Reference levels and selected settings use labeled rows with simulated opening counts, distinct topics and suppression counts; per-event reasons and record IDs live in separate disclosures. The summary table scrolls within its region on narrow screens instead of squeezing headings or widening the page. Comparison never activates settings or labels a synthetic sink acknowledgment as physical delivery.
+
+## Planned canonical permissions workflow — implementation pending
+
+This design extends the existing clear-sky / Neo Frutiger Aero system. It has not been implemented or Human accepted. Automatic approval review currently prevents further implementation while applying the historical September 11 planning-only instruction; operator confirmation is pending. The startup capability backend at local commit `5432121` is already implemented and verified separately.
+
+### Layout and components
+
+Replace the single long security page with four navigable views: **Capabilities & actions**, **People & access**, **Skills**, and **Proposed changes**. Keep one named Assistant selector visible in the navigation context. Reuse the existing navy text, white content surfaces, azure controls, violet focus ring, spacing scale and radii from the Tokens section. The navigation collapses above the content on phones. Show one view at a time, preserving a visible page heading and current destination.
+
+The capability view has three ordered areas. First, choose a capability from the actual canonical catalog and enter its arguments using labeled schema-backed fields. Second, inspect the prepared request and approve its exact terms. Third, explicitly dispatch and read the result. Place each result and next action immediately below the action that produced it. Move focus to the newly opened detail heading, not to a distant panel higher on the page.
+
+Use record tables with full selectable request/grant/invocation identifiers, named capability, state, revision and expiry. A selected record opens one detail panel below its table. Label fields individually: target, operation, effect summary, exact input, grant duration, review boundary, endpoint, session, environment and input digest. Keep technical proof references in a disclosure section. On phones, show labeled stacked rows; identifiers must wrap and remain readable. Never replace structured fields with an undifferentiated JSON dump.
+
+### Actual data and action flow
+
+- Read the actual canonical catalog from the authenticated Assistant tools resource. An unavailable or externally governed provider stays unavailable; the UI cannot replace it with a fixture or coarse local grant.
+- A missing or unknown session audience links directly to the existing Session disclosure control. Do not silently select an audience for the user.
+- Prepare with a stable request key, then create the pending canonical authority request. Show the server-derived target, effect and expiry. Preparation and pending-request creation do not dispatch anything.
+- The existing GrantRequest does not contain the original arguments or preparation key. Add a scoped, read-only prepared-invocation inspection resource before implementing reload/resume in the UI. It must return the original input/key only to the owning authenticated session, recheck current Assistant/endpoint/provider/schema access, and grant or dispatch nothing. This is the immediate missing backend dependency.
+- Require an explicit checkbox confirming the displayed exact request before approval. Send the returned confirmation digest, expected revision and unchanged grant terms. Approval returns a durable grant but does not invoke the capability.
+- Offer **Run approved action** beside that confirmed grant. Use the original invocation and preparation key. Show the actual result, receipt identity and whether the response was replayed. A transport error keeps the original command available for safe retry; it must not generate a fresh key automatically.
+- For an uncertain admitted outcome, offer **Check original result** through the existing reconciliation resource. Do not retry the effect, refund a grant, invent success or rediscover a replacement provider.
+- List requests and grants with bounded pagination. Display grant eligibility separately from stored lifecycle state. A revoked, consumed, expired or review-due grant must not look runnable. Grant detail shows the actual admitted invocation identifiers and lifecycle events.
+- Denial, cancellation and revocation act on the selected record and expected revision. Keep the updated record and action feedback in view. A reusable grant can support a newly prepared matching invocation; it must not turn a repeat of the original invocation into a new effect.
+
+### Interaction and accessibility rules
+
+Use labeled controls, native form validation, visible focus rings, 44px touch targets and status text next to the affected workflow. Preserve exact idempotency envelopes across ambiguous network failures. Clear form proposals, selected records, confirmations and late replies when the authenticated session, selected Assistant or audience changes. Render all provider/model/user text as text, never as markup. Show loading, unavailable, empty and error states distinctly; do not leave a spinner with no recovery action. Respect reduced motion and keep focus order aligned with the displayed workflow.
+
+### Verification required before completion
+
+Exercise the real control page against disposable authenticated server startup: catalog selection; invalid arguments; complete exact review; checkbox and keyboard approval; one dispatch; original-result replay; browser reload before dispatch; durable result after server restart; denial/revocation; expired and stale revisions; session/Assistant/audience withdrawal; interrupted replies with stable keys; bounded pagination; provider failure without fallback; and text rendered safely. Check desktop, 390px and 320px layouts for readable identifiers, nearby next actions, no page overflow and keyboard reachability. Capture and inspect the actual UI. These are agent checks; separate Human acceptance remains required. PWCE composition and physical effects are not established by a synthetic browser run.
