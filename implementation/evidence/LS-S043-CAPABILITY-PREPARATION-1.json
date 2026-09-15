@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S043-CAPABILITY-PREPARATION-1",
+  "slice": "LS-S043",
+  "status": "componentVerified",
+  "sourceRevision": "7b0642a518c3b8d08d1eff77c9394b74267b73b2",
+  "sourceBinding": "Exact changed source hashes below bind this preparation increment relative to sourceRevision; the enclosing commit contains the implementation. This is not a whole-slice or selected-provider qualification.",
+  "specificationRevision": "f9ff228ec4da9b86b8ea468b074dfb796b5faa9c",
+  "recordedAt": "2026-09-15T14:01:29.414570Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/authority/canonical-api.ts",
+      "sha256": "53fdc4fce1f06dc272880517bed08611c72b06c102a68428570c3398417c1f46"
+    },
+    {
+      "path": "apps/server/src/authority/capability-preparation.ts",
+      "sha256": "31e0b28508c96cc18c9aad3818662c884af2a09873aa5fbf77d50d43f02d95a3"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "3fa1b28db8fe823b7408327cf96e3d0a935af438523652c842fbfa4bf83a772b"
+    },
+    {
+      "path": "apps/server/test/capability-preparation.test.ts",
+      "sha256": "bd0801ad624b4f3e44bdf50b537ef252b1fc9ee29a724e76b97f8c7b47484319"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "da10997f1b2890a2a9c3b76d133bc381f411bdc0fb745338a15b86a2e0ea9ba1"
+    },
+    {
+      "path": "docs/canonical-provider-boundary.md",
+      "sha256": "a60c9babd2bce325d3ed3f0c14b7f2c737966c1166d0b75e657d7e42e16bec51"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "77a0d583872789fce42c887ccbbfd152c8d00a905efd3958b1a8dfe9f5ea3e60"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0032_canonical_preparations.sql",
+      "sha256": "1f0e6297533153f21f79c747e151270fbde96da07566bd401ccf481b78841eb3"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "95336b9b11965d004d218ed19893297e035a95661449d55db7612b5dff087206"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "0c0df4207e84bc34cc4dfeca623aaf2996d8face7a6bab40b8ae5eece57de1a5"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "0a8d385e3e0bc5880d90f807e670e30775e938722a7951ee9cdc681958db4eb7"
+    }
+  ],
+  "claims": [
+    "Explicit canonical capability composition now supplies the actual authenticated server with a retained original-invocation proposal source. Current Human, session, logical endpoint and configured environment are derived by the host; submitted scope, identity, digest and effect-summary overrides are rejected.",
+    "Preparation obtains a canonical provider snapshot through the boundary, checks catalog membership/version/route, resolves exact immutable input/output schema artifacts, validates arguments, and derives material target/data scope and effect text using a configured versioned semantic adapter.",
+    "Migration 32 persists the original invocation, input, schema metadata, provider and adapter identity, snapshot and complete owner binding with digest custody. Identical and concurrent retries retain one invocation; changed content conflicts; capacity and storage failures cannot produce a usable partial preparation.",
+    "Canonical request creation resolves the retained invocation. Fresh approval rechecks the catalog, schema access, arguments and derived scope. Serialized guards recheck owner, endpoint, provider selection and grant state while excluding only the current approval transaction's own grant issuance.",
+    "Expired or corrupt preparation, schema denial, audience withdrawal, changed catalog or provider selection cannot create permission. Provider switches fence in-flight lookup and retained preparation. Restart preserves identity but cannot substitute a replacement snapshot.",
+    "Preparation and approval invoke no capability. The 11 new real authenticated HTTP tests use a synthetic canonical provider, actual schema registry and temporary SQLite storage. They run alongside the existing 13 canonical API tests in the final 625-test source suite.",
+    "The migration follows repeat-safe ledger recovery and health reports the expected migration IDs through 32. Existing stored data is preserved during migration tests."
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "canonical-preparation-full-final.log",
+      "logSha256": "aac32035c51949266c4766b2e5bc6557db8a1105335ff9ce480f3c9123fd086f",
+      "testsPassed": 625
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "canonical-preparation-typecheck-selected.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "canonical-preparation-build-selected.log",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "canonical-preparation-lint-selected.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "canonical-preparation-workspace-tests.log",
+      "logSha256": "198686a648f3e6a4bbe0d55012f5bd460509835251d124c81efa4e049a3fbb8e",
+      "testsPassed": 43
+    },
+    {
+      "command": "node scripts/check-pwce-context-process.mjs",
+      "result": "pass",
+      "log": "canonical-preparation-pwce-process.log",
+      "logSha256": "cbe5ca4e9dbcd80879b4a4dd31b83481b7a6fb118ad26aa6028bab9f65eee1f1",
+      "scope": "19 context and 7 conversation checks at current PWCE producer. This preceded the final local provider-selection fence; final source suite covers the changed server. No PWCE action mapping is claimed."
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "log": "canonical-preparation-private.log",
+      "logSha256": "d0232b6bb7f5606c11f84f711b56f1ce628528fcdc03bef111c160d5ed028619"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "canonical-preparation-workspace-final.log",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S043",
+      "result": "pass",
+      "log": "canonical-preparation-preflight-final.log",
+      "logSha256": "f238d15171e718050c6658c0fd89e067f8b03e7b9fce89e887304c272cb90994"
+    }
+  ],
+  "regressionCounts": {
+    "sourceTestsPassed": 625,
+    "newPreparationHttpTests": 11,
+    "canonicalApiHttpTests": 13,
+    "workspaceToolTestsPassed": 43,
+    "pwceContextChecksPassed": 19,
+    "pwceConversationChecksPassed": 7
+  },
+  "producerCompatibility": {
+    "repository": "ggilchrest/PWCE",
+    "revision": "50d9a0b9f3919d810e356feadb24509277d0a7ca",
+    "bundleSha256": "32c555ba675b61b4c1ec82245e314a8f6ca537484defbeb48b9fe1b6bdf4e2e2",
+    "bundleChanged": false
+  },
+  "limits": [
+    "Explicit host composition is required. The existing tool dispatcher and control-web do not yet consume canonical preparations. PWCE governance cannot use this local grant path; its actual canonical adapter remains open.",
+    "Preparation expiry cannot exceed the retained catalog expiry; reusable terms require a validated-arguments adapter. Both preparation and authority-context registries are bounded to 4096 records. Schema artifacts remain bounded to 16 KiB, inputs to 64 KiB and stored preparation to 512 KiB.",
+    "Durable records and provider snapshot identity are rechecked after restart. Backup/restore fencing, final dispatch consumption, invalidations and a real admitted-invocation ledger are not completed here.",
+    "Logical personal-audience binding is host-verified session scope, not physical presence evidence. Synthetic provider verification does not certify live device behavior."
+  ],
+  "preservedFailures": [
+    {
+      "log": "canonical-preparation-http.log",
+      "reason": "Initial TypeScript parameter properties were unsupported by the source-test runner; corrected to ordinary fields.",
+      "logSha256": "9989d2dd65e13d0b5250e3cd5af1b0e236ec3394c63519a446f215df9dcc14ae"
+    },
+    {
+      "log": "canonical-preparation-http-3.log",
+      "reason": "Source tests required rebuilt migration artifacts; completed the ordinary build before proceeding.",
+      "logSha256": "76a6bcffe21170531011db857e9b07b498943a5875b8f576771f265ee115d52f"
+    },
+    {
+      "log": "canonical-preparation-http-4.log",
+      "reason": "Owner digest included extra proposal fields and fixture issue time exceeded its fixed clock; normalized owner fields and aligned fixture time.",
+      "logSha256": "655fbd766ab196b4839f7baea1ed9298b549b5e8e9f77ded6fb5411adf630d66"
+    },
+    {
+      "log": "canonical-preparation-full.log",
+      "reason": "Sparse migration-ledger recovery found table recreation failure; migration made repeat-safe. The later full suite passes.",
+      "logSha256": "b5825d366f6c6ea91e745fee6fc3ee7da569e52ecc58c6ff51962b2cc9de7e3b"
+    }
+  ],
+  "exclusions": [
+    "No canonical final dispatch, authoritative dispatch receipt, one-use consumption, admitted-invocation ledger or full LS-S044 Human workflow acceptance is claimed.",
+    "No real PWCE capability/authority mapping, physical target-state precondition, full joint action or remaining S083/S084 certification is completed by this increment.",
+    "No saved-service restart/migration, deployment, live configuration/effect, personal-data import, training, model/provider selection, selected-provider rerun or new Human acceptance. Historical receipts, dirty user artifacts, approved schemas and model-quality telemetry are preserved."
+  ],
+  "nextAction": "Implement canonical final dispatch under LS-S042 using the retained validated invocation, actual canonical grant, durable decision/receipt, one-use consumption and admitted-invocation ledger. Connect the LS-S044 control-web workflow and actual PWCE capability/authority mapping; finish physical target-state preconditions and joint action scenarios. Continue remaining S083/S084 development and broad source requalification."
+}

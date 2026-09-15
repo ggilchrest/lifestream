@@ -16,6 +16,8 @@ type ProposalInput = CreateAuthorityRequestRequest['payload'];
 export type CanonicalAuthorityHost = {
   environmentId: string;
   assertCurrent(binding: GrantOwnerBinding, principalId: string): void;
+  assertProposalCurrent?(request: TrustedGrantProposal['request'], principalId: string): void;
+  validateProposal?(request: TrustedGrantProposal['request'], principalId: string, call: CapabilityCallContext): Promise<void>;
   resolveProposal(payload: ProposalInput, principalId: string, call: CapabilityCallContext): Promise<TrustedGrantProposal>;
 };
 type Reply = { status: number; body: Record<string, unknown>; replayed?: boolean };
@@ -74,7 +76,7 @@ export class CanonicalAuthorityApi {
   constructor(database: Database, auth: LocalAuthentication, host?: CanonicalAuthorityHost, now: () => number = Date.now) {
     if (host && !valid(common + 'UUID', host.environmentId)) throw new Error('Canonical authority requires a configured environment UUID');
     this.database = database; this.auth = auth; this.repository = new CanonicalGrantRepository(database, 'local-human');
-    this.host = host && { environmentId: host.environmentId, assertCurrent: host.assertCurrent.bind(host), resolveProposal: host.resolveProposal.bind(host) }; this.now = now;
+    this.host = host && { environmentId: host.environmentId, assertCurrent: host.assertCurrent.bind(host), resolveProposal: host.resolveProposal.bind(host), ...(host.assertProposalCurrent ? { assertProposalCurrent: host.assertProposalCurrent.bind(host) } : {}), ...(host.validateProposal ? { validateProposal: host.validateProposal.bind(host) } : {}) }; this.now = now;
   }
   static matches(path: string): boolean { return /^\/api\/authority\/v1\/(?:requests|grants)(?:\/|$)/.test(path); }
   private context(local: LocalContext, call: CapabilityCall): CanonicalHumanContext {
@@ -162,12 +164,14 @@ export class CanonicalAuthorityApi {
             const proposal = structuredClone(await call.wait(() => this.host!.resolveProposal(structuredClone(payload), local.principalId, call!.context)));
             for (const key of Object.keys(payload)) if (!isDeepStrictEqual(payload[key], proposal.request[key as keyof typeof proposal.request])) throw new AuthenticationError(409, 'authority_proposal_changed');
             this.issuable(proposal.request, local);
-            const guard = context.assertCurrent; context.assertCurrent = binding => { guard(binding); this.issuable(binding, local); };
+            const guard = context.assertCurrent; context.assertCurrent = binding => { guard(binding); this.issuable(binding, local); this.host?.assertProposalCurrent?.(proposal.request, local.principalId); };
             mutation = this.repository.createRequest(proposal, command, context);
           } else if (operation === 'ApproveAuthorityRequest') {
             const pending = this.repository.inspectRequest(payload.requestId, context); this.issuable(pending, local);
+            if (this.host?.validateProposal) await call.wait(() => this.host!.validateProposal!(structuredClone(pending), local.principalId, call!.context));
+            this.issuable(pending, local);
             context.authenticationEvidence = { schemaRef: 'urn:lifestream:local-authentication-proof:1', data: JSON.stringify({ principalId: local.principalId, sessionId: local.sessionId, origin: local.origin, authenticatedAt: new Date(local.authenticatedAt).toISOString(), verifiedAt: context.now(), assistantId: pending.assistantId, providerRef: 'local-password' }) };
-            const guard = context.assertCurrent; context.assertCurrent = binding => { guard(binding); this.issuable({ ...binding, sessionId: pending.sessionId }, local); };
+            const guard = context.assertCurrent; context.assertCurrent = binding => { guard(binding); this.issuable({ ...binding, sessionId: pending.sessionId }, local); this.host?.assertProposalCurrent?.(pending, local.principalId); };
             mutation = this.repository.approveRequest(payload, command, context);
           } else if (operation === 'RevokeAuthorityGrant') mutation = this.repository.revokeGrant(payload, command, context);
           else mutation = this.repository.decideRequest({ ...payload, decision: operation === 'DenyAuthorityRequest' ? 'denied' : 'cancelled' }, command, context);

@@ -107,6 +107,10 @@
     "./capabilities/call": {
       "types": "./dist/capabilities/call.d.ts",
       "import": "./dist/capabilities/call.js"
+    },
+    "./capabilities/schema-validation": {
+      "types": "./dist/capabilities/schema-validation.d.ts",
+      "import": "./dist/capabilities/schema-validation.js"
     }
   },
   "scripts": {

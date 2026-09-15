@@ -1,0 +1,2 @@
+CREATE TABLE IF NOT EXISTS canonical_preparation_contexts (owner_key TEXT PRIMARY KEY, context_id TEXT NOT NULL, revision INTEGER NOT NULL CHECK(revision > 0), source_digest TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS canonical_preparations (principal_id TEXT NOT NULL, idempotency_key TEXT NOT NULL, invocation_id TEXT NOT NULL UNIQUE, payload_json TEXT NOT NULL, sha256 TEXT NOT NULL, PRIMARY KEY(principal_id,idempotency_key));

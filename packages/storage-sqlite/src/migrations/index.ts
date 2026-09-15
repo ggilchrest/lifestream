@@ -38,7 +38,8 @@ export function loadMigrations(): Migration[] {
     [28, "tool_invocations", "0028_tool_invocations.sql"],
     [29, "tool_recovery", "0029_tool_recovery.sql"],
     [30, "canonical_grants", "0030_canonical_grants.sql"],
-    [31, "canonical_authority_evidence", "0031_canonical_authority_evidence.sql"]
+    [31, "canonical_authority_evidence", "0031_canonical_authority_evidence.sql"],
+    [32, "canonical_preparations", "0032_canonical_preparations.sql"]
   ].map(([id, name, file]) => {
     const sql = readFileSync(join(migrationDirectory, file as string), "utf8");
     return { id: id as number, name: name as string, sql, digest: createHash("sha256").update(sql).digest("hex") };
