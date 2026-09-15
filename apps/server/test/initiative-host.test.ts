@@ -14,11 +14,11 @@ import type {InitiativeSimulationEvent} from '../src/runtime/initiative-host.ts'
 import {extensionSettings} from '../../../tests/fixtures/extension-settings.ts';
 const validator=createContractValidator(),apiId='https://lifestream.dev/contracts/initiative-api/1.0.0';
 
-async function fixture(t:TestContext,enabled=true,modality:'text'|'speech'='text'){
+async function fixture(t:TestContext,enabled=true,modality:'text'|'speech'='text',catalog=false){
  const root=await mkdtemp(join(tmpdir(),'initiative-host-'));t.after(()=>rm(root,{recursive:true,force:true}));
  const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};
  const events=new Map<string,InitiativeSimulationEvent>(),installerToken=randomUUID();
- const app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'safety'),installerToken},...(enabled?{initiativeSimulation:{resolve:(_scope:unknown,_session:string,id:string)=>events.get(id)}}:{})});await app.start();t.after(()=>app.shutdown());
+ const app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'safety'),installerToken},...(enabled?{initiativeSimulation:{...(catalog?{list:()=>[...events.keys()]}:{}),resolve:(_scope:unknown,_session:string,id:string)=>events.get(id)}}:{})});await app.start();t.after(()=>app.shutdown());
  const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={origin:base,'content-type':'application/json'};
  const send=async(path:string,body?:unknown,extra:Record<string,string>={})=>{const response=await fetch(base+path,{method:body===undefined?'GET':'POST',headers:{...headers,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});return {status:response.status,body:await response.json() as any};};
  const setup=await fetch(base+'/api/auth/v1/setup',{method:'POST',headers,body:JSON.stringify({username:'owner',password:randomUUID()+randomUUID(),installerToken})});assert.equal(setup.status,201);headers.cookie=setup.headers.get('set-cookie')!.split(';')[0]!;const auth=(await setup.json() as any).session;headers['x-lifestream-csrf']=auth.csrfToken;
@@ -208,4 +208,17 @@ test('forgetting clears shared dialogue and stale browser history cannot reintro
  const relationship=(await f.send(f.path)).body.relationship,record=relationship.candidates[0];const forgotten=await f.send(f.path+'/privacy',{action:'forget-derived-information',expectedRevision:relationship.revision,idempotencyKey:randomUUID(),targets:[{kind:'record',id:record.candidateId,revision:record.revision}]});assert.equal(forgotten.status,200,JSON.stringify(forgotten));assert.equal(forgotten.body.receipt.status,'completed');assert.equal((f.app as any).conversationHistory.diagnostics().entries,0);
  await message({userInput:'After synthetic forgetting.',conversation:JSON.stringify([{role:'assistant',text:'SYNTHETIC_PRIVATE_DIALOGUE FORGED_BROWSER_HISTORY'}])});const prior=prompts[1]!.sections.find(s=>s.kind==='conversation')!.content;assert.equal(prior,'[]');assert.doesNotMatch(JSON.stringify(prompts[1]),/SYNTHETIC_PRIVATE_DIALOGUE|FORGED_BROWSER_HISTORY/);
  assert.equal((await f.send('/api/auth/v1/sign-out',{})).status,200);assert.equal((f.app as any).conversationHistory.diagnostics().entries,0);
+});
+
+
+test('prepared synthetic catalog is bounded, current, read-only and revalidated at submission',async t=>{
+ const f=await fixture(t,true,'text',true),request=f.event(),foreign=f.event({userId:randomUUID()}),wrongSession=f.event({sessionId:randomUUID()}),expired=f.event({expiresAt:Date.now()-1}),future=f.event({observedAt:Date.now()+60000});
+ const inspect=()=>f.extension({operation:'inspect'}),rows=(body:any)=>body.explanations.filter((e:any)=>e.code.startsWith('synthetic_occurrence_'));
+ let result=await inspect();assert.deepEqual(rows(result.body).map((e:any)=>e.sourceRefs[0]),[request.sourceEventId]);assert.match(rows(result.body)[0].summary,/Available check-in.*Text.*expires/u);assert.equal(result.body.delivery,null);assert.equal(calls(f.db),0);assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM initiative_delivery').get()!.n,0);
+ assert.equal((await f.send(f.route,{schemaVersion:'1.0.0',operation:'inspect'},{cookie:''})).status,401);
+ await f.ready();f.events.get(request.sourceEventId)!.expiresAt=Date.now()-1;assert.equal((await f.extension(request)).status,409);assert.equal(calls(f.db),0);
+ const next=f.event({kind:'arrivalReturn',dwellSeconds:0,absenceSeconds:0});await f.extension(next);result=await inspect();assert.equal(rows(result.body).length,0);assert.ok(result.body.explanations.some((e:any)=>e.code==='synthetic_catalog_empty'));assert.equal(calls(f.db),0);
+ for(let n=0;n<80;n++)f.event();assert.equal(rows((await inspect()).body).length,16);assert.equal(calls(f.db),0);
+ const host=(f.app as any).initiativeHost;host.simulation.list=()=>{throw new Error('HOST_PRIVATE_DETAIL');};result=await inspect();assert.ok(result.body.explanations.some((e:any)=>e.code==='synthetic_catalog_unavailable'));assert.equal(JSON.stringify(result.body).includes('HOST_PRIVATE_DETAIL'),false);
+ for(const req of [foreign,wrongSession,expired,future])assert.equal((await f.extension(req)).status,409);
 });

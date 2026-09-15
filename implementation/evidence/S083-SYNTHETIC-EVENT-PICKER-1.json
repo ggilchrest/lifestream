@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-SYNTHETIC-EVENT-PICKER-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "ab03d7b285de0a34cca052e276f818b3ce483d94",
+  "specificationRevision": "e1b142fbf9e3fc0638c720443c19064eb6354e35",
+  "recordedAt": "2026-09-15T04:08:58.269356Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/runtime/initiative-host.ts",
+      "sha256": "c0a1c322a3972362880204ededb0af38e61acdbb658dd03c3266f93b62b58d65"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "95a343f0eeff529474365878ec0fda4d49981ce861c42f8ca7a7d7bfa56438f6"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "23374a1549e920764d30f4904bfa2d0ecf8c96b4405149dd96bc562fcd68b152"
+    },
+    {
+      "path": "apps/server/test/initiative-host.test.ts",
+      "sha256": "31852c902fd368da0c9e21e66f73b9906678ed73f02671e6b79a8208c7fb8ec2"
+    },
+    {
+      "path": "apps/server/test/audio-output.test.ts",
+      "sha256": "6564d32bcd776d297f315887d5df96a3be1bc15cb911b8d66c94954f1d4e5279"
+    },
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "1b7c56a4f1aa6d30d4f5437a214d428d1947a1d98402110a26d45769b471ec54"
+    },
+    {
+      "path": "apps/control-web/test/initiative-conversation.test.mjs",
+      "sha256": "35190cbb9a78fedb8357361e1f5ed0f4f677b5b85cffc27d35ce65f038c11911"
+    },
+    {
+      "path": "apps/control-web/DESIGN.md",
+      "sha256": "010308fa6a27e22f5108601bccf51d0cee4a1a04dbd1c723af3b667088b36f1b"
+    }
+  ],
+  "claims": [
+    "Test hosts can optionally list their prepared synthetic source IDs through an internal host callback. Existing protected Initiative inspection resolves and filters those IDs for the current authenticated subject and session, scans at most 64 candidates and projects at most 16 suggestions using existing explanation codes and source references. Listing does not create an event, invoke inference, change policy or issue output.",
+    "Duplicate, consumed, foreign-subject, foreign-session, future, expired, malformed and unsupported entries are withheld. Failed host listing returns an explicit unavailable explanation without exposing the host error. The existing simulate path independently resolves and checks the submitted source again; the catalog confers no authority.",
+    "The Conversation picker labels kind, text/speech output and expiry. Selection fills the existing request fields, moves identifiers into read-only details and proposes the matching output modality. Adjacent Enable case output, Run and Refresh controls keep the sequence together. Empty catalogs disable selection/run and explain the required host preparation. Resolve-only hosts retain manual source entry. No microphone starts through this workflow.",
+    "An observed playback regression returned cancelled for a lost acknowledgment that should remain unknown. Output-only speech now retains its own timer-expiry cause instead of relying only on a later wall-clock comparison. A deterministic timer-only regression test covers that ordering; the existing joined lost-acknowledgment test and full regression suite pass with retained uncertainty and no replay.",
+    "Browser verification selects and submits a host-prepared case without manually entering source identifiers, uses the adjacent output control, receives one text opening, and refreshes to an empty catalog without another inference call. Mobile layout has no horizontal overflow. Screenshots were inspected separately from Human acceptance."
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "logSha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "logSha256": "df3e6cba7064f43afd7bb6b4b0e78b5ae1e3e3b30b4f4f8b3e15aa28687a30c7"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs scripts/model-quality-observations.test.mjs",
+      "result": "pass",
+      "logSha256": "59b7242be995d993acdfbab4ebf1081d827172087cc8ab29615c006220d0c8f9"
+    },
+    {
+      "command": "pnpm --dir .private validate",
+      "result": "pass",
+      "logSha256": "3c5ef5b68c343c9b674ee662b0c81825902694194cca0358f13e9acd9cea67a9"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "logSha256": "155bcd7e385b7902c5f3981e924a33410b3be1cc739ca8168f0e7b1baa97696e"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "logSha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "counts": {
+    "sourceTests": 384,
+    "newSourceTests": 2,
+    "browserTests": 43,
+    "newBrowserTests": 1,
+    "toolingTests": 45
+  },
+  "intermediateFindings": [
+    {
+      "result": "fail",
+      "logSha256": "1ea1a6817eda0ed2e48ce9cb99120776b26ac33ca5026978d6e0336559af82ef",
+      "summary": "The existing lost-playback-acknowledgment case returned cancelled instead of unknown. Explicit timer-expiry cause and a deterministic timer/wall-clock ordering regression now preserve the intended classification."
+    },
+    {
+      "result": "fail",
+      "logSha256": "961d924e7cddda5da1e8c1b301e81f2b48d3a850c9ab662df9f2e84ad3a45b84",
+      "summary": "Adding nested source details made the previous broad summary locator ambiguous. Tests now target the outer Synthetic opening test summary explicitly; the workflow and full browser suite execute successfully."
+    }
+  ],
+  "visualEvidence": [
+    {
+      "kind": "syntheticBrowserCapture",
+      "name": "lifestream-synthetic-picker-mobile.png",
+      "sha256": "f2ad6ea1710ddae99f0d245e2da6d6a5033e8221d6f2410ffb58d4fa6c45c674"
+    },
+    {
+      "kind": "syntheticBrowserCapture",
+      "name": "lifestream-synthetic-picker-desktop.png",
+      "sha256": "a6a595c8b1bd1b607415572db8cd5afac0eed6502115fadda6b5a9d4d5052ac3"
+    }
+  ],
+  "prerequisiteQualification": {
+    "status": "pending",
+    "slices": [
+      "LS-S071",
+      "LS-S072",
+      "LS-S073",
+      "LS-S076",
+      "LS-S078"
+    ],
+    "reason": "Effective inputs changed since prior qualification. Historical receipts remain unchanged."
+  },
+  "limitations": [
+    "This component enumerates prepared events; a standalone isolated host launcher and repeatable guided event preparation remain to be completed. The saved Human review service was not restarted, redeployed or reconfigured.",
+    "No new selected-provider, physical-presence, audible-performance or Human acceptance evidence is claimed. No model-quality observations were added. Existing model-quality telemetry remains nonblocking and preserved.",
+    "Expression inspection, pinned gradient Lab, reserved acknowledgments, bounded timing adaptation, older-database restore fencing and current-source prerequisite qualification remain open. Full S083/S084 and PWCE Personal V1 development remains in progress.",
+    "No personal-data import, live configuration, training, model selection or external research occurred. All four approved machine schemas, protocol-common and preserved unrelated dirty artifacts remain unchanged."
+  ]
+}

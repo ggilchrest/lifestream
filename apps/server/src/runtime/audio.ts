@@ -67,7 +67,7 @@ export class AudioSession {
     const lease=this.deps.outputLease(input.endpointId,new Date(deadline).toISOString()),controller=new AbortController(),signal=AbortSignal.any([controller.signal,input.signal]);
     let settledOutput:()=>void=()=>{};this.outputSettlement=new Promise<void>(resolve=>{settledOutput=resolve;});
     this.controller=controller;this.interactionTraceId=input.interactionId;this.sequence=0;this.currentInput=undefined;
-    const timer=setTimeout(()=>controller.abort(),Math.max(1,deadline-Date.now()));
+    let deadlineElapsed=false;const timer=setTimeout(()=>{deadlineElapsed=true;controller.abort();},Math.max(1,deadline-Date.now()));
     let samples=0,frames=0,started=false,done=false,terminalSent=false,mappingRevision="unknown",settlement:Promise<void>|undefined,settled=false;
     const degraded=new Set<string>(["warmth"]),pacer=new PcmPacer(),segmentId=randomUUID(),decisionId=randomUUID();
     const current=()=>!this.closed&&this.socket.readyState===OPEN&&!signal.aborted&&Date.now()<deadline&&input.current()===true&&lease.current();
@@ -96,7 +96,7 @@ export class AudioSession {
       if(!current())throw new Error("Output-only playback was interrupted or expired");
       return {samples,frames,mappingRevision,warmth:"unsupported",degradedDimensions:[...degraded]};
     }catch(error){
-      const cancelled=signal.aborted||!input.current()||!lease.current();if(cancelled)input.interrupted?.(Date.now()>=deadline?"expired":"cancelled");controller.abort();if(started)send(this.socket,{type:"stopPlayback",interactionTraceId:input.interactionId,reason:"output_only_cancelled_or_failed"});
+      const cancelled=signal.aborted||!input.current()||!lease.current();if(cancelled)input.interrupted?.(deadlineElapsed||Date.now()>=deadline?"expired":"cancelled");controller.abort();if(started)send(this.socket,{type:"stopPlayback",interactionTraceId:input.interactionId,reason:"output_only_cancelled_or_failed"});
       if(!terminalSent)response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:cancelled?"interrupted":"failed",finalResponse:null,error:problem("output_only_stopped","Output-only speech stopped; playback completion is not established.",input.interactionId)});throw error;
     }finally{clearTimeout(timer);controller.abort();const release=()=>{lease.release();this.controller=undefined;this.interactionTraceId=undefined;this.outputSettlement=undefined;settledOutput();};if(settlement&&!settled)void settlement.catch(()=>undefined).then(release);else release();}
   }

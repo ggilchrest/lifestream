@@ -13,7 +13,7 @@ export type InitiativeOwner={scope:InitiativeScope;configuration?:Record<string,
 export type InitiativeSession={sessionId:string;conversationId:string;revision:number;endpoint:EndpointProfile};
 /** Only supplied by an explicitly enabled test host, never decoded from HTTP facts. */
 export type InitiativeSimulationEvent={userId:string;sessionId:string;sourceEventId:string;kind:InitiativeOpportunity['kind'];topicRef:string|null;observedAt:number;expiresAt:number;context:InitiativeFacts['context'];modality:'text'|'speech';dwellSeconds?:number;absenceSeconds?:number;unfinishedEvidenceCurrent?:boolean};
-export type InitiativeSimulation={resolve:(scope:InitiativeScope,sessionId:string,sourceEventId:string)=>InitiativeSimulationEvent|undefined};
+export type InitiativeSimulation={list?:(scope:InitiativeScope,sessionId:string)=>readonly string[];resolve:(scope:InitiativeScope,sessionId:string,sourceEventId:string)=>InitiativeSimulationEvent|undefined};
 type Result={status:number;body:Record<string,unknown>};
 type Speech={identity:object;available:()=>boolean;current:()=>boolean;speak:(input:OutputOnlySpeech)=>Promise<unknown>};
 type Context={speech?:Speech;owner:()=>InitiativeOwner|undefined;session:()=>InitiativeSession|undefined;authorized:()=>boolean;prepare:()=>HostRuntimeInput;provider:InferenceProvider|undefined;signal:AbortSignal;emit:(prefix:string,suffix:()=>string)=>void};
@@ -37,7 +37,26 @@ export class InitiativeHost {
  private readonly database:Database;
  private readonly simulation:InitiativeSimulation|undefined;
  constructor(database:Database,simulation?:InitiativeSimulation){this.database=database;this.simulation=simulation;this.ledger=new InitiativeDeliveryRepository(database);this.ledger.recover();}
- runtimeExplanations(){return [{code:this.simulation?'synthetic_ingress_enabled':'synthetic_ingress_disabled',summary:this.simulation?'This test host accepts only its prepared synthetic occurrences for the bound subject and session.':'Synthetic ingress is disabled on this host.',sourceRefs:[] as string[]}];}
+ runtimeExplanations(owner?:InitiativeOwner,sessionId?:string){
+  const explanations=[{code:this.simulation?'synthetic_ingress_enabled':'synthetic_ingress_disabled',summary:this.simulation?'This test host accepts only its prepared synthetic occurrences for the bound subject and session.':'Synthetic ingress is disabled on this host.',sourceRefs:[] as string[]}];
+  if(!this.simulation?.list||!owner||!sessionId)return explanations;
+  explanations.push({code:'synthetic_catalog_enabled',summary:'Choose a host-prepared synthetic case. Listing neither enables output nor creates or replays an event. Refresh after the host prepares new cases.',sourceRefs:[]});
+  try{
+   const ids=this.simulation.list(owner.scope,sessionId),now=Date.now(),seen=new Set<string>(),used=new Set(this.ledger.list(owner.scope).filter(r=>r.opportunity.sessionId===sessionId).flatMap(r=>r.opportunity.sourceRefs));
+   let count=0;
+   for(const id of ids.slice(0,64)){
+    if(count>=16)break;
+    if(typeof id!=='string'||!id||id.length>200||seen.has(id)||used.has(`synthetic-event:${id}`))continue;seen.add(id);
+    const event=this.simulation.resolve(owner.scope,sessionId,id);
+    if(!event||event.userId!==owner.scope.userId||event.sessionId!==sessionId||event.sourceEventId!==id||!['arrivalReturn','availableCheckIn','groundedFollowUp'].includes(event.kind)||!['text','speech'].includes(event.modality)||!Number.isFinite(event.observedAt)||!Number.isFinite(event.expiresAt)||event.observedAt>now||event.expiresAt<=now||event.expiresAt>8640000000000000||event.topicRef!==null&&(typeof event.topicRef!=='string'||!event.topicRef||event.topicRef.length>200||event.topicRef===id))continue;
+    const label={arrivalReturn:'Arrival or return',availableCheckIn:'Available check-in',groundedFollowUp:'Grounded follow-up'}[event.kind];
+    explanations.push({code:`synthetic_occurrence_${event.kind}_${event.modality}`,summary:`${label} · ${event.modality==='speech'?'Speech and transcript':'Text'} · expires ${new Date(event.expiresAt).toISOString()}`,sourceRefs:[id,...(event.topicRef?[event.topicRef]:[])]});count++;
+   }
+   if(!count)explanations.push({code:'synthetic_catalog_empty',summary:'No current prepared cases are available for this subject and session. Ask the test host operator to prepare a case, then refresh. No output was requested.',sourceRefs:[]});
+  }catch{explanations.splice(2);explanations.push({code:'synthetic_catalog_unavailable',summary:'The test host could not list prepared cases. Refresh to retry inspection; no output was requested.',sourceRefs:[]});}
+  return explanations;
+ }
+
  records(scope:InitiativeScope):unknown[]{return this.ledger.list(scope).slice(0,63).flatMap(r=>[r.opportunity,r.outcome]);}
  private response(owner:InitiativeOwner,operation:string,explanations:Array<{code:string;summary:string;sourceRefs:string[]}>=[],changed=false):Result {
   return {status:200,body:{schemaVersion:'1.0.0',relationshipId:owner.scope.relationshipId,operation,activeConfigurationId:owner.configuration?.configurationId??null,records:[...(owner.configuration?[owner.configuration]:[]),...this.records(owner.scope)].slice(0,128),explanations:[{code:'bounded_runtime_history',summary:'Current configuration and at most 63 recent opportunities and outcomes. Simulation is synthetic; emission, endpoint acceptance and playback completion are separate. No microphone capture is started.',sourceRefs:[]},...explanations],activeStateChanged:changed,executionMode:this.simulation?'simulation':'live',nextCursor:null,delivery:null}};

@@ -113,3 +113,11 @@ test('a provider that will not settle produces a bounded ordinary-reply error wi
  try{await assert.rejects(pending);await committed;assert.equal(foreground,0);assert.equal(f.counts().sttCalls,0);assert.equal(f.events.at(-1).problem.code,'audio_previous_output_unsettled');assert.equal(f.session.outputAvailable,false);}finally{release();await new Promise(r=>setImmediate(r));}
  assert.equal(f.session.outputAvailable,true);
 });
+
+
+test('playback deadline remains expiry when its timer fires before the wall-clock deadline',async t=>{
+ t.mock.timers.enable({apis:['setTimeout']});const f=fixture();let entered:()=>void=()=>{},reason:string|undefined;const waiting=new Promise<void>(r=>{entered=r;});
+ f.input.interrupted=value=>{reason=value;};f.input.synthesized=async signal=>{entered();await new Promise<void>((_,reject)=>signal.addEventListener('abort',()=>reject(new Error('Playback deadline')),{once:true}));};
+ const pending=f.session.speakOutputOnly(f.input),rejected=assert.rejects(pending);await waiting;assert.ok(Date.now()<Date.parse(f.input.deadlineAt));t.mock.timers.tick(30000);await rejected;
+ assert.equal(reason,'expired');assert.equal(f.events.at(-1).type,'stopPlayback');assert.equal(f.service.currentLease(f.sessionId),undefined);
+});
