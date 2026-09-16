@@ -60,3 +60,19 @@ test('prepared candidates reach actual input with current-domain precedence and 
  assert.doesNotMatch(await prompt('Tell me about Orin and Vale again.'),/FOREST_FACT_291/,'correcting the owning declaration invalidates the derived favorite and its prepared detail');
  const again=source('topic:forest-chronicle','Orin and Vale explore Forest Chronicle. FOREST_FACT_291.');const rebuilt=await discovery({operation:'prepare',purpose:'briefRebuild',idempotencyKey:'rebuild-after-correction',topicRef:again.topicRef,evidenceRefs:[],sources:[again]});assert.equal(rebuilt.status,202,JSON.stringify(rebuilt));let after:any;for(let n=0;n<50;n++){after=await discovery({operation:'inspect'});if(after.body.records.some((r:any)=>r.workId===rebuilt.body.records[0].workId&&r.state==='published'))break;await new Promise(resolve=>setTimeout(resolve,10));}assert.equal(after.body.records.find((r:any)=>r.recordType==='candidate').scores.interestStrength,null,'the corrected favorite cannot be reconstructed from its superseded statement');
 });
+
+test('hypothesis questions do not turn dislike, fatigue or uncertainty into assumed enjoyment',()=>{
+ for(const summary of ['The stated topic may be disliked.','Temporary fatigue may explain the reaction.','Interest without capacity may explain the reaction.','There is insufficient evidence of interest.']){
+  const scope=subject(),now=Date.now(),parent:UnderstandingRecord={...scope,schemaVersion:'1.0.0',recordType:'hypothesis',hypothesisId:randomUUID(),revision:1,epistemicStatus:'tentative',status:'candidate',topicRefs:['topic:synthetic'],explanations:[{explanationId:randomUUID(),summary,traitRefs:['trait:synthetic'],supportEvidenceRefs:['evidence:synthetic'],counterEvidenceRefs:[],boundary:'Only the stated context.'},{explanationId:randomUUID(),summary:'Timing may explain the reaction.',traitRefs:['trait:timing'],supportEvidenceRefs:['evidence:synthetic'],counterEvidenceRefs:[],boundary:'No lasting preference established.'}],unknownAlternative:'Another explanation may apply.',sourceCoverage:'unknown',uncertainty:'No established personal motive.',dependencyRefs:['evidence:synthetic:1'],createdAt:new Date(now).toISOString(),configurationRef:'configuration:synthetic'};
+  const before=structuredClone(parent),candidate=compileDiscoveryCandidates(parent,understandingDigest('current'),now)[0]!;
+  assert.equal(candidate.kind,'question');
+  assert.doesNotMatch(String(candidate.content),/appeal|enjoy|like|favorite/iu,'the question must not assume positive interest');
+  assert.match(String(candidate.content),/if anything/iu);
+  assert.deepEqual(candidate.alternatives,(parent.explanations as Record<string,unknown>[]).map(e=>e.summary));
+  assert.deepEqual(candidate.hypothesisRefs,[`hypothesis:${parent.hypothesisId}:1`]);
+  assert.equal(candidate.confersAuthority,false);
+  assert.equal((candidate.scores as any).interestStrength,null);
+  assert.deepEqual(parent,before,'compiling a question cannot reinforce or alter the hypothesis');
+  assert.equal(compileDiscoveryCandidates({...parent,status:'rejected'},understandingDigest('current'),now).length,0);
+ }
+});

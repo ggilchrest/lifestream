@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-NEUTRAL-QUESTIONS-1",
+  "slice": "LS-S084",
+  "status": "componentVerifiedQualificationPending",
+  "sourceRevision": "380cc020773e7934f19a3a2dab7a01f4d77d0a1b",
+  "specificationRevision": "7057bcaec4a88ab9bb0731bdeb1629d14107580a",
+  "recordedAt": "2026-09-16T16:08:09.413195Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/admin/discovery-candidates.ts",
+      "sha256": "10cd2a0e70b8afc0588c9797340ca4452fb0ec2366755d42bf12e49620f5b8ce"
+    },
+    {
+      "path": "apps/server/test/discovery-candidates.test.ts",
+      "sha256": "b5284ca1ceda649de706331d7a92c9751e51e976650376036ac0701a6c94cc33"
+    }
+  ],
+  "claims": [
+    "New hypothesis-derived questions ask what, if anything, matters in the current context rather than assuming the topic appeals to the user. No positive preference, recommendation desire, purchase intent or lasting motive is established.",
+    "Four synthetic hypothesis cases cover dislike, temporary fatigue, limited capacity and insufficient interest evidence. Regression fails before the wording change and passes afterward. Alternatives, parent references, null interest score, no-authority status and unchanged parent remain checked; rejected hypotheses produce no candidate.",
+    "Existing historical derived records are not rewritten. This is a candidate-compiler correction, not selected-model behavior or Human relevance acceptance."
+  ],
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-candidates.test.ts apps/server/test/discovery-analysis.test.ts apps/server/test/discovery-review.test.ts",
+      "result": "pass",
+      "details": "10/10"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "details": "891/891; zero skips"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "details": "19 passed; 30 optional actual-browser tests skipped"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "details": "43/43"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "details": "588 structural vectors; not runtime acceptance"
+    }
+  ],
+  "qualificationAttempt": {
+    "command": "node scripts/qualify-s073-development.mjs",
+    "result": "blockedEnvironment",
+    "sourceRevision": "380cc020773e7934f19a3a2dab7a01f4d77d0a1b",
+    "executedChecks": 0,
+    "diagnosis": "Read-only ssh -o BatchMode=yes -o ConnectTimeout=8 ai5090 hostname failed: connect to host 192.168.2.164 port 22: Operation timed out. No selected local tunnel listeners were present.",
+    "scope": "S073 refresh could not start; same selected environment needed for S076/S078/S080. No qualification selector updated, no fallback provider, no configuration or service changes."
+  },
+  "rawArtifacts": [
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-discovery-question-focused.log",
+      "sha256": "6fa80493cc569c4443d84cb60a08b3a3c05c91a1f36c7bf2aae59cf705b8f4aa"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-discovery-question-build.log",
+      "sha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-discovery-question-before.log",
+      "sha256": "99f7d1006fc61e3fbb19b3f3a7e1d85b3e44e874ad1732d2c0e1d2e50f42995a"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-discovery-question-typecheck.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-discovery-question-private.log",
+      "sha256": "c7d2a6350927f765c4e82b6525548c524b53f8d79f38b8fb9206aefedf33c2bd"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-discovery-question-workspace.log",
+      "sha256": "41e4fd085e8f0e98f6e1ffa759aae21b07c463312b3a592ff3d010317e4883c5"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-discovery-question-full.log",
+      "sha256": "4e8f307977eff77a33ef555d4b35f4190749d5cce376db330fdc3b5948f882d4"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-discovery-question-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-discovery-question-preflight.log",
+      "sha256": "db2575ff4b2275ecd80542d0585871adfa2937ffabafcce2a1c9e809fba47ced"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-discovery-question-browser.log",
+      "sha256": "3ac606a5a02fd11b44e8d89a010881873a38d00f513709201c8573859c35a578"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-s073-refresh-20260916.json",
+      "sha256": "52af700bcf70215bfc9710d5983ea2c22453c4f9d50723d2a7b2ee5134c107bd"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-neutral-questions/2026-09-16/ls-s073-refresh-20260916.stderr",
+      "sha256": "d7fbbecc9620284cc0beaee6dd0d932278b824517f385bd5f44fbd95a6e48b92"
+    }
+  ],
+  "limitations": [
+    "S084 connections, ranking/exploration and full performance/Human requirements remain outstanding.",
+    "Original intermittent contextual omission and earlier failed performance samples remain preserved.",
+    "No deployment, live configuration, model selection, personal data or new Human acceptance."
+  ]
+}
