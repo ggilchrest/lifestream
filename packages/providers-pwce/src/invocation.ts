@@ -23,7 +23,7 @@ export interface PwceInvocationCustody {
   observe(invocationId:string,observation:PwceInvocationObservation):PwceInvocationRecord;
   readObservation(invocationId:string,reference:M.ArtifactRef):PwceInvocationObservation|undefined;
 }
-export type PwceInvocationOptions={providerRef:string;client:PwceGatewayClient;dispatcher:PwceTrustedDispatchClient;admission:PwceAuthorityAdmission;custody:PwceInvocationCustody};
+export type PwceInvocationOptions={providerRef:string;client:PwceGatewayClient;dispatcher?:PwceTrustedDispatchClient;admission:PwceAuthorityAdmission;custody:PwceInvocationCustody};
 const validator=createContractValidator(),base='https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/',descriptor=EXPECTED_PWCE_CAPABILITY_BUNDLE.capabilities[0];
 const hash=(text:string)=>createHash('sha256').update(text).digest('hex');
 const fail=(code:string):never=>{throw new PwceTransportError(code,`PWCE invocation ${code}`);};
@@ -90,6 +90,7 @@ export class PwceInvocation {
     if(saved.requestDigest!==existing.requestDigest||!isDeepStrictEqual(saved.latest,observation))return fail('invocation_custody_failed');return observation;
   }
   async invoke(input:M.CapabilityInvocationRequest,context:ProviderCallContext):Promise<M.CapabilityInvocationResult> {
+    const dispatcher=this.options.dispatcher;if(!dispatcher)return fail('dispatch_unavailable');
     if(!boundedJson(input)||!validator.validate(base+'CapabilityInvocationRequest',input).valid)return fail('invalid_request');
     const request=structuredClone(input),call=this.call(request,context);
     try{
@@ -100,7 +101,7 @@ export class PwceInvocation {
       if(!this.options.custody.claim(structuredClone(request)))return fail('invocation_outcome_unknown');
       this.current(request,context,call);original.assertCurrent();const {binding}=original.record.intent.catalog,prepared=original.record.intent.prepared;
       const wire={...binding.identity,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,requestId:request.requestId,correlationId:request.correlationId,deadline:original.proof.deadlineAt,snapshotRef:original.record.intent.catalog.producerSnapshotRef,capabilityRef:descriptor.capabilityRef,capabilityVersion:descriptor.schemaVersion,capabilityOperation:descriptor.operation,...prepared.input,idempotencyKey:original.proof.idempotencyKey,approvalRequired:prepared.approval.required,approvalRef:prepared.approval.reference,actionRef:original.proof.actionRef};
-      const raw=await call.wait(this.options.dispatcher.invoke(binding.authorityContextRef,wire,call.signal,()=>{this.current(request,context,call);original.assertCurrent();return true;}));this.current(request,context,call);
+      const raw=await call.wait(dispatcher.invoke(binding.authorityContextRef,wire,call.signal,()=>{this.current(request,context,call);original.assertCurrent();return true;}));this.current(request,context,call);
       const proof=await this.proof(raw.invocationEvidence,original,call);
       if(raw.actionRef!==proof.actionRef||raw.status!==(proof.status==='succeeded'?'completed':proof.status)||proof.result!==null&&!isDeepStrictEqual(raw.result,proof.result))return fail('invocation_binding_mismatch');
       await call.wait(this.options.admission.resolveInvocation(request,{...context,signal:call.signal},'read'));this.current(request,context,call);

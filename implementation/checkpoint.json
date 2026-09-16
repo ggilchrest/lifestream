@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "2f4e72e0b5a5aadc540c10d97b8d8b6c980c31a2",
+  "currentRevision": "6b7ba58fe193adcee5b3460a4fa8bb986f6bd2a3",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -233,58 +233,63 @@
     "implementation/evidence/LS-S028-HOST-PREPARATION-1.json",
     "implementation/evidence/LS-S028-DISPATCH-CONFIG-1.json",
     "implementation/evidence/LS-S028-CONFIRMATION-GATE-1.json",
-    "implementation/evidence/LS-S028-HOST-DISPATCH-1.json"
+    "implementation/evidence/LS-S028-HOST-DISPATCH-1.json",
+    "implementation/evidence/LS-S028-HISTORICAL-STATUS-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/authority/pwce-action-journal.ts",
     "apps/server/src/authority/pwce-action-preparation.ts",
+    "apps/server/src/composition/pwce-capabilities.ts",
     "apps/server/src/index.ts",
     "apps/server/test/pwce-capabilities.test.ts",
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-HOST-DISPATCH-1.json",
+    "implementation/evidence/LS-S028-HISTORICAL-STATUS-1.json",
+    "packages/providers-pwce/src/authority-admission.ts",
+    "packages/providers-pwce/src/invocation.ts",
+    "packages/providers-pwce/test/authority-admission.test.ts",
+    "packages/providers-pwce/test/invocation.test.ts",
     "scripts/check-pwce-host-process.mjs"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-dispatch/2026-09-16T135022Z/ls-host-confirm-dispatch-full.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-historical-status/2026-09-16T140112Z/ls-historical-status-full.log"
     },
     {
-      "command": "node --test --experimental-strip-types apps/server/test/pwce-capabilities.test.ts apps/server/test/pwce-action-journal.test.ts",
+      "command": "node --test --experimental-strip-types apps/server/test/pwce-capabilities.test.ts packages/providers-pwce/test/authority-admission.test.ts packages/providers-pwce/test/invocation.test.ts",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-dispatch/2026-09-16T135022Z/ls-host-confirm-dispatch-focused.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-historical-status/2026-09-16T140112Z/ls-historical-status-focused-final.log"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-dispatch/2026-09-16T135022Z/ls-host-confirm-dispatch-typecheck-final2.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-historical-status/2026-09-16T140112Z/ls-historical-status-typecheck-final.log"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-dispatch/2026-09-16T135022Z/ls-host-confirm-dispatch-lint-verified.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-historical-status/2026-09-16T140112Z/ls-historical-status-lint-final.log"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-dispatch/2026-09-16T135022Z/ls-host-confirm-dispatch-build.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-historical-status/2026-09-16T140112Z/ls-historical-status-build.log"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-dispatch/2026-09-16T135022Z/ls-host-confirm-dispatch-workspace.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-historical-status/2026-09-16T140112Z/ls-historical-status-workspace.log"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-dispatch/2026-09-16T135022Z/ls-host-confirm-dispatch-private.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-historical-status/2026-09-16T140112Z/ls-historical-status-private.log"
     },
     {
-      "command": "PWCE_HOST_DISPATCH=1 PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-pwce-host-process.mjs",
+      "command": "PWCE_HOST_HISTORICAL=1 PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-pwce-host-process.mjs",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-dispatch/2026-09-16T135022Z/ls-host-confirm-dispatch-joined-final.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-historical-status/2026-09-16T140112Z/ls-historical-status-joined-final.log"
     }
   ],
   "decisions": [
@@ -302,8 +307,8 @@
     "2026-09-16: operator explicitly resumes at the current reasoning level; the previous pause is superseded."
   ],
   "blockers": [],
-  "nextAction": "Implement authenticated historical status and evidence recovery after review expiry without execution renewal; then complete producer Human approval and control-page workflows.",
-  "updatedAt": "2026-09-16T13:50:22.571006Z",
+  "nextAction": "Complete producer-owned Human approval request/review/resume handling through published boundaries, then connect the control-page preparation, confirmation, status and evidence workflow. Preserve other independent S083/S084 scope.",
+  "updatedAt": "2026-09-16T14:01:12.750851Z",
   "updatedBy": "Codex",
-  "notes": "Authenticated PWCE confirmation/admission/invocation verified: 857 application tests, 44 focused host/journal tests, 43 workspace tests and 23 actual producer/Chrome checks. Final isolated run: four synthetic targets, eight dispatch POSTs; no repeat dispatch on retry/restart/lost replies. Six preserved artifacts unchanged. Historical recovery after review expiry, producer Human approval and control UI remain pending."
+  "notes": "Historical PWCE status verified: 861 application tests, 78 focused host/provider tests, 43 workspace tests and 28 actual producer/Chrome checks. Actual review expiry and restart without dispatcher credential preserve read-only status/evidence. No authority creation, catalog refresh or dispatch during historical reads. Unknown admission remains unknown. Producer Human approval and control UI remain pending."
 }

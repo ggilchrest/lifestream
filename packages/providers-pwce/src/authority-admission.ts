@@ -25,7 +25,7 @@ export interface PwceAdmissionCustody {
   complete(key:string,outcome:PwceAdmissionOutcome):PwceAdmissionRecord;
 }
 export type PwceAuthorityAdmissionOptions={
-  providerRef:string;client:PwceGatewayClient;dispatcher:PwceTrustedDispatchClient;catalog:PwceCapabilityCatalog;preview:PwceAuthorityPreview;custody:PwceAdmissionCustody;
+  providerRef:string;client:PwceGatewayClient;dispatcher?:PwceTrustedDispatchClient;catalog:PwceCapabilityCatalog;preview:PwceAuthorityPreview;custody:PwceAdmissionCustody;
   /** Trusted host admission gate; never obtained from browser/model JSON. */
   authorize(request:M.AuthorityDispatchRequest,prepared:PwcePreparedAction,context:ProviderCallContext):Promise<boolean>;
 };
@@ -87,6 +87,7 @@ export class PwceAuthorityAdmission {
     return outcome;
   }
   async authorizeDispatch(input:M.AuthorityDispatchRequest,context:ProviderCallContext):Promise<M.AuthorityDispatchResult>{
+    const dispatcher=this.options.dispatcher;if(!dispatcher)return fail('dispatch_unavailable');
     if(!boundedJson(input)||!validator.validate(base+'AuthorityDispatchRequest',input).valid)return fail('invalid_request');
     const request=structuredClone(input),call=this.call(request,context);
     try{
@@ -106,7 +107,7 @@ export class PwceAuthorityAdmission {
       this.current(request,context,call);this.catalogCurrent(request,catalog);this.options.preview.assertDispatchCurrent(request,prepared,context);
       const binding=catalog.binding,wire={...binding.identity,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,requestId:request.requestId,correlationId:request.correlationId,deadline:request.deadlineAt,
         snapshotRef:catalog.producerSnapshotRef,capabilityRef:descriptor.capabilityRef,capabilityVersion:descriptor.schemaVersion,capabilityOperation:descriptor.operation,...prepared.input,idempotencyKey:producerKey,approvalRequired:prepared.approval.required,approvalRef:prepared.approval.reference};
-      const raw=await call.wait(this.options.dispatcher.authorizeDispatch(binding.authorityContextRef,wire,call.signal,()=>{this.current(request,context,call);this.catalogCurrent(request,catalog);this.options.preview.assertDispatchCurrent(request,prepared,context);return true;}));this.current(request,context,call);
+      const raw=await call.wait(dispatcher.authorizeDispatch(binding.authorityContextRef,wire,call.signal,()=>{this.current(request,context,call);this.catalogCurrent(request,catalog);this.options.preview.assertDispatchCurrent(request,prepared,context);return true;}));this.current(request,context,call);
       await schema(raw,PWCE_DISPATCH_RESPONSE_SCHEMA,call);
       for(const field of ['requestId','correlationId','worldRef','executionEnvironmentRef']as const)if(raw[field]!==wire[field])return fail('admission_binding_mismatch');
       let evidenceJson:string,schemaRef:string,admittedAt:string|null=null,expiresAt=catalog.snapshot.expiresAt,disposition:Decision['disposition'];

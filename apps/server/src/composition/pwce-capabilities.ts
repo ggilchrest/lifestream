@@ -97,7 +97,12 @@ export class PwceCapabilityDiscovery {
   /** Trusted host operation only. Original records come from retained host/journal
    * custody, never HTTP fields. Reattachment reads the SAME authority; it cannot
    * acquire replacement authority or rescue a previously cancelled operation. */
-  async withCatalog<T>(input: PwceCapabilityOwner, inputCall: CapabilityCallContext, operation: (lease: PwceCapabilityLease) => Promise<T>, originalInput?: PwceCatalogRecord): Promise<T> {
+  withCatalog<T>(input:PwceCapabilityOwner,inputCall:CapabilityCallContext,operation:(lease:PwceCapabilityLease)=>Promise<T>,originalInput?:PwceCatalogRecord):Promise<T>{return this.withLease(input,inputCall,operation,originalInput,false);}
+  /** Historical status only: original ownership and fresh authenticated streams,
+   * without catalog reads, snapshot renewal or authority creation. */
+  withHistoricalScope<T>(input:PwceCapabilityOwner,inputCall:CapabilityCallContext,original:PwceCatalogRecord,operation:(lease:PwceCapabilityLease)=>Promise<T>):Promise<T>{return this.withLease(input,inputCall,operation,original,true);}
+  private async withLease<T>(input: PwceCapabilityOwner, inputCall: CapabilityCallContext, operation: (lease: PwceCapabilityLease) => Promise<T>, originalInput: PwceCatalogRecord|undefined,historical:boolean): Promise<T> {
+    if (historical&&!originalInput)return unavailable();
     if (originalInput && !boundedJson(originalInput, 262144)) return unavailable();
     const original = originalInput ? structuredClone(originalInput) : undefined;
     const { isCurrent, ...metadata } = input, owner = { ...structuredClone(metadata), isCurrent: isCurrent.bind(input) };
@@ -111,7 +116,7 @@ export class PwceCapabilityDiscovery {
       const baseScope = { assistantId: owner.assistantId, endpointId: owner.endpointId, sessionId: owner.sessionId, environmentId: this.profile.lifestreamEnvironmentId, conversationId: owner.conversationId, interactionTraceId: owner.interactionTraceId };
       if (original) {
         const reference = original.scope.authorityContextRef;
-        if (!reference || reference.providerRef !== 'pwce' || reference.revision !== 1 || !valid('UUID', reference.contextId) || original.executionMode !== this.mode() || !valid('Time', original.snapshot.expiresAt) || Date.parse(original.snapshot.expiresAt) <= Date.now() ||
+        if (!reference || reference.providerRef !== 'pwce' || reference.revision !== 1 || !valid('UUID', reference.contextId) || original.executionMode !== this.mode() || !valid('Time', original.snapshot.expiresAt) || !historical&&Date.parse(original.snapshot.expiresAt) <= Date.now() ||
           !isDeepStrictEqual(original.scope, { ...baseScope, authorityContextRef: reference }) ||
           !isDeepStrictEqual(original.binding, { authorityContextRef: reference.contextId, principalRef: this.profile.principalRef, siteRefs: this.profile.siteRefs, worldRef: this.profile.worldRef, executionEnvironmentRef: this.profile.executionEnvironmentRef, identity: pwceIdentity(this.profile.lifestreamEnvironmentId, owner) })) return unavailable();
       }
@@ -120,13 +125,18 @@ export class PwceCapabilityDiscovery {
       if (!entry) {
         if (this.entries.size >= 16) return unavailable();
         entry = { key, owner, scope: { assistantId: owner.assistantId, endpointId: owner.endpointId, sessionId: owner.sessionId, environmentId: this.profile.lifestreamEnvironmentId, conversationId: owner.conversationId, interactionTraceId: owner.interactionTraceId, authorityContextRef: null }, controller: new AbortController(), ready: false, users: 0, expiresAt: Date.now() + 25000, initialization: Promise.resolve() };
-        if (original) { entry.scope = structuredClone(original.scope); entry.binding = structuredClone(original.binding); entry.expiresAt = Math.min(entry.expiresAt, Date.parse(original.snapshot.expiresAt)); }
+        if (original) { entry.scope = structuredClone(original.scope); entry.binding = structuredClone(original.binding); if(!historical)entry.expiresAt = Math.min(entry.expiresAt, Date.parse(original.snapshot.expiresAt)); }
         this.entries.set(key, entry); entry.initialization = this.initialize(entry); void entry.initialization.catch(() => undefined);
       }
       entry.users++;
       await call.wait(() => entry!.initialization);
       if (!entry.ready || !this.current(entry)) return unavailable();
       const context = { signal: AbortSignal.any([call.context.signal, entry.controller.signal]), isCurrent: (scope: CallScope) => isDeepStrictEqual(scope, entry!.scope) && this.current(entry!) && call.context.isCurrent() };
+      if(historical){
+        this.catalog.assertReadScope(original!,entry.scope,this.mode(),context);
+        const value=await call.wait(()=>operation({client:this.client,catalog:this.catalog,record:structuredClone(original!),context,deadlineAt:call.context.deadlineAt,expiresAt:new Date(entry!.expiresAt).toISOString()}));
+        call.check();this.catalog.assertReadScope(original!,entry.scope,this.mode(),context);return value;
+      }
       const request: CapabilitySnapshotRequest = { schemaVersion: '1.0.0', operation: 'CapabilityProvider.getSnapshot', requestId: call.context.requestId, correlationId: call.context.correlationId, cancellationId: randomUUID(), deadlineAt: call.context.deadlineAt, executionMode: this.mode(), scope: { ...structuredClone(entry.scope), endpointId: entry.owner.endpointId, sessionId: entry.owner.sessionId, authorityContextRef: entry.scope.authorityContextRef! }, idempotencyKey: null, payload: { requestedCapabilityIds: [] } };
       const result = await call.wait(() => this.catalog.getSnapshot(request, context));
       if (result.outcome.status !== 'succeeded') return unavailable();

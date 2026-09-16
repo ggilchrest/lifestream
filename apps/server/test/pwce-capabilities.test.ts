@@ -274,3 +274,20 @@ test('confirmed action cannot use another deployment journal',async t=>{
  await assert.rejects(f.app.pwcePreparation.dispatchConfirmed(r.owner.assistantId,r.invocationId,f.local,f.csrfToken,{idempotencyKey:first.body.idempotencyKey,confirmationDigest:r.confirmationDigest},call(),journal,{}),{code:'pwce_journal_deployment_mismatch'});
  assert.equal(journal.admissions.read(first.body.idempotencyKey),undefined);assert.equal(journal.invocations.read(r.invocationId),undefined);
 });
+
+
+test('historical scope reads retain expired original catalog without acquiring or refreshing authority',async t=>{
+ const f=gateway(t),o=owner(),original=await f.discovery.withCatalog(o,call(),async lease=>lease.record);f.discovery.close();
+ const restored=new PwceCapabilityDiscovery(f.profile,'synthetic-agent-token');t.after(()=>restored.close());const now=Date.now(),clock=t.mock.method(Date,'now',()=>now+120000),before=f.requests.length;
+ try{
+  const result=await restored.withHistoricalScope(o,call(),original,async lease=>{assert.ok(Date.parse(lease.record.snapshot.expiresAt)<Date.now());assert.equal(lease.catalog.retained(original.snapshot.snapshotId,original.scope),undefined);lease.catalog.assertReadScope(original,original.scope,original.executionMode,lease.context);return lease.record;});assert.deepEqual(result,original);
+  const added=f.requests.slice(before);assert.ok(added.some(r=>r.body?.operation==='events.subscribe'));assert.ok(added.every(r=>!r.path.endsWith('/authority')&&!['capabilities.getSnapshot','authority.evaluate','authority.authorizeDispatch','capabilities.invoke'].includes(r.body?.operation)));
+  await assert.rejects(restored.withCatalog(o,call(),async()=>assert.fail('expired snapshot reached execution lease'),original));
+ }finally{clock.mock.restore();}
+});
+
+test('historical scope refuses foreign owners and cancels late results on invalidation',async t=>{
+ const f=gateway(t),o=owner(),original=await f.discovery.withCatalog(o,call(),async lease=>lease.record),before=f.requests.length;
+ await assert.rejects(f.discovery.withHistoricalScope({...o,principalId:randomUUID()},call(),original,async()=>assert.fail('foreign historical read')));assert.equal(f.requests.length,before);
+ await assert.rejects(f.discovery.withHistoricalScope(o,call(),original,async()=>{f.emit('authority.revoked');await new Promise(resolve=>setImmediate(resolve));return 'late';}));
+});

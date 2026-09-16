@@ -43,7 +43,7 @@ async function fixture(){
  f.client.invocationContracts=async()=>{await state.hook('contracts');};
  f.dispatcher.invoke=async(_binding,wire,_signal,isCurrent)=>{await state.hook('transport');isCurrent?.();assert.ok(records.has(request.payload.invocationId),'initial dispatch claim precedes I/O');state.sent.push(structuredClone(wire));const now=new Date().toISOString(),result={status:state.status,externalEffectOccurred:state.effect,observed:{synthetic:true},completedAt:now};state.proof={schemaVersion:'1.0.0',kind:'pwce.action.invocation',actionRef:originalProof.actionRef,admissionEvidence:structuredClone(originalProof),status:state.status,attemptRef:randomUUID(),startedAt:now,dispatchResult:structuredClone(result),result:structuredClone(result),reconciliationRef:null};state.mutate(state.proof);await state.hook('invoke');if(state.lost)throw new Error('synthetic missing reply');return {actionRef:state.proof.actionRef,status:state.proof.status==='succeeded'?'completed':state.proof.status,result:state.proof.result,invocationEvidence:structuredClone(state.proof)};};
  f.client.request=async request=>{state.queries.push(structuredClone(request));await state.hook('status');return {profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',requestId:request.requestId,correlationId:request.correlationId,worldRef:request.worldRef,executionEnvironmentRef:request.executionEnvironmentRef,...(state.missing?{status:'unknown'}:{status:'known',invocationEvidence:structuredClone(state.proof),action:{actionRef:state.proof.actionRef,status:state.proof.status,attemptRef:state.proof.attemptRef,startedAt:state.proof.startedAt,dispatchResult:structuredClone(state.proof.dispatchResult),result:structuredClone(state.proof.result)}})};};
- const create=()=>new PwceInvocation({providerRef:'pwce.synthetic',client:f.client,dispatcher:f.dispatcher,admission,custody});
+ const create=(dispatchEnabled=true)=>new PwceInvocation({providerRef:'pwce.synthetic',client:f.client,...(dispatchEnabled?{dispatcher:f.dispatcher}:{}),admission,custody});
  const query=()=>({...structuredClone(request),operation:'CapabilityProvider.getInvocation',requestId:randomUUID(),deadlineAt:new Date(Date.now()+30000).toISOString(),payload:{invocationId:request.payload.invocationId}});
  return {f,request,state,custody,records,history,create,query,context:f.context};
 }
@@ -145,4 +145,11 @@ test('invocation transport fence catches invalidation after claiming without sen
  const f=await fixture();f.state.hook=async phase=>{if(phase==='transport')f.f.state.bound=false;};
  await assert.rejects(f.create().invoke(f.request,f.context),{code:'snapshot_unavailable'});
  assert.equal(f.state.sent.length,0);assert.equal(f.records.size,1);assert.equal(f.custody.read(f.request.payload.invocationId).latest,null);
+});
+
+
+test('read-only invocation composition retrieves original status but cannot claim or invoke',async()=>{
+ const f=await fixture(),reader=f.create(false);await assert.rejects(reader.invoke(f.request,f.context),{code:'dispatch_unavailable'});assert.equal(f.records.size,0);assert.equal(f.state.sent.length,0);
+ await f.create().invoke(f.request,f.context);const sent=f.state.sent.length;assert.equal((await reader.getInvocation(f.query(),f.context)).outcome.status,'succeeded');assert.equal(f.state.sent.length,sent);
+ await assert.rejects(reader.invoke(f.request,f.context),{code:'dispatch_unavailable'});assert.equal(f.state.sent.length,sent);
 });

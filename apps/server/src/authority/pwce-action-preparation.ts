@@ -2,8 +2,8 @@ import type {PwceActionJournal} from './pwce-action-journal.ts';
 import {createHash,randomUUID} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import type {Database} from '@lifestream/storage-sqlite';
-import type {AuthorityRequest,AuthorityDispatchRequest,CapabilityInvocationRequest,ArtifactRef,providerMessages_DefsExternalAuthorityDecision} from '@lifestream/contracts/provider-messages';
-import {PwceAuthorityAdmission,PwceInvocation,pwceGovernedDisposition,type PwceTrustedDispatchClient,PwceAuthorityPreview,pwceLightOperation,PWCE_LIGHT_CAPABILITY_ID,EXPECTED_PWCE_CAPABILITY_BUNDLE,type PwcePreparedAction,type PwceCatalogRecord} from '@lifestream/providers-pwce';
+import type {AuthorityRequest,AuthorityDispatchRequest,CapabilityInvocationRequest,CapabilityStatusRequest,ArtifactRef,providerMessages_DefsExternalAuthorityDecision} from '@lifestream/contracts/provider-messages';
+import {PwceTransportError,PwceAuthorityAdmission,PwceInvocation,pwceGovernedDisposition,type PwceTrustedDispatchClient,PwceAuthorityPreview,pwceLightOperation,PWCE_LIGHT_CAPABILITY_ID,EXPECTED_PWCE_CAPABILITY_BUNDLE,type PwcePreparedAction,type PwceCatalogRecord} from '@lifestream/providers-pwce';
 import {boundedJson,canonicalJson,validateCapabilitySchema} from '@lifestream/runtime/capabilities/schema-validation';
 import {resolveCapabilitySchema} from '@lifestream/runtime/capabilities/schema-artifacts';
 import {CapabilityCall} from '@lifestream/runtime/capabilities/call';
@@ -142,6 +142,38 @@ export class PwceActionPreparation {
    const result=await invocation.invoke(invoke,lease.context);current();
    if(result.outcome.status!=='succeeded')return fail('pwce_invocation_unavailable');
    return {providerRef:'pwce',replayed:!!prior,admission:admitted.outcome.payload,invocation:result.outcome.payload,grantsAuthority:false};
+  });
+ }
+ async readStatus(assistantId:string,invocationId:string,local:LocalContext,inputCall:CapabilityCallContext,journal:PwceActionJournal){
+  this.guard(assistantId,local);if(!uuid.test(invocationId))return fail('invalid_invocation_reference',422);
+  const record=this.decode(this.database.connection.prepare('SELECT * FROM pwce_action_preparations WHERE principal_id=? AND invocation_id=?').get(local.principalId,invocationId) as Row|undefined);
+  if(!record||record.owner.assistantId!==assistantId||record.owner.sessionId!==local.sessionId)return fail('pwce_preparation_not_found',404);
+  const {provider,owner}=this.binding(assistantId,local,inputCall),{isCurrent:_current,...metadata}=owner;
+  if(!isDeepStrictEqual(metadata,record.owner)||journal.deploymentId!==record.catalog.scope.environmentId)return fail('pwce_status_scope_changed',409);
+  return provider.withHistoricalScope(owner,inputCall,record.catalog,async lease=>{
+   const current=()=>{this.guard(assistantId,local);journal.assertCurrent();if(!owner.isCurrent()||lease.context.signal.aborted||!lease.context.isCurrent(record.catalog.scope)||!isDeepStrictEqual(this.byKey(local.principalId,record.idempotencyKey),record))return fail('pwce_status_scope_changed',409);};current();
+   let retained=journal.admissions.read(record.idempotencyKey);
+   const base={providerRef:'pwce',invocationId,readOnly:true,grantsAuthority:false,dispatchStarted:false};
+   if(!retained)return {...base,state:'noRetainedAdmission',admission:null,invocation:null};
+   const original=retained.intent.request;
+   if(original.payload.invocationId!==invocationId||original.correlationId!==record.correlationId||!isDeepStrictEqual(original.scope,record.catalog.scope)||!isDeepStrictEqual(retained.intent.catalog,record.catalog)||!isDeepStrictEqual(retained.intent.prepared,record.prepared))return fail('pwce_dispatch_original_conflict',409);
+   const preview=new PwceAuthorityPreview({providerRef:'pwce',client:lease.client,catalog:lease.catalog,resolve:async()=>structuredClone(record.prepared),isCurrent:()=>false});
+   const admission=new PwceAuthorityAdmission({providerRef:'pwce',client:lease.client,catalog:lease.catalog,preview,custody:journal.admissions,authorize:async()=>false});
+   const readRequest={...original,requestId:inputCall.requestId,cancellationId:randomUUID(),deadlineAt:lease.deadlineAt};
+   if(!retained.outcome){
+    try{retained=await admission.recoverAdmission(readRequest,lease.context);}catch(error){current();if(error instanceof PwceTransportError&&error.code==='admission_outcome_unknown')return {...base,state:'outcomeUnknown',admission:null,invocation:null};throw error;}
+   }
+   current();const existing=journal.invocations.read(invocationId);
+   if(!existing)return {...base,state:'admissionRecorded',admission:retained.outcome?.decision??null,admissionEvidence:retained.outcome?.evidenceJson??null,invocation:null};
+   if(existing.request.idempotencyKey!==record.idempotencyKey||!isDeepStrictEqual(existing.request.scope,record.catalog.scope))return fail('pwce_dispatch_original_conflict',409);
+   const invocation=new PwceInvocation({providerRef:'pwce',client:lease.client,admission,custody:journal.invocations});
+   const query:CapabilityStatusRequest={...existing.request,operation:'CapabilityProvider.getInvocation',requestId:inputCall.requestId,cancellationId:randomUUID(),deadlineAt:lease.deadlineAt,payload:{invocationId}};
+   const result=await invocation.getInvocation(query,lease.context);current();
+   if(result.outcome.status!=='succeeded')return fail('pwce_invocation_unavailable');
+   if(!('evidenceRef' in result.outcome.payload)||!result.outcome.payload.evidenceRef)return fail('pwce_invocation_evidence_unavailable');
+   const observation=journal.invocations.readObservation(invocationId,result.outcome.payload.evidenceRef);
+   if(!observation||!isDeepStrictEqual(observation.status,result.outcome.payload))return fail('pwce_invocation_evidence_unavailable');
+   return {...base,state:'invocationObserved',admission:retained.outcome?.decision??null,admissionEvidence:retained.outcome?.evidenceJson??null,invocation:result.outcome.payload,invocationEvidence:observation.proofJson};
   });
  }
  async inspect(assistantId:string,invocationId:string,local:LocalContext,inputCall:CapabilityCallContext){

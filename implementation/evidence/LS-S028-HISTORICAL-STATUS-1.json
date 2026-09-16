@@ -1,0 +1,186 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-HISTORICAL-STATUS-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "6b7ba58fe193adcee5b3460a4fa8bb986f6bd2a3",
+  "specificationRevision": "a7d24222593752aa59c3b30fd17d06cd93666464",
+  "producerRevision": "33fd48cea56e5352211db0b948fb760c13db8c27",
+  "recordedAt": "2026-09-16T14:01:12.750851Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/authority/pwce-action-preparation.ts",
+        "sha256": "aa3d88ccfb355df5bcb8e8c7c692427c63ed48a2cb16e03cc20ad01b2db5a24a"
+      },
+      {
+        "path": "apps/server/src/composition/pwce-capabilities.ts",
+        "sha256": "9a2ca514305aeb3889bdc9cf227069e392f98d5b250f9b75c8766355345e8d22"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "6a8d92dfe5368d4c78cdf210881e4d6e1a6d1c4ab2f7c8fa096ea1cc11615e99"
+      },
+      {
+        "path": "apps/server/test/pwce-capabilities.test.ts",
+        "sha256": "62d006892aa02a8f57abcf2cedd4ba4e88703ac5639b3e47b93c1b70b2f06bd7"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "f21426185dd72fe9c40be617d0a26bc4659da14170bda7a5ee1783d07545efb0"
+      },
+      {
+        "path": "packages/providers-pwce/src/authority-admission.ts",
+        "sha256": "875562eff19cd045739e1d4b7773709ed7eca35be87d5b3e9afa81460f209879"
+      },
+      {
+        "path": "packages/providers-pwce/src/invocation.ts",
+        "sha256": "3d065961ff1bd002177ffa8dfd30de12417af2236597ce25c3941718c317bf2e"
+      },
+      {
+        "path": "packages/providers-pwce/test/authority-admission.test.ts",
+        "sha256": "a362bc414799354f5f9cde6494072faa64cd86c8bce3c8ee0de4a531b9be839b"
+      },
+      {
+        "path": "packages/providers-pwce/test/invocation.test.ts",
+        "sha256": "be1d468e4e0e0e776629a7d1f63e994ad7d89e830b18f4ec7868f6fb3cbc44a7"
+      },
+      {
+        "path": "scripts/check-pwce-host-process.mjs",
+        "sha256": "07ad67fb5a5d19486b2cd83794754b702a7387892147479e67a063fc5ec6b949"
+      }
+    ]
+  },
+  "claim": "Authenticated historical status reads original invocation and exact evidence after actual review expiry and restart without dispatcher configuration or credential. Original-scope readers create no authority, refresh no catalog and cannot execute. Unknown original admission stays unknown without resending; lost custody and foreign scope withhold evidence.",
+  "results": {
+    "applicationTests": 861,
+    "focusedHostAndProviderTests": 78,
+    "newTests": 4,
+    "workspaceTests": 43,
+    "actualProducerAndChromeChecks": 28,
+    "finalIsolatedRunTargetCalls": 4,
+    "finalIsolatedRunDispatchPosts": 8,
+    "historicalReadAuthorityCreations": 0,
+    "historicalReadCatalogRefreshes": 0,
+    "historicalReadDispatchPosts": 0
+  },
+  "exclusions": [
+    "Actual-producer evidence covers expired review with original producer authority still valid. Expired-catalog reconnection is additionally covered by a controlled fixture. Expired or lost producer authority is never replaced.",
+    "Producer-owned Human approval and control-page workflows remain incomplete. No whole LS-S028, S083 or S084 acceptance is claimed.",
+    "No saved service/configuration activation, deployment, physical effects, personal import, training, provider/model selection, SYNPRJ_Q7M4 trial or new Human acceptance."
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-historical-status/2026-09-16T140112Z",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-historical-status-full.log",
+      "sha256": "42b3618dc4d11b25ce22f5fd8059ddf7b1b70dd86017f451827de4e917dda3af"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/pwce-capabilities.test.ts packages/providers-pwce/test/authority-admission.test.ts packages/providers-pwce/test/invocation.test.ts",
+      "result": "pass",
+      "log": "ls-historical-status-focused-final.log",
+      "sha256": "90ced98892486703a2e6ad1007a79e6d526fbf36a8936d117a09bfa5476ad6f2"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-historical-status-typecheck-final.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-historical-status-lint-final.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-historical-status-build.log",
+      "sha256": "3b0cf22b87e20c2ed1d5d4bdf1250a92654fc67d1e6e23145a25009cb28aa224"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-historical-status-workspace.log",
+      "sha256": "75bebe35d5ad026ad122e72bdfd85f6a856759ea53d2bc8918ba3f08aeecb641"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-historical-status-private.log",
+      "sha256": "9c167235caf96f563c414efc02e129935b83bc62646931f5d12512bc788e344e"
+    },
+    {
+      "command": "PWCE_HOST_HISTORICAL=1 PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-historical-status-joined-final.log",
+      "sha256": "d79cea3e94fa263d6b48a27aef8fd82835b2ff593c175bc54ad70cb7a4c6d8bc"
+    }
+  ],
+  "earlierFailures": [
+    "Typecheck required explicit discrimination and non-null evidence reference checks before reading an invocation observation; corrected without inventing evidence."
+  ],
+  "rawLogs": [
+    {
+      "log": "ls-historical-status-build.log",
+      "sha256": "3b0cf22b87e20c2ed1d5d4bdf1250a92654fc67d1e6e23145a25009cb28aa224"
+    },
+    {
+      "log": "ls-historical-status-focused-final.log",
+      "sha256": "90ced98892486703a2e6ad1007a79e6d526fbf36a8936d117a09bfa5476ad6f2"
+    },
+    {
+      "log": "ls-historical-status-focused.log",
+      "sha256": "e617ff1c5db2fae6f07b8f22d7c2cbbb70a57081bafd0a7a75c18af6b0b5b76a"
+    },
+    {
+      "log": "ls-historical-status-full.log",
+      "sha256": "42b3618dc4d11b25ce22f5fd8059ddf7b1b70dd86017f451827de4e917dda3af"
+    },
+    {
+      "log": "ls-historical-status-joined-1.log",
+      "sha256": "9cba2f160d102a995c121246b2cb4affabbc127a430cf3d2b23793001a447631"
+    },
+    {
+      "log": "ls-historical-status-joined-final.log",
+      "sha256": "d79cea3e94fa263d6b48a27aef8fd82835b2ff593c175bc54ad70cb7a4c6d8bc"
+    },
+    {
+      "log": "ls-historical-status-lint-final.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "log": "ls-historical-status-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "log": "ls-historical-status-private.log",
+      "sha256": "9c167235caf96f563c414efc02e129935b83bc62646931f5d12512bc788e344e"
+    },
+    {
+      "log": "ls-historical-status-typecheck-1.log",
+      "sha256": "3ddf5fa3073b9cb062d4cd5a3ce30667a5c75f8953e3356e8010202ec47ab24c"
+    },
+    {
+      "log": "ls-historical-status-typecheck-2.log",
+      "sha256": "e668ecc102501f90ed688e6569c81f6c388596a228abd98f353938bc53fe079d"
+    },
+    {
+      "log": "ls-historical-status-typecheck-final.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-historical-status-workspace.log",
+      "sha256": "75bebe35d5ad026ad122e72bdfd85f6a856759ea53d2bc8918ba3f08aeecb641"
+    }
+  ],
+  "operatorDisposition": {
+    "status": "continue",
+    "nextAction": "Complete producer-owned Human approval request/review/resume handling through published boundaries, then connect the control-page preparation, confirmation, status and evidence workflow. Preserve other independent S083/S084 scope."
+  }
+}

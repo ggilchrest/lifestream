@@ -31,7 +31,7 @@ async function fixture(previewLifetime=30000){
   state.recoveryProof=structuredClone(proof);
   const raw={dispatchProfileId:'pwce-trusted-dispatch.v1',dispatchProfileVersion:'1.0.0',profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',requestId:wire.requestId,correlationId:wire.correlationId,worldRef:wire.worldRef,executionEnvironmentRef:wire.executionEnvironmentRef,status:'admitted',actionRef:proof.actionRef,admissionEvidence:proof};state.mutate(raw);return raw;
  }};
- const create=()=>new PwceAuthorityAdmission({providerRef:'pwce.synthetic',client,dispatcher,catalog,preview,custody,authorize:async()=>{await state.hook('host');return state.approved;}});
+ const create=(dispatchEnabled=true)=>new PwceAuthorityAdmission({providerRef:'pwce.synthetic',client,...(dispatchEnabled?{dispatcher}:{}),catalog,preview,custody,authorize:async()=>{await state.hook('host');return state.approved;}});
  return {request,context,state,record,prepared,custody,create,catalog};
 }
 
@@ -202,4 +202,11 @@ test('admission transport fence catches invalidation after reservation and prese
  const f=await fixture();f.state.hook=async phase=>{if(phase==='transport')f.state.bound=false;};
  await assert.rejects(f.create().authorizeDispatch(f.request,f.context),{code:'snapshot_unavailable'});
  assert.equal(f.state.sent.length,0);assert.equal(f.state.records.size,1);assert.equal(f.custody.read(f.request.idempotencyKey).outcome,null);
+});
+
+
+test('read-only admission composition can recover custody but cannot authorize a send',async()=>{
+ const f=await pendingRecovery(),reader=f.create(false),before=f.state.sent.length;
+ const recovered=await reader.recoverAdmission(recoveryRequest(f),f.context);assert.ok(recovered.outcome);assert.equal(f.state.sent.length,before);
+ await assert.rejects(reader.authorizeDispatch(f.request,f.context),{code:'dispatch_unavailable'});assert.equal(f.state.sent.length,before);
 });
