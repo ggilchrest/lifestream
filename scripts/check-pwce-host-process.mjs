@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { createLifestreamServer } from '../apps/server/src/index.ts';
 import { loadProfile } from '../apps/server/src/config/loader.ts';
 import { Database } from '../packages/storage-sqlite/src/database.ts';
+import { PwceCapabilityDiscovery } from '../apps/server/src/composition/pwce-capabilities.ts';
 
 const token=randomBytes(24).toString('hex'),dispatcherToken=randomBytes(24).toString('hex');
 const producer=spawn(process.execPath,['scripts/gateway-dispatch-fixture.mjs'],{cwd:resolve(process.env.PWCE_PRODUCER_ROOT??'../PWCE'),env:{PATH:process.env.PATH,PWCE_FIXTURE_TOKEN:token,PWCE_FIXTURE_DISPATCHER_TOKEN:dispatcherToken},stdio:['pipe','pipe','pipe']});
@@ -20,6 +21,16 @@ try{
  const ready=await line();assert.equal(ready.fixture,true);assert.equal(ready.liveEffects,false);assert.equal(new URL(ready.url).hostname,'127.0.0.1');
  const config=loadProfile('test');config.authority.authentication='local-password';config.authority.provider='pwce';config.providers.world='pwce';config.providers.capability='pwce';config.secretRefs={gateway:{kind:'env',name:secret}};process.env[secret]=token;
  config.pwceProfile={endpoint:ready.url,worldRef:'world.personal.v1',executionEnvironmentRef:'test',siteRefs:['home.one'],principalRef:'agent.fixture',lifestreamEnvironmentId:randomUUID(),tokenSecretRef:'gateway',timeoutMs:5000,maximumPromptBytes:4096};config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};
+ const scopeOwner={assistantId:randomUUID(),endpointId:randomUUID(),sessionId:randomUUID(),principalId:randomUUID(),conversationId:randomUUID(),interactionTraceId:randomUUID(),revision:'synthetic-original-review',audienceKnown:true,isCurrent:()=>true};
+ const scopeCall=()=>({requestId:randomUUID(),correlationId:randomUUID(),deadlineAt:new Date(Date.now()+5000).toISOString(),executionMode:'live',signal:new AbortController().signal,isCurrent:()=>true});
+ let scopeHost=new PwceCapabilityDiscovery(config.pwceProfile,token);
+ try{
+  const original=await scopeHost.withCatalog(scopeOwner,scopeCall(),async lease=>structuredClone(lease.record));scopeHost.close();scopeHost=new PwceCapabilityDiscovery(config.pwceProfile,token);
+  const restored=await scopeHost.withCatalog(scopeOwner,scopeCall(),async lease=>lease.record,original);assert.deepEqual(restored,original);checks.push('fresh authenticated streams reattach the exact original producer scope after host closure');
+  await assert.rejects(scopeHost.withCatalog({...scopeOwner,principalId:randomUUID()},scopeCall(),async()=>assert.fail('foreign owner reached original catalog'),original));
+  const missing=structuredClone(original),unknown=randomUUID();missing.scope.authorityContextRef.contextId=unknown;missing.binding.authorityContextRef=unknown;
+  await assert.rejects(scopeHost.withCatalog(scopeOwner,scopeCall(),async()=>assert.fail('lost authority reached original catalog'),missing));checks.push('foreign owner and missing producer authority cannot be replaced during reconnection');
+ }finally{scopeHost.close();}
  const installerToken=randomBytes(24).toString('hex');app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'safety'),installerToken}});await app.start();db=new Database({path:config.storage.databasePath});
  const base=`http://127.0.0.1:${app.address().port}`,headers={origin:base,'content-type':'application/json'};
  const request=async(path,body,extra={})=>{const response=await fetch(base+path,{method:body===undefined?'GET':'POST',headers:{...headers,...extra},...(body===undefined?{}:{body:JSON.stringify(body)}),signal:AbortSignal.timeout(10000)});return {status:response.status,body:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};};

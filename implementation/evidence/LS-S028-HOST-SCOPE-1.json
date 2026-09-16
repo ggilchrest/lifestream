@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-HOST-SCOPE-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "faf8e4cc609729c7703f3961118b9f9b46df0a41",
+  "specificationRevision": "853218995612e38d18d1543d2bc88b536afe1508",
+  "producerRevision": "33fd48cea56e5352211db0b948fb760c13db8c27",
+  "recordedAt": "2026-09-16T13:03:03.392343Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/composition/pwce-capabilities.ts",
+        "sha256": "51a38680108c94ef5bac3afae2a5f05912f276c86f1c281bde98f4190367aa78"
+      },
+      {
+        "path": "apps/server/test/pwce-capabilities.test.ts",
+        "sha256": "4f47ee23251882ae19d314f4e779d3f2e529d49e0e971b42ccbfe2ea36506827"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "5aaf86c6295a6f1efe30d8dec87d72515a67dd1c17d361ceff7ad513376d76c5"
+      },
+      {
+        "path": "scripts/check-pwce-host-process.mjs",
+        "sha256": "32de4e6768570d70c1a629b4a5e14dc9368cb66b9d27e6492eacb21c6d3cbaac"
+      }
+    ]
+  },
+  "claim": "A trusted host operation can reconnect a retained review to the same actual PWCE authority and complete original catalog record after watcher/host closure. Fresh authenticated streams and exact fresh producer proof are required. Changed ownership, lost authority or changed snapshot cannot be replaced; reconnection cannot revive an older canceled operation.",
+  "results": {
+    "applicationTests": 842,
+    "hostScopeAndDiscoveryTests": 16,
+    "newScopeTests": 5,
+    "workspaceTests": 43,
+    "actualProducerAndChromeChecks": 13,
+    "syntheticTargetCalls": 0,
+    "preservedDirtyArtifacts": 6
+  },
+  "exclusions": [
+    "No action preparation, confirmation, dispatch or recovery host workflow has been enabled.",
+    "Reconnection requires retained original custody and still-existing producer authority. Lost authority is not restored or reissued.",
+    "No saved service/configuration changes, deployment, physical effects, personal import, training, provider/model selection, SYNPRJ_Q7M4 trial or new Human acceptance."
+  ],
+  "operatorDisposition": {
+    "status": "stopped",
+    "reason": "Operator requested pause at the next good stopping point. This checkpoint preserves the verified bounded reconnection change. Do not start the next implementation task until the operator resumes.",
+    "remaining": "Connect host-retained action preparation, explicit confirmation, PWCE admission/invocation and recovery to the action journal; retain external-grant representation and producer Human approval requirements."
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-scope/2026-09-16T130303Z",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-host-scope-tests.log",
+      "sha256": "5759c2261babf7ce40bab899dc660098ee943ffd3c25e2a582d7343d7dd0f726"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-host-scope-workspace.log",
+      "sha256": "f8be6997edd3b0f845a5b92f4b9f452bf28903c110f047d9321fb832bbb9c0c4"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-host-scope-typecheck.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-host-scope-build.log",
+      "sha256": "d664d470188a7a1e6d5817626677ca39a1602d10675e62ef59d661b196855e17"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-host-scope-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-host-scope-private.log",
+      "sha256": "966509442bca379b9540dbd7c3e252a0f364f33f268848f9eca8c4b023f5bcc5"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-host-scope-joined.log",
+      "sha256": "71b1f49a9ccaabe3ba3c76d0976539b4db1264e9ef56f8f2696448c22376637c"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "ls-host-scope-check.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-host-scope-preflight.log",
+      "sha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "evidence": "Observed command output."
+    }
+  ],
+  "earlierChecks": [
+    {
+      "log": "ls-host-actions-scopes.log",
+      "sha256": "c51a39b25beff8111ed27238f3c0e95dde7f09ec0e22ca9f1e7f47b4d0e79572"
+    }
+  ],
+  "deliveryTooling": "Installed /usr/local/bin/gh is x86_64 and failed in the arm64 session. A temporary native CLI of the same version 2.89.0 was verified against the published checksum and used with the existing ggilchrest account; no global CLI/authentication configuration was changed."
+}

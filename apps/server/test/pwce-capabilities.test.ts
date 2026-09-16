@@ -44,7 +44,7 @@ function gateway(t){
  });
  const emit=type=>{const raw={eventId:randomUUID(),type,cursor:String(++state.sequence),sourceRevision:state.sequence,affectedRef:null,watch:{siteRefs:[],principalRefs:[profile.principalRef]},reason:'synthetic_change',occurredAt:new Date().toISOString(),correlationId:randomUUID()};for(const controller of streams.keys())controller.enqueue(new TextEncoder().encode(`id: ${raw.cursor}\nevent: ${type}\ndata: ${JSON.stringify(raw)}\n\n`));};
  const discovery=new PwceCapabilityDiscovery(profile,'synthetic-agent-token');t.after(()=>discovery.close());
- return {profile,discovery,requests,streams,state,emit};
+ return {profile,discovery,requests,streams,snapshots,state,emit};
 }
 
 test('PWCE discovery validates exact public schemas and preserves opaque authenticated identity',async t=>{
@@ -122,4 +122,43 @@ test('logout during HTTP discovery cannot release tools',async t=>{
  const f=await http(t);await f.send('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession'});
  let release,entered;const gate=new Promise(resolve=>release=resolve),started=new Promise(resolve=>entered=resolve);f.state.hook=async phase=>{if(phase==='capabilities.getSnapshot'){entered();await gate;}};
  const pending=f.send(f.path);await started;await f.send('/api/auth/v1/sign-out',{});release();assert.equal((await pending).status,503);assert.equal((await f.send(f.path)).status,401);
+});
+
+
+test('host reattaches the exact original catalog after watcher/host closure without acquiring authority',async t=>{
+ const f=gateway(t),o=owner(),original=await f.discovery.withCatalog(o,call(),async lease=>structuredClone(lease.record));
+ f.discovery.close();const reopened=new PwceCapabilityDiscovery(f.profile,'synthetic-agent-token');t.after(()=>reopened.close());
+ let invoked=0;const result=await reopened.withCatalog(o,call(),async lease=>{invoked++;assert.deepEqual(lease.record,original);assert.equal(lease.context.isCurrent(original.scope),true);return 'same review';},original);
+ assert.equal(result,'same review');assert.equal(invoked,1);assert.equal(f.requests.filter(r=>r.path.endsWith('/authority')).length,1);assert.equal(f.streams.size,2);
+});
+
+test('foreign or changed host review scope cannot reconnect or issue replacement authority',async t=>{
+ const f=gateway(t),o=owner(),original=await f.discovery.withCatalog(o,call(),async lease=>structuredClone(lease.record));f.discovery.close();
+ for(const changed of [{principalId:randomUUID()},{assistantId:randomUUID()},{endpointId:randomUUID()},{sessionId:randomUUID()},{revision:'changed'},{conversationId:randomUUID()},{interactionTraceId:randomUUID()}]){
+  const reopened=new PwceCapabilityDiscovery(f.profile,'synthetic-agent-token');t.after(()=>reopened.close());const before=f.requests.length;
+  await assert.rejects(reopened.withCatalog({...o,...changed},call(),async()=>assert.fail('foreign review executed'),original));assert.equal(f.requests.length,before);
+ }
+ assert.equal(f.requests.filter(r=>r.path.endsWith('/authority')).length,1);
+});
+
+test('a changed producer snapshot cannot silently replace the reviewed action catalog',async t=>{
+ const f=gateway(t),o=owner(),original=await f.discovery.withCatalog(o,call(),async lease=>structuredClone(lease.record));f.discovery.close();
+ f.snapshots.get(original.binding.authorityContextRef).snapshotRef=randomUUID();
+ const reopened=new PwceCapabilityDiscovery(f.profile,'synthetic-agent-token');t.after(()=>reopened.close());
+ await assert.rejects(reopened.withCatalog(o,call(),async()=>assert.fail('changed review executed'),original));assert.equal(f.requests.filter(r=>r.path.endsWith('/authority')).length,1);
+});
+
+test('lost original producer authority does not trigger authority reissuance',async t=>{
+ const f=gateway(t),o=owner(),original=await f.discovery.withCatalog(o,call(),async lease=>structuredClone(lease.record));f.discovery.close();
+ f.state.hook=async operation=>{if(operation==='events.subscribe')throw new Error('synthetic authority no longer exists');};
+ const reopened=new PwceCapabilityDiscovery(f.profile,'synthetic-agent-token');t.after(()=>reopened.close());
+ await assert.rejects(reopened.withCatalog(o,call(),async()=>assert.fail('lost authority executed'),original));assert.equal(f.requests.filter(r=>r.path.endsWith('/authority')).length,1);
+});
+
+test('reconnecting after invalidation cannot revive an older pending host operation',async t=>{
+ const f=gateway(t),o=owner();let entered,release,original,oldSignal;const reached=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve);
+ const pending=f.discovery.withCatalog(o,call(),async lease=>{original=structuredClone(lease.record);oldSignal=lease.context.signal;entered();await gate;return 'late';});await reached;
+ f.emit('capabilities.invalidated');await new Promise(resolve=>setTimeout(resolve,30));assert.equal(oldSignal.aborted,true);
+ const fresh=await f.discovery.withCatalog(o,call(),async lease=>lease.record,original);assert.deepEqual(fresh,original);assert.equal(f.requests.filter(r=>r.path.endsWith('/authority')).length,1);
+ release();await assert.rejects(pending);
 });

@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "5d31a0860260a78c26a294817807ecbff880c2a1",
+  "currentRevision": "faf8e4cc609729c7703f3961118b9f9b46df0a41",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -226,102 +226,67 @@
     "apps/control-web/DESIGN.md",
     "apps/server/src/authority/pwce-action-journal.ts",
     "apps/server/test/pwce-action-journal.test.ts",
-    "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
+    "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json",
+    "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/authority/pwce-action-journal.ts",
-    "apps/server/test/pwce-action-journal.test.ts",
+    "apps/server/src/composition/pwce-capabilities.ts",
+    "apps/server/test/pwce-capabilities.test.ts",
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json",
-    "packages/storage-sqlite/src/index.ts",
-    "scripts/check-pwce-dispatch-process.mjs"
+    "implementation/evidence/LS-S028-HOST-SCOPE-1.json",
+    "scripts/check-pwce-host-process.mjs"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
-    },
-    {
-      "command": "node --test --experimental-strip-types apps/server/test/pwce-action-journal.test.ts apps/server/test/pwce-admission-custody.test.ts apps/server/test/pwce-invocation-custody.test.ts",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
     },
     {
-      "command": "node scripts/check-pwce-dispatch-process.mjs",
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-pwce-host-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
-    },
-    {
-      "command": "node scripts/check-pwce-context-process.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
     },
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
-    },
-    {
-      "command": "git diff --check",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
-    },
-    {
-      "command": "node scripts/generate-pwce-dispatch-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
-    },
-    {
-      "command": "node scripts/generate-pwce-capability-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
-    },
-    {
-      "command": "node scripts/generate-pwce-admission-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
-    },
-    {
-      "command": "node scripts/generate-pwce-invocation-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
-    },
-    {
-      "command": "node scripts/generate-pwce-admission-recovery-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
     },
     {
       "command": "node scripts/workspace.mjs preflight LS-S028",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json"
+      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
     }
   ],
   "decisions": [
@@ -334,11 +299,12 @@
     "2026-09-14: operator directs identifier-output compliance failures to nonblocking model-quality tracking and model selection after development. Prepared input, privacy and application completion remain hard requirements.",
     "2026-09-14: operator explicitly authorizes S083 and S084 implementation and verification: Continue with both. Earlier recovery stop is satisfied and superseded for these slices. Separate private machine export, live configuration, physical effects, provider selection, training and Human acceptance boundaries remain.",
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion.",
-    "2026-09-15: operator explicitly authorizes continued development and supersedes the previous implementation restriction; existing scoped push authorization continues."
+    "2026-09-15: operator explicitly authorizes continued development and supersedes the previous implementation restriction; existing scoped push authorization continues.",
+    "2026-09-16: operator requests pause at the next good stopping point. Complete and preserve the in-flight original-scope reconnection change, then stop pending resume."
   ],
   "blockers": [],
-  "nextAction": "Connect host-retained PWCE action preparation, explicit confirmation and dispatch/recovery through the separate safety journal. Preserve original authority on recovery and keep external grant representation truthful.",
-  "updatedAt": "2026-09-15T21:56:32.060488Z",
+  "nextAction": "Operator-paused at a clean stopping point. Await explicit resume before connecting PWCE host action preparation, confirmation, dispatch/recovery and external authority administration.",
+  "updatedAt": "2026-09-16T13:03:03.392343Z",
   "updatedBy": "Codex",
-  "notes": "PWCE action journal component verified: 837 application tests, 14 new journal tests, 26 focused storage tests, 43 workspace tests and 72 separate-process checks. Five actual synthetic application restores preserve claimed actions without resends; crash recovery and damaged safety files tested. Initial failed test instrumentation and typecheck output preserved. Full host action integration remains in progress."
+  "notes": "Original-scope reconnection verified: 842 application tests, 5 new scope tests, 43 workspace tests and 13 actual PWCE/Chrome checks; zero target calls. Scope cannot be replaced and canceled operations cannot be revived. Operator requested pause before further host workflow implementation. Preserved dirty artifacts unchanged."
 }
