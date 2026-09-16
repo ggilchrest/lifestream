@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-RANKING-CONNECTIONS-1",
+  "slice": "LS-S084",
+  "status": "implementationCompleteVerificationPending",
+  "componentStatus": "verified",
+  "sourceRevision": "ab07732f9a12559a3036e1a34cab61d94db48604",
+  "specificationRevision": "d98a6dfe2c7c529ed6725767560620579e8d8722",
+  "recordedAt": "2026-09-16T18:35:00.000Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/admin/discovery-candidates.ts",
+      "sha256": "6c50995d7d45409b16bcbaa7feb499b45c7d6187676eb798af7cb8b35cfebc62"
+    },
+    {
+      "path": "apps/server/test/discovery-candidates.test.ts",
+      "sha256": "d3c82b2d98b1f9d0bb46e4c7dd2a6df52c0495d197fc51882dc4dd20500d7d81"
+    },
+    {
+      "path": "apps/server/test/discovery-review.test.ts",
+      "sha256": "f26e0fb87e5321cbb1ca1545fa6f4a4f4024188a84658960e9f12aec11dcb6b5"
+    },
+    {
+      "path": "packages/storage-sqlite/src/understanding.ts",
+      "sha256": "725cc92efbcce5e5dfc4f0f2703a58ca93e47185be627f723cd27cff806404a7"
+    },
+    {
+      "path": "packages/storage-sqlite/test/understanding.test.ts",
+      "sha256": "c5c1c26a24bde50a59bcabf0d993b1b119ea529b995235baf2aca9f777b35b66"
+    }
+  ],
+  "claims": [
+    "A hypothesis with multiple distinct supporting topics produces at most one explicitly tentative, grounded connection. The candidate retains topic, support, counterevidence, trait and boundary references, records uncertainty and alternatives, and confers no authority.",
+    "Connection generation is omitted when the bounded grounding record cannot retain all required references. Existing neutral question and discovery-source behavior remain unchanged.",
+    "Candidate selection compares named dimensions in deterministic order after direct-topic, favorite, domain and scope gates. Unknown dimension values remain neutral and are never treated as positive evidence.",
+    "Rejecting a reviewed hypothesis invalidates every dependent question, connection or interpretation pinned to that hypothesis in the same owner transaction, while preserving parent identity, evidence and suppression history. Projection labels identify tentative connections."
+  ],
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-candidates.test.ts",
+      "result": "pass",
+      "details": "6/6"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/understanding.test.ts",
+      "result": "pass",
+      "details": "13/13"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-review.test.ts",
+      "result": "pass",
+      "details": "1/1"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "details": "903/903; zero skips; clean rerun"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "details": "19 passed; 30 optional actual-browser tests skipped"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "details": "pass"
+    }
+  ],
+  "retainedFailures": [
+    "One earlier concurrent full-suite run recorded 902/903 because the supplied-source publication test observed a transient publicationConflict cancellation. The exact test file passed 6/6 immediately afterward; the clean serial full rerun passed 903/903. The intermittent capacity observation is retained rather than rewritten.",
+    "The selected-provider prerequisites for LS-S073, LS-S076, LS-S078 and LS-S080 remain stale because their effective inputs changed since qualification. ai5090 reachability was not refreshed in this component run.",
+    "The current analysis request supplies one topic reference; the new multi-topic connection compiler path is therefore component-verified and not claimed as a selected-provider or end-to-end multi-topic qualification."
+  ],
+  "limitations": [
+    "Full selected-provider, voice, performance-under-all-conditions, production and Human acceptance remain separate gates.",
+    "S083 independent implementation and foreign-authority administration remain in progress under their owning slices.",
+    "No deployment, live configuration, model selection, personal-data import, training, physical effect or new Human acceptance was performed."
+  ]
+}
