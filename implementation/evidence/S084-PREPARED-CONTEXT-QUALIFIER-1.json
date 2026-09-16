@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-PREPARED-CONTEXT-QUALIFIER-1",
+  "slice": "LS-S084",
+  "status": "implementationCompleteVerificationPending",
+  "componentStatus": "verified",
+  "sourceRevision": "6c998fe89b591181b1915d4ae52797591db3a764",
+  "specificationRevision": "fba259d86a45ea90ede8d68f5b6d02a1d333d87a",
+  "recordedAt": "2026-09-16T20:52:16.000Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/admin/relationship-records.ts",
+      "sha256": "954db5194fe5bfb99d557ae75f5a7b6f57897fa3fcbd98743f0b6e3b95102725"
+    },
+    {
+      "path": "apps/server/test/relationship-administration.test.ts",
+      "sha256": "f21317a4a131f2928861836dcbe9c391c6ec63c06c5ac1ee07f68d95ccd18a6a"
+    }
+  ],
+  "claims": [
+    "The reviewed imported-declaration qualifier retains reviewed provenance, task relevance, lack of independent verification and lack of authority or consent while remaining compact enough for the conservative optional-context budget.",
+    "The actual prepared relationship formatter keeps a hash-length candidate identifier and its SYNPRJ_Q7M4 content inside the bounded optional context for the regression fixture.",
+    "The change is limited to the existing relationship administration and prepared-context path; it does not change provider selection or the joined-test semantics."
+  ],
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/relationship-administration.test.ts packages/runtime/test/context.test.ts packages/runtime/test/inference.test.ts",
+      "result": "pass",
+      "details": "19/19"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "details": "906/906; zero failures"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
+      "result": "pass",
+      "details": "49/49; fixture joined LS-TEST-106 passes"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs LIFESTREAM_S081_PROVIDER=selected LIFESTREAM_S081_REPORT=/private/tmp/ls-s081-after-qualifier.json node --test apps/control-web/test/relationship-joined.test.mjs",
+      "result": "blocked",
+      "details": "The first inspection request returned HTTP 503 because the ai5090 selected-provider service was unavailable; the joined assertion was not reached."
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "details": "pass"
+    }
+  ],
+  "retainedFailures": [
+    "The earlier selected-provider LS-TEST-106 omission receipt remains immutable for frequency tracking; this compact-qualifier rerun stopped earlier at HTTP 503 and does not replace that observation.",
+    "Selected-provider certification, model-behavior variance, production, physical, performance-under-all-conditions and Human acceptance remain outside this component receipt."
+  ],
+  "limitations": [
+    "Fixture and local source tests verify the bounded formatting path but cannot certify a live selected provider or explain model response behavior.",
+    "No deployment, live configuration change, personal-data import, training, provider selection or physical effect was performed."
+  ]
+}

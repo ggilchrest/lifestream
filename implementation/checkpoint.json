@@ -201,6 +201,7 @@
     "implementation/evidence/LS-S080-qualification-certification-3.json",
     "implementation/evidence/LS-S081-continuation-selected-provider-observation-1.json",
     "implementation/evidence/S084-PREPARED-CONTEXT-FORMAT-2.json",
+    "implementation/evidence/S084-PREPARED-CONTEXT-QUALIFIER-1.json",
     "implementation/evidence/LS-S073-S080-selected-provider-rerun-20260916.json",
     "implementation/evidence/LS-S073-selected-provider-observation-20260916-rerun-1.json",
     "implementation/evidence/LS-S073-qualification-certification-6.json",
@@ -424,14 +425,15 @@
     "2026-09-16: LS-S076, LS-S078 and LS-S080 selected-provider successor harnesses passed at current formatter revisions; immutable successors preserve each prior receipt and no model-quality or Human claim is inferred.",
     "2026-09-16: Current S080 synthetic selected-provider audio privacy route passed; the result supplements text S080 evidence and excludes physical/perceptual voice claims.",
     "2026-09-16: Current S081 independent isolation continuation passed; the joined LS-TEST-106 rerun reached admitted-record inspection but failed when prepared context omitted SYNPRJ_Q7M4. This remains nonblocking for ongoing development and is retained for follow-up frequency tracking.",
-    "2026-09-16: Compact the reviewed imported-declaration qualifier so a hash-length candidate identifier can remain within the conservative 512-byte optional context bound; focused server/runtime, full source (906/906) and browser fixture (49/49) checks pass. The selected-provider joined rerun stopped earlier at HTTP 503 before the joined assertion; the earlier omission receipt remains immutable."
+    "2026-09-16: Compact the reviewed imported-declaration qualifier so a hash-length candidate identifier can remain within the conservative 512-byte optional context bound; focused server/runtime, full source (906/906) and browser fixture (49/49) checks pass. The selected-provider joined rerun stopped earlier at HTTP 503 before the joined assertion; the earlier omission receipt remains immutable.",
+    "2026-09-16: Durable S084-PREPARED-CONTEXT-QUALIFIER-1 records the compact reviewed-import qualifier and hash-length candidate regression at source revision 6c998fe and private specification revision fba259d; source 906/906 and browser fixture 49/49 remain clean, while the selected-provider joined rerun stopped at HTTP 503 before its assertion."
   ],
   "blockers": [
     "Selected-provider LS-TEST-106 joined certification is not yet rerunnable: the latest attempt stopped at HTTP 503 during the first inspection request after the bounded qualifier fix. The earlier prepared-context omission receipt is preserved for frequency tracking; rerun the joined journey when the selected provider is available.",
     "Combined S080/S081 Human review plus real-provider, production, physical and all-conditions performance acceptance remain external gates."
   ],
   "nextAction": "Rerun the selected-provider LS-TEST-106 joined journey when the ai5090 service is available, then conduct any remaining external Human or provider-gated review.",
-  "updatedAt": "2026-09-16T20:48:17.347Z",
+  "updatedAt": "2026-09-16T20:52:16.000Z",
   "updatedBy": "Codex",
-  "notes": "S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/1000/10000/100000-record corpus benchmarks are component-verified; clean full application suite is 906/906 and browser fixture suite is 49/49. The reviewed imported-declaration qualifier now stays within the conservative optional context bound for hash-length candidate IDs. Selected-provider successors for LS-S073, LS-S076, LS-S078 and LS-S080 pass their bounded text cases; current S080 synthetic audio privacy also passes. The current S081 independent isolation continuation passes. The latest selected-provider joined attempt stopped at HTTP 503 before the joined assertion; the earlier SYNPRJ_Q7M4 omission and missing-reply/model-variance observations remain immutable. Optional provider-backed analysis, protected-authority, performance-under-all-conditions, production and combined S080/S081 Human acceptance remain external gates."
+  "notes": "S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/1000/10000/100000-record corpus benchmarks are component-verified; clean full application suite is 906/906 and browser fixture suite is 49/49. The reviewed imported-declaration qualifier now stays within the conservative optional context bound for hash-length candidate IDs, with durable evidence in S084-PREPARED-CONTEXT-QUALIFIER-1 at source revision 6c998fe and private specification revision fba259d. Selected-provider successors for LS-S073, LS-S076, LS-S078 and LS-S080 pass their bounded text cases; current S080 synthetic audio privacy also passes. The current S081 independent isolation continuation passes. The latest selected-provider joined attempt stopped at HTTP 503 before the joined assertion; the earlier SYNPRJ_Q7M4 omission and missing-reply/model-variance observations remain immutable. Optional provider-backed analysis, protected-authority, performance-under-all-conditions, production and combined S080/S081 Human acceptance remain external gates."
 }
