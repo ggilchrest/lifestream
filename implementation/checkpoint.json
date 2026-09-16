@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "43a727b4b06854ea65309444b3b7acf84a0a193c",
+  "currentRevision": "4beeb8f7624fbae8c13c81948ff7d7f492c5957c",
   "activeSlice": "LS-S084",
   "sliceStatus": "blocked",
   "completedSlices": [
@@ -213,7 +213,11 @@
     "implementation/evidence/LS-S078-current-qualification.json",
     "implementation/evidence/LS-S080-selected-provider-observation-20260916-rerun-1.json",
     "implementation/evidence/LS-S080-qualification-certification-4.json",
-    "implementation/evidence/LS-S080-current-qualification.json"
+    "implementation/evidence/LS-S080-current-qualification.json",
+    "implementation/evidence/LS-S080-audio-development-certification-2.json",
+    "implementation/evidence/LS-S080-audio-selected-provider-observation-20260916-rerun-1.json",
+    "implementation/evidence/LS-S081-continuation-selected-provider-observation-20260916-rerun-2.json",
+    "implementation/evidence/LS-S081-joined-selected-provider-observation-20260916-rerun-1.json"
   ],
   "changedFiles": [],
   "validation": [
@@ -386,6 +390,21 @@
       "command": "node scripts/qualify-s080-development.mjs",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S080-selected-provider-observation-20260916-rerun-1.json"
+    },
+    {
+      "command": "node scripts/qualify-s080-audio-development.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S080-audio-selected-provider-observation-20260916-rerun-1.json"
+    },
+    {
+      "command": "node scripts/qualify-s081-continuation-development.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S081-continuation-selected-provider-observation-20260916-rerun-2.json"
+    },
+    {
+      "command": "node scripts/qualify-s081-development.mjs",
+      "result": "fail",
+      "evidence": "implementation/evidence/LS-S081-joined-selected-provider-observation-20260916-rerun-1.json"
     }
   ],
   "decisions": [
@@ -402,14 +421,16 @@
     "2026-09-16: operator requests pause at the next good stopping point. Complete and preserve the in-flight original-scope reconnection change, then stop pending resume.",
     "2026-09-16: operator explicitly resumes at the current reasoning level; the previous pause is superseded.",
     "2026-09-16: LS-S073 selected-provider successor certification-6 passed all five bounded cases at public revision 6c88331; the earlier LS-TEST-094 omission remains immutable history for frequency tracking.",
-    "2026-09-16: LS-S076, LS-S078 and LS-S080 selected-provider successor harnesses passed at current formatter revisions; immutable successors preserve each prior receipt and no model-quality or Human claim is inferred."
+    "2026-09-16: LS-S076, LS-S078 and LS-S080 selected-provider successor harnesses passed at current formatter revisions; immutable successors preserve each prior receipt and no model-quality or Human claim is inferred.",
+    "2026-09-16: Current S080 synthetic selected-provider audio privacy route passed; the result supplements text S080 evidence and excludes physical/perceptual voice claims.",
+    "2026-09-16: Current S081 independent isolation continuation passed; the joined LS-TEST-106 rerun reached admitted-record inspection but failed when prepared context omitted SYNPRJ_Q7M4. This remains nonblocking for ongoing development and is retained for follow-up frequency tracking."
   ],
   "blockers": [
-    "Joined LS-TEST-106 remains unresolved: the selected-provider skipped-Assistant reply did not complete, so the prepared context lacked SYNPRJ_Q7M4. The independent isolation continuation passed and this failure remains nonblocking for local implementation.",
+    "Joined LS-TEST-106 remains unresolved: the current selected-provider joined rerun reached the admitted-record inspection, but the prepared context omitted SYNPRJ_Q7M4 and the journey stopped before later joined checks. The independent isolation continuation passed; this failure remains nonblocking for local implementation.",
     "Combined S080/S081 Human review plus real-provider, production, physical and all-conditions performance acceptance remain external gates."
   ],
-  "nextAction": "Diagnose and requalify the joined LS-TEST-106 reply completion when the selected-provider browser path is available, then conduct the combined S080/S081 Human review.",
-  "updatedAt": "2026-09-16T19:35:51.947Z",
+  "nextAction": "Resolve or explicitly disposition the joined LS-TEST-106 prepared-record omission when the owning test path is revised or rerunnable, then conduct the combined S080/S081 Human review.",
+  "updatedAt": "2026-09-16T19:49:42.363Z",
   "updatedBy": "Codex",
-  "notes": "S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/10000/100000-record corpus benchmark are component-verified; clean full application suite is 905/905 and PWCE is 324/324. Selected-provider successors for LS-S073, LS-S076, LS-S078 and LS-S080 now pass their bounded cases at formatter-bound revisions, with prior failures and model-variance observations retained immutably. The joined LS-TEST-106 missing-reply failure remains tracked and nonblocking for local implementation. Optional provider-backed analysis, protected-authority, performance-under-all-conditions, production and combined S080/S081 Human acceptance remain external gates."
+  "notes": "S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/1000/10000/100000-record corpus benchmarks are component-verified; clean full application suite is 905/905 and PWCE is 324/324. Selected-provider successors for LS-S073, LS-S076, LS-S078 and LS-S080 pass their bounded text cases; current S080 synthetic audio privacy also passes. The current S081 independent isolation continuation passes, while the joined LS-TEST-106 rerun stops at admitted-record inspection because prepared context omits SYNPRJ_Q7M4; this and earlier missing-reply/model-variance observations remain immutable. Optional provider-backed analysis, protected-authority, performance-under-all-conditions, production and combined S080/S081 Human acceptance remain external gates."
 }
