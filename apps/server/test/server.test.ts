@@ -65,7 +65,7 @@ test("fixture package exposes distinct health states, UI, and authenticated auth
   assert.equal((await fetch(`${base}/health/live`)).status, 200);
   assert.equal((await fetch(`${base}/health/ready`)).status, 200);
   const health = await (await fetch(`${base}/health/ready`)).json() as { migrations: { ids: number[]; expectedIds: number[] }; providers: Record<string, { implementation: string; fixture: boolean }> };
-  assert.deepEqual(health.migrations.ids, [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37]);
+  assert.deepEqual(health.migrations.ids, [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]);
   assert.deepEqual(health.migrations.expectedIds, health.migrations.ids);
   assert.equal(health.providers.inference.implementation, "@lifestream/providers-fixture");
   assert.equal(health.providers.inference.fixture, true);

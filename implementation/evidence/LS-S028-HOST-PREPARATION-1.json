@@ -1,0 +1,221 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-HOST-PREPARATION-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "ce114b0b48fdf2971e5efb89612416633491cd6f",
+  "specificationRevision": "c3be99e38f77cbc778df9612c01bbba4d99daa57",
+  "producerRevision": "33fd48cea56e5352211db0b948fb760c13db8c27",
+  "recordedAt": "2026-09-16T13:28:37.466103Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/control-web/capability-permissions.js",
+        "sha256": "f1d26c3ac917e734ecd09034ef36588cf34da708d0d32fc77109b2725c9996d4"
+      },
+      {
+        "path": "apps/server/src/authority/pwce-action-preparation.ts",
+        "sha256": "92504871812a2568f33a9adabe20ca2755d1fa1ed9fd467bd121f8f3c4cddec9"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "38361e7f2f5326cc6ed7f7ebb53b6957dab05a19b1cce2258cb6669ee3f5f6a3"
+      },
+      {
+        "path": "apps/server/test/pwce-capabilities.test.ts",
+        "sha256": "215212ff3b45657bc64b30d39b82ef38e097889e9dd9e7602a6879cce7a33965"
+      },
+      {
+        "path": "apps/server/test/server.test.ts",
+        "sha256": "c16116c16e974e61f6746d1d65d92e0d03e3ed5805fa90d03b3ad3a4c79dc82a"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "76dc5d602f66040a7eaf2886a4410ef15c1684741837715dab82c5d0032d0887"
+      },
+      {
+        "path": "packages/providers-pwce/src/index.ts",
+        "sha256": "efcd458578fd52a50872b385cb9f781ebb26e4a26fa19bb67a59ec92caa0c630"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0038_pwce_action_preparations.sql",
+        "sha256": "7a3e24b530e9e88ff5fc847912a45aecc258eacbc6ff0b25acf867614d3e8372"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/index.ts",
+        "sha256": "c81061424ced91af66d4162541ad9a2d9bb1f8c4515907a65a42af21cc1803e7"
+      },
+      {
+        "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+        "sha256": "2ecab8d2daf1c8e824bd2664bebf559e4f2dcd519b81494fb4c6ade5dc7df22c"
+      },
+      {
+        "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+        "sha256": "bfb84b4bd34039f234bba30dc7a85963fd2c787e976faef0099694681ac6c077"
+      },
+      {
+        "path": "scripts/check-pwce-host-process.mjs",
+        "sha256": "c311427920e97686f189482f3697c76745d4c23b4ba5869774e8bcb66c37a40c"
+      }
+    ]
+  },
+  "claim": "Authenticated PWCE preparation retains exact input, original catalog authority, immutable preview evidence and confirmation digest. Identical retries and server restart recover the same review, requiring current ownership and fresh non-consuming preview. Expiry, changed scope, invalid input and storage failure cannot grant authority or dispatch.",
+  "results": {
+    "applicationTests": 850,
+    "hostPreparationAndDiscoveryTests": 24,
+    "newPreparationTests": 8,
+    "workspaceTests": 43,
+    "focusedMigrationTests": 44,
+    "actualProducerAndChromeChecks": 16,
+    "syntheticTargetCalls": 0,
+    "preservedDirtyArtifacts": 6
+  },
+  "exclusions": [
+    "Host confirmation, producer Human approval, admission, invocation and recovery controls are not connected by this change.",
+    "No saved service or configuration changes, deployment, physical effects, personal import, training, model selection, SYNPRJ_Q7M4 trial or new Human acceptance.",
+    "This component receipt does not certify all of LS-S028, S083 or S084."
+  ],
+  "operatorDisposition": {
+    "status": "continue",
+    "nextAction": "Connect explicit host confirmation and producer admission/invocation/recovery to retained preparation and separate durable action journal."
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-host-preparation-tests-verified.log",
+      "sha256": "fed7325725cdf4ef051666a605c00eb03530ca015ec43d32c53f147bb1e6fa31"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-host-preparation-workspace.log",
+      "sha256": "f363aa9b889cc3cc4cc379e1333f76682d5ad00e5cd935f4a927d4345a0bc981"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-host-preparation-typecheck-verified.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-host-preparation-build-verified.log",
+      "sha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-host-preparation-lint-verified.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-host-preparation-joined.log",
+      "sha256": "d7ede1eb6acc13d64c69a94442dd41e4b61be6386079c02eb0efa7190cc480fa"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-host-preparation-private.log",
+      "sha256": "6820389433395aaff2c5611edd8393e4c5e9a8dac0db37bb6ae92ff8faf62f9a"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "log": "ls-host-preparation-check.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S028",
+      "result": "pass",
+      "log": "ls-host-preparation-preflight.log",
+      "sha256": "fcdf506852126c22e996b6b44307fb1f6cc552af1cf8ce2c74d91d87b559425f"
+    }
+  ],
+  "earlierFailures": [
+    "Initial typecheck identified a missing public export, nullable scope reference and decision-union narrowing; corrected.",
+    "First focused run passed 21/22: known invalid-input error was sanitized into HTTP 500; corrected while retaining outer current-scope checks.",
+    "First full run passed 847/850: three expected migration lists omitted migration 38.",
+    "Second full run passed 849/850: health expected migration list still omitted migration 38. Final unchanged-source run passed 850/850."
+  ],
+  "rawLogs": [
+    {
+      "log": "ls-host-preparation-build-final.log",
+      "sha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "log": "ls-host-preparation-build-verified.log",
+      "sha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "log": "ls-host-preparation-build.log",
+      "sha256": "3b0cf22b87e20c2ed1d5d4bdf1250a92654fc67d1e6e23145a25009cb28aa224"
+    },
+    {
+      "log": "ls-host-preparation-focused-1.log",
+      "sha256": "cd8c12f0077ff451ba618b22ccbc5fff962fbb65f17f4862a8c8ca1c19619e4b"
+    },
+    {
+      "log": "ls-host-preparation-focused-final.log",
+      "sha256": "99345fe612f0464f76143bd39f2029b544d2f7b96b470085def5a95ba0f4619d"
+    },
+    {
+      "log": "ls-host-preparation-joined.log",
+      "sha256": "d7ede1eb6acc13d64c69a94442dd41e4b61be6386079c02eb0efa7190cc480fa"
+    },
+    {
+      "log": "ls-host-preparation-lint-verified.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "log": "ls-host-preparation-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "log": "ls-host-preparation-migrations.log",
+      "sha256": "963a28b8669ba6dcd37c7ec0f37e10c35ad5353d94a67178c2e1891ab4318137"
+    },
+    {
+      "log": "ls-host-preparation-pin.log",
+      "sha256": "795269b4de8a0f97fc6626d36129495d8facf7ade0ea81d49a8f9f6d2beb6b3a"
+    },
+    {
+      "log": "ls-host-preparation-private.log",
+      "sha256": "6820389433395aaff2c5611edd8393e4c5e9a8dac0db37bb6ae92ff8faf62f9a"
+    },
+    {
+      "log": "ls-host-preparation-tests-final.log",
+      "sha256": "4b809d9e6b34ed1be8be94d9214a2e2187d77af00940dbcb9188a4c2e22a10a3"
+    },
+    {
+      "log": "ls-host-preparation-tests-verified.log",
+      "sha256": "fed7325725cdf4ef051666a605c00eb03530ca015ec43d32c53f147bb1e6fa31"
+    },
+    {
+      "log": "ls-host-preparation-tests.log",
+      "sha256": "41703dd6ea8862cfe70c65b094305a930799097cccf6088118a01f6b2c990e1a"
+    },
+    {
+      "log": "ls-host-preparation-typecheck-1.log",
+      "sha256": "c0d5b98342bc7f750208e3e80cbf9aa0520741712eea08c06ebc2cb072d18bce"
+    },
+    {
+      "log": "ls-host-preparation-typecheck-final.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-host-preparation-typecheck-verified.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-host-preparation-workspace.log",
+      "sha256": "f363aa9b889cc3cc4cc379e1333f76682d5ad00e5cd935f4a927d4345a0bc981"
+    }
+  ]
+}

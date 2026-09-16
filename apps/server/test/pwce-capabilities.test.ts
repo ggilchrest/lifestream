@@ -33,6 +33,7 @@ function gateway(t){
   if(u.pathname==='/gateway/v1/request'){
    const envelope={profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',requestId:body.requestId,correlationId:body.correlationId,worldRef:body.worldRef,executionEnvironmentRef:body.executionEnvironmentRef};
    if(body.operation==='events.subscribe')return json({...envelope,principalRef:profile.principalRef,siteRef:body.siteRef,events:[],nextCursor:body.afterCursor,resyncRequired:false,hasMore:false});
+   if(body.operation==='authority.evaluate')return json({...envelope,outcome:body.approvalRequired?'approval_required':'allowed',...(body.approvalRequired?{}:{capabilityRef:descriptor.capabilityRef,effectClass:descriptor.effectClass}),rationaleCodes:['synthetic_policy'],requirements:body.approvalRequired?['runtime_human_approval']:[],limitations:[]});
    assert.equal(body.operation,'capabilities.getSnapshot');
    if(!snapshots.has(body.authorityContextRef))snapshots.set(body.authorityContextRef,{snapshotRef:randomUUID(),principalRef:profile.principalRef,siteRefs:profile.siteRefs,sourceRevision:0,invalidationSequence:0,issuedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+60000).toISOString(),capabilities:[{...descriptor,available:true,authorization:'grant_required'}],availability:'configured',limitations:[]});
    return json({...envelope,...snapshots.get(body.authorityContextRef)});
@@ -95,7 +96,7 @@ test('authenticated HTTP discovery requires audience and cannot mint local grant
  assert.equal((await f.send('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession'})).status,200);
  const result=await f.send(f.path);assert.equal(result.status,200,JSON.stringify(result));assert.equal(result.body.providerRef,'pwce');assert.equal(result.body.tools.length,1);
  assert.equal((await f.send(f.path+'?scope=foreign')).status,422);assert.equal((await f.send(f.path.replace(/assistants\/[^/]+/,'assistants/'+randomUUID()))).status,403);
- assert.equal((await f.send('/api/authority/v1/grants')).status,503);assert.equal((await f.send(f.path+'/pwce.home.light.set-level/prepare',{})).status,503);
+ assert.equal((await f.send('/api/authority/v1/grants')).status,503);assert.equal((await f.send(f.path+'/pwce.home.light.set-level/prepare',{})).status,422);
  assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS count FROM canonical_grants').get().count,0);assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS count FROM pwce_admission_custody').get().count,0);
 });
 
@@ -161,4 +162,65 @@ test('reconnecting after invalidation cannot revive an older pending host operat
  f.emit('capabilities.invalidated');await new Promise(resolve=>setTimeout(resolve,30));assert.equal(oldSignal.aborted,true);
  const fresh=await f.discovery.withCatalog(o,call(),async lease=>lease.record,original);assert.deepEqual(fresh,original);assert.equal(f.requests.filter(r=>r.path.endsWith('/authority')).length,1);
  release();await assert.rejects(pending);
+});
+
+const preparationBody=()=>({idempotencyKey:randomUUID(),capabilityVersion:'1.0.0',input:{siteRef:'home.one',targetEntityId:'light.synthetic',parameters:{level:0.4}}});
+const preparationPath=f=>f.path+'/pwce.home.light.set-level/prepare';
+const inspectPath=(f,id)=>f.path+'/invocations/'+id+'/preparation';
+async function prepareAudience(f){assert.equal((await f.send('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession'})).status,200);}
+
+test('authenticated PWCE preparation retains exact input, original provider preview and retry identity without grants',async t=>{
+ const f=await http(t);await prepareAudience(f);const body=preparationBody(),first=await f.send(preparationPath(f),body);
+ assert.equal(first.status,201,JSON.stringify(first));assert.equal(first.body.grantsAuthority,false);assert.equal(first.body.dispatchStarted,false);assert.equal(first.body.confirmationAvailable,false);
+ assert.deepEqual(first.body.input,body.input);assert.equal(first.body.preparation.currentPreview.authorityKind,'external');assert.equal(first.body.preparation.currentPreview.disposition,'authorized');
+ const repeat=await f.send(preparationPath(f),body);assert.equal(repeat.status,200,JSON.stringify(repeat));assert.equal(repeat.body.preparation.invocationId,first.body.preparation.invocationId);assert.equal(repeat.body.preparation.confirmationDigest,first.body.preparation.confirmationDigest);assert.deepEqual(repeat.body.preparation.originalPreview,first.body.preparation.originalPreview);
+ const inspected=await f.send(inspectPath(f,first.body.preparation.invocationId));assert.equal(inspected.status,200);assert.deepEqual(inspected.body.input,body.input);
+ const conflict=await f.send(preparationPath(f),{...body,input:{...body.input,parameters:{level:0.9}}});assert.equal(conflict.status,409);
+ assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS n FROM pwce_action_preparations').get().n,1);
+ for(const table of ['canonical_grants','canonical_preparations','pwce_admission_custody','pwce_invocation_custody'])assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS n FROM '+table).get().n,0);
+ assert.ok(f.requests.every(r=>!['authority.authorizeDispatch','capabilities.invoke'].includes(r.body?.operation)));
+});
+
+test('PWCE preparation rejects invented approval fields, invalid input, authentication and CSRF failures',async t=>{
+ const f=await http(t);await prepareAudience(f);const body=preparationBody(),before=f.requests.length;
+ for(const extra of [{approvalRef:'invented'},{approved:true},{requestedClass:'allowOnce'},{authorityContextRef:randomUUID()}])assert.equal((await f.send(preparationPath(f),{...body,...extra})).status,422);
+ assert.equal(f.requests.length,before);assert.equal((await f.send(preparationPath(f),body,{'x-lifestream-csrf':'wrong'})).status,403);assert.equal((await f.send(preparationPath(f),body,{cookie:''})).status,401);
+ assert.equal((await f.send(preparationPath(f),{...body,input:{...body.input,parameters:{level:4}}})).status,422);assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS n FROM pwce_action_preparations').get().n,0);
+});
+
+test('audience withdrawal during a PWCE preview prevents durable preparation and late disclosure',async t=>{
+ const f=await http(t);await prepareAudience(f);let entered,release;const reached=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve);
+ f.state.hook=async phase=>{if(phase==='authority.evaluate'){entered();await gate;}};
+ const pending=f.send(preparationPath(f),preparationBody());await reached;await f.send('/api/runtime/v1/session-context',{expectedRevision:1,mode:'text',audienceScope:'unknown'});release();const result=await pending;assert.ok(result.status>=400);
+ assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS n FROM pwce_action_preparations').get().n,0);assert.equal(result.body.preparation,undefined);
+});
+
+test('retained PWCE preparation survives an actual host restart with no authority replacement',async t=>{
+ const f=await http(t);await prepareAudience(f);const body=preparationBody(),first=await f.send(preparationPath(f),body);assert.equal(first.status,201,JSON.stringify(first));
+ const count=f.requests.filter(r=>r.path.endsWith('/authority')).length,port=f.app.address().port;await f.app.shutdown();
+ const reopened=createLifestreamServer({config:f.config,port,localAuth:{stateDirectory:join(f.config.storage.artifactDirectory,'../safety')}});await reopened.start();t.after(()=>reopened.shutdown());
+ const inspect=await f.send(inspectPath(f,first.body.preparation.invocationId));assert.equal(inspect.status,200,JSON.stringify(inspect));assert.equal(inspect.body.preparation.confirmationDigest,first.body.preparation.confirmationDigest);assert.equal(f.requests.filter(r=>r.path.endsWith('/authority')).length,count);
+});
+
+test('retained PWCE preparation rejects corruption, foreign Assistant access and later owner changes',async t=>{
+ const f=await http(t);await prepareAudience(f);const first=await f.send(preparationPath(f),preparationBody());assert.equal(first.status,201,JSON.stringify(first));const id=first.body.preparation.invocationId;
+ assert.ok([403,404].includes((await f.send(inspectPath(f,id).replace(/assistants\/[^/]+/,'assistants/'+randomUUID()))).status));
+ f.db.connection.prepare("UPDATE pwce_action_preparations SET sha256='corrupt'").run();assert.equal((await f.send(inspectPath(f,id))).status,503);
+ await f.send('/api/runtime/v1/session-context',{expectedRevision:1,mode:'text',audienceScope:'unknown'});assert.ok((await f.send(inspectPath(f,id))).status>=400);
+});
+
+test('failed PWCE preparation persistence cannot report a retained review',async t=>{
+ const f=await http(t);await prepareAudience(f);f.db.exec("CREATE TRIGGER reject_pwce_preparation BEFORE INSERT ON pwce_action_preparations BEGIN SELECT RAISE(ABORT,'synthetic storage failure'); END");
+ const result=await f.send(preparationPath(f),preparationBody());assert.ok(result.status>=500);assert.equal(result.body.preparation,undefined);assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS n FROM pwce_action_preparations').get().n,0);
+});
+
+test('parallel initial PWCE preparation submissions select one durable review',async t=>{
+ const f=await http(t);await prepareAudience(f);const body=preparationBody(),results=await Promise.all([f.send(preparationPath(f),body),f.send(preparationPath(f),body)]);
+ assert.deepEqual(results.map(r=>r.status).sort(),[200,201]);assert.equal(results[0].body.preparation.invocationId,results[1].body.preparation.invocationId);assert.equal(results[0].body.preparation.confirmationDigest,results[1].body.preparation.confirmationDigest);assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS n FROM pwce_action_preparations').get().n,1);
+});
+
+test('expired PWCE preparation requires a new review and does not acquire replacement authority',async t=>{
+ const f=await http(t);await prepareAudience(f);const body=preparationBody(),first=await f.send(preparationPath(f),body);assert.equal(first.status,201,JSON.stringify(first));const before=f.requests.length,now=Date.now();
+ const clock=t.mock.method(Date,'now',()=>now+120000);
+ try{const result=await f.send(inspectPath(f,first.body.preparation.invocationId));assert.equal(result.status,409,JSON.stringify(result));assert.equal(result.body.preparation,undefined);assert.equal(f.requests.length,before);}finally{clock.mock.restore();}
 });

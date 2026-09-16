@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "faf8e4cc609729c7703f3961118b9f9b46df0a41",
+  "currentRevision": "ce114b0b48fdf2971e5efb89612416633491cd6f",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -227,66 +227,62 @@
     "apps/server/src/authority/pwce-action-journal.ts",
     "apps/server/test/pwce-action-journal.test.ts",
     "implementation/evidence/LS-S028-ACTION-JOURNAL-1.json",
-    "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
+    "implementation/evidence/LS-S028-HOST-SCOPE-1.json",
+    "apps/server/src/authority/pwce-action-preparation.ts",
+    "packages/storage-sqlite/src/migrations/0038_pwce_action_preparations.sql",
+    "implementation/evidence/LS-S028-HOST-PREPARATION-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/composition/pwce-capabilities.ts",
+    "apps/control-web/capability-permissions.js",
+    "apps/server/src/authority/pwce-action-preparation.ts",
+    "apps/server/src/index.ts",
     "apps/server/test/pwce-capabilities.test.ts",
+    "apps/server/test/server.test.ts",
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-HOST-SCOPE-1.json",
+    "implementation/evidence/LS-S028-HOST-PREPARATION-1.json",
+    "packages/providers-pwce/src/index.ts",
+    "packages/storage-sqlite/src/migrations/0038_pwce_action_preparations.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/test/initiative-delivery.test.ts",
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
     "scripts/check-pwce-host-process.mjs"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-tests-verified.log"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-workspace.log"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-typecheck-verified.log"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-build-verified.log"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
-    },
-    {
-      "command": "npm --prefix .private run validate",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-lint-verified.log"
     },
     {
       "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-pwce-host-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-joined.log"
     },
     {
-      "command": "node scripts/workspace.mjs check",
+      "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
-    },
-    {
-      "command": "node scripts/workspace.mjs preflight LS-S028",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
-    },
-    {
-      "command": "git diff --check",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-HOST-SCOPE-1.json"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-private.log"
     }
   ],
   "decisions": [
@@ -300,11 +296,12 @@
     "2026-09-14: operator explicitly authorizes S083 and S084 implementation and verification: Continue with both. Earlier recovery stop is satisfied and superseded for these slices. Separate private machine export, live configuration, physical effects, provider selection, training and Human acceptance boundaries remain.",
     "2026-09-14: operator approves exact S083/S084 four-schema export inventory. Source bytes verified unchanged before ingestion.",
     "2026-09-15: operator explicitly authorizes continued development and supersedes the previous implementation restriction; existing scoped push authorization continues.",
-    "2026-09-16: operator requests pause at the next good stopping point. Complete and preserve the in-flight original-scope reconnection change, then stop pending resume."
+    "2026-09-16: operator requests pause at the next good stopping point. Complete and preserve the in-flight original-scope reconnection change, then stop pending resume.",
+    "2026-09-16: operator explicitly resumes at the current reasoning level; the previous pause is superseded."
   ],
   "blockers": [],
-  "nextAction": "Operator-paused at a clean stopping point. Await explicit resume before connecting PWCE host action preparation, confirmation, dispatch/recovery and external authority administration.",
-  "updatedAt": "2026-09-16T13:03:03.392343Z",
+  "nextAction": "Connect explicit host confirmation and producer admission/invocation/recovery to retained preparation and separate durable action journal.",
+  "updatedAt": "2026-09-16T13:28:37.466103Z",
   "updatedBy": "Codex",
-  "notes": "Original-scope reconnection verified: 842 application tests, 5 new scope tests, 43 workspace tests and 13 actual PWCE/Chrome checks; zero target calls. Scope cannot be replaced and canceled operations cannot be revived. Operator requested pause before further host workflow implementation. Preserved dirty artifacts unchanged."
+  "notes": "Durable authenticated PWCE preparation and non-consuming preview component verified: 850 application tests, 43 workspace tests, 16 actual producer/Chrome checks, zero target calls. Original evidence retained across retry/restart. Development continues; confirmation and dispatch remain pending."
 }

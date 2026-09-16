@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createInterface } from 'node:readline';
-import { randomBytes, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -41,6 +41,12 @@ try{
  assert.equal((await request('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession'})).status,200);
  const discovered=await request(path);assert.equal(discovered.status,200,JSON.stringify(discovered));assert.equal(discovered.body.tools[0].capabilityId,'pwce.home.light.set-level');assert.equal(discovered.body.tools[0].authorization,'invokeDecision');assert.equal(discovered.body.tools[0].inputSchema.properties.parameters.properties.level.maximum,1);assert.equal(discovered.body.actionAdministration,'unavailable');checks.push('authenticated host discovers actual producer catalog and exact input schema');
  assert.equal((await request(path)).status,200);checks.push('fresh read uses the same current owner with active invalidation coverage');
+ const prepareBody={idempotencyKey:randomUUID(),capabilityVersion:'1.0.0',input:{siteRef:'home.one',targetEntityId:'light.synthetic',parameters:{level:0.4}}};
+ const prepared=await request(path+'/pwce.home.light.set-level/prepare',prepareBody);assert.equal(prepared.status,201,JSON.stringify(prepared));assert.equal(prepared.body.preparation.currentPreview.disposition,'authorized');assert.equal(prepared.body.preparation.currentPreview.authorityKind,'external');assert.equal(prepared.body.grantsAuthority,false);assert.equal(prepared.body.dispatchStarted,false);assert.equal(prepared.body.confirmationAvailable,false);
+ assert.equal(createHash('sha256').update(prepared.body.preparation.originalPreviewEvidence).digest('hex'),prepared.body.preparation.originalPreview.evidenceRef.sha256);checks.push('actual PWCE non-consuming preview and exact input are retained with their original proof bytes');
+ const repeated=await request(path+'/pwce.home.light.set-level/prepare',prepareBody);assert.equal(repeated.status,200,JSON.stringify(repeated));assert.equal(repeated.body.preparation.invocationId,prepared.body.preparation.invocationId);assert.equal(repeated.body.preparation.confirmationDigest,prepared.body.preparation.confirmationDigest);checks.push('same preparation key retains one original review and no action claim');
+ const inspected=await request(path+'/invocations/'+prepared.body.preparation.invocationId+'/preparation');assert.equal(inspected.status,200);assert.equal(inspected.body.preparation.confirmationDigest,prepared.body.preparation.confirmationDigest);
+ assert.equal(db.connection.prepare('SELECT COUNT(*) AS n FROM pwce_action_preparations').get().n,1);checks.push('authenticated preparation inspection checks the original catalog and obtains a fresh preview');
  if(process.env.PLAYWRIGHT_MODULE){
   const {chromium}=await import(process.env.PLAYWRIGHT_MODULE),browser=await chromium.launch({channel:'chrome',headless:true});
   try{
@@ -53,14 +59,14 @@ try{
   }finally{await browser.close();}
  }
  assert.equal((await request(path+'?scope=foreign')).status,422);assert.equal((await request(path.replace(/assistants\/[^/]+/,'assistants/'+randomUUID()))).status,403);checks.push('foreign scope and query injection rejected');
- assert.equal((await request('/api/authority/v1/grants')).status,503);assert.equal((await request(path+'/pwce.home.light.set-level/prepare',{})).status,503);checks.push('discovery cannot fall back to local grants or action preparation');
+ assert.equal((await request('/api/authority/v1/grants')).status,503);assert.equal((await request(path+'/pwce.home.light.set-level/prepare',{})).status,422);checks.push('PWCE cannot fall back to local grants and invalid preparation is rejected');
  producer.stdin.write('revoke\n');const revoked=await line();assert.equal(revoked.revoked,true);
  const after=await request(path);assert.ok(after.status===503||after.status===200&&after.body.tools.length===0,JSON.stringify(after));checks.push('producer revocation cannot return an earlier available capability');
  await request('/api/runtime/v1/session-context',{expectedRevision:1,mode:'text',audienceScope:'unknown'});assert.equal((await request(path)).status,503);checks.push('audience withdrawal removes discovery eligibility');
  await request('/api/auth/v1/sign-out',{});assert.equal((await request(path)).status,401);checks.push('logout removes access');
  producer.stdin.write('stats\n');const stats=await line();assert.equal(stats.fixtureStats,true);assert.equal(stats.calls,0);
  for(const table of ['canonical_grants','pwce_admission_custody','pwce_invocation_custody'])assert.equal(db.connection.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count,0);checks.push('zero action calls, grants, admission custody or invocation claims');
- console.log(JSON.stringify({fixtures:true,liveEffects:false,casesPassed:checks.length,targetCalls:0,checks,scope:'authenticated Lifestream HTTP discovery against a separate actual PWCE process; no saved configuration or action administration activation'}));
+ console.log(JSON.stringify({fixtures:true,liveEffects:false,casesPassed:checks.length,targetCalls:0,checks,scope:'authenticated Lifestream HTTP discovery against a separate actual PWCE process; non-consuming preparations only; no saved configuration or action dispatch activation'}));
 }finally{
  if(app)await app.shutdown();db?.close();delete process.env[secret];lines.close();producer.kill('SIGTERM');await exited;rmSync(root,{recursive:true,force:true});
 }
