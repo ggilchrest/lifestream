@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S081-AI5090-HEALTH-20260916",
+  "slice": "LS-S081",
+  "result": "pass",
+  "status": "observed",
+  "collectedAt": "2026-09-16T23:44:36.000Z",
+  "target": "ai5090",
+  "transport": "SSH read-only remote socket inspection",
+  "services": [
+    {
+      "name": "inference",
+      "remotePort": 30000,
+      "forwardedPort": 43000,
+      "listening": true
+    },
+    {
+      "name": "stt",
+      "remotePort": 8080,
+      "forwardedPort": 48080,
+      "listening": true
+    },
+    {
+      "name": "tts",
+      "remotePort": 8787,
+      "forwardedPort": 48787,
+      "listening": true
+    }
+  ],
+  "command": "ssh ai5090 powershell.exe -NoProfile -NonInteractive -EncodedCommand <read-only Get-NetTCPConnection check>",
+  "evidence": "All three configured ai5090 service ports reported listening=true in the same remote check. This is service liveness/transport readiness only; it does not claim model quality, audio playback, physical capture, production readiness or Human acceptance.",
+  "exclusions": [
+    "No service restart or configuration change",
+    "No credentials or personal data",
+    "No physical capture/playback",
+    "No production or Human acceptance claim"
+  ]
+}
