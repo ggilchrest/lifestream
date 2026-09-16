@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-TIMING-ADAPTATION-2",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "sourceRevision": "6c998fe89b591181b1915d4ae52797591db3a764",
+  "specificationRevision": "af10bc80b185014f74d2f902745af7c52a1a357e",
+  "recordedAt": "2026-09-16T20:56:40.000Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/runtime/initiative-timing.ts",
+      "sha256": "5309851628a227e0cf3e3613de935d1802466cdc5ea3c86cc840467c9785f0ac"
+    },
+    {
+      "path": "apps/server/test/initiative-timing.test.ts",
+      "sha256": "833e863516abd73afc0885bbad40a453ee44485bb874f02e87ded751ed94015e"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-lab.ts",
+      "sha256": "dd59943eabddbe9f87447180ddc3515ebd7727243b9f1ff1e3fb4446fef3bce8"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-selection.ts",
+      "sha256": "c4413d719247ef1e9a4877fb221fd625bc52ef32df57b81bf248c29f8a02563e"
+    },
+    {
+      "path": "apps/server/test/discovery-lab.test.ts",
+      "sha256": "6dcc9d0f0ac91f3311e6e832c658b1f510fac70fb8dbca2f05e959dcfd886e0b"
+    },
+    {
+      "path": "packages/runtime/src/context/builder.ts",
+      "sha256": "1c315909dc4ea55742b1a2605deb9cb764edd822cc1063e0c5cc824dc25404ec"
+    }
+  ],
+  "claims": [
+    "The current Discovery Lab comparison no longer reproduces the earlier ambiguous-pair/enabled deadline failure: all 19 comparison rows report empty failure lists, including the enabled contextual-detail row.",
+    "The existing bounded timing adaptation behavior remains covered by its four timing tests, while the current source regression is recorded as a successor rather than rewriting the predecessor failure.",
+    "This receipt establishes a current local component result after the bounded lookup, cache and candidate changes; it does not claim timing compliance under every load or selected-provider behavior."
+  ],
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-lab.test.ts",
+      "result": "pass",
+      "details": "3/3; all 19 comparison rows had no failed checks; log sha256 2af8e405ff80b9ebf092df5c6ab77f35056221a677df09c0381dcfdfd11458e3"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "details": "906/906; zero failures"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
+      "result": "pass",
+      "details": "49/49"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "details": "pass"
+    }
+  ],
+  "retainedFailures": [
+    "S083-TIMING-ADAPTATION-1 remains immutable and records the earlier 29.345875 ms ambiguous-pair/enabled deadline miss; this successor does not erase or reinterpret that observation.",
+    "Selected-provider, production, physical, all-conditions performance and Human acceptance remain outside this local component receipt."
+  ],
+  "limitations": [
+    "The current clean comparison is one bounded synthetic local run. It does not explain the historical deadline miss or guarantee the same deadline under contention, larger workloads or a selected provider.",
+    "No deployment, live configuration change, personal-data import, training, provider selection or physical effect was performed."
+  ]
+}
