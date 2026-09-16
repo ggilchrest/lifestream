@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "92e79cf320bc24d05693ebb7241da7735782d311",
+  "currentRevision": "43a727b4b06854ea65309444b3b7acf84a0a193c",
   "activeSlice": "LS-S084",
   "sliceStatus": "blocked",
   "completedSlices": [
@@ -204,7 +204,16 @@
     "implementation/evidence/LS-S073-S080-selected-provider-rerun-20260916.json",
     "implementation/evidence/LS-S073-selected-provider-observation-20260916-rerun-1.json",
     "implementation/evidence/LS-S073-qualification-certification-6.json",
-    "implementation/evidence/LS-S073-current-qualification.json"
+    "implementation/evidence/LS-S073-current-qualification.json",
+    "implementation/evidence/LS-S076-selected-provider-observation-20260916-rerun-1.json",
+    "implementation/evidence/LS-S076-qualification-certification-5.json",
+    "implementation/evidence/LS-S076-current-qualification.json",
+    "implementation/evidence/LS-S078-selected-provider-observation-20260916-rerun-1.json",
+    "implementation/evidence/LS-S078-qualification-certification-4.json",
+    "implementation/evidence/LS-S078-current-qualification.json",
+    "implementation/evidence/LS-S080-selected-provider-observation-20260916-rerun-1.json",
+    "implementation/evidence/LS-S080-qualification-certification-4.json",
+    "implementation/evidence/LS-S080-current-qualification.json"
   ],
   "changedFiles": [],
   "validation": [
@@ -362,6 +371,21 @@
       "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface (current source)",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S073-qualification-certification-6.json"
+    },
+    {
+      "command": "node scripts/qualify-s076-development.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S076-selected-provider-observation-20260916-rerun-1.json"
+    },
+    {
+      "command": "node scripts/qualify-s078-development.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S078-selected-provider-observation-20260916-rerun-1.json"
+    },
+    {
+      "command": "node scripts/qualify-s080-development.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S080-selected-provider-observation-20260916-rerun-1.json"
     }
   ],
   "decisions": [
@@ -377,15 +401,15 @@
     "2026-09-15: operator explicitly authorizes continued development and supersedes the previous implementation restriction; existing scoped push authorization continues.",
     "2026-09-16: operator requests pause at the next good stopping point. Complete and preserve the in-flight original-scope reconnection change, then stop pending resume.",
     "2026-09-16: operator explicitly resumes at the current reasoning level; the previous pause is superseded.",
-    "2026-09-16: LS-S073 selected-provider successor certification-6 passed all five bounded cases at public revision 6c88331; the earlier LS-TEST-094 omission remains immutable history for frequency tracking."
+    "2026-09-16: LS-S073 selected-provider successor certification-6 passed all five bounded cases at public revision 6c88331; the earlier LS-TEST-094 omission remains immutable history for frequency tracking.",
+    "2026-09-16: LS-S076, LS-S078 and LS-S080 selected-provider successor harnesses passed at current formatter revisions; immutable successors preserve each prior receipt and no model-quality or Human claim is inferred."
   ],
   "blockers": [
-    "Selected-provider prerequisite qualifications LS-S076, LS-S078 and LS-S080 remain invalidated by the formatter effective-input revision. Their reruns passed, but immutable qualification successors have not been refreshed.",
     "Joined LS-TEST-106 remains unresolved: the selected-provider skipped-Assistant reply did not complete, so the prepared context lacked SYNPRJ_Q7M4. The independent isolation continuation passed and this failure remains nonblocking for local implementation.",
     "Combined S080/S081 Human review plus real-provider, production, physical and all-conditions performance acceptance remain external gates."
   ],
-  "nextAction": "Refresh the remaining S076/S078/S080 revision-bound successors when their existing qualification harnesses are available, diagnose and requalify the joined LS-TEST-106 reply completion, then conduct the combined S080/S081 Human review.",
-  "updatedAt": "2026-09-16T19:24:27.669Z",
+  "nextAction": "Diagnose and requalify the joined LS-TEST-106 reply completion when the selected-provider browser path is available, then conduct the combined S080/S081 Human review.",
+  "updatedAt": "2026-09-16T19:35:51.947Z",
   "updatedBy": "Codex",
-  "notes": "S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/10000/100000-record corpus benchmark are component-verified in the current receipts; clean full application suite is 905/905 and PWCE is 324/324. Earlier transient publicationConflict capacity observation, the joined LS-TEST-106 missing-reply failure and remaining selected-provider/foreign-authority gates remain preserved. Current S084 timing successor records the current 40/40 focused run. LS-S073 successor certification-6 is a current 5/5 selected-provider pass at public revision 6c88331; the earlier LS-TEST-094 omission remains tracked in immutable history. Optional provider-backed analysis, real protected-authority, performance-under-all-conditions, production and Human acceptance remain outside current software evidence."
+  "notes": "S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/10000/100000-record corpus benchmark are component-verified; clean full application suite is 905/905 and PWCE is 324/324. Selected-provider successors for LS-S073, LS-S076, LS-S078 and LS-S080 now pass their bounded cases at formatter-bound revisions, with prior failures and model-variance observations retained immutably. The joined LS-TEST-106 missing-reply failure remains tracked and nonblocking for local implementation. Optional provider-backed analysis, protected-authority, performance-under-all-conditions, production and combined S080/S081 Human acceptance remain external gates."
 }
