@@ -1,4 +1,10 @@
-# Current recovery certification — 2026-09-14
+# Current recovery certification — 2026-09-16
+
+The selected-provider LS-TEST-106 joined journey was rerun successfully at public revision `473dc61fb5d483c3d43787fe42fd522574a06fe2` against the existing ai5090 profile. The complete authenticated path passed: source intake and admission, prepared context and ordinary replies, records and corrections, five insight lenses, configuration preview/activation/rollback, Lab rejection/promotion/held-out execution, audience and forgetting fences, injected provider failure recovery, restart persistence, skipped-Assistant isolation and another-account denial. The durable successor is [the selected-provider receipt](LS-S081-joined-selected-provider-observation-20260916-rerun-2.json).
+
+The run made 48 selected-provider calls and recorded 18 exact synthetic identifier outputs plus one missing-complete-identifier output. Under the operator's explicit policy, this model-quality observation is append-only and nonblocking; the earlier HTTP 503 and prepared-context omission receipts remain unchanged for frequency tracking. No provider/model setting, live configuration, deployment, personal data or training was changed. The technical core is ready at the existing combined Human-review boundary; remaining protected-authority, all-conditions performance, production and physical/perceptual gates stay outside this authorization.
+
+# Prior recovery certification — 2026-09-14
 
 The full S081/LS-TEST-106 selected-provider journey passes at `60ece410816836d5641153bf6364055a080d7497` on ai5090. All immediate prerequisites have current, digest-bound owner qualifications. Combined Human acceptance remains recorded independently; no repeat operator testing is required for this bounded recovery.
 

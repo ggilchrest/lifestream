@@ -3,7 +3,7 @@
   "scope": "Recovery v2 existing dependency path through LS-S081",
   "technicalCoreStatus": "verified",
   "humanAcceptance": "accepted",
-  "sourceRevision": "60ece410816836d5641153bf6364055a080d7497",
+  "sourceRevision": "473dc61fb5d483c3d43787fe42fd522574a06fe2",
   "selectedProfile": {
     "path": "apps/server/src/config/profiles/ai5090.json",
     "sha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd"
@@ -15,9 +15,9 @@
       "evidence": "Current required owner qualifications, exact committed artifacts and specification inputs passed admission before this joined run."
     },
     {
-      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs node scripts/qualify-s081-development.mjs",
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs LIFESTREAM_S081_PROVIDER=selected node scripts/qualify-s081-development.mjs",
       "result": "pass",
-      "evidence": "The full joined authenticated ai5090 browser journey completed, including selected-file admission, ordinary replies, records, controls, insights, actual comparisons/rejection/promotion/rollback, correction/audience/forget fences, failure recovery, restart, skipped Assistant and other-account read denial. Identifier model-quality misses are recorded separately under the operator-directed nonblocking policy."
+      "evidence": "The complete joined authenticated ai5090 browser journey passed at source revision 473dc61. The successor receipt records all application/privacy/isolation assertions, selected-provider identity, provider call count and append-only model-quality observations."
     },
     {
       "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface; pnpm test; pnpm build; pnpm typecheck; pnpm lint",
@@ -1110,6 +1110,38 @@
             }
           ],
           "reuse": "Joined technical core at the stated runtime and test source. Human review and its guide are separate artifacts; model compliance is observed, nonblocking and not certified as reliable."
+        },
+        {
+          "path": "implementation/evidence/LS-S081-joined-selected-provider-observation-20260916-rerun-2.json",
+          "sha256": "009f4166c474eb7f54d4a778ba07025a14ad4a2d26006129859886a3abf27668",
+          "ownerSlice": "LS-S081",
+          "status": "verified",
+          "testedRevision": "473dc61fb5d483c3d43787fe42fd522574a06fe2",
+          "effectiveSpecification": {
+            "sourceRepository": "ggilchrest/lifestream-specs",
+            "revision": "16e80cdf2acac2a1b22eb24c59eb84b12e660ade",
+            "artifacts": [
+              {
+                "path": "docs/25-assistant-personalization-administration.md",
+                "sha256": "5ec1d6cfff66fdb9f71eef60d925737a02a087b32f5c9c973a8d5203573a7337"
+              },
+              {
+                "path": "docs/26-assistant-context-and-relationship-administration.md",
+                "sha256": "2b3e6cef8bcacb5e94e35887c8d3c55ba9eb1f453ac78b9b0fe7832a09745251"
+              },
+              {
+                "path": "fixtures/requirement-traceability.json",
+                "sha256": "7a31f28f5e49ffd683e0408052f5c5551a3508921a14eb232144120f2de92b1b"
+              }
+            ]
+          },
+          "runtimeEvidence": [
+            {
+              "path": "implementation/evidence/LS-S081-joined-selected-provider-observation-20260916-rerun-2.json",
+              "sha256": "009f4166c474eb7f54d4a778ba07025a14ad4a2d26006129859886a3abf27668"
+            }
+          ],
+          "reuse": "Current selected-provider successor after the prior HTTP 503 and prepared-context omission attempts. All joined assertions passed; prior failures remain immutable. Model-quality identifier observations remain nonblocking by operator direction."
         }
       ],
       "humanReview": {

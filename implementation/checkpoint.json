@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "6c998fe89b591181b1915d4ae52797591db3a764",
+  "currentRevision": "473dc61fb5d483c3d43787fe42fd522574a06fe2",
   "activeSlice": "LS-S084",
   "sliceStatus": "blocked",
   "completedSlices": [
@@ -221,7 +221,8 @@
     "implementation/evidence/LS-S081-continuation-selected-provider-observation-20260916-rerun-2.json",
     "implementation/evidence/LS-S081-joined-selected-provider-observation-20260916-rerun-1.json",
     "implementation/evidence/S083-CODE-ALIGNMENT-1.json",
-    "implementation/evidence/S084-CODE-ALIGNMENT-1.json"
+    "implementation/evidence/S084-CODE-ALIGNMENT-1.json",
+    "implementation/evidence/LS-S081-joined-selected-provider-observation-20260916-rerun-2.json"
   ],
   "changedFiles": [],
   "validation": [
@@ -409,6 +410,11 @@
       "command": "node scripts/qualify-s081-development.mjs",
       "result": "fail",
       "evidence": "implementation/evidence/LS-S081-joined-selected-provider-observation-20260916-rerun-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs LIFESTREAM_S081_PROVIDER=selected node scripts/qualify-s081-development.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S081-joined-selected-provider-observation-20260916-rerun-2.json"
     }
   ],
   "decisions": [
@@ -431,14 +437,15 @@
     "2026-09-16: Compact the reviewed imported-declaration qualifier so a hash-length candidate identifier can remain within the conservative 512-byte optional context bound; focused server/runtime, full source (906/906) and browser fixture (49/49) checks pass. The selected-provider joined rerun stopped earlier at HTTP 503 before the joined assertion; the earlier omission receipt remains immutable.",
     "2026-09-16: Durable S084-PREPARED-CONTEXT-QUALIFIER-1 records the compact reviewed-import qualifier and hash-length candidate regression at source revision 6c998fe and private specification revision fba259d; source 906/906 and browser fixture 49/49 remain clean, while the selected-provider joined rerun stopped at HTTP 503 before its assertion.",
     "2026-09-16: S083-TIMING-ADAPTATION-2 records the current clean Discovery Lab regression at source revision 6c998fe and private specification revision af10bc8; the exact 3/3 test and 906/906 source suite pass. The predecessor timing failure remains immutable, and selected-provider LS-TEST-106 remains stopped by HTTP 503.",
-    "2026-09-16: S083-CODE-ALIGNMENT-1 and S084-CODE-ALIGNMENT-1 record current code-path alignment evidence for the applicable specification rows at source revision 6c998fe. Focused S083 and S084 suites pass 43/43 and 44/44; the fixture LS-TEST-106 journey passes 1/1. Selected-provider and Human gates remain open."
+    "2026-09-16: S083-CODE-ALIGNMENT-1 and S084-CODE-ALIGNMENT-1 record current code-path alignment evidence for the applicable specification rows at source revision 6c998fe. Focused S083 and S084 suites pass 43/43 and 44/44; the fixture LS-TEST-106 journey passes 1/1. Selected-provider and Human gates remain open.",
+    "2026-09-16: ai5090 selected-provider LS-TEST-106 joined rerun completed at public revision 473dc61; all application/privacy/isolation assertions passed. Model-quality tracking recorded 18 exact and 1 missing-complete-identifier sample as nonblocking under the operator direction; the prior HTTP 503 and omission receipts remain immutable."
   ],
   "blockers": [
-    "Selected-provider LS-TEST-106 joined certification is not yet rerunnable: the latest attempt stopped at HTTP 503 during the first inspection request after the bounded qualifier fix. The earlier prepared-context omission receipt is preserved for frequency tracking; rerun the joined journey when the selected provider is available.",
-    "Combined S080/S081 Human review plus real-provider, production, physical and all-conditions performance acceptance remain external gates."
+    "Optional provider-backed hypothesis analysis remains withheld pending a qualified shared-provider cancellation/priority bound; this is an explicit S084 capability boundary, not a failure of the local path.",
+    "Protected external-authority, all-conditions performance, production and physical/perceptual output gates remain outside the current authorization."
   ],
-  "nextAction": "Rerun the selected-provider LS-TEST-106 joined journey when the ai5090 service is available, then conduct any remaining external Human or provider-gated review.",
-  "updatedAt": "2026-09-16T22:10:00.000Z",
+  "nextAction": "No further authorized technical-core gap remains in this recovery. Preserve the selected-provider LS-TEST-106 pass and model-quality history; resume only for a separately authorized external gate or additional S083/S084 scope.",
+  "updatedAt": "2026-09-16T23:45:00.000Z",
   "updatedBy": "Codex",
-  "notes": "S083 timing adaptation now has a current successor receipt: the exact Discovery Lab regression is 3/3 with no failed comparison checks, while the earlier 29.345875 ms deadline miss remains immutable. S083-CODE-ALIGNMENT-1 records current local Initiative policy, delivery, timing, administration and regression evidence. S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/1000/10000/100000-record corpus benchmarks are component-verified; S084-CODE-ALIGNMENT-1 records the current local analysis, candidate, correction, Lab and bounded-selection paths. Clean full application suite is 906/906 and browser fixture suite is 49/49. The reviewed imported-declaration qualifier stays within the conservative optional context bound for hash-length candidate IDs, with durable evidence in S084-PREPARED-CONTEXT-QUALIFIER-1. Selected-provider successors for LS-S073, LS-S076, LS-S078 and LS-S080 pass their bounded text cases; current S080 synthetic audio privacy also passes. The current S081 independent isolation continuation passes. The latest selected-provider joined attempt stopped at HTTP 503 before the joined assertion; the earlier SYNPRJ_Q7M4 omission and missing-reply/model-variance observations remain immutable. Optional provider-backed analysis, protected-authority, performance-under-all-conditions, production and combined S080/S081 Human acceptance remain external gates."
+  "notes": "S083 timing adaptation now has a current successor receipt: the exact Discovery Lab regression is 3/3 with no failed comparison checks, while the earlier 29.345875 ms deadline miss remains immutable. S083-CODE-ALIGNMENT-1 records current local Initiative policy, delivery, timing, administration and regression evidence. S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/1000/10000/100000-record corpus benchmarks are component-verified; S084-CODE-ALIGNMENT-1 records the current local analysis, candidate, correction, Lab and bounded-selection paths. Clean full application suite is 906/906 and browser fixture suite is 49/49. The reviewed imported-declaration qualifier stays within the conservative optional context bound for hash-length candidate IDs, with durable evidence in S084-PREPARED-CONTEXT-QUALIFIER-1. Selected-provider successors for LS-S073, LS-S076, LS-S078 and LS-S080 pass their bounded text cases; current S080 synthetic audio privacy also passes. The current S081 independent isolation continuation and full selected-provider joined LS-TEST-106 rerun pass. The joined successor records 18 exact and 1 missing-complete-identifier model-quality observations; identifier compliance remains nonblocking by explicit operator direction. Earlier 503 and omission reports remain immutable. Optional provider-backed analysis, protected-authority, performance-under-all-conditions, production and combined external physical/perceptual gates remain outside this authorization."
 }
