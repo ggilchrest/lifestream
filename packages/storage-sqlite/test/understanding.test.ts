@@ -64,3 +64,43 @@ test('specific multi-term Discovery matches survive more than 32 common-word can
  assert.deepEqual(f.repo.select(f.scope,understandingDigest('old-boundary'),'synthetic quartz'),[]);
  f.advance(600001);assert.deepEqual(f.repo.select(f.scope,f.boundary,'synthetic quartz'),[]);
 });
+
+test('Discovery exploration reserves daily slots for less-covered approved topics without refunding failures or retries',t=>{
+ const f=fixture();t.after(()=>f.db.close());
+ const policy={share:0.5,approvedTopicRefs:['topic:quartz','topic:basalt']};
+ const work=(topic:string)=>({...f.work(),topicRef:topic,budget:{...extensionSettings.understanding.budget,jobsPerDay:4}});
+ const admit=(w:UnderstandingRecord,p=policy)=>f.repo.admit(f.scope,w,understandingDigest(w.idempotencyKey),understandingDigest(w.idempotencyKey),f.boundary,()=>true,p);
+ const first=work('topic:quartz');admit(first);f.repo.finish(f.scope,String(first.workId),'failed','synthetic failure');
+ assert.equal(admit(first).replay,true);
+ const second=work('topic:quartz');admit(second);f.repo.recover();
+ assert.throws(()=>admit(work('topic:quartz')),/reserved for less-covered/);
+ assert.throws(()=>admit(work('topic:unapproved')),/reserved for less-covered/);
+ assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM understanding_work').get()!.n,2,'rejection and retry do not consume another job');
+ admit(work('topic:basalt'));assert.throws(()=>admit(work('topic:quartz')),/reserved for less-covered/);
+ admit(work('topic:basalt'));assert.throws(()=>admit(work('topic:basalt')),/budget exhausted/);
+ f.advance(86400001);admit(work('topic:quartz'));
+});
+
+test('Discovery exploration is bounded, owner-local, and cannot reconstruct erased coverage',t=>{
+ const f=fixture();t.after(()=>f.db.close());const policy={share:0.5,approvedTopicRefs:['topic:quartz','topic:basalt']};
+ const work=()=>({...f.work(),budget:{...extensionSettings.understanding.budget,jobsPerDay:2}});
+ const admit=(w:UnderstandingRecord,p=policy)=>f.repo.admit(f.scope,w,understandingDigest(w.idempotencyKey),understandingDigest(w.idempotencyKey),f.boundary,()=>true,p);
+ for(const share of [-1,0.51,NaN])assert.throws(()=>admit(work(),{...policy,share}),/Invalid exploration/);
+ const original=work();admit(original);
+ const foreign={...work(),userId:randomUUID()};assert.equal(f.repo.admit(foreign,foreign,understandingDigest('foreign'),understandingDigest('foreign'),f.boundary,()=>true,policy).replay,false);
+ f.repo.purge(f.scope.relationshipId);
+ assert.throws(()=>admit({...work(),topicRef:'topic:basalt'}),/coverage unavailable/);
+ // With no competing eligible approved topic, the unused reserve is released.
+ assert.equal(admit(work(),{share:0.5,approvedTopicRefs:['topic:quartz']}).replay,false);
+});
+
+test('Discovery exploration rounding never exceeds its share and supports the full configured topic bound',t=>{
+ for(const share of [0,0.2]){
+  const f=fixture();t.after(()=>f.db.close());
+  const policy={share,approvedTopicRefs:Array.from({length:256},(_,index)=>`topic:${index}`)};
+  for(let index=0;index<3;index++){
+   const w={...f.work(),budget:{...extensionSettings.understanding.budget,jobsPerDay:3}};
+   assert.equal(f.repo.admit(f.scope,w,understandingDigest(w.idempotencyKey),understandingDigest(w.idempotencyKey),f.boundary,()=>true,policy).replay,false);
+  }
+ }
+});

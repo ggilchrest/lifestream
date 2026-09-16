@@ -44,7 +44,7 @@ export class UnderstandingRepository {
       tx.run("DELETE FROM understanding_artifacts WHERE artifact_id IN (SELECT artifact_id FROM understanding_artifacts WHERE fresh_until_ms<=? LIMIT 128)",this.now());
     });
   }
-  admit(scope:UnderstandingScope, work:UnderstandingRecord, requestDigest:string, snapshotKey:string, boundary:string, current:(tx:Transaction)=>boolean): {record:UnderstandingRecord; replay:boolean} {
+  admit(scope:UnderstandingScope, work:UnderstandingRecord, requestDigest:string, snapshotKey:string, boundary:string, current:(tx:Transaction)=>boolean, exploration?:{share:number;approvedTopicRefs:readonly string[]}): {record:UnderstandingRecord; replay:boolean} {
     valid(work,"UnderstandingWork",scope);
     if(work.state!=="queued"||work.revision!==1||!(/^[a-f0-9]{64}$/u.test(boundary)))throw new Error("Invalid initial work state");
     return this.database.transaction(tx=>{
@@ -58,6 +58,23 @@ export class UnderstandingRepository {
       const jobs=tx.get<{n:number}>("SELECT count(*) AS n FROM understanding_work WHERE scope_key=? AND created_ms>?",key,now-86400000)!.n;
       const queued=tx.get<{n:number}>(`SELECT count(*) AS n FROM understanding_work WHERE state IN ${pending} AND expires_ms>?`,now)!.n;
       if(jobs>=budget.jobsPerDay!||queued>=budget.pendingJobsPerRuntime!)throw new Error("Discovery admission budget exhausted");
+      // Exploration reserves whole job slots, never more than the configured share.
+      // Coverage here means charged preparation attempts, not enjoyment or factual certainty.
+      if(exploration){
+        const {share,approvedTopicRefs}=exploration;
+        if(!Number.isFinite(share)||share<0||share>0.5||approvedTopicRefs.length>256||new Set(approvedTopicRefs).size!==approvedTopicRefs.length||approvedTopicRefs.some(ref=>typeof ref!=='string'||!ref||ref.length>1000))throw new Error("Invalid exploration policy");
+        const reserved=Math.floor(budget.jobsPerDay!*share);
+        if(reserved>0&&approvedTopicRefs.length>1&&jobs>=budget.jobsPerDay!-reserved){
+          // Payload removal cannot refund a charge or invent its topic. Wait for the
+          // rolling window instead of retaining forgotten material in a second store.
+          const history=tx.all<{payload:string|null}>("SELECT payload_json AS payload FROM understanding_work WHERE scope_key=? AND created_ms>? LIMIT 32",key,now-86400000);
+          if(history.length!==jobs||history.some(row=>row.payload===null))throw new Error("Exploration coverage unavailable until the charged daily window expires");
+          const counts=new Map(approvedTopicRefs.map(ref=>[ref,0]));
+          for(const row of history){const topic=String(JSON.parse(row.payload!).topicRef);if(counts.has(topic))counts.set(topic,counts.get(topic)!+1);}
+          const count=counts.get(String(work.topicRef));
+          if(count===undefined||count>Math.min(...counts.values()))throw new Error("Remaining Discovery jobs are reserved for less-covered approved topics");
+        }
+      }
       tx.run("INSERT INTO understanding_work VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",work.workId,key,scope.relationshipId,retry,requestDigest,snapshotKey,boundary,"queued",created,deadline,expires,JSON.stringify(work));
       return {record:structuredClone(work),replay:false};
     });

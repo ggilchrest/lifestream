@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "380cc020773e7934f19a3a2dab7a01f4d77d0a1b",
+  "currentRevision": "98591d00b24573dcc4c6d15bdf921aa055aa30d5",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -176,54 +176,68 @@
     "scripts/discovery-benchmark-worker.mjs",
     "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json",
     "implementation/evidence/S084-DEADLINE-CACHE-1.json",
-    "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json"
+    "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json",
+    "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
   ],
   "changedFiles": [
-    "apps/server/src/admin/discovery-candidates.ts",
-    "apps/server/test/discovery-candidates.test.ts",
+    "apps/control-web/relationship-extensions.js",
+    "apps/server/src/admin/understanding.ts",
+    "apps/server/test/understanding.test.ts",
+    "packages/storage-sqlite/src/understanding.ts",
+    "packages/storage-sqlite/test/understanding.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json"
+    "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
   ],
   "validation": [
     {
-      "command": "node --test --experimental-strip-types apps/server/test/discovery-candidates.test.ts apps/server/test/discovery-analysis.test.ts apps/server/test/discovery-review.test.ts",
-      "result": "pass",
-      "evidence": "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json"
-    },
-    {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json"
+      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/understanding.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+    },
+    {
+      "command": "node --test --experimental-strip-types --test-name-pattern exploration apps/server/test/understanding.test.ts packages/storage-sqlite/test/understanding.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/understanding.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json"
+      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json"
+      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json"
+      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
     },
     {
       "command": "pnpm test:browser-surface",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json"
+      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json"
+      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json"
+      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
     }
   ],
   "decisions": [
@@ -241,8 +255,8 @@
     "2026-09-16: operator explicitly resumes at the current reasoning level; the previous pause is superseded."
   ],
   "blockers": [],
-  "nextAction": "Continue independent S084 candidate ranking/exploration and connection work, plus S083 and foreign-authority administration. Refresh S073/S076/S078/S080 qualification when selected ai5090 SSH is reachable; do not change provider. No overall blocker or exhaustion of independent development claimed.",
-  "updatedAt": "2026-09-16T16:08:09.413195Z",
+  "nextAction": "Continue S084 separate candidate ranking dimensions and grounded connections, plus independent S083 and foreign-authority administration. Investigate retained capacity/selection intermittency and refresh prerequisite selected-provider qualifications once ai5090 is reachable. No overall blocker or independent-work exhaustion claimed.",
+  "updatedAt": "2026-09-16T16:15:42.350107Z",
   "updatedBy": "Codex",
-  "notes": "Neutral hypothesis-question regression fixed; 891 application tests pass. Selected-provider qualification refresh could not start because ai5090 SSH timed out. No selectors rewritten."
+  "notes": "Exploration now governs atomic job admission; 895 tests pass. Initial capacity-related focused failures retained without claiming their root cause fixed. No live activation or Human acceptance."
 }

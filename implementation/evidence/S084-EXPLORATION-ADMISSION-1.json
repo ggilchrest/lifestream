@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-EXPLORATION-ADMISSION-1",
+  "slice": "LS-S084",
+  "status": "componentVerifiedQualificationPending",
+  "sourceRevision": "98591d00b24573dcc4c6d15bdf921aa055aa30d5",
+  "specificationRevision": "99d9adb3c2fd71a5b3440a47ba3d1e3a072ba3d5",
+  "recordedAt": "2026-09-16T16:15:42.350107Z",
+  "sourceFiles": [
+    {
+      "path": "apps/control-web/relationship-extensions.js",
+      "sha256": "976c36a727ce5b7d0988a34c58f47e8eacaa40eaa61effb42532a11045fe3352"
+    },
+    {
+      "path": "apps/server/src/admin/understanding.ts",
+      "sha256": "f9443e057634219ae5514475c2217ce7d533d3d2050758b79ef8c968ea3c7db2"
+    },
+    {
+      "path": "apps/server/test/understanding.test.ts",
+      "sha256": "3e871d2472be4982b6e00e10101ec94540842f190cd42be55bf4fc9cf41ae36e"
+    },
+    {
+      "path": "packages/storage-sqlite/src/understanding.ts",
+      "sha256": "3505c8da8f2e75fc060d4a13d85ed9878f54d1cd8150bf485e0525f463f294a7"
+    },
+    {
+      "path": "packages/storage-sqlite/test/understanding.test.ts",
+      "sha256": "c1b7a7416adac6584af782b626ed3b87496de30918d72af46d9ea582942d40c1"
+    }
+  ],
+  "claims": [
+    "Active explorationShare now governs supplied-source and hypothesis-analysis admission through the existing atomic storage transaction. The default setting was previously stored without an admission consumer.",
+    "Reference policy exploration-admitted-work:1 reserves floor(jobsPerDay * explorationShare) slots in the rolling 24-hour charged-work budget. With at least two currently permitted approved topics, reserved slots admit a topic tied for the fewest charged attempts. Counts measure work allocation, never interest, truth or source reliability.",
+    "Failed, cancelled and interrupted admissions remain charged; exact retries return the same work without another charge. Rejections do not insert work. Topic use still requires all prior current-owner, privacy, source, budget and provider gates. No network request or job is automatically created.",
+    "No competing eligible approved topic releases the reserve. Missing or erased charged-work topic payload makes reserved coverage unavailable until that charge expires; private topic history is not reconstructed or copied into a new store.",
+    "Tests cover retries, failures, restart, rolling expiry, foreign scope, erased payload, invalid shares, zero/sub-slot rounding, the full 256-topic configured bound, active settings and current exclusions. Control-page help explains whole slots and lack of automatic networking."
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "details": "895/895; zero skips"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/understanding.test.ts",
+      "result": "pass",
+      "details": "7/7 on final topic bound"
+    },
+    {
+      "command": "node --test --experimental-strip-types --test-name-pattern exploration apps/server/test/understanding.test.ts packages/storage-sqlite/test/understanding.test.ts",
+      "result": "pass",
+      "details": "3/3 policy tests before final additional rounding test"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/understanding.test.ts",
+      "result": "pass",
+      "details": "5/5 existing server regressions in repeat"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "details": "pass after final topic bound"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "details": "pass after final topic bound"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "details": "19 pass; 30 optional actual-browser tests skipped"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "details": "43/43"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "details": "588 structural vectors"
+    }
+  ],
+  "rawArtifacts": [
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-policy.log",
+      "sha256": "a6b59ac4453b301e6e0d3a0f6a7492072b3a83432afc518546cf810ed9745e20"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-focused.log",
+      "sha256": "4a215adfd8b2c89dc09fad68ffffe7d8da4f530ba9f3f7ce9dac4336c04267ff"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-typecheck.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-full.log",
+      "sha256": "640f62e62a4066c4cfdb701cef6e44b0acc369e4fa1e7c89e0455e50e4ebb224"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-workspace.log",
+      "sha256": "6e4dfcdcf77c7da7336aeddedc65445087d3f684ad05497dab6619f31a2cbbbb"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-build-bound.log",
+      "sha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-typecheck-bound.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-build-final.log",
+      "sha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-server-repeat.log",
+      "sha256": "2f17da27ecee00f6d208cac7d500a093b2996cf58cd19ddc60fa9c0ae6cb363f"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-private.log",
+      "sha256": "0f5ca0e1b5dce1f51023584e58b2a1797c836322d421b0ea8dfc86f45fc06f05"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-preflight-start.log",
+      "sha256": "db2575ff4b2275ecd80542d0585871adfa2937ffabafcce2a1c9e809fba47ced"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-storage-final.log",
+      "sha256": "0322b53bd1c3bf364edb7e023e449e66d35cf856da4e4b29104e6f2c36a41db0"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-build.log",
+      "sha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-typecheck-final.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-exploration/2026-09-16/ls-exploration-browser.log",
+      "sha256": "0fb77ae95b8d33b827c7885be9406eb2be6145d41ad4cbc6499f461510e809ef"
+    }
+  ],
+  "retainedFailures": [
+    "Initial combined focused run: 14 pass, 2 fail. One supplied-source job returned cancelled/foregroundOrCapacity and another admission returned current source/evidence/topic denied. Separate existing server repeat passed 5/5, and final full suite passed 895/895. No root cause fix for this intermittent capacity result is claimed."
+  ],
+  "limitations": [
+    "This implements exploration allocation at job admission, not all candidate ranking dimensions, connection generation or network acquisition.",
+    "Selected ai5090 qualification remains unavailable from the prior SSH timeout; current S073/S076/S078/S080 qualification gaps are not rewritten.",
+    "No full S084 performance, Human relevance, deployment, live configuration, model selection, personal data or physical output acceptance."
+  ]
+}

@@ -125,3 +125,24 @@ test("generic record forgetting also erases typed Discovery feedback attribution
  const result=applyRecordOperation([record],record.candidateId,{operation:'forget',expectedRecordRevision:1},scope.userId).records[0]!;
  assert.equal(result.content,'');assert.equal(result.discoveryFeedback,undefined);assert.equal(result.status,'forgotten');
 });
+
+test('active Discovery exploration settings govern supplied-source admission and current exclusions',async t=>{
+ const {DiscoveryAdministration}=await import('../src/admin/understanding.ts');
+ const {understandingDigest}=await import('../../../packages/storage-sqlite/src/understanding.ts');
+ const db=new Database({path:':memory:'});db.migrate();t.after(()=>db.close());
+ const scope={assistantId:randomUUID(),userId:randomUUID(),relationshipId:randomUUID(),deploymentId:randomUUID()};
+ const settings={...extensionSettings.understanding,enabled:true,policyRefs:['policy:synthetic-supplied'],approvedTopicRefs:['topic:quartz','topic:basalt'],explorationShare:0.5,budget:{...extensionSettings.understanding.budget,jobsPerDay:4,workerMemoryMiB:512}};
+ const admin=new DiscoveryAdministration(db,{snapshot:()=>({boundary:understandingDigest(settings),configuration:{configurationId:randomUUID(),revision:1,extensions:{understanding:settings}} as any}),evidenceAllowed:()=>true,sourceAllowed:()=>true,forget:()=> 'missing',changed:()=>{}});t.after(()=>admin.close());
+ const prepare=(topic:string)=>{const value={...source(),topicRef:topic};return admin.handle(scope,{schemaVersion:'1.0.0',operation:'prepare',idempotencyKey:randomUUID(),purpose:'briefRebuild',topicRef:topic,evidenceRefs:[],sources:[value]},()=>true);};
+ // Distinct source revisions make these distinct preparation requests, not retries.
+ let serial=0;const submit=(topic:string)=>{const value={...source(),topicRef:topic,sourceRevision:`revision:${++serial}`};return admin.handle(scope,{schemaVersion:'1.0.0',operation:'prepare',idempotencyKey:randomUUID(),purpose:'briefRebuild',topicRef:topic,evidenceRefs:[],sources:[value]},()=>true);};
+ assert.equal(submit('topic:quartz').status,202);
+ assert.equal(submit('topic:quartz').status,202);
+ const denied=submit('topic:quartz');assert.equal(denied.status,409);assert.match(String(denied.body.message),/reserved for less-covered/);
+ assert.equal(submit('topic:basalt').status,202);
+ settings.excludedTopicRefs=['topic:basalt'];
+ assert.equal(prepare('topic:basalt').status,409,'excluded topics never acquire permission from the reserve');
+ assert.equal(submit('topic:quartz').status,202,'no competing eligible topic leaves the remaining budget available');
+ admin.close();
+ assert.equal(db.connection.prepare('SELECT count(*) AS n FROM understanding_work').get()!.n,4);
+});
