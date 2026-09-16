@@ -21,3 +21,5 @@ export { PwceInvalidationStreams } from './invalidation-streams.ts';
 export type { PwceInvalidationOptions, PwceInvalidationEvidence } from './invalidation-streams.ts';
 
 export { EXPECTED_PWCE_CAPABILITY_BUNDLE } from './capability-bundle.js';
+export {verifyPwceApprovalEvidence} from './approval-evidence.ts';
+export type {PwceApprovalEvidence,PwceApprovalExpectation} from './approval-evidence.ts';

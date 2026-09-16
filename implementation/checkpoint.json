@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "15b37f86a237d97891bf594844122fd96be18581",
+  "currentRevision": "3f91a8d74aa9e8d6d6748af4398d4e686f4ebc65",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -239,63 +239,53 @@
     "packages/providers-pwce/src/approval-recovery-bundle.ts",
     "packages/providers-pwce/test/approval-recovery-client.test.ts",
     "implementation/evidence/LS-S028-APPROVAL-RECOVERY-1.json",
-    "scripts/check-pwce-approval-recovery.mjs"
+    "scripts/check-pwce-approval-recovery.mjs",
+    "packages/providers-pwce/src/approval-evidence.ts",
+    "implementation/evidence/LS-S028-APPROVAL-PROOF-1.json"
   ],
   "changedFiles": [
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-APPROVAL-RECOVERY-1.json",
-    "packages/providers-pwce/src/approval-recovery-bundle.ts",
-    "packages/providers-pwce/src/client.ts",
-    "packages/providers-pwce/test/approval-recovery-client.test.ts",
-    "scripts/check-pwce-approval-recovery.mjs",
-    "scripts/generate-pwce-approval-recovery-pin.mjs"
+    "implementation/evidence/LS-S028-APPROVAL-PROOF-1.json",
+    "packages/providers-pwce/src/approval-evidence.ts",
+    "packages/providers-pwce/src/index.ts",
+    "scripts/check-pwce-approval-recovery.mjs"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-recovery-client/2026-09-16T142301Z/ls-approval-recovery-full-final.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-proof/2026-09-16T142933Z/ls-approval-proof-full.log"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-recovery-client/2026-09-16T142301Z/ls-approval-recovery-typecheck-fixed.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-proof/2026-09-16T142933Z/ls-approval-proof-typecheck-final.log"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-recovery-client/2026-09-16T142301Z/ls-approval-recovery-lint-fixed.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-proof/2026-09-16T142933Z/ls-approval-proof-lint.log"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-recovery-client/2026-09-16T142301Z/ls-approval-recovery-build-fixed.log"
-    },
-    {
-      "command": "node --test --experimental-strip-types packages/providers-pwce/test/approval-recovery-client.test.ts packages/providers-pwce/test/admission-recovery-client.test.ts",
-      "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-recovery-client/2026-09-16T142301Z/ls-approval-recovery-focused-fixed.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-proof/2026-09-16T142933Z/ls-approval-proof-build.log"
     },
     {
       "command": "node scripts/check-pwce-approval-recovery.mjs",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-recovery-client/2026-09-16T142301Z/ls-approval-recovery-joined-fixed.log"
-    },
-    {
-      "command": "node scripts/generate-pwce-approval-recovery-pin.mjs --producer-root ../PWCE",
-      "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-recovery-client/2026-09-16T142301Z/ls-approval-recovery-generated.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-proof/2026-09-16T142933Z/ls-approval-proof-joined-final.log"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-recovery-client/2026-09-16T142301Z/ls-approval-recovery-workspace.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-proof/2026-09-16T142933Z/ls-approval-proof-workspace.log"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-recovery-client/2026-09-16T142301Z/ls-approval-recovery-private-final.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-proof/2026-09-16T142933Z/ls-approval-proof-private.log"
     }
   ],
   "decisions": [
@@ -313,8 +303,8 @@
     "2026-09-16: operator explicitly resumes at the current reasoning level; the previous pause is superseded."
   ],
   "blockers": [],
-  "nextAction": "Implement independent original approval proof verification and durable request/recovery custody, then host approval request/review/resume and control UI. Continue independent S083/S084 work.",
-  "updatedAt": "2026-09-16T14:24:46.651076Z",
+  "nextAction": "Implement separate durable approval request/recovery custody and safe existing-journal upgrade, then host review/resume and control UI. Continue independent S083/S084 work.",
+  "updatedAt": "2026-09-16T14:30:53.197863Z",
   "updatedBy": "Codex",
-  "notes": "Approval recovery client verified: 867 application tests, 12 focused tests, 43 workspace tests and 11 actual producer HTTP checks; zero target calls. Independent proof verification, durable approval custody, host resume and control UI remain pending."
+  "notes": "Original approval proof verified against retained catalog and operation: 867 application tests, 43 workspace tests, 29 real producer HTTP checks, zero target calls. Durable approval custody and host request/review/resume remain pending."
 }

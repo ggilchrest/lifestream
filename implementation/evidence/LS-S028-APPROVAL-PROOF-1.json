@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-APPROVAL-PROOF-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "3f91a8d74aa9e8d6d6748af4398d4e686f4ebc65",
+  "specificationRevision": "7123c5569cbd7a9503d23e62630e610ced0b1ef6",
+  "producerRevision": "e7c408c5d4ddb1cb1d9fe9579c7e08d91f056d3f",
+  "recordedAt": "2026-09-16T14:30:53.197863Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "1be2e1de1aebe5fc5824f3492c608b686d0e3180a5f3d2f897338d95a6b9a4a7"
+      },
+      {
+        "path": "packages/providers-pwce/src/approval-evidence.ts",
+        "sha256": "f35a702d4762e5a4d4dba88e503ec2cbabd425d2679bd3b4d68a9ad5db8743c8"
+      },
+      {
+        "path": "packages/providers-pwce/src/index.ts",
+        "sha256": "120bdec973b1a70ba8bbbb4c1bae4f2d8a0e5729faf46042d196e23e866f5925"
+      },
+      {
+        "path": "scripts/check-pwce-approval-recovery.mjs",
+        "sha256": "fbdc49302ba3a5d3c934f34457390017900f86c25bd7ee4fbcf4d24a983e499b"
+      }
+    ]
+  },
+  "claim": "Original approval proof is independently checked against host-retained catalog and prepared operation: snapshot bytes, exact original scope and revision, review text, confirmation digest, lifetime and Human actor/time order. Cancelled or changed inputs cannot alter a pending verification. Expired proof remains history and supplies no execution authority.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-approval-proof-full.log",
+      "logSha256": "5b67b3eba95fed0eb75a9f548e0df3cb96113009b52d1a977f0c24afe9952b1b"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-approval-proof-typecheck-final.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-approval-proof-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-approval-proof-build.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "node scripts/check-pwce-approval-recovery.mjs",
+      "result": "pass",
+      "log": "ls-approval-proof-joined-final.log",
+      "logSha256": "0b261e6f34fa1bc53a78a2a227a2978288641a2ea2b4dd3c4e6fe15fe7f67a52"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-approval-proof-workspace.log",
+      "logSha256": "b8a97386083271616fddd3e2f432d5ed3e6605aa82bbd2f2bbbcf7269a06c59c"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-approval-proof-private.log",
+      "logSha256": "07e01e908779f40f5661d98468b2165f301082215f7e42e27a23a57572cf54b9"
+    }
+  ],
+  "counts": {
+    "applicationTests": 867,
+    "workspaceTests": 43,
+    "actualProducerHttpChecks": 29,
+    "targetCalls": 0
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-proof/2026-09-16T142933Z",
+  "limitations": [
+    "Durable approval request/recovery custody and host review/resume remain pending; verifier export alone does not complete those workflows.",
+    "Actual producer HTTP fixture injects synthetic Human proof through producer service; no Studio Human authentication or acceptance is claimed.",
+    "No saved service, live configuration, model selection, personal import, training, physical effect or new Human acceptance."
+  ]
+}
