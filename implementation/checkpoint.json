@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "dd95ea879f617c033343fc7de167adc1a2375aa2",
+  "currentRevision": "16362df145dfe48567f2499beed42661c36e95f2",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -248,61 +248,62 @@
     "packages/storage-sqlite/src/migrations/0039_pwce_approval_custody.sql",
     "implementation/evidence/LS-S028-APPROVAL-CUSTODY-1.json",
     "scripts/check-pwce-host-approval.mjs",
-    "implementation/evidence/LS-S028-HOST-APPROVAL-REQUEST-1.json"
+    "implementation/evidence/LS-S028-HOST-APPROVAL-REQUEST-1.json",
+    "implementation/evidence/LS-S028-APPROVED-RESUME-1.json"
   ],
   "changedFiles": [
     "apps/server/src/authority/pwce-action-preparation.ts",
     "apps/server/src/index.ts",
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-HOST-APPROVAL-REQUEST-1.json",
+    "implementation/evidence/LS-S028-APPROVED-RESUME-1.json",
     "scripts/check-pwce-host-approval.mjs"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-approval-request/2026-09-16T145217Z/ls-host-approval-full.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-full.log"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-approval-request/2026-09-16T145217Z/ls-host-approval-typecheck-verified.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-typecheck-final.log"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-approval-request/2026-09-16T145217Z/ls-host-approval-lint-final.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-lint.log"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-approval-request/2026-09-16T145217Z/ls-host-approval-build-final.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-build.log"
     },
     {
-      "command": "node --test --experimental-strip-types apps/server/test/pwce-capabilities.test.ts packages/providers-pwce/test/authority-preview.test.ts",
+      "command": "node --test --experimental-strip-types apps/server/test/pwce-capabilities.test.ts packages/providers-pwce/test/authority-admission.test.ts packages/providers-pwce/test/invocation.test.ts",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-approval-request/2026-09-16T145217Z/ls-host-approval-focused.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-focused.log"
     },
     {
-      "command": "node scripts/check-pwce-host-approval.mjs",
+      "command": "PWCE_HOST_APPROVAL_RESUME=1 PWCE_HOST_APPROVAL_EXPIRY=1 node scripts/check-pwce-host-approval.mjs",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-approval-request/2026-09-16T145217Z/ls-host-approval-joined-final2.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-expiry.log"
     },
     {
       "command": "PWCE_HOST_DISPATCH=1 node scripts/check-pwce-host-process.mjs",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-approval-request/2026-09-16T145217Z/ls-host-approval-host-regression.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-host-regression.log"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-approval-request/2026-09-16T145217Z/ls-host-approval-workspace.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-workspace.log"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-approval-request/2026-09-16T145217Z/ls-host-approval-private.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-private.log"
     }
   ],
   "decisions": [
@@ -320,8 +321,8 @@
     "2026-09-16: operator explicitly resumes at the current reasoning level; the previous pause is superseded."
   ],
   "blockers": [],
-  "nextAction": "Implement exact approved review/resume against original approval and producer idempotency key, preserving custody and expiry; then control UI and remaining independent S083/S084 scope.",
-  "updatedAt": "2026-09-16T14:52:17.605207Z",
+  "nextAction": "Connect the control-page preparation, confirmation, producer approval review/resume, status and evidence workflow, then continue independent remaining S083/S084 requirements.",
+  "updatedAt": "2026-09-16T14:59:54.706238Z",
   "updatedBy": "Codex",
-  "notes": "Host approval request/recovery verified: 880 application tests, 43 focused tests, 43 workspace checks, 11 actual host approval checks with two approval POSTs and zero target calls; existing dispatch suite 22 checks and four synthetic targets. Approved exact review/resume and UI remain pending."
+  "notes": "Exact approved review/resume verified: 880 application tests, 78 focused tests, 43 workspace tests; 16 real host/PWCE checks with one synthetic target and original key retained; actual approval expiry and credential-free restart preserve status. Existing dispatch regression 22 checks. Control UI pending."
 }

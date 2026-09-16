@@ -16,6 +16,7 @@ const hash=(value:unknown)=>createHash('sha256').update(canonicalJson(value)).di
 const fail=(code='pwce_preparation_unavailable',status=503):never=>{throw new AuthenticationError(status,code);};
 type Owner=Omit<PwceCapabilityOwner,'isCurrent'>;
 type Preview={decision:providerMessages_DefsExternalAuthorityDecision;evidenceJson:string};
+type Confirmation={record:PwceActionPreparationRecord;lease:PwceCapabilityLease;request:AuthorityRequest;preview:PwceAuthorityPreview;evidence:Preview;assertCurrent():void};
 export type PwceActionPreparationRecord={schemaVersion:'1.0.0';invocationId:string;idempotencyKey:string;intentDigest:string;owner:Owner;catalog:PwceCatalogRecord;prepared:PwcePreparedAction;inputSchema:ArtifactRef;outputSchema:ArtifactRef;correlationId:string;createdAt:string;expiresAt:string;confirmationDigest:string;originalPreview:Preview};
 type Binding=(assistantId:string,local:LocalContext,call:CapabilityCallContext)=>{provider:PwceCapabilityDiscovery;owner:PwceCapabilityOwner};
 type Row={principal_id:string;idempotency_key:string;invocation_id:string;payload_json:string;sha256:string};
@@ -143,8 +144,38 @@ export class PwceActionPreparation {
    return {providerRef:'pwce',invocationId,replayed:!!prior,...approval,grantsAuthority:false,dispatchStarted:false,limitation:'Approve the exact retained review in PWCE Studio. This local request is not Human approval or action admission.'};
   });
  }
+ private async approvedPreparation(record:PwceActionPreparationRecord,lease:PwceCapabilityLease,journal:PwceActionJournal,current:()=>void){
+  current();const intent=this.approvalIntent(record,journal),observation=journal.approvals.read(this.approvalKey(record))?.latest;
+  if(!intent||!observation)return fail('pwce_approval_not_approved',409);
+  const proof=await verifyPwceApprovalEvidence(JSON.parse(observation.proofJson),intent.expectation,lease.context.signal);current();
+  if(proof.status!=='approved')return fail('pwce_approval_not_approved',409);
+  const prepared={...structuredClone(record.prepared),approval:{required:true,reference:proof.approvalRef}};
+  const reviewDigest=hash({originalConfirmationDigest:record.confirmationDigest,approvalEvidenceSha256:observation.sha256,approvalRef:proof.approvalRef,expiresAt:Math.min(Date.parse(record.expiresAt),Date.parse(proof.expiresAt))});
+  return {prepared,proof,reviewDigest,proofSha256:observation.sha256};
+ }
+ async reviewApproved(assistantId:string,invocationId:string,local:LocalContext,csrfToken:string,raw:unknown,inputCall:CapabilityCallContext,journal:PwceActionJournal,dispatcher?:PwceTrustedDispatchClient){
+  let original=raw,reviewDigest:string|undefined;
+  if(dispatcher){
+   if(!boundedJson(raw,2048)||!raw||typeof raw!=='object'||Array.isArray(raw)||Object.keys(raw).sort().join(',')!=='approvalReviewDigest,confirmationDigest,idempotencyKey')return fail('invalid_pwce_approval_confirmation',422);
+   const {approvalReviewDigest,...body}=raw as Record<string,unknown>;if(typeof approvalReviewDigest!=='string'||!/^[a-f0-9]{64}$/.test(approvalReviewDigest))return fail('invalid_pwce_approval_confirmation',422);reviewDigest=approvalReviewDigest;original=body;
+  }
+  return this.withReviewedOperation(assistantId,invocationId,local,csrfToken,original,inputCall,'approvalRequired',async confirmation=>{
+   const {record,lease}=confirmation;
+   const current=()=>{confirmation.assertCurrent();journal.assertCurrent();if(journal.deploymentId!==record.catalog.scope.environmentId)return fail('pwce_journal_deployment_mismatch',409);};current();
+   const recovered=await this.recoverApproval(record,lease,journal,current);if(recovered?.state!=='approved')return fail('pwce_approval_not_approved',409);
+   const approved=await this.approvedPreparation(record,lease,journal,current);
+   const assertCurrent=()=>{current();if(Date.now()>=Date.parse(approved.proof.expiresAt)||journal.approvals.read(this.approvalKey(record))?.latest?.sha256!==approved.proofSha256)return fail('pwce_approval_expired_or_changed',409);};assertCurrent();
+   if(dispatcher&&reviewDigest!==approved.reviewDigest)return fail('pwce_approval_review_changed',409);
+   const derived={...structuredClone(record),prepared:approved.prepared},preview=await this.previewOperation(derived,lease);assertCurrent();
+   if(preview.preview.decision.disposition!=='authorized')return fail('pwce_confirmation_requires_provider_authority',409);
+   if(!dispatcher)return {providerRef:'pwce',invocationId,idempotencyKey:record.idempotencyKey,confirmationDigest:record.confirmationDigest,approvalReviewDigest:approved.reviewDigest,input:record.prepared.input,approval:approved.proof,currentPreview:preview.preview.decision,expiresAt:new Date(Math.min(Date.parse(record.expiresAt),Date.parse(approved.proof.expiresAt))).toISOString(),grantsAuthority:false,dispatchStarted:false};
+   return this.dispatchReviewed({record:derived,lease,request:preview.request,preview:preview.provider,evidence:preview.preview,assertCurrent},invocationId,journal,dispatcher);
+  });
+ }
  async dispatchConfirmed(assistantId:string,invocationId:string,local:LocalContext,csrfToken:string,raw:unknown,inputCall:CapabilityCallContext,journal:PwceActionJournal,dispatcher:PwceTrustedDispatchClient){
-  return this.withConfirmedReview(assistantId,invocationId,local,csrfToken,raw,inputCall,async confirmation=>{
+  return this.withConfirmedReview(assistantId,invocationId,local,csrfToken,raw,inputCall,confirmation=>this.dispatchReviewed(confirmation,invocationId,journal,dispatcher));
+ }
+ private async dispatchReviewed(confirmation:Confirmation,invocationId:string,journal:PwceActionJournal,dispatcher:PwceTrustedDispatchClient){
    const {record,lease,request,preview,evidence}=confirmation;
    const interactionTraceId=record.catalog.scope.interactionTraceId;if(typeof interactionTraceId!=='string')return fail('pwce_dispatch_interaction_required',409);
    const current=()=>{confirmation.assertCurrent();journal.assertCurrent();if(journal.deploymentId!==record.catalog.scope.environmentId)return fail('pwce_journal_deployment_mismatch',409);};current();
@@ -176,7 +207,6 @@ export class PwceActionPreparation {
    const result=await invocation.invoke(invoke,lease.context);current();
    if(result.outcome.status!=='succeeded')return fail('pwce_invocation_unavailable');
    return {providerRef:'pwce',replayed:!!prior,admission:admitted.outcome.payload,invocation:result.outcome.payload,grantsAuthority:false};
-  });
  }
  async readStatus(assistantId:string,invocationId:string,local:LocalContext,inputCall:CapabilityCallContext,journal:PwceActionJournal){
   this.guard(assistantId,local);if(!uuid.test(invocationId))return fail('invalid_invocation_reference',422);
@@ -189,8 +219,9 @@ export class PwceActionPreparation {
    let retained=journal.admissions.read(record.idempotencyKey);
    const base={providerRef:'pwce',invocationId,readOnly:true,grantsAuthority:false,dispatchStarted:false};
    if(!retained){const approval=await this.recoverApproval(record,lease,journal,current);current();return {...base,state:approval?'approvalRecorded':'noRetainedAdmission',approval,admission:null,invocation:null};}
+   const historicalPrepared=this.approvalIntent(record,journal)?(await this.approvedPreparation(record,lease,journal,current)).prepared:record.prepared;current();
    const original=retained.intent.request;
-   if(original.payload.invocationId!==invocationId||original.correlationId!==record.correlationId||!isDeepStrictEqual(original.scope,record.catalog.scope)||!isDeepStrictEqual(retained.intent.catalog,record.catalog)||!isDeepStrictEqual(retained.intent.prepared,record.prepared))return fail('pwce_dispatch_original_conflict',409);
+   if(original.payload.invocationId!==invocationId||original.correlationId!==record.correlationId||!isDeepStrictEqual(original.scope,record.catalog.scope)||!isDeepStrictEqual(retained.intent.catalog,record.catalog)||!isDeepStrictEqual(retained.intent.prepared,historicalPrepared))return fail('pwce_dispatch_original_conflict',409);
    const preview=new PwceAuthorityPreview({providerRef:'pwce',client:lease.client,catalog:lease.catalog,resolve:async()=>structuredClone(record.prepared),isCurrent:()=>false});
    const admission=new PwceAuthorityAdmission({providerRef:'pwce',client:lease.client,catalog:lease.catalog,preview,custody:journal.admissions,authorize:async()=>false});
    const readRequest={...original,requestId:inputCall.requestId,cancellationId:randomUUID(),deadlineAt:lease.deadlineAt};

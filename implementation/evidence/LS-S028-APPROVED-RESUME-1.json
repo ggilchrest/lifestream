@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-APPROVED-RESUME-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "16362df145dfe48567f2499beed42661c36e95f2",
+  "specificationRevision": "d68240da578d3ca38faf1124e5a7fef52154072f",
+  "producerRevision": "e7c408c5d4ddb1cb1d9fe9579c7e08d91f056d3f",
+  "recordedAt": "2026-09-16T14:59:54.706238Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/authority/pwce-action-preparation.ts",
+        "sha256": "6d583d7c83f7a90f51bb2ea77533e187d539e42a409e99ec7a72b8d961e7686d"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "c542c08221cb6a6ac1806ae4f9a92dea8032a33752306f8cd1fa8b8bddc4f28b"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "abd42c63283896f779c91c275cad6dd27b87a90f0cf8b77ce2cef76e84ce93e7"
+      },
+      {
+        "path": "scripts/check-pwce-host-approval.mjs",
+        "sha256": "34e9f9cd4c8dfd199faa5d11feca162bb6330e5f7396aee6d8f4e5d70e67fa73"
+      }
+    ]
+  },
+  "claim": "Host review binds the original preparation and approved producer proof into an exact confirmation digest without extending either lifetime. Resume requires current original scope, approved proof and fresh authorized preview; original producer key and existing admission/invocation custody prevent duplicate effects. Lost admission recovers before one invocation. Historical approved status survives actual expiry and same-endpoint restart without dispatcher credentials.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-approved-resume-full.log",
+      "logSha256": "d53c8f795f68ff94469d172eccfbede1d9eff75a0a6c40906050a59dfea5c02a"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-approved-resume-typecheck-final.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-approved-resume-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-approved-resume-build.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/pwce-capabilities.test.ts packages/providers-pwce/test/authority-admission.test.ts packages/providers-pwce/test/invocation.test.ts",
+      "result": "pass",
+      "log": "ls-approved-resume-focused.log",
+      "logSha256": "1ce2dea36da91c7aa235ef8612a5b4f2c1c65a4cce08d5facfb9110337f435b4"
+    },
+    {
+      "command": "PWCE_HOST_APPROVAL_RESUME=1 PWCE_HOST_APPROVAL_EXPIRY=1 node scripts/check-pwce-host-approval.mjs",
+      "result": "pass",
+      "log": "ls-approved-resume-expiry.log",
+      "logSha256": "c68662e133b9ff21d9d09c7dd99915b7baab4a1b3f812a0155e28c5f7de78ad7"
+    },
+    {
+      "command": "PWCE_HOST_DISPATCH=1 node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-approved-resume-host-regression.log",
+      "logSha256": "e2845b3c71f3d139c154e9a6c9f8373ad69f3f210b7263d5213007263ec07ec3"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-approved-resume-workspace.log",
+      "logSha256": "70f9e008218423db0c5bcea68ba093fb28ec1042dc5d3ea4560b9669d4e4830c"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-approved-resume-private.log",
+      "logSha256": "e62a59a27edabbe2c2a458337f5a5a1688fd5d5f50404b277a718c7b8fa4d71b"
+    }
+  ],
+  "counts": {
+    "applicationTests": 880,
+    "focusedTests": 78,
+    "workspaceTests": 43,
+    "actualApprovedResumeChecks": 16,
+    "approvalScenarioDispatchPosts": 4,
+    "approvalScenarioSyntheticTargetCalls": 1,
+    "existingHostDispatchChecks": 22,
+    "existingSyntheticTargetCalls": 4
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z",
+  "limitations": [
+    "Control-page preparation, approval, review/resume and evidence workflow remains pending.",
+    "Actual host and PWCE HTTP fixture uses synthetic target and injected producer Human proof; no Studio Human acceptance or physical effect is claimed.",
+    "Original preparation and approval expiry remain strict; review does not renew them.",
+    "No saved runtime, live configuration, model selection, personal import, training or new Human acceptance."
+  ]
+}
