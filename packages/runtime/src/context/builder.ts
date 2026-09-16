@@ -17,7 +17,28 @@ export function buildContext(sources: ContextSource[], maxItems = 4, maxTokens =
   return selected;
 }
 export type PreparedRelationshipContext = { discoveryContent?: string; profileRevision: string; relationshipRevision: string; configurationRevision: string; configurationControls?: Readonly<Record<string, number>>; compiledConventions?: {lane: string; text: string; sources: {id:string;revision:number;family:string}[]}[]; approvedBaseline: readonly string[]; criticalCorrections: readonly string[]; relevantContext: readonly ContextSource[]; limitations: readonly string[] };
-export function formatPreparedRelationshipContext(context: PreparedRelationshipContext): string { const relevant = buildContext([...context.relevantContext]); const controls = context.configurationControls ? Object.entries(context.configurationControls).sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => `${key}=${value}`).join(", ") : "default"; return [`Prepared relationship context [profile=${context.profileRevision};relationship=${context.relationshipRevision};configuration=${context.configurationRevision}]`, `Expression controls: ${controls}. ${describeRelationshipControls(context.configurationControls ?? {})}`, ...(context.compiledConventions ? [`Compiled conventions with source links: ${JSON.stringify(context.compiledConventions)}`] : [`Approved baseline: ${context.approvedBaseline.join(" | ") || "none"}`, `Critical corrections: ${context.criticalCorrections.join(" | ") || "none"}`, `Relevant context: ${relevant.map((source) => `${source.id}=${source.content}`).join(" | ") || "none"}`]), `Limitations: ${context.limitations.join(" | ") || "none"}`, ...(context.discoveryContent ? [context.discoveryContent] : [])].join("\n"); }
+export function formatPreparedRelationshipContext(context: PreparedRelationshipContext): string {
+  const optional = buildContext([
+    ...(context.discoveryContent ? [{ id: "discovery", content: context.discoveryContent, rank: -1 }] : []),
+    ...context.relevantContext,
+  ]);
+  const controls = context.configurationControls ? Object.entries(context.configurationControls).sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => `${key}=${value}`).join(", ") : "default";
+  const optionalText = optional.map((source) => `${source.id}=${source.content}`).join(" | ") || "none";
+  const omittedDiscovery = context.discoveryContent && !optional.some((source) => source.id === "discovery") ? "Optional discovery context omitted by the four-item/512-token bound." : undefined;
+  const lines = [
+    `Prepared relationship context [profile=${context.profileRevision};relationship=${context.relationshipRevision};configuration=${context.configurationRevision}]`,
+    `Expression controls: ${controls}. ${describeRelationshipControls(context.configurationControls ?? {})}`,
+    `Approved baseline: ${context.approvedBaseline.join(" | ") || "none"}`,
+    `Critical corrections: ${context.criticalCorrections.join(" | ") || "none"}`,
+    ...(context.compiledConventions ? [`Compiled conventions with source links: ${JSON.stringify(context.compiledConventions)}`] : []),
+    `Relevant context: ${optionalText}`,
+    ...(omittedDiscovery ? [omittedDiscovery] : []),
+    `Limitations: ${context.limitations.join(" | ") || "none"}`,
+  ];
+  const formatted = lines.join("\n");
+  if (bytes(formatted) > 8192) throw new Error("Prepared relationship context exceeds bounded context capacity");
+  return formatted;
+}
 
 export type RelationshipContextRecord = { id: string; content: string; revision: number; sourceFamily: string; status: string; use: "baseline" | "correction" | "relevant"; personalization: boolean; mention: boolean; uncertainty?: string };
 export type ContextOmission = { id: string; revision: number; reason: string };
