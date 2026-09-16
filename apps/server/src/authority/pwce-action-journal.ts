@@ -1,9 +1,10 @@
+import {SqlitePwceApprovalCustody} from './pwce-approval-custody.ts';
 import {randomUUID} from 'node:crypto';
 import {closeSync,constants,existsSync,fstatSync,fsyncSync,lstatSync,mkdirSync,openSync,readFileSync,realpathSync,writeFileSync} from 'node:fs';
 import type {Stats} from 'node:fs';
 import {join} from 'node:path';
 import {Database,loadMigrations} from '@lifestream/storage-sqlite';
-import type {PwceAdmissionCustody,PwceInvocationCustody} from '@lifestream/providers-pwce';
+import type {PwceAdmissionCustody,PwceInvocationCustody,PwceApprovalCustody} from '@lifestream/providers-pwce';
 import {SqlitePwceAdmissionCustody} from './pwce-admission-custody.ts';
 import {SqlitePwceInvocationCustody} from './pwce-invocation-custody.ts';
 
@@ -34,6 +35,7 @@ export interface PwceActionJournalOptions {
 /** Consumer attempt custody. This never grants authority or repairs uncertain history. */
 export class PwceActionJournal {
  readonly deploymentId:string;
+ readonly approvals:PwceApprovalCustody;
  readonly admissions:PwceAdmissionCustody;
  readonly invocations:PwceInvocationCustody;
  private readonly database:Database;
@@ -41,6 +43,7 @@ export class PwceActionJournal {
  private readonly path:string;
  private readonly anchor:string;
  private readonly seal:string;
+ private readonly approvalSeal:string;
  private readonly bytes:string;
  private readonly rootStat:Stats;
  private readonly directoryStat:Stats;
@@ -56,8 +59,8 @@ export class PwceActionJournal {
    if(options.capacity!==undefined&&(!Number.isSafeInteger(options.capacity)||options.capacity<1||options.capacity>4096))fail();
    directory(options.stateDirectory);this.root=realpathSync(options.stateDirectory);this.rootStat=directory(this.root);
    this.anchor=join(this.root,'pwce-journal-identity.json');const dir=join(this.root,'pwce-action-journal');
-   this.path=join(dir,'custody.sqlite');this.seal=join(dir,'identity.json');
-   const migrations=loadMigrations().filter(item=>item.id===36||item.id===37);if(migrations.length!==2)fail();
+   this.path=join(dir,'custody.sqlite');this.seal=join(dir,'identity.json');this.approvalSeal=join(dir,'approval-schema.json');
+   const migrations=loadMigrations().filter(item=>item.id===36||item.id===37||item.id===39);if(migrations.length!==3)fail();
    let fresh=false;
    if(!existsSync(this.anchor)){
     // The exclusive anchor arbitrates simultaneous provisioning. A partial
@@ -83,18 +86,34 @@ export class PwceActionJournal {
      tx.run('CREATE TABLE pwce_journal_identity (identity TEXT NOT NULL)');
      tx.run('INSERT INTO pwce_journal_identity VALUES (?)',this.bytes);
     });
-    exclusive(this.seal,this.bytes);syncDirectory(dir);
+    exclusive(this.approvalSeal,this.bytes);exclusive(this.seal,this.bytes);syncDirectory(dir);
    }
-   // Reopening never runs migrations that could recreate missing history.
-   const rows=database.connection.prepare('SELECT id,name,digest FROM schema_migrations ORDER BY id').all();
-   if(JSON.stringify(rows)!==JSON.stringify(migrations.map(({id,name,digest})=>({id,name,digest}))))fail();
+   // Recognize the exact old journal before applying the one additive upgrade.
+   // Missing or changed historical tables are never recreated.
+   let rows=database.connection.prepare('SELECT id,name,digest FROM schema_migrations ORDER BY id').all();
+   const expected=migrations.map(({id,name,digest})=>({id,name,digest})),legacy=JSON.stringify(rows)===JSON.stringify(expected.slice(0,2));
+   if(!legacy&&JSON.stringify(rows)!==JSON.stringify(expected))fail();
    const ids=database.connection.prepare('SELECT identity FROM pwce_journal_identity').all();
    if(ids.length!==1||ids[0]?.identity!==this.bytes)fail();
    const check=database.connection.prepare('PRAGMA quick_check').all();
    if(check.length!==1||check[0]?.quick_check!=='ok')fail();
    for(const table of ['pwce_admission_custody','pwce_invocation_custody','pwce_invocation_observations'])database.connection.prepare(`SELECT * FROM ${table} LIMIT 0`).all();
+   if(legacy){
+    // A durable upgrade seal prevents a later missing migration from looking
+    // like an older journal. Interrupted upgrades remain fenced for inspection.
+    if(existsSync(this.approvalSeal))fail();
+    if(database.connection.prepare("SELECT name FROM sqlite_master WHERE name IN ('pwce_approval_custody','pwce_approval_observations')").all().length)fail();
+    exclusive(this.approvalSeal,this.bytes);syncDirectory(dir);
+    database.migrate();
+    rows=database.connection.prepare('SELECT id,name,digest FROM schema_migrations ORDER BY id').all();
+    if(JSON.stringify(rows)!==JSON.stringify(expected))fail();
+   }
+   if(identityBytes(this.approvalSeal)!==this.bytes)fail();
+   for(const table of ['pwce_approval_custody','pwce_approval_observations'])database.connection.prepare(`SELECT * FROM ${table} LIMIT 0`).all();
    this.walStat=regular(this.path+'-wal');this.shmStat=regular(this.path+'-shm');
    this.database=database;this.assertCurrent();
+   const approvals=new SqlitePwceApprovalCustody(database,options.capacity);
+   this.approvals=Object.freeze({read:key=>this.guarded(()=>approvals.read(key)),reserve:intent=>this.guarded(()=>approvals.reserve(intent)),observe:(key,json)=>this.guarded(()=>approvals.observe(key,json)),readProof:(key,sha)=>this.guarded(()=>approvals.readProof(key,sha))} satisfies PwceApprovalCustody);
    const admissions=new SqlitePwceAdmissionCustody(database,options.capacity),invocations=new SqlitePwceInvocationCustody(database,options.capacity);
    this.admissions=Object.freeze({
     read:key=>this.guarded(()=>admissions.read(key)),
@@ -121,7 +140,7 @@ export class PwceActionJournal {
    if(this.closed||this.fenced)fail();
    if(!same(this.rootStat,directory(this.root))||!same(this.directoryStat,directory(join(this.root,'pwce-action-journal')))||!same(this.databaseStat,regular(this.path)))fail();
    if(!same(this.walStat,regular(this.path+'-wal'))||!same(this.shmStat,regular(this.path+'-shm')))fail();
-   if(identityBytes(this.anchor)!==this.bytes||identityBytes(this.seal)!==this.bytes)fail();
+   if(identityBytes(this.anchor)!==this.bytes||identityBytes(this.seal)!==this.bytes||identityBytes(this.approvalSeal)!==this.bytes)fail();
    this.checkSidecars();
    const sync=this.database.connection.prepare('PRAGMA synchronous').get();if(sync?.synchronous!==2)fail();
   }catch{this.fenced=true;fail();}

@@ -30,7 +30,7 @@ test('journal requires explicit first provisioning, private files and a stable d
  assert.throws(()=>new PwceActionJournal({...s.options,deploymentId:randomUUID(),create:true}),unavailable);
  assert.equal(s.open(true).admissions.read('one'),undefined);
  const inspection=new Database({path:s.db});try{
-  assert.deepEqual(inspection.connection.prepare('SELECT id FROM schema_migrations ORDER BY id').all().map(row=>row.id),[36,37]);
+  assert.deepEqual(inspection.connection.prepare('SELECT id FROM schema_migrations ORDER BY id').all().map(row=>row.id),[36,37,39]);
   assert.equal(inspection.connection.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name='assistant_profiles'").get().n,0);
  }finally{inspection.close();}
 });
@@ -39,12 +39,13 @@ test('actual main database backup restoration cannot erase pending intent or inv
  const s=setup(t),mainPath=join(s.root,'application.sqlite'),backup=join(s.root,'before.sqlite');
  let main=new Database({path:mainPath});main.migrate();await main.backup(backup);
  const journal=s.open(true);assert.equal(journal.admissions.reserve(intent()),true);assert.equal(journal.invocations.claim(request()),true);
+ const approval={producerKey:'approval.original',invocationId:'approval.invocation',expectation:{producerKey:'approval.original'},request:{payload:{invocationId:'approval.invocation'}},confirmationDigest:'a'.repeat(64)};assert.equal(journal.approvals.reserve(approval),true);
  main.exec("CREATE TABLE synthetic_after_backup (id TEXT)");main.close();journal.close();
  copyFileSync(backup,mainPath);main=new Database({path:mainPath});main.migrate();
  try{
   assert.equal(main.connection.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name='synthetic_after_backup'").get().n,0);
   assert.equal(main.connection.prepare('SELECT count(*) AS n FROM pwce_admission_custody').get().n,0);
-  const reopened=s.open();assert.equal(reopened.admissions.reserve(intent()),false);assert.equal(reopened.invocations.claim(request()),false);
+  const reopened=s.open();assert.equal(reopened.approvals.reserve(approval),false);assert.equal(reopened.approvals.read('approval.original').latest,null);assert.equal(main.connection.prepare('SELECT count(*) AS n FROM pwce_approval_custody').get().n,0);assert.equal(reopened.admissions.reserve(intent()),false);assert.equal(reopened.invocations.claim(request()),false);
   assert.equal(reopened.admissions.read('one').outcome,null);assert.equal(reopened.invocations.read('invocation.one').latest,null);
   reopened.admissions.complete('one',outcome);reopened.close();assert.deepEqual(s.open().admissions.read('one').outcome,outcome);
  }finally{main.close();}
@@ -139,11 +140,12 @@ test('failed durable transaction does not grant a claim and corrupt bytes cannot
 test('a killed process retains committed WAL claims without clean shutdown',async t=>{
  const s=setup(t);s.open(true).close();
  const source=new URL('../src/authority/pwce-action-journal.ts',import.meta.url).href;
- const code=`import {PwceActionJournal} from ${JSON.stringify(source)};const journal=new PwceActionJournal(${JSON.stringify(s.options)});journal.admissions.reserve(${JSON.stringify(intent())});journal.invocations.claim(${JSON.stringify(request())});process.stdout.write('committed\\n');setInterval(()=>{},1000);`;
+ const approval={producerKey:'crash.approval',invocationId:'crash.invocation',expectation:{producerKey:'crash.approval'},request:{payload:{invocationId:'crash.invocation'}},confirmationDigest:'a'.repeat(64)};
+ const code=`import {PwceActionJournal} from ${JSON.stringify(source)};const journal=new PwceActionJournal(${JSON.stringify(s.options)});journal.admissions.reserve(${JSON.stringify(intent())});journal.invocations.claim(${JSON.stringify(request())});journal.approvals.reserve(${JSON.stringify(approval)});process.stdout.write('committed\\n');setInterval(()=>{},1000);`;
  const child=spawn(process.execPath,['--experimental-strip-types','--input-type=module','-e',code],{stdio:['ignore','pipe','pipe']});const exited=once(child,'exit');t.after(()=>child.kill('SIGKILL'));let errors='';child.stderr.on('data',chunk=>{errors+=String(chunk);});
  let timer;try{
   const signal=await Promise.race([once(child.stdout,'data').then(([chunk])=>String(chunk)),exited.then(()=>{throw new Error(errors);}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('journal child timed out')),10000);})]);
   assert.equal(signal,'committed\n');child.kill('SIGKILL');await exited;
-  const reopened=s.open();assert.equal(reopened.admissions.reserve(intent()),false);assert.equal(reopened.invocations.claim(request()),false);
+  const reopened=s.open();assert.equal(reopened.approvals.reserve(approval),false);assert.equal(reopened.approvals.read(approval.producerKey).latest,null);assert.equal(reopened.admissions.reserve(intent()),false);assert.equal(reopened.invocations.claim(request()),false);
  }finally{clearTimeout(timer);child.kill('SIGKILL');}
 });

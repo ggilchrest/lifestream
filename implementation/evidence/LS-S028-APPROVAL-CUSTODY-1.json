@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-APPROVAL-CUSTODY-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "f4c306d0fe7c2c2c2fed050c966ce077bd2ed1a6",
+  "specificationRevision": "f1edd6a2ad17103113fc69bea6799da77ff7ceb3",
+  "producerRevision": "e7c408c5d4ddb1cb1d9fe9579c7e08d91f056d3f",
+  "recordedAt": "2026-09-16T14:43:40.778244Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/authority/pwce-action-journal.ts",
+        "sha256": "1617b5896a381555cc2c4457a8ee3179d8011b042c533b2b73c1c5c8b8010a0c"
+      },
+      {
+        "path": "apps/server/src/authority/pwce-approval-custody.ts",
+        "sha256": "eb492ba9fb32c068eee53eebcc94e8ddfeaa9efde74740ccb3bfacbd5c513774"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "b53c34114a73a69cb105cea550c28aa302ce18fc44fb5ccf2154ca21152f3b77"
+      },
+      {
+        "path": "apps/server/test/pwce-action-journal.test.ts",
+        "sha256": "251e3c1b24ca93b37b1dd57da09f09c2c5f9f968e24d1ddac39daf59d32038fe"
+      },
+      {
+        "path": "apps/server/test/pwce-approval-custody.test.ts",
+        "sha256": "85c7898a82253509bff25a31b5e68b2a68e0822e162c401104ed054a40ba618e"
+      },
+      {
+        "path": "apps/server/test/server.test.ts",
+        "sha256": "2dede15036aabaa7c1b6653719698bb54033710c2e4b59dfd8ac7ae0f69736cb"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "8b73a9241a6142766c3f9500d897f56de8a3afdb7994d63ba5362178bec890ce"
+      },
+      {
+        "path": "packages/providers-pwce/src/approval-custody.ts",
+        "sha256": "1560110417469cb6b35b3a7c6da71e2db61d6b1d6ab9e29cc08d6df71955520c"
+      },
+      {
+        "path": "packages/providers-pwce/src/index.ts",
+        "sha256": "a1c0ac021b76b680bdc7759f8e1e56723da81c80490546981e7c51898d01c474"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/0039_pwce_approval_custody.sql",
+        "sha256": "8ea7d9b7e6cca923e997a41d17765cc20bb8056336c0aa1db79a65494c19b421"
+      },
+      {
+        "path": "packages/storage-sqlite/src/migrations/index.ts",
+        "sha256": "9d283e52fcd39cdd74b6e56a7719901eb0aaa8c06dabda0b96a64498140fdbcf"
+      },
+      {
+        "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+        "sha256": "9623d65efa6004dcaace807de418b38b3da58047db8993ca6cee135dfcd51040"
+      },
+      {
+        "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+        "sha256": "cef05e008d4eb0827e681a8a8a6acd5a68acfe5420c117efd1033333bd537154"
+      },
+      {
+        "path": "scripts/check-pwce-approval-recovery.mjs",
+        "sha256": "709dccf43141d50125eed01aeedebb2a388cb613652390a6efb451e5b059e743"
+      }
+    ]
+  },
+  "claim": "Separate durable approval reservations and original proof history survive reopen, abrupt process termination and ordinary application backup restoration. No replacement, expiry cleanup, terminal regression or implicit resend is provided. Exact legacy journals upgrade additively; an external durable upgrade seal prevents lost new history from masquerading as an older journal. Interrupted or damaged upgrades remain fenced.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-approval-custody-full-verified.log",
+      "logSha256": "d29f2d62dcf78835efb83b2b3d68f9200dc0f5c9c5a7318cf8d24aa374ac0025"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-approval-custody-typecheck-verified.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-approval-custody-lint-verified.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-approval-custody-build-checked.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/pwce-approval-custody.test.ts apps/server/test/pwce-action-journal.test.ts packages/storage-sqlite/test/initiative-delivery.test.ts packages/storage-sqlite/test/initiative-expression.test.ts packages/storage-sqlite/test/database.test.ts apps/server/test/server.test.ts",
+      "result": "pass",
+      "log": "ls-approval-custody-focused-regression.log",
+      "logSha256": "e8792d39d6fe4487afcbf21a71a1e13c79518cd6f334eafcfe72284cdd5b6789"
+    },
+    {
+      "command": "node scripts/check-pwce-approval-recovery.mjs",
+      "result": "pass",
+      "log": "ls-approval-custody-joined-verified.log",
+      "logSha256": "e58e4b93b1075fe1e1c27f7a5b28fbb887fd950d282ff1c345c1123c60d01e62"
+    },
+    {
+      "command": "PWCE_HOST_DISPATCH=1 node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-approval-custody-host.log",
+      "logSha256": "f51842541eceb088414eb6fd566c5697613f523d26303d1e92e68c613ed1e7a2"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-approval-custody-workspace.log",
+      "logSha256": "fa6c3a5c8a26825a8c1a0eab71e308bba5d80c691d6076cc10e43aac8bc19ece"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-approval-custody-private-final.log",
+      "logSha256": "d26fabeeac61afabe9537bfa7d7442193f302921b9438c072cb31f564eba9570"
+    }
+  ],
+  "counts": {
+    "applicationTests": 880,
+    "focusedTests": 74,
+    "newCustodyTests": 13,
+    "workspaceTests": 43,
+    "actualApprovalProducerChecks": 31,
+    "approvalTargetCalls": 0,
+    "existingHostDispatchChecks": 22,
+    "existingSyntheticTargetCalls": 4,
+    "existingDispatchPosts": 8
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-custody/2026-09-16T144135Z",
+  "preservedFailures": [
+    "Initial tests used stale built storage migration assets; rebuilding exposed migration 39.",
+    "The first upgrade-seal check ran before initial creation; it was moved after creation or verified legacy upgrade.",
+    "Two existing tests received an out-of-scope variable during a broad test edit; corrected and focused regressions pass.",
+    "Full regression found the health expected migration list omitted 39 and the application sparse-ledger migration needed idempotent table creation. Both corrected; journal upgrade still explicitly rejects partial/new tables and missing history."
+  ],
+  "limitations": [
+    "Host approval request/review/resume and control UI remain pending; storage and transport do not substitute Human approval.",
+    "The approval joined fixture uses actual producer HTTP and synthetic Human proof through the producer service. It is not Studio or Human acceptance.",
+    "Whole safety-directory rollback is not covered by ordinary application backup restoration proof.",
+    "No saved service, live configuration, model selection, personal import, training, physical effect or new Human acceptance."
+  ],
+  "preservation": "Six previously recorded dirty artifact SHA-256 values rechecked unchanged; private contents not printed."
+}
