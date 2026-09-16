@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-PREPARED-CONTEXT-FORMAT-1",
+  "slice": "LS-S084",
+  "status": "implementationCompleteVerificationPending",
+  "componentStatus": "verified",
+  "sourceRevision": "815040ef38d48f6b7e2236dfeed7d731ffc43316",
+  "specificationRevision": "e36b4f6e0b1446520b6c05d3a608eddaadbb7cf0",
+  "recordedAt": "2026-09-16T19:15:00.000Z",
+  "sourceFiles": [
+    {
+      "path": "packages/runtime/src/context/builder.ts",
+      "sha256": "fb344c830d70298538377c87c405e38af89fd1be44e44aaeba00c58e92b8a2a7"
+    },
+    {
+      "path": "packages/runtime/test/inference.test.ts",
+      "sha256": "b556bf42e61ea4c02ad40897daa4e35db8719617b41a5683302b7303702cd5ac"
+    }
+  ],
+  "claims": [
+    "The final prompt formatter applies the same bounded four-item, conservative UTF-8 budget to legacy and compiler-marked prepared relationship views. A caller cannot bypass the optional-context cap by supplying a compilerRevision marker.",
+    "Mandatory approved baseline and critical corrections remain separate from optional relevant context. The formatter preserves deterministic rank/id order and leaves the untrusted prepared section lower trust.",
+    "The regression exercises the actual buildCanonicalPrompt path with twelve legacy items and twelve compiler-marked items; only the first four are emitted in either case."
+  ],
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/inference.test.ts packages/runtime/test/context.test.ts",
+      "result": "pass",
+      "details": "16/16"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "details": "904/904; zero skips; clean rerun"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "details": "19 passed; 30 optional actual-browser tests skipped"
+    },
+    {
+      "command": "npm test (PWCE)",
+      "result": "pass",
+      "details": "324/324"
+    }
+  ],
+  "retainedFailures": [
+    "Selected-provider prerequisites for LS-S073, LS-S076, LS-S078 and LS-S080 remain stale because effective inputs changed since qualification; this component did not refresh ai5090.",
+    "PWCE-owned authority remains fail-closed from Lifestream when its external authority/admission adapter is unavailable. Read-only grant and evidence projections are covered; provider-owned approval and live effect qualification are not claimed.",
+    "No selected-provider, production, physical, performance-under-all-conditions or new Human acceptance claim is made."
+  ],
+  "limitations": [
+    "This closes the formatter bypass exposed by the earlier 10-versus-12 item source probe; it does not close the broader S084 prepared-context, acquisition or performance acceptance envelope.",
+    "S083 synthetic initiative component checks pass, but real source ingress, proactive live delivery, foreign authority activation and Human relevance acceptance remain separate gates.",
+    "No deployment, live configuration, personal-data import, training, provider selection or physical effect was performed."
+  ]
+}

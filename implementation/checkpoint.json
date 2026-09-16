@@ -183,9 +183,12 @@
     "packages/storage-sqlite/test/initiative-expression.test.ts",
     "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json",
     "implementation/evidence/S084-RANKING-CONNECTIONS-1.json",
+    "implementation/evidence/S084-PREPARED-CONTEXT-FORMAT-1.json",
     "packages/storage-sqlite/test/database.test.ts"
   ],
   "changedFiles": [
+    "implementation/checkpoint.json",
+    "implementation/evidence/S084-PREPARED-CONTEXT-FORMAT-1.json"
   ],
   "validation": [
     {
