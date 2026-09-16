@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "5f0e34c926cf70647ff5595538a9f75dbeb61c29",
+  "currentRevision": "a8a61fdbce90ae78be2db743fea0375335da1719",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -319,7 +319,7 @@
   ],
   "blockers": [],
   "nextAction": "Run LS-S084 preflight with refreshed S073/S076/S078/S080 selected-provider qualifications; continue remaining S084 performance and semantic obligations while preserving the nonblocking SYNPRJ_Q7M4 history.",
-  "updatedAt": "2026-09-16T18:22:30.513Z",
+  "updatedAt": "2026-09-16T18:23:12.342Z",
   "updatedBy": "Codex",
   "notes": "S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/10000/100000-record corpus benchmark are component-verified in the current receipts; clean full application suite is 904/904 and PWCE is 324/324. Earlier transient publicationConflict capacity observation and selected-provider/foreign-authority gates remain preserved. Current S084 timing successor preserves the prior deadline miss while recording the current 40/40 focused and 904/904 full-suite clean run. Current selected-provider S073 observation is 5/5 pass at 04d515c; the prior model-variance run remains outside qualification and is tracked in its raw receipt history."
 }
