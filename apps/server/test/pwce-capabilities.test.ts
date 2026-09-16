@@ -33,7 +33,7 @@ function gateway(t){
   if(u.pathname==='/gateway/v1/request'){
    const envelope={profileId:'pwce-agent-gateway.v1',profileVersion:'1.0.0',requestId:body.requestId,correlationId:body.correlationId,worldRef:body.worldRef,executionEnvironmentRef:body.executionEnvironmentRef};
    if(body.operation==='events.subscribe')return json({...envelope,principalRef:profile.principalRef,siteRef:body.siteRef,events:[],nextCursor:body.afterCursor,resyncRequired:false,hasMore:false});
-   if(body.operation==='authority.evaluate')return json({...envelope,outcome:body.approvalRequired?'approval_required':'allowed',...(body.approvalRequired?{}:{capabilityRef:descriptor.capabilityRef,effectClass:descriptor.effectClass}),rationaleCodes:['synthetic_policy'],requirements:body.approvalRequired?['runtime_human_approval']:[],limitations:[]});
+   if(body.operation==='authority.evaluate')return json({...envelope,outcome:state.previewDenied?'denied':body.approvalRequired?'approval_required':'allowed',...(body.approvalRequired?{}:{capabilityRef:descriptor.capabilityRef,effectClass:descriptor.effectClass}),rationaleCodes:['synthetic_policy'],requirements:body.approvalRequired?['runtime_human_approval']:[],limitations:[]});
    assert.equal(body.operation,'capabilities.getSnapshot');
    if(!snapshots.has(body.authorityContextRef))snapshots.set(body.authorityContextRef,{snapshotRef:randomUUID(),principalRef:profile.principalRef,siteRefs:profile.siteRefs,sourceRevision:0,invalidationSequence:0,issuedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+60000).toISOString(),capabilities:[{...descriptor,available:true,authorization:'grant_required'}],availability:'configured',limitations:[]});
    return json({...envelope,...snapshots.get(body.authorityContextRef)});
@@ -88,7 +88,7 @@ async function http(t){
  const setup=await send('/api/auth/v1/setup',{username:'owner',password:'Synthetic-'+randomBytes(24).toString('hex'),installerToken});assert.equal(setup.status,201);headers.cookie=setup.cookie;headers['x-lifestream-csrf']=setup.body.session.csrfToken;
  const assistant=await send('/api/admin/v1/assistants',{displayName:'Synthetic PWCE discovery'});assert.equal(assistant.status,201);const path=`/api/authority/v1/assistants/${assistant.body.assistantId}/tools`;
  const db=new Database({path:config.storage.databasePath});t.after(async()=>{await app.shutdown();db.close();rmSync(root,{recursive:true,force:true});});
- return {...f,send,path,db,app,config};
+ return {...f,send,path,db,app,config,local:app.localAuth.context(setup.cookie.split("=")[1],base),csrfToken:headers["x-lifestream-csrf"]};
 }
 
 test('authenticated HTTP discovery requires audience and cannot mint local grants or execute',async t=>{
@@ -223,4 +223,38 @@ test('expired PWCE preparation requires a new review and does not acquire replac
  const f=await http(t);await prepareAudience(f);const body=preparationBody(),first=await f.send(preparationPath(f),body);assert.equal(first.status,201,JSON.stringify(first));const before=f.requests.length,now=Date.now();
  const clock=t.mock.method(Date,'now',()=>now+120000);
  try{const result=await f.send(inspectPath(f,first.body.preparation.invocationId));assert.equal(result.status,409,JSON.stringify(result));assert.equal(result.body.preparation,undefined);assert.equal(f.requests.length,before);}finally{clock.mock.restore();}
+});
+
+
+test('confirmed PWCE review validates exact digest and CSRF before exposing a bounded fresh preview',async t=>{
+ const f=await http(t);await prepareAudience(f);const first=await f.send(preparationPath(f),preparationBody()),r=first.body.preparation,assistantId=r.owner.assistantId;
+ const confirm=(body,operation,csrf=f.csrfToken)=>f.app.pwcePreparation.withConfirmedReview(assistantId,r.invocationId,f.local,csrf,body,call(),operation);
+ const body={idempotencyKey:first.body.idempotencyKey,confirmationDigest:r.confirmationDigest};let reached=0,savedFence;
+ for(const value of [{...body,approved:true},{...body,confirmationDigest:'0'.repeat(64)},{...body,idempotencyKey:randomUUID()}])await assert.rejects(confirm(value,async()=>{reached++;}));
+ await assert.rejects(confirm(body,async()=>{reached++;},'wrong'));assert.equal(reached,0);
+ const before=f.requests.filter(r=>r.body?.operation==='authority.evaluate').length;
+ assert.equal(await confirm(body,async proof=>{reached++;proof.assertCurrent();savedFence=proof.assertCurrent;assert.equal(proof.record.confirmationDigest,r.confirmationDigest);assert.equal(proof.evidence.decision.disposition,'authorized');assert.equal(proof.request.payload.invocationId,r.invocationId);return 'reviewed';}),'reviewed');
+ assert.equal(reached,1);assert.throws(()=>savedFence());assert.equal(f.requests.filter(r=>r.body?.operation==='authority.evaluate').length,before+1);
+ assert.ok(f.requests.every(r=>!['authority.authorizeDispatch','capabilities.invoke'].includes(r.body?.operation)));
+});
+
+test('confirmation rejects late results and fences a callback after current audience is withdrawn',async t=>{
+ const f=await http(t);await prepareAudience(f);const first=await f.send(preparationPath(f),preparationBody()),r=first.body.preparation;
+ await assert.rejects(f.app.pwcePreparation.withConfirmedReview(r.owner.assistantId,r.invocationId,f.local,f.csrfToken,{idempotencyKey:first.body.idempotencyKey,confirmationDigest:r.confirmationDigest},call(),async proof=>{
+  await f.send('/api/runtime/v1/session-context',{expectedRevision:1,mode:'text',audienceScope:'unknown'});assert.throws(()=>proof.assertCurrent());return 'late';
+ }));
+ assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS n FROM pwce_admission_custody').get().n,0);
+});
+
+
+test('confirmation cannot substitute an earlier authorized preview after PWCE denies the action',async t=>{
+ const f=await http(t);await prepareAudience(f);const first=await f.send(preparationPath(f),preparationBody()),r=first.body.preparation;f.state.previewDenied=true;let reached=false;
+ await assert.rejects(f.app.pwcePreparation.withConfirmedReview(r.owner.assistantId,r.invocationId,f.local,f.csrfToken,{idempotencyKey:first.body.idempotencyKey,confirmationDigest:r.confirmationDigest},call(),async()=>{reached=true;}));
+ assert.equal(reached,false);const retained=JSON.parse(f.db.connection.prepare('SELECT payload_json FROM pwce_action_preparations').get().payload_json);assert.equal(retained.originalPreview.decision.disposition,'authorized');assert.equal(retained.confirmationDigest,r.confirmationDigest);
+});
+
+test('revocation while confirmation awaits a fresh preview prevents entry to the dispatch callback',async t=>{
+ const f=await http(t);await prepareAudience(f);const first=await f.send(preparationPath(f),preparationBody()),r=first.body.preparation;let reached=false;
+ f.state.hook=async phase=>{if(phase==='authority.evaluate'){f.emit('authority.revoked');await new Promise(resolve=>setImmediate(resolve));}};
+ await assert.rejects(f.app.pwcePreparation.withConfirmedReview(r.owner.assistantId,r.invocationId,f.local,f.csrfToken,{idempotencyKey:first.body.idempotencyKey,confirmationDigest:r.confirmationDigest},call(),async()=>{reached=true;}));assert.equal(reached,false);
 });

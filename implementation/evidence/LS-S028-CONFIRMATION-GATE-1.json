@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-CONFIRMATION-GATE-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "a7809cd2a3668b0f0c38f876980b18d7817ae3ac",
+  "specificationRevision": "9f63942cd35eeaa38acc558fe08509be1aaed229",
+  "recordedAt": "2026-09-16T13:40:07.002369Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/authority/pwce-action-preparation.ts",
+        "sha256": "4796c746b0591e21dea80355abeb7012f11bec731a922da6017ddd1ef00b17f7"
+      },
+      {
+        "path": "apps/server/test/pwce-capabilities.test.ts",
+        "sha256": "18b904c8fca79c4b2c20af7ab92f9aa4cb84158d64beb14c584d98f8830d82c2"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "744d87f2c53f36944f59fb13fa0af31577d4a56da9c2f05541366122917a01be"
+      }
+    ]
+  },
+  "claim": "Internal exact-review confirmation gate verifies original authenticated ownership, CSRF, key and digest; validates the original catalog and fresh preview; rejects current denial, revocation and late callback results. Its synchronous current-state fence cannot escape the finite callback lease.",
+  "results": {
+    "applicationTests": 855,
+    "focusedHostTests": 28,
+    "newConfirmationTests": 4,
+    "workspaceTests": 43
+  },
+  "exclusions": [
+    "The gate does not expose an HTTP confirmation endpoint, provision custody or send admission/invocation requests. No new actual-producer confirmation test is claimed.",
+    "Producer Human approval is separate and cannot be replaced by this local confirmation.",
+    "No complete LS-S028 or broader scope acceptance; no saved service/configuration activation, deployment, physical effects, personal import, training, model selection or new Human acceptance."
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-confirmation-gate/2026-09-16T134007Z",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-confirmation-gate-full.log",
+      "sha256": "e9f91ffc2ac28f4d9f82809f50c0b6cf573fae6b9843d87512afcc61b5ae2682"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/pwce-capabilities.test.ts",
+      "result": "pass",
+      "log": "ls-confirmation-gate-tests-final.log",
+      "sha256": "01264e273296a253171b6d0b9bc058bee7a15552c03f5518780af13e9a2d02d1"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-confirmation-gate-typecheck.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-confirmation-gate-lint-final.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-confirmation-gate-build.log",
+      "sha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-confirmation-gate-workspace.log",
+      "sha256": "2b80b7fc44b3c9401629048ac299ea3c47659d7ed014d9a50be760d8639b1383"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-confirmation-gate-private.log",
+      "sha256": "a9b97e803c7b8dc3a51e8955f40aef4aa6caad99c929dd548d65a94d0424a871"
+    }
+  ],
+  "operatorDisposition": {
+    "status": "continue",
+    "nextAction": "Connect the gate to the separate action journal and pinned admission/invocation components. Preserve original requests across retry/recovery. Complete producer approval handling and host controls separately without weakening denial checks."
+  }
+}
