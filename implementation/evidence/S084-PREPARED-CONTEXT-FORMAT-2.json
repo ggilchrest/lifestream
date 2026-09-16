@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-PREPARED-CONTEXT-FORMAT-2",
+  "slice": "LS-S084",
+  "status": "implementationCompleteVerificationPending",
+  "componentStatus": "verified",
+  "sourceRevision": "c7665eea3113d0be60cb52ddfc638e49fc1b1598",
+  "specificationRevision": "188e131f71a3a9c337fb67f4c1f32b12afbc5e43",
+  "recordedAt": "2026-09-16T18:50:29.000Z",
+  "sourceFiles": [
+    {
+      "path": "packages/runtime/src/context/builder.ts",
+      "sha256": "1c315909dc4ea55742b1a2605deb9cb764edd822cc1063e0c5cc824dc25404ec"
+    },
+    {
+      "path": "packages/runtime/test/context.test.ts",
+      "sha256": "c01062be3b17888ddc5ac1252f684ae4fd98c5c3c43de55cd5f335fd0ece5077"
+    }
+  ],
+  "claims": [
+    "The canonical prepared relationship formatter preserves approved baseline and critical correction lanes when the compiler supplies grouped convention metadata.",
+    "Discovery enrichment and relevant context share one conservative four-item/512-token optional allocation, and oversized discovery is explicitly reported as omitted rather than appended outside the bound.",
+    "The final formatted UTF-8 payload is checked against the existing 8192-byte capacity and fails closed if mandatory material would exceed it."
+  ],
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/context.test.ts packages/runtime/test/inference.test.ts",
+      "result": "pass",
+      "details": "17/17"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "details": "905/905; zero skips"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
+      "result": "fail",
+      "details": "48/49 passed. The sole failure is the pre-existing LS-TEST-106 joined selected-provider case: the skipped-Assistant reply did not complete, so the prepared context lacked SYNPRJ_Q7M4. This remains nonblocking for the independent A2 component claim."
+    }
+  ],
+  "retainedFailures": [
+    "LS-TEST-106 joined selected-provider reply completion remains unresolved; the missing SYNPRJ_Q7M4 reply is tracked without changing the model/provider or case semantics.",
+    "Selected-provider, production, physical, performance-under-all-conditions and new Human acceptance claims remain outside this component receipt."
+  ],
+  "limitations": [
+    "This receipt closes the discovered formatter lane-preservation and shared optional-allocation gap. It does not close the broader S084 prepared-context, source-acquisition, performance, provider or Human acceptance envelope.",
+    "No deployment, live configuration, personal-data import, training, provider selection or physical effect was performed."
+  ]
+}
