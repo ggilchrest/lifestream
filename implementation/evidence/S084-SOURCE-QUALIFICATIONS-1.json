@@ -1,0 +1,279 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-SOURCE-QUALIFICATIONS-1",
+  "slice": "LS-S084",
+  "status": "implementationCompleteVerificationPending",
+  "componentStatus": "verified",
+  "sourceRevision": "4cc7e063c6745f25c3a3216a09330e764dd60a7c",
+  "specificationRevision": "d98a6dfe2c7c529ed6725767560620579e8d8722",
+  "recordedAt": "2026-09-16T16:34:12.154405Z",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "49918697997bc13b229dd1d5f403af83755b7c0efe688f090f58ce19ad59cf01"
+    },
+    {
+      "path": "apps/server/test/discovery-candidates.test.ts",
+      "sha256": "b8c8a7e03c0fc907bee564d8035a364b7e8fee720c55ec378f989c482f8353d1"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "e9ef6908001dfa873e4ddd1f21daf54355e0d4249e8f57f98c5fa6c35563147e"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "a8429e708a013a0c43e012f6e46dc852b06887df183d5fe38b89e205c67f9d0f"
+    },
+    {
+      "path": "packages/storage-sqlite/src/understanding.ts",
+      "sha256": "0ef1f86f2ddd42aa11b48b9b74bc21e9b0764aa718261fbd77d9acb0fc6e2fe5"
+    },
+    {
+      "path": "packages/storage-sqlite/test/database.test.ts",
+      "sha256": "32eb0b1affabd5135d75658d290103b68a022d782e7c872345bc0e572e88bdc7"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "c6eae10c7109652436ff6a728f03ae86637ab45a65a1a251fbe90d56a7d17d2e"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "d039e6f71a8a59c52e2184fbe6b25a1e689eef7693b507a171885feb23f03da3"
+    },
+    {
+      "path": "packages/storage-sqlite/test/understanding.test.ts",
+      "sha256": "db2d221766fbdc8922756b361624388e2ba446f67bc682b7c19b25b5310e68ba"
+    },
+    {
+      "path": "scripts/benchmark-discovery-local.mjs",
+      "sha256": "018d13faaed0f25efede638239fec98f4fa317eb2199de276588cd05c4159f22"
+    },
+    {
+      "path": "scripts/discovery-benchmark-worker.mjs",
+      "sha256": "dc8a23baacd7dfba9bc30d44e7197e57700288a64ba99bb13bab97b94b82061a"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0040_understanding_source_notes.sql",
+      "sha256": "b7fdd64d6333696d3ae0c24512761db9c4f524fd0d07e97d02e3a666e32b19b8"
+    }
+  ],
+  "claims": [
+    "New conversational projections preserve the exact parent claim qualifier, version, source references with declared reliability, and recorded contradiction references. This occurs at publication or derived-index repair, not by foreground archive traversal. Candidate content/identity and suppression fingerprints remain unchanged.",
+    "Missing or ambiguous claim grounding and oversized qualified projections remain inspectable records but do not enter conversational context. Caveats are never truncated to fit. Actual authenticated ordinary input tests observe the source notes.",
+    "Additive migration 40 marks legacy projections unqualified. Foreground reads exclude them until bounded 128-row repair reconstructs source notes from the current scoped pinned parent. Records and previous migration digests remain unchanged; real pre-40 database upgrade is exercised.",
+    "The repair index includes only qualification_revision=0 rows, preserving the full-text-first selection plan. Runtime background maintenance performs one approximate 16-page FTS merge chunk per call; no unbounded optimize command runs in runtime or normal selection. The synthetic corpus setup drains those same maintenance chunks before measurement.",
+    "Final local 100/10000/100000-record benchmark passes all local gates with 1800/1800 expected enabled details, zero deadline misses. At 100000 records, selection p95 is 0.083 ms warm, 0.105 ms with the synthetic background writer, and 0.286 ms with a new database connection; OS caches are not flushed. These are local host lookup measurements only."
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "details": "899/899; zero skips; final run"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/server.test.ts packages/storage-sqlite/test/database.test.ts packages/storage-sqlite/test/understanding.test.ts",
+      "result": "pass",
+      "details": "34/34"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/understanding.test.ts apps/server/test/discovery-candidates.test.ts apps/server/test/discovery-lab.test.ts",
+      "result": "pass",
+      "details": "17/17 before the additional oversized-qualification test; all are included in final full suite"
+    },
+    {
+      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/ls-source-notes-corpus-merged.json",
+      "result": "pass",
+      "details": "Three corpora pass local objectives; 200 paired samples per condition; 1800/1800 expected enabled details present"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "details": "pass"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "details": "19 pass; 30 optional actual-browser tests skipped"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "details": "43/43"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "details": "588 structural vectors; runtime acceptance not implied"
+    }
+  ],
+  "rawArtifacts": [
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-fts-merge.json",
+      "sha256": "b97cbf0a804922295984255f7bfa43a48b70e27d5faa49688c7dbad36b34e16c"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-private-final.log",
+      "sha256": "9ad23d54661104c1b710769d2ab9e3ad99a1435860784411ddf197ed57dbab96"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-preflight-start.log",
+      "sha256": "db2575ff4b2275ecd80542d0585871adfa2937ffabafcce2a1c9e809fba47ced"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-check-before-receipt.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-corpus-merged.json",
+      "sha256": "836fa625ed25d60d02f145c96c0d17cc859068ffa37b78cfd66148d856c47d7d"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-build.log",
+      "sha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-migration-final.log",
+      "sha256": "0e1fb4c567a2976148aacf871bcf51b4c9a54180bca479d6ff28c6e0c7d27322"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-full-final.log",
+      "sha256": "4df480c1cceca22f2e17e79db6d9b7e6a8070da689d30c213af3d856bdbc97e4"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-corpus-merged.log",
+      "sha256": "e240c5694b0eaa616f8e771c87206c30bfd0fefe6acd5bb3a20049d2c034c760"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-browser.log",
+      "sha256": "c3eeb1d68300c868c78caa50aa4bada9bea0ba4086d635a7e2d277e0b244bc20"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-corpus.log",
+      "sha256": "014f0c137b3b710581ada4653b74a91f2624f45d9b3c0e3398a75c28b3c59ed6"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-build-merge.log",
+      "sha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-typecheck-final.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-focused-final.log",
+      "sha256": "9809dd47b0213855c4fc7c9d083c9d19fed9fb24c6b1d27d370ef6baebfd4274"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-lint-final.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-private.log",
+      "sha256": "4f454dfed1f0f475b9345c39ba63b0179b40bff4c0220c9e049dc4c605f948cd"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-corpus-fixed.json",
+      "sha256": "7a7696038cd08472ebfeb013fcc636e5bfb78c632e7f0e9bc01b38ffaa6b2e84"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-build-delivery.log",
+      "sha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-corpus-fixed.log",
+      "sha256": "dce8c28395219656f35bad4723e44f6e9fdeec5d55af04cbfaf186aa67da8701"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-typecheck-delivery.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-typecheck.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-storage-final.log",
+      "sha256": "fec987c3bc733ecaca75ac9de85ad4089882735c04f3d35dcab15537d947576a"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-workspace.log",
+      "sha256": "58ec7a41158322f1e8cec13168e5cbad4bd2ad4c76af81763008e409c257da00"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-server-final.log",
+      "sha256": "5cc1913ade86539878ac5d0248bddec681d97331198109910e84c6716242a677"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-private-delivery.log",
+      "sha256": "9adbb2464f3017e42f5e79c887439972ba925cb77196e3cfc87988c10f6b664c"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-focused.log",
+      "sha256": "f9b0c0fe35241536dc7b72adaa422f54eda7b12dc7848318af51d9a2389a0d7f"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-private-pass.log",
+      "sha256": "05739ba89934b9904d9d9b51c8485afce36a820f56115fd56cbbf499b0b62369"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-typecheck-merge.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-build-final.log",
+      "sha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-lint-delivery.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-full.log",
+      "sha256": "ba903d171f7e8d80347820728dbb1ba6408949d4c2579e1a13b858857711e1f5"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-node-plan.json",
+      "sha256": "84ddef4daa1913504dca025db3e1b544797bdb163a412543e901ddf2573484be"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-plan.json",
+      "sha256": "4131da83769f8a56d8da7a696f59b7d10fc35568067f50846ec86aa14eef8699"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-source-qualifications/2026-09-16/ls-source-notes-build-index.log",
+      "sha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    }
+  ],
+  "retainedFailures": [
+    "Initial non-partial qualification index made Node SQLite choose a qualification-first plan. The 100-record corpus failed local gates; the 10000-record run was deliberately interrupted after a separate copied-database query reproduced 11528.997 ms before index correction versus 1.259 ms afterward. Initial progress log and exact Node query-plan diagnostic are retained; no completed raw report exists for the interrupted run. Python SQLite used a different plan and was not used as evidence of Node behavior.",
+    "Partial index alone preserved all expected details but 100000-record p50 selection remained about 6 ms due to FTS fragmentation after repair. Full failed report retained. An isolated diagnostic found optimize reduced 10000-record p50 from 1.154 ms to 0.024 ms; runtime uses bounded merge steps instead. Final merged corpus report retained separately.",
+    "Initial storage regression used an ungrounded candidate text differing from its parent; corrected the fixture to provide its asserted source claim. New unresolved-grounding negative remains.",
+    "Initial full regression exposed stale migration health expectations and a sparse-ledger fixture that applied the new ALTER then erased its ledger entry. Readiness now includes 40; legacy sparse test starts from pre-40 schema. Final full suite and 34 focused migration/server tests pass.",
+    "Initial private validation identified a stale LS-MEM-093 definition digest. Reviewed mapped acceptance cases, added exact source-projection/legacy/oversize assertions to LS-TEST-125, refreshed the digest, and passed final validation."
+  ],
+  "references": [
+    {
+      "title": "SQLite FTS5 bounded merge command",
+      "url": "https://sqlite.org/fts5.html#the_merge_command"
+    }
+  ],
+  "limitations": [
+    "No full S084 selected-provider, voice, acquisition, performance-under-all-conditions or Human relevance acceptance. Source qualification and local index performance are component claims.",
+    "S084 ranking/connection work and S083/foreign-authority tasks remain. Existing ai5090 reachability and prerequisite qualification gaps are not rewritten.",
+    "No saved service restart, deployment, live configuration, new model, personal-data import, physical effects or new Human acceptance."
+  ]
+}

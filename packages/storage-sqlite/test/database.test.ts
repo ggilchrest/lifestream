@@ -22,9 +22,9 @@ test("transaction rolls back on failure", () => {
   assert.deepEqual(database.connection.prepare("SELECT * FROM sample").all(), []); database.close();
 });
 
-test("sparse migration ledger upgrades without rewriting existing data", () => {
+test("legacy sparse migration ledger upgrades without rewriting existing data", () => {
   const directory = mkdtempSync(join(tmpdir(), "lifestream-sparse-")); const path = join(directory, "state.db");
-  const seed = new Database({ path });
+  const seed = new Database({ path, migrations: loadMigrations().filter(m => m.id < 40) });
   seed.connection.exec("CREATE TABLE preserved (value TEXT NOT NULL)");
   seed.connection.prepare("INSERT INTO preserved VALUES (?)").run("keep-me");
   const migration = seed.migrate()[0];

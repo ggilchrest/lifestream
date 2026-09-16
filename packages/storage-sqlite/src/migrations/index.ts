@@ -46,7 +46,8 @@ export function loadMigrations(): Migration[] {
     [36, "pwce_admission_custody", "0036_pwce_admission_custody.sql"],
     [37, "pwce_invocation_custody", "0037_pwce_invocation_custody.sql"],
     [38, "pwce_action_preparations", "0038_pwce_action_preparations.sql"],
-    [39, "pwce_approval_custody", "0039_pwce_approval_custody.sql"]
+    [39, "pwce_approval_custody", "0039_pwce_approval_custody.sql"],
+    [40, "understanding_source_notes", "0040_understanding_source_notes.sql"]
   ].map(([id, name, file]) => {
     const sql = readFileSync(join(migrationDirectory, file as string), "utf8");
     return { id: id as number, name: name as string, sql, digest: createHash("sha256").update(sql).digest("hex") };

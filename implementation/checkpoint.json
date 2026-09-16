@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "98591d00b24573dcc4c6d15bdf921aa055aa30d5",
+  "currentRevision": "4cc7e063c6745f25c3a3216a09330e764dd60a7c",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -177,67 +177,79 @@
     "implementation/evidence/S084-LOCAL-CORPUS-BENCHMARK-1.json",
     "implementation/evidence/S084-DEADLINE-CACHE-1.json",
     "implementation/evidence/S084-NEUTRAL-QUESTIONS-1.json",
-    "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+    "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json",
+    "packages/storage-sqlite/src/migrations/0040_understanding_source_notes.sql",
+    "packages/storage-sqlite/test/initiative-delivery.test.ts",
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
+    "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json",
+    "packages/storage-sqlite/test/database.test.ts"
   ],
   "changedFiles": [
-    "apps/control-web/relationship-extensions.js",
-    "apps/server/src/admin/understanding.ts",
-    "apps/server/test/understanding.test.ts",
+    "apps/server/src/index.ts",
+    "apps/server/test/discovery-candidates.test.ts",
+    "apps/server/test/server.test.ts",
+    "packages/storage-sqlite/src/migrations/index.ts",
     "packages/storage-sqlite/src/understanding.ts",
+    "packages/storage-sqlite/test/database.test.ts",
+    "packages/storage-sqlite/test/initiative-delivery.test.ts",
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
     "packages/storage-sqlite/test/understanding.test.ts",
+    "scripts/benchmark-discovery-local.mjs",
+    "scripts/discovery-benchmark-worker.mjs",
+    "packages/storage-sqlite/src/migrations/0040_understanding_source_notes.sql",
     "implementation/checkpoint.json",
-    "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+    "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+      "evidence": "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
     },
     {
-      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/understanding.test.ts",
+      "command": "node --test --experimental-strip-types apps/server/test/server.test.ts packages/storage-sqlite/test/database.test.ts packages/storage-sqlite/test/understanding.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+      "evidence": "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
     },
     {
-      "command": "node --test --experimental-strip-types --test-name-pattern exploration apps/server/test/understanding.test.ts packages/storage-sqlite/test/understanding.test.ts",
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/understanding.test.ts apps/server/test/discovery-candidates.test.ts apps/server/test/discovery-lab.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+      "evidence": "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
     },
     {
-      "command": "node --test --experimental-strip-types apps/server/test/understanding.test.ts",
+      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/ls-source-notes-corpus-merged.json",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+      "evidence": "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+      "evidence": "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+      "evidence": "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+      "evidence": "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
     },
     {
       "command": "pnpm test:browser-surface",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+      "evidence": "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+      "evidence": "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "implementation/evidence/S084-EXPLORATION-ADMISSION-1.json"
+      "evidence": "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
     }
   ],
   "decisions": [
@@ -255,8 +267,8 @@
     "2026-09-16: operator explicitly resumes at the current reasoning level; the previous pause is superseded."
   ],
   "blockers": [],
-  "nextAction": "Continue S084 separate candidate ranking dimensions and grounded connections, plus independent S083 and foreign-authority administration. Investigate retained capacity/selection intermittency and refresh prerequisite selected-provider qualifications once ai5090 is reachable. No overall blocker or independent-work exhaustion claimed.",
-  "updatedAt": "2026-09-16T16:15:42.350107Z",
+  "nextAction": "Continue S084 ranking dimensions and grounded connections, plus independent S083 and foreign-authority administration; preserve original intermittent capacity observations. Refresh selected-provider prerequisites when ai5090 is reachable. No overall blocker or exhaustion of independent development claimed.",
+  "updatedAt": "2026-09-16T16:34:12.154405Z",
   "updatedBy": "Codex",
-  "notes": "Exploration now governs atomic job admission; 895 tests pass. Initial capacity-related focused failures retained without claiming their root cause fixed. No live activation or Human acceptance."
+  "notes": "Source qualifications and legacy projection upgrade verified; final 899 application tests and 1800 enabled local corpus samples pass. Failed intermediate planner/fragmentation runs retained. Full qualification and Human gaps remain."
 }

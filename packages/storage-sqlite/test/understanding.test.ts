@@ -1,3 +1,7 @@
+import {mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {loadMigrations} from '../src/migrations/index.ts';
 import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
 import test from "node:test";
@@ -56,7 +60,7 @@ test('specific multi-term Discovery matches survive more than 32 common-word can
   const candidates=Array.from({length:7},()=>({...f.candidate(parent),content:'Synthetic archive material.',topicRefs:['topic:archive']}));
   assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[parent,...candidates],()=>true),true);
  }
- const w=f.work();f.admit(w);f.repo.start(f.scope,String(w.workId));const parent=f.brief(),wanted={...f.candidate(parent),content:'Synthetic quartz calibration uses QTZ_MARKER_482.'};
+ const w=f.work();f.admit(w);f.repo.start(f.scope,String(w.workId));const parent=f.brief(),wanted={...f.candidate(parent),content:'Synthetic quartz calibration uses QTZ_MARKER_482.'};(parent.claims as Record<string,unknown>[])[0]!.text=wanted.content;
  assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[parent,wanted],()=>true),true);
  const result=f.repo.select(f.scope,f.boundary,'Tell me about synthetic quartz.');assert.equal(result.length,1);assert.match(result[0]!.content,/QTZ_MARKER_482/);
  assert.match(f.repo.select(f.scope,f.boundary,'quartz unrepresentedword')[0]!.content,/QTZ_MARKER_482/,'ordinary optional wording retains the bounded union fallback');
@@ -103,4 +107,51 @@ test('Discovery exploration rounding never exceeds its share and supports the fu
    assert.equal(f.repo.admit(f.scope,w,understandingDigest(w.idempotencyKey),understandingDigest(w.idempotencyKey),f.boundary,()=>true,policy).replay,false);
   }
  }
+});
+
+test('Discovery input keeps exact source version, uncertainty and contradiction notes without changing candidate identity',t=>{
+ const f=fixture();t.after(()=>f.db.close());const w=f.work();f.admit(w);f.repo.start(f.scope,String(w.workId));
+ const parent=f.brief(),claim=(parent.claims as Record<string,unknown>[])[0]!;
+ claim.qualifier='contradicted';claim.versionScope='synthetic edition 2';claim.contradictionRefs=['claim:conflicting-source'];
+ (parent.sources as Record<string,unknown>[])[0]!.reliability='low';
+ const candidate=f.candidate(parent),before=structuredClone(candidate);
+ assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[parent,candidate],()=>true),true);
+ const content=f.repo.select(f.scope,f.boundary,'quartz')[0]!.content;
+ assert.match(content,/contradicted; version: synthetic edition 2/);
+ assert.match(content,/declared reliability: source:synthetic=low/);
+ assert.match(content,/contradictions: claim:conflicting-source/);
+ assert.deepEqual(candidate,before,'source qualification must not change suppression identity');
+ assert.deepEqual(f.repo.list(f.scope,f.boundary).find(r=>r.candidateId===candidate.candidateId),before);
+});
+
+test('unresolved claim grounding cannot enter Discovery context as an unqualified fact',t=>{
+ const f=fixture();t.after(()=>f.db.close());const w=f.work();f.admit(w);f.repo.start(f.scope,String(w.workId));
+ const parent=f.brief(),candidate={...f.candidate(parent),content:'Quartz ungrounded assertion.'};
+ assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[parent,candidate],()=>true),true);
+ assert.deepEqual(f.repo.select(f.scope,f.boundary,'quartz'),[]);
+ assert.ok(f.repo.list(f.scope,f.boundary).some(r=>r.candidateId===candidate.candidateId),'retain the record for inspection without usable context');
+});
+
+test('pre-qualification databases withhold legacy context until bounded source-note repair without rewriting records',t=>{
+ const directory=mkdtempSync(join(tmpdir(),'ls-source-notes-'));t.after(()=>rmSync(directory,{recursive:true,force:true}));
+ const f=fixture(),parent=f.brief(),candidate=f.candidate(parent);f.db.close();
+ const path=join(directory,'legacy.sqlite'),old=new Database({path,migrations:loadMigrations().filter(m=>m.id<40)}),before=old.migrate();
+ const key=understandingDigest([f.scope.assistantId,f.scope.userId,f.scope.relationshipId,f.scope.deploymentId]);
+ for(const record of [parent,candidate])old.connection.prepare('INSERT INTO understanding_artifacts VALUES (?,?,?,?,?,?,?,?,?)').run(String(record.briefId??record.candidateId),key,f.scope.relationshipId,f.boundary,1,String(record.recordType),'topic:quartz',Date.parse(String(record.freshUntil??record.expiresAt)),JSON.stringify(record));
+ old.connection.prepare('INSERT INTO understanding_projection(artifact_id,scope_key,boundary,content,fresh_until_ms) VALUES (?,?,?,?,?)').run(String(candidate.candidateId),key,f.boundary,String(candidate.content),Date.parse(String(candidate.expiresAt)));old.close();
+ const db=new Database({path});t.after(()=>db.close());const migrations=db.migrate();assert.deepEqual(migrations.slice(0,before.length),before);assert.equal(migrations.at(-1)!.id,40);
+ const repo=new UnderstandingRepository(db);assert.deepEqual(repo.select(f.scope,f.boundary,'quartz'),[],'legacy text cannot silently pass as qualified source input');
+ repo.recover();const input=repo.select(f.scope,f.boundary,'quartz');assert.equal(input.length,1);assert.match(input[0]!.content,/Source notes: attributed; version: synthetic/);
+ assert.deepEqual(repo.list(f.scope,f.boundary).find(r=>r.candidateId===candidate.candidateId),candidate);
+ assert.deepEqual(repo.list(f.scope,f.boundary).find(r=>r.briefId===parent.briefId),parent);
+});
+
+test('source qualifications cannot be silently truncated to fit optional projection bounds',t=>{
+ const f=fixture();t.after(()=>f.db.close());const w=f.work();f.admit(w);f.repo.start(f.scope,String(w.workId));
+ const parent=f.brief(),source=(parent.sources as Record<string,unknown>[])[0]!,refs=Array.from({length:4},(_,i)=>`source:${i}:`+'x'.repeat(990));
+ parent.sources=refs.map(ref=>({...source,sourceRef:ref}));
+ (parent.claims as Record<string,unknown>[])[0]!.sourceRefs=refs;
+ (parent.claims as Record<string,unknown>[])[0]!.versionScope='v'.repeat(500);
+ const candidate=f.candidate(parent);assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[parent,candidate],()=>true),true);
+ assert.deepEqual(f.repo.select(f.scope,f.boundary,'quartz'),[],'withhold oversized qualified content rather than dropping its caveats');
 });

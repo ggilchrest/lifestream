@@ -21,11 +21,25 @@ const valid = (record: UnderstandingRecord, definition: string, scope: Understan
   if(!result.valid)throw new Error(`Invalid Discovery record: ${result.errors.slice(0,3).map(error=>`${error.instancePath} ${error.message}`).join("; ")}`);
   if(scopeKey(record)!==scopeKey(scope))throw new Error("Cross-scope Discovery record");
 };
+/** Resolve exact claim qualifications while publishing, never by archive traversal on a turn. */
+function sourceNotes(candidate:UnderstandingRecord,parent:UnderstandingRecord):string|undefined {
+  if(parent.recordType!=='topicBrief')return undefined;
+  const refs=(candidate.groundingRefs as string[]).filter(ref=>ref.startsWith('claim:'));
+  const claims=[...parent.claims as Record<string,unknown>[],...parent.aliasClaims as Record<string,unknown>[]]
+    .filter(claim=>claim.text===candidate.content&&(!refs.length||refs.includes(`claim:${claim.claimId}`)));
+  if(claims.length!==1)return undefined;
+  const claim=claims[0]!,sourceRefs=claim.sourceRefs as string[];
+  const sources=sourceRefs.map(ref=>(parent.sources as Record<string,unknown>[]).find(source=>source.sourceRef===ref));
+  if(sources.some(source=>!source))return undefined;
+  const contradictions=claim.contradictionRefs as string[];
+  return `Source notes: ${claim.qualifier}; version: ${claim.versionScope}; declared reliability: ${sources.map(source=>`${source!.sourceRef}=${source!.reliability}`).join(', ')}; contradictions: ${contradictions.length?contradictions.join(', '):'none recorded'}.`;
+}
 const pending = "('queued','admitted','running','paused','staged')";
 
 export class UnderstandingRepository {
   private readonly database: Database;
   private readonly now: () => number;
+  private projectionMergeActive=false;
   constructor(database: Database, now: () => number = Date.now) { this.database=database;this.now=now; }
   /** Payloads expire; hashed admission identities remain to prevent historical replay. */
   recover(): void {
@@ -36,12 +50,45 @@ export class UnderstandingRepository {
       tx.run("UPDATE understanding_work SET payload_json=NULL WHERE expires_ms<=?",time);
       tx.run("DELETE FROM understanding_artifacts WHERE fresh_until_ms<=?",time);
     });
+    this.refreshSourceNotes();
+    this.maintainProjectionIndex();
   }
   /** Bounded maintenance runs outside conversation; expired data is never selected while awaiting it. */
   cleanupExpired(): void {
     this.database.transaction(tx=>{
       tx.run("UPDATE understanding_work SET payload_json=NULL,state=CASE WHEN state IN ('queued','admitted','running','paused','staged') THEN 'expired' ELSE state END WHERE work_id IN (SELECT work_id FROM understanding_work WHERE expires_ms<=? AND payload_json IS NOT NULL LIMIT 128)",this.now());
       tx.run("DELETE FROM understanding_artifacts WHERE artifact_id IN (SELECT artifact_id FROM understanding_artifacts WHERE fresh_until_ms<=? LIMIT 128)",this.now());
+    });
+    this.refreshSourceNotes();
+    this.maintainProjectionIndex();
+  }
+  /** One bounded FTS maintenance chunk; never called by foreground selection.
+   * SQLite FTS5 merge uses roughly N pages, unlike unbounded optimize:
+   * https://sqlite.org/fts5.html#the_merge_command
+   */
+  maintainProjectionIndex():boolean {
+    const before=Number(this.database.connection.prepare('SELECT total_changes() AS n').get()!.n);
+    this.database.connection.prepare("INSERT INTO understanding_projection_fts(understanding_projection_fts,rank) VALUES ('merge',?)").run(this.projectionMergeActive?16:-16);
+    this.projectionMergeActive=Number(this.database.connection.prepare('SELECT total_changes() AS n').get()!.n)-before>=2;
+    return this.projectionMergeActive;
+  }
+  /** Bounded derived-index repair; legacy unqualified rows never serve foreground reads. */
+  private refreshSourceNotes():void {
+    this.database.transaction(tx=>{
+      const rows=tx.all<{id:number;payload:string;scope:string;boundary:string;expiry:number}>("SELECT p.projection_id AS id,a.payload_json AS payload,p.scope_key AS scope,p.boundary,p.fresh_until_ms AS expiry FROM understanding_projection p JOIN understanding_artifacts a ON a.artifact_id=p.artifact_id WHERE p.qualification_revision=0 LIMIT 128");
+      for(const row of rows){
+        const candidate=JSON.parse(row.payload) as UnderstandingRecord;
+        const refs=(candidate.groundingRefs as string[]).filter(ref=>/^(topic-brief|hypothesis):/u.test(ref));
+        const match=refs.length===1?/^(topic-brief|hypothesis):([^:]+):(\d+)$/u.exec(refs[0]!):null;
+        const stored=match?tx.get<{payload:string;expiry:number}>('SELECT payload_json AS payload,fresh_until_ms AS expiry FROM understanding_artifacts WHERE artifact_id=? AND scope_key=? AND boundary=?',match[2],row.scope,row.boundary):undefined;
+        const parent=stored?JSON.parse(stored.payload) as UnderstandingRecord:undefined;
+        tx.run('DELETE FROM understanding_projection WHERE projection_id=?',row.id);
+        if(!parent||parent.revision!==Number(match![3])||!['prepared','candidate','reviewed'].includes(String(parent.status))||row.expiry<=this.now()||row.expiry>stored!.expiry||candidate.status!=='proposed'||candidate.contextRef!==`snapshot:${row.boundary}`||scopeKey(candidate)!==row.scope||this.candidateSuppressed(candidate,candidate))continue;
+        const notes=candidate.kind==='discovery'?sourceNotes(candidate,parent):undefined;
+        if(candidate.kind==='discovery'&&!notes)continue;
+        const content=`${(candidate.topicRefs as string[])[0]}: ${candidate.kind==='discovery'?'Attributed source detail':'Optional tentative question'}: ${candidate.content}${notes?'\n'+notes:''} [optional; grants no authority]`;
+        if(Buffer.byteLength(content)<=4096)tx.run('INSERT INTO understanding_projection(artifact_id,scope_key,boundary,content,fresh_until_ms,qualification_revision) VALUES (?,?,?,?,?,1)',candidate.candidateId,row.scope,row.boundary,content,row.expiry);
+      }
     });
   }
   admit(scope:UnderstandingScope, work:UnderstandingRecord, requestDigest:string, snapshotKey:string, boundary:string, current:(tx:Transaction)=>boolean, exploration?:{share:number;approvedTopicRefs:readonly string[]}): {record:UnderstandingRecord; replay:boolean} {
@@ -163,6 +210,7 @@ export class UnderstandingRepository {
         const isBrief=artifact.recordType==='topicBrief',isCandidate=artifact.recordType==='candidate',id=isBrief?artifact.briefId:isCandidate?artifact.candidateId:artifact.hypothesisId,topic=isBrief?artifact.topicRef:(artifact.topicRefs as string[])[0];
         const expiry=isBrief?Date.parse(String(artifact.freshUntil)):isCandidate?Date.parse(String(artifact.expiresAt)):Date.parse(String(artifact.createdAt))+(work.budget.briefFreshnessSeconds as number)*1000;
         if(expiry<=this.now()||artifact.configurationRef!==work.configurationRef)throw new Error('Stale publication');
+        let qualifications:string|undefined;
         if(isCandidate){
           if(artifact.status!=='proposed'||artifact.revision!==1||artifact.contextRef!==`snapshot:${boundary}`||Date.parse(String(artifact.builtAt))>this.now()||expiry>Date.parse(String(artifact.builtAt))+600000||this.candidateSuppressed(scope,artifact))throw new Error('Invalid or suppressed candidate publication');
           const parents=(artifact.groundingRefs as string[]).filter(ref=>/^(topic-brief|hypothesis):/u.test(ref));if(parents.length!==1||!(artifact.dependencyRefs as string[]).includes(parents[0]!))throw new Error('Candidate must pin one prepared parent');
@@ -170,12 +218,13 @@ export class UnderstandingRepository {
           const stored=tx.get<{payload:string;expiry:number}>('SELECT payload_json AS payload,fresh_until_ms AS expiry FROM understanding_artifacts WHERE artifact_id=? AND scope_key=? AND boundary=?',match[2],scopeKey(scope),boundary);
           const parent=stored?JSON.parse(stored.payload):undefined;
           if(!parent||parent.revision!==Number(match[3])||!['prepared','candidate','reviewed'].includes(parent.status)||expiry>stored!.expiry)throw new Error('Candidate parent is unavailable or changed');
+          if(artifact.kind==='discovery')qualifications=sourceNotes(artifact,parent);
         }
         tx.run('INSERT INTO understanding_artifacts VALUES (?,?,?,?,?,?,?,?,?)',id,scopeKey(scope),scope.relationshipId,boundary,artifact.revision,artifact.recordType,topic,expiry,JSON.stringify(artifact));
         if(isCandidate){
           const prefix=artifact.kind==='discovery'?'Attributed source detail':'Optional tentative question';
-          const content=`${topic}: ${prefix}: ${artifact.content} [optional; grants no authority]`;
-          if(Buffer.byteLength(content)<=4096)tx.run('INSERT INTO understanding_projection(artifact_id,scope_key,boundary,content,fresh_until_ms) VALUES (?,?,?,?,?)',id,scopeKey(scope),boundary,content,expiry);
+          const content=`${topic}: ${prefix}: ${artifact.content}${qualifications?'\n'+qualifications:''} [optional; grants no authority]`;
+          if((artifact.kind!=='discovery'||qualifications)&&Buffer.byteLength(content)<=4096)tx.run('INSERT INTO understanding_projection(artifact_id,scope_key,boundary,content,fresh_until_ms,qualification_revision) VALUES (?,?,?,?,?,1)',id,scopeKey(scope),boundary,content,expiry);
         }
       }
       work.state="published";work.admissionReceiptRef=`understanding-admission:${id}`;work.revision++;work.lastOutcome="succeeded";work.reason="Published validated derived records under current pinned dependencies; no source acquisition or user-evidence mutation.";work.producedRefs=artifacts.map(record=>record.recordType==="topicBrief"?`topic-brief:${record.briefId}:${record.revision}`:record.recordType==='candidate'?`candidate:${record.candidateId}:${record.revision}`:`hypothesis:${record.hypothesisId}:${record.revision}`);
@@ -190,7 +239,7 @@ export class UnderstandingRepository {
     if(!/^[a-f0-9]{64}$/u.test(boundary))return [];
     const owner=scopeKey(scope),time=this.now();
     const match=(operator:'AND'|'OR')=>`scope_key:"${owner}" AND boundary:"${boundary}" AND content:(${terms.map(term=>`"${term}"`).join(` ${operator} `)})`;
-    const query=this.database.connection.prepare("SELECT a.artifact_id AS id,a.payload_json AS payload,p.content,p.fresh_until_ms AS freshUntil FROM understanding_projection_fts JOIN understanding_projection p ON p.projection_id=understanding_projection_fts.rowid JOIN understanding_artifacts a ON a.artifact_id=p.artifact_id WHERE understanding_projection_fts MATCH ? AND p.scope_key=? AND p.boundary=? AND p.fresh_until_ms>? AND a.kind='candidate' AND json_extract(a.payload_json,'$.status')='proposed' LIMIT 32");
+    const query=this.database.connection.prepare("SELECT a.artifact_id AS id,a.payload_json AS payload,p.content,p.fresh_until_ms AS freshUntil FROM understanding_projection_fts JOIN understanding_projection p ON p.projection_id=understanding_projection_fts.rowid JOIN understanding_artifacts a ON a.artifact_id=p.artifact_id WHERE understanding_projection_fts MATCH ? AND p.scope_key=? AND p.boundary=? AND p.fresh_until_ms>? AND p.qualification_revision=1 AND a.kind='candidate' AND json_extract(a.payload_json,'$.status')='proposed' LIMIT 32");
     type SelectionRow={id:string;payload:string;content:string;freshUntil:number};
     // Retrieve the bounded, more specific intersection before a broad union can
     // fill every slot with common-word matches. Keep the existing union fallback

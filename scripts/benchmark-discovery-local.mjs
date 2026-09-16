@@ -30,6 +30,7 @@ const measuredPaths=['scripts/benchmark-discovery-local.mjs','scripts/discovery-
 const measuredSources=await Promise.all(measuredPaths.map(async path=>({path,sha256:createHash('sha256').update(await readFile(join(root,path))).digest('hex')})));
 const directory=await mkdtemp(join(tmpdir(),'lifestream-discovery-benchmark-'));
 const reports=[];
+let interrupted=false;process.once('SIGINT',()=>{interrupted=true;});
 function seedCorpus(path,count){
  const db=new Database({path});db.migrate();const now=Date.now();
  const parent=(topic,text,n)=>({...scope,schemaVersion:'1.0.0',recordType:'topicBrief',briefId:uid(n),revision:1,topicRef:topic,derived:true,status:'prepared',sources:[{sourceRef:'source:local-benchmark',sourceFamily:'family:local-benchmark',sourceRevision:'revision:1',policyRef:'policy:synthetic',retrievedAt:new Date(now).toISOString(),reliability:'unknown',reliabilityBasis:'Synthetic fixture only.',kind:'providedFixture'}],claims:[{claimId:uid(n+10),text,sourceRefs:['source:local-benchmark'],qualifier:'attributed',versionScope:'Synthetic 1',spoilerClass:'none',contradictionRefs:[]}],aliasClaims:[],knowledgeGaps:['No factual-world claim.'],deeperMaterialRefs:[],builtAt:new Date(now).toISOString(),freshUntil:new Date(now+600000).toISOString(),compilerRef:'synthetic-corpus:1',dependencyRefs:['source:local-benchmark:revision:1'],configurationRef:'configuration:synthetic:1'});
@@ -47,6 +48,9 @@ function seedCorpus(path,count){
   }
   db.connection.exec('COMMIT');
  }catch(error){db.connection.exec('ROLLBACK');db.close();throw error;}
+ const repository=new UnderstandingRepository(db);
+ while(Number(db.connection.prepare('SELECT count(*) AS n FROM understanding_projection WHERE qualification_revision=0').get().n)>0)repository.cleanupExpired();
+ while(repository.maintainProjectionIndex()){}
  db.connection.exec('PRAGMA wal_checkpoint(TRUNCATE)');db.close();
 }
 async function startBackground(path){
@@ -80,6 +84,7 @@ try{
     if(condition==='background')background=await startBackground(path);
     let db=condition==='cold'?null:new Database({path});
     try{for(let i=0;i<200;i++){
+     if(interrupted)throw new Error('Benchmark interrupted by operator; completed corpora retained.');
      background?.check();if(condition==='cold')db=new Database({path});
      try{runs[condition].push(measure(db,condition,`pair:${i}`));}finally{if(condition==='cold'){db.close();db=null;}}
      if(i%20===0)await new Promise(resolve=>setImmediate(resolve));
