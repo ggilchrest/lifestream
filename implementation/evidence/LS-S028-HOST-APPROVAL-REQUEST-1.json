@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-HOST-APPROVAL-REQUEST-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "dd95ea879f617c033343fc7de167adc1a2375aa2",
+  "specificationRevision": "82f410a5378ebd24d1bfe2ed98c40ba55b767804",
+  "producerRevision": "e7c408c5d4ddb1cb1d9fe9579c7e08d91f056d3f",
+  "recordedAt": "2026-09-16T14:52:17.605207Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/authority/pwce-action-preparation.ts",
+        "sha256": "a484bed44d3769294c321825c60fe8f8dc2201735982aaa904f78094b9b68522"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "2198d441d9850b7795cc8531007f04f32cc23fcbc3fed53adf55e07aee9601d7"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "c08defda6187ec84181071cf04078af1af85601bab1bf0f4c0bf292961c5f4f3"
+      },
+      {
+        "path": "scripts/check-pwce-host-approval.mjs",
+        "sha256": "a3f5b55832e8ec481d1826722fd0c9a680a9d9f0aeee6e54dbb9934cb2ccba88"
+      }
+    ]
+  },
+  "claim": "Authenticated original-review approval requests require current approvalRequired preview and durable journal reservation before one producer POST. Original status and verified proof recover lost replies and survive same-endpoint host restart without dispatcher credentials. Unknown attempts are never resent. Local confirmation cannot satisfy pending producer Human approval; no action admission or invocation occurs.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-host-approval-full.log",
+      "logSha256": "80fdc4a8eed90f4da566b909e4003907c998f6b27da50da827c940f09178af3e"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-host-approval-typecheck-verified.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-host-approval-lint-final.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-host-approval-build-final.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/pwce-capabilities.test.ts packages/providers-pwce/test/authority-preview.test.ts",
+      "result": "pass",
+      "log": "ls-host-approval-focused.log",
+      "logSha256": "5b79aceaf4a95e5255d9cd68860802efd183cf9a2146f52e3b03153370952f4e"
+    },
+    {
+      "command": "node scripts/check-pwce-host-approval.mjs",
+      "result": "pass",
+      "log": "ls-host-approval-joined-final2.log",
+      "logSha256": "9a9bd74bc84ab718c2dde3649547c50c5bafe44c0dc2cf01c5333dcee194b2b7"
+    },
+    {
+      "command": "PWCE_HOST_DISPATCH=1 node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-host-approval-host-regression.log",
+      "logSha256": "2ab9680f5a1ed2e790ca99b4e0b1915caf06fc731228609a1f60e06f082d4ac8"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-host-approval-workspace.log",
+      "logSha256": "55d91cddf52a1007514fc508e4a9dda6f09df64612e5f2922804b0a6d74865d6"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-host-approval-private.log",
+      "logSha256": "03f8b6cb8807283cb7a8c0da82faf5c097f21f18a7e255bba52d57500b608574"
+    }
+  ],
+  "counts": {
+    "applicationTests": 880,
+    "focusedTests": 43,
+    "workspaceTests": 43,
+    "actualHostApprovalChecks": 11,
+    "approvalPosts": 2,
+    "approvalTargetCalls": 0,
+    "existingHostDispatchChecks": 22,
+    "existingSyntheticTargetCalls": 4
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-approval-request/2026-09-16T145217Z",
+  "preservedFailures": [
+    "Synthetic Human proof originally used wall-clock time later than the fixed producer clock; producer correctly rejected it. Fixture proof now uses its producer clock.",
+    "Initial restart changed the host port; authentication correctly rejected the old origin-bound session. Fixture preserves the original endpoint; production authentication was not weakened."
+  ],
+  "limitations": [
+    "Exact approved review/resume and control-page actions remain pending.",
+    "Tests run actual host and PWCE HTTP servers in one isolated test process. Producer is configured for approval-required live-mode policy with synthetic targets only; no physical effects or saved configuration changes.",
+    "Human proof is injected through the producer service, not Studio UI; no new Human acceptance."
+  ]
+}
