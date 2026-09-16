@@ -1,8 +1,9 @@
+import type {PwceActionJournal} from './pwce-action-journal.ts';
 import {createHash,randomUUID} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import type {Database} from '@lifestream/storage-sqlite';
-import type {AuthorityRequest,ArtifactRef,providerMessages_DefsExternalAuthorityDecision} from '@lifestream/contracts/provider-messages';
-import {PwceAuthorityPreview,pwceLightOperation,PWCE_LIGHT_CAPABILITY_ID,EXPECTED_PWCE_CAPABILITY_BUNDLE,type PwcePreparedAction,type PwceCatalogRecord} from '@lifestream/providers-pwce';
+import type {AuthorityRequest,AuthorityDispatchRequest,CapabilityInvocationRequest,ArtifactRef,providerMessages_DefsExternalAuthorityDecision} from '@lifestream/contracts/provider-messages';
+import {PwceAuthorityAdmission,PwceInvocation,pwceGovernedDisposition,type PwceTrustedDispatchClient,PwceAuthorityPreview,pwceLightOperation,PWCE_LIGHT_CAPABILITY_ID,EXPECTED_PWCE_CAPABILITY_BUNDLE,type PwcePreparedAction,type PwceCatalogRecord} from '@lifestream/providers-pwce';
 import {boundedJson,canonicalJson,validateCapabilitySchema} from '@lifestream/runtime/capabilities/schema-validation';
 import {resolveCapabilitySchema} from '@lifestream/runtime/capabilities/schema-artifacts';
 import {CapabilityCall} from '@lifestream/runtime/capabilities/call';
@@ -107,6 +108,41 @@ export class PwceActionPreparation {
    this.guard(assistantId,local);if(!isDeepStrictEqual(this.byKey(local.principalId,record.idempotencyKey),record))fail();
    return this.view(record,preview,inputSchema,replayed);
   },record.catalog);
+ }
+ async dispatchConfirmed(assistantId:string,invocationId:string,local:LocalContext,csrfToken:string,raw:unknown,inputCall:CapabilityCallContext,journal:PwceActionJournal,dispatcher:PwceTrustedDispatchClient){
+  return this.withConfirmedReview(assistantId,invocationId,local,csrfToken,raw,inputCall,async confirmation=>{
+   const {record,lease,request,preview,evidence}=confirmation;
+   const interactionTraceId=record.catalog.scope.interactionTraceId;if(typeof interactionTraceId!=='string')return fail('pwce_dispatch_interaction_required',409);
+   const current=()=>{confirmation.assertCurrent();journal.assertCurrent();if(journal.deploymentId!==record.catalog.scope.environmentId)return fail('pwce_journal_deployment_mismatch',409);};current();
+   if(evidence.decision.kind!=='preview')return fail();
+   const prior=journal.admissions.read(record.idempotencyKey);
+   let dispatch:AuthorityDispatchRequest;
+   if(prior){
+    const original=prior.intent.request,{expectedGrantRevision,requiredProviderDisposition:_preview,...payload}=original.payload;
+    if(original.idempotencyKey!==record.idempotencyKey||original.correlationId!==record.correlationId||original.executionMode!==record.catalog.executionMode||expectedGrantRevision!==record.catalog.producerRevision||!isDeepStrictEqual(original.scope,record.catalog.scope)||!isDeepStrictEqual(payload,request.payload)||!isDeepStrictEqual(prior.intent.prepared,record.prepared)||!isDeepStrictEqual(prior.intent.catalog,record.catalog))return fail('pwce_dispatch_original_conflict',409);
+    dispatch={...original,requestId:request.requestId,cancellationId:request.cancellationId,deadlineAt:request.deadlineAt};
+   }else dispatch={...request,operation:'AuthorityProvider.authorizeDispatch',idempotencyKey:record.idempotencyKey,payload:{...request.payload,expectedGrantRevision:record.catalog.producerRevision,requiredProviderDisposition:pwceGovernedDisposition({...evidence.decision,kind:'preview'})}};
+   const admission=new PwceAuthorityAdmission({providerRef:'pwce',client:lease.client,dispatcher,catalog:lease.catalog,preview,custody:journal.admissions,authorize:async(candidate,prepared)=>{
+    current();return isDeepStrictEqual(candidate.payload,dispatch.payload)&&isDeepStrictEqual(candidate.scope,dispatch.scope)&&candidate.idempotencyKey===dispatch.idempotencyKey&&candidate.correlationId===dispatch.correlationId&&isDeepStrictEqual(prepared,record.prepared);
+   }});
+   const invocation=new PwceInvocation({providerRef:'pwce',client:lease.client,dispatcher,admission,custody:journal.invocations});
+   const previousInvocation=journal.invocations.read(invocationId);
+   if(previousInvocation){
+    if(!prior||previousInvocation.request.idempotencyKey!==record.idempotencyKey||!isDeepStrictEqual(previousInvocation.request.scope,record.catalog.scope))return fail('pwce_dispatch_original_conflict',409);
+    const query={...previousInvocation.request,operation:'CapabilityProvider.getInvocation' as const,requestId:request.requestId,cancellationId:request.cancellationId,deadlineAt:request.deadlineAt,payload:{invocationId}};
+    const result=await invocation.getInvocation(query,lease.context);current();
+    if(result.outcome.status!=='succeeded')return fail('pwce_invocation_unavailable');
+    return {providerRef:'pwce',replayed:true,invocation:result.outcome.payload,admission:prior.outcome?.decision??null,grantsAuthority:false};
+   }
+   const admitted=await admission.authorizeDispatch(dispatch,lease.context);current();
+   if(admitted.outcome.status!=='succeeded'||admitted.outcome.payload.authorityKind!=='external'||admitted.outcome.payload.disposition!=='authorized')return fail('pwce_dispatch_not_admitted',409);
+   const decision=admitted.outcome.payload as providerMessages_DefsExternalAuthorityDecision;
+   if(decision.kind!=='dispatch')return fail();
+   const invoke:CapabilityInvocationRequest={...dispatch,scope:{...dispatch.scope,interactionTraceId},operation:'CapabilityProvider.invoke',requestId:randomUUID(),payload:{invocationId,capabilityId:PWCE_LIGHT_CAPABILITY_ID,capabilityVersion:descriptor.schemaVersion,snapshotId:record.catalog.snapshot.snapshotId,snapshotRevision:record.catalog.snapshot.revision,operationScope:dispatch.payload.scope,input:record.prepared.input,inputSchema:record.inputSchema,inputDigest:dispatch.payload.inputDigest,dispatchReceipt:decision.evidenceRef}};
+   const result=await invocation.invoke(invoke,lease.context);current();
+   if(result.outcome.status!=='succeeded')return fail('pwce_invocation_unavailable');
+   return {providerRef:'pwce',replayed:!!prior,admission:admitted.outcome.payload,invocation:result.outcome.payload,grantsAuthority:false};
+  });
  }
  async inspect(assistantId:string,invocationId:string,local:LocalContext,inputCall:CapabilityCallContext){
   this.guard(assistantId,local);if(!uuid.test(invocationId))fail('invalid_preparation_reference',422);

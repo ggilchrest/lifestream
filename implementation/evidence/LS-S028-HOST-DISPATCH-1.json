@@ -1,0 +1,185 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-HOST-DISPATCH-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "2f4e72e0b5a5aadc540c10d97b8d8b6c980c31a2",
+  "specificationRevision": "9d69fa670bf8b49897a791154c9e0f7ca62d4cda",
+  "producerRevision": "33fd48cea56e5352211db0b948fb760c13db8c27",
+  "recordedAt": "2026-09-16T13:50:22.571006Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/authority/pwce-action-journal.ts",
+        "sha256": "fcf7195b1b1164a8d5591e329a712f85ad95785d6c4b99b40edbdd93909ec950"
+      },
+      {
+        "path": "apps/server/src/authority/pwce-action-preparation.ts",
+        "sha256": "6104a4931f3c7d3f39913dc5fbf0cf890c0049c7a03174b5e190c793000d085c"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "ecd65d024ed2b94ba0ceb31de3e15788549120b943357e928648056eca853b11"
+      },
+      {
+        "path": "apps/server/test/pwce-capabilities.test.ts",
+        "sha256": "65e846dfab5e150f4532f54e374c371bfb71731136977343c278370e37975021"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "ae2ecbbbfa6fb2008cdf4663e838036b9c225b9e72051357801d4aff51c6b3da"
+      },
+      {
+        "path": "scripts/check-pwce-host-process.mjs",
+        "sha256": "b60f807c612f1723dfdb324fb0e2c340ca74513deb64193f3eb26ec2e6921779"
+      }
+    ]
+  },
+  "claim": "Authenticated exact-review HTTP confirmation composes actual PWCE admission and invocation with the separate deployment-bound action journal. Duplicate/concurrent requests, host restart, lost admission replies and lost invocation replies retain original identity and do not redispatch an existing invocation. Unavailable custody and foreign deployment prevent sends.",
+  "results": {
+    "applicationTests": 857,
+    "focusedHostAndJournalTests": 44,
+    "newHostTests": 2,
+    "workspaceTests": 43,
+    "actualProducerAndChromeChecks": 23,
+    "finalIsolatedRunTargetCalls": 4,
+    "finalIsolatedRunDispatchPosts": 8,
+    "preservedDirtyArtifacts": 6
+  },
+  "exclusions": [
+    "Confirmation currently requires an unexpired retained review and original catalog. Historical status after expiry, producer-owned Human approval and control-page workflows remain incomplete.",
+    "Existing preview denial and approval requirements cannot be bypassed by local confirmation.",
+    "No whole LS-S028 or broader scope acceptance, no saved service/configuration activation, deployment, physical effects, personal import, training, model selection or new Human acceptance."
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-dispatch/2026-09-16T135022Z",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-host-confirm-dispatch-full.log",
+      "sha256": "fa066fe794566cd18312dc3b56cff2553c0c046d4173ccbfba1abefc80e6669e"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/pwce-capabilities.test.ts apps/server/test/pwce-action-journal.test.ts",
+      "result": "pass",
+      "log": "ls-host-confirm-dispatch-focused.log",
+      "sha256": "bec74abd538091b8bd3822b1ca9bdca98498e0f3aa8cc00f7c57027078fda655"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-host-confirm-dispatch-typecheck-final2.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-host-confirm-dispatch-lint-verified.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-host-confirm-dispatch-build.log",
+      "sha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-host-confirm-dispatch-workspace.log",
+      "sha256": "97d924dc3a990e39f74d87f570b004aa3619b6b8edcd3d818a0eacc6115929bb"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-host-confirm-dispatch-private.log",
+      "sha256": "0973b9005e18d9c01624804c90439b594f36186318720d0f7eb85e4a39bc0567"
+    },
+    {
+      "command": "PWCE_HOST_DISPATCH=1 PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-host-confirm-dispatch-joined-final.log",
+      "sha256": "69e64cf8bba53a89675dc9d87d15348c8476358472d5c4bc6399691bbfd154d7"
+    }
+  ],
+  "earlierFailures": [
+    "Initial typecheck exposed preview/dispatch discriminant narrowing, nullable artifact and exact optional provisioning fields.",
+    "Later typecheck exposed the canonical invocation requirement for an existing non-null interaction trace. The host now checks this before admission instead of inventing an identity."
+  ],
+  "rawLogs": [
+    {
+      "log": "ls-host-confirm-dispatch-build.log",
+      "sha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-focused.log",
+      "sha256": "bec74abd538091b8bd3822b1ca9bdca98498e0f3aa8cc00f7c57027078fda655"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-full.log",
+      "sha256": "fa066fe794566cd18312dc3b56cff2553c0c046d4173ccbfba1abefc80e6669e"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-joined-1.log",
+      "sha256": "a16b222b1e3b117396f1ee3b89c63453b2f059282c4d74cd61635083e1fedf1e"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-joined-2.log",
+      "sha256": "0615424de8b1ede792e59a49c4f2ef581f91b4ff0514c4c26c2b8ecf8870385b"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-joined-3.log",
+      "sha256": "7ba48dba138a4f248d0a27144abd535548342757e37b21edcbc24bc73caf2343"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-joined-final.log",
+      "sha256": "69e64cf8bba53a89675dc9d87d15348c8476358472d5c4bc6399691bbfd154d7"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-lint-final.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-lint-verified.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-private.log",
+      "sha256": "0973b9005e18d9c01624804c90439b594f36186318720d0f7eb85e4a39bc0567"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-typecheck-final.log",
+      "sha256": "ac723ff94e9ac89d63bc4aedf3b9d2b25a9169f0f40196e6c5da8a5ec4fe5ea8"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-typecheck-final2.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-typecheck-pass.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-typecheck-verified.log",
+      "sha256": "ac723ff94e9ac89d63bc4aedf3b9d2b25a9169f0f40196e6c5da8a5ec4fe5ea8"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-typecheck.log",
+      "sha256": "40195fad706adc90c1dc3bb19b9957a179c8df671dc628363238001b046a6f2f"
+    },
+    {
+      "log": "ls-host-confirm-dispatch-workspace.log",
+      "sha256": "97d924dc3a990e39f74d87f570b004aa3619b6b8edcd3d818a0eacc6115929bb"
+    }
+  ],
+  "operatorDisposition": {
+    "status": "continue",
+    "nextAction": "Implement authenticated historical status and evidence recovery after review expiry without execution renewal; then complete producer Human approval and control-page workflows."
+  }
+}

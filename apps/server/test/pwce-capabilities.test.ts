@@ -1,3 +1,4 @@
+import { PwceActionJournal } from '../src/authority/pwce-action-journal.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID, randomBytes } from 'node:crypto';
@@ -257,4 +258,19 @@ test('revocation while confirmation awaits a fresh preview prevents entry to the
  const f=await http(t);await prepareAudience(f);const first=await f.send(preparationPath(f),preparationBody()),r=first.body.preparation;let reached=false;
  f.state.hook=async phase=>{if(phase==='authority.evaluate'){f.emit('authority.revoked');await new Promise(resolve=>setImmediate(resolve));}};
  await assert.rejects(f.app.pwcePreparation.withConfirmedReview(r.owner.assistantId,r.invocationId,f.local,f.csrfToken,{idempotencyKey:first.body.idempotencyKey,confirmationDigest:r.confirmationDigest},call(),async()=>{reached=true;}));assert.equal(reached,false);
+});
+
+
+test('HTTP confirmation cannot activate dispatch without explicit dispatcher and journal configuration',async t=>{
+ const f=await http(t);await prepareAudience(f);const first=await f.send(preparationPath(f),preparationBody()),r=first.body.preparation,path=f.path+'/invocations/'+r.invocationId+'/confirm';
+ const result=await f.send(path,{idempotencyKey:first.body.idempotencyKey,confirmationDigest:r.confirmationDigest});assert.equal(result.status,503);assert.equal(result.body.code,'pwce_dispatch_not_configured');
+ assert.equal((await f.send(path)).status,405);assert.equal((await f.send(path+'?override=true',{})).status,422);
+ assert.ok(f.requests.every(r=>!['authority.authorizeDispatch','capabilities.invoke'].includes(r.body?.operation)));
+});
+
+test('confirmed action cannot use another deployment journal',async t=>{
+ const f=await http(t);await prepareAudience(f);const first=await f.send(preparationPath(f),preparationBody()),r=first.body.preparation,root=mkdtempSync(join(tmpdir(),'ls-foreign-journal-'));
+ const journal=new PwceActionJournal({stateDirectory:root,deploymentId:randomUUID(),create:true});t.after(()=>{journal.close();rmSync(root,{recursive:true,force:true});});
+ await assert.rejects(f.app.pwcePreparation.dispatchConfirmed(r.owner.assistantId,r.invocationId,f.local,f.csrfToken,{idempotencyKey:first.body.idempotencyKey,confirmationDigest:r.confirmationDigest},call(),journal,{}),{code:'pwce_journal_deployment_mismatch'});
+ assert.equal(journal.admissions.read(first.body.idempotencyKey),undefined);assert.equal(journal.invocations.read(r.invocationId),undefined);
 });

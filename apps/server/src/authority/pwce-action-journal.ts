@@ -33,6 +33,7 @@ export interface PwceActionJournalOptions {
 
 /** Consumer attempt custody. This never grants authority or repairs uncertain history. */
 export class PwceActionJournal {
+ readonly deploymentId:string;
  readonly admissions:PwceAdmissionCustody;
  readonly invocations:PwceInvocationCustody;
  private readonly database:Database;
@@ -51,7 +52,7 @@ export class PwceActionJournal {
  constructor(options:PwceActionJournalOptions){
   let database:Database|undefined;
   try{
-   if(!uuid.test(options.deploymentId))fail();
+   if(!uuid.test(options.deploymentId))fail();this.deploymentId=options.deploymentId;
    if(options.capacity!==undefined&&(!Number.isSafeInteger(options.capacity)||options.capacity<1||options.capacity>4096))fail();
    directory(options.stateDirectory);this.root=realpathSync(options.stateDirectory);this.rootStat=directory(this.root);
    this.anchor=join(this.root,'pwce-journal-identity.json');const dir=join(this.root,'pwce-action-journal');
