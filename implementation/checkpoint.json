@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "ae60d3b73dbb6d80eebf8e0b6bb2a7178d5ba4b4",
+  "currentRevision": "ae60d3b24f6ec72f8874b429dea89be833536c77",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
