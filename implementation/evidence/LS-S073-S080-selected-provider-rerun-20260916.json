@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S073-S080-selected-provider-rerun-20260916",
+  "slice": "LS-S084",
+  "status": "qualificationPending",
+  "claimClass": "technical-core",
+  "collectedAt": "2026-09-16T18:57:17.930Z",
+  "sourceRevision": "d78630c83063454f1b01a3c4ba46e11d253cb4db",
+  "selectedProvider": {
+    "profile": "ai5090",
+    "profileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+    "inference": "@lifestream/providers-sglang",
+    "modelSelection": "existing profile; no provider or model selection change"
+  },
+  "observations": [
+    {
+      "slice": "LS-S073",
+      "script": "scripts/qualify-s073-development.mjs",
+      "scriptSha256": "2a97df98f519698156f10b72ea0ea871d54481209c86ec095e4c086c07f017e7",
+      "result": "fail",
+      "checks": {
+        "LS-TEST-092": "pass",
+        "LS-TEST-093": "pass",
+        "LS-TEST-094": "fail",
+        "LS-TEST-096": "pass",
+        "LS-TEST-100": "pass"
+      },
+      "failure": "One ordinary selected-provider cache-example reply omitted the synthetic Moon Orchard label while another repeated reply included it. This is model-output variability; the context selection, disabled-callback fence and correction/audience checks passed."
+    },
+    {
+      "slice": "LS-S076",
+      "script": "scripts/qualify-s076-development.mjs",
+      "scriptSha256": "a66fab25cd133caa484a624a9067760c9b737e974735569994ff4f8948b81cc3",
+      "result": "pass",
+      "checks": {
+        "LS-TEST-095-105": "pass"
+      }
+    },
+    {
+      "slice": "LS-S078",
+      "script": "scripts/qualify-s078-development.mjs",
+      "scriptSha256": "a75479412b7372c2958b037aea6fb3df6cbb3abdd790306c244dc2116c1152ee",
+      "result": "pass",
+      "checks": {
+        "LS-TEST-099": "pass"
+      }
+    },
+    {
+      "slice": "LS-S080",
+      "script": "scripts/qualify-s080-development.mjs",
+      "scriptSha256": "6a6a872778e95bef278ddcc74f0498b5ed7f83afe7239ca6238fe642bfe9f371",
+      "result": "pass",
+      "checks": {
+        "LS-TEST-102": "pass",
+        "LS-TEST-104": "pass"
+      }
+    }
+  ],
+  "claimBoundary": "These are selected-provider observations against the existing ai5090 development profile. The S073 failure keeps the current qualification gate open; passing S076/S078/S080 observations do not by themselves replace their immutable qualification successors.",
+  "retainedFailures": [
+    "S073 LS-TEST-094 remains pending until the selected provider produces the required synthetic label consistently enough for the existing qualification criterion.",
+    "The joined LS-TEST-106 missing-reply history remains separate and nonblocking for this rerun record."
+  ],
+  "exclusions": [
+    "No provider/model selection change, deployment, live configuration, personal-data import, training, physical effect or Human acceptance was performed."
+  ]
+}
