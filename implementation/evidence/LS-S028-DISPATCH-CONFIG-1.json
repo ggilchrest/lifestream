@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-DISPATCH-CONFIG-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "f294fcb840a3f18163099f317622b104d0c85693",
+  "specificationRevision": "abe2dd723263e7c719ad552207efa9dc6d06a33b",
+  "recordedAt": "2026-09-16T13:34:20.907545Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/server/src/config/pwce.ts",
+        "sha256": "b64b8704f63c52b14724a932c473c0184e563abc55baa6fabafd715e6584f251"
+      },
+      {
+        "path": "apps/server/src/config/schema.ts",
+        "sha256": "95430b742d4819dba95076864b6b964efa12db0a7f3b05331964c9bccf059d6c"
+      },
+      {
+        "path": "apps/server/test/config.test.ts",
+        "sha256": "399d1b495d5cd8ff62762ea88c533bb05c068c65c5a74c54f1f710b10f9e0391"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "492ed6ff9a80a563382ec93d321b4ac57893ae4ec474d7630645dfdb8fd0b692"
+      }
+    ]
+  },
+  "claim": "Explicit optional PWCE host dispatcher composition requires local authentication and distinct environment references, variable names and resolved credentials. No dispatcher secret is read when this configuration is absent. Existing pinned transport is constructed without a network call.",
+  "results": {
+    "applicationTests": 851,
+    "focusedConfigurationAndTransportTests": 17,
+    "workspaceTests": 43
+  },
+  "exclusions": [
+    "Confirmation, journal provisioning and dispatch/recovery routes remain pending. No complete LS-S028 or broader scope acceptance is claimed.",
+    "No saved service/configuration activation, deployment, physical effects, personal import, training, provider/model selection or new Human acceptance."
+  ],
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-dispatch-config/2026-09-16T133420Z",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-host-dispatch-config-full.log",
+      "sha256": "9afa975ba9b4665a23e6797ac2c05f2e5defa8dfc99fccd1eca7a902e86f1d5c"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/config.test.ts packages/providers-pwce/test/dispatch.test.ts",
+      "result": "pass",
+      "log": "ls-host-dispatch-config-tests.log",
+      "sha256": "f4e68f34bf29e381f6752f303e9f8b8cf4b337b1c6774048be9e12673b8cfe4a"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-host-dispatch-config-typecheck.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-host-dispatch-config-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-host-dispatch-config-build.log",
+      "sha256": "d8328370eb8905c7ebba3ab32330cd6a95d793c5e13c7f563cfc1c142656908c"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-host-dispatch-config-workspace.log",
+      "sha256": "46ee0aee89bb69b929a888860118087e8d7a075f5339b7212e00b9de0a2c742e"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-host-dispatch-config-private.log",
+      "sha256": "18765b050ba01679bb1ec6c491c0798bfe56398e2b02732aa988fb9486dc6397"
+    }
+  ],
+  "operatorDisposition": {
+    "status": "continue",
+    "nextAction": "Bind authenticated exact-review confirmation to durable original admission and invocation records; connect read-only status recovery and producer Human approval without authority substitution."
+  }
+}

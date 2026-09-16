@@ -1,3 +1,4 @@
+import { createPwceDispatcher } from '../src/config/pwce.ts';
 import assert from "node:assert/strict";
 import test from "node:test";
 import { loadConfig, loadProfile, redactedDigest } from "../src/config/loader.ts";
@@ -53,4 +54,22 @@ test('PWCE configuration binds World, mode, sites and an environment credential 
  assert.throws(()=>load({authority:{...input.authority,provider:'fixture'}}),/standalone/);
  assert.throws(()=>load({profile:'test'}),/fixture/);
  assert.throws(()=>load({providers:base.providers}),/explicit/);
+});
+
+
+test('PWCE dispatcher composition requires distinct host-only credentials without changing discovery configuration',()=>{
+ const profile={endpoint:'http://127.0.0.1:12345',worldRef:'world.synthetic',executionEnvironmentRef:'normal',siteRefs:['home.one'],principalRef:'agent.synthetic',lifestreamEnvironmentId:'deployment.synthetic',tokenSecretRef:'gateway'};
+ const input={...base,profile:'local-dev',providers:{...base.providers,world:'pwce',capability:'pwce'},authority:{provider:'pwce',authentication:'local-password'},secretRefs:{gateway:{kind:'env',name:'PWCE_AGENT'},dispatcher:{kind:'env',name:'PWCE_DISPATCHER'}},pwceProfile:profile};
+ const load=(change:Record<string,unknown>={})=>loadConfig({defaults:{...input,...change},profile:{},environment:{},cli:{}});
+ const noRead=new Proxy({}, {get(){throw new Error('unexpected secret read');}});
+ assert.equal(createPwceDispatcher(load(),noRead),undefined);
+ const configured={...profile,dispatcherTokenSecretRef:'dispatcher'};
+ const config=load({pwceProfile:configured});
+ assert.ok(createPwceDispatcher(config,{PWCE_AGENT:'a'.repeat(40),PWCE_DISPATCHER:'b'.repeat(40)}));
+ for(const environment of [{},{PWCE_AGENT:'a'.repeat(40)},{PWCE_AGENT:'a'.repeat(40),PWCE_DISPATCHER:'a'.repeat(40)},{PWCE_AGENT:'a'.repeat(40),PWCE_DISPATCHER:'short'}])assert.throws(()=>createPwceDispatcher(config,environment));
+ for(const ref of ['gateway','missing','',42])assert.throws(()=>load({pwceProfile:{...profile,dispatcherTokenSecretRef:ref}}));
+ assert.throws(()=>load({pwceProfile:configured,secretRefs:{...input.secretRefs,dispatcher:{kind:'env',name:'PWCE_AGENT'}}}));
+ assert.throws(()=>load({pwceProfile:configured,authority:{provider:'pwce',authentication:'fixture'}}));
+ assert.throws(()=>load({pwceProfile:{...configured,dispatcherToken:'plaintext'}}));
+ assert.equal(JSON.stringify(config).includes('a'.repeat(40)),false);
 });

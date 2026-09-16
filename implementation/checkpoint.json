@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "ce114b0b48fdf2971e5efb89612416633491cd6f",
+  "currentRevision": "f294fcb840a3f18163099f317622b104d0c85693",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -230,59 +230,52 @@
     "implementation/evidence/LS-S028-HOST-SCOPE-1.json",
     "apps/server/src/authority/pwce-action-preparation.ts",
     "packages/storage-sqlite/src/migrations/0038_pwce_action_preparations.sql",
-    "implementation/evidence/LS-S028-HOST-PREPARATION-1.json"
+    "implementation/evidence/LS-S028-HOST-PREPARATION-1.json",
+    "implementation/evidence/LS-S028-DISPATCH-CONFIG-1.json"
   ],
   "changedFiles": [
-    "apps/control-web/capability-permissions.js",
-    "apps/server/src/authority/pwce-action-preparation.ts",
-    "apps/server/src/index.ts",
-    "apps/server/test/pwce-capabilities.test.ts",
-    "apps/server/test/server.test.ts",
+    "apps/server/src/config/pwce.ts",
+    "apps/server/src/config/schema.ts",
+    "apps/server/test/config.test.ts",
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-HOST-PREPARATION-1.json",
-    "packages/providers-pwce/src/index.ts",
-    "packages/storage-sqlite/src/migrations/0038_pwce_action_preparations.sql",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/test/initiative-delivery.test.ts",
-    "packages/storage-sqlite/test/initiative-expression.test.ts",
-    "scripts/check-pwce-host-process.mjs"
+    "implementation/evidence/LS-S028-DISPATCH-CONFIG-1.json"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-tests-verified.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-dispatch-config/2026-09-16T133420Z/ls-host-dispatch-config-full.log"
     },
     {
-      "command": "node --test scripts/workspace.test.mjs",
+      "command": "node --test --experimental-strip-types apps/server/test/config.test.ts packages/providers-pwce/test/dispatch.test.ts",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-workspace.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-dispatch-config/2026-09-16T133420Z/ls-host-dispatch-config-tests.log"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-typecheck-verified.log"
-    },
-    {
-      "command": "pnpm build",
-      "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-build-verified.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-dispatch-config/2026-09-16T133420Z/ls-host-dispatch-config-typecheck.log"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-lint-verified.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-dispatch-config/2026-09-16T133420Z/ls-host-dispatch-config-lint.log"
     },
     {
-      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node scripts/check-pwce-host-process.mjs",
+      "command": "pnpm build",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-joined.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-dispatch-config/2026-09-16T133420Z/ls-host-dispatch-config-build.log"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-dispatch-config/2026-09-16T133420Z/ls-host-dispatch-config-workspace.log"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-host-preparation/2026-09-16T132837Z/ls-host-preparation-private.log"
+      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-dispatch-config/2026-09-16T133420Z/ls-host-dispatch-config-private.log"
     }
   ],
   "decisions": [
@@ -300,8 +293,8 @@
     "2026-09-16: operator explicitly resumes at the current reasoning level; the previous pause is superseded."
   ],
   "blockers": [],
-  "nextAction": "Connect explicit host confirmation and producer admission/invocation/recovery to retained preparation and separate durable action journal.",
-  "updatedAt": "2026-09-16T13:28:37.466103Z",
+  "nextAction": "Bind authenticated exact-review confirmation to durable original admission and invocation records; connect read-only status recovery and producer Human approval without authority substitution.",
+  "updatedAt": "2026-09-16T13:34:20.907545Z",
   "updatedBy": "Codex",
-  "notes": "Durable authenticated PWCE preparation and non-consuming preview component verified: 850 application tests, 43 workspace tests, 16 actual producer/Chrome checks, zero target calls. Original evidence retained across retry/restart. Development continues; confirmation and dispatch remain pending."
+  "notes": "PWCE separate dispatcher credential composition verified with 851 application tests, 17 focused configuration/transport tests, 43 workspace tests, typecheck, lint and build. Saved configuration unchanged. Confirmation and dispatch/recovery remain next."
 }

@@ -1,7 +1,7 @@
 export type Profile = "test" | "local-dev" | "ai5090" | "mac-local";
 export type SecretRef = { kind: "env"; name: string };
 export type ProviderRequirement = "required" | "optional";
-export type PwceProfile = { endpoint: string; worldRef: string; executionEnvironmentRef: "normal" | "live" | "test" | "replay" | "simulation" | "dry-run"; siteRefs: string[]; principalRef: string; lifestreamEnvironmentId: string; tokenSecretRef: string; timeoutMs: number; maximumPromptBytes: number };
+export type PwceProfile = { endpoint: string; worldRef: string; executionEnvironmentRef: "normal" | "live" | "test" | "replay" | "simulation" | "dry-run"; siteRefs: string[]; principalRef: string; lifestreamEnvironmentId: string; tokenSecretRef: string; dispatcherTokenSecretRef?: string; timeoutMs: number; maximumPromptBytes: number };
 export type RuntimeConfig = {
   profile: Profile;
   providers: {
