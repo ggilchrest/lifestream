@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-APPROVAL-RECOVERY-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "15b37f86a237d97891bf594844122fd96be18581",
+  "specificationRevision": "a7d24222593752aa59c3b30fd17d06cd93666464",
+  "producerRevision": "e7c408c5d4ddb1cb1d9fe9579c7e08d91f056d3f",
+  "recordedAt": "2026-09-16T14:24:46.651076Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "0b27bf6816f358ee1486243a6aa4f5a1ba92d51ce1b3ec83fb7f91e9c25be725"
+      },
+      {
+        "path": "packages/providers-pwce/src/approval-recovery-bundle.ts",
+        "sha256": "86ee1178d03975aaf75514cd4aa230645f580b3dafa364aae5c02627ce29f670"
+      },
+      {
+        "path": "packages/providers-pwce/src/client.ts",
+        "sha256": "dfc5df1e01a772853d1584c4ec09bdeccd798b998c969a5df7a66d70dc1c36e5"
+      },
+      {
+        "path": "packages/providers-pwce/test/approval-recovery-client.test.ts",
+        "sha256": "38a4c006f14db35819e3337f294042b2fd2a4e34c88d8ec5cf86af022b97f768"
+      },
+      {
+        "path": "scripts/check-pwce-approval-recovery.mjs",
+        "sha256": "da896f10df3cc31cc9f6892c0665824fdd6d113a138c217d252d192ee049902e"
+      },
+      {
+        "path": "scripts/generate-pwce-approval-recovery-pin.mjs",
+        "sha256": "b37f0d0df4e64ec80b45f6e1ead217489c1ce33008496ce6a1ede852614ea127"
+      }
+    ]
+  },
+  "producerContract": {
+    "bundleId": "pwce-approval-recovery.bundle.v1",
+    "bundleVersion": "1.0.0",
+    "bundleDigest": "9c53528c6116123aa64831b8bc96b42c2bfaf1529ebf55094ed316ccf9de7e05"
+  },
+  "claim": "Exact optional approval-recovery contract negotiation and bounded Agent-authenticated reads preserve original producer terms. Original pending, approved and expired evidence is readable without approval or target calls. Known responses with foreign original key, fingerprint, snapshot or caller scope are rejected.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-approval-recovery-full-final.log",
+      "logSha256": "8586e2965dc5acd884e7d808d780b1d3f17de412ad598b2a570e155f0a8c17b2"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-approval-recovery-typecheck-fixed.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-approval-recovery-lint-fixed.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-approval-recovery-build-fixed.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/approval-recovery-client.test.ts packages/providers-pwce/test/admission-recovery-client.test.ts",
+      "result": "pass",
+      "log": "ls-approval-recovery-focused-fixed.log",
+      "logSha256": "cd4c644b43cdc48704ff24ea5db918595609336613dc8cfc88ee55416513d137"
+    },
+    {
+      "command": "node scripts/check-pwce-approval-recovery.mjs",
+      "result": "pass",
+      "log": "ls-approval-recovery-joined-fixed.log",
+      "logSha256": "24090d218b275d0c0e9cb6d397f2bd78575729d302a4c7659b15265e7703d971"
+    },
+    {
+      "command": "node scripts/generate-pwce-approval-recovery-pin.mjs --producer-root ../PWCE",
+      "result": "pass",
+      "log": "ls-approval-recovery-generated.log",
+      "logSha256": "5f4ecc2c61bde2ba7246e48e6c75a9425e03c788816acb6dd294b774f2715282"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-approval-recovery-workspace.log",
+      "logSha256": "2d9be343af8c61ba8997ed42d8b23733412cc01df9db7dfbf9f8008aa3069037"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-approval-recovery-private-final.log",
+      "logSha256": "5bae83717c92aca7bfe8583714ff670fa572835b4d1a56f5f78a096c8d447747"
+    }
+  ],
+  "counts": {
+    "applicationTests": 867,
+    "focusedTests": 12,
+    "workspaceTests": 43,
+    "actualProducerHttpChecks": 11,
+    "targetCalls": 0
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approval-recovery-client/2026-09-16T142301Z",
+  "limitations": [
+    "Consumer approval custody, independent proof verification, request/review/resume and control UI remain pending.",
+    "Joined fixture uses actual producer HTTP in the test process; synthetic Human proof is injected through the producer service, not Studio Human authentication.",
+    "No saved service, live configuration, model selection, personal import, training, physical effect or new Human acceptance."
+  ],
+  "preservedFailures": [
+    "Initial response-binding typecheck lacked a Record<string,unknown> annotation; corrected, then typecheck and build pass.",
+    "Initial checkpoint timestamp used a +00:00 offset; workspace aid requires Z. Corrected, preflight and check pass."
+  ]
+}

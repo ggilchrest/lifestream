@@ -1,3 +1,4 @@
+import {EXPECTED_PWCE_APPROVAL_RECOVERY_BUNDLE as approvalRecoveryBundle,PWCE_APPROVAL_RECOVERY_REQUEST_SCHEMA,PWCE_APPROVAL_RECOVERY_RESPONSE_SCHEMA} from './approval-recovery-bundle.ts';
 import {EXPECTED_PWCE_ADMISSION_RECOVERY_BUNDLE as recoveryBundle,PWCE_ADMISSION_RECOVERY_REQUEST_SCHEMA,PWCE_ADMISSION_RECOVERY_RESPONSE_SCHEMA} from './admission-recovery-bundle.ts';
 import {boundedJson,validateCapabilitySchema} from '@lifestream/runtime/capabilities/schema-validation';
 import { EXPECTED_PWCE_ADMISSION_BUNDLE } from "./admission-bundle.ts";
@@ -104,6 +105,27 @@ export class PwceGatewayClient {
       scope.check();return structuredClone(response);
     });
   }
+  async recoverApproval(authorityContextRef:string,input:Record<string,unknown>,signal?:AbortSignal):Promise<PwceClientResult> {
+    if(typeof authorityContextRef!=='string'||!authorityContextRef||!objectInput(input)||!boundedJson(input)||['operation','authorityContextRef','token','profileId','profileVersion','approvalProfileId','approvalProfileVersion'].some(field=>Object.hasOwn(input,field)))throw new Error('PWCE approval recovery input cannot replace bound identity or credentials');
+    const request:Record<string,unknown>={...structuredClone(input),authorityContextRef,operation:'authority.recoverApproval',profileId:EXPECTED_PWCE_PROFILE.profileId,profileVersion:EXPECTED_PWCE_PROFILE.profileVersion,approvalProfileId:approvalRecoveryBundle.profileId,approvalProfileVersion:approvalRecoveryBundle.profileVersion};
+    return this.call(signal,async scope=>{
+      if(!await scope.wait(validateCapabilitySchema(PWCE_APPROVAL_RECOVERY_REQUEST_SCHEMA,request,scope.signal)))throw new Error('PWCE approval recovery request is invalid');
+      const body=encodeRequest(request);if(Buffer.byteLength(body)>approvalRecoveryBundle.maximumRequestBytes)throw new Error('PWCE approval recovery request is too large');
+      await this.readNegotiation(scope);
+      const received=await this.json('/gateway/v1/approval-recovery/bundle',scope);
+      if(!isDeepStrictEqual(received,approvalRecoveryBundle))throw new Error('PWCE approval recovery contract bundle is incompatible');
+      scope.check();
+      const response=await this.json<PwceClientResult>('/gateway/v1/approval-recovery',scope,{method:'POST',body,approvalRecoveryContract:approvalRecoveryBundle.bundleDigest});
+      if(!await scope.wait(validateCapabilitySchema(PWCE_APPROVAL_RECOVERY_RESPONSE_SCHEMA,response,scope.signal,false,131072)))throw new Error('PWCE approval recovery response is invalid');
+      for(const [field,value] of Object.entries({profileId:request.profileId,profileVersion:request.profileVersion,approvalProfileId:request.approvalProfileId,approvalProfileVersion:request.approvalProfileVersion,...Object.fromEntries(['requestId','correlationId','worldRef','executionEnvironmentRef'].map(key=>[key,request[key as keyof typeof request]]))}))if(response[field]!==value)throw new Error('PWCE approval recovery response binding differs');
+      if(response.status==='known'){
+        const evidence=response.approvalEvidence as Record<string,unknown>,snapshot=evidence.snapshot as Record<string,unknown>,review=evidence.review as Record<string,unknown>,original=review.request as Record<string,unknown>;
+        const gatewayScope={worldRef:request.worldRef,...Object.fromEntries(['assistantRef','endpointRef','participantRefs','audienceRef'].map(key=>[key,request[key as keyof typeof request]]))};
+        if(evidence.requestKey!==request.idempotencyKey||evidence.requestFingerprint!==request.requestFingerprint||snapshot.snapshotRef!==request.originalSnapshotRef||original.executionEnvironmentRef!==request.executionEnvironmentRef||!isDeepStrictEqual(original.gatewayScope,gatewayScope))throw new Error('PWCE approval recovery response original terms differ');
+      }
+      scope.check();return structuredClone(response);
+    });
+  }
   capabilityContracts(signal?: AbortSignal): Promise<typeof EXPECTED_PWCE_CAPABILITY_BUNDLE> {
     return this.call(signal, async scope => { await this.readNegotiation(scope); return this.readCapabilityContracts(scope); });
   }
@@ -200,9 +222,9 @@ export class PwceGatewayClient {
     } finally { clearTimeout(headersDeadline); scope.close(); }
   }
   health(authorityContextRef: string, signal?: AbortSignal): Promise<PwceClientResult> { return this.request({ operation: "health.get", authorityContextRef }, signal); }
-  private async json<T extends object>(path: string, scope: PwceCallScope, options: { readonly method?: string; readonly body?: string; readonly recoveryContract?: string } = {}): Promise<T> {
+  private async json<T extends object>(path: string, scope: PwceCallScope, options: { readonly method?: string; readonly body?: string; readonly recoveryContract?: string; readonly approvalRecoveryContract?: string } = {}): Promise<T> {
     const response = await boundedFetch(this.fetchImpl, `${this.baseUrl}${path}`, {
-      method: options.method ?? "GET", headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json", ...(options.recoveryContract ? {"X-PWCE-Admission-Recovery-Contract":options.recoveryContract} : {}) },
+      method: options.method ?? "GET", headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json", ...(options.approvalRecoveryContract ? {"X-PWCE-Approval-Recovery-Contract":options.approvalRecoveryContract} : {}), ...(options.recoveryContract ? {"X-PWCE-Admission-Recovery-Contract":options.recoveryContract} : {}) },
       ...(options.body === undefined ? {} : { body: options.body }),
     }, scope);
     const value = await readJsonObject(response, scope);
