@@ -184,6 +184,7 @@
     "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json",
     "implementation/evidence/S084-RANKING-CONNECTIONS-1.json",
     "implementation/evidence/S084-PREPARED-CONTEXT-FORMAT-1.json",
+    "implementation/evidence/S084-CURRENT-CORPUS-BENCHMARK-1.json",
     "packages/storage-sqlite/test/database.test.ts"
   ],
   "changedFiles": [
@@ -258,6 +259,11 @@
       "command": "npm test (PWCE)",
       "result": "pass",
       "evidence": "implementation/evidence/S084-PREPARED-CONTEXT-FORMAT-1.json"
+    },
+    {
+      "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-current.json",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-CURRENT-CORPUS-BENCHMARK-1.json"
     }
   ],
   "decisions": [

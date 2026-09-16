@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-CURRENT-CORPUS-BENCHMARK-1",
+  "slice": "LS-S084",
+  "status": "componentVerified",
+  "sourceRevision": "a6b907add358d14721f0e690d49ed4fe6e94b174",
+  "specificationRevision": "9cda8adf10c7765d03c1d2c08a1f2869a3e9bef2",
+  "recordedAt": "2026-09-16T00:00:00.000Z",
+  "scope": {
+    "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-current.json",
+    "corpora": [100, 10000, 100000],
+    "samplesPerCondition": 200,
+    "conditions": ["disabled", "warm", "background", "cold"],
+    "seed": 73,
+    "database": "temporary synthetic SQLite databases",
+    "sourceShape": "One known relevant candidate at ordinal 73 plus neutral indexed candidates; no network, model, personal data or delivery."
+  },
+  "sourceFiles": [
+    {"path": "scripts/benchmark-discovery-local.mjs", "sha256": "018d13faaed0f25efede638239fec98f4fa317eb2199de276588cd05c4159f22"},
+    {"path": "scripts/discovery-benchmark-worker.mjs", "sha256": "dc8a23baacd7dfba9bc30d44e7197e57700288a64ba99bb13bab97b94b82061a"},
+    {"path": "packages/performance/src/benchmark.ts", "sha256": "30ecff12b96d697dc7a159e1e7919a85fb13c683e147b2689f8ecbdb2d0b7666"},
+    {"path": "apps/server/src/admin/discovery-selection.ts", "sha256": "c4413d719247ef1e9a4877fb221fd625bc52ef32df57b81bf248c29f8a02563e"},
+    {"path": "packages/runtime/src/context/builder.ts", "sha256": "fb344c830d70298538377c87c405e38af89fd1be44e44aaeba00c58e92b8a2a7"},
+    {"path": "packages/runtime/src/inference/prompt.ts", "sha256": "c85a5c40abb17d7b3ac9daf6377b626e21109ca016f4cf0115d98c712bcd49fe"}
+  ],
+  "results": [
+    {"corpusRecords": 100, "status": "passedLocalObjectives", "deadlineMisses": 0, "enabledDetailMisses": 0, "p95SelectionMs": {"disabled": 0.009167, "warm": 0.084208, "background": 0.141583, "cold": 0.267166}},
+    {"corpusRecords": 10000, "status": "passedLocalObjectives", "deadlineMisses": 0, "enabledDetailMisses": 0, "p95SelectionMs": {"disabled": 0.004333, "warm": 0.071333, "background": 0.09525, "cold": 0.194666}},
+    {"corpusRecords": 100000, "status": "passedLocalObjectives", "deadlineMisses": 0, "enabledDetailMisses": 0, "p95SelectionMs": {"disabled": 0.0015, "warm": 0.05675, "background": 0.077625, "cold": 0.148542}}
+  ],
+  "claims": [
+    "The current indexed selector found the known relevant detail in all 1800 enabled samples across the three corpus sizes, with no deadline fallback.",
+    "The measured local selection p95 stayed below the 10 ms optional-selection objective in warm, background and cold conditions for all corpus sizes.",
+    "This is local indexed-selection and prompt-assembly evidence only. It does not qualify a selected model/provider, first useful token, audible timing, barge-in, physical audio, production or Human acceptance. The raw report is retained outside Git at .lifestream/benchmarks/discovery-local/2026-09-16/s084-local-corpus-current.json (SHA-256 71c5deeb74a7c4cc56e0af59d4aa111f2e88097067b315fb0a176a67facb3127)."
+  ],
+  "checks": [
+    {"command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-current.json", "result": "pass"},
+    {"command": "pnpm test", "result": "pass", "detail": "904/904"},
+    {"command": "node --test apps/server/test/discovery-selection.test.ts apps/server/test/discovery-analysis.test.ts", "result": "pass"}
+  ],
+  "limitations": [
+    "Synthetic direct database seeding does not certify admission, source acquisition, provider analysis or live conversation.",
+    "The benchmark does not close LS-COMP-064, selected-provider qualification, protected external authority, S083 delivery, production or Human acceptance."
+  ]
+}
