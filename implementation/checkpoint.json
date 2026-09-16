@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "9b8d7c3d6a4a602af8ed708457da4be4068640be",
+  "currentRevision": "ee67608f7ce0e400def1ce65e4045e2d29db0b20",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -186,13 +186,6 @@
     "packages/storage-sqlite/test/database.test.ts"
   ],
   "changedFiles": [
-    "apps/server/src/admin/discovery-candidates.ts",
-    "apps/server/test/discovery-candidates.test.ts",
-    "apps/server/test/discovery-review.test.ts",
-    "implementation/checkpoint.json",
-    "implementation/evidence/S084-RANKING-CONNECTIONS-1.json",
-    "packages/storage-sqlite/src/understanding.ts",
-    "packages/storage-sqlite/test/understanding.test.ts"
   ],
   "validation": [
     {
@@ -244,6 +237,16 @@
       "command": "npm --prefix .private run validate",
       "result": "pass",
       "evidence": "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-candidates.test.ts packages/storage-sqlite/test/understanding.test.ts apps/server/test/discovery-review.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-RANKING-CONNECTIONS-1.json"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-RANKING-CONNECTIONS-1.json"
     }
   ],
   "decisions": [
@@ -262,7 +265,7 @@
   ],
   "blockers": [],
   "nextAction": "Continue S084 ranking dimensions and grounded connections, plus independent S083 and foreign-authority administration; preserve original intermittent capacity observations. Refresh selected-provider prerequisites when ai5090 is reachable. No overall blocker or exhaustion of independent development claimed.",
-  "updatedAt": "2026-09-16T18:00:00.000Z",
+  "updatedAt": "2026-09-16T18:38:00.000Z",
   "updatedBy": "Codex",
-  "notes": "Source qualifications and legacy projection upgrade verified; final 899 application tests and 1800 enabled local corpus samples pass. Failed intermediate planner/fragmentation runs retained. Full qualification and Human gaps remain."
+  "notes": "S084 grounded connections, dimension-aware selection and hypothesis-dependent invalidation are component-verified in S084-RANKING-CONNECTIONS-1; clean full application suite is 903/903. Earlier transient publicationConflict capacity observation and selected-provider qualification gaps remain preserved."
 }
