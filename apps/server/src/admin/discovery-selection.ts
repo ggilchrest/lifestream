@@ -21,7 +21,16 @@ export function selectDiscoveryContext(options:{repository:UnderstandingReposito
  return {...result,freshUntil};
 }
 export function appendDiscoveryContext(view:CompiledRelationshipContext,enrichment:ReturnType<typeof selectDiscoveryContext>):void {
- if(!enrichment.content)return;
+ if(!enrichment.content){
+  if(enrichment.disposition==='deadline'){
+   // An optional timeout is a per-attempt omission, not a fresh prepared result.
+   // Keep the ordinary reply usable, but require selection again next turn.
+   view.freshUntil=new Date(Math.min(Date.parse(view.freshUntil),enrichment.freshUntil)).toISOString();
+   const ms=(value:number)=>Number.isFinite(value)?value.toFixed(3):'unavailable';
+   view.omissions=[...view.omissions,{id:'discovery:optional-selection',revision:1,reason:`deadline; totalMs=${ms(enrichment.elapsedMs)}; lookupMs=${ms(enrichment.lookupElapsedMs)}; selectionMs=${ms(enrichment.selectionElapsedMs)}`}];
+  }
+  return;
+ }
  view.discoveryContent=enrichment.content;view.budget.usedBytes+=Buffer.byteLength(enrichment.content)+1;
  view.sourceRevisions=[...view.sourceRevisions,...enrichment.items.map(item=>item.id)];
  view.selections=[...view.selections,...enrichment.items.map(item=>({id:item.id,revision:1,sourceFamily:'prepared-discovery-candidate',lane:'relevant' as const,byteContribution:Buffer.byteLength(item.content)}))];

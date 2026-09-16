@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-DEADLINE-CACHE-1",
+  "slice": "LS-S084",
+  "status": "componentVerifiedQualificationPending",
+  "sourceRevision": "a6e940ea825fd71f584144bf1399f21f972862fe",
+  "specificationRevision": "5304496847fc39b420ebc16660b47d3c65274585",
+  "recordedAt": "2026-09-16T16:01:15.147217+00:00",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/admin/discovery-selection.ts",
+      "sha256": "c4413d719247ef1e9a4877fb221fd625bc52ef32df57b81bf248c29f8a02563e"
+    },
+    {
+      "path": "apps/server/test/discovery-selection.test.ts",
+      "sha256": "afbfb655cd98b13791e23043c7172789e4848264a75572ea723850bdf390c091"
+    },
+    {
+      "path": "apps/server/test/discovery-candidates.test.ts",
+      "sha256": "34b9472cba7aee011f8167ade61fb20601cc28737e0ba53228155566915e0f4f"
+    }
+  ],
+  "claims": [
+    "A deterministic 11 ms selection reproduced a separate cache defect: appendDiscoveryContext discarded the timeout freshness and retained the ordinary two-minute prepared-view lifetime. The before-fix test failed; after-fix expiry and subsequent successful selection assertions pass.",
+    "Deadline omission now retains its immediate expiry so the existing prepared-cache freshness check reselects on the next request. It does not retry inside the failed request or extend the 10 ms deadline. Ordinary context remains available.",
+    "Protected input inspection receives bounded metadata-only deadline, total, lookup and inner-selection timing in the existing omissions list. No candidate payload or new persisted inspection record is added.",
+    "The joined test asserts that both preparation jobs published before prompting and preserves omission diagnostics on failure. It still requires actual contextual detail, without retries or accepting deadline fallback as a successful inclusion."
+  ],
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-selection.test.ts apps/server/test/discovery-candidates.test.ts",
+      "result": "pass",
+      "details": "6/6"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-selection.test.ts",
+      "result": "pass",
+      "details": "3/3 including recovery assertions"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "details": "890/890, zero skips"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "details": ""
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "details": ""
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "details": ""
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "details": "19 passed; 30 optional actual-browser tests skipped"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "details": "43/43"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "details": "structure only"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "details": "588 structural vectors; not runtime acceptance"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S084",
+      "result": "fail",
+      "details": "Current S073/S076/S078/S080 qualification effective inputs changed; no qualification rewritten"
+    }
+  ],
+  "rawArtifacts": [
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-before.log",
+      "sha256": "7a5d15407349ca60dcc9a2a0a37b3f05b9fecca286d47caa4dfa00c0e766c395"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-private-final.log",
+      "sha256": "9a7816a184d647b1b613bdf71de14143535c2f76dbd1c814c3aeecc375516783"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-preflight.log",
+      "sha256": "8ceaa291faa75de25d2f3cbd7b5e46dc3aee0bd641ba294853a7cf89fe1ca496"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-typecheck.log",
+      "sha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-focused.log",
+      "sha256": "7d598d94e965502a48655f8a5b7bc044257baa93d9741dca4e5785534566185d"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-workspace.log",
+      "sha256": "d4ccc44d421b4c431ea29ee889ed4b47b1e93f1814c295bab80af08064e1e501"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-recovery.log",
+      "sha256": "517d08e5fe0f00d00fec2eaf80ef85064cd5818139e3f7d6da347ca35ddf3669"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-browser.log",
+      "sha256": "076866f6b3c63cbf8daec791350d630058d4f295f0ba147b7a121c28572c202c"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-check.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-lint.log",
+      "sha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-full.log",
+      "sha256": "1f4704ff2c141424e70d12880c1fb33b7f0c4e45c8b6cd27c3767a5ed6db5593"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-build.log",
+      "sha256": "e2a22759c1ed542f258a938bec41d3f010f37edf0df5b374d732f57fc8c7db71"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-private.log",
+      "sha256": "0e29e303867db22af89151defb75a93e1d6ccdb3bfa87e1f5686ad95f1ff8e8f"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-preflight-final.log",
+      "sha256": "db2575ff4b2275ecd80542d0585871adfa2937ffabafcce2a1c9e809fba47ced"
+    },
+    {
+      "path": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/discovery-deadline-cache/2026-09-16T160115Z/ls-discovery-cache-check-final.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "limitations": [
+    "Original intermittent FOREST_FACT_291 omission root cause remains unestablished; its historical failure and the earlier 29.345 ms Lab result remain unchanged. This fixes repeated reuse of deadline omissions, not first-attempt latency.",
+    "Current prerequisite qualifications need revision-bound refresh; this component receipt does not certify S084 or replace S073/S076/S078/S080 qualification.",
+    "No selected-provider performance, Human acceptance, deployment, saved-service restart, model selection or live configuration change.",
+    "Initial private validation found the changed packet manifest digest; manifest updated and final validation passed."
+  ]
+}
