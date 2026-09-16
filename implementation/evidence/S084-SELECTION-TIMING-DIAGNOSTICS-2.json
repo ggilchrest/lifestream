@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "1.0.0",
+  "specificationRevision": "435a861c4bc970bc563990bc8237e69c2db1d765",
+  "sourceRevision": "ca6fb33b9945c31d99d359511f6fdf895843ed46",
+  "recordedAt": "2026-09-16T17:41:05.302Z",
+  "sourceArtifacts": [
+    {
+      "path": "apps/server/src/admin/discovery-selection.ts",
+      "sha256": "c4413d719247ef1e9a4877fb221fd625bc52ef32df57b81bf248c29f8a02563e"
+    },
+    {
+      "path": "apps/server/src/admin/discovery-lab.ts",
+      "sha256": "dd59943eabddbe9f87447180ddc3515ebd7727243b9f1ff1e3fb4446fef3bce8"
+    },
+    {
+      "path": "apps/server/test/discovery-selection.test.ts",
+      "sha256": "afbfb655cd98b13791e23043c7172789e4848264a75572ea723850bdf390c091"
+    },
+    {
+      "path": "apps/server/test/discovery-lab.test.ts",
+      "sha256": "6dcc9d0f0ac91f3311e6e832c658b1f510fac70fb8dbca2f05e959dcfd886e0b"
+    },
+    {
+      "path": "apps/server/src/runtime/initiative-timing.ts",
+      "sha256": "5309851628a227e0cf3e3613de935d1802466cdc5ea3c86cc840467c9785f0ac"
+    },
+    {
+      "path": "apps/server/test/initiative-timing.test.ts",
+      "sha256": "833e863516abd73afc0885bbad40a453ee44485bb874f02e87ded751ed94015e"
+    },
+    {
+      "path": "packages/storage-sqlite/src/understanding.ts",
+      "sha256": "725cc92efbcce5e5dfc4f0f2703a58ca93e47185be627f723cd27cff806404a7"
+    },
+    {
+      "path": "packages/storage-sqlite/test/understanding.test.ts",
+      "sha256": "c5c1c26a24bde50a59bcabf0d993b1b119ea529b995235baf2aca9f777b35b66"
+    },
+    {
+      "path": "packages/performance/src/benchmark.ts",
+      "sha256": "30ecff12b96d697dc7a159e1e7919a85fb13c683e147b2689f8ecbdb2d0b7666"
+    },
+    {
+      "path": "packages/performance/test/understanding.test.ts",
+      "sha256": "dced342981a33efe74e40876b6704c3639ad06db14a10406e002945aa2e57ee5"
+    }
+  ],
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-analysis.test.ts apps/server/test/discovery-candidates.test.ts apps/server/test/discovery-lab.test.ts apps/server/test/discovery-selection.test.ts apps/server/test/initiative-timing.test.ts packages/storage-sqlite/test/understanding.test.ts packages/performance/test/understanding.test.ts",
+      "result": "pass",
+      "evidence": "40/40 tests; log sha256 2931f7310edc37eb19c1abf739e4d872e7c0e3108c2646fc3a0551b7b307aa55"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "904/904 tests; log sha256 0d3901e6bbdc8851edda473121df416cb0b723e7a0379adef0def63645bd1a76"
+    },
+    {
+      "command": "pnpm exec tsc -b --pretty false apps/server packages/contracts packages/runtime packages/providers-fixture packages/providers-voxcpm packages/providers-nemo-speech packages/providers-moonshine packages/providers-ollama packages/providers-pwce packages/providers-sglang packages/storage-sqlite",
+      "result": "pass",
+      "evidence": "empty clean log; sha256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "limitations": [
+    "This is current-source component regression evidence only. It does not certify selected-provider behavior, performance, production, physical output or Human acceptance.",
+    "The original S083 timing and S084 selection deadline failures remain preserved in their predecessor receipts; this successor records the current clean source run after later bounded lookup, cache and candidate fixes.",
+    "Current S071/S073/S076/S078/S080 prerequisite qualifications and the LS-S081 joined selected-provider gate remain separate."
+  ],
+  "receiptId": "S084-SELECTION-TIMING-DIAGNOSTICS-2",
+  "slice": "LS-S084",
+  "status": "componentVerified",
+  "claims": [
+    "The current bounded Discovery selection path passes the complete focused regression set, including the earlier ambiguous-pair Lab criterion, deadline-cache fencing, candidate publication and full elapsed-time diagnostics.",
+    "The current full source suite passes 904/904. Selection timing remains measured and fail-closed; no performance claim is made from this component run.",
+    "The prior 29.345875 ms deadline miss and its unresolved contributor remain retained as historical evidence; this receipt records a clean successor source run, not a retroactive explanation or waiver."
+  ],
+  "predecessor": {
+    "path": "implementation/evidence/S084-SELECTION-TIMING-DIAGNOSTICS-1.json",
+    "sha256": "af08c347bdcc01ebcd96fdc7c1004114cba45c477800fb319f5d0a4420534c3f"
+  }
+}
