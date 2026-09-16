@@ -1,8 +1,8 @@
 import { randomUUID, createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { createContractValidator } from '@lifestream/contracts';
-import type { CallScope, CapabilitySnapshotRequest } from '@lifestream/contracts/provider-messages';
-import { PwceGatewayClient, PwceCapabilityCatalog, PwceInvalidationStreams, type PwceCapabilityBinding, type PwceCatalogRecord } from '@lifestream/providers-pwce';
+import type { CallScope, CapabilitySnapshotRequest, GrantQueryRequest, GrantQueryResult } from '@lifestream/contracts/provider-messages';
+import { PwceGatewayClient, PwceGrantQuery, PwceCapabilityCatalog, PwceInvalidationStreams, type PwceCapabilityBinding, type PwceCatalogRecord } from '@lifestream/providers-pwce';
 import { CanonicalProviderBoundary } from '@lifestream/runtime/ports/provider-boundary';
 import { CapabilityCall } from '@lifestream/runtime/capabilities/call';
 import type { ProviderCallContext } from '@lifestream/runtime/ports/provider-messages';
@@ -35,6 +35,7 @@ export class PwceCapabilityDiscovery {
   private readonly streams: PwceInvalidationStreams;
   private readonly entries = new Map<string, Entry>();
   private closed = false;
+  private readonly grantReads=new Map<string,{query:PwceGrantQuery;request:GrantQueryRequest;record:PwceCatalogRecord;expiresAt:string;reference:import("@lifestream/contracts/provider-messages").ArtifactRef}>();
   constructor(profile: PwceProfile, token: string) {
     this.profile = structuredClone(profile);
     this.client = new PwceGatewayClient({ baseUrl: profile.endpoint, token, requestTimeoutMs: profile.timeoutMs });
@@ -59,7 +60,7 @@ export class PwceCapabilityDiscovery {
     if (entry.scope.authorityContextRef) this.catalog.invalidateAuthority(entry.scope.authorityContextRef);
     if (this.entries.get(entry.key) === entry) this.entries.delete(entry.key);
   }
-  close(): void { this.closed = true; for (const entry of this.entries.values()) this.remove(entry); this.catalog.invalidateAll(); }
+  close(): void { this.closed = true; this.grantReads.clear(); for (const entry of this.entries.values()) this.remove(entry); this.catalog.invalidateAll(); }
   private mode(): CapabilitySnapshotRequest['executionMode'] {
     if (this.profile.executionEnvironmentRef === 'dry-run') return unavailable();
     return ['replay','simulation'].includes(this.profile.executionEnvironmentRef) ? this.profile.executionEnvironmentRef as 'replay' | 'simulation' : 'normal';
@@ -147,6 +148,26 @@ export class PwceCapabilityDiscovery {
       if (!this.current(entry) || !isDeepStrictEqual(this.catalog.retained(record.snapshot.snapshotId, entry.scope), record)) return unavailable();
       return value;
     } catch (error) { if (entry && entry.users === 1) this.remove(entry); throw error; } finally { if (entry) { entry.users--; if (!entry.ready && entry.users === 0) this.remove(entry); } call.close(); }
+  }
+  async getGrants(owner:PwceCapabilityOwner,call:CapabilityCallContext,payload:GrantQueryRequest['payload']):Promise<GrantQueryResult>{
+    for(const [key,value] of this.grantReads)if(Date.parse(value.expiresAt)<=Date.now())this.grantReads.delete(key);
+    if(this.grantReads.size>=256)return unavailable();
+    return this.withCatalog(owner,call,async lease=>{
+      const {record,client,catalog,context}=lease,query=new PwceGrantQuery({providerRef:'pwce',client,catalog,resolve:async()=>record});
+      const request:GrantQueryRequest={schemaVersion:'1.0.0',operation:'AuthorityProvider.getGrants',requestId:call.requestId,correlationId:call.correlationId,cancellationId:randomUUID(),deadlineAt:lease.deadlineAt,executionMode:record.executionMode,scope:{...record.scope,authorityContextRef:record.scope.authorityContextRef!,sessionId:record.scope.sessionId!,endpointId:record.scope.endpointId!},idempotencyKey:null,payload:structuredClone(payload)};
+      const boundary=new CanonicalProviderBoundary({providerRef:'pwce'}).authority({getGrants:query.getGrants.bind(query),evaluate:async()=>unavailable(),authorizeDispatch:async()=>unavailable(),subscribeInvalidations:async function*(){return unavailable();}});
+      const result=await boundary.getGrants(request,context),summary=result.outcome.payload?.externalSummary;
+      if(!summary||this.grantReads.size>=256)return unavailable();
+      this.grantReads.set(summary.evidenceRef.reference,{query,request,record,expiresAt:summary.expiresAt,reference:structuredClone(summary.evidenceRef)});return result;
+    });
+  }
+  async grantEvidence(owner:PwceCapabilityOwner,call:CapabilityCallContext,reference:string){
+    const saved=this.grantReads.get(reference);if(!saved||Date.parse(saved.expiresAt)<=Date.now()){this.grantReads.delete(reference);return unavailable();}
+    return this.withCatalog(owner,call,async lease=>{
+      // Artifact metadata comes from original custody, never HTTP fields.
+      const result=await saved.query.readEvidence(saved.reference,{...saved.request,deadlineAt:lease.deadlineAt},lease.context);
+      return JSON.parse(new TextDecoder().decode(result)) as Record<string,unknown>;
+    },saved.record);
   }
   async discover(input: PwceCapabilityOwner, inputCall: CapabilityCallContext) {
     return this.withCatalog(input, inputCall, async lease => {

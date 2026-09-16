@@ -7,7 +7,7 @@
   const status = text => { $('cap-status').textContent = text; };
   const path = invocationId => `${S.base()}/tools/invocations/${encodeURIComponent(invocationId)}`;
   const envelope = payload => ({ schemaVersion: '1.0.0', requestId: crypto.randomUUID(), correlationId: crypto.randomUUID(), idempotencyKey: crypto.randomUUID(), payload });
-  const show = key => { for (const p of document.querySelectorAll('[data-cap-panel]')) p.hidden = p.dataset.capPanel !== key; for (const b of document.querySelectorAll('[data-cap-view]')) b.setAttribute('aria-pressed', String(b.dataset.capView === key)); };
+  const show = key => { if(key!=="prepare")$("cap-status").hidden=false; for (const p of document.querySelectorAll('[data-cap-panel]')) p.hidden = p.dataset.capPanel !== key; for (const b of document.querySelectorAll('[data-cap-view]')) b.setAttribute('aria-pressed', String(b.dataset.capView === key)); };
   for (const b of document.querySelectorAll('[data-cap-view]')) b.onclick = () => show(b.dataset.capView);
   $('cap-disclosure').onclick = () => { $('security-context').open = true; $('session-audience').focus(); };
   const run = fn => async event => { event?.preventDefault(); const ticket = S.epoch(); try { await fn(); } catch (error) { if (ticket === S.epoch()) status(error.message); } };
@@ -18,7 +18,7 @@
   const clear = () => {
     resetDetails(); catalogExpiresAt = 0; tools = []; readers = []; pending = null;
     for (const kind of ['requests','grants']) { lists[kind] = { rows: [], cursor: null }; $('cap-' + kind).replaceChildren(); $('cap-' + kind + '-more').hidden = true; $('cap-'+kind+'-state').value=''; }
-    $('cap-grants-class').value='';
+    $('cap-grants-class').value='';$('cap-grants').classList.remove('card');$('cap-grants-refresh').textContent='Refresh grants';$('cap-grant-filters').hidden=false;document.querySelector('[data-cap-view=grants]').textContent='Grants';
     $('cap-select').replaceChildren(new Option('Load capabilities first','')); $('cap-arguments').replaceChildren(); $('cap-provider').textContent = '';
     $('cap-form').inert = false; $('cap-prepare').disabled = true; $('cap-prepare-retry').hidden = true; $('cap-class').value = 'allowOnce'; $('cap-review-label').hidden = true;
     $('cap-local-permission').hidden=false;for(const b of document.querySelectorAll('[data-cap-view]'))b.hidden=false;
@@ -64,8 +64,9 @@
     try { const result = await S.request(`${S.base()}/tools`); if (result.protocol !== 'canonical' || result.status !== 'available') throw new Error('Canonical capabilities are unavailable for this selected provider.');
       tools = result.tools.map(tool => ({ ...tool, providerRef:result.providerRef, administrationAvailable: result.actionAdministration !== 'unavailable' })); catalogExpiresAt = Date.parse(result.expiresAt); $('cap-provider').textContent = `Provider: ${result.providerRef} · Environment: ${result.environmentId}`;
       $('cap-select').replaceChildren(new Option('Choose a capability','')); tools.forEach((t,i) => $('cap-select').append(new Option(`${t.capabilityId} · ${t.version}`,String(i))));
-      for(const b of document.querySelectorAll('[data-cap-view]'))b.hidden=result.providerRef==='pwce'&&b.dataset.capView!=='prepare';
-      if(result.providerRef==='pwce')PWCE.renderRecent();
+      for(const b of document.querySelectorAll('[data-cap-view]'))b.hidden=result.providerRef==='pwce'&&b.dataset.capView==='requests';
+      $('cap-grant-filters').hidden=result.providerRef==='pwce';$('cap-grants-refresh').textContent=result.providerRef==='pwce'?'Refresh permissions':'Refresh grants';document.querySelector('[data-cap-view=grants]').textContent=result.providerRef==='pwce'?'PWCE permissions':'Grants';
+      if(result.providerRef==='pwce'){PWCE.renderRecent();$('cap-grants-state').value='';$('cap-grants-class').value='';lists.grants={rows:[],cursor:null};$('cap-grants').replaceChildren(el('p','Refresh permissions to read the current PWCE summary.'));$('cap-grants-more').hidden=true;}
       status(result.actionAdministration === 'unavailable' ? 'PWCE capability discovery is available. Select a capability to inspect its schema; review and execution controls are not yet connected.' : tools.length ? 'Choose a capability and enter the exact action arguments.' : 'No capabilities are available in this scope.');
     } finally { $('cap-refresh').disabled = false; }
   });
@@ -98,7 +99,20 @@
     await prepare();
   });
   $('cap-prepare-retry').onclick = run(prepare);
+  const renderSummary = selected => {
+    const p=$('cap-grants'),summary=selected.summary;p.classList.add('card');p.replaceChildren();
+    p.append(el('h3','Current PWCE permission summary'),el('p','PWCE owns these permissions. This summary does not approve an action or describe individual Human grants.'));
+    const state=el('p','Observed summary. Refresh to check for changes.');state.setAttribute('role','status');p.append(state);
+    p.append(fields({'Provider':summary.providerRef,'World':summary.worldRef,'Environment':summary.executionEnvironmentRef,'PWCE principal':summary.principalRef,'Summary valid until':summary.expiresAt},true));
+    for(const [title,rows] of [['Sites',summary.siteRefs],['Capabilities',summary.capabilityRefs]]){p.append(el('h4',title));p.append(rows.length?table([title==='Sites'?'Site reference':'Capability reference'],rows.map(v=>[v])):el('p','No '+title.toLowerCase()+' listed by PWCE.'));}
+    if(summary.limitations.length)p.append(el('h4','Producer limitations'),...summary.limitations.map(value=>el('p',value)));
+    disclosure(p,'Original scope and evidence reference',{'Source revision':selected.sourceRevision.revision,'Scope':summary.scope,'Evidence':summary.evidenceRef});
+    const proof=el('div'),readProof=button(p,'Read original summary evidence',async()=>{const value=await S.request(`${S.base()}/tools/grant-summary-evidence/${encodeURIComponent(summary.evidenceRef.reference.split(':').at(-1))}`);if(selected!==lists.grants)return;proof.replaceChildren();disclosure(proof,'Original producer response',value);});p.append(proof);
+    const expire=()=>{if(selected===lists.grants&&state.isConnected){readProof.disabled=true;state.textContent='This observation has expired. Refresh permissions to read the current scope; it grants no execution authority.';}};
+    if(Date.parse(summary.expiresAt)<=Date.now())expire();else setTimeout(expire,Date.parse(summary.expiresAt)-Date.now());
+  };
   const recordRows = kind => {
+    if(kind==='grants'&&lists.grants.summary){$('cap-grants-more').hidden=true;renderSummary(lists.grants);return;}
     $('cap-' + kind + '-more').hidden = !lists[kind].cursor;
     const rows = lists[kind].rows.filter(item => kind !== 'grants' || !$('cap-grants-class').value || item.grant.grantClass === $('cap-grants-class').value);
     if (!rows.length) { $('cap-' + kind).replaceChildren(el('p',`No ${kind} found for this Assistant. ${kind === 'requests' ? 'Prepare an action to begin.' : 'A grant appears only after an approved request.'}`)); return; }
@@ -110,15 +124,16 @@
   };
   const loadList = async (kind, more = false) => {
     const selected = lists[kind], cursor = more ? selected.cursor : null, requestNo=(selected.requestNo||0)+1; selected.requestNo=requestNo;
-    const value = await S.request(`${root}/${kind}?assistantId=${encodeURIComponent(S.assistant())}&limit=20${$('cap-'+kind+'-state').value ? '&states='+encodeURIComponent($('cap-'+kind+'-state').value) : ''}${cursor ? '&cursor=' + encodeURIComponent(cursor) : ''}`);
+    if(kind==='grants'){delete selected.summary;$('cap-grants').replaceChildren(el('p','Reading permissions…'));}
+    let value;try{value = await S.request(`${root}/${kind}?assistantId=${encodeURIComponent(S.assistant())}&limit=20${$('cap-'+kind+'-state').value ? '&states='+encodeURIComponent($('cap-'+kind+'-state').value) : ''}${cursor ? '&cursor=' + encodeURIComponent(cursor) : ''}`);}catch(error){if(kind==='grants'&&selected===lists[kind]&&selected.requestNo===requestNo)$('cap-grants').replaceChildren(el('p','No current permission summary is available. Refresh permissions to try again.'));throw error;}
     if (selected !== lists[kind] || selected.requestNo!==requestNo) return;
-    selected.rows = more ? [...selected.rows,...value.result[kind]] : value.result[kind]; selected.cursor = value.result.nextCursor; recordRows(kind);
+    selected.rows = more ? [...selected.rows,...value.result[kind]] : value.result[kind]; selected.cursor = value.result.nextCursor;if(kind==='grants'){selected.summary=value.result.externalSummary;selected.sourceRevision=value.result.sourceRevision;} recordRows(kind);
   };
   const loadRequests = () => loadList('requests');
   $('cap-grants-class').onchange = () => { resetDetails(); recordRows('grants'); };
   for(const kind of ['requests','grants']) $('cap-'+kind+'-state').onchange=run(async () => { resetDetails(); await loadList(kind); });
   for (const kind of ['requests','grants']) {
-    $('cap-' + kind + '-refresh').onclick = run(async () => { resetDetails(); await loadList(kind); status(`Current ${kind} loaded. Select a record to inspect it.`); });
+    $('cap-' + kind + '-refresh').onclick = run(async () => { resetDetails(); await loadList(kind); status(lists[kind].summary?'PWCE permission summary loaded. Approval and action results remain separate.':`Current ${kind} loaded. Select a record to inspect it.`); });
     $('cap-' + kind + '-more').onclick = run(() => loadList(kind,true));
   }
   const action = (parent, label, url, command, done, confirmation) => {

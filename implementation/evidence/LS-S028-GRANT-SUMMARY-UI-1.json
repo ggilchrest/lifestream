@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-GRANT-SUMMARY-UI-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "c6d4525bf341a0b175e460e30efccb15e7c4c722",
+  "specificationRevision": "cd42e6abfeaa7ddf96244a106f1e1e7f853e5179",
+  "producerRevision": "86a899b9a4a35d8bf96b96b1cb83c9274bd49c53",
+  "recordedAt": "2026-09-16T15:50:43.756595Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/control-web/DESIGN.md",
+        "sha256": "2894a6606dcaf664d11936f24d99ec17c12217d6735709f1ba2393bc8975714f"
+      },
+      {
+        "path": "apps/control-web/capability-permissions.js",
+        "sha256": "5d04555c14e4c40c3d2c6da161c6c82efade21f2a895d13a52a39c84f3c93ec0"
+      },
+      {
+        "path": "apps/control-web/security.html",
+        "sha256": "2e8ce346b2b3d90d450565552c0cb60ba2276946cc5205167ac9a4b0a77f337e"
+      },
+      {
+        "path": "apps/server/src/composition/pwce-capabilities.ts",
+        "sha256": "15f77cb7afe3e9b484d05351b5f24743b80a384a124e901916184fda5d1d699c"
+      },
+      {
+        "path": "apps/server/src/index.ts",
+        "sha256": "2172186269e30a98efd15b58690effd444e8482b38cc53e14f062f6bdad0d744"
+      },
+      {
+        "path": "apps/server/test/pwce-capabilities.test.ts",
+        "sha256": "6e31cc3a6fe906df70b0290b18ea0e594d65f98a39f3db8a01807f06a803c9c6"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "7249c47c4fba21ae358db99a4fd098cbf8ec64cef108745b1eee563d6a2c2fcf"
+      },
+      {
+        "path": "packages/providers-pwce/src/grant-query.ts",
+        "sha256": "0653e083b5508f2ee73131d387c7d45f9116bebf49d26ce799cd238f61b75171"
+      },
+      {
+        "path": "packages/providers-pwce/test/grant-query.test.ts",
+        "sha256": "64161d7278ccda74318ac5fe0631c05b7e281ae7df0a29f434adf2aef6cea249"
+      },
+      {
+        "path": "packages/runtime/src/ports/provider-boundary.ts",
+        "sha256": "4f0f3abe0b76100dbd358892684eacd678dacf93c0e0daa4b900f1c105a72b82"
+      },
+      {
+        "path": "packages/runtime/test/provider-boundary.test.ts",
+        "sha256": "895d652d73fb76d58bbd3aff12e020101b38ca7d1ce0d6a10452d6c7fa763f6f"
+      },
+      {
+        "path": "scripts/check-pwce-host-process.mjs",
+        "sha256": "7f41723907a22ff028169f6d3fe1a241b3fcf2a246c0270b806ced0dff57a8dc"
+      }
+    ]
+  },
+  "claim": "Authenticated grant-list and original evidence routes preserve PWCE ownership and reject unsupported filters, foreign Assistant access and mutations. The actual control page shows separated site/capability tables and proof disclosures, clears old content before refresh and on context change, and recovers explicitly after a failed refresh. Summary inspection lasts only through its original catalog lifetime; each evidence read has a fresh bounded deadline and original authority revalidation. No permission read invokes an action.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-grant-summary-ui-full-final.log",
+      "logSha256": "546e27725af7e4c2e5781e172686a8a44d6b2b2ae47a7ca8f83c8207ed4bef71"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-candidates.test.ts apps/server/test/pwce-capabilities.test.ts",
+      "result": "pass",
+      "log": "ls-grant-summary-ui-server-focused.log",
+      "logSha256": "1506664521e53d36618a6807832bb002b8672e97c1789105e5f27c005e47fdf1"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/grant-query.test.ts packages/runtime/test/provider-boundary.test.ts",
+      "result": "pass",
+      "log": "ls-grant-summary-ui-focused.log",
+      "logSha256": "42e4e28c2452623b1faf6b4f28c55cb4f4d54fe2022bd14be915ea54055436d2"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed Playwright module> PWCE_UI_CAPTURE_DIR=<local captures> node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-grant-summary-ui-browser-delivery.log",
+      "logSha256": "c992d7e113e738e4e2edba2ed6eb971d45d397b82eda82fff063e0207332b373"
+    },
+    {
+      "command": "PWCE_HOST_DISPATCH=1 node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-grant-summary-ui-host-regression.log",
+      "logSha256": "83d6c8d8d81e3a8173e34d9ca99b4c83154d9a383bc08d2ef73b61f5776b31c9"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed Playwright module> node scripts/check-canonical-control-browser.mjs",
+      "result": "pass",
+      "log": "ls-grant-summary-ui-local-browser.log",
+      "logSha256": "be60a8067d6578fceaefe030961fe5130d01ffd272a41d8761e4f76e93cc790a"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-grant-summary-ui-types-last.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-grant-summary-ui-lint-last.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-grant-summary-ui-build-delivery.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-grant-summary-ui-workspace.log",
+      "logSha256": "79d55104bf63185832dee2773442d0b35fd8360c6f567da1ea708142b21e8f10"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-grant-summary-ui-private.log",
+      "logSha256": "7b22c7097ff94a09b1e63a3554778cef8af982780ec3855843fe502e75525b30"
+    }
+  ],
+  "counts": {
+    "applicationTests": 889,
+    "providerBoundaryFocusedTests": 27,
+    "serverFocusedTests": 35,
+    "workspaceTests": 43,
+    "actualBrowserHostChecks": 23,
+    "browserHostTargetCalls": 0,
+    "browserHostDispatchPosts": 0,
+    "actualDispatchHostChecks": 26,
+    "dispatchHostSyntheticTargets": 4,
+    "dispatchHostPosts": 8,
+    "actualLocalGrantAuthenticationBrowserTests": 2
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-grant-summary-ui/2026-09-16T155043Z",
+  "failedAttempts": [
+    {
+      "log": "ls-grant-summary-ui-build.log",
+      "reason": "Grant query requires non-null authority scope; typed construction corrected."
+    },
+    {
+      "log": "ls-grant-summary-ui-full.log",
+      "reason": "Old PWCE unavailable-route assertion expected 503 instead of new invalid-query 422 and was updated. Separate Discovery candidate assertion omitted expected enrichment; it passed focused and repeated full runs without a Discovery code change. Cause is not established and original failure remains retained."
+    }
+  ],
+  "limitations": [
+    "Agent browser inspection and synthetic integration are not new Human acceptance or deployment.",
+    "The earlier intermittent Discovery omission remains relevant to outstanding S084 performance qualification; no performance waiver or root-cause fix is claimed.",
+    "Summaries are ephemeral, bounded and discarded on host shutdown. They do not represent local grant lifecycle history or authorize effects.",
+    "Broader foreign-authority administration and remaining S083/S084 qualification remain separate work.",
+    "Saved service/configuration, model selection, personal import, training and physical effects unchanged. Six preserved dirty artifact hashes rechecked unchanged."
+  ]
+}

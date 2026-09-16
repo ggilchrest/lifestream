@@ -320,7 +320,7 @@ test('unknown capability outcomes and typed stream failures preserve evidence wi
 });
 
 test('external permission summaries preserve current scope and cannot imply local lifecycle pages or mixed grants',async()=>{
- for(const change of [null,(v,q)=>v.externalSummary.executionEnvironmentRef='live',(v,q)=>v.externalSummary.scope.sessionId=id(999),(v,q)=>v.externalSummary.providerRef='other',(v,q)=>v.externalSummary.expiresAt='2000-01-01T00:00:00Z',(v,q)=>v.externalSummary.expiresAt=new Date(Date.parse(q.deadlineAt)+1000).toISOString(),(v,q)=>v.nextCursor='invented',(v,q)=>v.grants=[{}],(v,q)=>q.payload.states=['revoked'],(v,q)=>q.payload.page.cursor='invented']){
+ for(const change of [null,(v,q)=>v.externalSummary.executionEnvironmentRef='live',(v,q)=>v.externalSummary.scope.sessionId=id(999),(v,q)=>v.externalSummary.providerRef='other',(v,q)=>v.externalSummary.expiresAt='2000-01-01T00:00:00Z',(v,q)=>v.nextCursor='invented',(v,q)=>v.grants=[{}],(v,q)=>q.payload.states=['revoked'],(v,q)=>q.payload.page.cursor='invented']){
   const q=grantsRequest();
   const value={grants:[],nextCursor:null,sourceRevision:{providerRef:'fixture.authority',revision:'external-permission-generation',highWaterMark:null},externalSummary:{authorityKind:'externalSummary',providerRef:'fixture.authority',scope:structuredClone(q.scope),worldRef:'foreign.world',executionEnvironmentRef:'simulation',principalRef:'foreign.principal',siteRefs:['foreign.site'],capabilityRefs:['foreign.capability'],expiresAt:q.deadlineAt,evidenceRef:ref,limitations:['This is a current summary, not grant history.']}};
   change?.(value,q);

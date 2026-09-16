@@ -44,7 +44,7 @@ export class PwceGrantQuery{
    const original=structuredClone(raw);
    await call.wait(this.revalidate(request,record,scoped));this.check(request,record,scoped,call);
    const bytes=new TextEncoder().encode(canonicalJson(original)),reference:M.ArtifactRef={reference:`pwce:grant-summary:${randomUUID()}`,sha256:createHash('sha256').update(bytes).digest('hex'),byteLength:bytes.length,mediaType:'application/json',schemaRef:'https://pwce.local/contracts/pwce-agent-gateway-response-1.0.0.schema.json'};
-   const expiresAt=new Date(Math.min(Date.parse(record.snapshot.expiresAt),Date.parse(request.deadlineAt))).toISOString();
+   const expiresAt=record.snapshot.expiresAt;
    const result:M.GrantQueryResult={schemaVersion:'1.0.0',operation:request.operation,requestId:request.requestId,correlationId:request.correlationId,providerRef:this.options.providerRef,completedAt:new Date().toISOString(),outcome:{status:'succeeded',error:null,payload:{grants:[],nextCursor:null,sourceRevision:{providerRef:this.options.providerRef,revision:original.sourceRevision as string,highWaterMark:null},externalSummary:{authorityKind:'externalSummary',providerRef:this.options.providerRef,scope:request.scope,worldRef:binding.worldRef,executionEnvironmentRef:binding.executionEnvironmentRef,principalRef:binding.principalRef,siteRefs:original.siteRefs as string[],capabilityRefs:original.capabilityRefs as string[],limitations:original.limitations as string[],expiresAt,evidenceRef:reference}}}};
    if(!validator.validate(base+'GrantQueryResult',result).valid)fail('invalid_projection');this.prune();if(this.evidence.size>=this.options.capacity!)fail('evidence_capacity');this.check(request,record,scoped,call);
    this.evidence.set(reference.reference,{request,record,reference,bytes,expiresAt});return structuredClone(result);
@@ -53,6 +53,6 @@ export class PwceGrantQuery{
  async readEvidence(reference:M.ArtifactRef,input:M.GrantQueryRequest,context:ProviderCallContext):Promise<Uint8Array>{
   if(!boundedJson(reference)||!boundedJson(input)||!validator.validate(base+'GrantQueryRequest',input).valid)fail('invalid_request');
   const request=structuredClone(input),owned=structuredClone(reference),call=this.call(request,context),scoped={...context,signal:call.signal};
-  try{this.prune();const saved=this.evidence.get(owned.reference);if(!saved||!isDeepStrictEqual(saved.reference,owned)||!isDeepStrictEqual(saved.request,request))return fail('evidence_unavailable');this.check(request,saved.record,scoped,call);await call.wait(this.revalidate(request,saved.record,scoped));this.check(request,saved.record,scoped,call);return new Uint8Array(saved.bytes);}finally{call.close();}
+  try{this.prune();const saved=this.evidence.get(owned.reference);if(!saved||!isDeepStrictEqual(saved.reference,owned)||!isDeepStrictEqual(saved.request,{...request,deadlineAt:saved.request.deadlineAt}))return fail('evidence_unavailable');this.check(request,saved.record,scoped,call);await call.wait(this.revalidate(request,saved.record,scoped));this.check(request,saved.record,scoped,call);return new Uint8Array(saved.bytes);}finally{call.close();}
  }
 }

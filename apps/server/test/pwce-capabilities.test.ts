@@ -97,7 +97,7 @@ test('authenticated HTTP discovery requires audience and cannot mint local grant
  assert.equal((await f.send('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession'})).status,200);
  const result=await f.send(f.path);assert.equal(result.status,200,JSON.stringify(result));assert.equal(result.body.providerRef,'pwce');assert.equal(result.body.tools.length,1);
  assert.equal((await f.send(f.path+'?scope=foreign')).status,422);assert.equal((await f.send(f.path.replace(/assistants\/[^/]+/,'assistants/'+randomUUID()))).status,403);
- assert.equal((await f.send('/api/authority/v1/grants')).status,503);assert.equal((await f.send(f.path+'/pwce.home.light.set-level/prepare',{})).status,422);
+ assert.equal((await f.send('/api/authority/v1/grants')).status,422);assert.equal((await f.send(f.path+'/pwce.home.light.set-level/prepare',{})).status,422);
  assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS count FROM canonical_grants').get().count,0);assert.equal(f.db.connection.prepare('SELECT COUNT(*) AS count FROM pwce_admission_custody').get().count,0);
 });
 

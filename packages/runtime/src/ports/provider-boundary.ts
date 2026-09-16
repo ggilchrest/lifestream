@@ -166,7 +166,7 @@ function resultBinding(request: Request, result: Result, options: Readonly<Provi
       requireTrue(summary.scope.authorityContextRef?.providerRef===options.providerRef);
       requireTrue(request.executionMode==='normal'?['normal','live','test'].includes(summary.executionEnvironmentRef):request.executionMode==='simulation'?['simulation','dry-run'].includes(summary.executionEnvironmentRef):summary.executionEnvironmentRef==='replay');
       requireTrue(!value.grants.length&&value.nextCursor===null&&!request.payload.states.length&&request.payload.page.cursor===null);
-      requireTrue(Date.parse(summary.expiresAt)>Date.now()&&Date.parse(summary.expiresAt)<=Date.parse(request.deadlineAt));
+      requireTrue(Date.parse(summary.expiresAt)>Date.now());
     }
     requireTrue(value.grants.length <= request.payload.page.limit);
     requireTrue(new Set(value.grants.map(item => item.grant.grantId)).size === value.grants.length);

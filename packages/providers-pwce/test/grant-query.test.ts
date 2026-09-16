@@ -47,3 +47,10 @@ test('caller mutation, cancellation and stalled resolver preserve bounded origin
  const f=fixture(),request=f.request(),original=structuredClone(request);let release;const gate=new Promise(resolve=>release=resolve);f.state.hook=async p=>{if(p==='resolve')await gate;};const pending=f.query.getGrants(request,f.context);request.scope.sessionId=randomUUID();release();assert.deepEqual((await pending).outcome.payload.externalSummary.scope,original.scope);
  const g=fixture(),controller=new AbortController();controller.abort();await assert.rejects(g.query.getGrants(g.request(),{...g.context,signal:controller.signal}),{code:'cancelled'});g.state.hook=async()=>new Promise(()=>{});const r=g.request();r.deadlineAt=new Date(Date.now()+40).toISOString();await assert.rejects(g.query.getGrants(r,g.context),{code:'deadline_exceeded'});assert.equal(g.sent.length,0);
 });
+
+test('summary evidence outlives its initial read deadline but never renews original catalog authority',async()=>{
+ const f=fixture(),request=f.request();request.deadlineAt=new Date(Date.now()+150).toISOString();const result=await f.query.getGrants(request,f.context),summary=result.outcome.payload.externalSummary;
+ assert.ok(Date.parse(summary.expiresAt)>Date.parse(request.deadlineAt));await new Promise(resolve=>setTimeout(resolve,175));
+ await assert.rejects(f.query.readEvidence(summary.evidenceRef,request,f.context),{code:'deadline_exceeded'});
+ const freshRead={...request,deadlineAt:new Date(Date.now()+5000).toISOString()};assert.ok(await f.query.readEvidence(summary.evidenceRef,freshRead,f.context));f.catalog.invalidateAll();await assert.rejects(f.query.readEvidence(summary.evidenceRef,freshRead,f.context));
+});

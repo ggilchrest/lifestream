@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "1709da9c3f629fcf81f69585305ab9f95547768f",
+  "currentRevision": "c6d4525bf341a0b175e460e30efccb15e7c4c722",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -257,17 +257,20 @@
     "packages/providers-pwce/test/grant-query.test.ts",
     "implementation/evidence/LS-S028-EXTERNAL-GRANT-QUERY-1.json",
     "packages/contracts/src/schemas/provider-messages.schema.json",
-    "packages/contracts/src/schemas/contract-manifest.json"
+    "packages/contracts/src/schemas/contract-manifest.json",
+    "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
   ],
   "changedFiles": [
+    "apps/control-web/DESIGN.md",
+    "apps/control-web/capability-permissions.js",
+    "apps/control-web/security.html",
+    "apps/server/src/composition/pwce-capabilities.ts",
+    "apps/server/src/index.ts",
+    "apps/server/test/pwce-capabilities.test.ts",
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-EXTERNAL-GRANT-QUERY-1.json",
-    "packages/contracts/src/provider-messages.ts",
-    "packages/contracts/src/schemas/contract-manifest.json",
-    "packages/contracts/src/schemas/provider-messages.schema.json",
+    "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json",
     "packages/providers-pwce/src/grant-query.ts",
-    "packages/providers-pwce/src/index.ts",
     "packages/providers-pwce/test/grant-query.test.ts",
     "packages/runtime/src/ports/provider-boundary.ts",
     "packages/runtime/test/provider-boundary.test.ts",
@@ -277,47 +280,57 @@
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-EXTERNAL-GRANT-QUERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-candidates.test.ts apps/server/test/pwce-capabilities.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
     },
     {
       "command": "node --test --experimental-strip-types packages/providers-pwce/test/grant-query.test.ts packages/runtime/test/provider-boundary.test.ts",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-EXTERNAL-GRANT-QUERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
     },
     {
-      "command": "pnpm typecheck",
+      "command": "PLAYWRIGHT_MODULE=<installed Playwright module> PWCE_UI_CAPTURE_DIR=<local captures> node scripts/check-pwce-host-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-EXTERNAL-GRANT-QUERY-1.json"
-    },
-    {
-      "command": "pnpm build",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-EXTERNAL-GRANT-QUERY-1.json"
-    },
-    {
-      "command": "pnpm lint",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-EXTERNAL-GRANT-QUERY-1.json"
-    },
-    {
-      "command": "node --test scripts/workspace.test.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-EXTERNAL-GRANT-QUERY-1.json"
-    },
-    {
-      "command": "npm --prefix .private run validate",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-EXTERNAL-GRANT-QUERY-1.json"
-    },
-    {
-      "command": "node scripts/check-pwce-host-process.mjs",
-      "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-EXTERNAL-GRANT-QUERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
     },
     {
       "command": "PWCE_HOST_DISPATCH=1 node scripts/check-pwce-host-process.mjs",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S028-EXTERNAL-GRANT-QUERY-1.json"
+      "evidence": "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed Playwright module> node scripts/check-canonical-control-browser.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-GRANT-SUMMARY-UI-1.json"
     }
   ],
   "decisions": [
@@ -335,8 +348,8 @@
     "2026-09-16: operator explicitly resumes at the current reasoning level; the previous pause is superseded."
   ],
   "blockers": [],
-  "nextAction": "Connect the external permission summary to the authenticated host grant-list route and control page, then continue independent foreign-authority and S083/S084 requirements.",
-  "updatedAt": "2026-09-16T15:34:57.695152Z",
+  "nextAction": "Continue remaining foreign-authority administration and S083/S084 work; investigate the preserved intermittent Discovery enrichment omission during S084 performance qualification. No independent-work exhaustion or Human blocker is claimed.",
+  "updatedAt": "2026-09-16T15:50:43.756595Z",
   "updatedBy": "Codex",
-  "notes": "External permission-summary contract and provider component verified; actual producer and canonical boundary exercised. Host grant-list and control-page summary integration remain pending."
+  "notes": "Authenticated PWCE grant-summary and control-page component verified; repeated full suite passes 889 tests. Initial Discovery omission preserved without claiming a root-cause fix. No Human acceptance or deployment."
 }
