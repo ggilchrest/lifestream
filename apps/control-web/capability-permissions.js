@@ -1,6 +1,6 @@
 /* Canonical authority only. Browser input never becomes a grant or dispatch receipt. */
 (() => {
-  const S = window.lifestreamSecurity, { el, fields, table } = S, $ = id => document.getElementById(id);
+  const PWCE=window.lifestreamPwceActions, S = window.lifestreamSecurity, { el, fields, table } = S, $ = id => document.getElementById(id);
   const root = '/api/authority/v1', classes = { allowOnce: 'One use', allowSession: 'This session, until expiry', allowPersistent: 'Persistent, until expiry or revocation' };
   let catalogExpiresAt = 0, tools = [], readers = [], pending = null, version = 0, timer = null;
   const lists = { requests: { rows: [], cursor: null }, grants: { rows: [], cursor: null } };
@@ -21,14 +21,17 @@
     $('cap-grants-class').value='';
     $('cap-select').replaceChildren(new Option('Load capabilities first','')); $('cap-arguments').replaceChildren(); $('cap-provider').textContent = '';
     $('cap-form').inert = false; $('cap-prepare').disabled = true; $('cap-prepare-retry').hidden = true; $('cap-class').value = 'allowOnce'; $('cap-review-label').hidden = true;
+    $('cap-local-permission').hidden=false;for(const b of document.querySelectorAll('[data-cap-view]'))b.hidden=false;
     status('Context changed. Load capabilities or refresh records for the Current Assistant.');
   };
   window.addEventListener('lifestream-security-context',clear);
   const argumentsForm = () => {
-    pending = null; $('cap-form').inert = false; $('cap-prepare-retry').hidden = true; readers = []; $('cap-arguments').replaceChildren();
+    PWCE.clear();pending = null; $('cap-form').inert = false; $('cap-prepare-retry').hidden = true; readers = []; $('cap-arguments').replaceChildren();
     const tool = tools[Number($('cap-select').value)]; $('cap-prepare').disabled = !tool;
     if (!tool || $('cap-select').value === '') { $('cap-prepare').disabled = true; return; }
     const schema = tool.inputSchema;
+    $('cap-local-permission').hidden=tool.providerRef==='pwce';
+    if(tool.providerRef==='pwce'){readers=[PWCE.argumentsForm(schema,$('cap-arguments'))];readers.raw=true;PWCE.renderRecent();status('Enter the site, target and brightness, then prepare the exact action for review.');return;}
     if (tool.administrationAvailable === false) { $('cap-prepare').disabled = true; disclosure($('cap-arguments'),'Input schema', { Schema: schema }); status('PWCE capability discovered. Review and execution controls are not yet connected.'); return; }
     if (schema.type === 'object' && schema.properties && Object.keys(schema.properties).length <= 32) {
       for (const [key, spec] of Object.entries(schema.properties)) {
@@ -59,8 +62,10 @@
   $('cap-refresh').onclick = run(async () => {
     $('cap-refresh').disabled = true; tools = []; argumentsForm(); status('Loading the selected provider’s capabilities…');
     try { const result = await S.request(`${S.base()}/tools`); if (result.protocol !== 'canonical' || result.status !== 'available') throw new Error('Canonical capabilities are unavailable for this selected provider.');
-      tools = result.tools.map(tool => ({ ...tool, administrationAvailable: result.actionAdministration !== 'unavailable' })); catalogExpiresAt = Date.parse(result.expiresAt); $('cap-provider').textContent = `Provider: ${result.providerRef} · Environment: ${result.environmentId}`;
+      tools = result.tools.map(tool => ({ ...tool, providerRef:result.providerRef, administrationAvailable: result.actionAdministration !== 'unavailable' })); catalogExpiresAt = Date.parse(result.expiresAt); $('cap-provider').textContent = `Provider: ${result.providerRef} · Environment: ${result.environmentId}`;
       $('cap-select').replaceChildren(new Option('Choose a capability','')); tools.forEach((t,i) => $('cap-select').append(new Option(`${t.capabilityId} · ${t.version}`,String(i))));
+      for(const b of document.querySelectorAll('[data-cap-view]'))b.hidden=result.providerRef==='pwce'&&b.dataset.capView!=='prepare';
+      if(result.providerRef==='pwce')PWCE.renderRecent();
       status(result.actionAdministration === 'unavailable' ? 'PWCE capability discovery is available. Select a capability to inspect its schema; review and execution controls are not yet connected.' : tools.length ? 'Choose a capability and enter the exact action arguments.' : 'No capabilities are available in this scope.');
     } finally { $('cap-refresh').disabled = false; }
   });
@@ -85,6 +90,7 @@
     if (pending) throw new Error('Resolve the existing preparation first using its retry control.');
     const tool = tools[Number($('cap-select').value)]; if (!tool || $('cap-select').value === '') throw new Error('Choose a capability first.');
     if (!Number.isFinite(catalogExpiresAt) || catalogExpiresAt <= Date.now() + 5000) throw new Error('The capability catalog has expired. Load available capabilities and review the current definition again.');
+    if(tool.providerRef==='pwce'){await PWCE.prepare(tool,readers[0]());return;}
     const duration = Number($('cap-duration').value), review = Number($('cap-review').value), grantClass = $('cap-class').value, now = Date.now();
     if (grantClass === 'allowPersistent' && (review < 1 || review > duration)) throw new Error('The review boundary must be within the permission duration.');
     const input = readers.raw ? readers[0]() : Object.fromEntries(readers.map(read => read()).filter(Boolean));

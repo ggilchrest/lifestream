@@ -52,7 +52,7 @@ function gateway(t){
 test('PWCE discovery validates exact public schemas and preserves opaque authenticated identity',async t=>{
  const f=gateway(t),o=owner(),result=await f.discovery.discover(o,call());
  assert.equal(result.status,'available');assert.equal(result.tools[0].capabilityId,'pwce.home.light.set-level');assert.equal(result.tools[0].inputSchema.properties.parameters.properties.level.maximum,1);
- assert.equal(result.actionAdministration,'unavailable');assert.equal(result.grantsAuthority,false);assert.equal(result.dispatchStarted,false);
+ assert.equal(result.actionAdministration,'providerReview');assert.equal(result.grantsAuthority,false);assert.equal(result.dispatchStarted,false);
  const authority=f.requests.find(r=>r.path.endsWith('/authority')).body;assert.deepEqual(authority,{...pwceIdentity(f.profile.lifestreamEnvironmentId,o),siteRefs:f.profile.siteRefs});assert.ok(!JSON.stringify(authority).includes(o.principalId));
  assert.equal(f.streams.size,2);await f.discovery.discover(o,call());assert.equal(f.requests.filter(r=>r.path.endsWith('/authority')).length,1);
  assert.ok(f.requests.every(r=>!['authority.authorizeDispatch','capabilities.invoke'].includes(r.body?.operation)));

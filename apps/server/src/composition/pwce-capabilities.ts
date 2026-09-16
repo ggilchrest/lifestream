@@ -162,7 +162,7 @@ export class PwceCapabilityDiscovery {
           tools.push({ capabilityId: definition.capabilityId, version: definition.version, sideEffectClass: definition.sideEffectClass, authorization: definition.authorization, inputSchema, inputSchemaRef: descriptor.inputSchemaArtifact, outputSchemaRef: descriptor.resultSchemaArtifact });
         }
         call.check();
-        return { status: 'available', protocol: 'canonical', providerRef: 'pwce', environmentId: this.profile.lifestreamEnvironmentId, expiresAt: lease.expiresAt, tools, grantsAuthority: false, dispatchStarted: false, actionAdministration: 'unavailable', limitation: 'Capability discovery is available; PWCE action preparation and administration are not yet connected.' };
+        return { status: 'available', protocol: 'canonical', providerRef: 'pwce', environmentId: this.profile.lifestreamEnvironmentId, expiresAt: lease.expiresAt, tools, grantsAuthority: false, dispatchStarted: false, actionAdministration: 'providerReview', limitation: 'PWCE owns action approval and authority. Prepare and review the exact action; host execution requires separate configured dispatch custody and credentials.' };
       } finally { call.close(); }
     });
   }

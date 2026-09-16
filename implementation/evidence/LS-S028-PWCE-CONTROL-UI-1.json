@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-PWCE-CONTROL-UI-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "11078a993e216b1adef889bd2d8ba44d52ad1fcc",
+  "specificationRevision": "756006a1091894d2948c3582ed5c32f4a3e6736c",
+  "producerRevision": "e7c408c5d4ddb1cb1d9fe9579c7e08d91f056d3f",
+  "recordedAt": "2026-09-16T15:16:49.486250+00:00",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "apps/control-web/DESIGN.md",
+        "sha256": "025fbe167e756328ab1d29fabc9bc259a2fe4ae3d36934362a99e82127b8ca2d"
+      },
+      {
+        "path": "apps/control-web/capability-permissions.js",
+        "sha256": "a1c7d6482a9b5621f1d837bf4137da5d6a74fd9d86e603d8b90710a6e01ab648"
+      },
+      {
+        "path": "apps/control-web/pwce-actions.js",
+        "sha256": "f5074cd80dfbfde622bfb5f0416ecdb4ab6dd2916b28d9bf2f7fffe5c85aa23c"
+      },
+      {
+        "path": "apps/control-web/security.html",
+        "sha256": "1f53a19409f45c29bfd2940e941c3ae473ede747cc25c8430711771f280a303b"
+      },
+      {
+        "path": "apps/server/src/authority/pwce-action-preparation.ts",
+        "sha256": "9db70e2bb17909c4e0d51eb416a8170ab2abad552ab986ec939eeddd901d9ad5"
+      },
+      {
+        "path": "apps/server/src/composition/pwce-capabilities.ts",
+        "sha256": "1d5c8493b6074c49765f672ba5f5ebfd30af68105b37867cd2a307cfbc407f19"
+      },
+      {
+        "path": "apps/server/test/pwce-capabilities.test.ts",
+        "sha256": "1d215b22041cfe3a76e24c259261f5979661292e32db4e2151f8a21ed2351ddd"
+      },
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "9d8f11de009255b7635600c8eeb21c3a9f4e9c24cd90550fe1319ceacc49ed3b"
+      },
+      {
+        "path": "scripts/check-pwce-host-approval.mjs",
+        "sha256": "987886d30a3ed7fd88b503eaa799471c87eebfdde3a208b9fd9c6838f213720b"
+      },
+      {
+        "path": "scripts/check-pwce-host-process.mjs",
+        "sha256": "2d9674b0d3457bf7bee01f0e3be90163992d7b40f73c9464839f809d987a3c0b"
+      }
+    ]
+  },
+  "claim": "Actual control page exposes labeled PWCE preparation, exact confirmation, producer approval request and status, separate approved review and execution, and original evidence. One active step, expandable proof and retained reference table support desktop and phone use. Browser reload preserves pending approval and completed result without execution. A lost execution reply recovers success through read-only status, with exactly one synthetic target call. Keyboard confirmation and original local permission flows pass.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-pwce-ui-tests.log",
+      "logSha256": "f26984e471e132ded838c00973001b84b5cf39dae1623023164c1fe4075ebf24"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "log": "ls-pwce-ui-surface.log",
+      "logSha256": "20b86eb6ddd81230f129ecf91fd1af57f89df392af526d3a027124f271ba4210"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-pwce-ui-types.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-pwce-ui-lint.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-pwce-ui-build.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-pwce-ui-workspace.log",
+      "logSha256": "5f89a71a51cffdfa582a4fc2dde2c6dc54c25f9c16334fecdacc90ebe744baaa"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-pwce-ui-private.log",
+      "logSha256": "bfc0ae3eb28eace657dadeb67296eceb0936f3ca6e93696a46d7847f46c7d914"
+    },
+    {
+      "command": "PWCE_HOST_UI=1 PWCE_UI_CAPTURE_DIR=<local capture directory> PLAYWRIGHT_MODULE=<installed Playwright module> node scripts/check-pwce-host-approval.mjs",
+      "result": "pass",
+      "log": "ls-pwce-ui-browser-final.log",
+      "logSha256": "4c223e60b4beb96158108ba7ec357fff62a023c1b34b4eca3ba603ad1af19a6e"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed Playwright module> node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-pwce-ui-browser-basic-fixed.log",
+      "logSha256": "98561b809f3f3d50ece40f0488ffaebe2329bc0927c8f829aa5143279bf84f3c"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed Playwright module> node scripts/check-canonical-control-browser.mjs",
+      "result": "pass",
+      "log": "ls-pwce-ui-local-browser.log",
+      "logSha256": "533419c75c782d1598c5efd104bf2d87b1bf48277ac4705dd8aa694a60eae7c3"
+    }
+  ],
+  "counts": {
+    "applicationTests": 880,
+    "defaultBrowserSurfacePassed": 19,
+    "defaultBrowserSurfaceSkipped": 30,
+    "workspaceTests": 43,
+    "actualApprovalHostAndBrowserChecks": 19,
+    "approvalScenarioDispatchPosts": 5,
+    "approvalScenarioSyntheticTargetCalls": 1,
+    "actualDiscoveryHostAndBrowserChecks": 16,
+    "discoverySyntheticTargetCalls": 0,
+    "actualCanonicalAndAuthenticationBrowserTests": 2
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-control-ui/2026-09-16T151649Z",
+  "failedAttempts": [
+    {
+      "log": "ls-pwce-ui-browser-basic.log",
+      "reason": "Browser expected obsolete catalog status copy; wait now uses populated capability selection."
+    },
+    {
+      "log": "ls-pwce-ui-browser-full.log",
+      "reason": "Phone navigation was collapsed on reload; browser now opens the visible navigation disclosure before selecting the section."
+    }
+  ],
+  "limitations": [
+    "Synthetic PWCE target and injected producer Human proof; no physical effect or PWCE Studio Human acceptance.",
+    "Default browser-surface suite skips optional browser scenarios; affected PWCE and local canonical flows were separately executed in actual Chrome.",
+    "External grant query and modification views remain independent work.",
+    "Saved runtime, deployment, live configuration, model selection, personal import, training and new Human acceptance unchanged."
+  ]
+}

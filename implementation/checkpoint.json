@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "16362df145dfe48567f2499beed42661c36e95f2",
+  "currentRevision": "11078a993e216b1adef889bd2d8ba44d52ad1fcc",
   "activeSlice": "LS-S028",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -249,61 +249,75 @@
     "implementation/evidence/LS-S028-APPROVAL-CUSTODY-1.json",
     "scripts/check-pwce-host-approval.mjs",
     "implementation/evidence/LS-S028-HOST-APPROVAL-REQUEST-1.json",
-    "implementation/evidence/LS-S028-APPROVED-RESUME-1.json"
+    "implementation/evidence/LS-S028-APPROVED-RESUME-1.json",
+    "apps/control-web/pwce-actions.js",
+    "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json",
+    "apps/control-web/security.html"
   ],
   "changedFiles": [
+    "apps/control-web/DESIGN.md",
+    "apps/control-web/capability-permissions.js",
+    "apps/control-web/pwce-actions.js",
+    "apps/control-web/security.html",
     "apps/server/src/authority/pwce-action-preparation.ts",
-    "apps/server/src/index.ts",
+    "apps/server/src/composition/pwce-capabilities.ts",
+    "apps/server/test/pwce-capabilities.test.ts",
     "docs/canonical-provider-boundary.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S028-APPROVED-RESUME-1.json",
-    "scripts/check-pwce-host-approval.mjs"
+    "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json",
+    "scripts/check-pwce-host-approval.mjs",
+    "scripts/check-pwce-host-process.mjs"
   ],
   "validation": [
     {
       "command": "pnpm test",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-full.log"
+      "evidence": "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json"
     },
     {
       "command": "pnpm typecheck",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-typecheck-final.log"
+      "evidence": "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json"
     },
     {
       "command": "pnpm lint",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-lint.log"
+      "evidence": "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json"
     },
     {
       "command": "pnpm build",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-build.log"
-    },
-    {
-      "command": "node --test --experimental-strip-types apps/server/test/pwce-capabilities.test.ts packages/providers-pwce/test/authority-admission.test.ts packages/providers-pwce/test/invocation.test.ts",
-      "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-focused.log"
-    },
-    {
-      "command": "PWCE_HOST_APPROVAL_RESUME=1 PWCE_HOST_APPROVAL_EXPIRY=1 node scripts/check-pwce-host-approval.mjs",
-      "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-expiry.log"
-    },
-    {
-      "command": "PWCE_HOST_DISPATCH=1 node scripts/check-pwce-host-process.mjs",
-      "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-host-regression.log"
+      "evidence": "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json"
     },
     {
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-workspace.log"
+      "evidence": "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json"
     },
     {
       "command": "npm --prefix .private run validate",
       "result": "pass",
-      "evidence": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-approved-resume/2026-09-16T145954Z/ls-approved-resume-private.log"
+      "evidence": "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json"
+    },
+    {
+      "command": "PWCE_HOST_UI=1 PWCE_UI_CAPTURE_DIR=<local capture directory> PLAYWRIGHT_MODULE=<installed Playwright module> node scripts/check-pwce-host-approval.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed Playwright module> node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed Playwright module> node scripts/check-canonical-control-browser.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-PWCE-CONTROL-UI-1.json"
     }
   ],
   "decisions": [
@@ -321,8 +335,8 @@
     "2026-09-16: operator explicitly resumes at the current reasoning level; the previous pause is superseded."
   ],
   "blockers": [],
-  "nextAction": "Connect the control-page preparation, confirmation, producer approval review/resume, status and evidence workflow, then continue independent remaining S083/S084 requirements.",
-  "updatedAt": "2026-09-16T14:59:54.706238Z",
+  "nextAction": "Continue existing independent external grant representation and foreign authority requirements, then remaining S083/S084 implementation and qualification. Preserve Human, physical-effect and provider-selection boundaries.",
+  "updatedAt": "2026-09-16T15:16:49.486250Z",
   "updatedBy": "Codex",
-  "notes": "Exact approved review/resume verified: 880 application tests, 78 focused tests, 43 workspace tests; 16 real host/PWCE checks with one synthetic target and original key retained; actual approval expiry and credential-free restart preserve status. Existing dispatch regression 22 checks. Control UI pending."
+  "notes": "PWCE control-page review workflow component verified; receipt preserves synthetic scope, optional-suite skips and original failed runs. Broader development continues; no new Human acceptance."
 }
