@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-CODE-ALIGNMENT-1",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "componentStatus": "verified",
+  "sourceRevision": "6c998fe89b591181b1915d4ae52797591db3a764",
+  "specificationRevision": "af10bc80b185014f74d2f902745af7c52a1a357e",
+  "recordedAt": "2026-09-16T22:10:00.000Z",
+  "alignmentRows": [
+    {
+      "row": "A1",
+      "requirement": "LS-COMP-063",
+      "result": "componentVerified",
+      "changedPath": "Typed relational opportunities use the existing prepared context, prompt, conversation, endpoint and speech ownership path without fabricated user input.",
+      "oldBehaviorRegressions": ["ordinary authenticated text and voice turns", "quiet/default and missing-readiness denial", "audience, endpoint, interruption and audio-owner fences"],
+      "newBehaviorEvidence": ["LS-TEST-108", "LS-TEST-109", "LS-TEST-113", "LS-TEST-115", "LS-TEST-116", "LS-TEST-117", "LS-TEST-118", "LS-TEST-119", "LS-TEST-120"]
+    },
+    {
+      "row": "A3",
+      "requirement": "LS-COMP-063",
+      "result": "componentVerified",
+      "changedPath": "Initiative controls, policy review, synthetic catalog inspection and isolated Lab comparison remain separately scoped and reversible.",
+      "oldBehaviorRegressions": ["extension configuration lifecycle and transactional retries", "preview/Lab read-only behavior"],
+      "newBehaviorEvidence": ["LS-TEST-108", "LS-TEST-110", "LS-TEST-111", "LS-TEST-121"]
+    },
+    {
+      "row": "A5",
+      "requirement": "LS-COMP-063",
+      "result": "componentVerified",
+      "changedPath": "Current audience, source, correction, dismissal, forgetting and replay fences withhold stale initiative work and preserve durable uncertainty.",
+      "oldBehaviorRegressions": ["ordinary reply cancellation", "speech interruption and playback acknowledgement", "retention cleanup and restart"],
+      "newBehaviorEvidence": ["LS-TEST-112", "LS-TEST-114", "LS-TEST-115", "LS-TEST-117", "LS-TEST-118", "LS-TEST-120"]
+    },
+    {
+      "row": "A6",
+      "requirement": "LS-COMP-063",
+      "result": "componentVerified",
+      "changedPath": "Timing admission and bounded cleanup preserve foreground cancellation and current Discovery Lab selection timing; the current 3/3 Lab regression has no failed comparison rows.",
+      "oldBehaviorRegressions": ["bounded timing feedback and cancellation", "retention cadence and close"],
+      "newBehaviorEvidence": ["LS-TEST-110", "LS-TEST-111", "LS-TEST-114", "LS-TEST-117", "LS-TEST-121"]
+    }
+  ],
+  "sourceFiles": [
+    {"path": "apps/server/src/runtime/initiative-host.ts", "sha256": "0220095c8f78ce17692738c863f085c373dae57312728bd800225878307fbd29"},
+    {"path": "apps/server/src/runtime/initiative.ts", "sha256": "f39da7baf0b42758e1d656c1502c49232e9ffdd95c4cb76005a4d326c1cc3ab9"},
+    {"path": "apps/server/src/runtime/initiative-timing.ts", "sha256": "5309851628a227e0cf3e3613de935d1802466cdc5ea3c86cc840467c9785f0ac"},
+    {"path": "apps/server/src/admin/initiative-policy.ts", "sha256": "ab7da073cad39df765b01a9b6889fcf9de4dd7fa5d742f4ba7176539912962c8"},
+    {"path": "apps/server/src/admin/initiative-lab.ts", "sha256": "d3885d220060782f73ac66e9b0a2a8a25c4cd00432cdb9708c7f1a041e8e7d48"},
+    {"path": "packages/runtime/src/inference/prompt.ts", "sha256": "b2112976cd28fc50e0f219d729264ab6ed2afa92c914421d800359f7fe68329d"},
+    {"path": "apps/server/src/relationship-extensions.ts", "sha256": "bfa436855872ddc38f5196ecfbf47bbc32c95f44fb4adb00056b191df17e82a7"},
+    {"path": "apps/server/test/initiative-host.test.ts", "sha256": "301d93e0092767e28dbc578fd2e0e23c61021ef62dd89114d6d16b1257fe7c92"},
+    {"path": "apps/server/test/initiative-timing.test.ts", "sha256": "833e863516abd73afc0885bbad40a453ee44485bb874f02e87ded751ed94015e"},
+    {"path": "apps/control-web/test/relationship-joined.test.mjs", "sha256": "0d7906a14067c339d075715389694f910a7f5c6bb842abfc3f77099923aedd34"}
+  ],
+  "checks": [
+    {"command": "node --test --experimental-strip-types apps/server/test/initiative-host.test.ts apps/server/test/initiative-maintenance.test.ts apps/server/test/initiative-timing.test.ts apps/server/test/relationship-extensions.test.ts apps/server/test/audio-output.test.ts apps/server/test/conversation.test.ts", "result": "pass", "details": "43/43"},
+    {"command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/relationship-joined.test.mjs", "result": "pass", "details": "LS-TEST-106 fixture journey 1/1"},
+    {"command": "pnpm test", "result": "pass", "details": "906/906; current full source receipt", "evidence": "implementation/evidence/S084-PREPARED-CONTEXT-QUALIFIER-1.json"},
+    {"command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface", "result": "pass", "details": "49/49; current browser fixture receipt", "evidence": "implementation/evidence/S084-PREPARED-CONTEXT-QUALIFIER-1.json"},
+    {"command": "node scripts/workspace.mjs check", "result": "pass", "details": "current workspace structure"},
+    {"command": "git diff --check", "result": "pass", "details": "current source and evidence whitespace"}
+  ],
+  "retainedFailures": [
+    "The historical S083-TIMING-ADAPTATION-1 deadline failure remains immutable; S083-TIMING-ADAPTATION-2 records the current clean 3/3 successor.",
+    "Selected-provider certification, production, physical/perceptual output and Human acceptance remain open. The current selected-provider service is unavailable and is not replaced by fixture evidence."
+  ],
+  "limitations": [
+    "This receipt closes current local code-alignment evidence for the listed rows; it does not claim selected-provider, protected external-authority, production or Human conformance.",
+    "Model-output variance, including identifier casing, remains tracked separately from application-path correctness."
+  ]
+}

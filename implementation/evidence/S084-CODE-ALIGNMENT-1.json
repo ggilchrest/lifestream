@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-CODE-ALIGNMENT-1",
+  "slice": "LS-S084",
+  "status": "componentVerified",
+  "componentStatus": "verified",
+  "sourceRevision": "6c998fe89b591181b1915d4ae52797591db3a764",
+  "specificationRevision": "fba259d86a45ea90ede8d68f5b6d02a1d333d87a",
+  "recordedAt": "2026-09-16T22:10:00.000Z",
+  "alignmentRows": [
+    {
+      "row": "A2",
+      "requirement": "LS-COMP-064",
+      "result": "componentVerified",
+      "changedPath": "The actual canonical prompt formatter uses the same four-item/512-token optional selection bound as the prepared view while retaining mandatory baseline and correction lanes and the final 8,192-byte request cap.",
+      "oldBehaviorRegressions": ["record-oriented and convention-oriented prepared context", "mandatory approved baseline and critical correction retention", "ordinary prompt section ordering"],
+      "newBehaviorEvidence": ["LS-TEST-129", "LS-TEST-134"]
+    },
+    {
+      "row": "A4",
+      "requirement": "LS-COMP-064",
+      "result": "componentVerified",
+      "changedPath": "Supplied-source preparation, competing tentative analysis records, hypothesis review/rejection, grounded candidates, explicit preference ranking, feedback and isolated Lab paths enforce scoped evidence and no authority from inference.",
+      "oldBehaviorRegressions": ["ordinary context selection remains available when Discovery indexing fails", "existing evidence review and privacy ownership"],
+      "newBehaviorEvidence": ["LS-TEST-123", "LS-TEST-124", "LS-TEST-125", "LS-TEST-126", "LS-TEST-127", "LS-TEST-128", "LS-TEST-130", "LS-TEST-131", "LS-TEST-132", "LS-TEST-136", "LS-TEST-138", "LS-TEST-139"]
+    },
+    {
+      "row": "A5",
+      "requirement": "LS-COMP-064",
+      "result": "componentVerified",
+      "changedPath": "Correction, source exclusion, owner forgetting, failed-cleanup withholding and restore fences reach jobs, briefs, hypotheses and candidate derivatives without deleting supporting observations.",
+      "oldBehaviorRegressions": ["database recovery and durable review retry", "ordinary request path after optional Discovery failure"],
+      "newBehaviorEvidence": ["LS-TEST-129", "LS-TEST-132", "LS-TEST-133", "LS-TEST-136"]
+    },
+    {
+      "row": "A6",
+      "requirement": "LS-COMP-064",
+      "result": "componentVerified",
+      "changedPath": "Indexed local selection and current corpus runs are bounded and measured, with optional misses dropping enrichment rather than expanding the foreground request.",
+      "oldBehaviorRegressions": ["same-deadline lookup and inner selection", "deadline expiry does not create reusable stale context", "full source and browser fixture regressions"],
+      "newBehaviorEvidence": ["LS-TEST-134", "LS-TEST-135", "LS-TEST-136"]
+    }
+  ],
+  "sourceFiles": [
+    {"path": "packages/runtime/src/context/builder.ts", "sha256": "1c315909dc4ea55742b1a2605deb9cb764edd822cc1063e0c5cc824dc25404ec"},
+    {"path": "packages/runtime/src/inference/prompt.ts", "sha256": "b2112976cd28fc50e0f219d729264ab6ed2afa92c914421d800359f7fe68329d"},
+    {"path": "apps/server/src/admin/understanding.ts", "sha256": "f9443e057634219ae5514475c2217ce7d533d3d2050758b79ef8c968ea3c7db2"},
+    {"path": "apps/server/src/admin/discovery-analysis.ts", "sha256": "4168cd308d5026bebf2eac300d9d9b50d84777a731287451057fa4f9b3e828f5"},
+    {"path": "apps/server/src/admin/discovery-candidates.ts", "sha256": "6c50995d7d45409b16bcbaa7feb499b45c7d6187676eb798af7cb8b35cfebc62"},
+    {"path": "apps/server/src/admin/discovery-selection.ts", "sha256": "c4413d719247ef1e9a4877fb221fd625bc52ef32df57b81bf248c29f8a02563e"},
+    {"path": "apps/server/src/admin/discovery-lab.ts", "sha256": "dd59943eabddbe9f87447180ddc3515ebd7727243b9f1ff1e3fb4446fef3bce8"},
+    {"path": "apps/server/src/admin/relationship-recovery.ts", "sha256": "bf31af4dba4d5180268f1d97006a8b9eed509907850dd4eb66055c90e23fbd67"},
+    {"path": "apps/server/test/discovery-analysis.test.ts", "sha256": "5e8d609dd677de80951c1c60dea0d61512b16088154128d4e700484a9c1762fb"},
+    {"path": "apps/server/test/discovery-review.test.ts", "sha256": "f26e0fb87e5321cbb1ca1545fa6f4a4f4024188a84658960e9f12aec11dcb6b5"},
+    {"path": "apps/server/test/discovery-lab.test.ts", "sha256": "6dcc9d0f0ac91f3311e6e832c658b1f510fac70fb8dbca2f05e959dcfd886e0b"},
+    {"path": "apps/server/test/discovery-selection.test.ts", "sha256": "afbfb655cd98b13791e23043c7172789e4848264a75572ea723850bdf390c091"},
+    {"path": "apps/server/test/understanding.test.ts", "sha256": "3e871d2472be4982b6e00e10101ec94540842f190cd42be55bf4fc9cf41ae36e"},
+    {"path": "packages/runtime/test/context.test.ts", "sha256": "c01062be3b17888ddc5ac1252f684ae4fd98c5c3c43de55cd5f335fd0ece5077"},
+    {"path": "packages/storage-sqlite/src/understanding.ts", "sha256": "725cc92efbcce5e5dfc4f0f2703a58ca93e47185be627f723cd27cff806404a7"}
+  ],
+  "checks": [
+    {"command": "node --test --experimental-strip-types apps/server/test/discovery-analysis.test.ts apps/server/test/discovery-review.test.ts apps/server/test/discovery-lab.test.ts apps/server/test/discovery-selection.test.ts apps/server/test/understanding.test.ts apps/server/test/initiative-host.test.ts apps/server/test/initiative-maintenance.test.ts apps/server/test/initiative-timing.test.ts apps/server/test/relationship-insights.test.ts", "result": "pass", "details": "44/44"},
+    {"command": "PLAYWRIGHT_MODULE=<bundled> node --test apps/control-web/test/relationship-joined.test.mjs", "result": "pass", "details": "LS-TEST-106 fixture journey remains 1/1"},
+    {"command": "node scripts/workspace.mjs check", "result": "pass", "details": "current workspace structure"},
+    {"command": "git diff --check", "result": "pass", "details": "current source and evidence whitespace"},
+    {"command": "pnpm test", "result": "pass", "details": "906/906; current full source receipt", "evidence": "implementation/evidence/S084-PREPARED-CONTEXT-QUALIFIER-1.json"},
+    {"command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface", "result": "pass", "details": "49/49; current browser fixture receipt", "evidence": "implementation/evidence/S084-PREPARED-CONTEXT-QUALIFIER-1.json"}
+  ],
+  "retainedFailures": [
+    "Optional provider-backed hypothesis analysis remains correctly withheld until a qualified shared-provider cancellation/priority bound is available.",
+    "Selected-provider, protected external-authority, full all-conditions performance, production and Human acceptance remain open."
+  ],
+  "limitations": [
+    "This receipt closes current local code-alignment evidence for the listed rows; it does not claim selected-provider, network-research, physical, production or Human conformance.",
+    "Corpus measurements are local indexed-selection evidence. They do not establish provider latency, audio quality or all-conditions foreground contention."
+  ]
+}
