@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-CORRECTION-INVALIDATION-1",
+  "slice": "LS-S084",
+  "status": "componentVerified",
+  "sourceRevision": "a6b907add358d14721f0e690d49ed4fe6e94b174",
+  "specificationRevision": "636f104b3dbb8eb92cf08fb9ba2d6112bddd338f",
+  "recordedAt": "2026-09-16T00:00:00.000Z",
+  "sourceFiles": [
+    {"path": "apps/server/src/admin/relationship-recovery.ts", "sha256": "bf31af4dba4d5180268f1d97006a8b9eed509907850dd4eb66055c90e23fbd67"},
+    {"path": "apps/server/src/admin/understanding.ts", "sha256": "f9443e057634219ae5514475c2217ce7d533d3d2050758b79ef8c968ea3c7db2"},
+    {"path": "packages/storage-sqlite/src/understanding.ts", "sha256": "725cc92efbcce5e5dfc4f0f2703a58ca93e47185be627f723cd27cff806404a7"},
+    {"path": "apps/server/src/index.ts", "sha256": "49918697997bc13b229dd1d5f403af83755b7c0efe688f090f58ce19ad59cf01"}
+  ],
+  "claims": [
+    "The actual authenticated effective-request path excludes corrected, revoked and forgotten relationship, memory and User Profile payloads before inference; restoring an older database cannot revive the current owner-local tombstones.",
+    "Discovery analysis and hypothesis review cancel or withhold late publication when evidence, authorization or provider qualification changes; hypothesis rejection invalidates pinned candidate derivatives while retaining supporting observations.",
+    "Owner-local forgetting and source exclusion fence derived briefs, candidates, jobs and isolated Lab payloads, preserve retry identity and distinguish partial cleanup from completed cleanup."
+  ],
+  "checks": [
+    {"command": "node --test --experimental-strip-types apps/server/test/relationship-recovery.test.ts apps/server/test/discovery-analysis.test.ts apps/server/test/discovery-review.test.ts packages/storage-sqlite/test/understanding.test.ts", "result": "pass", "detail": "24/24"},
+    {"command": "pnpm test", "result": "pass", "detail": "904/904 clean rerun", "evidence": "implementation/evidence/S084-PREPARED-CONTEXT-FORMAT-1.json"}
+  ],
+  "limitations": [
+    "These are fixture/local component and authenticated local-runtime checks; they do not certify a selected external provider, production authority, network acquisition, physical output or Human acceptance.",
+    "The broader LS-COMP-064 performance and prerequisite qualification envelope remains open."
+  ]
+}

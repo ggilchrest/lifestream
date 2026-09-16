@@ -185,6 +185,7 @@
     "implementation/evidence/S084-RANKING-CONNECTIONS-1.json",
     "implementation/evidence/S084-PREPARED-CONTEXT-FORMAT-1.json",
     "implementation/evidence/S084-CURRENT-CORPUS-BENCHMARK-1.json",
+    "implementation/evidence/S084-CORRECTION-INVALIDATION-1.json",
     "packages/storage-sqlite/test/database.test.ts"
   ],
   "changedFiles": [
@@ -264,6 +265,11 @@
       "command": "node scripts/benchmark-discovery-local.mjs --output /private/tmp/s084-local-corpus-current.json",
       "result": "pass",
       "evidence": "implementation/evidence/S084-CURRENT-CORPUS-BENCHMARK-1.json"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/relationship-recovery.test.ts apps/server/test/discovery-analysis.test.ts apps/server/test/discovery-review.test.ts packages/storage-sqlite/test/understanding.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-CORRECTION-INVALIDATION-1.json"
     }
   ],
   "decisions": [
