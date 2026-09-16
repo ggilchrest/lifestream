@@ -85,6 +85,6 @@ export function recordContextContent(record: RelationshipRecord): string {
   const qualifiers: string[] = [];
   if (record.category === "episode") qualifiers.push("Authored/imported account; not a verified shared event");
   if (record.evidenceBasis === "modelInference") qualifiers.push("Unverified hypothesis");
-  if (record.builder) qualifiers.push(record.evidenceBasis === "userDeclaration" ? "User-reviewed imported declaration. Apply its task-relevant example or communication preferences unless the current request overrides them. This approval is not independent factual verification and grants no tools, effects or additional consent" : `Imported ${record.evidenceBasis ?? "observation"}; attributed source, not independent verification`);
+  if (record.builder) qualifiers.push(record.evidenceBasis === "userDeclaration" ? "User-reviewed imported declaration; task-relevant only; not independent verification; no tools, effects or additional consent" : `Imported ${record.evidenceBasis ?? "observation"}; attributed source, not independent verification`);
   return qualifiers.length ? `[${qualifiers.join("; ")}] ${record.content}` : record.content;
 }

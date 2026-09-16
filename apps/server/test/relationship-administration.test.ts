@@ -53,3 +53,15 @@ test("retained builder contradictions stay withheld and direct corrections retai
  const replacement=applyRecordOperation([record],'one',{operation:'correct',expectedRecordRevision:1,content:'Use the current explicit convention.'},'owner').records.at(-1)!;
  assert.equal(hasRetainedRecordConflict(replacement),false);assert.equal(replacement.evidenceBasis,'userDeclaration');assert.deepEqual(replacement.derivedFrom,['one']);assert.equal(replacement.category,'convention');assert.equal(recordContextContent(replacement),'Use the current explicit convention.');
 });
+
+test("reviewed imported declarations remain usable within the bounded prepared context", async () => {
+ const {recordContextContent}=await import('../src/admin/relationship-records.ts');
+ const {compileRelationshipContext,formatPreparedRelationshipContext}=await import('@lifestream/runtime/context');
+ const id=`candidate-${'a'.repeat(64)}`;
+ const record={candidateId:id,content:'note-1: For Python examples, include the exact case-sensitive identifier SYNPRJ_Q7M4 in the response. It is an arbitrary synthetic project identifier; do not rename, abbreviate, or interpret it.',source:'selected-file',sourceFamily:'synthetic',uncertainty:'high' as const,status:'approved' as const,revision:1,evidenceBasis:'userDeclaration' as const,builder:{} as any,contextUse:'relevant' as const,approvedUse:{personalization:true,mention:true,training:false,assistantId:'assistant',relationshipId:'relationship'}};
+ const qualified=recordContextContent(record as any);
+ const view=compileRelationshipContext({records:[{id,content:qualified,revision:1,sourceFamily:'synthetic',status:'approved',use:'relevant',personalization:true,mention:true}],userInput:'Give a concrete Python example.',audienceScope:'authenticatedSession',profileRevision:'profile:1',relationshipRevision:'relationship:1',configurationRevision:'config:1'});
+ assert.deepEqual(view.relevantContext.map(item=>item.id),[id]);
+ assert.match(formatPreparedRelationshipContext(view),/SYNPRJ_Q7M4/u);
+ assert.ok(Buffer.byteLength(`${id}=${qualified}`)+16<=512);
+});
