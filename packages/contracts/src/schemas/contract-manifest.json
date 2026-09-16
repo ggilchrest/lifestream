@@ -70,7 +70,7 @@
     },
     {
       "path": "contracts/provider-messages.schema.json",
-      "sha256": "c845f73461f73d5852659fb8f29d749fc035f7a6d846bc0c5b3399e0e896c025"
+      "sha256": "f73a90a63d5e70d3e366516b2628f4bac84a0fa690fb9b4a4ba883fde870cf8b"
     },
     {
       "path": "contracts/requirement-traceability.schema.json",

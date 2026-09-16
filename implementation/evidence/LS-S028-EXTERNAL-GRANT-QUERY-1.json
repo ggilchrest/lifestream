@@ -1,0 +1,153 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-EXTERNAL-GRANT-QUERY-1",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "1709da9c3f629fcf81f69585305ab9f95547768f",
+  "specificationRevision": "dcaba55a22f6077b02247340538a65cf1262b38f",
+  "producerRevision": "86a899b9a4a35d8bf96b96b1cb83c9274bd49c53",
+  "recordedAt": "2026-09-16T15:34:57.695152Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {
+        "path": "docs/canonical-provider-boundary.md",
+        "sha256": "65c9c168260836cf039e8a91b79aeb05ca78cfccff4abf29007f4fdfc5a7003d"
+      },
+      {
+        "path": "packages/contracts/src/provider-messages.ts",
+        "sha256": "7d65dca20be7236aee910e46bccd21481ebd38f3b7970d5a5e431a99b00159aa"
+      },
+      {
+        "path": "packages/contracts/src/schemas/contract-manifest.json",
+        "sha256": "e21c59d41174964397838000138a8b397bfb6b81a94a9038bc110f4936e83ac4"
+      },
+      {
+        "path": "packages/contracts/src/schemas/provider-messages.schema.json",
+        "sha256": "f73a90a63d5e70d3e366516b2628f4bac84a0fa690fb9b4a4ba883fde870cf8b"
+      },
+      {
+        "path": "packages/providers-pwce/src/grant-query.ts",
+        "sha256": "9593429875108fd858f91c97832414814267891940df5f350d69a8d00c73c07e"
+      },
+      {
+        "path": "packages/providers-pwce/src/index.ts",
+        "sha256": "69f5f004040ff96fd934e28fc72ff62d14ee9a4c5ae15f167efd77754845fe1e"
+      },
+      {
+        "path": "packages/providers-pwce/test/grant-query.test.ts",
+        "sha256": "0b2a2c755a809684499acaf742f03fd9be906cf7ca9ad4f564ff9a5c84c24c53"
+      },
+      {
+        "path": "packages/runtime/src/ports/provider-boundary.ts",
+        "sha256": "c3ffebef8c05fece8625dd5143505dc75311f8966a4e3056f4d5fd98bbae724c"
+      },
+      {
+        "path": "packages/runtime/test/provider-boundary.test.ts",
+        "sha256": "42a697b0301adf20bb53e75b7ed01efd256c1ddcff2e5aef029b0a44451fa5c1"
+      },
+      {
+        "path": "scripts/check-pwce-host-process.mjs",
+        "sha256": "1e50c5eba46ca688961b278c0c10dc9635e3fa38eb1b676be4636d89519555ad"
+      }
+    ]
+  },
+  "claim": "Canonical externalSummary preserves the actual producer current permission aggregate without fabricating local Human grants, lifecycle history, eligibility or pagination. Mapping and evidence reads require trusted original catalog custody, current scope, execution mode and bounded deadlines. Actual PWCE HTTP read through the canonical boundary returns matching source revision and proof digest with zero dispatch during the query.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "log": "ls-grant-query-full.log",
+      "logSha256": "b0d84f5f091791ad95a49535bd7196bd7f68437a5173d1ed4e8ef325de8c89cd"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-pwce/test/grant-query.test.ts packages/runtime/test/provider-boundary.test.ts",
+      "result": "pass",
+      "log": "ls-grant-query-focused-modes.log",
+      "logSha256": "e5be51949a338ce8137776ef3d9509c3087e8e5b0aaa8f5a4278a2c608d7c7d2"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "log": "ls-grant-query-types-final.log",
+      "logSha256": "cc72263553c2ab84b0b1cd8afbcfe13939c2f3db008097bbc0da6b8758dbaaed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "log": "ls-grant-query-build-final.log",
+      "logSha256": "62bdf463b481e1fc940b1067a20f3154c533b5c4f3c2e8e98c4b617bf304283e"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "log": "ls-grant-query-lint-current.log",
+      "logSha256": "9e0cef318985b2c28967e4759f36cc7b04a786f142b80d1dcc28a021e6a1870f"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "log": "ls-grant-query-workspace.log",
+      "logSha256": "cc5b503f2913840d2ed6795fbe1a438605cf3bb2147616d7dddd24f09682d01e"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "log": "ls-grant-query-private-final.log",
+      "logSha256": "873245e2039fa41a6e1246cafb463cf812a33a72022c68dae41d9a4ec64d1bf4"
+    },
+    {
+      "command": "node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-grant-query-host.log",
+      "logSha256": "2e8b31ba117901a8a71413fcb752b94c535df97fb2b2e263f4ae9047ab665d70"
+    },
+    {
+      "command": "PWCE_HOST_DISPATCH=1 node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "log": "ls-grant-query-host-final.log",
+      "logSha256": "6f7ed1dac3520fed228becea39a298b9a36c0ae94e48eeb38b236d5fa33be09a"
+    }
+  ],
+  "counts": {
+    "applicationTests": 888,
+    "focusedProviderAndBoundaryTests": 26,
+    "newProviderTests": 7,
+    "newCanonicalBoundaryTests": 1,
+    "workspaceTests": 43,
+    "privateStructuralVectors": 588,
+    "addedPrivateStructuralVectors": 5,
+    "actualReadHostChecks": 16,
+    "actualReadTargetCalls": 0,
+    "actualDispatchHostChecks": 23,
+    "actualDispatchTargetCalls": 4,
+    "actualDispatchPosts": 8
+  },
+  "rawEvidenceDirectory": "/Users/gg/Development/Agentic/Tifa/lifestream/.lifestream/benchmarks/pwce-grant-query/2026-09-16T153457Z",
+  "failedAttempts": [
+    {
+      "log": "ls-grant-query-build.log",
+      "reason": "TypeScript required explicit never-return narrowing for missing evidence custody; corrected before tests."
+    },
+    {
+      "log": "ls-grant-query-focused.log",
+      "reason": "Strict schema compilation required declaring the conditional externalSummary property; corrected without weakening validation."
+    },
+    {
+      "log": "ls-grant-query-private.log",
+      "reason": "Changed schema manifest digest needed updating."
+    },
+    {
+      "log": "ls-grant-query-private-vectors.log",
+      "reason": "New structural fixture digest needed updating."
+    }
+  ],
+  "limitations": [
+    "Public host grant-list route and control-page external summary presentation remain pending.",
+    "Full 888-test regression is supplemented by the final 26 focused checks after adding the execution-mode guard.",
+    "Evidence retains original decoded producer JSON using canonical bytes, not original HTTP whitespace or a producer signature.",
+    "Current aggregate is not local grant history; unsupported lifecycle filters and cursors are rejected. Projection expiry is not a producer permission expiry.",
+    "No saved service, deployment, live configuration, provider selection, personal import, training, physical effect or new Human acceptance."
+  ]
+}

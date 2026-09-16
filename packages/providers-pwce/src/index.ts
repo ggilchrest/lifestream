@@ -24,3 +24,6 @@ export { EXPECTED_PWCE_CAPABILITY_BUNDLE } from './capability-bundle.js';
 export {verifyPwceApprovalEvidence} from './approval-evidence.ts';
 export type {PwceApprovalEvidence,PwceApprovalExpectation} from './approval-evidence.ts';
 export type {PwceApprovalCustody,PwceApprovalIntent,PwceApprovalObservation,PwceApprovalRecord} from './approval-custody.ts';
+
+export {PwceGrantQuery} from './grant-query.ts';
+export type {PwceGrantQueryOptions} from './grant-query.ts';

@@ -1889,8 +1889,114 @@
               "type": "null"
             }
           ]
+        },
+        "externalSummary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "authorityKind",
+            "providerRef",
+            "scope",
+            "worldRef",
+            "executionEnvironmentRef",
+            "principalRef",
+            "siteRefs",
+            "capabilityRefs",
+            "expiresAt",
+            "evidenceRef",
+            "limitations"
+          ],
+          "properties": {
+            "authorityKind": {
+              "const": "externalSummary"
+            },
+            "providerRef": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            "scope": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/CallScope"
+            },
+            "worldRef": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "executionEnvironmentRef": {
+              "enum": [
+                "normal",
+                "live",
+                "test",
+                "replay",
+                "simulation",
+                "dry-run"
+              ]
+            },
+            "principalRef": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "siteRefs": {
+              "type": "array",
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              }
+            },
+            "capabilityRefs": {
+              "type": "array",
+              "maxItems": 100,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "expiresAt": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            "evidenceRef": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+            },
+            "limitations": {
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              }
+            }
+          }
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "externalSummary"
+            ],
+            "properties": {
+              "externalSummary": {}
+            }
+          },
+          "then": {
+            "properties": {
+              "grants": {
+                "maxItems": 0,
+                "type": "array"
+              },
+              "nextCursor": {
+                "const": null
+              }
+            }
+          }
+        }
+      ]
     },
     "GrantRequest": {
       "type": "object",

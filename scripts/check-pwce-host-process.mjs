@@ -10,6 +10,8 @@ import { createLifestreamServer } from '../apps/server/src/index.ts';
 import { loadProfile } from '../apps/server/src/config/loader.ts';
 import { Database } from '../packages/storage-sqlite/src/database.ts';
 import { PwceCapabilityDiscovery } from '../apps/server/src/composition/pwce-capabilities.ts';
+import {PwceGrantQuery} from '../packages/providers-pwce/src/grant-query.ts';
+import {CanonicalProviderBoundary} from '../packages/runtime/src/ports/provider-boundary.ts';
 
 const historicalEnabled=process.env.PWCE_HOST_HISTORICAL==='1',dispatchEnabled=process.env.PWCE_HOST_DISPATCH==='1'||historicalEnabled;
 const token=randomBytes(24).toString('hex'),dispatcherToken=randomBytes(24).toString('hex');
@@ -29,7 +31,14 @@ try{
  const scopeCall=()=>({requestId:randomUUID(),correlationId:randomUUID(),deadlineAt:new Date(Date.now()+5000).toISOString(),executionMode:'live',signal:new AbortController().signal,isCurrent:()=>true});
  let scopeHost=new PwceCapabilityDiscovery(config.pwceProfile,token);
  try{
-  const original=await scopeHost.withCatalog(scopeOwner,scopeCall(),async lease=>structuredClone(lease.record));scopeHost.close();scopeHost=new PwceCapabilityDiscovery(config.pwceProfile,token);
+  const original=await scopeHost.withCatalog(scopeOwner,scopeCall(),async lease=>{
+   const {client,catalog,record,context}=lease,query=new PwceGrantQuery({providerRef:'pwce',client,catalog,resolve:async()=>record});
+   const request={schemaVersion:'1.0.0',operation:'AuthorityProvider.getGrants',requestId:randomUUID(),correlationId:randomUUID(),cancellationId:randomUUID(),deadlineAt:lease.deadlineAt,executionMode:record.executionMode,scope:record.scope,idempotencyKey:null,payload:{states:[],page:{limit:1,cursor:null}}};
+   const provider=new CanonicalProviderBoundary({providerRef:'pwce'}).authority({getGrants:query.getGrants.bind(query),evaluate:async()=>assert.fail('grant read evaluated authority'),authorizeDispatch:async()=>assert.fail('grant read admitted action'),subscribeInvalidations:async function*(){assert.fail('unexpected stream');}});
+   const result=await provider.getGrants(request,context);assert.equal(result.outcome.status,'succeeded');assert.deepEqual(result.outcome.payload.grants,[]);assert.equal(result.outcome.payload.externalSummary.principalRef,'agent.fixture');assert.deepEqual(result.outcome.payload.externalSummary.siteRefs,['home.one']);assert.deepEqual(result.outcome.payload.externalSummary.capabilityRefs,['home.light.set_level']);
+   const bytes=await query.readEvidence(result.outcome.payload.externalSummary.evidenceRef,request,context);assert.equal(createHash('sha256').update(bytes).digest('hex'),result.outcome.payload.externalSummary.evidenceRef.sha256);assert.equal(JSON.parse(new TextDecoder().decode(bytes)).sourceRevision,result.outcome.payload.sourceRevision.revision);assert.equal(dispatchPosts,0);checks.push('canonical external permission summary and exact evidence read from actual producer without local grants or dispatch');
+   return structuredClone(record);
+  });scopeHost.close();scopeHost=new PwceCapabilityDiscovery(config.pwceProfile,token);
   const restored=await scopeHost.withCatalog(scopeOwner,scopeCall(),async lease=>lease.record,original);assert.deepEqual(restored,original);checks.push('fresh authenticated streams reattach the exact original producer scope after host closure');
   await assert.rejects(scopeHost.withCatalog({...scopeOwner,principalId:randomUUID()},scopeCall(),async()=>assert.fail('foreign owner reached original catalog'),original));
   const missing=structuredClone(original),unknown=randomUUID();missing.scope.authorityContextRef.contextId=unknown;missing.binding.authorityContextRef=unknown;
