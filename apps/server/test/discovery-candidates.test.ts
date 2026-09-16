@@ -76,3 +76,24 @@ test('hypothesis questions do not turn dislike, fatigue or uncertainty into assu
   assert.equal(compileDiscoveryCandidates({...parent,status:'rejected'},understandingDigest('current'),now).length,0);
  }
 });
+
+test('hypotheses with multiple supported topics produce one tentative grounded connection',()=>{
+ const scope=subject(),now=Date.now(),boundary=understandingDigest('current'),parent:UnderstandingRecord={...scope,schemaVersion:'1.0.0',recordType:'hypothesis',hypothesisId:randomUUID(),revision:1,epistemicStatus:'tentative',status:'candidate',topicRefs:['topic:alpha','topic:beta'],explanations:[
+  {explanationId:randomUUID(),summary:'Hands-on problem solving may matter.',traitRefs:['trait:making'],supportEvidenceRefs:['evidence:alpha'],counterEvidenceRefs:['evidence:counter-alpha'],boundary:'Only these activities are covered.'},
+  {explanationId:randomUUID(),summary:'Visible progress may matter.',traitRefs:['trait:making'],supportEvidenceRefs:['evidence:beta'],counterEvidenceRefs:['evidence:counter-beta'],boundary:'No broader motive is established.'}
+ ],unknownAlternative:'Another explanation may apply.',sourceCoverage:'partial',uncertainty:'The reason is not established.',dependencyRefs:['evidence:alpha','evidence:beta'],createdAt:new Date(now).toISOString(),configurationRef:'configuration:synthetic'};
+ const before=structuredClone(parent),candidates=compileDiscoveryCandidates(parent,boundary,now),question=candidates.find(candidate=>candidate.kind==='question'),connection=candidates.find(candidate=>candidate.kind==='connection');
+ assert.equal(candidates[0],question,'the neutral question remains first');assert.ok(connection);
+ assert.match(String(connection!.content),/tentative connection/);assert.match(String(connection!.content),/topic:alpha and topic:beta/);assert.match(String(connection!.content),/trait:making/);
+ assert.deepEqual(connection!.alternatives,parent.explanations.map(explanation=>explanation.summary));
+ assert.ok((connection!.limitations as string[]).some(value=>value.includes('Only these activities')));assert.ok((connection!.limitations as string[]).some(value=>value.includes('No broader motive')));
+ assert.deepEqual(connection!.groundingRefs,[`hypothesis:${parent.hypothesisId}:1`,'evidence:alpha','evidence:beta','evidence:counter-alpha','evidence:counter-beta','trait:making']);
+ assert.equal(connection!.scores && (connection!.scores as any).methodRef,'discovery-hypothesis-connection:1');assert.equal(connection!.confersAuthority,false);assert.deepEqual(parent,before);
+});
+
+test('hypothesis connection is omitted when evidence links cannot fit the bounded record',()=>{
+ const scope=subject(),now=Date.now(),refs=Array.from({length:32},(_,index)=>`evidence:${index}`),parent:UnderstandingRecord={...scope,schemaVersion:'1.0.0',recordType:'hypothesis',hypothesisId:randomUUID(),revision:1,epistemicStatus:'tentative',status:'candidate',topicRefs:['topic:alpha','topic:beta'],explanations:[
+  {explanationId:randomUUID(),summary:'One possibility.',traitRefs:['trait:a'],supportEvidenceRefs:refs.slice(0,16),counterEvidenceRefs:refs.slice(16),boundary:'Bounded.'}
+ ],unknownAlternative:'Unknown.',sourceCoverage:'unknown',uncertainty:'Uncertain.',dependencyRefs:refs,createdAt:new Date(now).toISOString(),configurationRef:'configuration:synthetic'};
+ assert.equal(compileDiscoveryCandidates(parent,understandingDigest('current'),now).some(candidate=>candidate.kind==='connection'),false);
+});

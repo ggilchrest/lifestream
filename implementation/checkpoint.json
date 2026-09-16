@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "codex/recovery-human-review",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "4cc7e063c6745f25c3a3216a09330e764dd60a7c",
+  "currentRevision": "9b8d7c3d6a4a602af8ed708457da4be4068640be",
   "activeSlice": "LS-S084",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -185,20 +185,12 @@
     "packages/storage-sqlite/test/database.test.ts"
   ],
   "changedFiles": [
-    "apps/server/src/index.ts",
+    "apps/server/src/admin/discovery-candidates.ts",
     "apps/server/test/discovery-candidates.test.ts",
-    "apps/server/test/server.test.ts",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/src/understanding.ts",
-    "packages/storage-sqlite/test/database.test.ts",
-    "packages/storage-sqlite/test/initiative-delivery.test.ts",
-    "packages/storage-sqlite/test/initiative-expression.test.ts",
-    "packages/storage-sqlite/test/understanding.test.ts",
-    "scripts/benchmark-discovery-local.mjs",
-    "scripts/discovery-benchmark-worker.mjs",
-    "packages/storage-sqlite/src/migrations/0040_understanding_source_notes.sql",
+    "apps/server/test/discovery-review.test.ts",
     "implementation/checkpoint.json",
-    "implementation/evidence/S084-SOURCE-QUALIFICATIONS-1.json"
+    "packages/storage-sqlite/src/understanding.ts",
+    "packages/storage-sqlite/test/understanding.test.ts"
   ],
   "validation": [
     {
@@ -268,7 +260,7 @@
   ],
   "blockers": [],
   "nextAction": "Continue S084 ranking dimensions and grounded connections, plus independent S083 and foreign-authority administration; preserve original intermittent capacity observations. Refresh selected-provider prerequisites when ai5090 is reachable. No overall blocker or exhaustion of independent development claimed.",
-  "updatedAt": "2026-09-16T16:34:12.154405Z",
+  "updatedAt": "2026-09-16T18:00:00.000Z",
   "updatedBy": "Codex",
   "notes": "Source qualifications and legacy projection upgrade verified; final 899 application tests and 1800 enabled local corpus samples pass. Failed intermediate planner/fragmentation runs retained. Full qualification and Human gaps remain."
 }

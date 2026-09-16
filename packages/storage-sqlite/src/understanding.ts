@@ -35,6 +35,8 @@ function sourceNotes(candidate:UnderstandingRecord,parent:UnderstandingRecord):s
   return `Source notes: ${claim.qualifier}; version: ${claim.versionScope}; declared reliability: ${sources.map(source=>`${source!.sourceRef}=${source!.reliability}`).join(', ')}; contradictions: ${contradictions.length?contradictions.join(', '):'none recorded'}.`;
 }
 const pending = "('queued','admitted','running','paused','staged')";
+const candidateLabel=(kind:unknown):string=>kind==='discovery'?'Attributed source detail':kind==='connection'?'Tentative connection':kind==='interpretation'?'Tentative interpretation':'Optional tentative question';
+const numericScore=(scores:Record<string,unknown>,name:string):number|undefined=>typeof scores[name]==='number'&&Number.isFinite(scores[name])?Number(scores[name]):undefined;
 
 export class UnderstandingRepository {
   private readonly database: Database;
@@ -86,7 +88,7 @@ export class UnderstandingRepository {
         if(!parent||parent.revision!==Number(match![3])||!['prepared','candidate','reviewed'].includes(String(parent.status))||row.expiry<=this.now()||row.expiry>stored!.expiry||candidate.status!=='proposed'||candidate.contextRef!==`snapshot:${row.boundary}`||scopeKey(candidate)!==row.scope||this.candidateSuppressed(candidate,candidate))continue;
         const notes=candidate.kind==='discovery'?sourceNotes(candidate,parent):undefined;
         if(candidate.kind==='discovery'&&!notes)continue;
-        const content=`${(candidate.topicRefs as string[])[0]}: ${candidate.kind==='discovery'?'Attributed source detail':'Optional tentative question'}: ${candidate.content}${notes?'\n'+notes:''} [optional; grants no authority]`;
+        const content=`${(candidate.topicRefs as string[])[0]}: ${candidateLabel(candidate.kind)}: ${candidate.content}${notes?'\n'+notes:''} [optional; grants no authority]`;
         if(Buffer.byteLength(content)<=4096)tx.run('INSERT INTO understanding_projection(artifact_id,scope_key,boundary,content,fresh_until_ms,qualification_revision) VALUES (?,?,?,?,?,1)',candidate.candidateId,row.scope,row.boundary,content,row.expiry);
       }
     });
@@ -162,6 +164,11 @@ export class UnderstandingRepository {
     tx.run('INSERT OR IGNORE INTO understanding_hypothesis_rejections VALUES (?,?,?,?)',key,target.hypothesisId,target.fingerprint,target.expectedRevision+1);
     const row=tx.get<{payload:string}>('SELECT payload_json AS payload FROM understanding_artifacts WHERE scope_key=? AND artifact_id=? AND kind=\'hypothesis\'',key,target.hypothesisId);
     if(row){const record=JSON.parse(row.payload) as UnderstandingRecord;if(record.status!=='rejected'){record.status='rejected';record.revision=Math.max(Number(record.revision)+1,target.expectedRevision+1);valid(record,'PreferenceHypothesis',scope);tx.run('UPDATE understanding_artifacts SET revision=?,payload_json=? WHERE artifact_id=?',record.revision,JSON.stringify(record),target.hypothesisId);}}
+    // A rejected hypothesis cannot leave a question or connection derivative
+    // usable. Invalidate by its pinned parent reference inside this transaction;
+    // candidate identity, suppression history and supporting evidence stay intact.
+    const parentPrefix=`hypothesis:${target.hypothesisId}:`,derived=tx.all<{id:string;payload:string}>('SELECT artifact_id AS id,payload_json AS payload FROM understanding_artifacts WHERE scope_key=? AND kind=\'candidate\'',key);
+    for(const item of derived){const candidate=JSON.parse(item.payload) as UnderstandingRecord,links=[...(candidate.hypothesisRefs as string[]??[]),...(candidate.groundingRefs as string[]??[]),...(candidate.dependencyRefs as string[]??[])];if(!links.some(ref=>ref===target.hypothesisId||ref.startsWith(parentPrefix)))continue;if(candidate.status!=='invalidated'){candidate.status='invalidated';candidate.revision=Number(candidate.revision)+1;valid(candidate,'UnderstandingCandidate',scope);tx.run('UPDATE understanding_artifacts SET revision=?,payload_json=? WHERE artifact_id=?',candidate.revision,JSON.stringify(candidate),item.id);}tx.run('DELETE FROM understanding_projection WHERE artifact_id=?',item.id);}
     tx.run('INSERT OR IGNORE INTO understanding_reviews VALUES (?,?,?,?,?)',key,retry,digest,target.hypothesisId,'rejectHypothesis');
     const jobs=tx.all<{payload:string}>(`SELECT payload_json AS payload FROM understanding_work WHERE scope_key=? AND state IN ${pending} AND payload_json IS NOT NULL`,key);
     for(const row of jobs){const work=JSON.parse(row.payload);work.state='cancelled';work.revision++;work.lastOutcome='cancelled';work.reason='Hypothesis rejection changed the current Discovery boundary; no automatic retry.';tx.run('UPDATE understanding_work SET state=\'cancelled\',payload_json=? WHERE work_id=?',JSON.stringify(work),work.workId);}
@@ -222,7 +229,7 @@ export class UnderstandingRepository {
         }
         tx.run('INSERT INTO understanding_artifacts VALUES (?,?,?,?,?,?,?,?,?)',id,scopeKey(scope),scope.relationshipId,boundary,artifact.revision,artifact.recordType,topic,expiry,JSON.stringify(artifact));
         if(isCandidate){
-          const prefix=artifact.kind==='discovery'?'Attributed source detail':'Optional tentative question';
+          const prefix=candidateLabel(artifact.kind);
           const content=`${topic}: ${prefix}: ${artifact.content}${qualifications?'\n'+qualifications:''} [optional; grants no authority]`;
           if((artifact.kind!=='discovery'||qualifications)&&Buffer.byteLength(content)<=4096)tx.run('INSERT INTO understanding_projection(artifact_id,scope_key,boundary,content,fresh_until_ms,qualification_revision) VALUES (?,?,?,?,?,1)',id,scopeKey(scope),boundary,content,expiry);
         }
@@ -252,9 +259,14 @@ export class UnderstandingRepository {
     const ranked=rows.flatMap((row,index)=>{const candidate=JSON.parse(row.payload) as UnderstandingRecord;if(this.candidateSuppressed(scope,candidate))return [];
       const topics=(candidate.topicRefs as string[]).map(ref=>words(ref.replace(/^topic:/u,''))),direct=topics.some(topic=>topic.length>0&&topic.every(word=>inputWords.has(word)));
       if(domain&&!topics.some(topic=>{const required=words(domain);return required.length>0&&required.every(word=>topic.includes(word));}))return [];
-      return [{id:`discovery-candidate:${row.id}`,content:row.content,rank:(direct?0:100)+index,freshUntil:row.freshUntil,direct,topics:candidate.topicRefs as string[],favorite:(candidate.scores as Record<string,unknown>).methodRef==='discovery-explicit-favorite:1'&&(candidate.scores as Record<string,unknown>).interestStrength===1}];
+      const scores=(candidate.scores??{}) as Record<string,unknown>;
+      return [{id:`discovery-candidate:${row.id}`,content:row.content,rank:0,freshUntil:row.freshUntil,direct,topics:candidate.topicRefs as string[],favorite:scores.methodRef==='discovery-explicit-favorite:1'&&scores.interestStrength===1,scores,order:index}];
     });
-    const explicit=ranked.some(row=>row.direct),favorites=new Set(ranked.filter(row=>row.favorite).flatMap(row=>row.topics)),preferred=!explicit&&favorites.size===1?[...favorites][0]:undefined,seen=new Set<string>();return ranked.filter(row=>{if(explicit&&!row.direct||preferred&&(!row.favorite||!row.topics.includes(preferred)))return false;const fingerprint=understandingDigest(row.content);if(seen.has(fingerprint))return false;seen.add(fingerprint);return true;}).map(({direct:_direct,topics:_topics,favorite:_favorite,...row})=>row).sort((a,b)=>a.rank-b.rank);
+    const explicit=ranked.some(row=>row.direct),favorites=new Set(ranked.filter(row=>row.favorite).flatMap(row=>row.topics)),preferred=!explicit&&favorites.size===1?[...favorites][0]:undefined,seen=new Set<string>();
+    const eligible=ranked.filter(row=>{if(explicit&&!row.direct||preferred&&(!row.favorite||!row.topics.includes(preferred)))return false;const fingerprint=understandingDigest(row.content);if(seen.has(fingerprint))return false;seen.add(fingerprint);return true;});
+    const dimensions:[string,number][]=[['expectedUsefulness',-1],['interestStrength',-1],['novelty',-1],['repetitionRisk',1],['evidenceConfidence',-1],['sourceCoverage',-1],['knowledgeCoverage',-1],['knowledgeReliability',-1],['researchCost',1],['resourcePressure',1]];
+    eligible.sort((a,b)=>{if(a.direct!==b.direct)return a.direct?-1:1;if(a.favorite!==b.favorite)return a.favorite?-1:1;for(const [name,direction] of dimensions){const left=numericScore(a.scores,name),right=numericScore(b.scores,name);if(left===undefined||right===undefined||left===right)continue;return (left-right)*direction;}return a.order-b.order||a.id.localeCompare(b.id);});
+    return eligible.map((row,index)=>{const {direct:_direct,topics:_topics,favorite:_favorite,scores:_scores,order:_order,...result}=row;return {...result,rank:(row.direct?0:100)+index};});
 
   }
   candidateSuppressed(scope:UnderstandingScope,record:UnderstandingRecord):boolean {

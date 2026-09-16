@@ -6,7 +6,8 @@ import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
 import test from "node:test";
 import {Database} from "../src/database.ts";
-import {UnderstandingRepository,understandingDigest,type UnderstandingRecord,type UnderstandingScope} from "../src/understanding.ts";
+import {UnderstandingRepository,hypothesisFingerprint,understandingDigest,type UnderstandingRecord,type UnderstandingScope} from "../src/understanding.ts";
+import {compileDiscoveryCandidates} from '../../../apps/server/src/admin/discovery-candidates.ts';
 import {extensionSettings} from "../../../tests/fixtures/extension-settings.ts";
 
 function fixture(){
@@ -67,6 +68,26 @@ test('specific multi-term Discovery matches survive more than 32 common-word can
  assert.deepEqual(f.repo.select({...f.scope,userId:randomUUID()},f.boundary,'synthetic quartz'),[]);
  assert.deepEqual(f.repo.select(f.scope,understandingDigest('old-boundary'),'synthetic quartz'),[]);
  f.advance(600001);assert.deepEqual(f.repo.select(f.scope,f.boundary,'synthetic quartz'),[]);
+});
+
+test('candidate selection compares named dimensions while leaving unknown scores neutral',t=>{
+ const f=fixture();t.after(()=>f.db.close());const w=f.work();f.admit(w);f.repo.start(f.scope,String(w.workId));const parent=f.brief();
+ const base=()=>({...f.candidate(parent),kind:'question' as const,scores:{interestStrength:null,evidenceConfidence:null,sourceCoverage:null,knowledgeCoverage:null,knowledgeReliability:null,expectedUsefulness:null,novelty:null,repetitionRisk:null,researchCost:0,resourcePressure:null,methodRef:'synthetic:question',limitations:[]}});
+ const low={...base(),content:'Quartz low usefulness detail.',scores:{...base().scores,expectedUsefulness:0.1}};
+ const high={...base(),content:'Quartz high usefulness detail.',scores:{...base().scores,expectedUsefulness:0.9}};
+ const unknown={...base(),content:'Quartz unknown usefulness detail.'};
+ assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[parent,low,high,unknown],()=>true),true);
+ const selected=f.repo.select(f.scope,f.boundary,'Tell me about quartz');assert.deepEqual(selected.map(item=>item.content),['topic:quartz: Optional tentative question: Quartz high usefulness detail. [optional; grants no authority]','topic:quartz: Optional tentative question: Quartz low usefulness detail. [optional; grants no authority]','topic:quartz: Optional tentative question: Quartz unknown usefulness detail. [optional; grants no authority]']);
+});
+
+test('hypothesis rejection invalidates every pinned candidate derivative in the owner transaction',t=>{
+ const f=fixture();t.after(()=>f.db.close());const w=f.work(),now=Date.now(),hypothesis:UnderstandingRecord={...f.scope,schemaVersion:'1.0.0',recordType:'hypothesis',hypothesisId:randomUUID(),revision:1,epistemicStatus:'tentative',status:'candidate',topicRefs:['topic:alpha','topic:beta'],explanations:[
+  {explanationId:randomUUID(),summary:'Making may matter.',traitRefs:['trait:making'],supportEvidenceRefs:['evidence:alpha'],counterEvidenceRefs:['evidence:counter-alpha'],boundary:'Only the supplied context.'},
+  {explanationId:randomUUID(),summary:'Progress may matter.',traitRefs:['trait:making'],supportEvidenceRefs:['evidence:beta'],counterEvidenceRefs:['evidence:counter-beta'],boundary:'No broader motive is established.'}
+ ],unknownAlternative:'Another explanation may apply.',sourceCoverage:'partial',uncertainty:'The motive is not established.',dependencyRefs:['evidence:alpha','evidence:beta'],createdAt:new Date(now).toISOString(),configurationRef:'config:1'};
+ f.admit(w);f.repo.start(f.scope,String(w.workId));const derivatives=compileDiscoveryCandidates(hypothesis,f.boundary,now);assert.ok(derivatives.some(record=>record.kind==='question'));assert.ok(derivatives.some(record=>record.kind==='connection'));assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[hypothesis,...derivatives],()=>true),true);assert.ok(f.repo.select(f.scope,f.boundary,'alpha beta').length>0);
+ f.db.transaction(tx=>f.repo.applyHypothesisRejection(tx,f.scope,{hypothesisId:String(hypothesis.hypothesisId),fingerprint:hypothesisFingerprint(hypothesis),expectedRevision:1},'reject-hypothesis',understandingDigest('reject-hypothesis')));
+ assert.equal(f.repo.select(f.scope,f.boundary,'alpha beta').length,0);const records=f.repo.list(f.scope,f.boundary),parent=records.find(record=>record.recordType==='hypothesis');assert.equal(parent?.status,'rejected');assert.ok(records.filter(record=>record.recordType==='candidate').every(record=>record.status==='invalidated'));
 });
 
 test('Discovery exploration reserves daily slots for less-covered approved topics without refunding failures or retries',t=>{
