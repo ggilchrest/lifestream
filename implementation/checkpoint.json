@@ -3,9 +3,9 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "6060a995f32944646060ade8c87cca66505b0164",
+  "currentRevision": "56227b914fe1735e6df782e896efc498a4e7a4e2",
   "activeSlice": "LS-S084",
-  "sliceStatus": "blocked",
+  "sliceStatus": "implemented",
   "completedSlices": [
     "LS-S001",
     "LS-S002",
@@ -223,7 +223,17 @@
     "implementation/evidence/S083-CODE-ALIGNMENT-1.json",
     "implementation/evidence/S084-CODE-ALIGNMENT-1.json",
     "implementation/evidence/LS-S081-joined-selected-provider-observation-20260916-rerun-2.json",
-    "implementation/evidence/LS-S081-ai5090-health-20260916.json"
+    "implementation/evidence/LS-S081-ai5090-health-20260916.json",
+    "scripts/qualify-s084-provider-priority.mjs",
+    "implementation/evidence/LS-S073-selected-provider-observation-20260917-rerun-1.json",
+    "implementation/evidence/LS-S076-selected-provider-observation-20260917-rerun-1.json",
+    "implementation/evidence/LS-S078-selected-provider-observation-20260917-rerun-1.json",
+    "implementation/evidence/LS-S080-selected-provider-observation-20260917-rerun-1.json",
+    "implementation/evidence/LS-S080-audio-selected-provider-observation-20260917-rerun-1.json",
+    "implementation/evidence/LS-S081-joined-selected-provider-observation-20260917-rerun-1.json",
+    "implementation/evidence/LS-S081-ai5090-health-20260917.json",
+    "implementation/evidence/S084-PROVIDER-PRIORITY-20260917.json",
+    "implementation/evidence/S084-SELECTED-PROVIDER-ANALYSIS-20260917.json"
   ],
   "changedFiles": [],
   "validation": [
@@ -451,6 +461,41 @@
       "command": "npm --prefix .private run validate",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S028-HOST-ACTION-RECHECK-20260916.json"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-PROVIDER-PRIORITY-20260917.json"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-SELECTED-PROVIDER-ANALYSIS-20260917.json"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-PROVIDER-PRIORITY-20260917.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled>/index.mjs pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-SELECTED-PROVIDER-ANALYSIS-20260917.json"
+    },
+    {
+      "command": "node scripts/qualify-s084-provider-priority.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-PROVIDER-PRIORITY-20260917.json"
+    },
+    {
+      "command": "Read-only ai5090 identity probes for inference, STT and TTS",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S081-ai5090-health-20260917.json"
+    },
+    {
+      "command": "Selected-provider S084 analysis samples with qualified bounds",
+      "result": "pass",
+      "evidence": "implementation/evidence/S084-SELECTED-PROVIDER-ANALYSIS-20260917.json"
     }
   ],
   "decisions": [
@@ -477,15 +522,18 @@
     "2026-09-16: ai5090 selected-provider LS-TEST-106 joined rerun completed at public revision 473dc61; all application/privacy/isolation assertions passed. Model-quality tracking recorded 18 exact and 1 missing-complete-identifier sample as nonblocking under the operator direction; the prior HTTP 503 and omission receipts remain immutable.",
     "2026-09-16: Read-only SSH inspection found all three configured ai5090 service ports listening (30000 inference, 8080 STT, 8787 TTS); no service or configuration mutation was performed.",
     "2026-09-16: operator directed continued development while deferring ai5090 testing until the service is available again; current PWCE host/action recheck used only disposable synthetic fixtures and no selected-provider call.",
-    "2026-09-16: SYNPRJ_Q7M4 model-quality telemetry remains nonblocking and append-only; no new selected-provider run was made during this continuation."
+    "2026-09-16: SYNPRJ_Q7M4 model-quality telemetry remains nonblocking and append-only; no new selected-provider run was made during this continuation.",
+    "2026-09-17: read-only ai5090 identity probes returned HTTP 200 and matched the pinned inference, NeMo STT and VoxCPM TTS profile identities; no service or configuration mutation was performed.",
+    "2026-09-17: S084 selected-provider priority qualification passed 20 synthetic cancellation samples at source revision e17a783; all terminal events were cancelled, maximum abort-to-terminal-and-cleanup was 2.668 ms, and both the 10 ms preemption and 250 ms slot-release bounds passed.",
+    "2026-09-17: the runtime now exposes the measured shared-provider bounds only after an exact healthy ai5090 probe; unprobed or degraded selected providers remain fail-closed, while fixture bounds remain 0/0.",
+    "2026-09-17: selected-provider S084 analysis completed 2 of 3 synthetic samples; one oversized provider output was rejected before publication. This remains nonblocking model-quality telemetry and is preserved separately from software verification.",
+    "2026-09-17: current source verification is 912/912 and bundled browser verification is 49/49 after fixing the test harness to select the literal evidence option value."
   ],
   "blockers": [
-    "Selected-provider ai5090 inference/STT/TTS qualification is deferred because the service is offline; do not run that path until it returns.",
-    "Optional provider-backed Discovery analysis remains withheld until a selected shared-provider cancellation/slot-release qualification exists.",
     "Protected external-authority, production, physical/perceptual output and any new Human acceptance gates remain outside the current authorization."
   ],
-  "nextAction": "Resume selected-provider and model-quality qualification when ai5090 is available; until then preserve historical SYNPRJ_Q7M4 telemetry and continue only separately authorized provider-independent work.",
-  "updatedAt": "2026-09-17T03:58:54.000Z",
+  "nextAction": "Hold at this clean technical stopping point. The selected ai5090 service is healthy, the shared-provider priority gate is qualified, and optional Discovery analysis is enabled only for healthy qualified runtimes; continue model-quality sampling or separately authorized acceptance work when requested.",
+  "updatedAt": "2026-09-17T04:51:57.854Z",
   "updatedBy": "Codex",
-  "notes": "S083 timing adaptation now has a current successor receipt: the exact Discovery Lab regression is 3/3 with no failed comparison checks, while the earlier 29.345875 ms deadline miss remains immutable. S083-CODE-ALIGNMENT-1 records current local Initiative policy, delivery, timing, administration and regression evidence. S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/1000/10000/100000-record corpus benchmarks are component-verified; S084-CODE-ALIGNMENT-1 records the current local analysis, candidate, correction, Lab and bounded-selection paths. Clean full application suite is 911/911 and the current fixture/browser evidence remains preserved separately. The reviewed imported-declaration qualifier stays within the conservative optional context bound for hash-length candidate IDs, with durable evidence in S084-PREPARED-CONTEXT-QUALIFIER-1. Selected-provider successors for LS-S073, LS-S076, LS-S078 and LS-S080 pass their bounded text cases; current S080 synthetic audio privacy also passes. The current S081 independent isolation continuation and full selected-provider joined LS-TEST-106 rerun pass. The joined successor records 18 exact and 1 missing-complete-identifier model-quality observations; identifier compliance remains nonblocking by explicit operator direction. Earlier 503 and omission reports remain immutable. Optional provider-backed analysis, protected-authority, performance-under-all-conditions, production and combined external physical/perceptual gates remain outside this authorization."
+  "notes": "S083 and S084 component paths are implemented and their dependency-ready regressions remain green. The recovered ai5090 service now passes read-only identity probes for inference, NeMo STT and VoxCPM TTS. Selected-provider successor observations for LS-S073, LS-S076, LS-S078 and LS-S080 pass; the S080 synthetic audio privacy route passes; and the joined LS-TEST-106 receipt records the completed application path with 19/19 exact identifier observations while retaining later provider deadline telemetry as nonblocking model-quality history. S084 priority qualification records 20/20 terminal cancellations with a 2.668 ms maximum cleanup measurement against the 10 ms/250 ms bounds. The runtime advertises those bounds only after the exact ai5090 health probe; fixture behavior remains isolated. Selected-provider bounded Discovery analysis completed 2/3 synthetic samples and rejected one oversized output before publication, so provider-output variance remains tracked as model-quality telemetry. Full source verification is 912/912, bundled browser verification is 49/49, and no physical, production or new Human acceptance claim is made."
 }
