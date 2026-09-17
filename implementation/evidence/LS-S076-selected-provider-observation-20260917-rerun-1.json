@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S076",
+  "status": "verified",
+  "result": "pass",
+  "caseIds": [
+    "LS-TEST-095",
+    "LS-TEST-105"
+  ],
+  "collectedAt": "2026-09-17T04:20:57.891Z",
+  "sourceRevision": "2e737bab053f4eca2ebb64d33244edb1df752daa",
+  "verificationRevision": "fe49101",
+  "selectedProvider": true,
+  "selectedProfile": "ai5090",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "checks": [
+    {
+      "id": "LS-TEST-095-105-rendered-selected-provider",
+      "result": "pass",
+      "evidenceClass": "development-provider"
+    }
+  ],
+  "sourceReportSha256": "655344467404f9da474a4d7288140f145953ad6ab44929dcb777999855a23d49",
+  "sourceReportPath": "/private/tmp/ls-s076-20260917.json",
+  "exclusions": [
+    "No personal data, physical output, Human fit acceptance, training, deployment, production or provider service changes"
+  ]
+}

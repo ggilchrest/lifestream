@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S081",
+  "status": "verified",
+  "result": "pass",
+  "collectedAt": "2026-09-17T04:47:44.752Z",
+  "sourceRevision": "fe49101",
+  "selectedProfile": "ai5090",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "providerSelection": {
+    "inference": "ai5090-development",
+    "stt": "nemo-speech",
+    "tts": "voxcpm"
+  },
+  "checks": [
+    {
+      "provider": "inference",
+      "endpoint": "http://127.0.0.1:43000/v1/models",
+      "httpStatus": 200,
+      "identityMatch": true
+    },
+    {
+      "provider": "stt",
+      "endpoint": "http://127.0.0.1:48080/health",
+      "httpStatus": 200,
+      "identityMatch": true
+    },
+    {
+      "provider": "tts",
+      "endpoint": "http://127.0.0.1:48787/readyz",
+      "httpStatus": 200,
+      "identityMatch": true
+    }
+  ],
+  "method": "Read-only requests through the existing SSH forwards; credentials and response payloads were not retained.",
+  "exclusions": [
+    "No service restart, configuration change, deployment or production claim."
+  ]
+}

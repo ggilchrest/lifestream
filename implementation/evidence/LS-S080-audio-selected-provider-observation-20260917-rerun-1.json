@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S080",
+  "status": "verified",
+  "result": "pass",
+  "caseIds": [
+    "LS-TEST-102",
+    "LS-TEST-104"
+  ],
+  "collectedAt": "2026-09-17T04:22:38.313Z",
+  "sourceRevision": "2e737bab053f4eca2ebb64d33244edb1df752daa",
+  "verificationRevision": "fe49101",
+  "selectedProvider": true,
+  "selectedProfile": "ai5090",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "checks": [
+    {
+      "id": "actual-synthetic-audio-route",
+      "result": "pass",
+      "evidenceClass": "development-provider"
+    }
+  ],
+  "sourceReportSha256": "865deeb594f6f90cff4d26ee94f8f3e9b8cdfe101db444829e0b1b282adf72fc",
+  "sourceReportPath": "/private/tmp/ls-s080-audio-20260917.json",
+  "exclusions": [
+    "Human acceptance",
+    "physical microphone/camera capture",
+    "physical audibility",
+    "perceptual voice quality",
+    "production"
+  ]
+}

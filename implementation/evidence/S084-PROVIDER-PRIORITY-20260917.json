@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S084",
+  "caseIds": [
+    "LS-TEST-107"
+  ],
+  "status": "verified",
+  "result": "pass",
+  "claimClass": "selected-provider-priority-transport",
+  "collectedAt": "2026-09-17T04:40:09.304Z",
+  "sourceRevision": "e17a7831b023608b500fa85d8c0c8adb382f91f7",
+  "selectedProfile": {
+    "path": "apps/server/src/config/profiles/ai5090.json",
+    "sha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+    "provider": "ai5090"
+  },
+  "selectedProvider": true,
+  "limits": {
+    "preemptionBoundMs": 10,
+    "slotReleaseBoundMs": 250
+  },
+  "measurement": {
+    "samples": 20,
+    "abortDelayMs": 20,
+    "maxAbortToTerminalAndCleanupMs": 2.668,
+    "allTerminalCancelled": true,
+    "withinPreemptionBound": true,
+    "withinSlotReleaseBound": true
+  },
+  "checks": [
+    {
+      "command": "node scripts/qualify-s084-provider-priority.mjs",
+      "result": "pass",
+      "evidence": "Synthetic cancellation against the selected ai5090 inference forward; terminal and iterator cleanup are measured after AbortController cancellation. No credentials or generated text are retained."
+    }
+  ],
+  "rows": [
+    {
+      "trial": 0,
+      "elapsedMs": 1.814,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 1,
+      "elapsedMs": 0.349,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 2,
+      "elapsedMs": 0.434,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 3,
+      "elapsedMs": 0.476,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 4,
+      "elapsedMs": 0.753,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 5,
+      "elapsedMs": 0.774,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 6,
+      "elapsedMs": 1.184,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 7,
+      "elapsedMs": 1.176,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 8,
+      "elapsedMs": 0.63,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 9,
+      "elapsedMs": 2.668,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 10,
+      "elapsedMs": 1.358,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 11,
+      "elapsedMs": 0.292,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 12,
+      "elapsedMs": 0.924,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 13,
+      "elapsedMs": 0.943,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 14,
+      "elapsedMs": 0.505,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 15,
+      "elapsedMs": 0.542,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 16,
+      "elapsedMs": 0.503,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 17,
+      "elapsedMs": 0.382,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 18,
+      "elapsedMs": 1.527,
+      "terminal": "cancelled"
+    },
+    {
+      "trial": 19,
+      "elapsedMs": 1.387,
+      "terminal": "cancelled"
+    }
+  ],
+  "exclusions": [
+    "No personal data",
+    "No provider configuration or service changes",
+    "No speech, physical output, production or Human acceptance claim"
+  ],
+  "verificationRevision": "fe49101",
+  "sourceReportSha256": "05a85e1029374affd9ca44b4d8a3e7474ac5eeaa72ef629f5366367f6ed3e10e",
+  "sourceReportPath": "/private/tmp/ls-s084-priority-20260917-e17a783.json"
+}

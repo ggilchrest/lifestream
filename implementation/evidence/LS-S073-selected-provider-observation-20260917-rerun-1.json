@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S073",
+  "status": "verified",
+  "result": "pass",
+  "caseIds": [
+    "LS-TEST-092",
+    "LS-TEST-093",
+    "LS-TEST-094",
+    "LS-TEST-096",
+    "LS-TEST-100"
+  ],
+  "collectedAt": "2026-09-17T04:20:17.777Z",
+  "sourceRevision": "2e737bab053f4eca2ebb64d33244edb1df752daa",
+  "verificationRevision": "fe49101",
+  "selectedProvider": true,
+  "selectedProfile": "ai5090",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "checks": [
+    {
+      "id": "LS-TEST-092-baseline-cold-warm-no-recall",
+      "result": "pass",
+      "evidenceClass": "development-provider"
+    },
+    {
+      "id": "LS-TEST-093-current-request-precedence",
+      "result": "pass",
+      "evidenceClass": "development-provider"
+    },
+    {
+      "id": "LS-TEST-094-relevance-and-disabled-callbacks",
+      "result": "pass",
+      "evidenceClass": "development-provider"
+    },
+    {
+      "id": "LS-TEST-096-correction-real-reply-and-pending-fence",
+      "result": "pass",
+      "evidenceClass": "development-provider"
+    },
+    {
+      "id": "LS-TEST-100-audience-transition-and-safe-ordinary-fallback",
+      "result": "pass",
+      "evidenceClass": "development-provider"
+    }
+  ],
+  "sourceReportSha256": "c5db747650a5c5ed1fc8f3dd28ec7be2be5bdde575760cc5ae04d4978303cff6",
+  "sourceReportPath": "/private/tmp/ls-s073-20260917.json",
+  "exclusions": [
+    "Human fit acceptance",
+    "physical capture/playback",
+    "real personal data",
+    "training/adapters",
+    "production or shared service changes"
+  ]
+}

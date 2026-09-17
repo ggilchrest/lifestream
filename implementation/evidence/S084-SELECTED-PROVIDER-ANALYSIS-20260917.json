@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S084",
+  "status": "observed",
+  "result": "pass",
+  "caseIds": [
+    "LS-TEST-123"
+  ],
+  "collectedAt": "2026-09-17T04:50:25.039Z",
+  "sourceRevision": "e17a7831b023608b500fa85d8c0c8adb382f91f7",
+  "verificationRevision": "fe49101",
+  "selectedProvider": true,
+  "selectedProfile": "ai5090",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "limits": {
+    "preemptionBoundMs": 10,
+    "slotReleaseBoundMs": 250
+  },
+  "samples": [
+    {
+      "sample": 0,
+      "result": "fail",
+      "elapsedMs": 5842.744,
+      "error": "Error: Analysis output exceeds the conservative UTF-8 token bound"
+    },
+    {
+      "sample": 1,
+      "result": "pass",
+      "elapsedMs": 5877.727,
+      "explanations": 3,
+      "outputBytes": 1729,
+      "manifestSections": 9
+    },
+    {
+      "sample": 2,
+      "result": "pass",
+      "elapsedMs": 5945.889,
+      "explanations": 3,
+      "outputBytes": 1849,
+      "manifestSections": 9
+    }
+  ],
+  "exclusions": [
+    "Synthetic evidence only; no personal data or external effects.",
+    "Provider output contract variance remains model-quality telemetry; invalid outputs are rejected without publication."
+  ]
+}

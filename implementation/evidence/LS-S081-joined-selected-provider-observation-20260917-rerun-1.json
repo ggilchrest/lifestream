@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S081",
+  "status": "verified",
+  "result": "pass",
+  "caseIds": [
+    "LS-TEST-106"
+  ],
+  "collectedAt": "2026-09-17T04:18:17.580Z",
+  "sourceRevision": "2e737bab053f4eca2ebb64d33244edb1df752daa",
+  "verificationRevision": "fe49101",
+  "selectedProvider": true,
+  "selectedProfile": "ai5090",
+  "selectedProfileSha256": "8ba50cc7fbb592ae5ed8c7547308e5d16f3603b262c4a4d8bdabc67e542da4fd",
+  "applicationResult": "pass",
+  "providerCalls": 48,
+  "modelQuality": {
+    "blocking": false,
+    "exact": 19,
+    "capitalizationOnly": 0,
+    "missingCompleteIdentifier": 0,
+    "total": 19,
+    "identifierPresenceRate": 1,
+    "exactMatchRate": 1,
+    "artifactPath": ".lifestream/model-quality/5265a30acc15d053eb94af5903829a37d132e8b4e066cb71484dae4079d55903.json"
+  },
+  "checks": [
+    {
+      "id": "LS-TEST-106-joined-selected-provider",
+      "result": "pass",
+      "evidence": "Authenticated intake, tuning, insights, executed Lab, correction, audience transition, forgetting and restart completed against the selected ai5090 provider."
+    }
+  ],
+  "retainedProviderTelemetry": [
+    {
+      "outcome": "pass",
+      "exact": 19,
+      "total": 19
+    },
+    {
+      "outcome": "deadline_exceeded",
+      "phase": "separate-assistant skip after 19 exact samples",
+      "blocking": false
+    },
+    {
+      "outcome": "deadline_exceeded",
+      "phase": "Lab partial rerun",
+      "blocking": false
+    },
+    {
+      "outcome": "deadline_exceeded",
+      "phase": "direct joined rerun",
+      "blocking": false
+    }
+  ],
+  "exclusions": [
+    "Identifier compliance is nonblocking model-quality telemetry by operator direction.",
+    "No personal data, physical output, Human fit acceptance, training, deployment, production or provider service changes."
+  ]
+}
