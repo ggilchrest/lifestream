@@ -99,7 +99,7 @@ const profileDiff = (before: AssistantProfile | null, after: AssistantProfile): 
   if (!before) return Object.keys(after).filter((key) => !["assistantId", "profileId", "revision", "status", "createdAt", "createdBy"].includes(key));
   return [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]));
 };
-const isolatedLabRuntime=(providers:ProviderRegistry,config:RuntimeConfig):LabRuntime=>{if(!providers.inference)throw new Error("Selected inference provider unavailable");return {provider:providers.inference,identity:{implementation:providers.providers.inference!.implementation,model:config.inferenceProfile?.model??"fixture",revision:config.inferenceProfile?.modelRevision??"workspace",configurationDigest:redactedDigest(config),fixture:providers.providers.inference!.fixture}};};
+const isolatedLabRuntime=(providers:ProviderRegistry,config:RuntimeConfig):LabRuntime=>{if(!providers.inference)throw new Error("Selected inference provider unavailable");const fixture=providers.providers.inference!.fixture;return {provider:providers.inference,identity:{implementation:providers.providers.inference!.implementation,model:config.inferenceProfile?.model??"fixture",revision:config.inferenceProfile?.modelRevision??"workspace",configurationDigest:redactedDigest(config),fixture},...(fixture?{preemptionBoundMs:0,slotReleaseBoundMs:0}: {})};};
 const initiativeComparisonValidator=createContractValidator();
 let pwceGrantValidator:ReturnType<typeof createContractValidator>|undefined;
 class AssistantAdminApi {

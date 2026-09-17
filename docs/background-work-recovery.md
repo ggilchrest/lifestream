@@ -4,6 +4,8 @@ Background work is durable only when the work owns a safe replay boundary. A for
 
 A user cancellation is terminal. A privacy operation, authorization change, evidence change, stale source, stale provider identity, expired deadline, or changed review boundary is also terminal. The worker never replays an action that could duplicate an external or user-visible effect. Owner admission receipts and idempotency records stay charged when a job cannot safely be repeated.
 
+The existing in-process fixture provider supplies explicit software-only bounds of zero milliseconds for both shared-provider limits. That lets the fixture exercise optional hypothesis analysis and recovery tests without implying a mac-local or ai5090 qualification. Those real runtimes continue to withhold provider-backed analysis until their cancellation and slot-release evidence is available.
+
 The current durable paths behave as follows:
 
 - Discovery supplied-source preparation is replayed while the live process is idle and the supplied source remains fresh. Its raw selected source is intentionally not retained in the durable work row, so a process restart cannot reconstruct it; the charged receipt remains and a new current admission is required.
