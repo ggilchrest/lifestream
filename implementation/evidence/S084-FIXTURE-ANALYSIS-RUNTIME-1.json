@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S084-FIXTURE-ANALYSIS-RUNTIME-1",
+  "slice": "LS-S084",
+  "status": "componentVerifiedQualificationPending",
+  "recordedAt": "2026-09-17T03:45:00Z",
+  "sourceRevision": "5249d62",
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/discovery-workflows.js",
+      "sha256": "cf39ec5ed54075ec78e29894ea7cc89a8ffb8250eba103941e216cf6f0575885"
+    },
+    {
+      "path": "apps/control-web/relationship-extensions.js",
+      "sha256": "0b32d656a282f696be7efb2d47da1667a6b1dd8baa8f60bedfff930fb4b50087"
+    },
+    {
+      "path": "apps/control-web/test/understanding.test.mjs",
+      "sha256": "35c6b7e97365cfe053b31864898d11324b303b5bc9bc431c298603477929ac4c"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "0f9d49059f7145d94c9a5b881bb5edc613fe05c2b8fe46c87b755fc331d1a828"
+    },
+    {
+      "path": "packages/runtime/src/inference/fixture.ts",
+      "sha256": "b8e5b355f951a71d2677619efed96cd19c1246ff27a282a34afe615bfe3ce34a"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "00eb168dc390385da7f11d849123d2ae0666a331beab8afa00bd2ebefd2ca4bf"
+    }
+  ],
+  "claims": [
+    "The Discovery control surface now admits bounded hypothesis analysis from a selected topic and current approved evidence, then exposes the durable work record and tentative hypotheses through the existing Hypotheses and Job history views.",
+    "The authenticated fixture server path creates an Assistant and relationship, approves one synthetic evidence record, activates Discovery, admits hypothesisAnalysis, publishes two competing tentative explanations, preserves the exact evidence reference, and replays the same request without another provider call.",
+    "The fixture inference provider supplies only bounded synthetic JSON for discovery-analysis sessions; canonical user evidence remains unchanged and no authority or training decision is inferred."
+  ],
+  "checks": [
+    {
+      "command": "pnpm typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass; 911 passed, 0 failed"
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass; 19 passed, 30 optional browser checks skipped because PLAYWRIGHT_MODULE is unavailable"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass; structure only"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    }
+  ],
+  "limitations": [
+    "This receipt qualifies the local fixture path only. mac-local and ai5090 shared-provider analysis remain gated on measured cancellation and slot-release evidence.",
+    "The ai5090 service is offline by operator direction; no reachability or selected-provider qualification is claimed.",
+    "This is component and integration verification, not LS-S084 conformance, production readiness, or Human acceptance."
+  ],
+  "humanAcceptanceClaim": false
+}
