@@ -58,11 +58,17 @@ try {
   config.storage = { databasePath: join(directory, 'data.sqlite'), artifactDirectory: join(directory, 'artifacts') };
   app = createLifestreamServer({ config, host: '127.0.0.1', port, localAuth: { stateDirectory: join(directory, 'safety'), installerToken: (await readFile(join(directory, 'installer-token.txt'), 'utf8')).trim() } });
   await app.start();
-  assert.equal(app.health.status, 'ready', 'Selected providers are not ready; no fixture fallback was substituted.');
+  if (app.health.status !== 'ready') {
+    const required = Object.values(app.health.providers)
+      .filter(provider => provider.required && provider.status !== 'healthy')
+      .map(provider => `${provider.id}=${provider.status}${provider.reason ? ` (${provider.reason})` : ''}`)
+      .join('; ');
+    throw new Error(`Selected providers are not ready; no fixture fallback was substituted. Required provider status: ${required || 'unknown'}.`);
+  }
   console.log(`Review app: http://127.0.0.1:${app.address().port}/control/\nReview directory: ${directory}\nFirst enrollment token file: ${join(directory, 'installer-token.txt')}\nUse synthetic inputs only. Keep the safety directory with this review; it must remain current when restoring the database.\nCtrl+C stops this review app. Restart with --directory and the path above.`);
   for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => { void close().then(() => process.exit(0)); });
 } catch (error) {
   await close();
-  console.error(error instanceof assert.AssertionError ? error.message : 'Review startup failed. Check the review directory and existing selected-provider access; credentials are not logged.');
+  console.error(error instanceof Error ? error.message : 'Review startup failed. Check the review directory and existing selected-provider access; credentials are not logged.');
   process.exitCode = 1;
 }
