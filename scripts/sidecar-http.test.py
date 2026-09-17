@@ -149,6 +149,15 @@ class SidecarHttpTest(unittest.TestCase):
         self.assertIsNone(module.validate(request))
         self.assertEqual(module.validate({**request,"voiceReference":{**reference,"dataBase64":"bad"}}),"malformedRequest")
         self.assertEqual(module.validate({**request,"voiceDesign":{"version":"voxcpm.voice-design.v1","description":"ok","seed":True}}),"malformedRequest")
+        self.assertEqual(module.synthesis_settings(), {"inferenceTimesteps":10,"cfgValue":2.0})
+        custom={"inferenceTimesteps":32,"cfgValue":2.5}
+        self.assertIsNone(module.validate({**request,"synthesisSettings":custom}))
+        from types import SimpleNamespace
+        module.ACTIVE_JOB=SimpleNamespace(request={"synthesisSettings":custom})
+        self.assertEqual(module.synthesis_settings(),custom)
+        module.ACTIVE_JOB=None
+        for invalid in [None, {}, {"inferenceTimesteps":True,"cfgValue":2}, {"inferenceTimesteps":51,"cfgValue":2}, {"inferenceTimesteps":20,"cfgValue":float('nan')}, {"inferenceTimesteps":20,"cfgValue":1.9}]:
+            self.assertEqual(module.validate({**request,"synthesisSettings":invalid}),"malformedRequest")
         paths = []
         def fake_generate(text, style, seed, reference_path=None, transcript=""):
             paths.append(Path(reference_path))

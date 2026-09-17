@@ -96,6 +96,11 @@ STYLES = {
     "emergency": "A commanding adult voice, urgent and concise",
 }
 
+def synthesis_settings():
+    request = getattr(ACTIVE_JOB, "request", {}) if ACTIVE_JOB else {}
+    return request.get("synthesisSettings", {"inferenceTimesteps":10, "cfgValue":2.0})
+
+
 def now():
     return datetime.now(timezone.utc)
 
@@ -147,7 +152,7 @@ def generate_conditioned(text, style, seed, reference_path=None, transcript=""):
         return
     with tempfile.TemporaryDirectory(prefix="lifestream-voice-anchor-") as directory:
         anchor_path = os.path.join(directory, "anchor.wav")
-        key=(BACKEND,MODEL_REVISION,style,seed)
+        key=(BACKEND,MODEL_REVISION,style,seed,synthesis_settings()["inferenceTimesteps"],synthesis_settings()["cfgValue"])
         cached=ANCHORS.get(key)
         if cached and time.monotonic()-cached[0]<300:
             anchor=cached[1];ANCHORS.move_to_end(key)
@@ -181,7 +186,7 @@ def raw_generate(text, style, seed, reference_path=None, transcript="", max_toke
         if reference_path and transcript:
             conditioning.update(prompt_audio=prompt_path or reference_path,prompt_text=transcript.rstrip()+" ")
         with guard_mlx_generation(MODEL):
-            for result in MODEL.generate(text=text, instruct=style or None, max_tokens=max_tokens, cfg_value=2.0, inference_timesteps=10, **conditioning):
+            for result in MODEL.generate(text=text, instruct=style or None, max_tokens=max_tokens, cfg_value=synthesis_settings()["cfgValue"], inference_timesteps=synthesis_settings()["inferenceTimesteps"], **conditioning):
                 check_generation()
                 yield np.asarray(result.audio, dtype=np.float32)
         return
@@ -191,7 +196,7 @@ def raw_generate(text, style, seed, reference_path=None, transcript="", max_toke
     conditioning = {"reference_wav_path":reference_path} if reference_path else {}
     if reference_path and transcript:
         conditioning.update(prompt_wav_path=prompt_path or reference_path,prompt_text=transcript.rstrip()+" ")
-    generator=MODEL.generate_streaming(text=f"({style}){text}" if style else text, max_len=max_tokens, cfg_value=2.0, inference_timesteps=10, retry_badcase=False, **conditioning)
+    generator=MODEL.generate_streaming(text=f"({style}){text}" if style else text, max_len=max_tokens, cfg_value=synthesis_settings()["cfgValue"], inference_timesteps=synthesis_settings()["inferenceTimesteps"], retry_badcase=False, **conditioning)
     try:
         for chunk in generator:
             check_generation(); yield chunk
@@ -216,6 +221,13 @@ def map_delivery(delivery):
     return applied, sorted(set(degraded)), style
 
 def validate(request):
+    settings = request.get("synthesisSettings")
+    if "synthesisSettings" in request:
+        if not isinstance(settings,dict) or set(settings)!={"inferenceTimesteps","cfgValue"}: return "malformedRequest"
+        steps, guidance = settings["inferenceTimesteps"], settings["cfgValue"]
+        if type(steps) is not int or not 10 <= steps <= 50: return "malformedRequest"
+        if type(guidance) not in (int,float) or not 2.0 <= guidance <= 4.0: return "malformedRequest"
+
     reference=request.get("voiceReference")
     if reference is not None:
         if not isinstance(reference,dict) or set(reference)!={"version","sampleRateHz","dataBase64","transcript"}: return "malformedRequest"
@@ -265,7 +277,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path=="/healthz": return self.json(200,{"status":"alive","busy":LOCK.locked(),"queuedJobs":JOBS.qsize()})
         if self.path=="/readyz": return self.json(200 if READY else 503,{"status":"ready" if READY else "unavailable","runtimeRevision":RUNTIME_REVISION,"modelRevision":MODEL_REVISION,"mappingRevision":MAPPING_REVISION})
-        if self.path=="/v1/capabilities": return self.json(200,{"protocolVersion":"voxcpm.loopback.v1","contractVersion":"2.0.0","streaming":True,"workers":1,"ready":READY,"format":FORMAT,"backend":BACKEND,"spokenTextIsolation":"reference-anchor-v1","voiceDesignControl":"voxcpm.voice-design.v1","voiceReferenceControl":"voxcpm.voice-reference.v1"})
+        if self.path=="/v1/capabilities": return self.json(200,{"protocolVersion":"voxcpm.loopback.v1","contractVersion":"2.0.0","streaming":True,"workers":1,"ready":READY,"format":FORMAT,"backend":BACKEND,"spokenTextIsolation":"reference-anchor-v1","voiceDesignControl":"voxcpm.voice-design.v1","voiceReferenceControl":"voxcpm.voice-reference.v1","synthesisSettingsControl":{"version":"voxcpm.synthesis-settings.v1","inferenceTimesteps":{"min":10,"max":50,"default":10},"cfgValue":{"min":2.0,"max":4.0,"default":2.0}}})
         self.json(404,{"error":"not_found"})
     def do_POST(self):
         if self.path!="/v1/tts/synthesize" or not READY: return self.json(503,{"error":"provider_unavailable"})
@@ -333,7 +345,7 @@ class Handler(BaseHTTPRequestHandler):
                 style=style.replace("adult voice", "delivery")
             if design["description"]:
                 style=design["description"] + "; " + style
-            self.event({"kind":"preAudio","sequence":sequence,"requestId":request["requestId"],"correlationId":request["correlationId"],"voiceBundleRevision":request["voiceBundleRevision"],"requestedDelivery":request["delivery"],"appliedDelivery":applied,"degradedDimensions":degraded,"mappingRevision":MAPPING_REVISION,"effectiveSynthesis":{"spokenTextIsolation":"reference-anchor-v1","voiceDesign":style,"voiceDescription":design["description"],"seed":design["seed"],"referenceDigest":reference_digest,"conditioningMode":"continuation" if reference and reference["transcript"] else "reference" if reference else "description","cfgValue":2.0,"inferenceTimesteps":10,"backend":BACKEND},"format":FORMAT,"runtimeRevision":RUNTIME_REVISION,"modelRevision":MODEL_REVISION})
+            self.event({"kind":"preAudio","sequence":sequence,"requestId":request["requestId"],"correlationId":request["correlationId"],"voiceBundleRevision":request["voiceBundleRevision"],"requestedDelivery":request["delivery"],"appliedDelivery":applied,"degradedDimensions":degraded,"mappingRevision":MAPPING_REVISION,"effectiveSynthesis":{"spokenTextIsolation":"reference-anchor-v1","voiceDesign":style,"voiceDescription":design["description"],"seed":design["seed"],"referenceDigest":reference_digest,"conditioningMode":"continuation" if reference and reference["transcript"] else "reference" if reference else "description","cfgValue":synthesis_settings()["cfgValue"],"inferenceTimesteps":synthesis_settings()["inferenceTimesteps"],"backend":BACKEND},"format":FORMAT,"runtimeRevision":RUNTIME_REVISION,"modelRevision":MODEL_REVISION})
             sequence+=1; deadline=datetime.fromisoformat(request["deadlineAt"].replace("Z","+00:00"))
             generator=generate_audio(request["text"],style,design["seed"],reference)
             import numpy as np
