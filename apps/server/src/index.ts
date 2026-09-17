@@ -34,7 +34,7 @@ import { WebSocketServer } from "ws";
 import { defaultVoiceSettings, deliveryModes, parseVoiceSettings, type VoiceSettings } from "./runtime/voice-settings.ts";
 import { AssistantProfileRepository, Database, InitiativeLedgerRepository, MemoryRepository, ProfileBuilderRepository, type ProfileCandidate, type AssistantProfile, type MemoryRecord } from "@lifestream/storage-sqlite";
 import { isProfile, loadProfile, redactedDigest } from "./config/loader.ts";
-import { createProviderRegistry, type ProviderInstanceHealth, type ProviderRegistry } from "./composition/providers.ts";
+import { createProviderRegistry, providerPriorityBounds, type ProviderInstanceHealth, type ProviderRegistry } from "./composition/providers.ts";
 import type { Profile, RuntimeConfig } from "./config/schema.js";
 import { unavailableWorldContext } from "@lifestream/runtime/context/world";
 import { streamMessage, type HostRuntimeInput } from "./runtime/inference.ts";
@@ -99,7 +99,7 @@ const profileDiff = (before: AssistantProfile | null, after: AssistantProfile): 
   if (!before) return Object.keys(after).filter((key) => !["assistantId", "profileId", "revision", "status", "createdAt", "createdBy"].includes(key));
   return [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]));
 };
-const isolatedLabRuntime=(providers:ProviderRegistry,config:RuntimeConfig):LabRuntime=>{if(!providers.inference)throw new Error("Selected inference provider unavailable");const fixture=providers.providers.inference!.fixture;return {provider:providers.inference,identity:{implementation:providers.providers.inference!.implementation,model:config.inferenceProfile?.model??"fixture",revision:config.inferenceProfile?.modelRevision??"workspace",configurationDigest:redactedDigest(config),fixture},...(fixture?{preemptionBoundMs:0,slotReleaseBoundMs:0}: {})};};
+const isolatedLabRuntime=(providers:ProviderRegistry,config:RuntimeConfig):LabRuntime=>{if(!providers.inference)throw new Error("Selected inference provider unavailable");const priority=providerPriorityBounds(config,providers.providers.inference);return {provider:providers.inference,identity:{implementation:providers.providers.inference!.implementation,model:config.inferenceProfile?.model??"fixture",revision:config.inferenceProfile?.modelRevision??"workspace",configurationDigest:redactedDigest(config),fixture:providers.providers.inference!.fixture},...(priority??{})};};
 const initiativeComparisonValidator=createContractValidator();
 let pwceGrantValidator:ReturnType<typeof createContractValidator>|undefined;
 class AssistantAdminApi {

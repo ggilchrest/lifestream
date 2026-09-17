@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createProviderRegistry } from "../src/composition/providers.ts";
+import { createProviderRegistry, providerPriorityBounds } from "../src/composition/providers.ts";
 import { loadConfig } from "../src/config/loader.ts";
 
 const config = (provider: string, requirements = { inference: "required", memory: "required", stt: "required", tts: "required", world: "optional", capability: "optional", renderer: "optional", clock: "required" } as const) => loadConfig({
@@ -19,6 +19,22 @@ test("provider registry constructs explicit fixture/system identities", () => {
   assert.equal(registry.providers.inference.implementation, "@lifestream/providers-fixture");
   assert.equal(registry.providers.clock.fixture, false);
   assert.equal(registry.ready, true);
+  assert.deepEqual(providerPriorityBounds(config("fixture"), registry.providers.inference), { preemptionBoundMs: 0, slotReleaseBoundMs: 0 });
+});
+
+test("selected ai5090 priority bounds require a healthy exact provider probe", () => {
+  const profile = loadConfig({
+    defaults: {
+      profile: "ai5090",
+      providers: { inference: "ai5090-development", memory: "fixture", stt: "fixture", tts: "fixture", world: "fixture", capability: "fixture", renderer: "fixture", clock: "system" },
+      providerRequirements: { inference: "required", memory: "required", stt: "required", tts: "required", world: "optional", capability: "optional", renderer: "optional", clock: "required" },
+      inferenceProfile: { runtime: "SGLang", runtimeVersion: "v", model: "Qwen", modelRevision: "inference-revision", servedModelName: "qwen", quantization: "q", contextLength: 1, endpoint: "http://inference.invalid", containerImageDigest: "sha256:image", developmentOnly: true },
+      storage: { databasePath: ":memory:", artifactDirectory: ".artifacts" }, authority: { provider: "fixture", authentication: "fixture" }, secretRefs: {}
+    }, profile: {}, environment: {}, cli: {}
+  });
+  const registry = createProviderRegistry(profile);
+  assert.equal(providerPriorityBounds(profile, registry.providers.inference), undefined);
+  assert.deepEqual(providerPriorityBounds(profile, { ...registry.providers.inference, status: "healthy" }), { preemptionBoundMs: 10, slotReleaseBoundMs: 250 });
 });
 
 test("unknown providers fail closed and unavailable requirements affect readiness", () => {

@@ -11,6 +11,7 @@ import { WebSocket } from "ws";
 import { PwceCapabilityDiscovery } from './pwce-capabilities.ts';
 import { PwceWorldContext } from "./pwce-world.ts";
 import { validatePwceProfile } from "../config/pwce.ts";
+import { SHARED_PROVIDER_PREEMPTION_BOUND_MS, SHARED_PROVIDER_SLOT_RELEASE_BOUND_MS } from "@lifestream/runtime/understanding/coordinator";
 
 export type ProviderHealthStatus = "healthy" | "degraded" | "unavailable";
 export type ProviderInstanceHealth = {
@@ -21,6 +22,21 @@ export type ProviderInstanceHealth = {
   fixture: boolean;
   required: boolean;
   reason?: string;
+};
+
+export type ProviderPriorityBounds = { preemptionBoundMs: number; slotReleaseBoundMs: number };
+
+/**
+ * Advertise shared-provider bounds only for a provider whose current health
+ * probe has qualified the exact runtime. Fixture work remains immediate and
+ * isolated; an unprobed or degraded selected provider stays fail-closed.
+ */
+export const providerPriorityBounds = (config: RuntimeConfig, health: ProviderInstanceHealth | undefined): ProviderPriorityBounds | undefined => {
+  if (health?.fixture) return { preemptionBoundMs: 0, slotReleaseBoundMs: 0 };
+  if (config.providers.inference === "ai5090-development" && health?.status === "healthy") {
+    return { preemptionBoundMs: SHARED_PROVIDER_PREEMPTION_BOUND_MS, slotReleaseBoundMs: SHARED_PROVIDER_SLOT_RELEASE_BOUND_MS };
+  }
+  return undefined;
 };
 
 type ProviderDescriptor = Omit<ProviderInstanceHealth, "id" | "required">;
