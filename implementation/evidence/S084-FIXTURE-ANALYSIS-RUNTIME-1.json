@@ -4,7 +4,7 @@
   "slice": "LS-S084",
   "status": "componentVerifiedQualificationPending",
   "recordedAt": "2026-09-17T03:45:00Z",
-  "sourceRevision": "5249d62",
+  "sourceRevision": "5249d62c71653b3f1d4421abae3f270a465d28db",
   "sourceArtifacts": [
     {
       "path": "apps/control-web/discovery-workflows.js",
