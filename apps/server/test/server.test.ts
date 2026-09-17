@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,6 +7,7 @@ import test from "node:test";
 import { createLifestreamServer } from "../src/index.ts";
 import { loadConfig } from "../src/config/loader.ts";
 import { ProviderRegistry } from "../src/composition/providers.ts";
+import { extensionSettings } from "../../../tests/fixtures/extension-settings.ts";
 
 const config = (root: string) => loadConfig({ defaults: { profile: "test", providers: { inference: "fixture", memory: "fixture", stt: "fixture", tts: "fixture", world: "fixture", capability: "fixture", renderer: "fixture", clock: "fixture" }, storage: { databasePath: join(root, "data", "state.sqlite"), artifactDirectory: join(root, "artifacts") }, authority: { provider: "fixture", authentication: "fixture" }, secretRefs: {} }, profile: {}, environment: {}, cli: {} });
 
@@ -319,6 +321,29 @@ test("relationship Lab executes scoped fixture comparisons and requires separate
  const assistant=(await api('/api/admin/v1/assistants',{displayName:'Lab Fixture'})).body,relationship=(await api(`/api/admin/v1/assistants/${assistant.assistantId}/relationships`,{})).body.relationship,path=`/api/admin/v1/assistants/${assistant.assistantId}/relationships/${relationship.relationshipId}/lab`;
  const prepared=await api(path,{syntheticOnly:true,transmissionApproved:true,scenarios:[{id:'one',prompt:'Explain a cache.',sourceFamily:'one',split:'comparison',forbiddenTerms:[]},{id:'held',prompt:'Explain Python.',sourceFamily:'held',split:'heldOut',forbiddenTerms:[]}],criteria:['nonempty','noForbiddenTerms'],repeatedRuns:2,candidateControls:{verbosity:0},candidateRepresentation:'conventionOriented'});assert.equal(prepared.status,201);assert.deepEqual(prepared.body.lab.representations,['recordOriented','conventionOriented']);
  const run=async(action:string)=>{const before=(await api(path)).body.lab;assert.equal((await api(path+action,{expectedRevision:before.revision})).status,202);for(let n=0;n<100;n++){const lab=(await api(path)).body.lab;if(lab.status!=='running')return lab;await new Promise(r=>setTimeout(r,5));}throw new Error('Lab did not finish');};let lab=await run('/run');assert.equal(lab.status,'completed');assert.equal(lab.comparison.resultCount,12);assert.ok(Object.values(lab.comparison.variability).every(v=>v===0));assert.equal((await api(path+'/decision',{decision:'promoted',expectedRevision:lab.revision})).status,409);lab=await run('/held-out');assert.equal(lab.heldOut.resultCount,12);const result=await api(path+'/decision',{decision:'promoted',expectedRevision:lab.revision});assert.equal(result.status,200);assert.equal(result.body.configuration.status,'draft');assert.equal(result.body.activeStateChanged,false);
+});
+
+test("fixture provider reaches bounded Discovery hypothesis analysis through the server path", async t => {
+  const root = await mkdtemp(join(tmpdir(), "lifestream-fixture-analysis-")); t.after(() => rm(root, { recursive: true, force: true }));
+  const app = createLifestreamServer({ config: config(root) }); await app.start(); t.after(() => app.shutdown());
+  const base = `http://127.0.0.1:${app.address().port}`, principal = randomUUID(), headers = { "content-type": "application/json", "x-lifestream-fixture-session": "fixture-analysis", "x-lifestream-fixture-principal": principal, origin: base };
+  const api = async (path: string, body?: unknown) => { const response = await fetch(base + path, { method: body === undefined ? "GET" : "POST", headers, body: body === undefined ? undefined : JSON.stringify(body) }); return { status: response.status, body: await response.json() as any }; };
+  const assistant = (await api("/api/admin/v1/assistants", { displayName: "Fixture Analysis" })).body;
+  assert.equal((await api(`/api/admin/v1/assistants/${assistant.assistantId}/activate`, { profileId: assistant.profile.profileId, expectedActiveRevision: null })).status, 200);
+  const relation = (await api(`/api/admin/v1/assistants/${assistant.assistantId}/relationships`, { userId: principal })).body.relationship;
+  const prefix = `/api/admin/v1/assistants/${assistant.assistantId}/relationships/${relation.relationshipId}`;
+  const added = (await api(prefix + "/candidates", { content: "I enjoy the synthetic story.", source: "fixture-declaration", sourceFamily: "fixture", uncertainty: "low", expectedRevision: relation.revision, idempotencyKey: "fixture-analysis-candidate" })).body;
+  assert.equal(added.relationshipRevision, 2);
+  const approved = (await api(`${prefix}/candidates/${added.candidate.candidateId}/decision`, { decision: "approved", expectedRevision: 2, idempotencyKey: "fixture-analysis-approval" })).body;
+  const evidenceRef = `relationship-record:${approved.candidate.candidateId}:${approved.candidate.revision}`;
+  const route = prefix + "/understanding/v1", discovery = (body: Record<string, unknown>) => api(route, { schemaVersion: "1.0.0", ...body });
+  const draft = await discovery({ operation: "draft", idempotencyKey: "fixture-analysis-settings", expectedActiveConfigurationId: null, settings: { enabled: true, researchMode: "providedOnly", researchDepth: "brief", approvedTopicRefs: [], policyRefs: ["policy:synthetic"], excludedSourceRefs: [], excludedTopicRefs: [], spoilerPolicy: "avoid", progressBoundaryRef: null, explorationShare: 0.2, budget: { ...extensionSettings.understanding.budget } } });
+  assert.equal(draft.status, 201, JSON.stringify(draft)); const configuration = draft.body.records[0];
+  assert.equal((await discovery({ operation: "activate", idempotencyKey: "fixture-analysis-activate", configurationId: configuration.configurationId, expectedRevision: configuration.revision, confirmed: true })).status, 200);
+  const request = { operation: "prepare", purpose: "hypothesisAnalysis", idempotencyKey: "fixture-analysis-once", topicRef: "topic:synthetic-story", evidenceRefs: [evidenceRef], sources: [] };
+  const admitted = await discovery(request); assert.equal(admitted.status, 202, JSON.stringify(admitted)); const workId = admitted.body.records[0].workId;
+  let inspection: any; for (let attempt = 0; attempt < 80; attempt++) { inspection = await discovery({ operation: "inspect" }); if (inspection.body.records.some((record: any) => record.workId === workId && record.state === "published")) break; await new Promise(resolve => setTimeout(resolve, 10)); }
+  assert.equal(inspection.body.records.find((record: any) => record.workId === workId)?.state, "published", JSON.stringify(inspection)); const hypothesis = inspection.body.records.find((record: any) => record.recordType === "hypothesis"); assert.ok(hypothesis); assert.equal(hypothesis.explanations.length, 2); assert.equal(hypothesis.epistemicStatus, "tentative"); assert.equal(hypothesis.explanations[0].supportEvidenceRefs[0], evidenceRef); assert.equal((await discovery(request)).status, 200);
 });
 
 test('bounded shutdown closes lingering HTTP connections before a same-port restart', async t => {
