@@ -54,14 +54,23 @@ test("LS-TEST-129/133/135: a new foreground turn cancels admitted work and fence
   const coordinator = new UnderstandingWorkCoordinator({ now: () => 100, pressureAllowsWork: () => true });
   let release: (value: string) => void = () => { throw new Error("step not started"); };
   let signal: AbortSignal | undefined, publishes = 0;
-  const work: BackgroundWork<string> = { key: "job", deadlineAt: 1000, current: () => true, admitOnce: () => true, steps: [(value) => { signal = value; return new Promise(resolve => { release = resolve; }); }], publish: () => { publishes++; return true; }, sharedInference: true, providerPreemptionBoundMs: 5 };
+  const work: BackgroundWork<string> = { key: "job", deadlineAt: 1000, current: () => true, admitOnce: () => true, steps: [(value) => { signal = value; return new Promise(resolve => { release = resolve; }); }], publish: () => { publishes++; return true; }, sharedInference: true, providerPreemptionBoundMs: 5, providerSlotReleaseBoundMs: 250 };
   const pending = coordinator.run(work);
   assert.ok(signal);
   const done = coordinator.foregroundStarted(); assert.equal(signal.aborted, true);
   assert.equal((await coordinator.run({ ...work, key: "other" })).reason, "foregroundOrCapacity");
   done(); done(); // release is idempotent and cannot make foreground count negative
   release("late private result");
-  assert.equal((await pending).state, "cancelled"); assert.equal(publishes, 0);
+  assert.equal((await pending).reason, "foregroundPreempted"); assert.equal(publishes, 0);
+});
+
+test("foreground cancellation notifies idle waiters and defers extra P2 work", async () => {
+  const coordinator = new UnderstandingWorkCoordinator({ now: () => 100, pressureAllowsWork: () => true });
+  let idle = 0; coordinator.onIdle(() => { idle++; });
+  const release = coordinator.foregroundStarted();
+  const result = await coordinator.run({ key: "p2", deadlineAt: 1000, current: () => true, admitOnce: () => true, steps: [async () => "never"], publish: () => true, sharedInference: false, priority: "P2" });
+  assert.equal(result.reason, "deferredP2");
+  release(); assert.equal(idle, 1);
 });
 
 test("LS-TEST-136: unique admission, revoked dependencies and failed publication never retry", async () => {

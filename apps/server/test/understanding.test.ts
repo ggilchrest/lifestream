@@ -76,6 +76,18 @@ test("Discovery cancellation and runtime closure fence late preparation without 
  await new Promise(resolve=>setTimeout(resolve,25));assert.equal(publications,0,'closed runtime cannot publish a late result or touch a closed database');
 });
 
+test("foreground interruption defers eligible preparation and automatically resumes when idle",async t=>{
+ const {DiscoveryAdministration}=await import('../src/admin/understanding.ts');
+ const {understandingDigest}=await import('../../../packages/storage-sqlite/src/understanding.ts');
+ const db=new Database({path:':memory:'});db.migrate();t.after(()=>db.close());
+ const scope={assistantId:randomUUID(),userId:randomUUID(),relationshipId:randomUUID(),deploymentId:randomUUID()},boundary=understandingDigest('foreground-retry'),configurationId=randomUUID();
+ const admin=new DiscoveryAdministration(db,{snapshot:()=>({boundary,configuration:{configurationId,revision:1,extensions:{understanding:{...extensionSettings.understanding,enabled:true,policyRefs:['policy:synthetic-supplied']}}} as any}),evidenceAllowed:()=>true,sourceAllowed:()=>true,forget:()=> 'missing',changed:()=>{}});t.after(()=>admin.close());
+ const request={schemaVersion:'1.0.0',operation:'prepare',idempotencyKey:'foreground-retry',topicRef:'topic:quartz',purpose:'briefRebuild',evidenceRefs:[],sources:[source()]};
+ const release=admin.foregroundStarted();const admitted=admin.handle(scope,request,()=>true);assert.equal(admitted.status,202);
+ await new Promise(resolve=>setTimeout(resolve,25));const key=(admitted.body.records as any[])[0]!.workId;assert.equal(admin.repository.work(scope,key)?.state,'queued');assert.match(String(admin.repository.work(scope,key)?.reason),/idle retry/u);
+ release();for(let i=0;i<100&&admin.repository.work(scope,key)?.state!=='published';i++)await new Promise(resolve=>setTimeout(resolve,10));assert.equal(admin.repository.work(scope,key)?.state,'published');
+});
+
 test("optional Discovery index failure leaves ordinary input selection available",async t=>{
  const {DiscoveryAdministration}=await import('../src/admin/understanding.ts');const {understandingDigest}=await import('../../../packages/storage-sqlite/src/understanding.ts');
  const db=new Database({path:':memory:'});db.migrate();t.after(()=>db.close());

@@ -34,6 +34,12 @@ test("Discovery publication is atomic, scope-bound and denied after cancellation
  assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[f.brief()],()=>true),false);
 });
 
+test("foreground-preempted work returns to the durable idle queue with a fresh bounded deadline",t=>{
+ const f=fixture();t.after(()=>f.db.close());const w=f.work();f.admit(w);assert.equal(f.repo.start(f.scope,String(w.workId)),true);
+ const queued=f.repo.requeue(f.scope,String(w.workId),"Deferred while foreground work had priority; waiting for idle retry (1/3).");
+ assert.equal(queued?.state,"queued");assert.equal(queued?.lastOutcome,"notRun");assert.match(String(queued?.reason),/idle retry/u);assert.equal(f.repo.work(f.scope,String(w.workId))?.state,"queued");
+});
+
 test("Discovery lookup and expiry preserve scope isolation and minimal replay receipts",t=>{
  const f=fixture();t.after(()=>f.db.close());const w=f.work();f.admit(w);f.repo.start(f.scope,String(w.workId));const parent=f.brief();assert.equal(f.repo.publish(f.scope,String(w.workId),f.boundary,[parent,f.candidate(parent)],()=>true),true);
  assert.equal(f.repo.select(f.scope,f.boundary,"quartz").length,1);

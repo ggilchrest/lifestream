@@ -55,11 +55,26 @@ type Scope = { userId: string; assistantId: string; relationshipId: string; revi
 type Result = { status: number; body: Record<string, unknown> };
 export class ProfileBuilderAdmin {
   private readonly active = new Set<string>();
+  private readonly retryQueue = new Set<string>();
   private closed = false;
   readonly repository: ProfileBuilderRepository;
   private readonly sourceAllowed:(userId:string,relationshipId:string,value:string,digest:string)=>boolean;
-  constructor(repository: ProfileBuilderRepository, sourceAllowed:(userId:string,relationshipId:string,value:string,digest:string)=>boolean=()=>true) { this.repository = repository;this.sourceAllowed=sourceAllowed; }
-  close(): void { this.closed = true; for (const id of this.active) { const job = this.repository.getJob(id); if (job?.status === "extracting") this.repository.cancel(id, job.revision); } }
+  private readonly current:(job:import("@lifestream/storage-sqlite").ProfileBuilderJob)=>boolean;
+  constructor(repository: ProfileBuilderRepository, sourceAllowed:(userId:string,relationshipId:string,value:string,digest:string)=>boolean=()=>true, options:{autoRecover?:boolean;current?:(job:import("@lifestream/storage-sqlite").ProfileBuilderJob)=>boolean}={}) {
+    this.repository = repository;this.sourceAllowed=sourceAllowed;this.current=options.current??(()=>true);
+    if(options.autoRecover!==false){for(const job of repository.listRecoverableJobs())this.retryQueue.add(job.jobId);void setImmediate().then(()=>this.drainRetries());}
+  }
+  close(): void { this.closed = true; this.retryQueue.clear(); for (const id of this.active) { const job = this.repository.getJob(id); if (job?.status === "extracting") this.repository.interrupt(id, job.revision); } }
+  private drainRetries(): void {
+    if(this.closed||this.active.size>0||this.retryQueue.size===0)return;
+    for(const jobId of [...this.retryQueue]){
+      if(this.active.size>=PROFILE_BUILDER_LIMITS.concurrentJobs)break;
+      this.retryQueue.delete(jobId);const job=this.repository.getJob(jobId);
+      if(!job||job.status!=="failed"||job.retryable!==true)continue;
+      if(!this.current(job)){try{this.repository.cancel(job.jobId,job.revision);}catch{/* A newer owner decision already fenced this job. */}continue;}
+      try{const next=this.repository.beginExtraction(job.jobId,job.revision);void this.extract(job.jobId,next.job.revision,next.uploads);}catch{/* The job became stale or was explicitly cancelled; preserve its terminal record. */}
+    }
+  }
   private async extract(jobId: string, revision: number, uploads: ProfileUpload[]): Promise<void> {
     this.active.add(jobId);
     const startedAt = Date.now();
@@ -73,7 +88,7 @@ export class ProfileBuilderAdmin {
       for (let index = 0; index < uploads.length; index++) {
         const source = job.sources[index]!;
         for (const record of extractProfileUpload(uploads[index]!, job.userId)) {
-          if(!this.sourceAllowed(job.userId,job.relationshipId,record.value,source.sha256)){this.repository.cancel(job.jobId,revision);return;}
+          if(!this.current(job)||!this.sourceAllowed(job.userId,job.relationshipId,record.value,source.sha256)){this.repository.cancel(job.jobId,revision);return;}
           tokens += record.value.length;
           if (records.length >= PROFILE_BUILDER_LIMITS.records || tokens > PROFILE_BUILDER_LIMITS.tokens || Date.now() - startedAt > PROFILE_BUILDER_LIMITS.durationMs) throw new ProfileBuilderError("Extraction exceeded declared count, token or time limits");
           records.push({ source, record });
@@ -83,7 +98,7 @@ export class ProfileBuilderAdmin {
       }
       this.repository.finishExtraction(jobId, revision, records);
     } catch (error) { if (!this.closed) this.repository.fail(jobId, revision, error instanceof ProfileBuilderError ? error.message : "Bounded local extraction failed; no candidate was admitted"); }
-    finally { this.active.delete(jobId); }
+    finally { this.active.delete(jobId); this.drainRetries(); }
   }
   handle(method: string, tail: string[], actor: string, scope: Scope, input: unknown, admit: (candidate: ProfileCandidate) => void | (() => void)): Result {
     try {

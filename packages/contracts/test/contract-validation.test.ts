@@ -29,7 +29,7 @@ test("approved relationship export is byte-bound and retains both prepared-conte
 // Public synthetic inputs; private structural fixtures are not exported.
 test("approved extension exports compile and reject forged or unknown request fields", () => {
   const validator = createContractValidator();
-  const receipt = JSON.parse(readFileSync(new URL("../../../implementation/evidence/S083-S084-SCHEMA-EXPORT-1.json", import.meta.url), "utf8")) as { artifacts: Array<{ path: string; schemaId: string; sha256: string }> };
+  const receipt = JSON.parse(readFileSync(new URL("../../../implementation/evidence/S083-S084-SCHEMA-EXPORT-2.json", import.meta.url), "utf8")) as { artifacts: Array<{ path: string; schemaId: string; sha256: string }> };
   for (const artifact of receipt.artifacts) {
     const bytes = readFileSync(new URL(`../../../${artifact.path}`, import.meta.url));
     assert.equal(createHash("sha256").update(bytes).digest("hex"), artifact.sha256);

@@ -202,6 +202,19 @@ export class UnderstandingRepository {
       return work;
     });
   }
+  /** Return an eligible, still-current attempt to the durable idle queue. */
+  requeue(scope:UnderstandingScope,id:string,reason:string):UnderstandingRecord|undefined {
+    return this.database.transaction(tx=>{
+      const row=tx.get<{payload:string}>(`SELECT payload_json AS payload FROM understanding_work WHERE scope_key=? AND work_id=? AND state IN ${pending}`,scopeKey(scope),id);
+      if(!row?.payload)return undefined;
+      const work=JSON.parse(row.payload) as UnderstandingRecord,now=this.now(),budget=work.budget as Record<string,number>,expires=Date.parse(String(work.expiresAt));
+      if(!Number.isFinite(expires)||expires<=now){work.state="expired";work.revision=Number(work.revision)+1;work.lastOutcome="expired";work.reason="Idle retry expired before current dependencies became available.";tx.run("UPDATE understanding_work SET state='expired',payload_json=? WHERE work_id=?",JSON.stringify(work),id);return undefined;}
+      const deadline=Math.min(now+Number(budget.jobDeadlineSeconds)*1000,expires-1);
+      if(!Number.isFinite(deadline)||deadline<=now){work.state="expired";work.revision=Number(work.revision)+1;work.lastOutcome="expired";work.reason="Idle retry could not receive a current bounded deadline.";tx.run("UPDATE understanding_work SET state='expired',payload_json=? WHERE work_id=?",JSON.stringify(work),id);return undefined;}
+      work.state="queued";work.revision=Number(work.revision)+1;work.deadlineAt=new Date(deadline).toISOString();work.lastOutcome="notRun";work.reason=reason;
+      valid(work,"UnderstandingWork",scope);tx.run("UPDATE understanding_work SET state='queued',deadline_ms=?,payload_json=? WHERE work_id=?",deadline,JSON.stringify(work),id);return structuredClone(work);
+    });
+  }
   finish(scope:UnderstandingScope,id:string,state:"cancelled"|"failed",reason:string):void {
     this.database.transaction(tx=>{const row=tx.get<{payload:string}>(`SELECT payload_json AS payload FROM understanding_work WHERE scope_key=? AND work_id=? AND state IN ${pending}`,scopeKey(scope),id);if(!row?.payload)return;const record=JSON.parse(row.payload);record.state=state;record.revision++;record.lastOutcome=state;record.reason=reason;tx.run("UPDATE understanding_work SET state=?,payload_json=? WHERE work_id=?",state,JSON.stringify(record),id);});
   }

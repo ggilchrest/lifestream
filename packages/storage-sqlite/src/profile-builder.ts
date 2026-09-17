@@ -21,6 +21,8 @@ export type ProfileBuilderJob = {
   sources: ProfileSource[]; snapshotDigest: string; candidateIds: string[]; createdAt: string; updatedAt: string;
   egress: "closed"; collectionAccess: "closed"; extractionVersion: "bounded-local-v1"; limits: typeof PROFILE_BUILDER_LIMITS;
   failure?: string; outcomes: Array<{ candidateId: string; status: "admitted" | "alreadyAdmitted" | "failed"; reason?: string }>;
+  /** Set only when a worker interruption left the pinned snapshot safe to resume. */
+  retryable?: boolean;
 };
 export type ExtractedRecord = { key: string; value: string; evidenceBasis: EvidenceBasis; eventAt: string | null; sensitivity: "personal" | "sensitive"; locator: string };
 export class ProfileBuilderError extends Error { readonly status: number; constructor(message: string, status = 422) { super(message); this.status = status; } }
@@ -57,14 +59,19 @@ export class ProfileBuilderRepository {
   constructor(database?: Database) {
     this.database = database ?? new Database({ path: ":memory:" });
     if (!database) this.database.migrate();
-    // Recovery never recreates file/collection capabilities or restarts a job.
-    for (const job of this.allJobs()) if (job.status === "extracting") this.saveJob({ ...job, revision: job.revision + 1, status: "failed", collectionAccess: "closed", failure: "Extraction interrupted by restart; explicitly resume the pinned snapshot or cancel", updatedAt: new Date().toISOString() });
+    // Recovery never recreates file/collection capabilities in place. It records
+    // that an interrupted extraction still has a pinned, local snapshot which
+    // may be resumed by the owning idle worker after current checks pass.
+    for (const job of this.allJobs()) if (job.status === "extracting") this.saveJob({ ...job, revision: job.revision + 1, status: "failed", collectionAccess: "closed", failure: "Extraction interrupted by restart; waiting for an idle worker to reprocess the pinned snapshot", retryable: true, updatedAt: new Date().toISOString() });
   }
   private allJobs(): ProfileBuilderJob[] { return (this.database.connection.prepare("SELECT payload_json FROM profile_builder_jobs").all() as { payload_json: string }[]).map((r) => JSON.parse(r.payload_json) as ProfileBuilderJob); }
   private saveJob(job: ProfileBuilderJob): void { this.database.connection.prepare("INSERT OR REPLACE INTO profile_builder_jobs (job_id,payload_json) VALUES (?,?)").run(job.jobId, JSON.stringify(job)); }
   private saveCandidate(candidate: ProfileCandidate): void { this.database.connection.prepare("INSERT OR REPLACE INTO profile_builder_candidates (candidate_id,job_id,payload_json) VALUES (?,?,?)").run(candidate.candidateId, candidate.jobId, JSON.stringify(candidate)); }
   getJob(jobId: string): ProfileBuilderJob | undefined { const row = this.database.connection.prepare("SELECT payload_json FROM profile_builder_jobs WHERE job_id=?").get(jobId) as { payload_json: string } | undefined; return row ? JSON.parse(row.payload_json) as ProfileBuilderJob : undefined; }
   listJobs(userId: string, relationshipId: string): ProfileBuilderJob[] { return this.allJobs().filter((j) => j.userId === userId && j.relationshipId === relationshipId).sort((a, b) => b.createdAt.localeCompare(a.createdAt)); }
+  listRecoverableJobs(): ProfileBuilderJob[] {
+    return this.allJobs().filter(job => job.status === "failed" && job.retryable === true && !!this.database.connection.prepare("SELECT 1 FROM profile_builder_snapshots WHERE job_id=?").get(job.jobId));
+  }
   getCandidate(candidateId: string): ProfileCandidate | undefined { const row = this.database.connection.prepare("SELECT payload_json FROM profile_builder_candidates WHERE candidate_id=?").get(candidateId) as { payload_json: string } | undefined; return row ? JSON.parse(row.payload_json) as ProfileCandidate : undefined; }
   getCandidates(jobId: string): ProfileCandidate[] { return (this.getJob(jobId)?.candidateIds ?? []).map((id) => this.getCandidate(id)).filter((c): c is ProfileCandidate => !!c); }
   private current(jobId: string, revision: number): ProfileBuilderJob { const job = this.getJob(jobId); ensure(job && job.revision === revision, "Builder job revision is stale", 409); return job!; }
@@ -90,7 +97,7 @@ export class ProfileBuilderRepository {
     ensure(snapshot, "Pinned snapshot is unavailable; explicitly collect a new selection", 409);
     const uploads = JSON.parse(snapshot!.payload_json) as ProfileUpload[];
     ensure(profileDigest(JSON.stringify(inventoryUploads(job.userId, uploads))) === job.snapshotDigest, "Pinned snapshot integrity failed", 409);
-    const next = { ...job, revision: job.revision + 1, status: "extracting" as const, updatedAt: new Date().toISOString() }; delete next.failure; this.saveJob(next); return { job: next, uploads };
+    const next = { ...job, revision: job.revision + 1, status: "extracting" as const, updatedAt: new Date().toISOString() }; delete next.failure; delete next.retryable; this.saveJob(next); return { job: next, uploads };
   }
   finishExtraction(jobId: string, revision: number, records: Array<{ source: ProfileSource; record: ExtractedRecord }>): ProfileBuilderJob {
     const job = this.current(jobId, revision); ensure(job.status === "extracting", "Job is no longer extracting", 409); ensure(records.length <= PROFILE_BUILDER_LIMITS.records, "Candidate count exceeds the bounded limit");
@@ -104,10 +111,11 @@ export class ProfileBuilderRepository {
     const next = { ...job, revision: job.revision + 1, status: "review" as const, candidateIds: [...new Set(candidates.map((c) => c.candidateId))], updatedAt: new Date().toISOString() };
     this.database.transaction(() => { for (const candidate of candidates) this.saveCandidate(candidate); this.saveJob(next); this.database.connection.prepare("DELETE FROM profile_builder_snapshots WHERE job_id=?").run(jobId); }); return next;
   }
-  fail(jobId: string, revision: number, reason: string): void { const job = this.getJob(jobId); if (job?.revision === revision && job.status === "extracting") this.saveJob({ ...job, revision: job.revision + 1, status: "failed", collectionAccess: "closed", failure: reason, updatedAt: new Date().toISOString() }); }
+  fail(jobId: string, revision: number, reason: string): void { const job = this.getJob(jobId); if (job?.revision === revision && job.status === "extracting") this.saveJob({ ...job, revision: job.revision + 1, status: "failed", collectionAccess: "closed", failure: reason, retryable: false, updatedAt: new Date().toISOString() }); }
+  interrupt(jobId: string, revision: number, reason = "Extraction interrupted; waiting for an idle worker to reprocess the pinned snapshot"): void { const job = this.getJob(jobId); if (job?.revision === revision && job.status === "extracting") this.saveJob({ ...job, revision: job.revision + 1, status: "failed", collectionAccess: "closed", failure: reason, retryable: true, updatedAt: new Date().toISOString() }); }
   cancel(jobId: string, revision: number): ProfileBuilderJob {
     const job = this.current(jobId, revision); ensure(job.status !== "review", "Reviewed jobs retain their per-candidate review history", 409);
-    const next = { ...job, revision: job.revision + 1, status: "cancelled" as const, collectionAccess: "closed" as const, updatedAt: new Date().toISOString() };
+    const next = { ...job, revision: job.revision + 1, status: "cancelled" as const, collectionAccess: "closed" as const, retryable: false, updatedAt: new Date().toISOString() };
     this.database.transaction(() => { this.database.connection.prepare("DELETE FROM profile_builder_snapshots WHERE job_id=?").run(jobId); this.saveJob(next); }); return next;
   }
   review(jobId: string, revision: number, actor: string, items: Array<{ candidateId: string; expectedRevision: number; decision: "approved" | "rejected"; value?: string; use?: { personalization: boolean; mention: boolean; training: false }; retainConflicts?: boolean }>): ProfileBuilderJob {

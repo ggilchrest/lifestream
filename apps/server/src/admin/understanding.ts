@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 import { createContractValidator } from "@lifestream/contracts";
 import { UnderstandingRepository, understandingDigest, hypothesisFingerprint, candidateFingerprint, type Database, type UnderstandingRecord, type UnderstandingScope } from "@lifestream/storage-sqlite";
 import type {HypothesisRejection,CandidateSuppression} from './recovery-journal.ts';
-import { UnderstandingWorkCoordinator } from "@lifestream/runtime/understanding/coordinator";
+import { UnderstandingWorkCoordinator, SHARED_PROVIDER_PREEMPTION_BOUND_MS, SHARED_PROVIDER_SLOT_RELEASE_BOUND_MS } from "@lifestream/runtime/understanding/coordinator";
 import {selectDiscoveryContext} from "./discovery-selection.ts";
 import { extensionError, type RelationshipConfiguration } from "../relationship-extensions.ts";
 
@@ -23,15 +23,20 @@ export class DiscoveryAdministration {
   readonly repository:UnderstandingRepository;
   private readonly coordinator=new UnderstandingWorkCoordinator({pressureAllowsWork:()=>process.memoryUsage().heapUsed<256*1024*1024});
   private readonly tasks=new Map<string,{relationshipId:string;scope:UnderstandingScope;promise:Promise<unknown>}>();
+  private readonly retryQueue=new Map<string,{relationshipId:string;scope:UnderstandingScope;run:()=>Promise<void>;attempt:number}>();
   private closed=false;
   private readonly inputLab=new DiscoveryInputLab();
   private readonly recent=new Map<string,{revision:number;ids:Map<string,number>}>();
   private readonly cleanupTimer:ReturnType<typeof setInterval>;
+  private readonly retryTimer:ReturnType<typeof setInterval>;
+  private readonly removeIdleListener:()=>void;
   private readonly host:DiscoveryHost;
   constructor(database:Database,host:DiscoveryHost){
     this.host=host;this.repository=new UnderstandingRepository(database);this.repository.recover();
     this.cleanupTimer=setInterval(()=>{try{this.repository.cleanupExpired();}catch{/* Expired data remains denied; retry bounded maintenance on the next interval. */}},30000);
     this.cleanupTimer.unref();
+    this.retryTimer=setInterval(()=>this.drainRetries(),1000);this.retryTimer.unref();
+    this.removeIdleListener=this.coordinator.onIdle(()=>this.drainRetries());
   }
   private recentKey(scope:UnderstandingScope,sessionId:string):string{return understandingDigest([scope.assistantId,scope.userId,scope.relationshipId,scope.deploymentId,sessionId]);}
   selectionRevision(scope:UnderstandingScope,sessionId?:string):number{return sessionId?this.recent.get(this.recentKey(scope,sessionId))?.revision??0:0;}
@@ -41,8 +46,23 @@ export class DiscoveryAdministration {
     while(entry.ids.size>32)entry.ids.delete(entry.ids.keys().next().value!);entry.revision++;this.recent.delete(key);this.recent.set(key,entry);while(this.recent.size>128)this.recent.delete(this.recent.keys().next().value!);
   }
   foregroundStarted():()=>void{return this.coordinator.foregroundStarted();}
-  close():void{if(this.closed)return;this.closed=true;this.inputLab.close();this.recent.clear();clearInterval(this.cleanupTimer);for(const [key,task] of this.tasks){this.coordinator.cancel(key);this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
-  invalidate(relationshipId:string):void{for(const [key,task]of this.tasks)if(task.relationshipId===relationshipId)this.coordinator.cancel(key);}
+  close():void{if(this.closed)return;this.closed=true;this.inputLab.close();this.recent.clear();clearInterval(this.cleanupTimer);clearInterval(this.retryTimer);this.removeIdleListener();this.retryQueue.clear();for(const [key,task] of this.tasks){this.coordinator.cancel(key,"shutdown");this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
+  invalidate(relationshipId:string):void{for(const [key,entry]of this.retryQueue)if(entry.relationshipId===relationshipId){this.retryQueue.delete(key);this.repository.finish(entry.scope,key,"cancelled","Current authorization or evidence changed; idle retry withheld.");}for(const [key,task]of this.tasks)if(task.relationshipId===relationshipId)this.coordinator.cancel(key,"scopeInvalidated");}
+  private queueRetry(key:string,entry:{relationshipId:string;scope:UnderstandingScope;run:()=>Promise<void>;attempt:number},reason:string):void {
+    if(this.closed)return;
+    const current=this.repository.work(entry.scope,key),configured=Number((current?.budget as Record<string,unknown>|undefined)?.automaticRetries),maximum=Number.isInteger(configured)&&configured>=0&&configured<=3?configured:0;
+    if(entry.attempt>=maximum){this.repository.finish(entry.scope,key,"failed",`Idle retry budget exhausted after ${entry.attempt} deferred attempts (${reason}).`);return;}
+    if(!this.repository.requeue(entry.scope,key,`Deferred while foreground work had priority; waiting for idle retry (${entry.attempt+1}/${maximum}).`))return;
+    this.retryQueue.set(key,{...entry,attempt:entry.attempt+1});
+    this.drainRetries();
+  }
+  private drainRetries():void {
+    if(this.closed||this.tasks.size>0||!this.coordinator.isIdle()||this.retryQueue.size===0)return;
+    const first=[...this.retryQueue.entries()][0];if(!first)return;
+    const [key,entry]=first;this.retryQueue.delete(key);
+    const promise=entry.run().finally(()=>{if(this.tasks.get(key)?.promise===promise)this.tasks.delete(key);if(this.retryQueue.size)this.drainRetries();});
+    this.tasks.set(key,{relationshipId:entry.relationshipId,scope:entry.scope,promise});
+  }
   records(scope:UnderstandingScope):UnderstandingRecord[]{return this.repository.list(scope,this.host.snapshot(scope).boundary);}
   private response(scope:UnderstandingScope,operation:string,records:UnderstandingRecord[],message:string,status=200):Result{
     const body={schemaVersion:"1.0.0",relationshipId:scope.relationshipId,operation,activeConfigurationId:this.host.snapshot(scope).configuration?.configurationId??null,records:records.slice(0,128),explanations:[{code:"discovery_status",summary:message,sourceRefs:[]}],activeStateChanged:false,executionMode:"live",nextCursor:null};
@@ -153,7 +173,7 @@ export class DiscoveryAdministration {
     if(request.purpose==="hypothesisAnalysis")return this.prepareAnalysis(scope,request,snapshot,settings,authorizationCurrent);
     const sources=request.sources as Source[],topic=String(request.topicRef),refs=[...new Set([...request.evidenceRefs as string[],...this.host.preferenceRefs?.(scope,topic)??[]])],budget=settings.budget;
     if(!sources.length)return extensionError(409,"acquisition_unavailable","No configured network acquisition capability is available. Select and supply authorized source material.");
-    const current=()=>!this.closed&&process.memoryUsage().heapUsed<budget.workerMemoryMiB!*1024*1024&&authorizationCurrent()&&snapshot.boundary===this.host.snapshot(scope).boundary&&this.host.evidenceAllowed(scope,refs)&&this.host.sourceAllowed(scope,topic)&&sources.every(source=>this.host.sourceAllowed(scope,source.sourceRef)&&this.host.sourceAllowed(scope,source.content));
+    const current=()=>!this.closed&&process.memoryUsage().heapUsed<budget.workerMemoryMiB!*1024*1024&&authorizationCurrent()&&snapshot.boundary===this.host.snapshot(scope).boundary&&this.host.evidenceAllowed(scope,refs)&&this.host.sourceAllowed(scope,topic)&&sources.every(source=>this.host.sourceAllowed(scope,source.sourceRef)&&this.host.sourceAllowed(scope,source.content)&&Date.parse(source.retrievedAt)+budget.briefFreshnessSeconds!*1000>Date.now());
     try{
       if(refs.length>24)throw new Error("Too many current evidence references");
       if(!current()||settings.excludedTopicRefs.includes(topic)||sources.some(source=>settings.excludedSourceRefs.includes(source.sourceRef)))throw new Error("Current source, evidence or topic use is denied");
@@ -174,9 +194,10 @@ export class DiscoveryAdministration {
       const admitted=this.repository.admit(scope,work,understandingDigest(request),understandingDigest([semanticRequest,snapshot.boundary]),snapshot.boundary,()=>current(),{share:settings.explorationShare,approvedTopicRefs:settings.approvedTopicRefs.filter(ref=>!settings.excludedTopicRefs.includes(ref)&&this.host.sourceAllowed(scope,ref))});
       if(admitted.replay)return this.response(scope,operation,[admitted.record],"Existing admission; no repeated preparation.");
       const key=String(work.workId);
-      const promise=new Promise<void>(resolve=>setImmediate(resolve)).then(async()=>{
+      const run=async(attempt:number):Promise<void>=>{
         if(this.closed)return;
-        const result=await this.coordinator.run({key,deadlineAt:Date.parse(String(work.deadlineAt)),current,admitOnce:()=>this.repository.start(scope,key),sharedInference:false,
+        const latest=this.repository.work(scope,key);if(!latest)return;
+        const result=await this.coordinator.run({key,deadlineAt:Date.parse(String(latest.deadlineAt)),current,admitOnce:()=>this.repository.start(scope,key),sharedInference:false,priority:"P1",
           steps:[async signal=>{
             if(signal.aborted||!current())throw new Error("Preparation cancelled");
             const permitted=(claim:Claim)=>claim.spoilerClass==="none"||settings.spoilerPolicy==="allow"||settings.spoilerPolicy==="throughKnownProgress"&&claim.spoilerClass==="withinDeclaredProgress"&&!!settings.progressBoundaryRef;
@@ -187,23 +208,29 @@ export class DiscoveryAdministration {
             const brief:UnderstandingRecord={...scope,schemaVersion:"1.0.0",recordType:"topicBrief",briefId:randomUUID(),revision:1,topicRef:topic,derived:true,status:"prepared",sources:sources.map(({content:_content,claims:_claims,aliasClaims:_aliases,knowledgeGaps:_gaps,topicRef:_topic,...source})=>({...source,kind:"providedFixture"})),claims,aliasClaims,knowledgeGaps:[...new Set(sources.flatMap(source=>source.knowledgeGaps))].slice(0,16),deeperMaterialRefs:[],builtAt:new Date().toISOString(),freshUntil:new Date(freshUntil).toISOString(),compilerRef:"provided-source-attribution:1",dependencyRefs,configurationRef};
             return brief;
           }],publish:brief=>this.repository.publish(scope,key,snapshot.boundary,[brief,...compileDiscoveryCandidates(brief,snapshot.boundary,Date.now(),evidence)],()=>current())});
+        // A preemption is retryable only while the pinned source, authorization,
+        // evidence and boundary are still current.  A foreground turn can abort
+        // the provider at the same time that privacy or evidence revocation is
+        // observed; stale dependencies always win and become terminal.
+        if(!this.closed&&result.state!=="published"&&current()&&["foregroundPreempted","foregroundOrCapacity","deferredP2","capacityPressure"].includes(result.reason)){this.queueRetry(key,{relationshipId:scope.relationshipId,scope,run:()=>run(attempt+1),attempt},result.reason);return;}
         if(!this.closed&&result.state!=="published")this.repository.finish(scope,key,result.state==="failed"?"failed":"cancelled",result.reason);
         if(!this.closed&&result.state==="published")this.host.changed();
-      }).catch(()=>{if(!this.closed)this.repository.finish(scope,key,"failed","Preparation failed without publication or automatic retry.");}).finally(()=>this.tasks.delete(key));
-      this.tasks.set(key,{relationshipId:scope.relationshipId,scope,promise});
+      };
+      const promise=new Promise<void>(resolve=>setImmediate(resolve)).then(()=>run(0)).catch(()=>{if(!this.closed)this.repository.finish(scope,key,"failed","Preparation failed without publication.");});
+      this.tasks.set(key,{relationshipId:scope.relationshipId,scope,promise});void promise.finally(()=>{if(this.tasks.get(key)?.promise===promise)this.tasks.delete(key);if(this.retryQueue.size)this.drainRetries();});
       return this.response(scope,operation,[work],"Preparation admitted. Refresh to inspect its observed terminal result.",202);
     }catch(error){return extensionError(409,"discovery_admission_denied",error instanceof Error?error.message:"Discovery admission denied");}
   }
   private prepareAnalysis(scope:UnderstandingScope,request:Record<string,unknown>,snapshot:Snapshot,settings:Settings,authorizationCurrent:()=>boolean):Result {
     const selectedPort=this.host.analysis?.(),port=selectedPort?{...selectedPort}:undefined;
-    if(!port||port.preemptionBoundMs===undefined||!Number.isFinite(port.preemptionBoundMs)||port.preemptionBoundMs<0||port.preemptionBoundMs>10)return extensionError(409,"provider_priority_unverified","Optional model analysis is withheld until shared-provider cancellation and next-turn latency are qualified. Supplied-source preparation remains available.");
+    if(!port||port.preemptionBoundMs===undefined||!Number.isFinite(port.preemptionBoundMs)||port.preemptionBoundMs<0||port.preemptionBoundMs>SHARED_PROVIDER_PREEMPTION_BOUND_MS||port.slotReleaseBoundMs===undefined||!Number.isFinite(port.slotReleaseBoundMs)||port.slotReleaseBoundMs<0||port.slotReleaseBoundMs>SHARED_PROVIDER_SLOT_RELEASE_BOUND_MS)return extensionError(409,"provider_priority_unverified","Optional model analysis is withheld until shared-provider cancellation and slot-release bounds are qualified. Supplied-source preparation remains available.");
     try {
       const budget=settings.budget,refs=request.evidenceRefs as string[],topic=String(request.topicRef);
       if(!refs.length||refs.length>24||!this.host.evidence||budget.analysisCallsPerJob!<1||!settings.policyRefs.length||settings.excludedTopicRefs.includes(topic))throw new Error("Current evidence, topic policy and analysis budget are required");
       if(settings.researchMode==="approvedTopics"&&!settings.approvedTopicRefs.includes(topic))throw new Error("Topic is not approved");
       if((request.sources as unknown[]).length)throw new Error("Prepare supplied sources separately; hypothesis analysis consumes scoped personal evidence without acquiring topic material");
       const evidence=this.host.evidence(scope,refs);if(evidence.length!==refs.length||new Set(refs).size!==refs.length||new Set(evidence.map(item=>item.ref)).size!==refs.length||evidence.some(item=>!refs.includes(item.ref)))throw new Error("Some selected evidence is unavailable");
-      const current=()=>{const livePort=this.host.analysis?.();return !this.closed&&authorizationCurrent()&&snapshot.boundary===this.host.snapshot(scope).boundary&&livePort?.identity===port.identity&&livePort?.preemptionBoundMs===port.preemptionBoundMs&&this.host.evidenceAllowed(scope,refs)&&this.host.sourceAllowed(scope,topic)&&process.memoryUsage().heapUsed<budget.workerMemoryMiB!*1024*1024;};
+      const current=()=>{const livePort=this.host.analysis?.(),liveEvidence=this.host.evidence?.(scope,refs)??[];return !this.closed&&authorizationCurrent()&&snapshot.boundary===this.host.snapshot(scope).boundary&&livePort?.identity===port.identity&&livePort?.preemptionBoundMs===port.preemptionBoundMs&&livePort?.slotReleaseBoundMs===port.slotReleaseBoundMs&&liveEvidence.length===evidence.length&&liveEvidence.every((item,index)=>item.ref===evidence[index]?.ref&&item.revision===evidence[index]?.revision&&item.content===evidence[index]?.content)&&this.host.evidenceAllowed(scope,refs)&&this.host.sourceAllowed(scope,topic)&&process.memoryUsage().heapUsed<budget.workerMemoryMiB!*1024*1024;};
       if(!current())throw new Error("Current analysis scope denied");
       const now=Date.now(),key=randomUUID(),configurationRef=`relationship-configuration:${snapshot.configuration!.configurationId}:${snapshot.configuration!.revision}`;
       const dependencyRefs=[`snapshot:${snapshot.boundary}`,`analysis-provider:${understandingDigest(port.identity)}`,...evidence.map(e=>`evidence:${e.ref}:${e.revision}`)];
@@ -211,15 +238,18 @@ export class DiscoveryAdministration {
       const {idempotencyKey:_key,...semantic}=request;
       const admitted=this.repository.admit(scope,work,understandingDigest(request),understandingDigest([semantic,snapshot.boundary,port.identity]),snapshot.boundary,()=>current(),{share:settings.explorationShare,approvedTopicRefs:settings.approvedTopicRefs.filter(ref=>!settings.excludedTopicRefs.includes(ref)&&this.host.sourceAllowed(scope,ref))});
       if(admitted.replay)return this.response(scope,"prepare",[admitted.record],"Existing analysis admission; no repeated provider call.");
-      const promise=new Promise<void>(resolve=>setImmediate(resolve)).then(async()=>{
+      const run=async(attempt:number):Promise<void>=>{
         if(this.closed)return;
-        const result=await this.coordinator.run({key,deadlineAt:Date.parse(String(work.deadlineAt)),current,admitOnce:()=>this.repository.start(scope,key),sharedInference:true,providerPreemptionBoundMs:port.preemptionBoundMs!,
-          steps:[async signal=>(await analyzeDiscoveryEvidence({scope,topicRef:topic,workId:key,configurationRef,dependencyRefs,evidence,port,maximumOutputTokens:budget.outputTokensPerCall!,maximumInputBytes:Math.min(budget.inputBytesPerJob!,budget.sourceTokensPerJob!),deadlineAt:String(work.deadlineAt),signal,current})).record],
+        const latest=this.repository.work(scope,key);if(!latest)return;
+        const result=await this.coordinator.run({key,deadlineAt:Date.parse(String(latest.deadlineAt)),current,admitOnce:()=>this.repository.start(scope,key),sharedInference:true,priority:"P2",providerPreemptionBoundMs:port.preemptionBoundMs!,providerSlotReleaseBoundMs:port.slotReleaseBoundMs!,
+          steps:[async signal=>(await analyzeDiscoveryEvidence({scope,topicRef:topic,workId:key,configurationRef,dependencyRefs,evidence,port,maximumOutputTokens:budget.outputTokensPerCall!,maximumInputBytes:Math.min(budget.inputBytesPerJob!,budget.sourceTokensPerJob!),deadlineAt:String(latest.deadlineAt),signal,current})).record],
           publish:record=>this.repository.publish(scope,key,snapshot.boundary,[record,...compileDiscoveryCandidates(record,snapshot.boundary)],()=>current())});
+        if(!this.closed&&result.state!=="published"&&current()&&["foregroundPreempted","foregroundOrCapacity","deferredP2","capacityPressure"].includes(result.reason)){this.queueRetry(key,{relationshipId:scope.relationshipId,scope,run:()=>run(attempt+1),attempt},result.reason);return;}
         if(!this.closed&&result.state!=="published")this.repository.finish(scope,key,result.state==="failed"?"failed":"cancelled",result.reason);
         if(!this.closed&&result.state==="published")this.host.changed();
-      }).catch(()=>{if(!this.closed)this.repository.finish(scope,key,"failed","Analysis failed without publication or automatic retry.");}).finally(()=>this.tasks.delete(key));
-      this.tasks.set(key,{relationshipId:scope.relationshipId,scope,promise});return this.response(scope,"prepare",[work],"Analysis admitted. Its explanations remain tentative and require review.",202);
+      };
+      const promise=new Promise<void>(resolve=>setImmediate(resolve)).then(()=>run(0)).catch(()=>{if(!this.closed)this.repository.finish(scope,key,"failed","Analysis failed without publication.");});
+      this.tasks.set(key,{relationshipId:scope.relationshipId,scope,promise});void promise.finally(()=>{if(this.tasks.get(key)?.promise===promise)this.tasks.delete(key);if(this.retryQueue.size)this.drainRetries();});return this.response(scope,"prepare",[work],"Analysis admitted. Its explanations remain tentative and require review.",202);
     }catch(error){return extensionError(409,"analysis_admission_denied",error instanceof Error?error.message:"Analysis admission denied");}
   }
   select(scope:UnderstandingScope,input:string,audience:"authenticatedSession"|"unknown",remainingBytes:number,sessionId?:string){

@@ -74,12 +74,11 @@ test("LS-TEST-101 authenticated HTTP intake executes snapshot, extraction, granu
   assert.equal((await fetch(base + '/control/profile-builder.js')).status, 200);
 });
 
-test("LS-TEST-101 explicit resume executes the pinned local snapshot after worker restart", async t => {
+test("LS-TEST-101 idle recovery executes the pinned local snapshot after worker restart", async t => {
   const repository = new ProfileBuilderRepository(); t.after(() => repository.database.close()); const scope = { userId: "resuming-user", assistantId: "resuming-assistant", relationshipId: "resuming-relationship", revision: 1 };
   const files = [upload({ content: "A bounded statement." })]; let job = repository.createJob(scope, files); job = repository.snapshot(job.jobId, job.revision, files); repository.beginExtraction(job.jobId, job.revision);
   const recovered = new ProfileBuilderRepository(repository.database); const admin = new ProfileBuilderAdmin(recovered); t.after(() => admin.close()); job = recovered.getJob(job.jobId)!; assert.equal(job.status, "failed"); assert.equal(job.collectionAccess, "closed");
-  assert.equal(admin.handle("POST", [job.jobId, "resume"], scope.userId, scope, { expectedRevision: job.revision }, () => {}).status, 202);
-  for (let i = 0; i < 100 && recovered.getJob(job.jobId)?.status === "extracting"; i++) await setTimeout(10);
+  for (let i = 0; i < 100 && ["failed", "extracting"].includes(recovered.getJob(job.jobId)?.status ?? ""); i++) await setTimeout(10);
   assert.equal(recovered.getJob(job.jobId)?.status, "review"); assert.equal(recovered.getCandidates(job.jobId)[0]?.status, "inactive"); assert.equal(recovered.getCandidates(job.jobId)[0]?.value, "A bounded statement.");
 });
 

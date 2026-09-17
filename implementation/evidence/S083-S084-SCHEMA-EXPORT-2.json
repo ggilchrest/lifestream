@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0.0",
+  "approval": "2026-09-17 continuation: automatic idle retry budget and recovery policy",
+  "scope": "Exact S083/S084 machine schemas only",
+  "artifacts": [
+    {
+      "path": "packages/contracts/src/schemas/relational-initiative.schema.json",
+      "schemaId": "https://lifestream.dev/contracts/relational-initiative/1.0.0",
+      "sha256": "09c6de6ac082f3262e65ce1a67cde12b0dcc1ccdff62b269747a6074b838a3af",
+      "bytes": 22029
+    },
+    {
+      "path": "packages/contracts/src/schemas/initiative-api.schema.json",
+      "schemaId": "https://lifestream.dev/contracts/initiative-api/1.0.0",
+      "sha256": "e98e0dfccde369800b25b023101563223879634285fc0fb71169c706745be979",
+      "bytes": 25318
+    },
+    {
+      "path": "packages/contracts/src/schemas/personal-understanding.schema.json",
+      "schemaId": "https://lifestream.dev/contracts/personal-understanding/1.0.0",
+      "sha256": "78396cc87a7a3290c806806c98ba43a65517f366e00b093cec91b81e5a90c484",
+      "bytes": 39507
+    },
+    {
+      "path": "packages/contracts/src/schemas/understanding-api.schema.json",
+      "schemaId": "https://lifestream.dev/contracts/understanding-api/1.0.0",
+      "sha256": "cc8bfc499782fc4cfb7104900c2b95f8c1c13d51690ce143a4d4e78a88684450",
+      "bytes": 26399
+    }
+  ],
+  "unchangedDependency": {
+    "id": "https://lifestream.dev/contracts/protocol-common/1.0.0",
+    "sha256": "d7bdc15c51875828b6b72dbbdf7b849856afdc9b2b66c0fbff479e84ba60b0d6",
+    "export": false
+  },
+  "exclusions": [
+    "Private prose",
+    "Private fixtures",
+    "Personal data",
+    "Credentials"
+  ],
+  "claim": "Byte-for-byte export for the continuation contract; prior receipt remains historical.",
+  "supersedes": "S083-S084-SCHEMA-EXPORT-1.json"
+}
