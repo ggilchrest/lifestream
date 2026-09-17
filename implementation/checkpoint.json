@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
-  "branch": "codex/recovery-human-review",
+  "branch": "main",
   "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
-  "currentRevision": "473dc61fb5d483c3d43787fe42fd522574a06fe2",
+  "currentRevision": "7f4dec5503bec70cbe41f4743b94ba1d97c36ad2",
   "activeSlice": "LS-S084",
   "sliceStatus": "blocked",
   "completedSlices": [
@@ -421,6 +421,36 @@
       "command": "Read-only SSH ai5090 service-port check (inference 30000, STT 8080, TTS 8787)",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S081-ai5090-health-20260916.json"
+    },
+    {
+      "command": "node scripts/check-pwce-host-process.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-HOST-ACTION-RECHECK-20260916.json"
+    },
+    {
+      "command": "node scripts/check-pwce-host-approval.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-HOST-ACTION-RECHECK-20260916.json"
+    },
+    {
+      "command": "PWCE_HOST_APPROVAL_RESUME=1 node scripts/check-pwce-host-approval.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-HOST-ACTION-RECHECK-20260916.json"
+    },
+    {
+      "command": "pnpm build && pnpm test && pnpm lint",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-HOST-ACTION-RECHECK-20260916.json"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-HOST-ACTION-RECHECK-20260916.json"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S028-HOST-ACTION-RECHECK-20260916.json"
     }
   ],
   "decisions": [
@@ -445,14 +475,17 @@
     "2026-09-16: S083-TIMING-ADAPTATION-2 records the current clean Discovery Lab regression at source revision 6c998fe and private specification revision af10bc8; the exact 3/3 test and 906/906 source suite pass. The predecessor timing failure remains immutable, and selected-provider LS-TEST-106 remains stopped by HTTP 503.",
     "2026-09-16: S083-CODE-ALIGNMENT-1 and S084-CODE-ALIGNMENT-1 record current code-path alignment evidence for the applicable specification rows at source revision 6c998fe. Focused S083 and S084 suites pass 43/43 and 44/44; the fixture LS-TEST-106 journey passes 1/1. Selected-provider and Human gates remain open.",
     "2026-09-16: ai5090 selected-provider LS-TEST-106 joined rerun completed at public revision 473dc61; all application/privacy/isolation assertions passed. Model-quality tracking recorded 18 exact and 1 missing-complete-identifier sample as nonblocking under the operator direction; the prior HTTP 503 and omission receipts remain immutable.",
-    "2026-09-16: Read-only SSH inspection found all three configured ai5090 service ports listening (30000 inference, 8080 STT, 8787 TTS); no service or configuration mutation was performed."
+    "2026-09-16: Read-only SSH inspection found all three configured ai5090 service ports listening (30000 inference, 8080 STT, 8787 TTS); no service or configuration mutation was performed.",
+    "2026-09-16: operator directed continued development while deferring ai5090 testing until the service is available again; current PWCE host/action recheck used only disposable synthetic fixtures and no selected-provider call.",
+    "2026-09-16: SYNPRJ_Q7M4 model-quality telemetry remains nonblocking and append-only; no new selected-provider run was made during this continuation."
   ],
   "blockers": [
-    "Optional provider-backed hypothesis analysis remains withheld pending a qualified shared-provider cancellation/priority bound; this is an explicit S084 capability boundary, not a failure of the local path.",
-    "Protected external-authority, all-conditions performance, production and physical/perceptual output gates remain outside the current authorization."
+    "Selected-provider ai5090 inference/STT/TTS qualification is deferred because the service is offline; do not run that path until it returns.",
+    "Optional provider-backed Discovery analysis remains withheld until a selected shared-provider cancellation/slot-release qualification exists.",
+    "Protected external-authority, production, physical/perceptual output and any new Human acceptance gates remain outside the current authorization."
   ],
-  "nextAction": "No further authorized technical-core gap remains in this recovery. Preserve the selected-provider LS-TEST-106 pass and model-quality history; resume only for a separately authorized external gate or additional S083/S084 scope.",
-  "updatedAt": "2026-09-16T23:46:00.000Z",
+  "nextAction": "Resume selected-provider and model-quality qualification when ai5090 is available; until then preserve historical SYNPRJ_Q7M4 telemetry and continue only separately authorized provider-independent work.",
+  "updatedAt": "2026-09-17T03:58:54.000Z",
   "updatedBy": "Codex",
-  "notes": "S083 timing adaptation now has a current successor receipt: the exact Discovery Lab regression is 3/3 with no failed comparison checks, while the earlier 29.345875 ms deadline miss remains immutable. S083-CODE-ALIGNMENT-1 records current local Initiative policy, delivery, timing, administration and regression evidence. S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/1000/10000/100000-record corpus benchmarks are component-verified; S084-CODE-ALIGNMENT-1 records the current local analysis, candidate, correction, Lab and bounded-selection paths. Clean full application suite is 906/906 and browser fixture suite is 49/49. The reviewed imported-declaration qualifier stays within the conservative optional context bound for hash-length candidate IDs, with durable evidence in S084-PREPARED-CONTEXT-QUALIFIER-1. Selected-provider successors for LS-S073, LS-S076, LS-S078 and LS-S080 pass their bounded text cases; current S080 synthetic audio privacy also passes. The current S081 independent isolation continuation and full selected-provider joined LS-TEST-106 rerun pass. The joined successor records 18 exact and 1 missing-complete-identifier model-quality observations; identifier compliance remains nonblocking by explicit operator direction. Earlier 503 and omission reports remain immutable. Optional provider-backed analysis, protected-authority, performance-under-all-conditions, production and combined external physical/perceptual gates remain outside this authorization."
+  "notes": "S083 timing adaptation now has a current successor receipt: the exact Discovery Lab regression is 3/3 with no failed comparison checks, while the earlier 29.345875 ms deadline miss remains immutable. S083-CODE-ALIGNMENT-1 records current local Initiative policy, delivery, timing, administration and regression evidence. S084 grounded connections, dimension-aware selection, hypothesis-dependent invalidation, final prepared-context bounding and the current 100/1000/10000/100000-record corpus benchmarks are component-verified; S084-CODE-ALIGNMENT-1 records the current local analysis, candidate, correction, Lab and bounded-selection paths. Clean full application suite is 911/911 and the current fixture/browser evidence remains preserved separately. The reviewed imported-declaration qualifier stays within the conservative optional context bound for hash-length candidate IDs, with durable evidence in S084-PREPARED-CONTEXT-QUALIFIER-1. Selected-provider successors for LS-S073, LS-S076, LS-S078 and LS-S080 pass their bounded text cases; current S080 synthetic audio privacy also passes. The current S081 independent isolation continuation and full selected-provider joined LS-TEST-106 rerun pass. The joined successor records 18 exact and 1 missing-complete-identifier model-quality observations; identifier compliance remains nonblocking by explicit operator direction. Earlier 503 and omission reports remain immutable. Optional provider-backed analysis, protected-authority, performance-under-all-conditions, production and combined external physical/perceptual gates remain outside this authorization."
 }
