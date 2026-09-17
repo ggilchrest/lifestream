@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "LS-S028-HOST-ACTION-RECHECK-20260916",
+  "slice": "LS-S028",
+  "status": "componentVerified",
+  "sourceRevision": "b96736fe5351065d36725b64b04c8c8e2665a46e",
+  "producerRevision": "86a899b9a4a35d8bf96b96b1cb83c9274bd49c53",
+  "recordedAt": "2026-09-16T00:00:00.000Z",
+  "sourceBinding": {
+    "kind": "baseline-plus-file-digests",
+    "enclosingCommitContainsImplementation": true,
+    "files": [
+      {"path": "apps/server/src/authority/pwce-action-preparation.ts", "sha256": "9db70e2bb17909c4e0d51eb416a8170ab2abad552ab986ec939eeddd901d9ad5"},
+      {"path": "apps/server/src/index.ts", "sha256": "00eb168dc390385da7f11d849123d2ae0666a331beab8afa00bd2ebefd2ca4bf"},
+      {"path": "apps/control-web/pwce-actions.js", "sha256": "f5074cd80dfbfde622bfb5f0416ecdb4ab6dd2916b28d9bf2f7fffe5c85aa23c"},
+      {"path": "scripts/check-pwce-host-process.mjs", "sha256": "7f41723907a22ff028169f6d3fe1a241b3fcf2a246c0270b806ced0dff57a8dc"},
+      {"path": "scripts/check-pwce-host-approval.mjs", "sha256": "987886d30a3ed7fd88b503eaa799471c87eebfdde3a208b9fd9c6838f213720b"}
+    ]
+  },
+  "claim": "The current Lifestream PWCE action path remains provider-independent and is verified against an isolated disposable PWCE HTTP producer. Read-only host discovery and preparation retain the original scope and exact arguments without local-grant fallback. Approval-required requests reserve one durable producer request and recover a lost reply; approved resume binds the original review, admits once, invokes one synthetic target and preserves duplicate/restart fences.",
+  "checks": [
+    {"command": "node scripts/check-pwce-host-process.mjs", "result": "pass", "evidence": "19 authenticated discovery/preparation checks; zero synthetic target calls; no dispatch activation."},
+    {"command": "node scripts/check-pwce-host-approval.mjs", "result": "pass", "evidence": "11 authenticated approval/recovery checks; two approval posts; zero target calls when resume is disabled."},
+    {"command": "PWCE_HOST_APPROVAL_RESUME=1 node scripts/check-pwce-host-approval.mjs", "result": "pass", "evidence": "15 approved-resume checks; four dispatch posts; one synthetic target call; duplicate/restart recovery preserved."},
+    {"command": "pnpm build && pnpm test && pnpm lint", "result": "pass", "evidence": "Current source build, 911 tests and lint completed successfully."},
+    {"command": "node --test scripts/workspace.test.mjs", "result": "pass", "evidence": "43 workspace/evidence-discipline checks passed."},
+    {"command": "npm --prefix .private run validate", "result": "pass", "evidence": "Private specification validation passed: 119 JSON files, 40 Markdown files and 53 validation tests."}
+  ],
+  "limitations": [
+    "The PWCE producer and target are disposable synthetic fixtures; no physical or external effect was performed.",
+    "This is component and isolated HTTP integration evidence, not selected-provider qualification, production readiness or new Human acceptance.",
+    "ai5090 inference/STT/TTS qualification is intentionally deferred while that service is offline; no 5090 call was made by these checks.",
+    "The control-page browser path remains separate from this non-browser process check and requires the existing Playwright environment when resumed."
+  ],
+  "disposition": "continue"
+}
