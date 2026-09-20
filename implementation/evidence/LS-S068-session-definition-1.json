@@ -1,0 +1,215 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "structured-session-settings-component",
+  "recordedAt": "2026-09-20T20:58:24.847Z",
+  "sourceRevision": "ba765738f938127feddfecf9b2ea6781f2b4c8da",
+  "specificationRevision": "d638e3e7db5372592ec5da7c00b49009045948f4",
+  "behavior": [
+    "A bounded JSON definition composes the existing session text/audio mode and disclosure operation; it creates no parallel settings store.",
+    "Preview validates strict fields and types without mutation. Explicit apply pins the definition, session revision and runtime boundary, atomically revises the current sign-in and fences stale input/output.",
+    "CSRF, current administration and audience checks protect read/preview/apply; credentials and physical-device/authority/identity/voice/appearance settings cannot be imported.",
+    "Download exports only current settings. Editing invalidates preview; privacy/auth changes clear draft and delayed responses; successful revision acknowledgement survives conservative audience revalidation.",
+    "Same-endpoint sign-ins remain independent across restart. Logical audio mode does not start capture or playback."
+  ],
+  "checks": {
+    "source": {
+      "passed": 989,
+      "skipped": 0,
+      "durationMs": 58936.959667
+    },
+    "serialBrowser": {
+      "passed": 73,
+      "skipped": 0,
+      "durationMs": 207885.779667
+    },
+    "workspace": {
+      "passed": 44,
+      "skipped": 0,
+      "durationMs": 19091.138167
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "privateValidation": "pass",
+    "workspaceCheck": "pass",
+    "actualNative": {
+      "at": "2026-09-20T20:55:27.612Z",
+      "status": "verified",
+      "sourceRevision": "ba765738f938127feddfecf9b2ea6781f2b4c8da",
+      "nativeSourceRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+      "checks": [
+        "Fresh native session uses visible setup and structured definition controls",
+        "Preview leaves revision unchanged",
+        "Explicit apply changes only this sign-in and shows the acknowledged revision",
+        "Desktop/mobile layout without horizontal overflow",
+        "Shared audience clears editor and preview",
+        "Normal sign-out"
+      ],
+      "scope": "Actual authenticated candidate and packaged native UI. Temporary session disclosure only; endpoint defaults unchanged. No provider generation, capture, playback, learning or Human acceptance.",
+      "errors": [],
+      "humanAcceptance": false
+    },
+    "genericArchive": {
+      "recordedAt": "2026-09-20T20:55:13.843695+00:00",
+      "sourceRevision": "ba765738f938127feddfecf9b2ea6781f2b4c8da",
+      "archiveSha256": "48d6397c8ac2fe24f07185d36b809500064922ffb6455a3a1c6dc8affa25e740",
+      "archiveBytes": 18780160,
+      "members": 1285,
+      "privatePackageHashMatches": 0,
+      "privateOrMediaPaths": [],
+      "status": "verified",
+      "priorReceipts": [
+        "generic-clean-package.json",
+        "generic-clean-package-2.json",
+        "generic-clean-package-3.json",
+        "generic-clean-package-4.json",
+        "generic-clean-package-5.json",
+        "generic-clean-package-6.json",
+        "generic-clean-package-7.json"
+      ],
+      "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+      "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+      "build": "pnpm build",
+      "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+      "runtimeChecks": {
+        "passwordSetup": true,
+        "initialAudienceProtected": true,
+        "privatePackageCount": 0,
+        "neutralAvailable": true,
+        "fixtureConversation": true,
+        "effectiveConfiguration": true,
+        "presentationSelfContext": true,
+        "structuredSessionDefinition": true,
+        "profileTopicControls": 6,
+        "pageErrors": []
+      }
+    },
+    "visualReview": "Agent inspected actual native desktop and narrow-viewport screenshots; no horizontal overflow or clipped controls."
+  },
+  "guide": {
+    "at": "2026-09-20T20:46:56.892Z",
+    "version": "2026-09-20.v16",
+    "journeys": 17,
+    "actions": 158,
+    "links": 23,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "8e62484003a547d5fc9dcf1646364fafb5e60f5b1c92e8e2e56dbda2acc7071c",
+    "validation": "Static structure, unique/sequential action identifiers and named targets pass. Last full browser/visual guide check remains v13; file URL policy denied reopening. No workaround used.",
+    "humanAcceptance": false
+  },
+  "retainedFailures": [
+    "Baseline endpoint returned 404 before implementation.",
+    "Initial error class used a TypeScript parameter property unsupported by strip-only runtime; replaced with an explicit property.",
+    "Initial rendered preview used the wrong API helper calling convention; fixed actual POST wiring.",
+    "Apply acknowledgement was cleared by the existing conservative audience refresh; successful revision metadata now survives revalidation while private draft/preview are still cleared.",
+    "Pending-turn test initially expected interrupted text; actual canonical result was runtime_input_stale with zero late text or completion. Corrected assertion preserves the real terminal contract.",
+    "First full browser run: 71/73. Acknowledgment sampling assumed wall-clock delay guaranteed AudioContext progress; successor waits on the actual playback clock and verifies the cue at its observed offset. Fresh setup now waits for workspace readiness and asserts enrollment success. Original setup timeout root cause remains unproven. Focused 5/5 and full 73/73 successors pass."
+  ],
+  "exclusions": [
+    "This bounded session definition is not the whole LS-TEST-086 presence/override/handoff rubric.",
+    "Actual linked-session handoff and source-stop/audio-owner confirmation remain open.",
+    "Current ai5090 inference/STT unavailable, TTS healthy; no shared service restart or replacement.",
+    "Guide v16 static only; last full guide browser/visual check remains v13 under file URL policy.",
+    "Original 24 Human-accepted journeys, provider/performance/physical/Human criteria and recovery boundaries remain unchanged. No capture, personal learning, publication or pushes."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "session-definition-before.log",
+      "sha256": "510ad8a46cba1cb17f5adfa31c3a3dc3dd96a38a64c6060d787a92e120a81072"
+    },
+    {
+      "name": "session-definition-http.log",
+      "sha256": "47994876513e7e324ed430e8aea8021c4fd07650da1c136bbbc3e82fda320121"
+    },
+    {
+      "name": "session-definition-http-2.log",
+      "sha256": "2de78d1bd708bfd5c063eaeb275c3523b1ce46244a3bca4d5cb82e395e50208b"
+    },
+    {
+      "name": "session-definition-http-3.log",
+      "sha256": "4db013b1cd2ae9ab53ff934843ea3da5895ed91a49346d8a111fd2e74fe7ab8c"
+    },
+    {
+      "name": "session-definition-http-4.log",
+      "sha256": "063d3f4a4e8c31b87ef5ec9b43de05da6f82647590ffafb417b465ec0fd5f6dc"
+    },
+    {
+      "name": "session-definition-http-5.log",
+      "sha256": "412aeb342b9c50da619737bc91f598211acf80e8ea3f622f2fbac7a04676b37d"
+    },
+    {
+      "name": "session-definition-source-final.log",
+      "sha256": "8541e4dde3acda4bc4f9ea3696539cec9a3bc9aa50c466111bbe667c8b991850"
+    },
+    {
+      "name": "session-definition-browser.log",
+      "sha256": "cc0aabd1f254d040582394f68725ac17599af59300abe68277a531a46b7336f2"
+    },
+    {
+      "name": "session-definition-browser-2.log",
+      "sha256": "46cffd48d44e4834f642d568beb22222fd491aaa553d47a1f9991cbdd324dd09"
+    },
+    {
+      "name": "session-definition-browser-3.log",
+      "sha256": "5cef9aaa7d8f502846a0604b542bbd575b1fa420684af791e5b30871656bb44a"
+    },
+    {
+      "name": "session-definition-browser-4.log",
+      "sha256": "843accc7dc58a722b4e4866ef0d6107f77159b8ee0866d701c9de46f69bc424e"
+    },
+    {
+      "name": "session-definition-browser-all.log",
+      "sha256": "573634b0457fd1b1cbace5238e7bd24dd4e16af7da662fe82f3fecb7ca45d363"
+    },
+    {
+      "name": "session-definition-browser-successor-focused.log",
+      "sha256": "14bbbe98e8616fed6f9f1db8fd1fd3607f2fc579f198ef067f4dff081a531b56"
+    },
+    {
+      "name": "session-definition-browser-all-2.log",
+      "sha256": "ef3677b0bd1a0a06775c60bc549fa0fa21ac85c66ba372ace87196c8911495ff"
+    },
+    {
+      "name": "session-definition-typecheck-final-2.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "session-definition-build-final-2.log",
+      "sha256": "c958569cc3185fd81a651f4f474169f6bae3f278e4e8707d992064ed52305110"
+    },
+    {
+      "name": "session-definition-lint-final-2.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "session-definition-private-final.log",
+      "sha256": "cc016e2eed62c12b16fa8c33858c30a223f197865cdd0eb4fbc954766c15a3b8"
+    },
+    {
+      "name": "session-definition-workspace-check-final.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "name": "session-definition-workspace-tests.log",
+      "sha256": "2930bcdba95f438a27ba6badf6e01d4755e579cad3258e566f765afd4cd9d6e2"
+    },
+    {
+      "name": "native-session-definition.json",
+      "sha256": "664ce7e1e4954d18541afb9ea2f857d84632e76fe67007718b38df4dd71616cf"
+    },
+    {
+      "name": "generic-clean-package-12.json",
+      "sha256": "c1db6bec63f9a3b27feb3478fceb49ce9265b1decac223857f0a8c0f3ad4dcbc"
+    },
+    {
+      "name": "v01-guide-static-v16.json",
+      "sha256": "beb819be8724a9f7e2dffbb6eaaad9b91bd738f92f9c2c417ab88fee0ff149cb"
+    },
+    {
+      "name": "session-definition-current-health.json",
+      "sha256": "8b6a459cba3d73fe255667fe5b8ded46a8b8957759e4a298f19c4f9774921cd5"
+    }
+  ]
+}
