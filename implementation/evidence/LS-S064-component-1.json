@@ -1,0 +1,196 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S064",
+  "status": "verified",
+  "claimClass": "local-component-verification",
+  "sourceRevision": "9e9225c86b424613b4adc85fb4883b3d34651a45",
+  "privateSpecificationRevision": "27038d524428c42035b27f28546c59948b1b3794",
+  "recordedAt": "2026-09-20T08:26:53.935276Z",
+  "scope": "Durable voice candidates, same-session successful preview and explicit reviewed profile activation; existing selected-provider preview preparation. No whole-slice voice identity or Human quality qualification.",
+  "caseIds": [
+    "LS-TEST-082"
+  ],
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/app.js",
+      "sha256": "fa39df2b51f2aa0ac1913b6133a1fe994f0142496aee1ba091aabe834d1c159d"
+    },
+    {
+      "path": "apps/control-web/saved-voices.js",
+      "sha256": "63a07bffcbce6f07e5d08d99bc12afccc3f97ddf24e0f5ad0332b479d6ebedbb"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "ba8a890ad19b0297d2112157dc657b7e98712de20ec6d3b5d394ecced766b82a"
+    },
+    {
+      "path": "apps/control-web/test/saved-voices.test.mjs",
+      "sha256": "cbe1e1b6deb5458b2933a64eab07c84e33d5771e1983869b3ba4d7fc380fe9cf"
+    },
+    {
+      "path": "apps/control-web/workspace.js",
+      "sha256": "a4853d260204a4babc11bd631bbf982bd82c3a25863348a57e6a2297060fc6b3"
+    },
+    {
+      "path": "apps/server/src/admin/saved-voices.ts",
+      "sha256": "44b2a59b89b885c87aa16de4adf339be86d6433c3dcc127b4f6fb0b1d1d43860"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "dc0cc41b94c5bc542b20109372d85e9f948725610ddb2c2f8816c57d7eec6770"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "55aeadd7dd189044e19b0c400feef6de1a28073954927e5b71091e2932bd7dad"
+    },
+    {
+      "path": "apps/server/test/audio.test.ts",
+      "sha256": "f427880cdc31b0e411f24015fd3286577c9adad3d393c51ee9d92f49547b3859"
+    },
+    {
+      "path": "apps/server/test/saved-voice-fixture.ts",
+      "sha256": "a3c82ed7d42e62a91a197214317d4c4fbf9e82ec1166a588beb09a9af2e93c51"
+    },
+    {
+      "path": "apps/server/test/saved-voices.test.ts",
+      "sha256": "e1416af1b20b51337252390e86e8ebca7061bca063541ada271a1ca1a96e8b02"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "58e0a1229ba1c66ccb35d64340cd1a84536f896035ea0baf01b0b8c7e744fd8e"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "5c49375052adafb2c9ee024624ecef22f3686cb8e3dc291837a5aebe4dd05cc0"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0045_saved_voices.sql",
+      "sha256": "b461ecdde1ba26187ea75066bb70ecc6512dc4526eda747941c6d0f47200e49c"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "4ff14a9293e8347cabc343525743d0dc168f70bda248063f890fa588a5e250b3"
+    },
+    {
+      "path": "packages/storage-sqlite/src/saved-voices.ts",
+      "sha256": "7d46880dab7f515128ac61702bc929c09b58238f331875518738d24cf65aba0d"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "2ebfb9788a4685bad0c668e2acb9cbf8aedb167fb615ce1fe55eb2cb588332c4"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "9eabd01155bbb673f508dbc9daac5e4e851cdd1e9595a7e78894cca2876d7eac"
+    },
+    {
+      "path": "packages/storage-sqlite/test/saved-voices.test.ts",
+      "sha256": "df5d3048cd3ba377f45643e5eb156ac264347997c537cd7d0cf3ce00a85e0954"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "940/940, zero skips, 49410.117208 ms before the final preview audience fence."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<local-module> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "55/55, zero skips, 162553.720875 ms before the final preview audience fence."
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/saved-voices.test.ts apps/server/test/audio.test.ts packages/storage-sqlite/test/saved-voices.test.ts",
+      "result": "pass",
+      "evidence": "19/19, zero skips, 2977.799875 ms after final audience fence, including cancellation during provider preparation."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<local-module> node --test apps/control-web/test/saved-voices.test.mjs",
+      "result": "pass",
+      "evidence": "1/1, zero skips, 9840.382916 ms on committed source bytes; desktop/mobile visual review and no horizontal overflow."
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build; git diff --check",
+      "result": "pass",
+      "evidence": "All pass after final source changes."
+    }
+  ],
+  "selectedProvider": {
+    "fixture": false,
+    "controls": {
+      "description": false,
+      "reference": false
+    },
+    "samples": [
+      {
+        "name": "configured-default",
+        "firstPcmMs": 418.5899589999999,
+        "completedMs": 7969.685916999999,
+        "audioMs": 5120,
+        "frames": 64
+      },
+      {
+        "name": "calm-delivery",
+        "firstPcmMs": 318.839750000001,
+        "completedMs": 5436.427417000001,
+        "audioMs": 3520,
+        "frames": 44
+      }
+    ],
+    "activation": false
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "s064-source-tests-2.log",
+      "sha256": "7424704c2eef35108841eef81d228bfd119e2ff65be91b8d1fa57eb9a850c773"
+    },
+    {
+      "name": "s064-browser-full-1.log",
+      "sha256": "0444d78391b9a66f206e75ada8576c898097c1f8074972319a684ba9a6fcbabd"
+    },
+    {
+      "name": "s064-focused-final.log",
+      "sha256": "baa979c26c80498367fe22975ff3086e985c6c771b0663cd73383662029ebbdc"
+    },
+    {
+      "name": "s064-browser-final-executed.log",
+      "sha256": "2c73453d9c10e343541914911a8bca276210bb8a85ab11b2f5129285206cdf2f"
+    },
+    {
+      "name": "s064-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "s064-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "s064-build-final.log",
+      "sha256": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155"
+    },
+    {
+      "name": "s064-selected-provider.json",
+      "sha256": "7e2e76f71c136f5959288ec6383314d21b172cb3b2813a5002b1c53189b91f0d"
+    },
+    {
+      "name": "s064-selected-provider-2.log",
+      "sha256": "6c56ba5aaaaec6aeefbba2efed091c99fa8a3bdc0725d9baa3c74aa13b4c01e8"
+    },
+    {
+      "name": "v01-guide-validation.json",
+      "sha256": "1396d9cd0d52d8772ce7c37a1f40750f172bd90d4e06a658d2250ba46741583f"
+    }
+  ],
+  "retainedFailures": [
+    "Initial full-suite failure was an outdated migration expectation; corrected full source suite passed.",
+    "A preview harness requested unsupported description controls and received 422 before synthesis. Capability-aware supported previews then passed.",
+    "An invocation without PLAYWRIGHT_MODULE skipped its test; only the explicit-module executed result is counted."
+  ],
+  "exclusions": [
+    "No physical playback, Human voice identity, naturalness, consistency or language-quality acceptance.",
+    "The selected provider currently advertises no description/seed or reference-conditioning support; fixture conditioning checks are not live provider evidence.",
+    "No new live voice activation, model/provider replacement, training, publication, cloud upload or external exposure.",
+    "Explicit removal deletes from the current database; older backups can retain voice references. Removable-volume work remains deferred.",
+    "Existing 24 S083/S084 Human-accepted journeys remain unchanged."
+  ]
+}
