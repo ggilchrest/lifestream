@@ -1,0 +1,182 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "verified",
+  "claimClass": "local-recovery-and-component-regression",
+  "sourceRevision": "361c72211bdcb17cee97140085e73b63797cefc7",
+  "pwceRevision": "26c038fe58f3257718cbb7d4e7e73f15afdd66c0",
+  "compositionImplementationRevision": "1c72cce5d4344ddae297964f059acd3f2a22fa7a",
+  "recordedAt": "2026-09-20T07:26:34.513Z",
+  "scope": "Consistent isolated recovery, current forgetting/authentication safety, shared schema compilation and private presentation disposal. Existing broad slice acceptance remains open.",
+  "sourceArtifacts": [
+    {
+      "path": "apps/server/src/admin/candidate-snapshot.ts",
+      "sha256": "2e9675d1cfba946227dc3f93cfa7a962bedfd0c7fcc2a4db29a4c01411f4c4a4"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "ea812ae7c3fb1758d39d709090ee826ce5c02c911106180a3dd8108a536b1c15"
+    },
+    {
+      "path": "apps/server/test/candidate-snapshot.test.ts",
+      "sha256": "dd46257d41cfc0cee4d252a085c3d481619cd00a826a44a22e5e07e339fcdd26"
+    },
+    {
+      "path": "apps/control-web/auth.js",
+      "sha256": "8abec33942d11e1db8ee36250e3f8a534c2828cb266cb3ba3ad2b4497c9a08c3"
+    },
+    {
+      "path": "apps/control-web/audience.js",
+      "sha256": "8db492dde832bd553c521aff46b7fa8b7815bc35640db3164e715424e465ba71"
+    },
+    {
+      "path": "apps/control-web/presentation.js",
+      "sha256": "712fb9f37430c466739e3643b7829b002aa98a43d553eefc59870fa15ef2ab7a"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "3b84d3accf4972b05935fc55c56ba17518e4837fb8f9bb8de581bde057185cbf"
+    },
+    {
+      "path": "apps/control-web/test/audience-privacy.test.mjs",
+      "sha256": "51ec80daa6ffbc3719d4292b40e276a5f2f18c38f64f50a4d4ee38f8d8f326f5"
+    },
+    {
+      "path": "packages/contracts/src/validator.ts",
+      "sha256": "36c6cf3c87ecbb80eed390a0cfc1c89aedfc71e720a1f7332f531ac73c39d1fb"
+    },
+    {
+      "path": "packages/contracts/test/contract-validation.test.ts",
+      "sha256": "bdb73ff20f96a0849626e654b0c7beffd910e631e5b1ca2b6bff8e147a88d9d4"
+    },
+    {
+      "path": "scripts/candidate-recovery.mjs",
+      "sha256": "0a1ce7fae064ab97081994d5d1042c811e16890c720d19cf06286e6936470591"
+    },
+    {
+      "path": "docs/candidate-recovery.md",
+      "sha256": "2b302219230757965b1ad9a5653bcc8f4f2bcf5db3d697f89455f6768ed78309"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "934/934 tests, zero skips, 50521.477125 ms; server and library bytes unchanged by following presentation-only commit."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<local-module> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "52/52 tests, zero skips, 157023.462291 ms. Serial execution retains original deadline assertions."
+    },
+    {
+      "command": "pnpm build; pnpm typecheck; pnpm lint; producer-contract regeneration; git diff --check",
+      "result": "pass",
+      "evidence": "Completed successfully; regenerated incident bundle is byte-identical."
+    },
+    {
+      "command": "PWCE npm test and fixture validation",
+      "result": "pass",
+      "evidence": "335/335 tests; current-custody incident expiry and restored World quarantine verified."
+    },
+    {
+      "command": "Real separate-device encrypted full, incremental and isolated restore",
+      "result": "pass",
+      "evidence": "Full: 143370451 processed bytes, 5.219457083 s; incremental: 549986 new bytes, 1.42847475 s. Full repository integrity checks pass. Restored sign-in, current safety epoch 1, two packages, one unavailable historical default; authority 423 and unknown audience. Completed before operator deferral."
+    },
+    {
+      "command": "Real-provider ordinary memory process restart and fresh-session recall",
+      "result": "pass",
+      "evidence": "First-person synthetic project statement saved automatically in 1623.978666 ms; fresh-session reply recalled Go after server process restart in 1132.680875 ms. Follow-up question produced no memory."
+    }
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "component-4-source-tests-cache.log",
+      "sha256": "7ee495d678e4ecdf344d5dca3287d1121a7f76e0989e9230ce9a5ec3347c96c5"
+    },
+    {
+      "name": "component-4-browser-serial.log",
+      "sha256": "1c78f20e8c3dca71968bc4287d36a5a204ed86d957d0c5a6dcca23004ec030c0"
+    },
+    {
+      "name": "component-4-source-tests-final.log",
+      "sha256": "a4e32c77f809826d8fa08f0ab4f99794ca33ac7eac7259360ca055437f253ddb"
+    },
+    {
+      "name": "component-4-browser-tests-cache.log",
+      "sha256": "29d37c226a006732d2da0b3c052015fed0c287d752ead0d6f737f136b40cbb79"
+    },
+    {
+      "name": "component-4-browser-focused.log",
+      "sha256": "9e474375facd8deec85de8c693c7440149fddcd697c50353c3170b2309c0183d"
+    },
+    {
+      "name": "component-4-private-validation-cache.log",
+      "sha256": "d2351a8b436cdadb058aa0341ceeb2ad1bbde159f42bc45b7b1de9a80aa80ccc"
+    },
+    {
+      "name": "pwce-recovery-tests-final.log",
+      "sha256": "0f2fc44e77562ae76476413476dedfb3f8e373f15ec52a30d203bc5dad9b7b79"
+    },
+    {
+      "name": "backup-first-full.json",
+      "sha256": "627f46eddd36e0fbdfc80aaa5e44c5c0bb203bed69586761f5fade2a7d56d4ad"
+    },
+    {
+      "name": "backup-incremental.json",
+      "sha256": "deb446112b27fa2cc025eba470e212fb3b7112b0581c438931c6bc4092768cbd"
+    },
+    {
+      "name": "backup-real-restore.json",
+      "sha256": "0a9a537c271b9c1f5ed7a047fe58f5ca2e807c07c65d46ed6d3836edbcbe9deb"
+    },
+    {
+      "name": "backup-operator-deferral.json",
+      "sha256": "7c37fb36e97347721f720d30564a8ce8095439f5a0ae188a7cb922c3a3239e4b"
+    },
+    {
+      "name": "restored-candidate-browser.json",
+      "sha256": "23ed26b0f4e71e040e138aabb99178c89b92d10e1e203df7ed3a7333daac0089"
+    },
+    {
+      "name": "validator-memory-before.json",
+      "sha256": "432d38941b8c1970eb70317581b07f0a2b91cf58efb74e7f70eb089bff7ec703"
+    },
+    {
+      "name": "validator-memory-after.json",
+      "sha256": "e4d539b279d2e406d06046d54ba1b76459566ab4f6b9db4f5fa7423dd43913b3"
+    },
+    {
+      "name": "memory-restart-attempt-1.json",
+      "sha256": "db1e2782607928f6cbb4acf50551a08fe3032101a5065dc1edd9d7fddd8e5dce"
+    },
+    {
+      "name": "memory-restart-seed.json",
+      "sha256": "11630c0864c212976521f04943e356fa83cc53207f7d9b92a45c2e0bf8bf0214"
+    },
+    {
+      "name": "memory-restart-verify.json",
+      "sha256": "027974eed29e7bb12aece48ce28024a46d9a111443c50b7261b37fec07f2f1f8"
+    }
+  ],
+  "retainedFailures": [
+    {
+      "scope": "Before shared schema compilation",
+      "observation": "Repeat full source run failed three Discovery pressure checks; focused recheck passed. Full cache revision passes 934/934 without changing pressure ceiling."
+    },
+    {
+      "scope": "Unrestricted concurrent browser suite",
+      "observation": "50/52 passed; Discovery selection exceeded its existing 10 ms deadline and relationship administration timed out. Both focused serial checks and full serial suite passed. Concurrent resource stability is not certified."
+    },
+    {
+      "scope": "Automatic-memory model quality",
+      "observation": "A synthetic acceptance project phrasing yielded zero extracted records. A normal first-person statement was saved and survived restart. This is not universal extraction reliability acceptance."
+    }
+  ],
+  "exclusions": [
+    "Operator deferred removable-volume work; scheduler unloaded. No unattended backup acceptance or new disk access after deferral.",
+    "Offline key physical custody and independent-key decryption remain Human work.",
+    "No live camera, automatic physical audience, away route, production or Human acceptance.",
+    "No blanket LS-S066/S067/S068/S070 or LS-DEP-031 completion."
+  ]
+}
