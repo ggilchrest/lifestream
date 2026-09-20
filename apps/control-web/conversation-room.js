@@ -19,7 +19,7 @@ export function installConversationRoom({anchor,api,context}){
  const deliveries=new Map();
  const automaticMemory=installAutomaticMemory({anchor,api,context});
  installIncidentReview({anchor,api,context});
- const presentation=installPresentation({anchor,api,identity:()=>({assistantId:context()?.assistantId}),busy:()=>busy||!!output?.turn||!!capture?.pending||!!capture?.speaking,playback:()=>output?.playbackSample()});
+ const presentation=installPresentation({anchor,api,identity:()=>({assistantId:context()?.assistantId,relationshipId:context()?.relationship?.relationshipId??null}),busy:()=>busy||!!output?.turn||!!capture?.pending||!!capture?.speaking,playback:()=>output?.playbackSample()});
  const scope=()=>{const c=context(),s=auth().session;if(auth().mode!=='local-password'||!s||!c?.assistantId)throw new Error('Sign in and select an Assistant first.');return {assistantId:c.assistantId,relationshipId:c.relationship?.relationshipId??null,sessionId:s.sessionId,principalId:s.principalId};};
  const route=s=>{if(!s.relationshipId)throw new Error('Select a relationship before enabling Initiative. Ordinary typed messages remain available.');return `/api/admin/v1/assistants/${s.assistantId}/relationships/${s.relationshipId}/initiative/v1`;};
  const same=(s,ticket)=>{try{return epoch===ticket&&JSON.stringify(scope())===JSON.stringify(s);}catch{return false;}};
