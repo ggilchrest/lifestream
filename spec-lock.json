@@ -53,13 +53,13 @@
     {
       "slice": "LS-S086",
       "owner": "ggilchrest/lifestream-specs",
-      "revision": "acd14e52a725657089bad9638cafdbb881ca60cc",
+      "revision": "571b40466661a6fa27aeb4cc737d13e956b13253",
       "authorization": "Operator-approved LS-DEC-044 machine-only export to this exact destination; local ingestion only, no publication.",
       "artifacts": [
         {
           "path": "contracts/experiential-learning.schema.json",
           "schemaId": "https://lifestream.dev/contracts/experiential-learning/1.0.0",
-          "sha256": "3e3b6e4b1ce056d5ac317f49a7e5277ae743f511dcfa6edac6b15bb0b1430746",
+          "sha256": "b03c315f202d455a79173508824724c6ed9d3bbc791e569f3f93701000b15eb6",
           "publicPath": "packages/contracts/src/schemas/experiential-learning.schema.json"
         }
       ]

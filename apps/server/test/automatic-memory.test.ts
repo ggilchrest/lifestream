@@ -5,13 +5,18 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {Database,MemoryRepository} from '@lifestream/storage-sqlite';
-import {AutomaticMemory,validateExtractedMemory} from '../src/runtime/automatic-memory.ts';
+import {AutomaticMemory,validateExtractedMemory,validateMemoryBatch} from '../src/runtime/automatic-memory.ts';
 const scope=()=>({principalId:randomUUID(),assistantId:randomUUID(),relationshipId:randomUUID()});
 function setup(t:any){const root=mkdtempSync(join(tmpdir(),'automatic-memory-')),path=join(root,'db.sqlite');const db=new Database({path});db.migrate();const memories=new MemoryRepository(db),owner=scope();let calls=0,items:unknown[]=[];
  const make=()=>new AutomaticMemory({database:db,memories,provider:()=>({revision:'synthetic-extractor-v1',provider:{async *generate(){calls++;yield {kind:'text' as const,text:JSON.stringify({items})};yield {kind:'done' as const};}}}),idle:()=>true,changed:()=>{}});
  let worker=make();t.after(async()=>{await worker.close();db.close();rmSync(root,{recursive:true,force:true});});
- return {db,memories,owner,get worker(){return worker;},set:(quote:string,key='project.language',kind='conversationSummary')=>items=[{key,kind,quote,subject:'owner',epistemic:'userStatement'}],calls:()=>calls,restart:async()=>{await worker.close();worker=make();}};
+ return {db,memories,owner,get worker(){return worker;},setItems:(values:unknown[])=>items=values,set:(quote:string,key='project.language',kind='conversationSummary')=>items=[{key,kind,quote,subject:'owner',epistemic:'userStatement'}],calls:()=>calls,restart:async()=>{await worker.close();worker=make();}};
 }
+test('mixed extraction retains only independently validated statements with visible rejection counts across persistence retry',async t=>{
+ const f=setup(t),quote='I enjoy measuring the results of my basil experiments.',good={key:'gardening.enjoyment',kind:'preference',quote,subject:'owner',epistemic:'userStatement'},bad={...good,key:'invalidCamelCase',quote:'I never said this invented conclusion.'};
+ assert.throws(()=>validateExtractedMemory({items:[good,bad]},quote));assert.throws(()=>validateMemoryBatch({items:[good,good]},quote),/duplicate/);assert.throws(()=>validateMemoryBatch({items:[bad]},quote),/No safely/);assert.throws(()=>validateMemoryBatch({items:[good],extra:true},quote));assert.throws(()=>validateMemoryBatch({items:Array(7).fill(good)},quote),/bound/);
+ f.setItems([good,bad]);f.worker.configure(f.owner,true,0);f.worker.enqueue(f.owner,'turn:mixed',quote,'authenticatedTypedOwner');f.db.exec("CREATE TRIGGER reject_mixed BEFORE INSERT ON memories BEGIN SELECT RAISE(ABORT,'synthetic storage failure'); END");await f.worker.tick();const prepared=String(f.db.connection.prepare('SELECT prepared_json AS p FROM automatic_memory_work').get()!.p);assert.ok(!prepared.includes('invented'));await f.restart();f.db.exec('DROP TRIGGER reject_mixed');await f.worker.tick();assert.equal(f.calls(),1);assert.deepEqual(f.memories.contextRecords(f.owner.assistantId,f.owner.principalId).map(r=>r.content),['User stated: '+quote]);const job=f.worker.inspect(f.owner).jobs[0]!;assert.equal(job.state,'saved');const result=JSON.parse(String(job.result));assert.equal(result.returnedItemCount,2);assert.equal(result.extractedCount,1);assert.equal(result.rejectedItemCount,1);assert.equal(result.activeCount,1);
+});
 test('automatic admission requires one scope approval, persists ordinary project context and excludes unknown speakers and secrets',async t=>{
  const f=setup(t),text='Our project uses Python for its service layer.';f.set(text);
  assert.equal(f.worker.enqueue(f.owner,'turn:1',text,'authenticatedTypedOwner').state,'notAdmitted');f.worker.configure(f.owner,true,0);

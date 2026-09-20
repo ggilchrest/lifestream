@@ -23,6 +23,18 @@ export function validateExtractedMemory(raw:unknown,input:string):Item[]{
   return [structuredClone(item)];
  });
 }
+export function validateMemoryBatch(raw:unknown,input:string):{items:Item[];returnedItemCount:number;rejectedItemCount:number}{
+ // An item is independently attributable. Do not discard valid owner statements
+ // because a different item is malformed, or persist the rejected raw output.
+ if(!raw||typeof raw!=='object'||Object.keys(raw).join(',')!=='items'||!Array.isArray((raw as {items?:unknown}).items))throw new Error('Invalid memory extraction');
+ const values=(raw as {items:unknown[]}).items;if(values.length>6)throw new Error('Memory extraction bound exceeded');
+ const keys=values.flatMap(v=>v&&typeof v==='object'&&typeof (v as Item).key==='string'?[(v as Item).key]:[]);
+ if(new Set(keys).size!==keys.length)throw new Error('Ambiguous duplicate memory key');
+ const items:Item[]=[];let rejectedItemCount=0;
+ for(const value of values){try{items.push(...validateExtractedMemory({items:[value]},input));}catch{rejectedItemCount++;}}
+ if(rejectedItemCount&&items.length===0)throw new Error('No safely attributable memory items');
+ return {items,returnedItemCount:values.length,rejectedItemCount};
+}
 async function* bounded<T>(source:AsyncIterable<T>,signal:AbortSignal):AsyncGenerator<T>{
  const iterator=source[Symbol.asyncIterator]();let cancel=()=>{};const stopped=new Promise<never>((_resolve,reject)=>{cancel=()=>reject(new Error("Memory extraction cancelled"));signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel();});void stopped.catch(()=>{});
  try{while(true){const next=await Promise.race([iterator.next(),stopped]);if(next.done)return;yield next.value;}}
@@ -65,7 +77,7 @@ export class AutomaticMemory {
   const controller=this.controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),60000);
   try{
    this.database.connection.prepare("UPDATE automatic_memory_work SET state='running',attempts=attempts+1 WHERE id=?").run(work.id);
-   let prepared:{items:Item[];providerRevision:string};
+   let prepared:{items:Item[];providerRevision:string;returnedItemCount?:number;rejectedItemCount?:number};
    if(work.prepared)prepared=JSON.parse(work.prepared);
    else{
     const runtime=this.provider(),existing=this.memories.list(owner.assistantId).filter(r=>r.provenance.actor===owner.principalId&&r.provenance.relationshipId===owner.relationshipId&&typeof r.provenance.memoryTopic==='string'&&['active','candidate','contradicted'].includes(String(r.lifecycle.status))).slice(-24).map(r=>({key:r.provenance.memoryTopic,statement:r.content,status:r.lifecycle.status}));
@@ -74,14 +86,14 @@ export class AutomaticMemory {
     const policy=request.sections[0]!;policy.content=instruction;policy.sourceRevision='automatic-memory-extraction-v1';policy.contentDigest=createHash('sha256').update(instruction).digest('hex');policy.tokenCount=Buffer.byteLength(instruction);
     request.manifest.sections=request.sections.map(({kind,sourceRevision,sourceRef,contentDigest,redaction,tokenCount})=>({kind,sourceRevision,sourceRef,contentDigest,redaction,tokenCount}));let output='',done=false;
     for await(const chunk of bounded(runtime.provider.generate(request,{signal:controller.signal}),controller.signal)){controller.signal.throwIfAborted();if(chunk.kind==='text')output+=chunk.text??'';else if(chunk.kind==='done')done=true;else throw new Error('Memory provider extraction failed');if(output.length>12000)throw new Error('Memory output bound exceeded');}
-    if(!done)throw new Error('Incomplete memory extraction');const items=validateExtractedMemory(JSON.parse(output.replace(/^```(?:json)?\s*/u,'').replace(/\s*```$/u,'')),work.input);prepared={items,providerRevision:runtime.revision};
+    if(!done)throw new Error('Incomplete memory extraction');const batch=validateMemoryBatch(JSON.parse(output.replace(/^```(?:json)?\s*/u,'').replace(/\s*```$/u,'')),work.input);prepared={...batch,providerRevision:runtime.revision};
     controller.signal.throwIfAborted();this.database.connection.prepare("UPDATE automatic_memory_work SET prepared_json=?,state='prepared' WHERE id=? AND state='running'").run(JSON.stringify(prepared),work.id);
    }
    controller.signal.throwIfAborted();if(this.policy(owner).revision!==work.revision||!this.scopeAllowed(owner))throw new Error('Memory policy changed');
    const records:MemoryRecord[]=prepared.items.filter(item=>this.contentAllowed(owner,`User stated: ${item.quote}`)).map((item,i)=>{const digest=hash([work.id,i]),id=`${digest.slice(0,8)}-${digest.slice(8,12)}-4${digest.slice(13,16)}-8${digest.slice(17,20)}-${digest.slice(20,32)}`;return {id,assistantId:owner.assistantId,content:`User stated: ${item.quote}`,provenance:{actor:owner.principalId,source:`turn:${work.source}`,sourceTurnRef:work.source,sourceFamily:`turn:${work.source}`,relationshipId:owner.relationshipId,automaticMemoryKey:hash([work.scope,item.key]),memoryTopic:item.key,epistemicStatus:'userStatement',extractorRevision:prepared.providerRevision,transformation:'exact-attributed-quote-v1'},lifecycle:{kind:item.key.startsWith('project.')?'conversationSummary':item.kind,sensitivity:'private',confidence:1,status:'candidate',revision:1,lastReinforcedAt:null,contradictedBy:[]},createdAt:new Date().toISOString()};});
    const directCorrection=/^\s*(?:correction\s*[:,-]|actually\b|I\s+(?:no longer|changed my mind)|instead\b)/iu.test(work.input),ids=this.memories.admitAutomatic(records,owner.principalId,directCorrection);
    const activeCount=ids.filter(id=>this.memories.get(owner.assistantId,id)?.lifecycle.status==='active').length,reviewCount=ids.filter(id=>this.memories.get(owner.assistantId,id)?.lifecycle.needsReview===true).length;
-   this.database.connection.prepare("UPDATE automatic_memory_work SET state=?,input_text='',prepared_json=NULL,result_json=?,reason=NULL WHERE id=?").run(activeCount?'saved':reviewCount?'needsReview':'noMemory',JSON.stringify({memoryIds:ids,activeCount,reviewCount,extractedCount:prepared.items.length,admissibleCount:records.length}),work.id);this.changed();
+   this.database.connection.prepare("UPDATE automatic_memory_work SET state=?,input_text='',prepared_json=NULL,result_json=?,reason=NULL WHERE id=?").run(activeCount?'saved':reviewCount?'needsReview':'noMemory',JSON.stringify({memoryIds:ids,activeCount,reviewCount,extractedCount:prepared.items.length,admissibleCount:records.length,returnedItemCount:prepared.returnedItemCount??prepared.items.length,rejectedItemCount:prepared.rejectedItemCount??0}),work.id);this.changed();
   }catch{
    if(!this.closed&&controller.signal.reason==='foreground'){this.database.connection.prepare("UPDATE automatic_memory_work SET state=CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END,reason='foreground_preempted' WHERE id=? AND state<>'cancelled'").run(work.id);return;}
    if(!this.closed)this.database.connection.prepare("UPDATE automatic_memory_work SET state=CASE WHEN state='cancelled' THEN state WHEN attempts<2 THEN CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END ELSE 'failed' END,reason=CASE WHEN state='cancelled' THEN reason ELSE 'extraction_or_persistence_failed' END WHERE id=?").run(work.id);
