@@ -2,8 +2,8 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "aaa421cad73c763cd42509212898c41356451a15",
-  "currentRevision": "aaa421cad73c763cd42509212898c41356451a15",
+  "baseRevision": "269e9aee874d7dd3027f47ec2369b2f68eb37f66",
+  "currentRevision": "269e9aee874d7dd3027f47ec2369b2f68eb37f66",
   "activeSlice": "LS-S066",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -175,7 +175,6 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S066-scope-refresh-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -726,8 +725,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Continue private asset tangent-quality validation and remaining dependency-ready integration; preserve actual selected-provider, physical environment and Human acceptance boundaries.",
-  "updatedAt": "2026-09-20T18:01:35.699435Z",
+  "nextAction": "Continue operator-local semantic animation mappings beyond idle and remaining dependency-ready v0.1 integration. Shared face motion, same-scope refresh repair, private tangent validation and actual browser/native checks are complete as bounded components; real provider, physical and Human criteria remain open.",
+  "updatedAt": "2026-09-20T18:07:29.146952Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "Same-scope appearance cancellation was reproduced on the actual candidate and in a failing browser regression; source aaa421cad73c763cd42509212898c41356451a15 repairs it and passes all 68 browser checks, three focused privacy/preview checks, typecheck/lint/build, and actual authenticated private appearance/preview/privacy/sign-out smoke. Face-motion source regression 980/980 remains inherited at e74ec9d. No provider or personal policy replacement. Private tangent derivative has zero validator errors but awaits visual promotion; original assets and failures retained. Run disposition continue."
+  "notes": "Candidate source 269e9ae (runtime-equivalent aaa421c) has actual browser/native private-package 0.2.1 proof; six previews, unchanged-context retention, real-context/privacy cleanup and synthetic native lock pass. Public source 980 at e74ec9d; final serial browser 68 at aaa421c; private Lab 57. Isolated private derivative repairs 86 zero tangents with zero validator errors and 14 inherited warnings, preserving source/history and positions/normals/textures/skin/animations. Guide v8 is 17 journeys/148 actions. Current generic source archive at aaa421c passes offline install/build/runtime with no private assets. Encrypted current snapshot completed; fresh isolated restore is recorded by composition. No whole acceptance or new activation is inferred. Continue."
 }
