@@ -54,6 +54,7 @@ import { relationshipControlDefaults, relationshipControlInventory, compileRelat
 import { ContextCache } from "@lifestream/runtime/context/cache";
 import { buildCanonicalPrompt, type RuntimeSelfContext, type AssistantPersonaProjection } from "@lifestream/runtime/inference/prompt";
 import { readSessionEndpoint, reviseSessionEndpoint } from "./runtime/session-context.ts";
+import { inspectSessionDefinition, reviewSessionDefinition, SessionDefinitionError } from "./runtime/session-definition.ts";
 import {inspectEndpointConfiguration} from "./runtime/endpoint-configuration.ts";
 import { AudioSession } from "./runtime/audio.ts";
 import {SavedVoiceAdministration,SavedVoiceError,voiceSummary,savedVoiceConfiguration} from './admin/saved-voices.ts';
@@ -832,6 +833,23 @@ export class LifestreamServer {
       if(!this.audiencePermits(context))throw new AuthenticationError(403,'audience_protected');
       const persona=assistantId?this.admin.getActivePersona(assistantId,context.principalId,true):undefined;
       return json(response,200,inspectEndpointConfiguration({database:this.database,config:this.config,principalId:context.principalId,sessionId:context.sessionId,...(assistantId?{assistantId}:{}),...(persona?{personaRevision:persona.sourceRevision}:{}),catalog:this.presentationPackages,selection:this.presentationSelection,voices:this.savedVoices,ownership:this.audioOwnership,audience:this.audience?this.audience.snapshot(this.audienceIdentity(context)):{enforced:false},privateContextAllowed:this.runtimeSelfContext('inactive','sessionEndpoint',context).audienceScope==='authenticatedSession',providers:this.providers.providers}));
+    }
+    if (path === "/api/runtime/v1/session-definition") {
+      const context=this.requestContext(request,true);if(!context)throw new AuthenticationError();
+      if(new URL(request.url??"/",originFor(request)).search)return json(response,422,{code:'invalid_session_definition_query'});
+      if(!this.audiencePermits(context))throw new AuthenticationError(403,'audience_protected');
+      if(method==='GET')return json(response,200,inspectSessionDefinition(this.database,context.sessionId));
+      if(method!=='POST')return json(response,405,{code:'method_not_allowed'});
+      if(this.localAuth)this.localAuth.csrf(context as LocalContext,String(request.headers['x-lifestream-csrf']??''));
+      const body=asObject(await readBody(request));if(!body)return json(response,422,{code:'invalid_session_definition'});
+      if(!this.requestContext(request,true))throw new AuthenticationError();
+      if(!this.audiencePermits(context))throw new AuthenticationError(403,'audience_protected');
+      try{
+        const review=reviewSessionDefinition({database:this.database,sessionId:context.sessionId,principalId:context.principalId,audioConfigured:!!this.providers.stt&&!!this.providers.tts,boundary:this.runtimeSelfContext('inactive','sessionEndpoint',context).sourceRevision,body});
+        if(body.operation==='preview')return json(response,200,review);
+        reviseSessionEndpoint(this.database,context.sessionId,{expectedRevision:body.expectedRevision,mode:review.definition.mode,audienceScope:review.definition.audienceScope},!!this.providers.stt&&!!this.providers.tts,context.principalId);this.invalidateRuntimeInputs('configurationChanged');
+        return json(response,200,{...inspectSessionDefinition(this.database,context.sessionId),applied:true});
+      }catch(error){if(error instanceof SessionDefinitionError)return json(response,error.status,{code:'session_definition_unavailable',message:error.message});throw error;}
     }
     if (path === "/api/runtime/v1/session-context") {
       const context = this.requestContext(request, false); if (!context) throw new AuthenticationError();

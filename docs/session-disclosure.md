@@ -13,3 +13,17 @@ An isolated candidate restore revokes sessions, clears session settings and appe
 Verification covers real local-password HTTP sessions, prepared memory isolation with synthetic records and a fixture inference provider, database restart, legacy migration, stale revision rejection and restore quarantine. Rendered browser checks exercise the selection controls with distinct authenticated sessions. These checks do not establish physical audience detection, microphone permission, audible playback, provider qualification or Human acceptance.
 
 The read-only Effective endpoint configuration panel composes current session, active Assistant/persona and voice references, pinned Appearance selections and the current session audio lease. It explains precedence, compatibility and unavailable handoff operations. Refresh after another tab changes settings. Saved choices are not proof of actual playback, physical capture or audibility. Unknown/shared audiences conceal this inspector and its API requires current administration access. The panel is usable without a renderer or private asset pack.
+
+## Structured session settings
+
+In Session disclosure, **Structured session settings** supports a bounded JSON definition for this sign-in:
+
+```json
+{"schemaVersion":"1.0.0","mode":"text","audienceScope":"unknown"}
+```
+
+**Load current settings** refreshes the document and session revision. Edit/paste only `mode` (`text` or `audio`) and `audienceScope` (`unknown` or `authenticatedSession`). **Preview changes** validates the definition and shows a difference without saving. **Apply reviewed changes** revises the existing session atomically and fences pending output whose input scope changed. Other sign-ins retain independent settings. **Download current settings** exports only the last loaded/applied settings, without session IDs, credentials, assets or grants. Imported text cannot activate itself.
+
+An audio definition requires configured STT and TTS; it negotiates the existing transport and does not start capture or playback. Current provider health remains visible in Effective endpoint configuration. Disclosure still requires permitted current audience and existing approved memory scope. Stale revisions, changed runtime/audience state, invalid fields and edited previews require a fresh review. A failed/uncertain network response must be reconciled with Load current settings before retrying.
+
+The authenticated `/api/runtime/v1/session-definition` GET returns the current projection. POST accepts `operation: preview` or `apply`, the definition and `expectedRevision`; apply additionally supplies the preview `reviewDigest`. The digest fences the proposed definition against the current authenticated session and runtime boundary; it never grants authority. There is no canonical settings store separate from the existing session operation. Identity/persona, voice, appearance, accessibility, interruption policy, physical bindings and handoff retain their existing owners and separate controls; this limited document does not redefine or bulk-activate them.

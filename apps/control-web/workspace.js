@@ -18,7 +18,7 @@ export function installWorkspace() {
     ['lab','Relationship Lab','Compare isolated alternatives before promoting a draft for review.',['.relationship-lab'],'Evaluate'],
     ['readiness','Readiness','Inspect eligibility, exclusions and readiness without starting training.',['.relationship-readiness'],'Evaluate'],
     ['privacy','Privacy & recovery','Preview a precise target before changing retention or recovery state.',['.relationship-recovery'],'Protect'],
-    ['session','Session disclosure','Control whether this session can use your approved private context.',['#session-context-panel','#endpoint-configuration-panel'],'Protect'],
+    ['session','Session disclosure','Control whether this session can use your approved private context.',['#session-context-panel','#endpoint-configuration-panel','#session-definition-panel'],'Protect'],
     ['account','Account & access','Manage sign-in, recovery codes and authentication.',['#authentication-panel'],'Protect'],
     ['memory','Assistant memory','Review memory candidates, corrections and their history.',['#assistant-memory'],'Advanced'],
     ['adaptations','Persona proposals','Review evidence before approving a change in expression.',['#assistant-adaptations'],'Advanced'],

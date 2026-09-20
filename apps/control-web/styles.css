@@ -159,6 +159,7 @@
 [data-audience-protected="true"] .room-simulation,
 [data-audience-protected="true"] #session-context-details,
 [data-audience-protected="true"] #endpoint-configuration-panel,
+[data-audience-protected="true"] #session-definition-panel,
 [data-audience-protected="true"] #profile-editor,
 [data-audience-protected="true"] dialog {display:none!important}
 .audience-panel {margin-bottom:1rem}.audience-panel h2{margin-top:0}
