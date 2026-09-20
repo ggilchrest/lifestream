@@ -1,6 +1,6 @@
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function endpointFromArguments(argv,packaged){
- const args=argv.slice(packaged?1:2),flag=args.indexOf('--url');
+function endpointFromArguments(argv,defaultApp=false){
+ const args=argv.slice(defaultApp?2:1),flag=args.indexOf('--url');
  const endpoint=new URL(flag>=0?args[flag+1]:'http://127.0.0.1:43182/control/#conversation');
  if(endpoint.protocol!=='http:'||!['127.0.0.1','localhost','[::1]'].includes(endpoint.hostname)||endpoint.username||endpoint.password||!endpoint.port||endpoint.pathname!=='/control/'||endpoint.search)throw Error('The desktop endpoint requires a loopback /control/ URL.');
  return {endpoint,args};

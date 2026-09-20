@@ -1,5 +1,5 @@
 // Local-only macOS bundle from the already installed, pinned Electron runtime.
-import {cpSync,existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,readlinkSync,realpathSync,rmSync,writeFileSync} from 'node:fs';
+import {cpSync,existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,readlinkSync,realpathSync,renameSync,rmSync,writeFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
@@ -14,7 +14,7 @@ const sourceFiles=inputs.map(path=>{const current=readFileSync(join(root,path)),
 const require=createRequire(import.meta.url),electronPackage=require.resolve('electron/package.json'),electron=JSON.parse(readFileSync(electronPackage)),expected=JSON.parse(readFileSync(join(root,'package.json'))).devDependencies.electron;
 if(electron.version!==expected)throw Error('Installed Electron does not match the exact project pin.');
 const source=join(dirname(electronPackage),'dist','Electron.app');if(!existsSync(source))throw Error('Install the pinned macOS Electron runtime before packaging. No download was attempted.');
-mkdirSync(destination,{mode:0o700});const app=join(destination,'Lifestream.app');cpSync(source,app,{recursive:true,dereference:false,verbatimSymlinks:true});
+mkdirSync(destination,{mode:0o700});const app=join(destination,'Lifestream.app');cpSync(source,app,{recursive:true,dereference:false,verbatimSymlinks:true});renameSync(join(app,'Contents','MacOS','Electron'),join(app,'Contents','MacOS','Lifestream'));
 const resources=join(app,'Contents','Resources'),application=join(resources,'app');if(existsSync(application))throw Error('Unexpected application content in the installed runtime.');mkdirSync(application);
 for(const path of files)cpSync(join(root,path),join(application,path.split('/').at(-1)));
 for(const name of ['LICENSE','THIRD_PARTY_NOTICES.md'])cpSync(join(root,name),join(application,name));
@@ -25,7 +25,7 @@ const thirdPartyNotices=['LICENSE','LICENSES.chromium.html'].map(name=>{
 rmSync(join(resources,'default_app.asar'),{force:true});
 const version=JSON.parse(readFileSync(join(application,'package.json'))).version;
 writeFileSync(join(application,'build.json'),JSON.stringify({schemaVersion:'1.0.0',sourceRevision:revision,electronVersion:electron.version,architecture:process.arch,version,sourceFiles},null,2)+'\n');
-const plist=join(app,'Contents','Info.plist');for(const [key,value]of Object.entries({CFBundleIdentifier:'dev.lifestream.local-endpoint',CFBundleName:'Lifestream',CFBundleDisplayName:'Lifestream',CFBundleShortVersionString:version,CFBundleVersion:version,NSMicrophoneUsageDescription:'Lifestream uses your microphone only when you start a voice interaction.'})){
+const plist=join(app,'Contents','Info.plist');for(const [key,value]of Object.entries({CFBundleIdentifier:'dev.lifestream.local-endpoint',CFBundleExecutable:'Lifestream',CFBundleName:'Lifestream',CFBundleDisplayName:'Lifestream',CFBundleShortVersionString:version,CFBundleVersion:version,NSMicrophoneUsageDescription:'Lifestream uses your microphone only when you start a voice interaction.'})){
  try{execFileSync('/usr/libexec/PlistBuddy',['-c',`Set :${key} ${value}`,plist],{stdio:'pipe'});}catch{execFileSync('/usr/libexec/PlistBuddy',['-c',`Add :${key} string ${value}`,plist],{stdio:'pipe'});}
 }
 // Ad-hoc local integrity signing uses no identity, account, timestamp or network.

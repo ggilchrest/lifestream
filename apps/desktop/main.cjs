@@ -3,7 +3,7 @@ const {createHash}=require('node:crypto');
 const {resolve}=require('node:path');
 const {endpointFromArguments,connectionPage}=require('./connection-status.cjs');
 let endpoint,args;
-try{({endpoint,args}=endpointFromArguments(process.argv,app.isPackaged));}catch{console.error('The desktop endpoint requires a loopback /control/ URL.');process.exit(1);}
+try{({endpoint,args}=endpointFromArguments(process.argv,process.defaultApp===true));}catch{console.error('The desktop endpoint requires a loopback /control/ URL.');process.exit(1);}
 app.setName('Lifestream');
 // The endpoint host is a shell around the same web core. It has no asset filesystem or provider bridge.
 app.whenReady().then(async()=>{
