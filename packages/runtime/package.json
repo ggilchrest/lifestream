@@ -115,6 +115,10 @@
     "./authority/grants": {
       "types": "./dist/authority/grants.d.ts",
       "import": "./dist/authority/grants.js"
+    },
+    "./embodiment/controller": {
+      "types": "./dist/embodiment/controller.d.ts",
+      "import": "./dist/embodiment/controller.js"
     }
   },
   "scripts": {

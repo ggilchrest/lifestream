@@ -6,6 +6,7 @@
   document.querySelector('#authentication-panel')?.after(panel);
   const get = id => panel.querySelector('#' + id);
   let revision = null, epoch = 0;
+  const bindingKey=()=>{const key='lifestream.endpoint-key.v1';let value=localStorage.getItem(key);if(!value){value=crypto.randomUUID();localStorage.setItem(key,value);}return value;};
   const render = value => {
     revision = value.revision;
     get('session-audience').value = value.endpoint?.privacyClass === 'personal' ? 'authenticatedSession' : 'unknown';
@@ -21,7 +22,7 @@
   get('session-context-apply').onclick = run(async () => {
     if (revision === null) throw new Error('Current session state is unavailable.');
     const ticket = epoch;
-    const value = await window.lifestreamAuth.request('/api/runtime/v1/session-context', { expectedRevision: revision, mode: 'text', audienceScope: get('session-audience').value }, true);
+    const value = await window.lifestreamAuth.request('/api/runtime/v1/session-context', { expectedRevision: revision, bindingKey: bindingKey(), mode: 'text', audienceScope: get('session-audience').value }, true);
     if (ticket !== epoch) return;
     render(value);
     window.dispatchEvent(new CustomEvent('lifestream-session-context'));
