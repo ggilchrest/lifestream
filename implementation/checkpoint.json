@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "7cf7be7f46aa8fb05e4d4ec31300aa11decef047",
-  "currentRevision": "0c4598817e43154e7adf73dfd9b7f6549ce5cd20",
+  "currentRevision": "f49d1667c90fa866c62177a7e93d68a3149c5370",
   "activeSlice": "LS-S068",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -89,6 +89,7 @@
     "apps/control-web/test/audio-ownership.test.mjs",
     "apps/control-web/test/conversation-playback.test.mjs",
     "apps/control-web/test/endpoint-configuration.test.mjs",
+    "apps/control-web/test/initiative-conversation.test.mjs",
     "apps/control-web/test/local-auth.test.mjs",
     "apps/control-web/test/session-definition.test.mjs",
     "apps/control-web/workspace.js",
@@ -106,6 +107,7 @@
     "apps/server/test/candidate-snapshot.test.ts",
     "apps/server/test/endpoint-bindings.test.ts",
     "apps/server/test/endpoint-configuration.test.ts",
+    "apps/server/test/initiative-host.test.ts",
     "apps/server/test/local-auth-http.test.ts",
     "apps/server/test/server.test.ts",
     "apps/server/test/session-definition.test.ts",
@@ -116,6 +118,7 @@
     "implementation/checkpoint.json",
     "implementation/evidence/LS-S068-audio-playback-1.json",
     "implementation/evidence/LS-S068-effective-configuration-1.json",
+    "implementation/evidence/LS-S068-output-only-playback-1.json",
     "implementation/evidence/LS-S068-protected-setup-1.json",
     "implementation/evidence/LS-S068-session-definition-1.json",
     "implementation/evidence/LS-S068-session-isolation-1.json",
@@ -138,7 +141,7 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-audio-playback-1.json",
+    "implementation/evidence/LS-S068-output-only-playback-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -759,6 +762,11 @@
       "command": "Ordinary audio ownership: source/browser/workspace/native/clean install and contract validation",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S068-audio-playback-1.json"
+    },
+    {
+      "command": "Initiative output ownership: source/browser/workspace/native/clean install and contract validation",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S068-output-only-playback-1.json"
     }
   ],
   "decisions": [
@@ -805,8 +813,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Continue output-only stop confirmation and actual handoff prerequisites; preserve current provider, physical and Human gates.",
-  "updatedAt": "2026-09-20T21:26:23.425589Z",
+  "nextAction": "Continue HTTP preview playback custody and actual handoff prerequisites; preserve current provider, physical and Human gates.",
+  "updatedAt": "2026-09-20T21:45:29.724378Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "Ordinary playback ownership verified at 0c45988: 995 source, 76 serial browser, 44 workspace; actual packaged native and clean generic install/guards pass. Current candidate serves this source; all selected ai5090 provider ports unavailable on direct host probe. Guide v18 static, last full guide visual v13. Complete handoff and other audio delivery paths remain open."
+  "notes": "Initiative playback ownership verified at f49d166: 998 source, 76 serial browser, 44 workspace; actual packaged native and clean generic install/guards pass. Current candidate serves this source; all selected ai5090 provider ports unavailable on direct host probe. Guide v19 static, last full guide visual v13. Complete handoff and other audio delivery paths remain open."
 }
