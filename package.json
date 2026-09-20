@@ -14,7 +14,9 @@
     "typecheck": "tsc -b --pretty false apps/server packages/contracts packages/runtime packages/providers-fixture packages/providers-voxcpm packages/providers-nemo-speech packages/providers-moonshine packages/providers-ollama packages/providers-pwce packages/providers-sglang packages/storage-sqlite",
     "test:browser-surface": "node --test apps/control-web/test/*.test.mjs",
     "candidate": "node scripts/start-candidate.mjs",
-    "desktop": "electron apps/desktop/main.cjs"
+    "desktop": "electron apps/desktop/main.cjs",
+    "desktop:package": "node scripts/package-desktop.mjs",
+    "test:desktop": "node --test apps/desktop/test/*.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
