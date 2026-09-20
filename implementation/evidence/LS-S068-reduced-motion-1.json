@@ -1,0 +1,250 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "observable-endpoint-reduced-motion-component",
+  "recordedAt": "2026-09-20T23:36:47.669273Z",
+  "sourceRevision": "8183d20d33110bc9234cac4f1e0c4ea2bca57532",
+  "specificationRevision": "7ce9970c385f4de616026b3b238ee4666d6d8b43",
+  "behavior": [
+    "Automatic body motion holds its current pose when the local reduced-motion preference is on, alongside existing automatic blink/gaze suppression.",
+    "An appearance loaded with reduced motion already on evaluates its initial idle pose once and remains still.",
+    "Explicit body/face previews remain bounded to five seconds; End preview, timeout, playback, interaction and privacy/navigation retain their existing cancellation behavior. A display preference change cancels an existing preview.",
+    "Real playback-amplitude mouth movement remains available, independent of paused body motion; semantic conversation status still updates.",
+    "The appearance panel and effective endpoint inspection disclose the current local browser preference without revising the session, changing audience or transferring settings."
+  ],
+  "checks": {
+    "source": {
+      "tests": 1014,
+      "pass": 1014,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 61163.078666
+    },
+    "serialBrowser": {
+      "tests": 78,
+      "pass": 78,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 237000.291166
+    },
+    "nativeCleanInstall": {
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1580.451
+    },
+    "finalBrowserRegression": {
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 2413.361292
+    },
+    "focusedPredecessor": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 34989.662208
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "privateValidation": "pass",
+    "workspaceCheck": "pass"
+  },
+  "native": {
+    "sourceRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+    "frontendSourceRevision": "8183d20d33110bc9234cac4f1e0c4ea2bca57532",
+    "scope": "Actual packaged Mac executable, real local HTTP and Three.js rendering from a clean installed source. Neutral animation fixture, emulated reduced-motion preference and synthetic playback sample. No microphone, camera, physical speech or Human claim."
+  },
+  "genericArchive": {
+    "recordedAt": "2026-09-20T23:33:39.323021+00:00",
+    "sourceRevision": "8183d20d33110bc9234cac4f1e0c4ea2bca57532",
+    "archiveSha256": "29e87271566c7e5bc6aa30b941975980c4f5e928b559f35dc4bca37eb9e49d8a",
+    "archiveBytes": 19005440,
+    "members": 1308,
+    "privatePackageHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "status": "verified",
+    "priorReceipts": [
+      "generic-clean-package.json",
+      "generic-clean-package-2.json",
+      "generic-clean-package-3.json",
+      "generic-clean-package-4.json",
+      "generic-clean-package-5.json",
+      "generic-clean-package-6.json",
+      "generic-clean-package-7.json"
+    ],
+    "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+    "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+    "build": "pnpm build",
+    "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "effectiveConfiguration": true,
+      "presentationSelfContext": true,
+      "structuredSessionDefinition": true,
+      "authenticatedHandoffAvailable": true,
+      "reducedMotionExplained": true,
+      "profileTopicControls": 6,
+      "pageErrors": [],
+      "actualPackagedMacReducedMotion": true
+    },
+    "runtimeStopped": true
+  },
+  "guide": {
+    "at": "2026-09-20T23:31:34.216Z",
+    "version": "2026-09-20.v23",
+    "journeys": 18,
+    "actions": 172,
+    "links": 24,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "e9e7f2eeb336f7d93d0aac1f099bf6f8062efc73fdf08dbc431b11c0b2e2d83e",
+    "validation": "Static structure, unique/sequential action identifiers and named targets pass. Last full browser/visual guide check remains v13; file URL policy denied reopening. No workaround used.",
+    "humanAcceptance": false
+  },
+  "visual": {
+    "application": "Desktop/native and 390px screenshots inspected; controls and motion status fit without horizontal overflow.",
+    "privateGuide": "Current static only; last full guide visual/browser remains v13 under URL policy.",
+    "privateAppearance": "Existing assets were not changed; no new perceptual acceptance."
+  },
+  "runningCandidate": {
+    "sourceRevision": "8183d20d33110bc9234cac4f1e0c4ea2bca57532",
+    "migration": 51,
+    "servedAssetsMatched": 44,
+    "authentication": true,
+    "newSessionProtected": true,
+    "preservedExistingData": true,
+    "changedExistingTables": [
+      "initiative_clock"
+    ],
+    "runtimeManifestSha256": "865ca10cd744b9d3ac9a0e70b54097378a2fe67e7fcb4aaf0a3b60ed53fd7d0a",
+    "filesVerified": 6858,
+    "configurationDigest": "f1e304cbc15d2eabb72a71ed748101572725d915d9eba978532cad6679505a96",
+    "providers": {
+      "inference": "unavailable",
+      "stt": "unavailable",
+      "tts": "unavailable"
+    },
+    "acceptingInteractions": false
+  },
+  "retainedFailures": [
+    "Rendered predecessor reproduced continuing automatic body motion under reduced motion: mixer time advanced 0.2084 to 0.4075 seconds while body angle changed. Successor preserves pose and time.",
+    "Private validation caught the stale LS-S068 packet manifest digest after scope bookkeeping. The scoped digest is repaired; unrelated S084 changes remain uncommitted and preserved."
+  ],
+  "exclusions": [
+    "Physical OS setting behavior, appearance comfort, real speech perception, provider recovery/current qualification, full endpoint composition and whole LS-TEST-086 remain open.",
+    "No new migration or backend behavior. Prior encrypted restore remains pinned to 8cc81a4 backend source; this component does not claim a fresh backup/restore.",
+    "Guide v23 remains 18 journeys/172 actions/24 named links, with the prior motion action expanded. Original 24 Human-accepted journeys remain unchanged.",
+    "No new provider, shared-service restart, personal learning, sensor/camera, publication, push or external exposure."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "reduced-motion-actual.log",
+      "sha256": "aa21088497cfcbfdaab9902cb2a38d94dfb1cd4e4fb7cd6858c0b85ea3a9cca3"
+    },
+    {
+      "name": "reduced-motion-before.log",
+      "sha256": "b5f865faed88c253e8df85809f38f998e876f08da5cc1b79e528e562a844e1c9"
+    },
+    {
+      "name": "reduced-motion-browser-all.log",
+      "sha256": "60c70d0892aa04ad8a1177dbf04abb88ab51e38ac8c3657b947ecce7040bfa51"
+    },
+    {
+      "name": "reduced-motion-final-browser.log",
+      "sha256": "72c5c45e42ba52430ad5ed9b473fe22cdb204002257919452e1da32c0c94d383"
+    },
+    {
+      "name": "reduced-motion-focused-1.log",
+      "sha256": "a621537caee994d08cd2a3ec775fb5f901ea23e463e01f242aad49f89a5ce146"
+    },
+    {
+      "name": "reduced-motion-generic-archive.log",
+      "sha256": "b90ac347f0a25ffe56b519d618b4d4f66ee51ddad92b94a9c956e783e9b167b8"
+    },
+    {
+      "name": "reduced-motion-generic-build.log",
+      "sha256": "1941f18e47fe0af08a90455a932e2139e6151d048cf2bc9636065123a92f0c6d"
+    },
+    {
+      "name": "reduced-motion-generic-install.log",
+      "sha256": "982f33d34e1e2d2d8d8d94b337b211ef5c70e0d6a79dfee639199bd8cdaeb506"
+    },
+    {
+      "name": "reduced-motion-generic-smoke.log",
+      "sha256": "d7f816bce9c8db6e46ec76f2503dbbaf712e442a8098e533b1e98779446a3484"
+    },
+    {
+      "name": "reduced-motion-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "reduced-motion-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "reduced-motion-native-clean.log",
+      "sha256": "56db52d42c9e20c857154df020cb6797458d0335e8c6f2ff8aacd962665aa664"
+    },
+    {
+      "name": "reduced-motion-native-final.log",
+      "sha256": "e1833fcecdd8fa2bcd8dc36f4e967621a92904ef4ee28ac0a46ff865eeb03998"
+    },
+    {
+      "name": "reduced-motion-native.log",
+      "sha256": "139b020eebf8f20033274dd0256dc2ab7012edbb138773ee1ed31b0aee55b3cf"
+    },
+    {
+      "name": "reduced-motion-preflight-2.log",
+      "sha256": "6df2c4989b417bbb5f82782f244e7f9021eebfb3a8ee71a46cfcd52c1d1c28b7"
+    },
+    {
+      "name": "reduced-motion-preflight.log",
+      "sha256": "ce8d9d4ad2cb00adb0cc0af21e4dbdb0992ebc62462692d5bffec47db584cf66"
+    },
+    {
+      "name": "reduced-motion-private-final.log",
+      "sha256": "6564e5064f28165538009a18f7844a875bf95c2db5c250055267f7a194e562b6"
+    },
+    {
+      "name": "reduced-motion-private.log",
+      "sha256": "7ec58a4581082bfc39f59bbd74781223c185d77c3638323508c906808174058e"
+    },
+    {
+      "name": "reduced-motion-source-all.log",
+      "sha256": "c3e39a5588ec1b15dc8e17303c73cf129c4db642df4fc0277bf91b3c615d0a3f"
+    },
+    {
+      "name": "reduced-motion-typecheck-build.log",
+      "sha256": "a1466e781747b59d7f4aae19847fa2c9f37e009537086d87baae9a619d8d7064"
+    },
+    {
+      "name": "reduced-motion-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "name": "generic-clean-package-17.json",
+      "sha256": "571466bcf763717d4c217612b2026b91957c9ee727cfd19636d79c7b7204bac4"
+    },
+    {
+      "name": "reduced-motion-actual.json",
+      "sha256": "484fdf82eaec62d79c90548690a36f6e0e7883a4249097b1a5cfdf5c30db428b"
+    },
+    {
+      "name": "reduced-motion-runtime-pin.json",
+      "sha256": "e7b9806607014f704f04ba7b139ced769ca862efed7c0d5c2fc9f872a20de39c"
+    },
+    {
+      "name": "v01-guide-static-v23.json",
+      "sha256": "b37b0c8cabd4bc30f2e17b98caab418ed0d8f71bafe789df21b676236b8e79e0"
+    }
+  ]
+}

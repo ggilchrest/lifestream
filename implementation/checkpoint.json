@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "7cf7be7f46aa8fb05e4d4ec31300aa11decef047",
-  "currentRevision": "8cc81a453fa6c40f431a45d4d3e492241364af47",
+  "currentRevision": "8183d20d33110bc9234cac4f1e0c4ea2bca57532",
   "activeSlice": "LS-S068",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -82,6 +82,8 @@
     "apps/control-web/conversation-room.js",
     "apps/control-web/conversation.js",
     "apps/control-web/endpoint-configuration.js",
+    "apps/control-web/presentation-runtime.js",
+    "apps/control-web/presentation.js",
     "apps/control-web/preview-playback.js",
     "apps/control-web/saved-voices.js",
     "apps/control-web/session-context.js",
@@ -95,6 +97,7 @@
     "apps/control-web/test/endpoint-configuration.test.mjs",
     "apps/control-web/test/initiative-conversation.test.mjs",
     "apps/control-web/test/local-auth.test.mjs",
+    "apps/control-web/test/presentation-reduced-motion.test.mjs",
     "apps/control-web/test/saved-voices.test.mjs",
     "apps/control-web/test/session-definition.test.mjs",
     "apps/control-web/test/session-handoff.test.mjs",
@@ -127,6 +130,7 @@
     "apps/server/test/session-handoff-retention.test.ts",
     "apps/server/test/session-handoff.test.ts",
     "apps/server/test/tts-playback.test.ts",
+    "docs/presentation-reduced-motion.md",
     "docs/s083-s084-acceptance-guide.html",
     "docs/session-disclosure.md",
     "docs/voice-playback.md",
@@ -138,6 +142,7 @@
     "implementation/evidence/LS-S068-output-only-playback-1.json",
     "implementation/evidence/LS-S068-preview-playback-1.json",
     "implementation/evidence/LS-S068-protected-setup-1.json",
+    "implementation/evidence/LS-S068-reduced-motion-1.json",
     "implementation/evidence/LS-S068-session-definition-1.json",
     "implementation/evidence/LS-S068-session-isolation-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
@@ -169,7 +174,7 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-authenticated-handoff-1.json",
+    "implementation/evidence/LS-S068-reduced-motion-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -805,6 +810,11 @@
       "command": "Authenticated handoff: source/browser/workspace/packaged native/clean install, actual candidate metadata transfer and isolated recovery",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S068-authenticated-handoff-1.json"
+    },
+    {
+      "command": "Reduced motion: rendered failing/passing regression, full source/browser, native clean install, current pinned candidate and owner checks",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S068-reduced-motion-1.json"
     }
   ],
   "decisions": [
@@ -851,8 +861,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Pin the runnable candidate to the verified clean install, then continue remaining presence and effective override composition. Preserve current provider, physical, Human and retained performance/causal gates.",
-  "updatedAt": "2026-09-20T23:15:36.404482Z",
+  "nextAction": "Continue remaining endpoint presence/override composition and independent integration gaps. Candidate is pinned at 8183d20; provider, physical, Human and preserved performance/causal criteria stay open.",
+  "updatedAt": "2026-09-20T23:36:47.669273Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "Authenticated between-turn handoff verified at 8cc81a4: 1014 source, 77 browser, 44 workspace, actual packaged native 1 and generic guards 19, zero skips. Candidate migration 51 preserves prior data; empty-dialogue handoff, encrypted backup and isolated restore pass. Guide v22 static, last full visual v13. Whole LS-S068 remains in progress."
+  "notes": "Reduced-motion component verified: 1014 source, 78 serial browser, actual packaged native against clean install, 44 served assets and data-preserving candidate restart. Guide v23 static; prior original 24 acceptance preserved. Full LS-S068 remains in progress."
 }
