@@ -26,3 +26,5 @@ export { CanonicalGrantRepository, CanonicalGrantError, canonicalDispatchTermina
 export type { CanonicalGrant, CanonicalHumanContext, TrustedGrantProposal, AuthorityCommand, AuthorityMutation, GrantOwnerBinding, CanonicalAdmission, CanonicalDispatchView, CanonicalDispatchObservation } from './authority/canonical-grants.js';
 export {SavedVoiceRepository, type SavedVoice} from './saved-voices.ts';
 export * from './acknowledgments.ts';
+
+export * from './experience.ts';

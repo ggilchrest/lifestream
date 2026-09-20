@@ -52,6 +52,7 @@ export class AutomaticMemory {
   const now=Date.now();this.database.connection.prepare("INSERT INTO automatic_memory_work (id,scope_key,source_turn,policy_revision,state,input_text,input_digest,created_at,expires_at) VALUES (?,?,?,?,'queued',?,?,?,?)").run(id,key(scope),source,policy.revision,input,hash(input),now,now+86400000);return {state:'queued'};
  }
  inspect(scope:MemoryScope){const jobs=this.database.connection.prepare('SELECT id,state,result_json AS result,reason,created_at AS createdAt FROM automatic_memory_work WHERE scope_key=? ORDER BY created_at DESC LIMIT 20').all(key(scope));return {policy:this.policy(scope),jobs};}
+ isIdle(){return !this.controller;}
  preempt(){this.controller?.abort('foreground');}
  retry(scope:MemoryScope,id:string){const result=this.database.connection.prepare("UPDATE automatic_memory_work SET state=CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END,reason='retry_requested' WHERE id=? AND scope_key=? AND state='failed' AND attempts<6 AND expires_at>?").run(id,key(scope),Date.now());if(result.changes!==1)throw new Error('Memory retry is unavailable');}
  async tick():Promise<void>{

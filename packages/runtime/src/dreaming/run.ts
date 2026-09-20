@@ -29,3 +29,9 @@ export function classifyFeedback(input: Omit<FeedbackEvent, "id" | "affects" | "
   const affects = input.kind === "reaffirmation" || input.kind === "correction" ? "evidence" : input.kind === "salience" ? "salience" : "communication";
   return { id: input.id ?? "feedback", targetId: input.targetId, kind: input.kind, attributedBy: input.attributedBy, ...(input.sourceFamily ? { sourceFamily: input.sourceFamily } : {}), ...(input.value ? { value: input.value } : {}), affects, independentSupport: input.kind === "reaffirmation" || input.kind === "correction" };
 }
+
+/** Dreaming reuses durable experiential admission; this port never generates or applies outside the shared slot. */
+export function queueExperientialDreaming<Scope, Job>(scope: Scope, port: { reconcile(scope: Scope): void; enqueue(scope: Scope): Job | null }): Job | null {
+  port.reconcile(scope);
+  return port.enqueue(scope);
+}

@@ -49,6 +49,20 @@
           "publicPath": "packages/contracts/src/schemas/protocol-common.schema.json"
         }
       ]
+    },
+    {
+      "slice": "LS-S086",
+      "owner": "ggilchrest/lifestream-specs",
+      "revision": "219da512d00625ab283c3325232ef8753abc2ff7",
+      "authorization": "Operator-approved LS-DEC-044 machine-only export to this exact destination; local ingestion only, no publication.",
+      "artifacts": [
+        {
+          "path": "contracts/experiential-learning.schema.json",
+          "schemaId": "https://lifestream.dev/contracts/experiential-learning/1.0.0",
+          "sha256": "793d4e25eadec40790372a4cc4b6d3141ba85dd713a826d1eb8a6c82a3cf5205",
+          "publicPath": "packages/contracts/src/schemas/experiential-learning.schema.json"
+        }
+      ]
     }
   ]
 }

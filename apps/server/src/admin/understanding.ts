@@ -46,6 +46,7 @@ export class DiscoveryAdministration {
     while(entry.ids.size>32)entry.ids.delete(entry.ids.keys().next().value!);entry.revision++;this.recent.delete(key);this.recent.set(key,entry);while(this.recent.size>128)this.recent.delete(this.recent.keys().next().value!);
   }
   foregroundStarted():()=>void{return this.coordinator.foregroundStarted();}
+  backgroundIdle(){return this.coordinator.isIdle();}
   runBackground<T>(work:BackgroundWork<T>){return this.coordinator.run(work);}
   close():void{if(this.closed)return;this.closed=true;this.inputLab.close();this.recent.clear();clearInterval(this.cleanupTimer);clearInterval(this.retryTimer);this.removeIdleListener();this.retryQueue.clear();for(const [key,task] of this.tasks){this.coordinator.cancel(key,"shutdown");this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
   invalidate(relationshipId:string):void{for(const [key,entry]of this.retryQueue)if(entry.relationshipId===relationshipId){this.retryQueue.delete(key);this.repository.finish(entry.scope,key,"cancelled","Current authorization or evidence changed; idle retry withheld.");}for(const [key,task]of this.tasks)if(task.relationshipId===relationshipId)this.coordinator.cancel(key,"scopeInvalidated");}

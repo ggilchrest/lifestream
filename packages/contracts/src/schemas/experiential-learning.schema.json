@@ -1,0 +1,1284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/experiential-learning/1.0.0",
+  "title": "Relationship-scoped experiential learning",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/State"
+    },
+    {
+      "$ref": "#/$defs/Request"
+    },
+    {
+      "$ref": "#/$defs/Response"
+    },
+    {
+      "$ref": "#/$defs/Result"
+    },
+    {
+      "$ref": "#/$defs/Job"
+    },
+    {
+      "$ref": "#/$defs/Episode"
+    }
+  ],
+  "$defs": {
+    "Scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assistantId",
+        "principalId",
+        "relationshipId"
+      ],
+      "properties": {
+        "assistantId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "principalId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "relationshipId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "Dimension": {
+      "enum": [
+        "attentionGardening",
+        "attentionAstronomy",
+        "attentionReading",
+        "attentionCooking",
+        "attentionMusic",
+        "attentionGames"
+      ]
+    },
+    "Topic": {
+      "enum": [
+        "gardening",
+        "astronomy",
+        "reading",
+        "cooking",
+        "music",
+        "games",
+        "health",
+        "sexual",
+        "religious",
+        "existential"
+      ]
+    },
+    "Treatment": {
+      "enum": [
+        "ordinary",
+        "invitationRequired",
+        "disallowed"
+      ]
+    },
+    "Topics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gardening",
+        "astronomy",
+        "reading",
+        "cooking",
+        "music",
+        "games",
+        "health",
+        "sexual",
+        "religious",
+        "existential"
+      ],
+      "properties": {
+        "gardening": {
+          "$ref": "#/$defs/Treatment"
+        },
+        "astronomy": {
+          "$ref": "#/$defs/Treatment"
+        },
+        "reading": {
+          "$ref": "#/$defs/Treatment"
+        },
+        "cooking": {
+          "$ref": "#/$defs/Treatment"
+        },
+        "music": {
+          "$ref": "#/$defs/Treatment"
+        },
+        "games": {
+          "$ref": "#/$defs/Treatment"
+        },
+        "health": {
+          "$ref": "#/$defs/Treatment"
+        },
+        "sexual": {
+          "$ref": "#/$defs/Treatment"
+        },
+        "religious": {
+          "$ref": "#/$defs/Treatment"
+        },
+        "existential": {
+          "$ref": "#/$defs/Treatment"
+        }
+      }
+    },
+    "Bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "idleMs",
+        "callsPerDay",
+        "retries",
+        "deadlineMs",
+        "inputTokens",
+        "outputTokens",
+        "outputBytes",
+        "activeItems",
+        "itemBytes",
+        "episodeDelta",
+        "rollingDelta"
+      ],
+      "properties": {
+        "idleMs": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 3600000
+        },
+        "callsPerDay": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "deadlineMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120000
+        },
+        "inputTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "outputTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 768
+        },
+        "outputBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8192
+        },
+        "activeItems": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "itemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2048
+        },
+        "episodeDelta": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.05
+        },
+        "rollingDelta": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.2
+        }
+      }
+    },
+    "Configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordType",
+        "revision",
+        "enabled",
+        "frozen",
+        "retention",
+        "processingPolicyRevision",
+        "bounds",
+        "topicPolicies"
+      ],
+      "properties": {
+        "recordType": {
+          "const": "configuration"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "frozen": {
+          "type": "boolean"
+        },
+        "retention": {
+          "enum": [
+            "sourceBound"
+          ]
+        },
+        "processingPolicyRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "bounds": {
+          "$ref": "#/$defs/Bounds"
+        },
+        "topicPolicies": {
+          "$ref": "#/$defs/Topics"
+        }
+      }
+    },
+    "Source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "revision",
+        "family",
+        "digest",
+        "content",
+        "occurredAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "family": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "Episode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordType",
+        "id",
+        "scope",
+        "sourceRefs",
+        "sourceDigest",
+        "independence",
+        "occurredAt",
+        "eligibleReason",
+        "state"
+      ],
+      "properties": {
+        "recordType": {
+          "const": "episode"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "maxItems": 16
+        },
+        "sourceDigest": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "independence": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "eligibleReason": {
+          "enum": [
+            "interest",
+            "project",
+            "correction",
+            "question",
+            "outcome"
+          ]
+        },
+        "state": {
+          "enum": [
+            "retained",
+            "invalidated"
+          ]
+        }
+      }
+    },
+    "ItemProposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "expectedRevision",
+        "kind",
+        "topic",
+        "statement",
+        "nextStep",
+        "uncertainty",
+        "sourceRefs",
+        "disposition"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "kind": {
+          "enum": [
+            "question",
+            "prediction",
+            "hypothesis",
+            "project"
+          ]
+        },
+        "topic": {
+          "$ref": "#/$defs/Topic"
+        },
+        "statement": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "nextStep": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "uncertainty": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "maxItems": 16
+        },
+        "disposition": {
+          "enum": [
+            "open",
+            "deferred",
+            "resolved",
+            "invalidated"
+          ]
+        }
+      }
+    },
+    "Item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "topic",
+        "statement",
+        "nextStep",
+        "uncertainty",
+        "sourceRefs",
+        "disposition",
+        "revision",
+        "lastEvaluatedAt",
+        "reconsiderAfter"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "kind": {
+          "enum": [
+            "question",
+            "prediction",
+            "hypothesis",
+            "project"
+          ]
+        },
+        "topic": {
+          "$ref": "#/$defs/Topic"
+        },
+        "statement": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "nextStep": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "uncertainty": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "maxItems": 16
+        },
+        "disposition": {
+          "enum": [
+            "open",
+            "deferred",
+            "resolved",
+            "invalidated"
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "lastEvaluatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reconsiderAfter": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "ChangeProposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dimension",
+        "delta",
+        "episodeRefs",
+        "confidence",
+        "reason"
+      ],
+      "properties": {
+        "dimension": {
+          "$ref": "#/$defs/Dimension"
+        },
+        "delta": {
+          "type": "number",
+          "minimum": -0.05,
+          "maximum": 0.05
+        },
+        "episodeRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "maxItems": 16
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 300
+        }
+      }
+    },
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordType",
+        "decision",
+        "conclusion",
+        "items",
+        "changes"
+      ],
+      "properties": {
+        "recordType": {
+          "const": "reflectionResult"
+        },
+        "decision": {
+          "enum": [
+            "change",
+            "noChange"
+          ]
+        },
+        "conclusion": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemProposal"
+          },
+          "maxItems": 16
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChangeProposal"
+          },
+          "maxItems": 6
+        }
+      }
+    },
+    "Imprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dimension",
+        "seed",
+        "learned",
+        "value",
+        "seedRevision",
+        "revision",
+        "contributingEpisodes",
+        "confidence",
+        "processingPolicyRevision"
+      ],
+      "properties": {
+        "dimension": {
+          "$ref": "#/$defs/Dimension"
+        },
+        "seed": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "learned": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "value": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "seedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "contributingEpisodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "maxItems": 256
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "processingPolicyRevision": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "revision",
+        "operation",
+        "at",
+        "jobId",
+        "sourceRefs",
+        "changes",
+        "reversed",
+        "originOmittedFromModel",
+        "summary"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "operation": {
+          "enum": [
+            "reflection",
+            "seed",
+            "reverse",
+            "reset",
+            "invalidate",
+            "configure"
+          ]
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "jobId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "maxItems": 256
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "dimension",
+              "delta",
+              "inverse",
+              "episodeRefs",
+              "confidence"
+            ],
+            "properties": {
+              "dimension": {
+                "$ref": "#/$defs/Dimension"
+              },
+              "delta": {
+                "type": "number",
+                "minimum": -2,
+                "maximum": 2
+              },
+              "inverse": {
+                "type": "number",
+                "minimum": -2,
+                "maximum": 2
+              },
+              "episodeRefs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                "maxItems": 16
+              },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          },
+          "maxItems": 6
+        },
+        "reversed": {
+          "type": "boolean"
+        },
+        "originOmittedFromModel": {
+          "type": "boolean"
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 600
+        }
+      }
+    },
+    "Job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordType",
+        "id",
+        "scope",
+        "policyRevision",
+        "state",
+        "attempts",
+        "episodeRefs",
+        "createdAt",
+        "eligibleAt",
+        "reason",
+        "providerRevision",
+        "inputTokens",
+        "outputTokens",
+        "queueMs",
+        "elapsedMs"
+      ],
+      "properties": {
+        "recordType": {
+          "const": "job"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "policyRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "state": {
+          "enum": [
+            "queued",
+            "running",
+            "published",
+            "noChange",
+            "failed",
+            "cancelled",
+            "invalidated"
+          ]
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "episodeRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "maxItems": 16
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "eligibleAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "providerRevision": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inputTokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outputTokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "queueMs": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000000000000.0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "elapsedMs": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000000000000.0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordType",
+        "id",
+        "revision",
+        "considered",
+        "selected",
+        "reason",
+        "inputDigest",
+        "at",
+        "observedOutput"
+      ],
+      "properties": {
+        "recordType": {
+          "const": "selection"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "considered": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "maxItems": 16
+        },
+        "selected": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "enum": [
+            "ranked",
+            "noEligibleItems",
+            "disabled",
+            "uninvited",
+            "directRequest"
+          ]
+        },
+        "inputDigest": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "observedOutput": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Funnel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eligible",
+        "admitted",
+        "calls",
+        "failures",
+        "skips",
+        "noChange",
+        "published",
+        "considered",
+        "selected",
+        "outputs"
+      ],
+      "properties": {
+        "eligible": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "admitted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "failures": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "skips": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "noChange": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "published": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "considered": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "selected": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "outputs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      }
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordType",
+        "schemaVersion",
+        "scope",
+        "revision",
+        "epoch",
+        "configuration",
+        "items",
+        "imprints",
+        "funnel",
+        "lastReason",
+        "lastEligibleEpisode"
+      ],
+      "properties": {
+        "recordType": {
+          "const": "experienceState"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "configuration": {
+          "$ref": "#/$defs/Configuration"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Item"
+          },
+          "maxItems": 128
+        },
+        "imprints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Imprint"
+          },
+          "maxItems": 6
+        },
+        "funnel": {
+          "$ref": "#/$defs/Funnel"
+        },
+        "lastReason": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "lastEligibleEpisode": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Request": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operation",
+            "expectedRevision",
+            "enabled",
+            "frozen",
+            "retention",
+            "topicPolicies"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "operation": {
+              "const": "configure"
+            },
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "frozen": {
+              "type": "boolean"
+            },
+            "retention": {
+              "const": "sourceBound"
+            },
+            "topicPolicies": {
+              "$ref": "#/$defs/Topics"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operation",
+            "expectedRevision",
+            "dimension",
+            "value"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "operation": {
+              "const": "seed"
+            },
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "dimension": {
+              "$ref": "#/$defs/Dimension"
+            },
+            "value": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operation",
+            "expectedRevision",
+            "lineageId"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "operation": {
+              "const": "reverse"
+            },
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "lineageId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operation",
+            "expectedRevision"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "operation": {
+              "const": "reset"
+            },
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            }
+          }
+        }
+      ]
+    },
+    "Response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "state",
+        "jobs",
+        "lineage",
+        "selections",
+        "limitations"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "state": {
+          "$ref": "#/$defs/State"
+        },
+        "jobs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Job"
+          },
+          "maxItems": 32
+        },
+        "lineage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Lineage"
+          },
+          "maxItems": 128
+        },
+        "selections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Selection"
+          },
+          "maxItems": 32
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "maxItems": 12
+        }
+      }
+    }
+  }
+}

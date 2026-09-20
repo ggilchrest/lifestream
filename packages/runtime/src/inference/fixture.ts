@@ -1,5 +1,6 @@
 import type { InferenceProvider, InferenceRequest, InferenceChunk, ProviderCallContext } from "./port.js";
 export class FixtureInferenceProvider implements InferenceProvider {
+  async tokenize(input:InferenceRequest|string,_context:ProviderCallContext){return {count:Math.ceil((typeof input==='string'?input:input.sections.map(s=>s.content).join(' ')).split(/\s+/u).length*1.5),identity:'fixture-deterministic-tokenizer'};}
   async *generate(request: InferenceRequest, context: ProviderCallContext): AsyncIterable<InferenceChunk> {
     if (context.signal.aborted || request.executionMode === "replay") return;
     if (request.scope.sessionId.startsWith("discovery-analysis:")) {

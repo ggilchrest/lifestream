@@ -3,4 +3,4 @@ export type InferenceRequest = { maximumOutputTokens?: number; sections: readonl
 export type InputManifest = { schemaVersion: "1.0.0"; sections: readonly Pick<InferenceSection, "kind" | "sourceRevision" | "sourceRef" | "contentDigest" | "redaction" | "tokenCount">[]; tokenizer: string };
 export type ProviderCallContext = { signal: AbortSignal };
 export type InferenceChunk = { kind: "text" | "capabilityRequest" | "done" | "error"; text?: string; capability?: { name: string; input: Record<string, unknown>; effect: "read-only" } ; error?: { code: string; message: string } };
-export interface InferenceProvider { generate(request: InferenceRequest, context: ProviderCallContext): AsyncIterable<InferenceChunk>; }
+export interface InferenceProvider { tokenize?(input: InferenceRequest | string, context: ProviderCallContext): Promise<{count:number;identity:string}>; generate(request: InferenceRequest, context: ProviderCallContext): AsyncIterable<InferenceChunk>; }

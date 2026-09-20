@@ -119,6 +119,22 @@
     "./embodiment/controller": {
       "types": "./dist/embodiment/controller.d.ts",
       "import": "./dist/embodiment/controller.js"
+    },
+    "./experience/types": {
+      "types": "./dist/experience/types.d.ts",
+      "import": "./dist/experience/types.js"
+    },
+    "./experience/selection": {
+      "types": "./dist/experience/selection.d.ts",
+      "import": "./dist/experience/selection.js"
+    },
+    "./experience/reflection": {
+      "types": "./dist/experience/reflection.d.ts",
+      "import": "./dist/experience/reflection.js"
+    },
+    "./dreaming/run": {
+      "types": "./dist/dreaming/run.d.ts",
+      "import": "./dist/dreaming/run.js"
     }
   },
   "scripts": {
