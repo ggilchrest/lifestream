@@ -9,13 +9,15 @@ export class AudioPlayback {
   private endpointSettled = false;
   private stopped = false;
   private samples = 0;
+  private expired = false;
+  get deadlineExpired(): boolean { return this.expired; }
 
   readonly trace: string;
   private readonly stop: () => void;
   constructor(trace: string, deadlineAt: string, stop: () => void) {
     this.trace = trace; this.stop = stop;
     this.settled = new Promise(resolve => { this.resolve = resolve; });
-    this.timer = setTimeout(() => { this.endpointSettled = true; this.stopped = true; this.stop(); this.finish(); }, Math.max(1, Date.parse(deadlineAt) - Date.now()));
+    this.timer = setTimeout(() => { this.expired = true; this.endpointSettled = true; this.stopped = true; this.stop(); this.finish(); }, Math.max(1, Date.parse(deadlineAt) - Date.now()));
     this.timer.unref?.();
   }
   emittedOutput(samples = 0): void {

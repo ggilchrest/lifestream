@@ -10,13 +10,15 @@ import test from 'node:test';
 import {AudioSession,type OutputOnlySpeech} from '../src/runtime/audio.ts';
 import {SessionHandoffService} from '@lifestream/runtime/endpoints/handoff';
 
-function fixture(){
+function fixture({autoSettle=true}={}){
  const events:any[]=[],requests:any[]=[],service=new SessionHandoffService(),sessionId=randomUUID(),endpointId=randomUUID();let sttCalls=0,inferenceCalls=0,noRetry=0,begins=0,emitted=0;
- const socket={readyState:1,send:(value:string)=>events.push(JSON.parse(value)),close:()=>{socket.readyState=3;}};
+ let session:AudioSession;
+ // Synthetic endpoint protocol acknowledgment; real WebAudio is exercised separately.
+ const socket={readyState:1,send:(value:string)=>{const event=JSON.parse(value);events.push(event);const trace=event.interactionTraceId??event.event?.interactionTraceId;if(autoSettle&&(event.type==='stopPlayback'||event.event?.payload.type==='terminal'&&event.event.payload.state==='completed'))queueMicrotask(()=>void session.message(JSON.stringify({type:'playbackSettled',interactionTraceId:trace,outcome:event.type==='stopPlayback'?'stopped':'completed',receivedSamples:events.filter(e=>e.type==='audio'&&e.interactionTraceId===trace).reduce((sum,e)=>sum+e.chunk.frame.sampleCount,0)})));},close:()=>{socket.readyState=3;}};
  const frame=(sequence=0)=>({frameId:randomUUID(),sequence,format:{encoding:'pcm_s16le' as const,sampleRateHz:48000 as const,channels:1 as const},sampleOffset:sequence*10,sampleCount:10,dataBase64:Buffer.alloc(20).toString('base64')});
  const tts:any={withoutAdmissionRetries(){noRetry++;return this;},async *synthesize(request:any){requests.push(request);yield {kind:'preAudio',mappingRevision:'synthetic-map:1',degradedDimensions:['affect']};yield {kind:'data',segmentId:request.segmentId,frame:frame(),mappingRevision:'synthetic-map:1'};yield {kind:'terminal',outcome:'succeeded',outputSamples:10,frameCount:1,mappingRevision:'synthetic-map:1',degradedDimensions:[]};}};
  const deps:any={stt:{async *transcribe(){sttCalls++;throw new Error('STT must not run');}},inference:{async *generate(){inferenceCalls++;throw new Error('Inference must not run');}},tts,outputLease:(endpoint:string,deadline:string)=>{const lease=service.acquire(sessionId,endpoint,randomUUID(),deadline);return {current:()=>service.owns(lease),release:()=>service.release(lease)};}};
- const session=new AudioSession(socket,deps,sessionId),input:OutputOnlySpeech={text:'Synthetic output only.',interactionId:randomUUID(),endpointId,deadlineAt:new Date(Date.now()+30000).toISOString(),warmth:0.8,signal:new AbortController().signal,current:()=>true,beforeEmission:()=>{begins++;},emitted:()=>{emitted++;}};
+ session=new AudioSession(socket,deps,sessionId);const input:OutputOnlySpeech={text:'Synthetic output only.',interactionId:randomUUID(),endpointId,deadlineAt:new Date(Date.now()+30000).toISOString(),warmth:0.8,signal:new AbortController().signal,current:()=>true,beforeEmission:()=>{begins++;},emitted:()=>{emitted++;}};
  return {events,requests,service,sessionId,endpointId,socket,frame,tts,deps,session,input,counts:()=>({sttCalls,inferenceCalls,noRetry,begins,emitted})};
 }
 
@@ -126,4 +128,26 @@ test('playback deadline remains expiry when its timer fires before the wall-cloc
 test('speech expression observations retain provider metadata and actual emission stages without provider prose',async()=>{
  const f=fixture(),observed:any[]=[];f.input.expressionObserved=report=>observed.push(report);f.tts.synthesize=async function*(request:any){yield {kind:'preAudio',mappingRevision:'synthetic-expression:1',disposition:'partiallyApplied',degradedDimensions:['affect'],delivery:{deliveryMode:'neutral',pace:0.5,energy:0.4,text:'PROVIDER_PROSE'}};yield {kind:'data',segmentId:request.segmentId,frame:f.frame(),mappingRevision:'synthetic-expression:1'};yield {kind:'terminal',outcome:'succeeded',outputSamples:10,frameCount:1,mappingRevision:'synthetic-expression:1',disposition:'partiallyApplied',degradedDimensions:['affect']};};
  await f.session.speakOutputOnly(f.input);assert.deepEqual(observed.map(r=>r.speechStage),['providerReported','audioEmitted','audioEmitted','synthesized']);assert.deepEqual(observed.at(-1).appliedDelivery,{deliveryMode:'neutral',pace:0.5,energy:0.4});assert.deepEqual(observed.at(-1).degradedDimensions,['warmth','affect']);assert.equal(observed.at(-1).disposition,'partiallyApplied');assert.equal(JSON.stringify(observed).includes('PROVIDER_PROSE'),false);
+});
+
+
+test('output-only cancellation cannot release ownership before the endpoint confirms local stop',async()=>{
+ const f=fixture({autoSettle:false});let entered:()=>void=()=>{};const started=new Promise<void>(r=>{entered=r;});
+ f.input.synthesized=async signal=>{entered();await new Promise<void>((_,reject)=>signal.addEventListener('abort',()=>reject(Error('Stopped')),{once:true}));};
+ const pending=f.session.speakOutputOnly(f.input);await started;await f.session.message(JSON.stringify({type:'interrupt',interactionTraceId:f.input.interactionId,reason:'Cancel'}));await assert.rejects(pending);
+ assert.ok(f.service.currentLease(f.sessionId),'cancel requests are not endpoint stop acknowledgments');assert.equal(f.session.outputAvailable,false);
+ await f.session.message(JSON.stringify({type:'playbackSettled',interactionTraceId:f.input.interactionId,outcome:'stopped',receivedSamples:10}));await new Promise(r=>setImmediate(r));assert.equal(f.service.currentLease(f.sessionId),undefined);assert.equal(f.session.outputAvailable,true);
+});
+
+
+test('output-only success requires both delivery confirmation and exact endpoint playback settlement',async()=>{
+ const f=fixture({autoSettle:false});let entered:()=>void=()=>{};const started=new Promise<void>(r=>{entered=r;});f.input.synthesized=async()=>{entered();};
+ const pending=f.session.speakOutputOnly(f.input);await started;assert.equal(f.session.outputAvailable,false);
+ for(const mutation of [{interactionTraceId:randomUUID()},{receivedSamples:9},{receivedSamples:'10'}]){await f.session.message(JSON.stringify({type:'playbackSettled',interactionTraceId:f.input.interactionId,outcome:'completed',receivedSamples:10,...mutation}));assert.ok(f.service.currentLease(f.sessionId));}
+ await f.session.message(JSON.stringify({type:'playbackSettled',interactionTraceId:f.input.interactionId,outcome:'completed',receivedSamples:10}));await pending;await new Promise(r=>setImmediate(r));assert.equal(f.session.outputAvailable,true);assert.equal(f.service.currentLease(f.sessionId),undefined);
+});
+
+test('output-only cancellation without an endpoint report keeps ownership only until the existing expiry',async t=>{
+ t.mock.timers.enable({apis:['setTimeout']});const f=fixture({autoSettle:false});let entered:()=>void=()=>{};const started=new Promise<void>(r=>{entered=r;});f.input.synthesized=async signal=>{entered();await new Promise<void>((_,reject)=>signal.addEventListener('abort',()=>reject(Error('Cancelled')),{once:true}));};
+ const pending=f.session.speakOutputOnly(f.input);await started;await f.session.message(JSON.stringify({type:'interrupt',interactionTraceId:f.input.interactionId,reason:'Stop'}));await assert.rejects(pending);assert.ok(f.service.currentLease(f.sessionId));t.mock.timers.tick(30000);await new Promise(r=>setImmediate(r));assert.equal(f.service.currentLease(f.sessionId),undefined);assert.equal(f.session.outputAvailable,true);
 });

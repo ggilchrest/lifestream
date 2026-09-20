@@ -71,6 +71,7 @@ export class AudioSession {
     const deadline=Math.min(Date.parse(input.deadlineAt),Date.now()+SPEECH_SEGMENT_DEADLINE_MS);
     if(!Number.isFinite(deadline)||deadline<=Date.now())throw new Error("Output-only speech expired");
     const lease=this.deps.outputLease(input.endpointId,new Date(deadline).toISOString()),controller=new AbortController(),signal=AbortSignal.any([controller.signal,input.signal]);
+    const playback=this.playback=new AudioPlayback(input.interactionId,new Date(deadline).toISOString(),()=>{controller.abort();send(this.socket,{type:"stopPlayback",interactionTraceId:input.interactionId,reason:"output_only_stopped_or_expired"});});
     let settledOutput:()=>void=()=>{};this.outputSettlement=new Promise<void>(resolve=>{settledOutput=resolve;});
     this.controller=controller;this.interactionTraceId=input.interactionId;this.sequence=0;this.currentInput=undefined;
     let deadlineElapsed=false;const timer=setTimeout(()=>{deadlineElapsed=true;controller.abort();},Math.max(1,deadline-Date.now()));
@@ -98,17 +99,18 @@ export class AudioSession {
         await pacer.admit(event.frame.sampleCount,event.frame.format.sampleRateHz,signal);if(!current())throw new Error("Audio lease or policy changed before emission");
         if(!started){input.beforeEmission();if(!current())throw new Error("Output-only admission changed");response(this.socket,input.interactionId,this.sequence++,{type:"textDelta",text:input.text});started=true;input.emitted();}
         if(!current())throw new Error("Output-only ownership changed");
-        send(this.socket,{type:"audio",interactionTraceId:input.interactionId,chunk:{segmentId:event.segmentId,frame:event.frame}});samples+=event.frame.sampleCount;frames++;if(frames===1){expressionStage="audioEmitted";observeExpression();}
+        playback.emittedOutput(event.frame.sampleCount);send(this.socket,{type:"audio",interactionTraceId:input.interactionId,chunk:{segmentId:event.segmentId,frame:event.frame}});samples+=event.frame.sampleCount;frames++;if(frames===1){expressionStage="audioEmitted";observeExpression();}
       }
       if(!done||!current())throw new Error("Output-only speech has no current successful terminal");
-      expressionStage="synthesized";observeExpression();response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:"completed",finalResponse:null,error:null});terminalSent=true;
+      playback.synthesized();playback.producerSettled();expressionStage="synthesized";observeExpression();response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:"completed",finalResponse:null,error:null});terminalSent=true;
       if(input.synthesized)await input.synthesized(signal);
+      await playback.settled;
       if(!current())throw new Error("Output-only playback was interrupted or expired");
       return {samples,frames,mappingRevision,warmth:"unsupported",degradedDimensions:[...degraded]};
     }catch(error){
-      const cancelled=signal.aborted||!input.current()||!lease.current();if(cancelled)input.interrupted?.(deadlineElapsed||Date.now()>=deadline?"expired":"cancelled");controller.abort();if(started)send(this.socket,{type:"stopPlayback",interactionTraceId:input.interactionId,reason:"output_only_cancelled_or_failed"});
+      const cancelled=signal.aborted||!input.current()||!lease.current();if(cancelled)input.interrupted?.(deadlineElapsed||playback.deadlineExpired||Date.now()>=deadline?"expired":"cancelled");controller.abort();if(started)playback.interrupt();
       if(!terminalSent)response(this.socket,input.interactionId,this.sequence++,{type:"terminal",state:cancelled?"interrupted":"failed",finalResponse:null,error:problem("output_only_stopped","Output-only speech stopped; playback completion is not established.",input.interactionId)});throw error;
-    }finally{clearTimeout(timer);controller.abort();const release=()=>{lease.release();this.controller=undefined;this.interactionTraceId=undefined;this.outputSettlement=undefined;settledOutput();};if(settlement&&!settled)void settlement.catch(()=>undefined).then(release);else release();}
+    }finally{clearTimeout(timer);controller.abort();const release=()=>{lease.release();this.controller=undefined;this.interactionTraceId=undefined;this.outputSettlement=undefined;this.playback=undefined;settledOutput();};if(settlement&&!settled)void settlement.catch(()=>undefined).then(()=>playback.producerSettled());else playback.producerSettled();void playback.settled.then(release);}
   }
 
   close(): void { this.closed = true;this.lifetime.abort(); this.frames = []; this.voiceSettings = { ...defaultVoiceSettings }; this.request = undefined; this.playback?.interrupt(); this.controller?.abort(); this.socket.close(1001, "audio session closed"); }

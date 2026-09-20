@@ -152,7 +152,7 @@ test('protected speech delivery holds ownership after synthesis until receipt-bo
  assert.equal(f.wire.some(e=>['transcript','accepted','turnStarted'].includes(e.type)),false);assert.equal(f.wire.find(e=>e.type==='audio').interactionTraceId,r.body.delivery.interactionId);assert.equal(f.pending(),1);
  assert.equal((await f.preview()).status,409);assert.equal(outcome(await f.ack(r)).acknowledgmentKind,'endpointAccepted');assert.equal(f.pending(),1);assert.equal((await f.preview()).status,409);
  assert.equal((await f.extension({operation:'acknowledge',sessionId:f.auth.sessionId,opportunityId:outcome(r).opportunityId,receiptId:randomUUID(),kind:'playbackCompleted'})).status,409);assert.equal(f.pending(),1);
- assert.equal(outcome(await f.ack(r,'playbackCompleted')).acknowledgmentKind,'playbackCompleted');await until(()=>!(f.app as any).audioOwnership.currentLease(f.auth.sessionId));assert.equal(f.pending(),0);
+ assert.equal(outcome(await f.ack(r,'playbackCompleted')).acknowledgmentKind,'playbackCompleted');assert.ok((f.app as any).audioOwnership.currentLease(f.auth.sessionId),'delivery receipt alone cannot release endpoint audio custody');const trace=r.body.delivery.interactionId;f.socket.send(JSON.stringify({type:'playbackSettled',interactionTraceId:trace,outcome:'completed',receivedSamples:f.wire.filter(e=>e.type==='audio'&&e.interactionTraceId===trace).reduce((sum,e)=>sum+e.chunk.frame.sampleCount,0)}));await until(()=>!(f.app as any).audioOwnership.currentLease(f.auth.sessionId));assert.equal(f.pending(),0);
  assert.equal((await f.extension(request)).body.delivery,null);assert.equal(f.model.length,1);assert.equal((await f.ack(r,'playbackCompleted')).status,200);
 });
 
@@ -178,6 +178,8 @@ test('quiet, endpoint change, explicit stop and ordinary typed replies cancel un
   if(cause==='stop')f.socket.send(JSON.stringify({type:'interrupt',interactionTraceId:r.body.delivery.interactionId,reason:'Explicit stop'}));
   if(cause==='reply'){const response=await fetch(f.base+'/api/runtime/v1/messages',{method:'POST',headers:f.headers,body:JSON.stringify({assistantId:f.assistant.assistantId,relationshipId:f.rel.relationshipId,userInput:'Synthetic ordinary reply.'})});assert.equal(response.status,200);await response.text();}
   await until(()=>f.pending()===0);const final=outcome(await f.extension({operation:'inspect'}));assert.equal(final.state,'cancelled',cause);assert.equal(final.lastDeliveryStage,'acknowledged');assert.equal(final.acknowledgmentKind,'endpointAccepted');if(cause==='reply')assert.equal(final.response,'replied');assert.equal((await f.ack(r,'playbackCompleted')).status,409);await until(()=>f.wire.some(e=>e.type==='stopPlayback'));
+  assert.ok((f.app as any).audioOwnership.currentLease(f.auth.sessionId),'cancelled ledger state does not confirm endpoint stop');
+  if(cause!=='endpoint'){const trace=r.body.delivery.interactionId;f.socket.send(JSON.stringify({type:'playbackSettled',interactionTraceId:trace,outcome:'stopped',receivedSamples:f.wire.filter(e=>e.type==='audio'&&e.interactionTraceId===trace).reduce((sum,e)=>sum+e.chunk.frame.sampleCount,0)}));await until(()=>!(f.app as any).audioOwnership.currentLease(f.auth.sessionId));}
  }
 });
 
