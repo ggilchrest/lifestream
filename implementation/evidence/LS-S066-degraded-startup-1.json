@@ -1,0 +1,106 @@
+{
+  "slice": "LS-S066",
+  "status": "inProgress",
+  "claimClass": "verified-local-candidate-outage-component",
+  "revision": "567154ba3ad7d7eb15559267a38e5db6bc40e10b",
+  "collectedAt": "2026-09-20T16:38:12.839293Z",
+  "behavior": [
+    "Candidate starts with authenticated administration available when required selected providers are unavailable; readiness remains 503 and interaction admission closed.",
+    "Readiness recovery starts existing acknowledgment and experience workers idempotently. No provider substitution, authority expansion or model change.",
+    "Fatal configuration, database and listening failures still fail startup."
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 973,
+      "skipped": 0,
+      "durationMs": 53752.593167
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/candidate-startup.test.ts",
+      "result": "pass",
+      "tests": 1,
+      "durationMs": 891.381583,
+      "regression": "First failed because CLI exited; successor exposed missing background startup after recovery; final passes both."
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build; node scripts/workspace.mjs check; npm --prefix .private run validate",
+      "result": "pass"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "tests": 44
+    },
+    {
+      "command": "operator-local authenticated actual-candidate browser smoke",
+      "result": "pass",
+      "checks": [
+        "real local authentication",
+        "real private catalog: two packages",
+        "all eight previews and End preview through actual server and browser",
+        "neutral absent-mapping disclosure",
+        "desktop and mobile rendered; no horizontal overflow",
+        "shared audience clears preview",
+        "sign-out"
+      ],
+      "pageErrors": []
+    }
+  ],
+  "runningCandidate": {
+    "sourceRevision": "567154ba3ad7d7eb15559267a38e5db6bc40e10b",
+    "profile": "ai5090",
+    "status": "degraded",
+    "acceptingInteractions": false,
+    "inference": "unavailable",
+    "stt": "unavailable",
+    "tts": "healthy",
+    "hostScope": "loopback only",
+    "presentation": "real Three renderer; neutral reference for smoke; private catalog authorization checked without selecting a private package"
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "resumed-final-source.log",
+      "sha256": "0c87213aae0e542dbf6d1afcbec78a48517ad811714b132951f9c6c381d17d4c"
+    },
+    {
+      "name": "candidate-degraded-startup-before.log",
+      "sha256": "0a338b539696d16f047ecaa886affc7809b39b38bc87e6af65f3f40f960c756f"
+    },
+    {
+      "name": "candidate-degraded-background-before.log",
+      "sha256": "1bbc33c59678b357001cb9ad2982fb8421224ae1513a294fa0207e7e4769c880"
+    },
+    {
+      "name": "candidate-degraded-startup-final.log",
+      "sha256": "ca152ef1b2db9558440c18c96052c9bfb128b4124d0513d6a4279ebd3356b58c"
+    },
+    {
+      "name": "resumed-final-build.log",
+      "sha256": "d7d2e6a4ec780c5cf71a0166c964337468ebcb408b1f239a309743de3bf7c1e3"
+    },
+    {
+      "name": "resumed-final-workspace.log",
+      "sha256": "dbc916b965a109f8b60a3a03c17f86cd9955f42b8d20119674a4f98d1ae2a0b4"
+    },
+    {
+      "name": "resumed-final-private-validation.log",
+      "sha256": "460236282e2a8b41ffd17ae7133f1f368808c25f9112b5a1c88f33c421aca785"
+    },
+    {
+      "name": "resumed-candidate-browser.json",
+      "sha256": "7bc0c92786a3881426b3e81d88e186ce8c0de205d564459af650a1dc377ba091"
+    }
+  ],
+  "retainedSmokeAttempts": [
+    "Initial sign-in timed out; a fresh attempt succeeded with the same existing credentials.",
+    "A harness expectation of private packages before audience approval failed correctly; final proof asserts zero packages while unknown and two after scoped declaration.",
+    "Mobile sign-out navigation first omitted the collapsed menu; final proof uses Navigate workspace before selecting Account."
+  ],
+  "exclusions": [
+    "No fresh real inference/STT generation or joined voice timing; services remain unavailable.",
+    "Manual audience declarations and neutral rendered previews do not qualify physical sensing or private-avatar motion quality.",
+    "No Human acceptance, microphone, camera, provider restart, external exposure or personal learning policy change."
+  ]
+}

@@ -2,8 +2,8 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "18fc95265786fc055b7914eb0f6f9ffe5f4ea8b5",
-  "currentRevision": "18fc95265786fc055b7914eb0f6f9ffe5f4ea8b5",
+  "baseRevision": "567154ba3ad7d7eb15559267a38e5db6bc40e10b",
+  "currentRevision": "567154ba3ad7d7eb15559267a38e5db6bc40e10b",
   "activeSlice": "LS-S066",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -110,6 +110,7 @@
     "apps/server/test/audience.test.ts",
     "apps/server/test/automatic-memory.test.ts",
     "apps/server/test/candidate-snapshot.test.ts",
+    "apps/server/test/candidate-startup.test.ts",
     "apps/server/test/endpoint-bindings.test.ts",
     "apps/server/test/presentation-packages.test.ts",
     "apps/server/test/server.test.ts",
@@ -121,11 +122,13 @@
     "implementation/checkpoint.json",
     "implementation/evidence/LS-S062-current-qualification.json",
     "implementation/evidence/LS-S062-qualification-certification-10.json",
+    "implementation/evidence/LS-S062-qualification-certification-11.json",
     "implementation/evidence/LS-S062-qualification-certification-3.json",
     "implementation/evidence/LS-S062-qualification-certification-4.json",
     "implementation/evidence/LS-S062-qualification-certification-5.json",
     "implementation/evidence/LS-S062-qualification-certification-6.json",
     "implementation/evidence/LS-S062-qualification-certification-7.json",
+    "implementation/evidence/LS-S066-degraded-startup-1.json",
     "implementation/evidence/LS-S066-semantic-preview-1.json",
     "implementation/evidence/LS-S066-v01-component-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
@@ -168,7 +171,7 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S066-semantic-preview-1.json",
+    "implementation/evidence/LS-S066-degraded-startup-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -628,6 +631,11 @@
       "command": "LS-S066 semantic animation preview component",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S066-semantic-preview-1.json"
+    },
+    {
+      "command": "candidate outage and readiness recovery component",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S066-degraded-startup-1.json"
     }
   ],
   "decisions": [
@@ -673,8 +681,8 @@
     "2026-09-20: Operator confirms Node removable-media approval and resumes the goal. Fresh encrypted incremental and current-candidate isolated restore pass; existing daily/weekly/monthly schedule restored. Independent software work continues without renewed approval. Physical offline-key custody and Human acceptance remain separate."
   ],
   "blockers": [],
-  "nextAction": "Keep administration available during selected-provider outage, then continue recovery integration. Shared ai5090 services are not restarted; fresh inference/STT readiness and voice measurements remain unavailable.",
-  "updatedAt": "2026-09-20T16:26:01.370212Z",
+  "nextAction": "Continue recovery integration: add a focused S086 restore regression for retained learning, current source invalidation and cancelled background jobs before asserting full experiential-state recovery. Preserve independent renderer/gaze work. Real inference/STT readiness and joined voice measurements remain unavailable; do not restart shared ai5090 services.",
+  "updatedAt": "2026-09-20T16:38:12.839293Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
   "notes": "Current implementation and selected-provider component evidence are committed separately from whole acceptance. S086 remains implementationCompleteVerificationPending; original causal, deadline, audio latency and prior qualifier failures are preserved. The private runnable report, named-tab 17-journey guide and complete raw synthetic evidence remain operator-local. The original accepted 24 S083/S084 journeys and their guide bytes are unchanged. README.md, PRODUCT-REALITY-AUDIT.md and earlier acceptance artifacts remain preserved unrelated work. No pushes, publication, cloud upload, new camera, external exposure, personal learning activation or provider/model replacement."
 }
