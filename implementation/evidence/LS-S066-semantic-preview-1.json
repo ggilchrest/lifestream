@@ -1,0 +1,76 @@
+{
+  "slice": "LS-S066",
+  "status": "inProgress",
+  "claimClass": "verified-semantic-animation-preview-component",
+  "collectedAt": "2026-09-20T16:26:01.370212+00:00",
+  "revision": "18fc95265786fc055b7914eb0f6f9ffe5f4ea8b5",
+  "specificationRevision": "ef39add27a8f08e7647faccc9d32e90a0d1ee1eb",
+  "behavior": [
+    "Manifest 1.1.0 adds preparing, interrupted, working, waiting and failure mappings and bounded transitions; 1.0.0 remains supported.",
+    "Every declared clip, including non-idle and amplitude mappings, must exist exactly once before replacement.",
+    "Five-second isolated previews expose all eight states, declared/idle/absent fallback and explicit End preview.",
+    "Actual conversation, playback, audience, navigation or replacement cancels preview. Busy work refuses preview; no provider request or selection/memory write."
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 972,
+      "skipped": 0,
+      "durationMs": 54346.834292
+    },
+    {
+      "command": "node --test --test-concurrency=1 apps/control-web/test/*.test.mjs (PLAYWRIGHT_MODULE configured)",
+      "result": "pass",
+      "tests": 64,
+      "skipped": 0,
+      "durationMs": 187798.33475
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "predecessor": "First run detected the changed packet digest; the owning manifest was updated without staging unrelated work."
+    }
+  ],
+  "visual": {
+    "desktop": 1280,
+    "mobile": 390,
+    "result": "reviewed rendered active preview, controls and fallback labels; no horizontal overflow",
+    "fixture": "Neutral reference and synthetic named clips through real Three renderer. Catalog API is a fixture; no private motion-quality acceptance."
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "semantic-preview-source.log",
+      "sha256": "c9dd4fdfa419a27b53e2fdeca84c20fad275854a284a696f283e1b7f8c96bba3"
+    },
+    {
+      "name": "semantic-preview-full-browser.log",
+      "sha256": "917164ea2db189c86f7f83ff526d9439b5d82ace1deb37efb08f810b8438c43d"
+    },
+    {
+      "name": "semantic-manifest-tests.log",
+      "sha256": "ed241a193fe0e619ba2c7785853766600ee73f50cd338a661dd227a32f1ea5be"
+    },
+    {
+      "name": "semantic-preview-build.log",
+      "sha256": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155"
+    },
+    {
+      "name": "semantic-preview-private-validation-final.log",
+      "sha256": "8c49f8e41ca83309d1ad2170313017a826a41bd199936541f142ebc650982951"
+    },
+    {
+      "name": "semantic-preview-visual-final.log",
+      "sha256": "7ec74d272ca9242bf7626f3f432f05cbff4c065f9c49bafee14dd6e0586eb685"
+    }
+  ],
+  "limitations": [
+    "Gaze, phoneme alignment and selected private package perceptual quality remain open.",
+    "No whole LS-TEST-084, Human or production acceptance.",
+    "Selected-provider voice qualification remains unavailable; original latency objectives and failures are unchanged."
+  ]
+}
