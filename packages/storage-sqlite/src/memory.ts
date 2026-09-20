@@ -20,6 +20,30 @@ export class MemoryRepository {
     } else { if (this.records.has(copy.id)) throw new Error("memory is immutable"); this.records.set(copy.id, copy); this.events.set(copy.id, [{ memoryId: copy.id, assistantId: copy.assistantId, revision: 1, eventType: "created", payload: structuredClone(copy.lifecycle), occurredAt: copy.createdAt }]); }
     return structuredClone(copy);
   }
+  // Canonical memory and lifecycle records; the cold-path queue is not another memory store.
+  admitAutomatic(records: MemoryRecord[], actor: string, directCorrection: boolean): string[] {
+    if(!this.database)throw new Error("Automatic memory requires durable storage");
+    if(records.length>6)throw new Error("Automatic memory admission bound exceeded");
+    return this.database.transaction(tx=>records.map(record=>{
+      if(record.provenance.actor!==actor||typeof record.provenance.automaticMemoryKey!=="string"||!record.content||record.content.length>1200)throw new Error("Invalid automatic memory provenance");
+      const existing=tx.get<{id:string}>("SELECT id FROM memories WHERE id=? AND assistant_id=?",record.id,record.assistantId);if(existing)return existing.id;
+      if(tx.get("SELECT memory_key FROM automatic_memory_exclusions WHERE principal_id=? AND assistant_id=? AND memory_key=?",actor,record.assistantId,record.provenance.automaticMemoryKey))return "excluded";
+      const priors=tx.all<MemoryRow>("SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(provenance_json,'$.automaticMemoryKey')=? AND json_extract(lifecycle_json,'$.status') IN ('active','candidate','contradicted') ORDER BY created_at DESC LIMIT 32",record.assistantId,actor,record.provenance.automaticMemoryKey),prior=priors[0];
+      if(prior?.content===record.content)return prior.id;
+      const count=tx.get<{n:number}>("SELECT count(*) AS n FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(lifecycle_json,'$.status')='active'",record.assistantId,actor)!.n;if(count>=240&&!prior)throw new Error("Automatic memory scope capacity exceeded");
+      const conflict=!!prior&&!directCorrection;
+      const lifecycle={...record.lifecycle,status:conflict?"candidate":"active",revision:2,lastReinforcedAt:null,contradictedBy:conflict?priors.map(p=>p.id):[],...(conflict?{needsReview:true}:{})};
+      for(const prior of priors){const old=JSON.parse(prior.lifecycle),next={...old,status:directCorrection?"superseded":"contradicted",revision:Number(old.revision)+1,changedBy:actor,...(directCorrection?{supersededBy:record.id}:{contradictedBy:[...new Set([...(old.contradictedBy??[]),record.id])],needsReview:true})};
+        tx.run("UPDATE memories SET lifecycle_json=? WHERE id=?",JSON.stringify(next),prior.id);
+        const revision=tx.get<{n:number}>("SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?",prior.id)!.n;
+        tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",prior.id,record.assistantId,revision,directCorrection?"correctionApplied":"contradictionObserved",JSON.stringify({actor,correctionId:directCorrection?record.id:null,contradictedBy:directCorrection?[]:[record.id],sourceTurnRef:record.provenance.sourceTurnRef}),record.createdAt);
+      }
+      tx.run("INSERT INTO memories VALUES (?,?,?,?,?,?)",record.id,record.assistantId,record.content,JSON.stringify(record.provenance),JSON.stringify(lifecycle),record.createdAt);
+      tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",record.id,record.assistantId,1,"created",JSON.stringify({...record.lifecycle,status:"candidate",revision:1}),record.createdAt);
+      tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",record.id,record.assistantId,2,conflict?"conflictNeedsReview":"lifecycleChanged",JSON.stringify(lifecycle),record.createdAt);
+      return record.id;
+    }));
+  }
   saveMany(records: MemoryRecord[]): void {
     if (this.database) {
       this.database.transaction((tx) => { for (const record of records) { const copy = structuredClone(record); tx.run("INSERT INTO memories (id, assistant_id, content, provenance_json, lifecycle_json, created_at) VALUES (?, ?, ?, ?, ?, ?)", copy.id, copy.assistantId, copy.content, JSON.stringify(copy.provenance), JSON.stringify(copy.lifecycle), copy.createdAt); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", copy.id, copy.assistantId, 1, "created", JSON.stringify(copy.lifecycle), copy.createdAt); } });
@@ -108,6 +132,7 @@ export class MemoryRepository {
     const journalRevision = (this.history(assistantId,id).at(-1)?.revision ?? 0) + 1;
     const payload = { status: "invalidated", contentRemoved: true };
     if (this.database) this.database.transaction(tx => {
+      if(typeof existing.provenance.automaticMemoryKey==="string")tx.run("INSERT OR IGNORE INTO automatic_memory_exclusions VALUES (?,?,?,?)",String(existing.provenance.actor??actor),assistantId,existing.provenance.automaticMemoryKey,occurredAt);
       tx.run("UPDATE memories SET content='', provenance_json=?, lifecycle_json=? WHERE assistant_id=? AND id=? AND json_extract(lifecycle_json,'$.revision')=?",JSON.stringify(provenance),JSON.stringify(lifecycle),assistantId,id,previousRevision);
       if(tx.get<{changes:number}>("SELECT changes() AS changes")?.changes!==1)throw new Error("memory revision conflict");
       tx.run("UPDATE memory_lifecycle_events SET payload_json=? WHERE assistant_id=? AND memory_id=?",JSON.stringify({payloadRemoved:true}),assistantId,id);

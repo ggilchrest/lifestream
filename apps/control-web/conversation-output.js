@@ -1,7 +1,7 @@
 // Output-only use of the existing runtime audio protocol. This class never opens
 // an input stream, sends a start request, recognizes speech or calls a provider.
 export class ConversationOutput {
- constructor({onStopped,onComplete,onState,onMessage,onReplyText,onReplyComplete,onClosed,onError}){Object.assign(this,{onStopped,onComplete,onState,onMessage,onReplyText,onReplyComplete,onClosed,onError});this.retired=new Set();this.sources=new Set();this.socket=null;this.audio=null;this.turn=null;this.waiting=false;this.cursor=0;this.generation=0;}
+ constructor({onStopped,onComplete,onState,onMessage,onReplyText,onReplyComplete,onClosed,onError}){Object.assign(this,{onStopped,onComplete,onState,onMessage,onReplyText,onReplyComplete,onClosed,onError});this.retired=new Set();this.sources=new Set();this.socket=null;this.audio=null;this.turn=null;this.waiting=false;this.cursor=0;this.generation=0;this.playbackFrames=[];this.playbackScheduledSamples=0;}
  get connected(){return this.socket?.readyState===WebSocket.OPEN&&this.audio?.state==='running';}
  async connect(){
   this.close();const generation=this.generation;
@@ -64,9 +64,11 @@ export class ConversationOutput {
   for(let i=0;i<channel.length;i++)channel[i]=view.getInt16(i*2,true)/32768;
   const source=audio.createBufferSource();source.buffer=buffer;source.connect(audio.destination);this.cursor=Math.max(this.cursor,audio.currentTime+.25);this.sources.add(source);
   source.addEventListener('ended',()=>{this.sources.delete(source);source.disconnect();if(this.turn===turn)this.maybeComplete();},{once:true});
+  this.playbackFrames=this.playbackFrames.filter(frame=>frame.end>audio.currentTime);this.playbackFrames.push({offset:this.playbackScheduledSamples,start:this.cursor,end:this.cursor+buffer.duration,samples:buffer.getChannelData(0),trace:turn.trace,rate:48000});this.playbackScheduledSamples+=bytes.length/2;
   source.start(this.cursor);this.cursor+=buffer.duration;this.onState('Playing speech');
  }
  maybeComplete(){const turn=this.turn;if(!turn||turn.stopped||turn.completed||!turn.accepted||!turn.terminal||!turn.samples||this.sources.size)return;turn.completed=true;clearTimeout(turn.timer);this.turn=null;this.retire(turn.trace);if(turn.reply)this.onReplyComplete?.(turn.trace);else this.onComplete(turn.trace);}
- stop(reason='Stopped locally'){const binding=this.binding;this.binding=null;binding?.reject(new Error(reason));const turn=this.turn;this.waiting=false;if(turn){this.retire(turn.trace);turn.stopped=true;clearTimeout(turn.timer);if(this.socket?.readyState===WebSocket.OPEN)this.socket.send(JSON.stringify({type:'interrupt',interactionTraceId:turn.trace,reason}));}for(const source of this.sources){try{source.stop();}catch{}source.disconnect();}this.sources.clear();this.turn=null;this.cursor=this.audio?.currentTime??0;this.onStopped(turn?.trace,reason);}
+ playbackSample(){const audio=this.audio,turn=this.turn;if(!audio||!turn||audio.state!=='running')return {playing:false,amplitude:0};const now=audio.currentTime;this.playbackFrames=this.playbackFrames.filter(frame=>frame.end>now);const frame=this.playbackFrames.find(frame=>frame.trace===turn.trace&&frame.start<=now&&now<frame.end);if(!frame)return {playing:false,amplitude:0};const start=Math.max(0,Math.floor((now-frame.start)*frame.rate)),end=Math.min(frame.samples.length,start+480);let energy=0;for(let i=start;i<end;i++)energy+=frame.samples[i]**2;return {playing:true,amplitude:Math.sqrt(energy/Math.max(1,end-start)),trace:turn.trace,sampleOffset:frame.offset+start,clock:'AudioContext.currentTime'};}
+ stop(reason='Stopped locally'){this.playbackFrames=[];this.playbackScheduledSamples=0;const binding=this.binding;this.binding=null;binding?.reject(new Error(reason));const turn=this.turn;this.waiting=false;if(turn){this.retire(turn.trace);turn.stopped=true;clearTimeout(turn.timer);if(this.socket?.readyState===WebSocket.OPEN)this.socket.send(JSON.stringify({type:'interrupt',interactionTraceId:turn.trace,reason}));}for(const source of this.sources){try{source.stop();}catch{}source.disconnect();}this.sources.clear();this.turn=null;this.cursor=this.audio?.currentTime??0;this.onStopped(turn?.trace,reason);}
  close(){this.generation++;this.stop();const socket=this.socket;this.socket=null;socket?.close();const audio=this.audio;this.audio=null;void audio?.close();this.onClosed?.();}
 }

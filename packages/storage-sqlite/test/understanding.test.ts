@@ -87,7 +87,7 @@ test('candidate selection compares named dimensions while leaving unknown scores
 });
 
 test('hypothesis rejection invalidates every pinned candidate derivative in the owner transaction',t=>{
- const f=fixture();t.after(()=>f.db.close());const w=f.work(),now=Date.now(),hypothesis:UnderstandingRecord={...f.scope,schemaVersion:'1.0.0',recordType:'hypothesis',hypothesisId:randomUUID(),revision:1,epistemicStatus:'tentative',status:'candidate',topicRefs:['topic:alpha','topic:beta'],explanations:[
+ const f=fixture();t.after(()=>f.db.close());const w=f.work(),now=Date.parse(String(w.createdAt)),hypothesis:UnderstandingRecord={...f.scope,schemaVersion:'1.0.0',recordType:'hypothesis',hypothesisId:randomUUID(),revision:1,epistemicStatus:'tentative',status:'candidate',topicRefs:['topic:alpha','topic:beta'],explanations:[
   {explanationId:randomUUID(),summary:'Making may matter.',traitRefs:['trait:making'],supportEvidenceRefs:['evidence:alpha'],counterEvidenceRefs:['evidence:counter-alpha'],boundary:'Only the supplied context.'},
   {explanationId:randomUUID(),summary:'Progress may matter.',traitRefs:['trait:making'],supportEvidenceRefs:['evidence:beta'],counterEvidenceRefs:['evidence:counter-beta'],boundary:'No broader motive is established.'}
  ],unknownAlternative:'Another explanation may apply.',sourceCoverage:'partial',uncertainty:'The motive is not established.',dependencyRefs:['evidence:alpha','evidence:beta'],createdAt:new Date(now).toISOString(),configurationRef:'config:1'};
@@ -166,7 +166,7 @@ test('pre-qualification databases withhold legacy context until bounded source-n
  const key=understandingDigest([f.scope.assistantId,f.scope.userId,f.scope.relationshipId,f.scope.deploymentId]);
  for(const record of [parent,candidate])old.connection.prepare('INSERT INTO understanding_artifacts VALUES (?,?,?,?,?,?,?,?,?)').run(String(record.briefId??record.candidateId),key,f.scope.relationshipId,f.boundary,1,String(record.recordType),'topic:quartz',Date.parse(String(record.freshUntil??record.expiresAt)),JSON.stringify(record));
  old.connection.prepare('INSERT INTO understanding_projection(artifact_id,scope_key,boundary,content,fresh_until_ms) VALUES (?,?,?,?,?)').run(String(candidate.candidateId),key,f.boundary,String(candidate.content),Date.parse(String(candidate.expiresAt)));old.close();
- const db=new Database({path});t.after(()=>db.close());const migrations=db.migrate();assert.deepEqual(migrations.slice(0,before.length),before);assert.equal(migrations.at(-1)!.id,40);
+ const db=new Database({path});t.after(()=>db.close());const migrations=db.migrate();assert.deepEqual(migrations.slice(0,before.length),before);assert.ok(migrations.some(m=>m.id===40));
  const repo=new UnderstandingRepository(db);assert.deepEqual(repo.select(f.scope,f.boundary,'quartz'),[],'legacy text cannot silently pass as qualified source input');
  repo.recover();const input=repo.select(f.scope,f.boundary,'quartz');assert.equal(input.length,1);assert.match(input[0]!.content,/Source notes: attributed; version: synthetic/);
  assert.deepEqual(repo.list(f.scope,f.boundary).find(r=>r.candidateId===candidate.candidateId),candidate);

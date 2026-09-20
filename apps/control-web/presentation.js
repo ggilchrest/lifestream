@@ -1,0 +1,30 @@
+// Presentation is optional. A package or GPU failure never disables conversation controls.
+export function installPresentation({anchor,api,busy,playback}) {
+ const section=document.createElement('section');section.className='presentation-panel';section.setAttribute('aria-label','Assistant appearance');
+ section.innerHTML='<div class="presentation-stage"><canvas aria-label="Assistant presentation"></canvas><span class="presentation-state">Idle</span></div><div class="presentation-controls"><label>Appearance<select aria-label="Appearance"><option value="neutral">Neutral reference</option></select></label><label>Apply to<select aria-label="Appearance scope"><option value="default">This endpoint</option><option value="session">This session only</option></select></label><div class="actions"><button type="button" data-apply>Apply appearance</button><button type="button" class="secondary" data-refresh>Refresh appearances</button></div><p role="status" class="muted">Neutral reference · appearance does not change identity or voice.</p></div>';
+ anchor.querySelector('.room-layout').prepend(section);
+ const select=section.querySelector('[aria-label="Appearance"]'),scope=section.querySelector('[aria-label="Appearance scope"]'),status=section.querySelector('[role="status"]'),button=section.querySelector('[data-apply]');
+ let runtime,snapshot,epoch=0,pending=null,effective='neutral',initializing;
+ const say=text=>{status.textContent=text;};
+ const initialize=()=>initializing??=import('./presentation-runtime.js').then(({PresentationRuntime})=>runtime=new PresentationRuntime(section.querySelector('canvas'),{playback,onFailure:say})).catch(error=>{initializing=null;throw error;});
+ const refresh=async()=>{if(!window.lifestreamAuth.session)return;const ticket=epoch;const value=await api('/api/runtime/v1/presentation');if(ticket!==epoch)return;snapshot=value;const old=select.value;select.replaceChildren();for(const item of [value.neutral,...value.packages]){const option=document.createElement('option');option.value=item.id;option.textContent=item.label;select.add(option);}const selected=value.selection?.override??value.selection?.default;select.value=[value.neutral,...value.packages].some(p=>p.id===selected?.id)?selected.id:old||'neutral';if(!select.value)select.value='neutral';button.disabled=!value.endpointId;if(location.hash!=='#conversation'||document.hidden)return;await initialize();if(selected&&selected.id!==effective&&!busy())await apply(false);};
+ const apply=async(save=true)=>{
+  if(busy())throw new Error('Wait until the current turn and speech finish before changing appearance.');
+  if(pending)throw new Error('An appearance is already loading.');
+  const ticket=epoch,item=snapshot?.packages.find(p=>p.id===select.value)??snapshot?.neutral;
+  if(!item)throw new Error('Refresh appearances first.');
+  const chosenScope=scope.value,revision=(chosenScope==='default'?snapshot.selection?.default:snapshot.selection?.override)?.revision??0;
+  const controller=pending=new AbortController(),timer=setTimeout(()=>controller.abort(new Error('Appearance loading timed out.')),30000);button.disabled=true;let candidate;
+  try{await initialize();say(`Loading ${item.label}… Current appearance stays visible.`);candidate=await runtime.prepare(item,controller.signal);controller.signal.throwIfAborted();if(ticket!==epoch||busy())throw new Error('The conversation changed while loading. Try again between turns.');if(save)snapshot=await api('/api/runtime/v1/presentation',{method:'POST',body:JSON.stringify({scope:chosenScope,id:item.id,digest:item.digest,expectedRevision:revision})});if(ticket!==epoch)throw new Error('The session changed before the appearance could be applied.');runtime.commit(candidate);candidate=null;effective=item.id;say(`${item.label} · ${item.manifest?.capabilities.lipSync==='amplitude'||item.id==='neutral'?'Amplitude-driven mouth; no phoneme timing':'No live mouth mapping'}.`);}
+  catch(error){if(candidate)runtime?.release(candidate);say(`Requested ${item.label}; current appearance retained. ${error.message}`);throw error;}
+  finally{clearTimeout(timer);if(pending===controller)pending=null;button.disabled=!snapshot?.endpointId;}
+ };
+ const run=fn=>()=>void fn().catch(error=>say(error.message));section.querySelector('[data-refresh]').onclick=run(refresh);button.onclick=run(()=>apply());
+ const clear=()=>{epoch++;pending?.abort();pending=null;snapshot=null;effective='neutral';runtime?.commit(runtime.neutral());button.disabled=true;select.replaceChildren(new Option('Neutral reference','neutral'));say('Sign in and apply a session endpoint to choose an appearance.');};
+ for(const event of ['lifestream-auth','lifestream-assistant','lifestream-relationship','lifestream-session-context'])window.addEventListener(event,()=>{clear();void refresh().catch(error=>say(error.message));});
+ const release=()=>{pending?.abort();runtime?.dispose();runtime=null;initializing=null;effective='neutral';};
+ window.addEventListener('hashchange',()=>{if(location.hash==='#conversation')void refresh().catch(error=>say(error.message));else release();});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)release();else if(location.hash==='#conversation')void refresh().catch(error=>say(error.message));});
+ window.addEventListener('pagehide',()=>{clear();release();});
+ return {refresh:run(refresh),clear,state(value){section.querySelector('.presentation-state').textContent=value;runtime?.applyState(value);},get pending(){return !!pending;}};
+}

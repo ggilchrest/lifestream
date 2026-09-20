@@ -12,13 +12,19 @@
     "test": "node --test --test-concurrency=4 --experimental-strip-types tests/**/*.test.ts packages/**/*.test.ts apps/**/*.test.ts",
     "runtime:check:mac": "node --experimental-strip-types scripts/check-mac-local-profile.mjs",
     "typecheck": "tsc -b --pretty false apps/server packages/contracts packages/runtime packages/providers-fixture packages/providers-voxcpm packages/providers-nemo-speech packages/providers-moonshine packages/providers-ollama packages/providers-pwce packages/providers-sglang packages/storage-sqlite",
-    "test:browser-surface": "node --test apps/control-web/test/*.test.mjs"
+    "test:browser-surface": "node --test apps/control-web/test/*.test.mjs",
+    "candidate": "node scripts/start-candidate.mjs",
+    "desktop": "electron apps/desktop/main.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",
+    "electron": "44.3.0",
     "eslint": "^9.0.0",
     "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "three": "0.186.0"
   }
 }
