@@ -517,7 +517,10 @@
         "delta": {
           "type": "number",
           "minimum": -0.05,
-          "maximum": 0.05
+          "maximum": 0.05,
+          "not": {
+            "const": 0
+          }
         },
         "episodeRefs": {
           "type": "array",
@@ -526,7 +529,9 @@
             "minLength": 1,
             "maxLength": 160
           },
-          "maxItems": 16
+          "maxItems": 16,
+          "minItems": 2,
+          "uniqueItems": true
         },
         "confidence": {
           "type": "number",
@@ -577,7 +582,30 @@
           },
           "maxItems": 6
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "noChange"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "items": {
+                "type": "array",
+                "maxItems": 0
+              },
+              "changes": {
+                "type": "array",
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
     },
     "Imprint": {
       "type": "object",

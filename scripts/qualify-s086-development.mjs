@@ -34,8 +34,8 @@ try{
   'I finished a third independent basil gardening trial. Equal watering and light still gave taller plants in compost. I especially enjoy these repeatable garden experiments and want to investigate whether pot size changes the result.'
  ];
  for(let n=0;n<prompts.length;n++){
-  const before=await snapshot(path);await turn(prompts[n]+' Acknowledge in one short sentence.');console.log(JSON.stringify({phase:'ordinary-turn-completed',number:n+1}));
-  view=await wait(async()=>{const v=await json(path),memory=await json('/api/runtime/v1/memory?'+new URLSearchParams(scope));if(memory.jobs.some(j=>j.state==='failed')&&v.state.funnel.eligible===before.state.funnel.eligible){report.memoryFailure=memory;return v;}return v.state.funnel.calls>before.state.funnel.calls&&v.jobs.every(j=>!['queued','running'].includes(j.state))?v:null;});
+  const before=await snapshot(path),priorMemoryJobs=new Set((await json('/api/runtime/v1/memory?'+new URLSearchParams(scope))).jobs.map(j=>j.id));await turn(prompts[n]+' Acknowledge in one short sentence.');console.log(JSON.stringify({phase:'ordinary-turn-completed',number:n+1}));
+  view=await wait(async()=>{const v=await json(path),memory=await json('/api/runtime/v1/memory?'+new URLSearchParams(scope));if(memory.jobs.some(j=>j.state==='failed'&&!priorMemoryJobs.has(j.id))&&v.state.funnel.eligible===before.state.funnel.eligible){report.memoryFailure=memory;return v;}return v.state.funnel.calls>before.state.funnel.calls&&v.jobs.every(j=>!['queued','running'].includes(j.state))?v:null;});
   view??=await snapshot(path);report.snapshots.push({at:new Date().toISOString(),...view});console.log(JSON.stringify({phase:'reflection-observed',number:n+1,funnel:view.state.funnel,items:view.state.items.length,jobs:view.jobs.map(j=>({state:j.state,reason:j.reason,inputTokens:j.inputTokens,outputTokens:j.outputTokens}))}));
   if(view.state.items.filter(i=>i.disposition==='open').length>=2&&view.state.imprints.some(i=>i.learned!==0))break;
  }
