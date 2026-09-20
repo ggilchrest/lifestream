@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S052",
+  "sourceRevision": "b6c63aec47accb01be3c8e90b7abdb9ddf6a479a",
+  "privateSpecificationRevision": "683dae1cfd7c9823849fec306ab7a90b3165e6c9",
+  "claimClass": "development-runtime",
+  "status": "verified",
+  "recordedAt": "2026-09-20T08:30:51.920277Z",
+  "checks": [
+    {
+      "id": "pinned-config",
+      "evidenceClass": "configuration",
+      "result": "pass",
+      "elapsedMs": 0
+    },
+    {
+      "id": "observed-provider-identity",
+      "evidenceClass": "development-provider",
+      "result": "pass",
+      "elapsedMs": 10025
+    },
+    {
+      "id": "typed-real-stream-manifest-correlation-readonly",
+      "evidenceClass": "development-provider",
+      "result": "pass",
+      "elapsedMs": 431
+    },
+    {
+      "id": "real-call-cancellation",
+      "evidenceClass": "development-provider",
+      "result": "pass",
+      "elapsedMs": 104
+    },
+    {
+      "id": "real-response-byte-limit",
+      "evidenceClass": "development-provider",
+      "result": "pass",
+      "elapsedMs": 156
+    },
+    {
+      "id": "fixture-parity",
+      "evidenceClass": "fixture",
+      "result": "pass",
+      "elapsedMs": 1
+    },
+    {
+      "id": "runtime-deadline",
+      "evidenceClass": "fault-injection",
+      "result": "pass",
+      "elapsedMs": 10013
+    },
+    {
+      "id": "outage-fails-without-fabricated-answer",
+      "evidenceClass": "fault-injection",
+      "result": "pass",
+      "elapsedMs": 4
+    },
+    {
+      "id": "replay-zero-provider-calls",
+      "evidenceClass": "fault-injection",
+      "result": "pass",
+      "elapsedMs": 1
+    },
+    {
+      "id": "invalid-canonical-input-rejected-before-provider",
+      "evidenceClass": "fault-injection",
+      "result": "pass",
+      "elapsedMs": 2
+    }
+  ],
+  "privateReceiptSha256": "eca10a3a4f25f89b17b5117068c9e3170b17128a103e85a97b24e6f7d1c834e6",
+  "scope": "Exact existing selected inference identity, typed stream, manifest/correlation, cancellation, response bounds, runtime deadline, outage and replay rejection. Synthetic input and isolated storage. No service/model changes, physical I/O or Human acceptance."
+}

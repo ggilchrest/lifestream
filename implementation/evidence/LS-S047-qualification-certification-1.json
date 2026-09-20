@@ -1,0 +1,85 @@
+{
+  "slice": "LS-S047",
+  "status": "verified",
+  "claimClass": "structural-contract",
+  "caseIds": [
+    "LS-TEST-060",
+    "LS-TEST-061",
+    "LS-TEST-062",
+    "LS-TEST-063",
+    "LS-TEST-064"
+  ],
+  "revision": "b6c63aec47accb01be3c8e90b7abdb9ddf6a479a",
+  "collectedAt": "2026-09-20T08:30:51.920277Z",
+  "checks": [
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "Current private schema, closure and traceability suite passed; structural contract claim only."
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/contracts/test/provider-types.test.ts packages/contracts/test/contract-validation.test.ts packages/providers-voxcpm/test/*.test.ts",
+      "result": "pass",
+      "evidence": "\u2139 tests 14\n\u2139 suites 0\n\u2139 pass 14\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 706.152459"
+    }
+  ],
+  "qualification": {
+    "kind": "prospective-qualification",
+    "sourceRepository": "ggilchrest/lifestream",
+    "testedRevision": "b6c63aec47accb01be3c8e90b7abdb9ddf6a479a",
+    "supersedes": "implementation/evidence/LS-S047.json",
+    "supersedesSha256": "23c747fa2aed9eb9b0153d16f0a753af5890ffcd16c3a991af0e4bc379da35d8",
+    "sourceArtifacts": [
+      {
+        "path": "packages/contracts/src/schemas/provider-messages.schema.json",
+        "sha256": "f73a90a63d5e70d3e366516b2628f4bac84a0fa690fb9b4a4ba883fde870cf8b"
+      },
+      {
+        "path": "packages/contracts/src/schemas/interaction-trace-event.schema.json",
+        "sha256": "135c611137e2f69b6d164d0313116de1d67bc7494538491da40103ea30938f3c"
+      },
+      {
+        "path": "packages/contracts/src/provider-messages.ts",
+        "sha256": "7d65dca20be7236aee910e46bccd21481ebd38f3b7970d5a5e431a99b00159aa"
+      },
+      {
+        "path": "packages/contracts/test/provider-types.test.ts",
+        "sha256": "8a81330930fb2cfb3618f54496cde12e862d98d2417f24cd46c96ab6cb4d8186"
+      },
+      {
+        "path": "packages/contracts/test/contract-validation.test.ts",
+        "sha256": "bdb73ff20f96a0849626e654b0c7beffd910e631e5b1ca2b6bff8e147a88d9d4"
+      }
+    ],
+    "effectiveSpecification": {
+      "sourceRepository": "ggilchrest/lifestream-specs",
+      "revision": "683dae1cfd7c9823849fec306ab7a90b3165e6c9",
+      "artifacts": [
+        {
+          "path": "docs/11-provider-interfaces.md",
+          "sha256": "1e290870a4a5150c3c9a06a9f08e6715bb7f6a703ab757d8fac8b149cb36162d"
+        },
+        {
+          "path": "docs/20-concrete-port-and-transport-contracts.md",
+          "sha256": "498749208993287ef9abbd2d7bb958a6497006e6d71dc35c441641fa8a20a2f5"
+        },
+        {
+          "path": "docs/23-expressive-speech.md",
+          "sha256": "2e88f825276548c318403b3aa3bd39dafccbe167620b7e296c4837bce0d0f5a1"
+        },
+        {
+          "path": "contracts/provider-messages-2.0.0.schema.json",
+          "sha256": "5590cda5aafdd37a2132922efa2241e077ca850fd4e0662be6c056a950d900e0"
+        },
+        {
+          "path": "fixtures/requirement-traceability.json",
+          "sha256": "c82fd96431c86cecd002eef107d0769b01a5ab8aa40b474b6312b41e694cb827"
+        }
+      ]
+    }
+  },
+  "exclusions": [
+    "Refreshes the expressive-speech contract amendment, not full scenario execution or perceptual identity acceptance.",
+    "Historical specification-only receipt remains unchanged; no provider/model or live effect is authorized."
+  ]
+}
