@@ -2,7 +2,7 @@
 export function installEndpointConfiguration({anchor,api,context}) {
  anchor.id='endpoint-configuration-panel';anchor.className='card endpoint-configuration';
  anchor.innerHTML='<h2>Effective endpoint configuration</h2><p>Inspect the saved choices and current session that govern this endpoint. This does not start playback or change a setting.</p><div class="actions"><button type="button" data-effective-refresh>Refresh effective settings</button><button type="button" class="secondary" data-effective-route="profile">Assistant profile</button><button type="button" class="secondary" data-effective-route="voice">Saved voice</button><button type="button" class="secondary" data-effective-route="conversation">Conversation & appearance</button></div><p data-effective-status role="status"></p><dl data-effective-values></dl><details><summary>Sources, revisions and limits</summary><pre class="context-inspector" data-effective-details></pre></details>';
- const $=s=>anchor.querySelector(s);let epoch=0;
+ const $=s=>anchor.querySelector(s);let epoch=0;const motionPreference=matchMedia('(prefers-reduced-motion: reduce)');
  const permitted=()=>window.lifestreamAuth?.mode==='local-password'&&!!window.lifestreamAuth.session&&document.documentElement.dataset.audienceProtected!=='true'&&!document.hidden;
  const clear=()=>{$('[data-effective-values]').replaceChildren();$('[data-effective-details]').textContent='';};
  const row=(label,text)=>{const term=document.createElement('dt'),value=document.createElement('dd');term.textContent=label;value.textContent=text;$('[data-effective-values]').append(term,value);};
@@ -23,7 +23,7 @@ export function installEndpointConfiguration({anchor,api,context}) {
    row('Appearance',`${value.presentation.label} · ${value.presentation.source==='sessionOverride'?'session override':value.presentation.source==='endpointDefault'?'endpoint default':'neutral fallback'} · revision ${value.presentation.selected.revision}. ${value.presentation.reason??'Saved choice available; current renderer playback is local to the endpoint.'}`);
    row('Audio ownership',value.audioOwnership.active?`One current-session lease · revision ${value.audioOwnership.revision}. Physical playback is unverified.`:'No active audio lease in this session.');
    row('Handoff',value.handoff.reason);
-   row('Accessibility & interruption','Reduced motion and speech enablement are endpoint-local. Conversation has Stop response & speech and microphone controls; physical interruption remains separately verified.');
+   row('Accessibility & interruption',`Reduced motion: ${motionPreference.matches?'on for this display; automatic body and face motion paused. Explicit five-second previews and playback-driven mouth movement remain available':'off for this display; standard motion'}. This is the local browser preference, not a server or physical audience observation. Conversation has Stop response & speech and microphone controls; physical interruption remains separately verified.`);
    $('[data-effective-details]').textContent=JSON.stringify(value,null,2);
    $('[data-effective-status]').textContent='Current read-only snapshot. Refresh after changes in another tab.';
   }catch(error){if(ticket===epoch){clear();$('[data-effective-status]').textContent='Effective settings unavailable. '+error.message;}}
@@ -32,6 +32,6 @@ export function installEndpointConfiguration({anchor,api,context}) {
  for(const button of anchor.querySelectorAll('[data-effective-route]'))button.onclick=()=>window.lifestreamUI?.navigate(button.dataset.effectiveRoute);
  const changed=()=>{epoch++;clear();anchor.hidden=!permitted();if(!anchor.hidden&&location.hash==='#session')void refresh();};
  for(const event of ['lifestream-auth','lifestream-assistant','lifestream-session-context','lifestream-audience','hashchange'])window.addEventListener(event,changed);
- document.addEventListener('visibilitychange',changed);window.addEventListener('pagehide',()=>{epoch++;clear();anchor.hidden=true;});
+ motionPreference.addEventListener('change',changed);document.addEventListener('visibilitychange',changed);window.addEventListener('pagehide',()=>{epoch++;clear();anchor.hidden=true;});
  void window.lifestreamAuth.ready.then(changed);
 }
