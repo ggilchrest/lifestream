@@ -1,0 +1,194 @@
+{
+  "slice": "LS-S086",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "verified-isolated-learning-recovery-component",
+  "revision": "ad251662de1401f6f1fcf2f8e5b24d3e189e6626",
+  "runtimeSourceRevision": "629321b48f8e0faa4bfec64df25240effbef5773",
+  "specificationRevision": "249ab09bf069ab64febdf282e461c2b2b0c17cac",
+  "collectedAt": "2026-09-20T17:09:23.767358Z",
+  "behavior": [
+    "Current safety replay and attributable-source reconciliation remove forgotten derived text, summaries, inverse payloads and affected learned contributions before access.",
+    "Independent supported workspace/imprints, authored seeds, provenance and spent call budgets survive isolated restore.",
+    "All old learning jobs are cancelled and fenced; processing and selection stay disabled/frozen until fresh memory approval and explicit learning enable/unfreeze.",
+    "Retention-only suspension is scoped to the exact memory-policy revision. Later explicit withdrawal, newer collection withdrawal and revoked administration cannot be overridden. Nested restore preserves only current suspension."
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 979,
+      "skipped": 0,
+      "durationMs": 55902.705166
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed local playwright> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "tests": 64,
+      "skipped": 0,
+      "durationMs": 192504.628875
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "tests": 44,
+      "skipped": 0
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build; npm --prefix .private run validate",
+      "result": "pass"
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/candidate-snapshot.test.ts",
+      "result": "pass",
+      "tests": 8,
+      "skipped": 0,
+      "claim": "Synthetic learned results, real local SQLite, privacy journal, HTTP and isolated directories."
+    },
+    {
+      "command": "operator-local candidate snapshot and isolated restore",
+      "result": "pass",
+      "learningScopes": 0,
+      "claim": "Actual candidate contains no enabled personal learning or learning scopes; this does not replace the synthetic populated-state test."
+    },
+    {
+      "command": "operator-local actual-candidate browser smoke",
+      "result": "pass",
+      "checks": 8,
+      "pageErrors": 0
+    },
+    {
+      "command": "operator-local guide browser QA and desktop/mobile visual inspection",
+      "result": "pass",
+      "journeys": 17,
+      "actions": 141,
+      "target": "lifestreamAcceptanceTarget"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass"
+    }
+  ],
+  "retainedFailures": [
+    "The new populated-state regression failed before repair because forgotten workspace text survived pre-access restore.",
+    "First integration successor reached the expected unknown-audience guard; test then established a temporary private scope.",
+    "First full source run: 977/979 passed; two upgrade assertions omitted migration 49. Corrected successor: 979/979.",
+    "Initial browser command omitted the Playwright module: 25 passed/39 skipped. Corrected successor: 64/64, zero skips.",
+    "Desktop guide capture expected the mobile scroll offset; corrected to actual desktop header/scroll margin. Final interaction and visual checks pass.",
+    "First actual-candidate UI sign-in returned 401; a subsequent instrumented attempt using matching stored credentials passed. Cause remains unresolved and is queued for independent follow-up."
+  ],
+  "prerequisites": {
+    "preflight": "Current selected-provider prerequisite qualifications S073/S076/S078/S080 report effective input changed. No stale or fixture receipt is promoted to a fresh provider pass.",
+    "regression": "Reused source/privacy/recovery paths pass the full local suite.",
+    "provider": "Selected inference and STT unavailable; no shared-service restart or substitution. These affect fresh provider/audio/performance claims only."
+  },
+  "actualCandidateRestore": {
+    "schemaVersion": "1.0.0",
+    "status": "verified",
+    "snapshotId": "6efdbf52-5519-471f-a2eb-a9a90948a7cc",
+    "restoredAt": "2026-09-20T17:00:05.188Z",
+    "safetyEpoch": 1,
+    "packageCount": 2,
+    "unavailableDefaultPresentations": 1,
+    "authority": "quarantined",
+    "sessions": "revoked",
+    "audience": "unknown",
+    "automaticMemory": "requiresFreshScopeApproval",
+    "experientialLearning": {
+      "scopes": 0,
+      "retainedScopes": 0,
+      "cancelledJobs": 0,
+      "status": "disabledAndFrozen",
+      "approval": "freshMemoryAndLearningApprovalRequired"
+    },
+    "humanAcceptance": false
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "experience-restore-before.log",
+      "sha256": "305deb582d95ebd1eed7eb95497367c608eb257319a00adbcd9b64ffb441a8b3"
+    },
+    {
+      "name": "experience-restore-focused-1.log",
+      "sha256": "5751fe77709b8d6327c96aabe86e1f15324c3e41cc18afdb0ecbcafc1d48f400"
+    },
+    {
+      "name": "experience-restore-focused-2.log",
+      "sha256": "d7b9adb84c420791c6edd75449cb1aaee242e661bdd39aae9ee20bac8cc1f63b"
+    },
+    {
+      "name": "experience-restore-source-final.log",
+      "sha256": "2fb3206ea8d72e91b72e8fc5a01523e33acbe6a558f12f22cb4b2b72891ebdad"
+    },
+    {
+      "name": "experience-restore-source-final-2.log",
+      "sha256": "f1cc9b1cfa0fd65f2499488c584386999dd3985ec2c5f04da068855e18ada3df"
+    },
+    {
+      "name": "experience-restore-browser-final.log",
+      "sha256": "6fb932b4d24a7a562204513077978efae61d1e7ad6e2d90ca33a5e4dd5006a61"
+    },
+    {
+      "name": "experience-restore-browser-final-2.log",
+      "sha256": "aac5f0e50a1792502a45aa144eba262ff6a8a1090c4a2545f3c38d65cf7ff7c8"
+    },
+    {
+      "name": "experience-restore-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "experience-restore-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "experience-restore-build-final.log",
+      "sha256": "1b33e8cce60d49bd5c039729354a4c41348c155e1abe6858f7260ee30425092f"
+    },
+    {
+      "name": "experience-restore-owner-final.log",
+      "sha256": "05ea841b0f5de041ad5f3fcd7a5170adea59a455cbf5c6e28b8d63bec6cc800c"
+    },
+    {
+      "name": "experience-restore-workspace-tests.log",
+      "sha256": "93c2edbc9629719601c8834f8c5314ac20baf4911cf7db945762464c21d73a66"
+    },
+    {
+      "name": "experience-current-snapshot.json",
+      "sha256": "5460742bc906fcb47f78a7bbb35136c3e49adce659ab0be6fa6676b485e7f8bc"
+    },
+    {
+      "name": "experience-current-restore.json",
+      "sha256": "247c032c9a20c57658b6d7f387da39e642270c0472d0075fcb3a893edb029368"
+    },
+    {
+      "name": "v01-guide-validation-v7.json",
+      "sha256": "3b5a7cb1c574ec056688a3466aabfdc3a4443a0836aa485b75813110d48eb40f"
+    },
+    {
+      "name": "guide-v7-final-verified.log",
+      "sha256": "d65b6145538394183200671a5e68de6ac14b371d83bb5c082d5c1da97f019922"
+    },
+    {
+      "name": "recovery-candidate-browser.log",
+      "sha256": "285272b8f5f9807ae6607cc2f8537f9752d9334ce66639af0ef8acb2dbff3802"
+    },
+    {
+      "name": "recovery-candidate-browser-2.log",
+      "sha256": "3cafcbccb5af38e38eb765815e2ab54bd24116949a2443abd053e7f172f099cf"
+    },
+    {
+      "name": "recovery-candidate-browser.json",
+      "sha256": "329a4a0d9e17f9f638f09197a1189a8266f22e697e741d8fee73b6f7564e5ba7"
+    },
+    {
+      "name": "experience-restore-workspace-check.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "acceptance": {
+    "wholeSlice": false,
+    "newHumanAcceptance": false,
+    "prior24Journeys": "preserved",
+    "causalAndPerformanceFailures": "preserved at original revisions"
+  },
+  "nextAction": "Investigate the intermittent first UI sign-in failure with content-free request diagnostics; continue independent presentation work. No personal learning activation, new provider, camera, external effect or publication."
+}
