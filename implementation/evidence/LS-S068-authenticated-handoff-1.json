@@ -1,0 +1,490 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "authenticated-between-turn-handoff-component",
+  "recordedAt": "2026-09-20T23:15:36.404482Z",
+  "sourceRevision": "8cc81a453fa6c40f431a45d4d3e492241364af47",
+  "specificationRevision": "0640698a4bf35be082bab60909ac0cbc4b8aa7cc",
+  "behavior": [
+    "Current same-principal Assistant administration and relationship scope, independently private source/destination and explicit fresh destination readiness precede separate review and commit.",
+    "Typed turns, audio sessions, Initiative work and pending STT/preview/playback ownership prevent transfer. Delayed request bodies recheck ended state.",
+    "Atomic linked-session handoff ends source conversation while preserving its authenticated administration access. Destination keeps its own authentication, endpoint settings and consent. No grants, live streams, voices or appearances are copied.",
+    "Bounded volatile dialogue retains provenance, privacy, correction and original expiry. Idle timers erase review copies, transfers cannot enqueue memory again, and raw dialogue never enters durable outcome metadata.",
+    "Reviewed stale failures remain auditable, commit/history rollback is atomic, idempotent replay survives restart, durable outcome capacity fails explicitly, and current administration permission remains required.",
+    "Migration 51 marks prior sign-ins used rather than assuming lost volatile history was empty. Candidate environment identity is opaque composition metadata without a physical-location claim."
+  ],
+  "checks": {
+    "source": {
+      "tests": 1014,
+      "pass": 1014,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 61198.216666
+    },
+    "serialBrowser": {
+      "tests": 77,
+      "pass": 77,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 298464.049917
+    },
+    "workspace": {
+      "tests": 44,
+      "pass": 44,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 20480.694458
+    },
+    "nativePackaged": {
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 9174.767542
+    },
+    "genericGuards": {
+      "tests": 19,
+      "pass": 19,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 5858.535292
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "privateValidation": "pass",
+    "workspaceCheck": "pass"
+  },
+  "native": {
+    "sourceRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+    "backendSourceRevision": "8cc81a453fa6c40f431a45d4d3e492241364af47",
+    "scope": "Actual packaged Mac app and browser endpoint against clean installed source; real UI, authentication, HTTP and SQLite with synthetic inference. Visible native sign-in; no microphone, camera, physical or Human claim."
+  },
+  "genericArchive": {
+    "recordedAt": "2026-09-20T23:02:46.761523+00:00",
+    "sourceRevision": "8cc81a453fa6c40f431a45d4d3e492241364af47",
+    "archiveSha256": "44cac88f03c8e1553cebb16223f8a966cbe7bb93c4b24c781598b8358eaea20d",
+    "archiveBytes": 18974720,
+    "members": 1305,
+    "privatePackageHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "status": "verified",
+    "priorReceipts": [
+      "generic-clean-package.json",
+      "generic-clean-package-2.json",
+      "generic-clean-package-3.json",
+      "generic-clean-package-4.json",
+      "generic-clean-package-5.json",
+      "generic-clean-package-6.json",
+      "generic-clean-package-7.json"
+    ],
+    "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+    "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+    "build": "pnpm build",
+    "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "effectiveConfiguration": true,
+      "presentationSelfContext": true,
+      "structuredSessionDefinition": true,
+      "authenticatedHandoffAvailable": true,
+      "profileTopicControls": 6,
+      "pageErrors": [],
+      "handoffGuards": 19,
+      "actualPackagedMacHandoff": true
+    },
+    "runtimeStopped": true
+  },
+  "guide": {
+    "at": "2026-09-20T22:56:19.925Z",
+    "version": "2026-09-20.v22",
+    "journeys": 18,
+    "actions": 172,
+    "links": 24,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "0571d31e7b164081769398926a20f90a44b67844ad88b1c333c5207230928184",
+    "validation": "Static structure, unique/sequential action identifiers and named targets pass. Last full browser/visual guide check remains v13; file URL policy denied reopening. No workaround used.",
+    "humanAcceptance": false
+  },
+  "actualCandidate": {
+    "at": "2026-09-20T23:07:45.042Z",
+    "status": "verified",
+    "sourceRevision": "8cc81a453fa6c40f431a45d4d3e492241364af47",
+    "migration": 51,
+    "configurationDigest": "f1e304cbc15d2eabb72a71ed748101572725d915d9eba978532cad6679505a96",
+    "healthStatus": "degraded",
+    "acceptingInteractions": false,
+    "actualCandidateMetadataHandoff": true,
+    "dialogueEntries": 0,
+    "completedOutcome": true,
+    "sourceEnded": true,
+    "destinationLinked": true,
+    "grantsTransferred": false,
+    "currentReceiptVisible": true,
+    "scope": "Existing Reference Assistant; two new temporary sign-ins and logical endpoints, empty dialogue only. No provider generation, microphone, private asset/default changes, memory policy, learning, sensor or world action. Synthetic-provider dialogue continuity and packaged-native UI are separately verified; no real-provider or Human acceptance."
+  },
+  "migration": {
+    "version": 51,
+    "legacySignInsFenced": 60,
+    "preservedExistingData": true,
+    "runtimeClockAdvanced": true,
+    "changedExistingTables": [
+      "initiative_clock",
+      "schema_migrations"
+    ]
+  },
+  "recovery": {
+    "backup": {
+      "schemaVersion": "1.0.0",
+      "status": "verified",
+      "operation": "backup",
+      "completedAt": "2026-09-20T23:09:08.120Z",
+      "snapshotId": "f2e37d52ba3dbe2a460a62c14626240b5ed3610dce41c8dbcef7b7610c514c51",
+      "applicationSnapshotId": "c0876e82-2278-49d6-9c86-a3ba0ad82945",
+      "mode": "daily-incremental",
+      "dataProcessedBytes": 286153869,
+      "newDataBytes": 1192968,
+      "files": 51,
+      "durationSeconds": 1.27203025,
+      "integrity": "full-data-checked",
+      "separateVolume": true,
+      "encrypted": true,
+      "retentionDays": 30,
+      "humanAcceptance": false
+    },
+    "restore": {
+      "schemaVersion": "1.0.0",
+      "status": "verified",
+      "snapshotId": "c0876e82-2278-49d6-9c86-a3ba0ad82945",
+      "restoredAt": "2026-09-20T23:13:21.051Z",
+      "safetyEpoch": 1,
+      "packageCount": 3,
+      "unavailableDefaultPresentations": 1,
+      "authority": "quarantined",
+      "sessions": "revoked",
+      "audience": "unknown",
+      "automaticMemory": "requiresFreshScopeApproval",
+      "experientialLearning": {
+        "scopes": 0,
+        "retainedScopes": 0,
+        "cancelledJobs": 0,
+        "status": "disabledAndFrozen",
+        "approval": "freshMemoryAndLearningApprovalRequired"
+      },
+      "humanAcceptance": false,
+      "pwce": {
+        "stateIntegrityVerified": true,
+        "schemaVersion": "1.0.0",
+        "status": "verified",
+        "incidents": 4,
+        "retained": 1,
+        "authority": "quarantined",
+        "recorderActivated": false
+      },
+      "operation": "restore",
+      "encryptedRepositoryVerified": true
+    },
+    "restoredState": {
+      "migration": 51,
+      "activeSignIns": 0,
+      "sessionSettings": 0,
+      "openRuntimeSessions": 0,
+      "handoffRecords": 1,
+      "usedSignIns": 61
+    },
+    "restoredRuntimeServed": false
+  },
+  "selectedProvider": {
+    "status": "blockedEnvironment",
+    "observedAt": "2026-09-20T23:07:44.739Z",
+    "httpStatus": 503,
+    "acceptingInteractions": false,
+    "providers": {
+      "inference": "unavailable",
+      "stt": "unavailable",
+      "tts": "unavailable"
+    },
+    "sharedServicesRestarted": false
+  },
+  "retainedFailures": [
+    "Focused iterations retained stale build migration SQL, test setup table/auth/column assumptions and a stale-review audit gap; bounded metadata tombstones preserve audit while erasing raw review text.",
+    "Delayed TTS body initially returned 503 after source ended; current state recheck returns 409 without admitting work.",
+    "Browser setup import and response-wait races were corrected. Actual received status disappeared on audience refresh; stable derived receipt status now preserves it.",
+    "First native harness setup could not inject cookies into the separate Electron session; actual visible sign-in replaced it. Only disposable test processes were stopped.",
+    "Two full source runs passed 1013/1014 due to stale migration inventory and health expectations; expected health migration IDs now derive from the canonical migration catalog.",
+    "Initial migration equivalence report retained the expected monotonic runtime-clock advance; successor excludes only the migration ledger and clock, verifying all other pre-existing table hashes.",
+    "Python SQLite readonly inspection could not open the restored WAL database; current supported Node SQLite inspection passed without changing application records."
+  ],
+  "exclusions": [
+    "Logical between-turn linked-session handoff is verified, not hot media transfer, physical device arbitration, automatic trusted presence or the full presence/override rubric. Whole LS-S068 and LS-TEST-086 remain open.",
+    "Current selected-provider health is degraded. Actual-candidate check transfers empty dialogue; full dialogue continuity uses synthetic inference. No current real-provider continuity or qualification pass.",
+    "Preserved performance and causal failures, physical output/lock checks and new Human acceptance remain open.",
+    "Guide v22 is statically checked; last full guide visual/browser remains v13 after explicit URL policy denial. New application handoff UI was visually inspected at desktop and mobile widths. Original 24 accepted journeys remain unchanged.",
+    "No private asset changes, personal learning enablement, new camera, provider replacement, shared-service restart, external exposure, push or publication."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "handoff-actual-candidate.log",
+      "sha256": "cd4ef92a9805253555bfb5896702e838baed5a311189b1debfaaf5f97af44548"
+    },
+    {
+      "name": "handoff-browser-all-1.log",
+      "sha256": "f8c99284109a02ba867e979034d3e49693334055a4e996b7eab4207b1efffde9"
+    },
+    {
+      "name": "handoff-browser-final.log",
+      "sha256": "c89d1af4ca7f44631c1c7c60b5e3cb4e14d0a9f32639df33c13f7edb22524c0d"
+    },
+    {
+      "name": "handoff-browser-focused-1.log",
+      "sha256": "64d6215fc6ac77b75c62d475b7490d77c8ea8d7d7fb4fd013910d6a68eaa4245"
+    },
+    {
+      "name": "handoff-browser-focused-2.log",
+      "sha256": "52c39d3e5965e1131451368c8ff5bb5b4606fc2fec1417e1c275b9288143338f"
+    },
+    {
+      "name": "handoff-browser-focused-3.log",
+      "sha256": "530c10f978456821108eecc5bc962214aa6d5f58ce04ea2131a91e5990c7ae0c"
+    },
+    {
+      "name": "handoff-browser-focused-4.log",
+      "sha256": "ec4b0048ff69121eda464b3ec5dc49b1cb475d20872a4a647da37bdbfb925d36"
+    },
+    {
+      "name": "handoff-build-1.log",
+      "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446"
+    },
+    {
+      "name": "handoff-build-2.log",
+      "sha256": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042"
+    },
+    {
+      "name": "handoff-build-3.log",
+      "sha256": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042"
+    },
+    {
+      "name": "handoff-build-4.log",
+      "sha256": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042"
+    },
+    {
+      "name": "handoff-build-5.log",
+      "sha256": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042"
+    },
+    {
+      "name": "handoff-build-final.log",
+      "sha256": "a1466e781747b59d7f4aae19847fa2c9f37e009537086d87baae9a619d8d7064"
+    },
+    {
+      "name": "handoff-contract-focused.log",
+      "sha256": "7475eeeb6a3e966427b950994bfed5705954010a09569b45165c6985842e9e60"
+    },
+    {
+      "name": "handoff-generic-build.log",
+      "sha256": "e8b56314babf8953937d8f25353a780a6100805368d0ef49eefeae01f35d831c"
+    },
+    {
+      "name": "handoff-generic-guards.log",
+      "sha256": "50ba87b21b717391691f74c213b30a982b403ee342617873fd423bd19696ff6c"
+    },
+    {
+      "name": "handoff-generic-install.log",
+      "sha256": "6403beeb39ce8fdfbceb4179a0859ad65d5d66999a92f8446e11fcbdd5093e6c"
+    },
+    {
+      "name": "handoff-generic-smoke.log",
+      "sha256": "b7d0441b9b494aec3f72959aaff56f845a48599ef3b21c68a643d9749cfe98ed"
+    },
+    {
+      "name": "handoff-health-regression.log",
+      "sha256": "f2c289043343db3be76037e714f73dad9c05b6b0f76197de8382556d468672c9"
+    },
+    {
+      "name": "handoff-history-focused.log",
+      "sha256": "96b0d9a239381ebbc2cd1af5c059b4285a72685a58f1613110fdced4566c6416"
+    },
+    {
+      "name": "handoff-history-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "handoff-lint-1.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "handoff-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "handoff-migration-focused-1.log",
+      "sha256": "6047ff0f6a4f05388edf9d4911d864ef8ad7e5531d64512af1b451ef10ea7283"
+    },
+    {
+      "name": "handoff-native-1.log",
+      "sha256": "505231e7048cee1023b9da404db2a41bb273dbfce672f74a1984d98dd64d0fa8"
+    },
+    {
+      "name": "handoff-native-2.log",
+      "sha256": "12ae0955cd59f995ad50fbf535172516cebb3fea293db8742fd5cc29aadae02a"
+    },
+    {
+      "name": "handoff-native-3.log",
+      "sha256": "b2e4f6122be5ce4c0e9a46c1eac0a8016212387309c8a089b7d0d5a98be7b650"
+    },
+    {
+      "name": "handoff-native-final.log",
+      "sha256": "ddafed9d2f0d636b37b0169faa6f44e349d4fd905a331104e64655e2236794d4"
+    },
+    {
+      "name": "handoff-preflight-2.log",
+      "sha256": "6df2c4989b417bbb5f82782f244e7f9021eebfb3a8ee71a46cfcd52c1d1c28b7"
+    },
+    {
+      "name": "handoff-preflight-final.log",
+      "sha256": "9b0f89b9913488b842aceeabef939d8a2c02d54e49100c41b367a98305b5f064"
+    },
+    {
+      "name": "handoff-preflight.log",
+      "sha256": "8ceaa291faa75de25d2f3cbd7b5e46dc3aee0bd641ba294853a7cf89fe1ca496"
+    },
+    {
+      "name": "handoff-private-2.log",
+      "sha256": "d0f54460d9c59e745b095770b47cbad7a619848cd2791ad527faa339f8f71549"
+    },
+    {
+      "name": "handoff-private-final.log",
+      "sha256": "f9c727e297021a999664e1cc145111bebc9ad76493e36dfeec7592f8fe66edb3"
+    },
+    {
+      "name": "handoff-private-first.log",
+      "sha256": "8763597b6e704247a9a88d33f54a70cf54a90470e23faed6962a46f593fce434"
+    },
+    {
+      "name": "handoff-server-focused-1.log",
+      "sha256": "acbae2de0f6f0eb1c3b5b3ebe94151198ceaf568a3a4eb75ceed36a84e0c9eb3"
+    },
+    {
+      "name": "handoff-server-focused-2.log",
+      "sha256": "a40fcc3e520a29967fef83bfc769739f2c720ed884783135542d41c81c3c9707"
+    },
+    {
+      "name": "handoff-server-focused-3.log",
+      "sha256": "27d5d44431826efad9178158b5ef3efc12dea94806acfb64727876f58c072c15"
+    },
+    {
+      "name": "handoff-server-focused-4.log",
+      "sha256": "9e307bcb69419bd848d5c4540297b24e70fd462bb51f0337894a2261015f26c5"
+    },
+    {
+      "name": "handoff-server-focused-5.log",
+      "sha256": "50f287bbd8a406205d46e647c46d1fbda5710e3929050274a175e7ecf11d5790"
+    },
+    {
+      "name": "handoff-server-focused-6.log",
+      "sha256": "df20ba715c48c135b712a213d5eb9398d9e4f66c9e7f24a84872b3126b503477"
+    },
+    {
+      "name": "handoff-server-focused-7.log",
+      "sha256": "1719db7d45a5c14e81a5df7905ecf6f5c516196599d5516b1142816a3097ef2b"
+    },
+    {
+      "name": "handoff-server-focused-8.log",
+      "sha256": "0ee7fd0a977040ebd14195d47fe9679c517ea8fe02328165441a12d0c8a83aaa"
+    },
+    {
+      "name": "handoff-source-final.log",
+      "sha256": "302224cccaaed18733b0685f05b0d41dcbf22cc1a4b07057e80b5959d40f03f3"
+    },
+    {
+      "name": "handoff-source-full-1.log",
+      "sha256": "a9c4370c3c00c1231fa45fcdcfad319096d08bf723b42aa40a1ce04fe1a47f7b"
+    },
+    {
+      "name": "handoff-source-full-2.log",
+      "sha256": "1485d8317659351fc27974c895e5ba48f8ea6e4bbde693be4c36d9acf4e80901"
+    },
+    {
+      "name": "handoff-typecheck-1.log",
+      "sha256": "e0c0911c91ce128b5dc55f9f61ca28e74ace98521092af2fd67aca8e2de00c94"
+    },
+    {
+      "name": "handoff-typecheck-2.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "handoff-typecheck-3.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "handoff-typecheck-4.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "handoff-typecheck-5.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "handoff-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "handoff-workspace-check-1.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "name": "handoff-workspace-tests-1.log",
+      "sha256": "ce70043c363b8003b57c908c121bb6c1f464e8f30dab8f44273e8192e6fb40cb"
+    },
+    {
+      "name": "handoff-current-health.json",
+      "sha256": "07d6239b1f863244c91b24700b55b3fd969038d48cacab71c899c3018d99dff9"
+    },
+    {
+      "name": "handoff-current-assets.json",
+      "sha256": "b13c9699f2748263c3cde99c183f78a211c94379ab55c24c2c373e0477edaacc"
+    },
+    {
+      "name": "generic-clean-package-16.json",
+      "sha256": "b9a70e5981afff1887aed082b46d22eff1e7969ed2bb0242ba950e3703557c99"
+    },
+    {
+      "name": "v01-guide-static-v22.json",
+      "sha256": "9514e3975da5456b65f197c18f8a0ff16d6a8b7ebf3d90c48a60aca514e3a3c4"
+    },
+    {
+      "name": "handoff-actual-candidate.json",
+      "sha256": "dd6d9bf4749d912485108c105d5fe251290888151cc83b7907a2eb62002d8f68"
+    },
+    {
+      "name": "handoff-candidate-before.json",
+      "sha256": "3768ad7cdc7434ca7bcbe3cffe3952b93ffcdca35d7d962d18dcd490e326cb31"
+    },
+    {
+      "name": "handoff-candidate-after.json",
+      "sha256": "ab01ce344b373a7654336e13c35ac7b415272708c673f72bd48c4ae9f63bc6c4"
+    },
+    {
+      "name": "handoff-current-backup.json",
+      "sha256": "f776d4ad683a13a9cc8b917d617f97736b516337efd933527bb500e5afd6df52"
+    },
+    {
+      "name": "handoff-current-restore.json",
+      "sha256": "b60a045cef3ce8f2df5600742fb11a9edb4ee0489278924e7855ebf523125091"
+    },
+    {
+      "name": "handoff-restored-state.json",
+      "sha256": "6f80b5785a6e81f9afb0531efc082eb88a39941a8fc092060feb075bd5edadae"
+    }
+  ],
+  "preflight": {
+    "status": "blockedEnvironment",
+    "affectedClaim": "current prerequisite qualification LS-S062",
+    "reason": "effective input changed since qualification",
+    "independentWork": "Component tests, metadata handoff and isolated recovery verified; selected-provider qualification and whole-slice acceptance remain open."
+  }
+}
