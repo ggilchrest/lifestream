@@ -1,0 +1,180 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S085",
+  "status": "verified",
+  "claimClass": "local-component-verification",
+  "sourceRevision": "e6cd3abc04f6b2e6790a4b6c8b5ef492f8817bdc",
+  "privateSpecificationRevision": "818112d8ea93344762c28693da226496a7ae61b2",
+  "recordedAt": "2026-09-20T09:09:38.008985+00:00",
+  "scope": "Bounded durable acknowledgment catalog, foreground-safe selected-provider preparation and buffered endpoint playback. Selected avatar alignment and Human listening remain unverified.",
+  "caseIds": [
+    "LS-TEST-141",
+    "LS-TEST-142",
+    "LS-TEST-143",
+    "LS-TEST-144"
+  ],
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/acknowledgments.js",
+      "sha256": "5d5080ca139ed845edeb53dbebd924143a3d1ed308fb65be95f91a8fd601064c"
+    },
+    {
+      "path": "apps/control-web/conversation-output.js",
+      "sha256": "85673cc326b69c519369b4b33a01efe2a2e97f42f97bf7bd492dd74a8aa6c2bb"
+    },
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "1cbf32e536b48e0c84766f753ef3f1a4cad10831791e4a33ae5872c4a5369f59"
+    },
+    {
+      "path": "apps/control-web/saved-voices.js",
+      "sha256": "76f5c94066c255e4af0080a8b19d80f82be8d60ecd0de627cfcd3093617c9870"
+    },
+    {
+      "path": "apps/control-web/test/acknowledgments.test.mjs",
+      "sha256": "43ca96104fee6e8dc240fadd91b3477e41d956560a5133ab15543578425c63fb"
+    },
+    {
+      "path": "apps/server/src/admin/acknowledgments.ts",
+      "sha256": "1caf63bad0325a862c75010decae178d479d1a478a48cc5fd4e22ce9a9fb43db"
+    },
+    {
+      "path": "apps/server/src/admin/understanding.ts",
+      "sha256": "7c3f567a1fba2a3462a77fe06960e76965a64bd4f0983fd3700c2b203bc3bb29"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "e9c2465b045c62809d4b15aee6fefdbb8826adfd99bb3bbfaa86eae50a4f4892"
+    },
+    {
+      "path": "apps/server/src/runtime/acknowledgments.ts",
+      "sha256": "f6bb2ccf2c7fa8191d8911355efad9ea0ecf294e67f01978c98224ad67b9dca0"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "1435fd207f1bc005ae348ef1d3c50a382a0575a5c9df72ff94ec785ac6692389"
+    },
+    {
+      "path": "apps/server/test/acknowledgments.test.ts",
+      "sha256": "10b7dc9288fdf4219825b71a1c33589364f3c3c8ec260a55cc0ccbfffd209a35"
+    },
+    {
+      "path": "apps/server/test/audio.test.ts",
+      "sha256": "debb6957eddc23bf9dd820f66fdeb2be44eb8b0c1b6c97bad46b37417853583e"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "f53dd2a635f807688b883b766f77e2c05b406307e01b3ee2d01293a96d82c4b3"
+    },
+    {
+      "path": "packages/storage-sqlite/src/acknowledgments.ts",
+      "sha256": "694723c6a7e6865bb07325c507af86e9de88ad7b7fbe2235246ebf2edb8e99e1"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "37be4df19f0b81d64e5c00fa13c6fe1c5e9d739c2c54a9acfd1cb8239c0f3b19"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0046_acknowledgments.sql",
+      "sha256": "472143a633ed7ef67a5c0ac53fa8d1a95c71b44465abc4ddda778289ccc322b4"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "52d321f11ca8989d8d3ce88d37918bffe42f0159b0e7cdb9fd4c3c5c05fd7262"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "cb09f5dd82503a54595f0bb5a61e8f9394bf13d1b3c4f33fc353bc64db3bbd90"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "5ea6132741b01130673bcd3edfe9da02e23d0336293f5e336f815757f3194506"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "949/949, zero skips, 50293.679208 ms before final alignment/persistence guards; focused checks below verify the subsequent guards."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<local-module> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "57/57, zero skips, 168624.567625 ms before final response-preemption refinements."
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/acknowledgments.test.ts apps/server/test/audio.test.ts",
+      "result": "pass",
+      "evidence": "24/24, zero skips, 2993.713708 ms on final source, including closed/reopened SQLite and general profile activation refill."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<local-module> node --test apps/control-web/test/acknowledgments.test.mjs",
+      "result": "pass",
+      "evidence": "2/2, zero skips, 48757.636625 ms; actual AudioContext with deterministic PCM/tracks, response preemption, privacy, edits and reload. Later changes are backend-only."
+    },
+    {
+      "command": "pnpm build; pnpm lint; git diff --check",
+      "result": "pass",
+      "evidence": "Final build, lint and diff checks passed."
+    }
+  ],
+  "selectedProvider": {
+    "sourceRevision": "1ae616942b6f268ff4987440a1a0e88fae8c71ee",
+    "fixture": false,
+    "readyCount": 5,
+    "synchronizedReadyCount": 0,
+    "preparationMs": 15264.961333000001,
+    "durationsMs": [
+      1440,
+      1920,
+      1920,
+      1760,
+      1920
+    ],
+    "liveAssistantEnabled": false
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "s085-source-tests-2.log",
+      "sha256": "0deee9257add56a2d3f929cf41fa48b835534954246a8796004d7e7a661cb3ec"
+    },
+    {
+      "name": "s085-browser-full-1.log",
+      "sha256": "921c67c56a8318bd30de34b7420455f43e8ff10a3dd6a6f5dd0332a0fe842a1b"
+    },
+    {
+      "name": "s085-persistence-tests-2.log",
+      "sha256": "ab4f872705d469899c737052a9914a0b99182f6cb99cc987fdd3ddfd11fc32ee"
+    },
+    {
+      "name": "s085-browser-final-2.log",
+      "sha256": "9243b84156dba2779389c26bc1593d9d0903defe38efd1f4162b9e189ede21de"
+    },
+    {
+      "name": "s085-final-build.log",
+      "sha256": "1b33e8cce60d49bd5c039729354a4c41348c155e1abe6858f7260ee30425092f"
+    },
+    {
+      "name": "s085-persistence-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "s085-selected-provider.json",
+      "sha256": "8232b4227f7639baaddf7f447a6b0e59e34b6562b30e59e70176a237cd287db7"
+    },
+    {
+      "name": "v01-guide-validation.json",
+      "sha256": "6307def086f16dd55e20791c8337c53946645d6857dc8ef822ab50dc56fe4edd"
+    }
+  ],
+  "retainedFailures": [
+    "Initial migration and harness expectation failures retained; corrected executed checks pass.",
+    "No selected aligned-viseme provider is configured. Deterministic paired-clock tests do not establish actual avatar synchronization."
+  ],
+  "exclusions": [
+    "No complete S085, integrated beta, physical audio, perceptual quality or new Human acceptance.",
+    "Main candidate acknowledgment feature remains default off; isolated synthetic Assistant preparation only.",
+    "No new provider/model/training, camera activation, publication, push, cloud upload or external exposure.",
+    "Removable-volume backup remains operator-deferred."
+  ]
+}
