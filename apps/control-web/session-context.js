@@ -8,9 +8,9 @@
   let revision = null, epoch = 0;
   const bindingKey=()=>{const key='lifestream.endpoint-key.v1';let value=localStorage.getItem(key);if(!value){value=crypto.randomUUID();localStorage.setItem(key,value);}return value;};
   const render = value => {
-    revision = value.revision;
+    revision = value.revision;get('session-context-apply').disabled=!!value.ended;get('session-audience').disabled=!!value.ended;
     get('session-audience').value = value.endpoint?.privacyClass === 'personal' ? 'authenticatedSession' : 'unknown';
-    get('session-context-status').textContent = `Session revision ${revision} · ${value.endpoint?.privacyClass === 'personal' ? 'Approved context allowed in this authenticated session' : 'Unknown audience: private context withheld'}. Physical speaker identity remains unverified.`;
+    get('session-context-status').textContent = value.ended?'This conversation has ended. Sign in again to start a different conversation here.':`Session revision ${revision} · ${value.endpoint?.privacyClass === 'personal' ? 'Approved context allowed in this authenticated session' : 'Unknown audience: private context withheld'}. Physical speaker identity remains unverified.`;
     get('session-context-details').textContent = JSON.stringify({ runtimeSelfContext: value.runtimeSelfContext, limitations: value.limitations }, null, 2);
   };
   const refresh = async () => {
@@ -34,5 +34,6 @@
     if (!panel.hidden) void run(refresh)();
   };
   window.addEventListener('lifestream-auth', authChanged);
+  window.addEventListener('lifestream-session-context',run(refresh));
   void window.lifestreamAuth.ready.then(authChanged);
 })();

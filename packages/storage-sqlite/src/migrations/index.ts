@@ -57,7 +57,8 @@ export function loadMigrations(): Migration[] {
     [47, "experiential_learning", "0047_experiential_learning.sql"],
     [48, "experience_context_indexes", "0048_experience_context_indexes.sql"],
     [49, "experience_restore", "0049_experience_restore.sql"],
-    [50, "session_endpoint_settings", "0050_session_endpoint_settings.sql"]
+    [50, "session_endpoint_settings", "0050_session_endpoint_settings.sql"],
+    [51, "session_handoff", "0051_session_handoff.sql"]
   ].map(([id, name, file]) => {
     const sql = readFileSync(join(migrationDirectory, file as string), "utf8");
     return { id: id as number, name: name as string, sql, digest: createHash("sha256").update(sql).digest("hex") };

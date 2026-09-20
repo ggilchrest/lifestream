@@ -36,3 +36,31 @@ test('retention expires without reads extending it and process cleanup removes a
 test('idle payloads are erased at expiry without another read or request',t=>{
  t.mock.timers.enable({apis:['setTimeout']});let now=1000;const history=new ConversationHistory(()=>now);history.bind(scope,()=>true,1100).remember({interactionId:'idle',role:'user',text:'Must expire while idle'});assert.equal(history.diagnostics().entries,1);now=1100;t.mock.timers.tick(100);assert.equal(history.diagnostics().entries,0);history.clear();
 });
+
+test('prepared handoff preserves dialogue lineage and original expiry without memory admission',()=>{
+ let now=1000,sourceCurrent=true,destinationCurrent=true;const history=new ConversationHistory(()=>now),port=history.bind(scope,()=>sourceCurrent,5000),destination={...scope,sessionId:'fresh-session'};
+ port.remember({interactionId:'turn',role:'user',text:'Accepted input.'});port.remember({interactionId:'opening',role:'assistant',text:'Observed opening.',opportunityId:'opportunity',observation:'emitted'});
+ const boundary=history.prepareTransfer(scope);assert.equal(boundary.entries,2);now=2000;
+ history.withTransfer(boundary,destination,10000,install=>{sourceCurrent=false;install(()=>destinationCurrent);});
+ const received=history.bind(destination,()=>destinationCurrent,10000);assert.equal(received.read(),boundary.content);assert.equal(port.read(),'[]');assert.equal(history.transferCurrent(boundary),false);assert.throws(()=>history.withTransfer(boundary,destination,10000,()=>{}),/changed/);
+ now=5000;assert.equal(received.read(),'[]','transfer cannot renew original retention');history.clear();
+});
+
+test('handoff rejects forged, changed, cross-owner and occupied destination boundaries',()=>{
+ let current=true;const history=new ConversationHistory(()=>1000),port=history.bind(scope,()=>current,5000),destination={...scope,sessionId:'destination'};port.remember({interactionId:'a',role:'user',text:'Source'});
+ const first=history.prepareTransfer(scope);assert.equal(history.transferCurrent({...first}),false);port.remember({interactionId:'b',role:'assistant',text:'Later'});assert.equal(history.transferCurrent(first),false);
+ const boundary=history.prepareTransfer(scope);for(const key of ['principalId','assistantId','conversationId','relationshipId'])assert.throws(()=>history.withTransfer(boundary,{...destination,[key]:'foreign'},5000,()=>{}),/scope/);
+ history.bind(destination,()=>true,5000).remember({interactionId:'old',role:'user',text:'Existing destination conversation'});assert.throws(()=>history.withTransfer(boundary,destination,5000,()=>{}),/already/);
+ current=false;assert.equal(history.transferCurrent(boundary),false);history.prune();current=true;assert.equal(history.transferCurrent(boundary),false);history.clear();
+});
+
+test('durable handoff failure restores volatile history without retiring the rolled-back source',()=>{
+ let sourceCurrent=true;const history=new ConversationHistory(()=>1000),port=history.bind(scope,()=>sourceCurrent,5000),destination={...scope,sessionId:'destination'};port.remember({interactionId:'a',role:'user',text:'Preserve me'});const boundary=history.prepareTransfer(scope);
+ assert.throws(()=>history.withTransfer(boundary,destination,5000,install=>{sourceCurrent=false;install(()=>true);sourceCurrent=true;throw Error('Durable audit write failed');}),/audit/);
+ assert.match(port.read(),/Preserve me/);assert.equal(history.bind(destination,()=>true,5000).read(),'[]');assert.equal(history.transferCurrent(boundary),true);
+ history.withTransfer(boundary,destination,5000,install=>{sourceCurrent=false;install(()=>true);});assert.match(history.bind(destination,()=>true,5000).read(),/Preserve me/);history.clear();
+});
+
+test('history cleanup also invalidates prepared empty handoffs',()=>{
+ const history=new ConversationHistory(()=>1000),boundary=history.prepareTransfer(scope);assert.equal(history.transferCurrent(boundary),true);history.clear();assert.equal(history.transferCurrent(boundary),false);
+});

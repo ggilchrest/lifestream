@@ -547,7 +547,14 @@
           "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
         },
         "authorization": {
-          "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityDecision"
+          "oneOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/AuthorityDecision"
+            },
+            {
+              "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/SessionHandoffAuthorization"
+            }
+          ]
         },
         "contextBoundary": {
           "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
@@ -3384,6 +3391,87 @@
           "$ref": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/AudioServerMessage"
         }
       ]
+    },
+    "SessionHandoffAuthorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Local domain authorization for an explicitly reviewed transfer between two current sign-ins of one principal. Never a capability grant, tool dispatch decision, credential or transfer of consent. Destination readiness and source review are independently bound and current.",
+      "required": [
+        "schemaVersion",
+        "kind",
+        "disposition",
+        "grantsTransferred",
+        "decisionId",
+        "principalId",
+        "assistantId",
+        "sourceSessionId",
+        "destinationSessionId",
+        "sourceEndpointId",
+        "destinationEndpointId",
+        "sourceReviewId",
+        "destinationReadinessId",
+        "sourceRevision",
+        "destinationRevision",
+        "inputDigest",
+        "scopeDigest",
+        "evaluatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "kind": {
+          "const": "authenticatedSessionHandoff"
+        },
+        "disposition": {
+          "const": "authorized"
+        },
+        "grantsTransferred": {
+          "const": false
+        },
+        "decisionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "principalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sourceSessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "destinationSessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sourceEndpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "destinationEndpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sourceReviewId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "destinationReadinessId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sourceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "destinationRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "inputDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "scopeDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "evaluatedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        }
+      }
     }
   }
 }

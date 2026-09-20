@@ -91,6 +91,7 @@ export class InitiativeHost {
  invalidate(reason='configurationChanged'):void {
   for(const job of this.jobs.values())if(this.closed||this.foreground>0||!job.current()){job.reason=this.foreground>0?'userTurn':reason;job.controller.abort();}
  }
+ busy(sessionId:string):boolean{return [...this.jobs.values()].some(job=>job.sessionId===sessionId);}
  foregroundStarted(engagement?:{scope:InitiativeScope;sessionId:string}):()=>void {
   this.foreground++;this.invalidate('userTurn');
   if(engagement){const {scope,sessionId}=engagement;this.timing.clear(key(scope,sessionId));this.ledger.resetSessionTopics(scope,sessionId);const prior=this.ledger.list(scope).find(r=>r.opportunity.sessionId===sessionId&&['emitted','acknowledged'].includes(r.outcome.lastDeliveryStage)&&['notObserved','noResponse'].includes(r.outcome.response));if(prior)this.ledger.transition(scope,prior.opportunity.opportunityId,prior.version,{type:'respond',sessionId,response:'replied'});}

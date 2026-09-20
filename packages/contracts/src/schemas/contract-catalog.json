@@ -166,8 +166,8 @@
     {
       "port": "TextToSpeechProvider",
       "method": "synthesize",
-      "request": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TtsRequest",
-      "result": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TtsEvent",
+      "request": "https://lifestream.dev/contracts/provider-messages/2.0.0#/$defs/TtsRequest",
+      "result": "https://lifestream.dev/contracts/provider-messages/2.0.0#/$defs/TtsEvent",
       "stream": true,
       "effects": false,
       "ownerSlice": "LS-S019",
@@ -408,6 +408,24 @@
       "successStatus": 101,
       "transport": "WebSocket",
       "ownerSlice": "LS-S020"
+    },
+    {
+      "name": "InitiativeAdministration",
+      "method": "POST",
+      "path": "/api/admin/v1/assistants/{assistantId}/relationships/{relationshipId}/initiative/v1",
+      "request": "https://lifestream.dev/contracts/initiative-api/1.0.0#/$defs/Request",
+      "response": "https://lifestream.dev/contracts/initiative-api/1.0.0#/$defs/Response",
+      "successStatus": 200,
+      "ownerSlice": "LS-S083"
+    },
+    {
+      "name": "UnderstandingAdministration",
+      "method": "POST",
+      "path": "/api/admin/v1/assistants/{assistantId}/relationships/{relationshipId}/understanding/v1",
+      "request": "https://lifestream.dev/contracts/understanding-api/1.0.0#/$defs/Request",
+      "response": "https://lifestream.dev/contracts/understanding-api/1.0.0#/$defs/Response",
+      "successStatus": 200,
+      "ownerSlice": "LS-S084"
     }
   ],
   "traceEvents": [
@@ -728,6 +746,26 @@
     }
   ],
   "types": [
+    {
+      "name": "UserProfile",
+      "schemaRef": "https://lifestream.dev/contracts/user-profile/1.0.0",
+      "ownerSlice": "LS-S072"
+    },
+    {
+      "name": "Relationship",
+      "schemaRef": "https://lifestream.dev/contracts/relationship/1.0.0",
+      "ownerSlice": "LS-S072"
+    },
+    {
+      "name": "RelationshipAdministration",
+      "schemaRef": "https://lifestream.dev/contracts/relationship-administration/1.0.0",
+      "ownerSlice": "LS-S072"
+    },
+    {
+      "name": "PreparedContextViewV2",
+      "schemaRef": "https://lifestream.dev/contracts/prepared-context/2.0.0",
+      "ownerSlice": "LS-S072"
+    },
     {
       "name": "UUID",
       "schemaRef": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID",
@@ -1060,7 +1098,7 @@
     },
     {
       "name": "SpeechSegment",
-      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/SpeechSegment",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/2.0.0#/$defs/SpeechSegment",
       "ownerSlice": "LS-S002"
     },
     {
@@ -1335,12 +1373,12 @@
     },
     {
       "name": "TtsRequest",
-      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TtsRequest",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/2.0.0#/$defs/TtsRequest",
       "ownerSlice": "LS-S002"
     },
     {
       "name": "TtsEvent",
-      "schemaRef": "https://lifestream.dev/contracts/provider-messages/1.0.0#/$defs/TtsEvent",
+      "schemaRef": "https://lifestream.dev/contracts/provider-messages/2.0.0#/$defs/TtsEvent",
       "ownerSlice": "LS-S002"
     },
     {
@@ -1697,6 +1735,51 @@
       "name": "ActivateMemory",
       "schemaRef": "https://lifestream.dev/contracts/memory-operations/1.0.0#/$defs/ActivateMemory",
       "ownerSlice": "LS-S008"
+    },
+    {
+      "name": "RelationalInitiativeConfiguration",
+      "schemaRef": "https://lifestream.dev/contracts/relational-initiative/1.0.0#/$defs/RelationalInitiativeConfiguration",
+      "ownerSlice": "LS-S083"
+    },
+    {
+      "name": "RelationalOpportunity",
+      "schemaRef": "https://lifestream.dev/contracts/relational-initiative/1.0.0#/$defs/RelationalOpportunity",
+      "ownerSlice": "LS-S083"
+    },
+    {
+      "name": "RelationalInitiativeOutcome",
+      "schemaRef": "https://lifestream.dev/contracts/relational-initiative/1.0.0#/$defs/RelationalInitiativeOutcome",
+      "ownerSlice": "LS-S083"
+    },
+    {
+      "name": "UnderstandingConfiguration",
+      "schemaRef": "https://lifestream.dev/contracts/personal-understanding/1.0.0#/$defs/UnderstandingConfiguration",
+      "ownerSlice": "LS-S084"
+    },
+    {
+      "name": "PreferenceHypothesis",
+      "schemaRef": "https://lifestream.dev/contracts/personal-understanding/1.0.0#/$defs/PreferenceHypothesis",
+      "ownerSlice": "LS-S084"
+    },
+    {
+      "name": "TopicBrief",
+      "schemaRef": "https://lifestream.dev/contracts/personal-understanding/1.0.0#/$defs/TopicBrief",
+      "ownerSlice": "LS-S084"
+    },
+    {
+      "name": "UnderstandingWork",
+      "schemaRef": "https://lifestream.dev/contracts/personal-understanding/1.0.0#/$defs/UnderstandingWork",
+      "ownerSlice": "LS-S084"
+    },
+    {
+      "name": "UnderstandingCandidate",
+      "schemaRef": "https://lifestream.dev/contracts/personal-understanding/1.0.0#/$defs/UnderstandingCandidate",
+      "ownerSlice": "LS-S084"
+    },
+    {
+      "name": "SessionHandoffAuthorization",
+      "schemaRef": "https://lifestream.dev/contracts/runtime-api/1.0.0#/$defs/SessionHandoffAuthorization",
+      "ownerSlice": "LS-S024"
     }
   ]
 }
