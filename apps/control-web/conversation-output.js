@@ -1,5 +1,8 @@
 // Output-only use of the existing runtime audio protocol. This class never opens
 // an input stream, sends a start request, recognizes speech or calls a provider.
+// Give startup a small scheduling cushion. Once queued, preserve the PCM clock;
+// arrival jitter must not reinsert a startup delay between contiguous frames.
+const START_LEAD_SECONDS=.08, RECOVERY_LEAD_SECONDS=.02;
 export class ConversationOutput {
  constructor({onStopped,onComplete,onState,onMessage,onReplyText,onReplyComplete,onReplyAudio,onClosed,onError}){Object.assign(this,{onStopped,onComplete,onState,onMessage,onReplyText,onReplyComplete,onReplyAudio,onClosed,onError});this.retired=new Set();this.sources=new Set();this.socket=null;this.audio=null;this.turn=null;this.waiting=false;this.cursor=0;this.generation=0;this.playbackFrames=[];this.playbackScheduledSamples=0;}
  get connected(){return this.socket?.readyState===WebSocket.OPEN&&this.audio?.state==='running';}
@@ -64,7 +67,7 @@ export class ConversationOutput {
   const turn=this.turn,audio=this.audio;if(this.cursor-audio.currentTime>3)throw new Error('Speech playback exceeded its bounded lookahead.');
   const buffer=audio.createBuffer(1,bytes.length/2,48000),view=new DataView(bytes.buffer),channel=buffer.getChannelData(0);
   for(let i=0;i<channel.length;i++)channel[i]=view.getInt16(i*2,true)/32768;
-  const source=audio.createBufferSource();source.buffer=buffer;source.connect(audio.destination);this.cursor=Math.max(this.cursor,audio.currentTime+.25);this.sources.add(source);
+  const source=audio.createBufferSource();source.buffer=buffer;source.connect(audio.destination);this.cursor=Math.max(this.cursor,audio.currentTime+(this.playbackScheduledSamples===0?START_LEAD_SECONDS:RECOVERY_LEAD_SECONDS));this.sources.add(source);
   source.addEventListener('ended',()=>{this.sources.delete(source);source.disconnect();if(this.turn===turn)this.maybeComplete();},{once:true});
   this.playbackFrames=this.playbackFrames.filter(frame=>frame.end>audio.currentTime);this.playbackFrames.push({offset:this.playbackScheduledSamples,start:this.cursor,end:this.cursor+buffer.duration,samples:buffer.getChannelData(0),trace:turn.trace,rate:48000});this.playbackScheduledSamples+=bytes.length/2;
   source.start(this.cursor);if(turn.reply&&!turn.firstScheduledAudio){turn.firstScheduledAudio=true;this.onReplyAudio?.({kind:'actual-response-audio',trace:turn.trace,segmentId:turn.segment,audioTime:this.cursor,observedAt:performance.now()});}this.cursor+=buffer.duration;this.onState('Playing speech');
