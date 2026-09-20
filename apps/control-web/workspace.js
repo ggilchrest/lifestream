@@ -60,7 +60,7 @@ export function installWorkspace() {
   };
   nav.onclick=event=>{const link=event.target.closest('[data-destination]');if(link){event.preventDefault();location.hash=link.dataset.destination;}};
   window.addEventListener('hashchange',()=>navigate(location.hash.slice(1)));
-  window.addEventListener('lifestream-auth',()=>{notification.hidden=true;notification.querySelector('span').textContent='';navigate(active==='account'&&window.lifestreamAuth.session&&$('#auth-recovery-codes').hidden?'profile':active,false);});
+  window.addEventListener('lifestream-auth',()=>{notification.hidden=true;notification.querySelector('span').textContent='';navigate(active==='account'&&window.lifestreamAuth.session&&$('#auth-recovery-codes').hidden?(document.documentElement.dataset.audienceProtected==='true'?'session':'profile'):active,false);});
   window.addEventListener('lifestream-assistant',()=>{notification.hidden=true;notification.querySelector('span').textContent='';});
   window.lifestreamUI={navigate:id=>{location.hash=id;navigate(id);},notify:(message,error)=>{notification.querySelector('span').textContent=message;notification.classList.toggle('error',!!error);notification.hidden=false;}};
   navigate(location.hash.slice(1)||'profile',false);

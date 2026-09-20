@@ -149,7 +149,7 @@
 .room-memory{border-top:1px solid #d1dedd;margin-top:24px;padding-top:20px}.room-memory p{max-width:78ch;line-height:1.6}.room-memory label input{width:auto;margin-right:8px}
 
 /* Audience protection precedes asynchronous hydration and applies on every route. */
-[data-audience-protected="true"] .workspace-view:not([data-view="conversation"]):not([data-view="account"]),
+[data-audience-protected="true"] .workspace-view:not([data-view="conversation"]):not([data-view="account"]):not([data-view="session"]),
 [data-audience-protected="true"] .workspace-notification,
 [data-audience-protected="true"] #assistant-list,
 [data-audience-protected="true"] #new-assistant,

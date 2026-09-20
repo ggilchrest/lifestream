@@ -13,7 +13,7 @@ export class AudienceCoordinator{
  declare(identity:AudienceIdentity,mode:'solo'|'shared'|'clear'|'lock'|'unlock',seconds=300):AudienceSnapshot{
   if(!['solo','shared','clear','lock','unlock'].includes(mode))throw new Error('Unsupported audience declaration');
   if(!Number.isInteger(seconds)||seconds<1||seconds>900)throw new Error('A manual declaration must expire within fifteen minutes');
-  const e=this.entry(identity);if(mode==='lock'){e.restricted=true;e.manual=undefined;}else if(mode==='unlock'){e.restricted=false;e.manual=undefined;e.observation=undefined;}else if(mode==='clear')e.manual=undefined;else{if(!identity.endpointId)throw new Error('Apply a logical endpoint before declaring an audience');e.manual={mode,expires:this.now()+seconds*1000};}return structuredClone(this.reconcile(e));
+  const e=this.entry(identity);if(mode==='lock'){e.restricted=true;e.manual=undefined;}else if(mode==='unlock'){e.restricted=false;e.manual=undefined;e.observation=undefined;}else if(mode==='clear')e.manual=undefined;else{if(!identity.endpointId)throw new Error('Open Session disclosure and apply a choice before declaring an audience');e.manual={mode,expires:this.now()+seconds*1000};}return structuredClone(this.reconcile(e));
  }
  // Only an operator-configured source adapter can publish automatic evidence.
  observe(identity:AudienceIdentity,input:AudienceObservation|null):void{this.applyObservation(this.entry(identity),input);}
