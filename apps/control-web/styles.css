@@ -158,6 +158,7 @@
 [data-audience-protected="true"] .room-memory,
 [data-audience-protected="true"] .room-simulation,
 [data-audience-protected="true"] #session-context-details,
+[data-audience-protected="true"] #endpoint-configuration-panel,
 [data-audience-protected="true"] #profile-editor,
 [data-audience-protected="true"] dialog {display:none!important}
 .audience-panel {margin-bottom:1rem}.audience-panel h2{margin-top:0}
@@ -175,3 +176,5 @@
 .saved-voice-candidate{align-items:start;flex-wrap:wrap}.saved-voice-candidate h3{margin:0}.saved-voice-candidate .actions{flex-wrap:wrap}.saved-voice-candidate label{display:flex;align-items:center;gap:.4rem}.saved-voice-candidate input[type=checkbox]{width:auto}.saved-voices form{margin-block:1rem;padding-block:1rem;border-block:1px solid var(--border,#cfdee7)}
 
 .profile-attention{margin:1rem 0;padding:1rem;border:1px solid var(--line,#d5e4ed);border-radius:12px}.profile-attention legend{font-weight:700}.profile-attention .check{display:inline-flex;align-items:center;gap:.4rem;margin:.4rem 1rem .4rem 0}.profile-attention input[type=checkbox]{width:auto;margin:0}
+
+.endpoint-configuration dl{display:grid;grid-template-columns:minmax(9rem,1fr) minmax(0,3fr);gap:.8rem 1rem;line-height:1.6}.endpoint-configuration dt{font-weight:700}.endpoint-configuration dd{margin:0;overflow-wrap:anywhere}.endpoint-configuration details{margin-top:1rem}@media(max-width:600px){.endpoint-configuration dl{grid-template-columns:1fr;gap:.35rem}.endpoint-configuration dd{margin-bottom:.75rem}}

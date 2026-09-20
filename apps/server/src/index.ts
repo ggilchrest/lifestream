@@ -54,6 +54,7 @@ import { relationshipControlDefaults, relationshipControlInventory, compileRelat
 import { ContextCache } from "@lifestream/runtime/context/cache";
 import { buildCanonicalPrompt, type RuntimeSelfContext, type AssistantPersonaProjection } from "@lifestream/runtime/inference/prompt";
 import { readSessionEndpoint, reviseSessionEndpoint } from "./runtime/session-context.ts";
+import {inspectEndpointConfiguration} from "./runtime/endpoint-configuration.ts";
 import { AudioSession } from "./runtime/audio.ts";
 import {SavedVoiceAdministration,SavedVoiceError,voiceSummary,savedVoiceConfiguration} from './admin/saved-voices.ts';
 import { synthesizePreview } from "./runtime/preview-speech.ts";
@@ -821,6 +822,16 @@ export class LifestreamServer {
         const heartbeat=setInterval(()=>{try{if(this.localAuth)this.localAuth.assertCurrent(context as LocalContext);if(JSON.stringify(identity)!==JSON.stringify(this.audienceIdentity(context)))throw new Error('endpoint changed');send(this.audience!.snapshot(identity));}catch{response.end();}},1000);heartbeat.unref();response.once('close',()=>{clearInterval(heartbeat);unsubscribe();});return;
       }
       return json(response,200,this.audience?{enforced:true,...this.audience.snapshot(identity)}:{enforced:false});
+    }
+    if(path === "/api/runtime/v1/endpoint-configuration") {
+      const context=this.requestContext(request,true);if(!context)throw new AuthenticationError();
+      if(method!=="GET")return json(response,405,{code:"method_not_allowed"});
+      const query=new URL(request.url!,this.localOrigin).searchParams,assistantId=query.get('assistantId')??undefined;
+      if([...query.keys()].some(key=>key!=='assistantId')||query.getAll('assistantId').length>1||assistantId!==undefined&&!validUuid(assistantId))return json(response,422,{code:'invalid_endpoint_configuration_query'});
+      if(assistantId&&(!this.localAuth||!this.localAuth.canAdminister(context as LocalContext,assistantId)))throw new AuthenticationError(403,'assistant_scope_unavailable');
+      if(!this.audiencePermits(context))throw new AuthenticationError(403,'audience_protected');
+      const persona=assistantId?this.admin.getActivePersona(assistantId,context.principalId,true):undefined;
+      return json(response,200,inspectEndpointConfiguration({database:this.database,config:this.config,principalId:context.principalId,sessionId:context.sessionId,...(assistantId?{assistantId}:{}),...(persona?{personaRevision:persona.sourceRevision}:{}),catalog:this.presentationPackages,selection:this.presentationSelection,voices:this.savedVoices,ownership:this.audioOwnership,audience:this.audience?this.audience.snapshot(this.audienceIdentity(context)):{enforced:false},privateContextAllowed:this.runtimeSelfContext('inactive','sessionEndpoint',context).audienceScope==='authenticatedSession',providers:this.providers.providers}));
     }
     if (path === "/api/runtime/v1/session-context") {
       const context = this.requestContext(request, false); if (!context) throw new AuthenticationError();
