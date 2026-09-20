@@ -1,0 +1,88 @@
+{
+  "slice": "LS-S066",
+  "status": "inProgress",
+  "claimClass": "verified-presentation-scope-refresh-repair",
+  "collectedAt": "2026-09-20T18:01:35.698119Z",
+  "revision": "aaa421cad73c763cd42509212898c41356451a15",
+  "specificationRevision": "c95249bb275b6fc48481f336d1f0f940b4990f8a",
+  "problem": "Delayed health/profile rendering repeated an unchanged Assistant notification. Presentation incorrectly disposed the active renderer and cancelled a between-turn appearance switch.",
+  "behavior": [
+    "Unchanged Assistant/relationship scope notifications retain the display and preview.",
+    "Real Assistant/relationship changes still clear and release the prior renderer; auth, session disclosure, audience, navigation and playback boundaries remain enforced.",
+    "Relationship identity is used only for local scope comparison and is excluded from canonical semantic presentation state."
+  ],
+  "checks": [
+    {
+      "command": "New unchanged-scope rendered regression before repair",
+      "result": "expectedFailure",
+      "tests": 1,
+      "detail": "Repeated unchanged scope notifications disposed the loaded appearance."
+    },
+    {
+      "command": "Focused presentation and actual audience privacy browser checks",
+      "result": "pass",
+      "tests": 3,
+      "skipped": 0
+    },
+    {
+      "command": "Complete serial browser surface suite with PLAYWRIGHT_MODULE",
+      "result": "pass",
+      "tests": 68,
+      "skipped": 0,
+      "durationMs": 194570.081667
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build; git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "Actual authenticated candidate appearance/browser proof",
+      "result": "pass",
+      "detail": "Original and extended packages, all six face previews, End preview, same neutral pixels at identical clock, session-only choice, desktop/mobile, shared audience and sign-out. No provider generation."
+    }
+  ],
+  "sourceRegression": {
+    "inheritedFrom": "e74ec9dcea48f455cfe68818131ad1d615437298",
+    "tests": 980,
+    "reason": "This repair changes browser JavaScript only; complete browser suite rerun."
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "presentation-scope-regression-before.log",
+      "sha256": "412e01110b22499e345f4a1bfdc439b49a480afcb17702c633d391d2fef5f4ef"
+    },
+    {
+      "name": "presentation-scope-focused.log",
+      "sha256": "1237ef8a7a77c284413234665e5cbded531ad88e2ab9abede15cdc193f14d345"
+    },
+    {
+      "name": "presentation-scope-browser-suite.log",
+      "sha256": "eab704e972100d93e7b5d49980bf0adc5e8b2a30338a0d1ca7b723778b84529b"
+    },
+    {
+      "name": "presentation-scope-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "presentation-scope-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "presentation-scope-build.log",
+      "sha256": "4979cc1a58813b57e83bcc6af1a45d6f75e9fb531ee02007723c4046eb2a4486"
+    },
+    {
+      "name": "actual-candidate-face-motion-committed.log",
+      "sha256": "726bc735b5d32b4c5b967868be3e2247ee5908af7b943e32cdcc050bd77e2b4d"
+    }
+  ],
+  "retainedFailures": [
+    "Original actual-candidate smoke timed out; tracing proved redundant notifications and an isolated rendered test reproduced the bug. A settled-scope harness alone did not repair it.",
+    "Source and predecessor face-motion receipts remain unchanged."
+  ],
+  "limitations": [
+    "Whole S066, selected alignment, real-provider performance and Human acceptance remain open.",
+    "Current inference/STT outage keeps the candidate administration-only; no shared service restart or provider replacement.",
+    "All private models, mappings, screenshots, lab and deployment material remain outside connected repositories. No pushes/publication."
+  ]
+}

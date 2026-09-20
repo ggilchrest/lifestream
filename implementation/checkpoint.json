@@ -2,8 +2,8 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "e74ec9dcea48f455cfe68818131ad1d615437298",
-  "currentRevision": "e74ec9dcea48f455cfe68818131ad1d615437298",
+  "baseRevision": "aaa421cad73c763cd42509212898c41356451a15",
+  "currentRevision": "aaa421cad73c763cd42509212898c41356451a15",
   "activeSlice": "LS-S066",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -132,6 +132,7 @@
     "implementation/evidence/LS-S062-qualification-certification-7.json",
     "implementation/evidence/LS-S066-degraded-startup-1.json",
     "implementation/evidence/LS-S066-face-motion-1.json",
+    "implementation/evidence/LS-S066-scope-refresh-1.json",
     "implementation/evidence/LS-S066-semantic-preview-1.json",
     "implementation/evidence/LS-S066-v01-component-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
@@ -174,7 +175,7 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S066-face-motion-1.json",
+    "implementation/evidence/LS-S066-scope-refresh-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -725,8 +726,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Continue independent presentation quality and integration verification; inspect inherited private model validator findings and remaining shared runtime controls. Selected real-provider speech/performance and Human acceptance remain blocked only on their named dependencies.",
-  "updatedAt": "2026-09-20T17:48:13.589569Z",
+  "nextAction": "Continue private asset tangent-quality validation and remaining dependency-ready integration; preserve actual selected-provider, physical environment and Human acceptance boundaries.",
+  "updatedAt": "2026-09-20T18:01:35.699435Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "Bounded facial-motion component at e74ec9dcea48f455cfe68818131ad1d615437298 passes 980 source, 68 serial browser, 44 workspace and final 11 focused tests; whole S066 acceptance remains open. Private assets and Lab stay operator-local. Current candidate/report tracks exact revisions and remaining environment and Human boundaries. Original 24 accepted journeys and unrelated dirty work preserved. Initial sign-in 401 was not reproduced in three fresh contexts and is parked; no credential changes."
+  "notes": "Same-scope appearance cancellation was reproduced on the actual candidate and in a failing browser regression; source aaa421cad73c763cd42509212898c41356451a15 repairs it and passes all 68 browser checks, three focused privacy/preview checks, typecheck/lint/build, and actual authenticated private appearance/preview/privacy/sign-out smoke. Face-motion source regression 980/980 remains inherited at e74ec9d. No provider or personal policy replacement. Private tangent derivative has zero validator errors but awaits visual promotion; original assets and failures retained. Run disposition continue."
 }
