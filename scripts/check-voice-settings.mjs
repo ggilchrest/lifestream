@@ -1,3 +1,4 @@
+import {discardPreview} from './preview-settlement.mjs';
 // Real-provider test; generates its own neutral reference in memory. No human recording.
 import assert from 'node:assert/strict';
 const base=process.env.LIFESTREAM_URL||'http://127.0.0.1:3910';
@@ -7,6 +8,7 @@ const synthesize=async(text,voiceSettings)=>{
   const response=await fetch(`${base}/api/runtime/v1/tts`,{method:'POST',headers,body:JSON.stringify({text,voiceSettings}),signal:AbortSignal.timeout(70000)});
   assert.equal(response.status,200,await (!response.ok?response.text():Promise.resolve('')));
   const events=(await response.text()).trim().split('\n').map(JSON.parse);
+  await discardPreview(response,events,base,headers);
   assert.equal(events.at(-1)?.outcome,'succeeded',JSON.stringify(events.at(-1)));
   const pcm=Buffer.concat(events.filter(e=>e.kind==='data').map(e=>Buffer.from(e.frame.dataBase64,'base64')));
   let energy=0;for(let i=0;i<pcm.length;i+=2)energy+=(pcm.readInt16LE(i)/32768)**2;

@@ -1,3 +1,4 @@
+import {previewPlayback} from './preview-playback.js';
 import {VadStream} from './vad-stream.js';
 let vadStream=null,captureContext=null;
 import {SpeechGate,PRE_ROLL_FRAMES,END_SILENCE_SECONDS} from './speech-gate.js';
@@ -5,7 +6,7 @@ const speechGate=new SpeechGate(50);let voicePreRoll=[];
 const fixtureHeaders={"content-type":"application/json","x-lifestream-fixture-session":"browser-conversation","x-lifestream-fixture-principal":"human"};
 const $=id=>document.getElementById(id);let stream=null,audioContext=null,analyser=null,captureProcessor=null,captureChunks=[],levelFrame=0,requestController=null,ttsCursor=0,audioSocket=null,voiceSessionId=null,voiceInputId=null,voiceSequence=0,voiceOffset=0,voicePending=new Float32Array(0),voiceSpeaking=false,voiceSilenceFrames=0,voiceTurnInFlight=false,voicePendingTurns=0,bargeInSent=false,activeTraceId=null,voiceAnswer=null,activeVoiceTurn=null,voiceTurns=new Map(),activeProfile="unavailable",playingSources=new Set(),playbackTraceId=null,ttsTestRunning=false;const interruptedTraces=new Set();
 const uuid=()=>crypto.randomUUID();
-let cueTimer=null,cueSource=null,voicePlayback=null;
+let cueTimer=null,cueSource=null,voicePlayback=null,ttsPreview=null,ttsPreviewSettlement=Promise.resolve();
 const settleVoicePlayback=outcome=>{const value=voicePlayback;if(!value||outcome==='completed'&&(!value.terminal||!value.samples||playingSources.size))return;voicePlayback=null;interruptedTraces.add(value.trace);if(interruptedTraces.size>128)interruptedTraces.delete(interruptedTraces.values().next().value);try{if(audioSocket?.readyState===WebSocket.OPEN)audioSocket.send(JSON.stringify({type:'playbackSettled',interactionTraceId:value.trace,outcome,receivedSamples:value.samples}));}catch{/* Missing report retains runtime ownership until expiry. */}};
 function clearCue(){clearTimeout(cueTimer);cueTimer=null;if(cueSource){try{cueSource.stop()}catch{}cueSource.disconnect();cueSource=null;}}
 function scheduleCue(traceId){clearCue();if(!$("delay-cue").checked)return;cueTimer=setTimeout(()=>{if(activeTraceId!==traceId||interruptedTraces.has(traceId)||playingSources.size||audioContext?.state!=="running")return;const source=audioContext.createOscillator(),gain=audioContext.createGain();source.frequency.value=440;gain.gain.setValueAtTime(.018,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.08);source.connect(gain).connect(audioContext.destination);source.start();source.stop(audioContext.currentTime+.08);cueSource=source;source.onended=()=>{source.disconnect();gain.disconnect();if(cueSource===source)cueSource=null;};},900);}
@@ -90,7 +91,7 @@ async function speakerTest(){audioContext??=new AudioContext();await audioContex
 const pcmToBuffer=(base64,sampleRate)=>{const bytes=Uint8Array.from(atob(base64),character=>character.charCodeAt(0)),view=new DataView(bytes.buffer),buffer=audioContext.createBuffer(1,bytes.byteLength/2,sampleRate),channel=buffer.getChannelData(0);for(let index=0;index<channel.length;index++)channel[index]=view.getInt16(index*2,true)/32768;return buffer};
 const pcmBase64=samples=>{const bytes=new Uint8Array(samples.length*2),view=new DataView(bytes.buffer);for(let index=0;index<samples.length;index++)view.setInt16(index*2,Math.max(-32768,Math.min(32767,Math.round(samples[index]*32767))),true);let binary="";for(const byte of bytes)binary+=String.fromCharCode(byte);return btoa(binary)};
 const resample16k=(samples,inputRate)=>{if(inputRate===16000)return samples;const output=new Float32Array(Math.floor(samples.length*16000/inputRate));for(let index=0;index<output.length;index++)output[index]=samples[Math.min(samples.length-1,Math.floor(index*inputRate/16000))];return output};
-const stopPlayback=()=>{clearCue();for(const source of playingSources){try{source.stop()}catch{}source.disconnect()}playingSources.clear();settleVoicePlayback('stopped');ttsCursor=audioContext?.currentTime||0};
+const stopPlayback=()=>{clearCue();for(const source of playingSources){try{source.stop()}catch{}source.disconnect()}playingSources.clear();settleVoicePlayback('stopped');if(ttsPreview){ttsTestController?.abort();ttsPreviewSettlement=ttsPreview.finish('stopped');ttsPreview=null;}ttsCursor=audioContext?.currentTime||0};
 const playVoiceChunk=chunk=>{clearCue();
   if(!audioContext)throw new Error("Audio output is not initialized");
   if(audioContext.state!=="running")throw new Error("Audio output is suspended; click Speaker test to resume");
@@ -173,11 +174,12 @@ async function ttsTest(){
   if(track)track.enabled=false;
   let reader;
   try{
-    audioContext??=new AudioContext();await audioContext.resume();stopPlayback();
+    audioContext??=new AudioContext();await audioContext.resume();stopPlayback();await ttsPreviewSettlement;
     if(activeTraceId)audioSocket?.send(JSON.stringify({type:"interrupt",interactionTraceId:activeTraceId,reason:"standalone TTS test"}));
     setStatus("events","Events: generating test speech…");
     const response=await fetch("/api/runtime/v1/tts",{method:"POST",headers:fixtureHeaders,signal:AbortSignal.any([AbortSignal.timeout(190000),ttsTestController.signal]),body:JSON.stringify({text:$("voice-preview-text").value.trim()||"This is a live Assistant text to speech test.",voiceSettings})});
     if(!response.ok){const problem=await response.json();throw new Error(problem.message||`TTS unavailable (${response.status})`)}
+    const custody=ttsPreview=previewPlayback(response,fixtureHeaders,()=>{ttsTestController?.abort();stopPlayback();});
     reader=response.body.getReader();
     const decoder=new TextDecoder();let buffer="",frames=0,terminal=null;
     while(true){
@@ -186,7 +188,7 @@ async function ttsTest(){
       for(const line of lines){
         if(!line.trim())continue;const event=JSON.parse(line);
         if(event.kind==="preAudio")setStatus("events","Events: TTS pre-audio received");
-        if(event.kind==="data"){playVoiceChunk({frame:event.frame});frames++}
+        if(event.kind==="data"){custody.received(event.frame.sampleCount);playVoiceChunk({frame:event.frame});frames++}
         if(event.kind==="terminal")terminal=event;
       }
     }
@@ -198,6 +200,7 @@ async function ttsTest(){
       Promise.all([...playingSources].map(source=>new Promise(resolve=>source.addEventListener("ended",resolve,{once:true})))),
       new Promise((_,reject)=>{playbackTimer=setTimeout(()=>reject(new Error("Browser playback did not finish; check audio output and retry")),Math.min(185000,Math.max(5000,(ttsCursor-audioContext.currentTime)*1000+5000)));})
     ]);}finally{clearTimeout(playbackTimer);}
+    if(ttsTestController.signal.aborted||ttsPreview!==custody)throw Error('Preview stopped');ttsPreview=null;ttsPreviewSettlement=custody.finish('completed');if(!await ttsPreviewSettlement)throw Error('Playback ended but confirmation was unavailable. Retry after ownership expires.');
     setStatus("events",`Events: TTS succeeded (${frames} frames) — browser playback finished`);
   }catch(error){stopPlayback();throw error;
   }finally{

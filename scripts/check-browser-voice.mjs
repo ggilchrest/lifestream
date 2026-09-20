@@ -10,9 +10,11 @@ const fixtureTransport=process.env.VOICE_FIXTURE_TRANSPORT==='1';
 if(fixtureTransport){
   const pcm=readFileSync(process.env.VOICE_FIXTURE_PCM);assert.ok(pcm.length>96000&&pcm.length<=48000*2*20&&pcm.length%2===0);
   await page.addInitScript(({base64})=>{
-    const original=window.fetch,bytes=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+    const previews=new Map(),original=window.fetch,bytes=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
     window.fetch=async(input,options={})=>{
+      if(String(input).endsWith('/api/runtime/v1/tts/playback')){const m=JSON.parse(options.body),p=previews.get(m.interactionTraceId),valid=p&&m.type==='playbackSettled'&&Number.isSafeInteger(m.receivedSamples)&&m.receivedSamples>=0&&m.receivedSamples<=p.samples&&(m.outcome==='stopped'||m.outcome==='completed'&&p.complete&&m.receivedSamples===p.samples);if(valid)previews.delete(m.interactionTraceId);return Response.json({fixtureTransport:true,accepted:!!valid},{status:valid?200:409});}
       if(!String(input).endsWith('/api/runtime/v1/tts'))return original(input,options);
+      const trace=crypto.randomUUID(),playback={samples:0,complete:false};previews.set(trace,playback);
       let timer,stopped=false;
       const body=new ReadableStream({
         start(controller){
@@ -22,15 +24,15 @@ if(fixtureTransport){
           if(options.signal?.aborted){abort();return;}options.signal?.addEventListener('abort',abort,{once:true});
           const next=()=>{
             if(stopped)return;
-            if(offset===bytes.length){emit({kind:'terminal',sequence,outcome:'succeeded',outputSamples:offset/2,frameCount:sequence});stopped=true;options.signal?.removeEventListener('abort',abort);controller.close();return;}
-            const chunk=bytes.slice(offset,offset+7680);
+            if(offset===bytes.length){playback.complete=true;emit({kind:'terminal',sequence,outcome:'succeeded',outputSamples:offset/2,frameCount:sequence});stopped=true;options.signal?.removeEventListener('abort',abort);controller.close();return;}
+            const chunk=bytes.slice(offset,offset+7680);playback.samples+=chunk.length/2;
             emit({kind:'data',sequence,frame:{format:{encoding:'pcm_s16le',sampleRateHz:48000,channels:1},sampleCount:chunk.length/2,sampleOffset:offset/2,dataBase64:btoa(String.fromCharCode(...chunk))}});
             offset+=chunk.length;timer=setTimeout(next,[70,90,60,100][sequence++%4]);
           };next();
         },
         cancel(){stopped=true;clearTimeout(timer);}
       });
-      return new Response(body,{status:200,headers:{'content-type':'application/x-ndjson'}});
+      return new Response(body,{status:200,headers:{'content-type':'application/x-ndjson','x-lifestream-playback-trace':trace,'x-lifestream-playback-expires':new Date(Date.now()+180000).toISOString()}});
     };
   },{base64:pcm.toString('base64')});
 }

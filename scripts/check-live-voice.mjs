@@ -1,3 +1,4 @@
+import {discardPreview} from './preview-settlement.mjs';
 // Opt-in real-provider development check. No microphone capture or audio files.
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -10,7 +11,7 @@ const synthesize = async text => {
   const started = performance.now();
   const result = await fetch(`${base}/api/runtime/v1/tts`, { method: 'POST', headers, body: JSON.stringify({ text }), signal: AbortSignal.timeout(20000) });
   assert.equal(result.status, 200);
-  const events = (await result.text()).trim().split('\n').map(JSON.parse);
+  const events = (await result.text()).trim().split('\n').map(JSON.parse);await discardPreview(result,events,base,headers);
   assert.equal(events.at(-1).outcome, 'succeeded', JSON.stringify(events.at(-1)));
   const pcm = Buffer.concat(events.filter(event => event.kind === 'data').map(event => Buffer.from(event.frame.dataBase64, 'base64')));
   assert.ok(pcm.length > 0);

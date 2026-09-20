@@ -1,3 +1,4 @@
+import {discardPreview} from '../../../scripts/preview-settlement.mjs';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {mkdtemp,rm,readFile} from 'node:fs/promises';
@@ -7,13 +8,13 @@ import test from 'node:test';
 import {createLifestreamServer} from '../../server/src/index.ts';
 import {loadProfile} from '../../server/src/config/loader.ts';
 
-test('real WebSocket and WebAudio retain ordinary ownership through queued playback and explicit stop',{skip:!process.env.PLAYWRIGHT_MODULE,timeout:30000},async t=>{
+test('real WebSocket and WebAudio retain ordinary ownership through queued playback and explicit stop',{skip:!process.env.PLAYWRIGHT_MODULE,timeout:45000},async t=>{
  const root=await mkdtemp(join(tmpdir(),'ls-playback-owner-'));t.after(()=>rm(root,{recursive:true,force:true}));const config=loadProfile('test');config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};
  const app=createLifestreamServer({config});await app.start();t.after(()=>app.shutdown());const base=`http://127.0.0.1:${app.address().port}`;
  app.providers.stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Synthetic voice input.'}};yield {kind:'terminal',outcome:'succeeded'};}};
  app.providers.tts={async *synthesize(request){for(let i=0;i<15;i++)yield {kind:'data',segmentId:request.segmentId,frame:{frameId:randomUUID(),sequence:i,format:request.format,sampleOffset:i*4800,sampleCount:4800,dataBase64:Buffer.alloc(9600).toString('base64')},mappingRevision:'synthetic-1'};yield {kind:'terminal',outcome:'succeeded',outputSamples:72000,frameCount:15,mappingRevision:'synthetic-1',degradedDimensions:[],disposition:'fullyApplied'};}};
  const {chromium,_electron}=await import(process.env.PLAYWRIGHT_MODULE),browser=process.env.PLAYBACK_ELECTRON?null:await chromium.launch({channel:'chrome',headless:true});if(browser)t.after(()=>browser.close());
- const preview=async sessionId=>{const response=await fetch(base+'/api/runtime/v1/tts',{method:'POST',headers:{origin:base,'content-type':'application/json','x-lifestream-fixture-session':sessionId,'x-lifestream-fixture-principal':'human'},body:JSON.stringify({text:'Synthetic preview.'})});await response.text();return response.status;};
+ const preview=async sessionId=>{const response=await fetch(base+'/api/runtime/v1/tts',{method:'POST',headers:{origin:base,'content-type':'application/json','x-lifestream-fixture-session':sessionId,'x-lifestream-fixture-principal':'human'},body:JSON.stringify({text:'Synthetic preview.'})});const raw=await response.text();if(response.ok)await discardPreview(response,raw.trim().split('\n').map(JSON.parse),base,{origin:base,'content-type':'application/json','x-lifestream-fixture-session':sessionId,'x-lifestream-fixture-principal':'human'});return response.status;};
  for(const legacy of [false,true]){
   const desktop=process.env.PLAYBACK_ELECTRON?await _electron.launch({executablePath:process.env.PLAYBACK_ELECTRON,args:['--user-data-dir='+join(root,legacy?'native-legacy':'native-room'),'--url',base+'/control/']}):null;if(desktop)t.after(()=>desktop.close().catch(()=>{}));
   const page=desktop?await desktop.firstWindow():await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(8000);
@@ -35,6 +36,11 @@ test('real WebSocket and WebAudio retain ordinary ownership through queued playb
    let status;const until=Date.now()+2000;do{status=await preview(sessionId);if(status===200)break;await new Promise(r=>setTimeout(r,10));}while(Date.now()<until);assert.equal(status,200);
   }
   if(!legacy){const state=await page.evaluate(()=>window.playbackProbe.snapshot());assert.deepEqual(state.records.map(r=>r.outcome),['completed','stopped']);assert.ok(state.records.every(r=>r.sources===0&&r.receivedSamples===72000));}
+  if(legacy)for(const stopped of [false,true]){
+   await page.locator('#tts-test').click();await page.waitForFunction(()=>window.playbackProbe.snapshot().sources>0);assert.ok(app.audioOwnership.currentLease('browser-conversation'));
+   if(stopped)await page.evaluate(()=>window.playbackProbe.stop());
+   await page.waitForFunction(()=>!document.querySelector('#tts-test').disabled);for(let i=0;i<100&&app.audioOwnership.currentLease('browser-conversation');i++)await new Promise(r=>setTimeout(r,10));assert.equal(app.audioOwnership.currentLease('browser-conversation'),undefined);assert.equal(await page.evaluate(()=>window.playbackProbe.snapshot().sources),0);
+  }
   await page.evaluate(()=>window.playbackProbe.close());assert.deepEqual(errors,[]);if(desktop)await desktop.close();else await page.close();
  }
 });

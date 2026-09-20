@@ -1,3 +1,4 @@
+import {discardPreview} from './preview-settlement.mjs';
 // Opt-in real-provider verification; synthetic speech only, no microphone/files.
 import assert from 'node:assert/strict';
 const base=process.env.LIFESTREAM_URL||'http://127.0.0.1:3910';
@@ -5,7 +6,7 @@ const headers={'content-type':'application/json','x-lifestream-fixture-session':
 const health=await(await fetch(base+'/health')).json();
 const text='The package will arrive tomorrow. Please leave it beside the front door. The garden is quiet this evening. We can take a short walk after dinner. Bring a jacket if the air feels cool. I will meet you outside.';
 const start=Date.now(),r=await fetch(base+'/api/runtime/v1/tts',{method:'POST',headers,body:JSON.stringify({text,voiceSettings:{deliveryMode:'reassurance',description:'A warm clear adult voice',seed:42,pace:.5,energy:.4}}),signal:AbortSignal.timeout(70000)});
-assert.equal(r.status,200);const events=(await r.text()).trim().split('\n').map(JSON.parse);assert.equal(events.at(-1).outcome,'succeeded',JSON.stringify(events.at(-1)));
+assert.equal(r.status,200);const events=(await r.text()).trim().split('\n').map(JSON.parse);await discardPreview(r,events,base,headers);assert.equal(events.at(-1).outcome,'succeeded',JSON.stringify(events.at(-1)));
 const pcm=Buffer.concat(events.filter(e=>e.kind==='data').map(e=>Buffer.from(e.frame.dataBase64,'base64'))),samples=Math.floor(pcm.length/6),data=Buffer.alloc(samples*2);
 assert.ok(samples>16000&&samples<=480000,'test must fit the 30-second STT input bound');
 for(let i=0;i<samples;i++)data.writeInt16LE(Math.round((pcm.readInt16LE(i*6)+pcm.readInt16LE(i*6+2)+pcm.readInt16LE(i*6+4))/3),i*2);
