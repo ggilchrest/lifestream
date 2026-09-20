@@ -1,0 +1,277 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "ordinary-voice-playback-ownership-component",
+  "recordedAt": "2026-09-20T21:26:23.425589+00:00",
+  "sourceRevision": "0c4598817e43154e7adf73dfd9b7f6549ce5cd20",
+  "specificationRevision": "c8cb0ec92a32ef0bcae6f8769d867ce5cacff06c",
+  "behavior": [
+    "Ordinary synthesis completion no longer releases an audio lease while endpoint PCM remains queued.",
+    "Current owned trace, exact response-sample accounting, successful synthesis and endpoint completion or stopped report control settlement. Unknown, malformed, early, duplicate and stale reports cannot release a successor.",
+    "Cancellation, stale context and queued foreground input fence further output; confirmed local stop and provider cleanup must settle before this transport admits a successor. Missing reports and disconnect retain the lease until its existing deadline.",
+    "Conversation and legacy development voice screens report after source end/stop; transport send failure cannot prevent local stopping. Headless qualification sinks discard PCM and report stopped without inventing playback."
+  ],
+  "contract": {
+    "canonicalPath": "contracts/runtime-api.schema.json",
+    "implementationPath": "packages/contracts/src/schemas/runtime-api.schema.json",
+    "sha256": "4fad21b29af153af0b92032f4cbb73de0a353524b9dae26380472a5b10a436d1",
+    "draftCompatibility": "Additive playbackSettled client message; older clients retain lease until expiry. No push/publication."
+  },
+  "checks": {
+    "source": {
+      "tests": 995,
+      "pass": 995,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 57262.1535
+    },
+    "serialBrowser": {
+      "tests": 76,
+      "pass": 76,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 218929.995916
+    },
+    "workspace": {
+      "tests": 44,
+      "pass": 44,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 20590.602667
+    },
+    "nativePackaged": {
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 8011.896083
+    },
+    "genericPlaybackGuards": {
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 505.247708
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "privateValidation": "pass",
+    "workspaceCheck": "pass"
+  },
+  "native": {
+    "sourceRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+    "backendSourceRevision": "0c4598817e43154e7adf73dfd9b7f6549ce5cd20",
+    "scope": "Actual packaged Mac app, WebSocket and AudioContext against an isolated synthetic-provider server. Both normal and explicit-stop cases on Conversation controller and legacy voice screen. No microphone, new sensors, physical audibility or Human claim."
+  },
+  "genericArchive": {
+    "recordedAt": "2026-09-20T21:22:14.547557+00:00",
+    "sourceRevision": "0c4598817e43154e7adf73dfd9b7f6549ce5cd20",
+    "archiveSha256": "61661ad0fd7989adef91eb99e53e4dcf64ab4579e88269efb8923795a4e1705a",
+    "archiveBytes": 18821120,
+    "members": 1290,
+    "privatePackageHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "installationDirectory": "/Users/gg/Library/Application Support/Lifestream/operator-local/v0.1/build/generic clean 0c45988",
+    "status": "verified",
+    "priorReceipts": [
+      "generic-clean-package.json",
+      "generic-clean-package-2.json",
+      "generic-clean-package-3.json",
+      "generic-clean-package-4.json",
+      "generic-clean-package-5.json",
+      "generic-clean-package-6.json",
+      "generic-clean-package-7.json"
+    ],
+    "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+    "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+    "build": "pnpm build",
+    "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "effectiveConfiguration": true,
+      "presentationSelfContext": true,
+      "structuredSessionDefinition": true,
+      "profileTopicControls": 6,
+      "pageErrors": [],
+      "audioPlaybackGuards": 6
+    }
+  },
+  "guide": {
+    "at": "2026-09-20T21:25:18.018Z",
+    "version": "2026-09-20.v18",
+    "journeys": 17,
+    "actions": 159,
+    "links": 23,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "a41fb56dae1588e4c0c4b4fc2bc8bdfd399928339b426fe3b7daaa916f2aa526",
+    "validation": "Static structure, unique/sequential action identifiers and named targets pass. Last full browser/visual guide check remains v13; file URL policy denied reopening. No workaround used.",
+    "humanAcceptance": false
+  },
+  "retainedFailures": [
+    "Baseline regression failed because the lease was already released after synthesis.",
+    "First helper used a TypeScript parameter property unsupported by strip-only Node; explicit fields repaired it.",
+    "First private validation found a changed LS-RUN-031 definition digest; reviewed and retained existing acceptance, added settlement negatives and updated the digest.",
+    "First full source run was 994/995 because the generated provider type closure carried the old runtime schema digest. Regenerated from canonical-derived source; successor 995/995 passes."
+  ],
+  "selectedProvider": {
+    "status": "blockedEnvironment",
+    "inference": "unavailable",
+    "stt": "unavailable",
+    "tts": "unavailable",
+    "observedAt": "2026-09-20T21:24:34.1320278Z",
+    "hostTcp": {
+      "30000": false,
+      "8080": false,
+      "8787": false
+    },
+    "ssh": "reachable",
+    "sharedServicesRestarted": false
+  },
+  "exclusions": [
+    "This component does not complete LS-TEST-021 or the whole LS-TEST-086 presence/override/handoff rubric.",
+    "Output-only Initiative cancellation, HTTP preview playback custody and physical device arbitration retain separate requirements. Actual cross-endpoint handoff and durable handoff audit remain open.",
+    "Endpoint software completion/stopping does not establish physical silence, audibility or Human reception.",
+    "Current selected-provider, physical and Human acceptance remain open. Guide v18 is static checked; last full guide browser/visual remains v13 after file URL policy denial.",
+    "Original 24 accepted journeys and existing latency/causal/privacy criteria preserved. No new sensors, personal learning, shared restart, provider replacement, pushes or publication."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "audio-playback-baseline.log",
+      "sha256": "5aaa84f66bad56dfc77a5196b11de7edc46557a9244b93be898f38e01763542e"
+    },
+    {
+      "name": "audio-playback-browser-all.log",
+      "sha256": "a8c41f11398211a02c463cbd0b1581073e84050cef63c29fa777d5bce67ba9c5"
+    },
+    {
+      "name": "audio-playback-browser.log",
+      "sha256": "4a8cf41657254466aeb06ec40dbffc9156a3ce86528bf84a0705d7e2ae1bfe3f"
+    },
+    {
+      "name": "audio-playback-build-final.log",
+      "sha256": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155"
+    },
+    {
+      "name": "audio-playback-build.log",
+      "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446"
+    },
+    {
+      "name": "audio-playback-client-focused.log",
+      "sha256": "566035bec6d95a9e004a802321efe2101b1e4e91fddc3013d05cc5c915ddf932"
+    },
+    {
+      "name": "audio-playback-first-2.log",
+      "sha256": "45027c1175dfc3d3bc5e15c1b3805b292d3c558230f160a1434677be59e04bf6"
+    },
+    {
+      "name": "audio-playback-first.log",
+      "sha256": "b493865ca0c61430a4067b5908b5071e6c204d42e0cfd248740119d74d443e7a"
+    },
+    {
+      "name": "audio-playback-generic-build.log",
+      "sha256": "7ef7c1271fac9bcc65cb07e61e11704169d02aff0e2de8e128183e3a4400f72d"
+    },
+    {
+      "name": "audio-playback-generic-guards.log",
+      "sha256": "db1ef6780f8f007ea389f457d581d6213ade73084c6ff05f8acf2de4eb6d7eec"
+    },
+    {
+      "name": "audio-playback-generic-install.log",
+      "sha256": "b3e64bc6712255b5acb52de14d660896d0021d539837d97fee85d6cd2574e7ac"
+    },
+    {
+      "name": "audio-playback-generic-runtime.log",
+      "sha256": "da9cf1667ef10f3efee14782fcd82bd364c4f1d19445268cf59c40fb16774929"
+    },
+    {
+      "name": "audio-playback-guards.log",
+      "sha256": "ff56c3db692cc789936ec87578c4d7da0b549c338650b42d9dbaf3356df2fdc1"
+    },
+    {
+      "name": "audio-playback-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "audio-playback-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "audio-playback-native.log",
+      "sha256": "ce8e3f4c2c7f695e7bb77edc30d83c922ecefefda6617c7c202945145c80432b"
+    },
+    {
+      "name": "audio-playback-private-2.log",
+      "sha256": "3b029b5c0e1f5835ab42147bf6b2176db22bd72588b0b8ba2de7456ccca4c7e0"
+    },
+    {
+      "name": "audio-playback-private-final.log",
+      "sha256": "0d1e1863a2acaa9dbd64de386ffaad5e1588554867d02ed1dcb9a86bbf169f9d"
+    },
+    {
+      "name": "audio-playback-private.log",
+      "sha256": "b37d7047b274aae7494bbb7dd9e0f8637bd8590068be850620d3b9edf26f3aac"
+    },
+    {
+      "name": "audio-playback-source-all-2.log",
+      "sha256": "dec276b6d30f788467d01951d8e8bff7787566b21187bedd0612dace03e3f1cc"
+    },
+    {
+      "name": "audio-playback-source-all.log",
+      "sha256": "8c0ce6d3974c0f40701373e5c8045c6fe1c811cbc38a7b9c16bfd9193360ceaa"
+    },
+    {
+      "name": "audio-playback-source-focused.log",
+      "sha256": "ca8de8622da601083db898a68d1b52e07fc0f00c8fa6a7d881aa0f8b25871bd0"
+    },
+    {
+      "name": "audio-playback-typecheck-2.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "audio-playback-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "audio-playback-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "audio-playback-workspace-check.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "name": "audio-playback-workspace-tests.log",
+      "sha256": "9895722ac9b2e27c7b9825abce51ec8b1896b2ffcb24ef3e4b1aaeb560a9d727"
+    },
+    {
+      "name": "audio-playback-current-health.json",
+      "sha256": "8e9da40247fe8097f591a76be86aa0b65a534c6d76cc5d7c45f966354d0d1b20"
+    },
+    {
+      "name": "audio-playback-current-assets.json",
+      "sha256": "a584f22c7ec86c8ae921a5d2f5c7297cead989acf2b90ecaebcc504acfdc3ee4"
+    },
+    {
+      "name": "audio-playback-ai5090-readonly.json",
+      "sha256": "852fbcf15a79ba51366e5eed6431319b42d780274950e024973a14f129e04ed8"
+    },
+    {
+      "name": "generic-clean-package-13.json",
+      "sha256": "96da13da5dec0267d52afb5a082e5fa60ccee494ed820e22d7707ab88d91d41b"
+    },
+    {
+      "name": "v01-guide-static-v17.json",
+      "sha256": "aa653fcf9c94bd85b540f88c1ab3d6e2fea3abf774e0ee26bcc13bf15c499354"
+    },
+    {
+      "name": "v01-guide-static-v18.json",
+      "sha256": "a7c0b2ce04c4bc2c8e61c8b31e4e97f9275bdda685ea3358a34992f9946e18e3"
+    }
+  ]
+}

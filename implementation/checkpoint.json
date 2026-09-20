@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "7cf7be7f46aa8fb05e4d4ec31300aa11decef047",
-  "currentRevision": "ba765738f938127feddfecf9b2ea6781f2b4c8da",
+  "currentRevision": "0c4598817e43154e7adf73dfd9b7f6549ce5cd20",
   "activeSlice": "LS-S068",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -78,12 +78,16 @@
   "allowedFiles": [
     "README.md",
     "apps/control-web/app.js",
+    "apps/control-web/conversation-output.js",
+    "apps/control-web/conversation.js",
     "apps/control-web/endpoint-configuration.js",
     "apps/control-web/session-context.js",
     "apps/control-web/session-definition.js",
     "apps/control-web/styles.css",
     "apps/control-web/test/acknowledgments.test.mjs",
     "apps/control-web/test/audience-privacy.test.mjs",
+    "apps/control-web/test/audio-ownership.test.mjs",
+    "apps/control-web/test/conversation-playback.test.mjs",
     "apps/control-web/test/endpoint-configuration.test.mjs",
     "apps/control-web/test/local-auth.test.mjs",
     "apps/control-web/test/session-definition.test.mjs",
@@ -91,9 +95,14 @@
     "apps/server/src/admin/candidate-snapshot.ts",
     "apps/server/src/index.ts",
     "apps/server/src/runtime/audience.ts",
+    "apps/server/src/runtime/audio-playback.ts",
+    "apps/server/src/runtime/audio.ts",
     "apps/server/src/runtime/endpoint-configuration.ts",
     "apps/server/src/runtime/session-context.ts",
     "apps/server/src/runtime/session-definition.ts",
+    "apps/server/test/audio-output.test.ts",
+    "apps/server/test/audio-playback.test.ts",
+    "apps/server/test/audio.test.ts",
     "apps/server/test/candidate-snapshot.test.ts",
     "apps/server/test/endpoint-bindings.test.ts",
     "apps/server/test/endpoint-configuration.test.ts",
@@ -102,26 +111,34 @@
     "apps/server/test/session-definition.test.ts",
     "docs/s083-s084-acceptance-guide.html",
     "docs/session-disclosure.md",
+    "docs/voice-playback.md",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
+    "implementation/evidence/LS-S068-audio-playback-1.json",
     "implementation/evidence/LS-S068-effective-configuration-1.json",
     "implementation/evidence/LS-S068-protected-setup-1.json",
     "implementation/evidence/LS-S068-session-definition-1.json",
     "implementation/evidence/LS-S068-session-isolation-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json",
+    "packages/contracts/src/provider-messages.ts",
+    "packages/contracts/src/schemas/runtime-api.schema.json",
+    "packages/contracts/test/audio-playback.test.ts",
     "packages/storage-sqlite/src/migrations/0050_session_endpoint_settings.sql",
     "packages/storage-sqlite/src/migrations/index.ts",
     "packages/storage-sqlite/test/database.test.ts",
     "packages/storage-sqlite/test/initiative-delivery.test.ts",
-    "packages/storage-sqlite/test/initiative-expression.test.ts"
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
+    "scripts/check-live-voice.mjs",
+    "scripts/qualify-s071-development.mjs",
+    "scripts/qualify-s080-audio-development.mjs"
   ],
   "changedFiles": [
     "README.md",
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-session-definition-1.json",
+    "implementation/evidence/LS-S068-audio-playback-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -737,6 +754,11 @@
       "command": "npm --prefix .private run validate",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S068-session-definition-1.json"
+    },
+    {
+      "command": "Ordinary audio ownership: source/browser/workspace/native/clean install and contract validation",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S068-audio-playback-1.json"
     }
   ],
   "decisions": [
@@ -783,8 +805,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Continue existing handoff/audio ownership integration: establish source playback stop confirmation or lease expiry before destination admission, preserve the destination disclosure and pin context/identity revisions. Structured session-settings component verified; whole LS-TEST-086 and physical/Human/provider criteria remain open.",
-  "updatedAt": "2026-09-20T20:58:24.847Z",
+  "nextAction": "Continue output-only stop confirmation and actual handoff prerequisites; preserve current provider, physical and Human gates.",
+  "updatedAt": "2026-09-20T21:26:23.425589Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "S068 read-only effective endpoint inspection verified at 783ce1e (test successor fb89c26): 986 source, 72 serial browser, 44 workspace, actual packaged native and clean generic install pass. First 71/72 browser run retained. Guide v14 static checks pass; full guide browser/visual remains v13 after file URL policy denial. S068 whole structured override/handoff and provider/physical/Human criteria remain open."
+  "notes": "Ordinary playback ownership verified at 0c45988: 995 source, 76 serial browser, 44 workspace; actual packaged native and clean generic install/guards pass. Current candidate serves this source; all selected ai5090 provider ports unavailable on direct host probe. Guide v18 static, last full guide visual v13. Complete handoff and other audio delivery paths remain open."
 }
