@@ -1,0 +1,104 @@
+{
+  "slice": "LS-S066",
+  "status": "inProgress",
+  "claimClass": "verified-bounded-face-motion-component",
+  "collectedAt": "2026-09-20T17:47:10.703576+00:00",
+  "revision": "e74ec9dcea48f455cfe68818131ad1d615437298",
+  "specificationRevision": "1b1d07fed1bc084aa7bf59c1f6455beeed748c46",
+  "behavior": [
+    "Manifest 1.2.0 adds bounded data-only gaze targets and blink poses; 1.0/1.1 remain supported.",
+    "Shared presentation module composes after current body and actual-playback mouth layers; prior overlays are restored each frame. Missing, ambiguous, conflicting or nonfinite targets fail closed.",
+    "Six five-second face previews, End preview, busy denial, conversation/playback/audience/navigation/replacement cancellation and explicit unavailable mappings. Successful retry clears stale busy message.",
+    "Ambient motion respects reduced-motion preferences; gaze animation is not sensed audience or eye tracking.",
+    "The operator-local Lab consumes the exact reviewed generic module; private mappings, assets, curation and evidence are absent from the endpoint build."
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 980,
+      "skipped": 0,
+      "durationMs": 55933.859292
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE configured; node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "tests": 68,
+      "skipped": 0,
+      "durationMs": 192392.847875
+    },
+    {
+      "command": "Final focused presentation unit, rendered UI and package validation after status-message fix",
+      "result": "pass",
+      "tests": 11,
+      "skipped": 0,
+      "durationMs": 12873.822416
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "tests": 44,
+      "skipped": 0
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build; node scripts/workspace.mjs check; private specification validation; git diff --check",
+      "result": "pass"
+    }
+  ],
+  "visual": {
+    "desktop": 1440,
+    "mobile": 390,
+    "result": "Agent inspected actual privately supplied model, corrected gaze directions and blink closure, shared Lab controls, endpoint previews and responsive controls. Human acceptance pending.",
+    "privateEvidence": "Retained outside connected repositories; real authenticated asset/renderer checks are separate from synthetic provider and physical sensing claims."
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "face-motion-source-suite.log",
+      "sha256": "3ae44623e5494dd1fce90c60f9ad8efc034c58c786a3a59898dba7a8f290e2df"
+    },
+    {
+      "name": "face-motion-browser-suite-serial.log",
+      "sha256": "fb2edbdf80157a9c8a6e45b1ed44e4c23c8bac4d85b326a5844ff10e7bc77558"
+    },
+    {
+      "name": "face-motion-focused-final.log",
+      "sha256": "47a011308a186384065542106d8ede43e991fa8fb694c053ac021228ba384ab1"
+    },
+    {
+      "name": "face-motion-workspace-tests.log",
+      "sha256": "692e77aa942139a496cddb7e4766d6ae1d5cb3c40a7b2a443edeaf9338144677"
+    },
+    {
+      "name": "face-motion-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "face-motion-lint-final-2.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "face-motion-build-final.log",
+      "sha256": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042"
+    },
+    {
+      "name": "face-motion-private-validation.log",
+      "sha256": "7ca5c5402d410502a8ffd4fab509ff3dacea7464ddf03d5e4938465a48faa736"
+    },
+    {
+      "name": "face-motion-workspace-check.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    }
+  ],
+  "retainedFailures": [
+    "First full browser run: 67/68; old texture-test harness omitted the new module. Harness repaired.",
+    "Second parallel run: 66/68; audience conversation and Initiative waits timed out. Complete serial successor passes both without changing their product code or criteria.",
+    "Initial private eye-axis mapping failed visual review; corrected from the existing skeleton. Earlier renders retained.",
+    "Private original and extended model both retain identical pre-existing validator findings; no whole asset validator or perceptual pass."
+  ],
+  "limitations": [
+    "Whole LS-TEST-084, Human visual/voice and production acceptance remain open.",
+    "Selected-provider phoneme alignment, real-provider latency and current environment qualification remain open.",
+    "Current LS-S062 prerequisite qualification is stale for effective inputs; no fabricated real-provider successor. Independent rendering implementation is operator-authorized.",
+    "No private assets/mappings/lab code, camera activation, personal learning enablement, external effects, pushes or publication."
+  ]
+}
