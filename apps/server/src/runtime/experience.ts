@@ -6,7 +6,7 @@ import {selectExperience,experienceDigest} from '@lifestream/runtime/experience/
 import {reflectExperience} from '@lifestream/runtime/experience/reflection';
 import type {BackgroundWork,BackgroundResult} from '@lifestream/runtime/understanding/coordinator';
 import type {InferenceProvider} from '@lifestream/runtime/inference';
-type Host={policy:(scope:ExperienceScope)=>ExperiencePolicy;sources:(scope:ExperienceScope)=>Source[];provider:()=>{provider:InferenceProvider;revision:string;preemptionBoundMs?:number;slotReleaseBoundMs?:number};run:<T>(work:BackgroundWork<T>)=>Promise<BackgroundResult>;idle:()=>boolean;changed:()=>void;now?:()=>number};
+type Host={retentionPolicy?:(scope:ExperienceScope)=>ExperiencePolicy;policy:(scope:ExperienceScope)=>ExperiencePolicy;sources:(scope:ExperienceScope)=>Source[];provider:()=>{provider:InferenceProvider;revision:string;preemptionBoundMs?:number;slotReleaseBoundMs?:number};run:<T>(work:BackgroundWork<T>)=>Promise<BackgroundResult>;idle:()=>boolean;changed:()=>void;now?:()=>number};
 const key=(s:ExperienceScope)=>experienceDigest([s.principalId,s.assistantId,s.relationshipId]);
 export class ExperientialLearning{
  readonly repository:ExperienceRepository;private timer:ReturnType<typeof setInterval>|undefined;private busy=false;private closed=false;private foregroundAt=0;private controller:AbortController|undefined;
@@ -17,14 +17,14 @@ export class ExperientialLearning{
  start(){if(this.timer)return;this.timer=setInterval(()=>void this.tick().catch(()=>{if(!this.closed)this.repository.fault();}),1000);this.timer.unref();}
  async close(){this.closed=true;clearInterval(this.timer);this.controller?.abort();while(this.busy)await new Promise(r=>setTimeout(r,5));}
  foreground(){this.foregroundAt=this.now();this.controller?.abort('foreground');}
- reconcile(scope:ExperienceScope){const sources=this.host.sources(scope),policy=this.host.policy(scope),fingerprint=experienceDigest([sources.map(s=>[s.id,s.revision,s.digest]),policy]);if(this.dependencies.get(key(scope))===fingerprint)return;this.repository.reconcile(scope,sources,policy);this.dependencies.set(key(scope),fingerprint);}
+ reconcile(scope:ExperienceScope){const sources=this.host.sources(scope),policy=(this.host.retentionPolicy??this.host.policy)(scope),fingerprint=experienceDigest([sources.map(s=>[s.id,s.revision,s.digest]),policy]);if(this.dependencies.get(key(scope))===fingerprint)return;this.repository.reconcile(scope,sources,policy);this.dependencies.set(key(scope),fingerprint);}
  reconcileAll(){for(const scope of this.repository.scopes())this.reconcile(scope);}
  completed(scope:ExperienceScope,turnId:string){const state=this.repository.read(scope);if(!state.configuration.enabled||state.configuration.frozen||!this.host.policy(scope).allowed)return;this.database.connection.prepare('INSERT OR IGNORE INTO experience_turns VALUES (?,?,?)').run(key(scope),turnId,this.now());this.database.connection.prepare('DELETE FROM experience_turns WHERE created_ms<?').run(this.now()-30*86400000);}
  inspect(scope:ExperienceScope){this.reconcile(scope);return {schemaVersion:'1.0.0',state:this.repository.read(scope),jobs:this.repository.jobs(scope),lineage:this.repository.lineage(scope),selections:this.repository.selections(scope),limitations:['Uses only retained attributable owner memory with current processing consent; source correction/forgetting removes dependent use.','Six reference attention dimensions may be allowlisted by the active Assistant profile; no Core Persona, weights or authority change.','No private chain-of-thought, research, camera, outside contact or effects. Origin ledger stays in administration.','A selected next step and an observed reply are recorded separately; inclusion alone does not establish relational quality.']};}
  boundary(scope:ExperienceScope){const s=this.repository.read(scope);return experienceDigest([s.epoch,s.configuration,s.items,s.imprints]);}
  select(scope:ExperienceScope,input:string,audiencePrivate:boolean):{id:string;item:Item|null;boundary:string}{
   const started=performance.now(),initial=this.repository.read(scope),none=()=>({id:'',item:null,boundary:this.boundary(scope)});
-  if(!initial.configuration.enabled||initial.configuration.frozen||!audiencePrivate)return none();
+  if(!initial.configuration.enabled||initial.configuration.frozen||!audiencePrivate||!this.host.policy(scope).allowed)return none();
   this.reconcile(scope);const state=this.repository.read(scope);
   const missed=()=>{this.repository.noteSelectionDeadline(scope);return none();};
   if(performance.now()-started>=10)return missed();

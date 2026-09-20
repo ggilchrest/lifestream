@@ -6,6 +6,7 @@ import {join,dirname,resolve,sep} from 'node:path';
 import {Database,MemoryRepository} from '@lifestream/storage-sqlite';
 import {LocalAuthentication} from '../auth/local-auth.ts';
 import {RelationshipRecovery} from './relationship-recovery.ts';
+import {quarantineRestoredExperience} from './experience-recovery.ts';
 import {PresentationPackages} from './presentation-packages.ts';
 const hash=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex');
 type Artifact={path:string;bytes:number;sha256:string};
@@ -49,15 +50,16 @@ export async function restoreCandidate(input:{snapshot:string;currentSafety:stri
  try{separate(target,[snapshot,currentSafety]);}catch(error){await rm(target,{recursive:true,force:true});throw error;}
  try{
   await copyInventory(snapshot,target,manifest.files);await rm(join(target,'safety'),{recursive:true,force:true});await copyInventory(currentSafety,join(target,'safety'),current);if(JSON.stringify(current)!==JSON.stringify(await safety(currentSafety)))throw Error('Safety changed during restore; retry');
-  let unavailableDefaultPresentations=0;const db=new Database({path:join(target,'data.sqlite')});try{
-   db.migrate();new LocalAuthentication(db,{stateDirectory:join(target,'safety')});const recovery=new RelationshipRecovery(db,new MemoryRepository(db),join(target,'safety/relationship-recovery'));if(recovery.journal.currency!=='current')throw Error('Restored privacy state cannot prove current currency');recovery.recover();
+  let unavailableDefaultPresentations=0,experientialLearning={scopes:0,retainedScopes:0,cancelledJobs:0};const db=new Database({path:join(target,'data.sqlite')});try{
+   db.migrate();new LocalAuthentication(db,{stateDirectory:join(target,'safety')});const memories=new MemoryRepository(db),recovery=new RelationshipRecovery(db,memories,join(target,'safety/relationship-recovery'));if(recovery.journal.currency!=='current')throw Error('Restored privacy state cannot prove current currency');recovery.recover();
    const epoch=Number(db.connection.prepare('SELECT epoch FROM relationship_recovery_currency WHERE singleton=1').get()?.epoch);if(epoch!==recovery.journal.revision)throw Error('Restored privacy replay is incomplete');
+   experientialLearning=quarantineRestoredExperience(db,memories,recovery);
    db.transaction(tx=>{tx.run('UPDATE local_sessions SET revoked=1');tx.run("UPDATE sessions SET status='closed',endpoint_id=NULL,revision=revision+1");tx.run('DELETE FROM prepared_context');tx.run("UPDATE automatic_memory_work SET state='cancelled',input_text='',prepared_json=NULL,reason='restore_quarantine' WHERE state IN ('queued','running','prepared','failed')");tx.run('UPDATE automatic_memory_policies SET enabled=0,revision=revision+1');tx.run("DELETE FROM presentation_selections WHERE scope_id<>'default'");});
    unavailableDefaultPresentations=unavailableSelections(db.connection,join(target,'packages'));
    if(db.connection.prepare('PRAGMA integrity_check').get()?.integrity_check!=='ok')throw Error('Restored database integrity failed');
   }finally{db.close();}
   if(catalog(join(target,'packages')).length!==manifest.packageCount)throw Error('Restored presentation package count differs');
-  const receipt={schemaVersion:'1.0.0',status:'verified',snapshotId:manifest.snapshotId,restoredAt:new Date().toISOString(),safetyEpoch:journal.epoch,packageCount:manifest.packageCount,unavailableDefaultPresentations,authority:'quarantined',sessions:'revoked',audience:'unknown',automaticMemory:'requiresFreshScopeApproval',humanAcceptance:false};
+  const receipt={schemaVersion:'1.0.0',status:'verified',snapshotId:manifest.snapshotId,restoredAt:new Date().toISOString(),safetyEpoch:journal.epoch,packageCount:manifest.packageCount,unavailableDefaultPresentations,authority:'quarantined',sessions:'revoked',audience:'unknown',automaticMemory:'requiresFreshScopeApproval',experientialLearning:{...experientialLearning,status:'disabledAndFrozen',approval:'freshMemoryAndLearningApprovalRequired'},humanAcceptance:false};
   await writeFile(join(target,'restore-quarantine.json'),JSON.stringify(receipt,null,2)+'\n',{mode:0o600,flag:'wx'});await writeFile(join(target,'installer-token.txt'),randomBytes(32).toString('hex')+'\n',{mode:0o600,flag:'wx'});return receipt;
  }catch(error){await rm(target,{recursive:true,force:true});throw error;}
 }
