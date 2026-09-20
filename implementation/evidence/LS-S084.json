@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S084",
+  "status": "verified",
+  "claimClass": "reused-technical-core",
+  "revision": "e6cd3abc04f6b2e6790a4b6c8b5ef492f8817bdc",
+  "collectedAt": "2026-09-20T09:12:31.967928+00:00",
+  "scope": "The specific existing S084 behavior reused by S086: shared foreground-priority coordinator, bounded analysis publication, source/correction fences. This is not a whole Discovery release receipt.",
+  "caseIds": [
+    "LS-TEST-107",
+    "LS-TEST-136"
+  ],
+  "checks": [
+    {
+      "command": "node --experimental-strip-types scripts/qualify-s084-provider-priority.mjs",
+      "result": "pass",
+      "evidence": "20 actual selected-provider cancellation probes; maximum 1.919 ms, all cancelled inside configured bounds."
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/discovery-analysis.test.ts apps/server/test/discovery-candidates.test.ts apps/server/test/discovery-review.test.ts packages/runtime/test/understanding.test.ts",
+      "result": "pass",
+      "evidence": "19/19, zero skips, 3252.651958 ms. Current scoped deterministic admission, publication and invalidation checks."
+    }
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "s086-prerequisite-s084-1.json",
+      "sha256": "95d6f17b32df99a4b09b8fb26504ef58eec9821bd1db7f1d24a6cdb59668b11e"
+    },
+    {
+      "name": "s086-prerequisite-s084-tests.log",
+      "sha256": "df136a6a9baf1ddaad0b17814fb811e9830766d5229d5c717b59c2343f21a571"
+    }
+  ],
+  "exclusions": [
+    "No complete Discovery or experiential learning quality/performance claim.",
+    "Prior 24 S083/S084 Human journeys remain separately accepted; no new Human acceptance.",
+    "No selected-provider replacement, personal enablement or external effects."
+  ]
+}
