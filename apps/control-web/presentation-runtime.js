@@ -30,10 +30,12 @@ export class PresentationRuntime {
   try {
    // URLs are constructed from the authenticated resource allowlist, never from model-supplied hosts.
    for(const resource of item.manifest.resources){signal?.throwIfAborted();const route=`/api/runtime/v1/presentation/resources/${encodeURIComponent(item.id)}/${resource.path.split('/').map(encodeURIComponent).join('/')}`;const response=await fetch(route,{signal,credentials:'same-origin',cache:'no-store'});if(!response.ok)throw new Error('A package resource is unavailable.');const bytes=await response.arrayBuffer();if(bytes.byteLength!==resource.bytes)throw new Error('Package resource size changed.');const actual=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');if(actual!==resource.sha256)throw new Error('Package resource digest changed.');const url=URL.createObjectURL(new Blob([bytes],{type:resource.mime}));urls.push(url);byPath.set(resource.path,{url,bytes});}
-   const model=item.manifest.model,manager=new THREE.LoadingManager();
+   const model=item.manifest.model,manager=new THREE.LoadingManager();let resourceFailed=false;
+   manager.onError=()=>{resourceFailed=true;};
    manager.setURLModifier(url=>{if(urls.includes(url)||url.startsWith(`blob:${location.origin}/`))return url;const entry=byPath.get(url);if(!entry)throw new Error('The model requested an undeclared resource.');return entry.url;});
    const loader=new GLTFLoader(manager),data=byPath.get(model).bytes;
    parsed=await loader.parseAsync(data,model.includes('/')?model.slice(0,model.lastIndexOf('/')+1):'');signal?.throwIfAborted();
+   if(resourceFailed)throw new Error('A model texture could not be loaded. The previous appearance is retained.');
    const root=parsed.scene,mixer=new THREE.AnimationMixer(root),manifest=item.manifest;
    const actions=new Map(parsed.animations.map(clip=>[clip.name,mixer.clipAction(clip)]));
    if(manifest.animations.idle&&!actions.has(manifest.animations.idle))throw new Error('The declared idle animation is missing.');

@@ -1,11 +1,12 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export interface MigrationRecord { id: number; name: string; digest: string; appliedAt: string; }
 export interface Migration { id: number; name: string; sql: string; digest: string; }
 
-const migrationDirectory = dirname(new URL(import.meta.url).pathname);
+const migrationDirectory = dirname(fileURLToPath(import.meta.url));
 
 export function loadMigrations(): Migration[] {
   return [

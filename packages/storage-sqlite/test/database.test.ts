@@ -1,10 +1,23 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { cpSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { test } from "node:test";
 import { Database } from "../src/database.ts";
 import { loadMigrations } from "../src/migrations/index.ts";
+
+test("migration assets load from an installed path containing spaces and URL-reserved characters", async t => {
+  const directory=mkdtempSync(join(tmpdir(),"lifestream install % # ü "));
+  t.after(()=>rmSync(directory,{recursive:true,force:true}));
+  cpSync(new URL('../src/migrations/',import.meta.url),directory,{recursive:true});
+  const installed=await import(pathToFileURL(join(directory,'index.ts')).href);
+  const migrations=installed.loadMigrations();
+  assert.deepEqual(migrations.map(({id,digest})=>({id,digest})),loadMigrations().map(({id,digest})=>({id,digest})));
+  const database=new Database({path:join(directory,'state.sqlite'),migrations});
+  try { assert.equal(database.migrate().length,loadMigrations().length); }
+  finally { database.close(); }
+});
 
 test("SQLite database migrates, persists, and rejects changed history", () => {
   const directory = mkdtempSync(join(tmpdir(), "lifestream-sqlite-")); const path = join(directory, "state.db");
