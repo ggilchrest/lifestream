@@ -1,0 +1,11 @@
+# Session disclosure on a remembered endpoint
+
+Account → Session disclosure controls whether the current signed-in session may use approved private relationship context. Apply Session Disclosure saves the choice; Refresh Session State reads the current choice and its revision. This does not identify people nearby, start capture, or grant tool authority. Audience privacy must separately permit private output.
+
+A remembered endpoint shares its identity and saved Appearance default across sign-ins by the same account. It does not share disclosure, negotiated text/audio mode, or session appearance overrides. Tabs using the same authentication cookie share one session; use another browser profile or isolated browser context to test separate sign-ins. Changing either session does not grant or revoke the other session's disclosure or negotiate audio for it. Output and prepared private context remain subject to current authentication, audience and session fences.
+
+Schema migration 50 stores disclosure and modalities per session. Older endpoint metadata cannot prove which session chose it, so pre-upgrade sessions fall back to unknown audience and text until they make a fresh choice. Explicit settings survive a normal server restart on the same origin; a new sign-in starts with unknown disclosure. A new server origin requires authentication again. Unbinding clears only that session's settings.
+
+An isolated candidate restore revokes sessions, clears session settings and appearance overrides, and preserves endpoint Appearance defaults. It requires fresh authentication, disclosure and applicable audience approval before private use. Restoration does not reactivate memory collection or physical devices.
+
+Verification covers real local-password HTTP sessions, prepared memory isolation with synthetic records and a fixture inference provider, database restart, legacy migration, stale revision rejection and restore quarantine. Rendered browser checks exercise the selection controls with distinct authenticated sessions. These checks do not establish physical audience detection, microphone permission, audible playback, provider qualification or Human acceptance.

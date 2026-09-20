@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -43,5 +43,24 @@ test("real session logout, permission, audience and endpoint changes fence pendi
    const response=await post('/api/runtime/v1/messages',{assistantId:created.assistantId,userInput:'Synthetic pending reply'});assert.equal(response.status,200);const output=response.text();
    const changed=action==='audience'||action==='endpoint'?await post('/api/runtime/v1/session-context',{expectedRevision:1,mode:action==='endpoint'?'none':'text',audienceScope:'unknown'}):action==='logout'?await post('/api/auth/v1/sign-out',{}):await post('/api/auth/v1/permissions',{principalId:identity.session.principalId,assistantId:created.assistantId,administer:false});assert.equal(changed.status,200);release();const text=await output;assert.doesNotMatch(text,/REVOKED_PENDING_CONTEXT/);assert.match(text,/runtime_input_stale/);assert.doesNotMatch(text,/event: interaction.completed/);
   } finally {release();FixtureInferenceProvider.prototype.generate=original;await app.shutdown();await rm(root,{recursive:true,force:true});}
+ }
+});
+
+
+test('authenticated sessions on one remembered endpoint isolate actual prepared memory and retain their disclosure across restart',async t=>{
+ const {FixtureInferenceProvider}=await import('@lifestream/runtime/inference/fixture');const root=await mkdtemp(join(tmpdir(),'ls-two-session-scope-'));t.after(()=>rm(root,{recursive:true,force:true}));const config=loadProfile('test');config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};config.authority.authentication='local-password';const installerToken=secret(),password=secret(),options={config,localAuth:{stateDirectory:join(root,'safety'),installerToken},audiencePrivacy:{sourceIds:[]}};let app=createLifestreamServer(options);await app.start();t.after(()=>app.shutdown());let base=`http://127.0.0.1:${app.address().port}`;
+ type Client={cookie:string;csrf:string};const first:Client={cookie:'',csrf:''},second:Client={cookie:'',csrf:''};
+ const request=(client:Client,path:string,body?:unknown)=>fetch(base+path,{method:body===undefined?'GET':'POST',headers:{origin:base,'content-type':'application/json',cookie:client.cookie,'x-lifestream-csrf':client.csrf},...(body===undefined?{}:{body:JSON.stringify(body)})});
+ const api=async(client:Client,path:string,body?:unknown)=>{const res=await request(client,path,body),data=await res.json() as any;assert.ok(res.ok,JSON.stringify(data));return data;};
+ const authenticate=async(client:Client,setup=false)=>{const res=await request(client,setup?'/api/auth/v1/setup':'/api/auth/v1/sign-in',{username:'owner',password,...(setup?{installerToken}:{})});assert.ok(res.ok);client.cookie=res.headers.get('set-cookie')!.split(';')[0]!;client.csrf=(await res.json() as any).session.csrfToken;};
+ await authenticate(first,true);await authenticate(second);const assistant=await api(first,'/api/admin/v1/assistants',{displayName:'Synthetic session isolation'});await api(first,`/api/admin/v1/assistants/${assistant.assistantId}/activate`,{profileId:assistant.profile.profileId,expectedActiveRevision:null});await api(first,`/api/admin/v1/assistants/${assistant.assistantId}/relationships`,{});const memory=(await api(first,`/api/admin/v1/assistants/${assistant.assistantId}/memories`,{content:'The synthetic project code is PRIVATE_SESSION_SENTINEL.'})).memory;await api(first,`/api/admin/v1/assistants/${assistant.assistantId}/memories/${memory.id}/lifecycle`,{status:'active',expectedRevision:1});
+ const bindingKey=randomUUID(),one=await api(first,'/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'unknown',bindingKey}),two=await api(second,'/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession',bindingKey});assert.equal(one.endpoint.endpointId,two.endpoint.endpointId);
+ const captured:any[]=[];const original=FixtureInferenceProvider.prototype.generate;FixtureInferenceProvider.prototype.generate=async function*(request,context){captured.push(request);yield* original.call(this,request,context);};t.after(()=>{FixtureInferenceProvider.prototype.generate=original;});
+ const turn=async(client:Client)=>{const response=await request(client,'/api/runtime/v1/messages',{assistantId:assistant.assistantId,userInput:'What is the synthetic project code?'});assert.equal(response.status,200);assert.match(await response.text(),/interaction.completed/);return captured.at(-1).sections.find((s:{kind:string})=>s.kind==='preparedMemory').content;};
+ for(let attempt=0;attempt<2;attempt++){
+  await api(first,'/api/runtime/v1/audience',{mode:'solo',seconds:300});await api(second,'/api/runtime/v1/audience',{mode:'solo',seconds:300});
+  const a=await api(first,'/api/runtime/v1/session-context'),b=await api(second,'/api/runtime/v1/session-context');assert.equal(a.runtimeSelfContext.audienceScope,'unknown');assert.equal(b.runtimeSelfContext.audienceScope,'authenticatedSession');assert.deepEqual(a.endpoint.outputModalities,['text']);assert.deepEqual(b.endpoint.outputModalities,['text']);
+  assert.doesNotMatch(await turn(first),/PRIVATE_SESSION_SENTINEL/);assert.match(await turn(second),/PRIVATE_SESSION_SENTINEL/);
+  if(attempt===0){const port=app.address().port;await app.shutdown();app=createLifestreamServer({...options,port});await app.start();base=`http://127.0.0.1:${app.address().port}`;}
  }
 });
