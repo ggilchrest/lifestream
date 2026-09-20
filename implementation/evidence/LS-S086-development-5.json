@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "status": "inProgress",
+  "result": "pass",
+  "sourceRevision": "90c04e50393400e04c4f28611e5e706224b0cb67",
+  "recordedAt": "2026-09-20T10:42:06.119809+00:00",
+  "claimClass": "selected-development-provider-ordinary-attempt",
+  "funnel": {
+    "eligible": 4,
+    "admitted": 4,
+    "calls": 4,
+    "failures": 0,
+    "skips": 0,
+    "noChange": 0,
+    "published": 4,
+    "considered": 2,
+    "selected": 1,
+    "outputs": 1
+  },
+  "ordinaryTurnsCompleted": 5,
+  "openWorkspaceItems": 2,
+  "learnedValues": {
+    "attentionGardening": 0.02,
+    "attentionAstronomy": 0,
+    "attentionReading": 0,
+    "attentionCooking": 0,
+    "attentionMusic": 0,
+    "attentionGames": 0
+  },
+  "reflectionCalls": 4,
+  "measuredReflectionMs": [
+    3348.4659580000007,
+    3878.822624999986,
+    4315.739583000017,
+    6233.632416000008
+  ],
+  "jobTokenCounts": [
+    {
+      "input": 3147,
+      "output": 417,
+      "state": "published"
+    },
+    {
+      "input": 2817,
+      "output": 266,
+      "state": "published"
+    },
+    {
+      "input": 2091,
+      "output": 254,
+      "state": "published"
+    },
+    {
+      "input": 1404,
+      "output": 212,
+      "state": "published"
+    }
+  ],
+  "restartPreserved": true,
+  "memoryExtractionFailureObserved": false,
+  "operatorLocalEvidence": {
+    "name": "s086-provider-5/report.json",
+    "sha256": "e31296b70835970cea3ea21a53e5804b38915c65fa155c2826f271c559e88e49"
+  },
+  "finding": "Actual ordinary reflection published learned selection state and two eligible projects. A later ordinary response consumed selected state and a real database restart preserved it. Controlled causal and Human claims remain separate.",
+  "exclusions": [
+    "Synthetic owner statements; no real personal enablement or physical capture.",
+    "No causal ablation claim from this receipt alone.",
+    "No Human or production acceptance."
+  ],
+  "humanAcceptance": false
+}

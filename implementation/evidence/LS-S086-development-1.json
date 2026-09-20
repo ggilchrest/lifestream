@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "status": "inProgress",
+  "claimClass": "selected-development-provider-failed-attempt",
+  "sourceRevision": "2f9e68b12cae1641e302186342bfe73f2a514ecf",
+  "recordedAt": "2026-09-20T10:07:34.458400+00:00",
+  "result": "fail",
+  "ordinaryTurnsCompleted": 3,
+  "ordinaryTurnsAttempted": 4,
+  "memoryModelCalls": 6,
+  "reflectionModelCalls": 0,
+  "finding": "Actual memory extraction returned uppercase/camelCase keys or unattributable quote fragments; strict existing validation rejected them. A later unconstrained long conversational response reached the ordinary inference deadline. No learned state was fabricated.",
+  "operatorLocalEvidence": {
+    "name": "s086-provider-1/report.json",
+    "sha256": "a43e8ea44f56bef98c332b5a10b5382d2d28df811bb6b424fdce263666f82517"
+  },
+  "successorAction": "Explicit lowercase-key and complete-attributed-quote instructions, with unchanged admission validation. Rerun in a fresh isolated synthetic relationship with a concise ordinary acknowledgment request.",
+  "exclusions": [
+    "Human acceptance",
+    "physical audio or audience",
+    "production",
+    "personal relationship enablement"
+  ]
+}

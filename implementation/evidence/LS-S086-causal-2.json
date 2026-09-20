@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "preregistered-selected-provider-causal-study",
+  "sourceRevision": "46e33db344fbcd75417b1903f9ba5f8e229ca681",
+  "learnedSourceRevision": "90c04e50393400e04c4f28611e5e706224b0cb67",
+  "recordedAt": "2026-09-20T10:47:15.641949+00:00",
+  "result": "fail",
+  "attempts": 84,
+  "passed": 79,
+  "selectorMatches": 84,
+  "inputTokenRange": [
+    611,
+    985
+  ],
+  "maximumOutputTokens": 512,
+  "fixedContextGroups": 14,
+  "fixedContextHashesMatch": true,
+  "failedTrials": [
+    {
+      "repeat": 0,
+      "scenario": "activity",
+      "variant": "swapped",
+      "selected": "reading",
+      "expectedTopic": "reading",
+      "observedFirstTopic": null,
+      "error": "Expected values to be strictly equal:\n\nnull !== 'reading'\n"
+    },
+    {
+      "repeat": 0,
+      "scenario": "game",
+      "variant": "noWorkspace",
+      "selected": null,
+      "expectedTopic": null,
+      "observedFirstTopic": "reading",
+      "error": "unwanted project pressure\n\n'reading' !== null\n"
+    },
+    {
+      "repeat": 0,
+      "scenario": "game",
+      "variant": "disabled",
+      "selected": null,
+      "expectedTopic": null,
+      "observedFirstTopic": "reading",
+      "error": "unwanted project pressure\n\n'reading' !== null\n"
+    },
+    {
+      "repeat": 1,
+      "scenario": "game",
+      "variant": "noWorkspace",
+      "selected": null,
+      "expectedTopic": null,
+      "observedFirstTopic": "reading",
+      "error": "unwanted project pressure\n\n'reading' !== null\n"
+    },
+    {
+      "repeat": 1,
+      "scenario": "game",
+      "variant": "workspaceOnly",
+      "selected": null,
+      "expectedTopic": null,
+      "observedFirstTopic": "reading",
+      "error": "unwanted project pressure\n\n'reading' !== null\n"
+    }
+  ],
+  "operatorLocalEvidence": {
+    "name": "s086-causal-2/report.json",
+    "sha256": "2d56fb14a56353a0a9ddab1a8d03a3d1482d6f706c36a977908b0170b0224ac4"
+  },
+  "registeredProtocolSha256": "d803915a7582434a81ad0bad88a21b8d301a5d627256097fa7c016b5ce4e33d0",
+  "configurationDigest": "061e36f16079b9c8c787b212b48b432e015acee7082e6c7216e28744dbecfc58",
+  "notes": [
+    "The separately registered 512-token completion study had no incomplete outputs, but one response ignored its selected reading opportunity.",
+    "Four game responses used river as a word-game token and failed the preregistered literal-topic exclusion. These are lexical-scoring failures, not established unwanted project pressure. Do not retroactively re-score them as passes."
+  ],
+  "exclusions": [
+    "No deterministic model compliance, Human earnedness/quality, physical audience or production acceptance.",
+    "Whole-system no-workspace baseline is separate from fixed-context mechanism comparisons.",
+    "Request-level random seed is unavailable in the existing adapter."
+  ]
+}

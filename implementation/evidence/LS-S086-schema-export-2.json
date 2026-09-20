@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "result": "pass",
+  "claimClass": "machine-contract-export-conformance",
+  "sourceRevision": "90c04e50393400e04c4f28611e5e706224b0cb67",
+  "ownerContractRevision": "571b40466661a6fa27aeb4cc737d13e956b13253",
+  "effectiveSpecificationRevision": "fa7f8a0efa88ef80bdc68150e48da96f8f656b8a",
+  "recordedAt": "2026-09-20T10:54:24Z",
+  "source": "contracts/experiential-learning.schema.json",
+  "destination": "packages/contracts/src/schemas/experiential-learning.schema.json",
+  "sha256": "b03c315f202d455a79173508824724c6ed9d3bbc791e569f3f93701000b15eb6",
+  "checks": [
+    "Private canonical validation passes, including independent episode and no-change vectors.",
+    "Exact source/export bytes and spec-lock pin match.",
+    "Optional per-contribution inverse metadata is backward compatible; partial invalidation, explicit undo and authored seed consent withdrawal pass."
+  ],
+  "exclusions": [
+    "No private prose publication",
+    "No Human acceptance"
+  ]
+}

@@ -1,0 +1,524 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "measured-local-component-only",
+  "recordedAt": "2026-09-20T10:15:37Z",
+  "observationBaseRevision": "2f9e68b12cae1641e302186342bfe73f2a514ecf",
+  "observationWorkingTreeEquivalentComponentRevision": "c3cdec3950e4975a660444b68666ad4667fc7da5",
+  "binding": "The measured index, source lookup and selection implementation was then uncommitted and is preserved by c3cdec3. Later prompt/inspection changes are separate.",
+  "operatorLocalEvidence": {
+    "name": "s086-performance-1/report.json",
+    "sha256": "6c4056db505ff1c73ed8fd5beda3441c92f3320b8886901b88adc4acfecc5827"
+  },
+  "samplesPerCondition": 200,
+  "conditions": [
+    "disabled",
+    "warm",
+    "concurrent SQLite metadata writer",
+    "connection-cold"
+  ],
+  "results": [
+    {
+      "corpus": 100,
+      "status": "passedLocalObjectives",
+      "distributions": {
+        "disabled": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.03012499999999818,
+            "p95": 0.040374999999983174,
+            "minimum": 0.027792000000033568,
+            "maximum": 0.12070799999997917
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.03012499999999818,
+            "p95": 0.040374999999983174,
+            "minimum": 0.027792000000033568,
+            "maximum": 0.12070799999997917
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.03012499999999818,
+            "p95": 0.040374999999983174,
+            "minimum": 0.027792000000033568,
+            "maximum": 0.12070799999997917
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.03012499999999818,
+            "p95": 0.040374999999983174,
+            "minimum": 0.027792000000033568,
+            "maximum": 0.12070799999997917
+          }
+        },
+        "warm": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.1752920000000131,
+            "p95": 0.2526250000000232,
+            "minimum": 0.14537499999994452,
+            "maximum": 2.7123750000000086
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.1752920000000131,
+            "p95": 0.2526250000000232,
+            "minimum": 0.14537499999994452,
+            "maximum": 2.7123750000000086
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.1752920000000131,
+            "p95": 0.2526250000000232,
+            "minimum": 0.14537499999994452,
+            "maximum": 2.7123750000000086
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.1752920000000131,
+            "p95": 0.2526250000000232,
+            "minimum": 0.14537499999994452,
+            "maximum": 2.7123750000000086
+          }
+        },
+        "background": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.16399999999998727,
+            "p95": 0.2876660000000584,
+            "minimum": 0.13533299999994597,
+            "maximum": 2.774833000000058
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.16399999999998727,
+            "p95": 0.2876660000000584,
+            "minimum": 0.13533299999994597,
+            "maximum": 2.774833000000058
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.16399999999998727,
+            "p95": 0.2876660000000584,
+            "minimum": 0.13533299999994597,
+            "maximum": 2.774833000000058
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.16399999999998727,
+            "p95": 0.2876660000000584,
+            "minimum": 0.13533299999994597,
+            "maximum": 2.774833000000058
+          }
+        },
+        "cold": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.28674999999998363,
+            "p95": 0.35583299999996143,
+            "minimum": 0.2501669999999194,
+            "maximum": 0.6713340000000017
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.28674999999998363,
+            "p95": 0.35583299999996143,
+            "minimum": 0.2501669999999194,
+            "maximum": 0.6713340000000017
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.28674999999998363,
+            "p95": 0.35583299999996143,
+            "minimum": 0.2501669999999194,
+            "maximum": 0.6713340000000017
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.28674999999998363,
+            "p95": 0.35583299999996143,
+            "minimum": 0.2501669999999194,
+            "maximum": 0.6713340000000017
+          }
+        }
+      },
+      "comparisons": [
+        {
+          "condition": "warm",
+          "p95Delta": 0.21225000000004002,
+          "uncertainty": {
+            "lower": 0.18254300000000967,
+            "upper": 0.2525410000000079,
+            "resamples": 500,
+            "method": "paired-percentile-bootstrap-95pct-v1"
+          }
+        },
+        {
+          "condition": "background",
+          "p95Delta": 0.2472910000000752,
+          "uncertainty": {
+            "lower": 0.18645900000001348,
+            "upper": 0.6290410000000293,
+            "resamples": 500,
+            "method": "paired-percentile-bootstrap-95pct-v1"
+          }
+        },
+        {
+          "condition": "cold",
+          "p95Delta": 0.31545799999997826,
+          "uncertainty": {
+            "lower": 0.2945410000000379,
+            "upper": 0.4011259999999197,
+            "resamples": 500,
+            "method": "paired-percentile-bootstrap-95pct-v1"
+          }
+        }
+      ],
+      "deadlineMisses": {
+        "disabled": 0,
+        "warm": 0,
+        "background": 0,
+        "cold": 0
+      }
+    },
+    {
+      "corpus": 10000,
+      "status": "passedLocalObjectives",
+      "distributions": {
+        "disabled": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.025208999999904336,
+            "p95": 0.02750000000014552,
+            "minimum": 0.023582999999916865,
+            "maximum": 0.033749999999827196
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.025208999999904336,
+            "p95": 0.02750000000014552,
+            "minimum": 0.023582999999916865,
+            "maximum": 0.033749999999827196
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.025208999999904336,
+            "p95": 0.02750000000014552,
+            "minimum": 0.023582999999916865,
+            "maximum": 0.033749999999827196
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.025208999999904336,
+            "p95": 0.02750000000014552,
+            "minimum": 0.023582999999916865,
+            "maximum": 0.033749999999827196
+          }
+        },
+        "warm": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.14650000000006003,
+            "p95": 0.16670799999997143,
+            "minimum": 0.135291000000052,
+            "maximum": 6.190499999999929
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.14650000000006003,
+            "p95": 0.16670799999997143,
+            "minimum": 0.135291000000052,
+            "maximum": 6.190499999999929
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.14650000000006003,
+            "p95": 0.16670799999997143,
+            "minimum": 0.135291000000052,
+            "maximum": 6.190499999999929
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.14650000000006003,
+            "p95": 0.16670799999997143,
+            "minimum": 0.135291000000052,
+            "maximum": 6.190499999999929
+          }
+        },
+        "background": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.15012499999988904,
+            "p95": 0.18695800000000418,
+            "minimum": 0.13245899999992616,
+            "maximum": 1.7511250000000018
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.15012499999988904,
+            "p95": 0.18695800000000418,
+            "minimum": 0.13245899999992616,
+            "maximum": 1.7511250000000018
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.15012499999988904,
+            "p95": 0.18695800000000418,
+            "minimum": 0.13245899999992616,
+            "maximum": 1.7511250000000018
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.15012499999988904,
+            "p95": 0.18695800000000418,
+            "minimum": 0.13245899999992616,
+            "maximum": 1.7511250000000018
+          }
+        },
+        "cold": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.2804999999998472,
+            "p95": 0.3250000000000455,
+            "minimum": 0.2511669999998958,
+            "maximum": 0.558084000000008
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.2804999999998472,
+            "p95": 0.3250000000000455,
+            "minimum": 0.2511669999998958,
+            "maximum": 0.558084000000008
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.2804999999998472,
+            "p95": 0.3250000000000455,
+            "minimum": 0.2511669999998958,
+            "maximum": 0.558084000000008
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.2804999999998472,
+            "p95": 0.3250000000000455,
+            "minimum": 0.2511669999998958,
+            "maximum": 0.558084000000008
+          }
+        }
+      },
+      "comparisons": [
+        {
+          "condition": "warm",
+          "p95Delta": 0.13920799999982592,
+          "uncertainty": {
+            "lower": 0.13599999999996726,
+            "upper": 0.1467499999996562,
+            "resamples": 500,
+            "method": "paired-percentile-bootstrap-95pct-v1"
+          }
+        },
+        {
+          "condition": "background",
+          "p95Delta": 0.15945799999985866,
+          "uncertainty": {
+            "lower": 0.14591699999982666,
+            "upper": 0.22008299999993142,
+            "resamples": 500,
+            "method": "paired-percentile-bootstrap-95pct-v1"
+          }
+        },
+        {
+          "condition": "cold",
+          "p95Delta": 0.29749999999989996,
+          "uncertainty": {
+            "lower": 0.2861250000000837,
+            "upper": 0.3132079999998041,
+            "resamples": 500,
+            "method": "paired-percentile-bootstrap-95pct-v1"
+          }
+        }
+      ],
+      "deadlineMisses": {
+        "disabled": 0,
+        "warm": 0,
+        "background": 0,
+        "cold": 0
+      }
+    },
+    {
+      "corpus": 100000,
+      "status": "failedLocalObjectives",
+      "distributions": {
+        "disabled": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.027000000000043656,
+            "p95": 0.03216699999984485,
+            "minimum": 0.024208000000271568,
+            "maximum": 0.0755829999998241
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.027000000000043656,
+            "p95": 0.03216699999984485,
+            "minimum": 0.024208000000271568,
+            "maximum": 0.0755829999998241
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.027000000000043656,
+            "p95": 0.03216699999984485,
+            "minimum": 0.024208000000271568,
+            "maximum": 0.0755829999998241
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.027000000000043656,
+            "p95": 0.03216699999984485,
+            "minimum": 0.024208000000271568,
+            "maximum": 0.0755829999998241
+          }
+        },
+        "warm": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.15279200000031778,
+            "p95": 0.18741700000009587,
+            "minimum": 0.130500000000211,
+            "maximum": 18.791291999999885
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.15279200000031778,
+            "p95": 0.18741700000009587,
+            "minimum": 0.130500000000211,
+            "maximum": 18.791291999999885
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.15279200000031778,
+            "p95": 0.18741700000009587,
+            "minimum": 0.130500000000211,
+            "maximum": 18.791291999999885
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.15279200000031778,
+            "p95": 0.18741700000009587,
+            "minimum": 0.130500000000211,
+            "maximum": 18.791291999999885
+          }
+        },
+        "background": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.14325000000008004,
+            "p95": 0.1722500000000764,
+            "minimum": 0.12800000000015643,
+            "maximum": 1.7694589999996424
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.14325000000008004,
+            "p95": 0.1722500000000764,
+            "minimum": 0.12800000000015643,
+            "maximum": 1.7694589999996424
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.14325000000008004,
+            "p95": 0.1722500000000764,
+            "minimum": 0.12800000000015643,
+            "maximum": 1.7694589999996424
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.14325000000008004,
+            "p95": 0.1722500000000764,
+            "minimum": 0.12800000000015643,
+            "maximum": 1.7694589999996424
+          }
+        },
+        "cold": {
+          "prepared": {
+            "count": 200,
+            "p50": 0.2813749999995707,
+            "p95": 0.33399999999983265,
+            "minimum": 0.24637500000017099,
+            "maximum": 0.5874590000003082
+          },
+          "selection": {
+            "count": 200,
+            "p50": 0.2813749999995707,
+            "p95": 0.33399999999983265,
+            "minimum": 0.24637500000017099,
+            "maximum": 0.5874590000003082
+          },
+          "lookup": {
+            "count": 200,
+            "p50": 0.2813749999995707,
+            "p95": 0.33399999999983265,
+            "minimum": 0.24637500000017099,
+            "maximum": 0.5874590000003082
+          },
+          "innerSelection": {
+            "count": 200,
+            "p50": 0.2813749999995707,
+            "p95": 0.33399999999983265,
+            "minimum": 0.24637500000017099,
+            "maximum": 0.5874590000003082
+          }
+        }
+      },
+      "comparisons": [
+        {
+          "condition": "warm",
+          "p95Delta": 0.15525000000025102,
+          "uncertainty": {
+            "lower": 0.14587499999970532,
+            "upper": 0.1601660000001175,
+            "resamples": 500,
+            "method": "paired-percentile-bootstrap-95pct-v1"
+          }
+        },
+        {
+          "condition": "background",
+          "p95Delta": 0.14008300000023155,
+          "uncertainty": {
+            "lower": 0.1317909999997937,
+            "upper": 0.2247920000004342,
+            "resamples": 500,
+            "method": "paired-percentile-bootstrap-95pct-v1"
+          }
+        },
+        {
+          "condition": "cold",
+          "p95Delta": 0.3018329999999878,
+          "uncertainty": {
+            "lower": 0.29129299999976865,
+            "upper": 0.3775829999999587,
+            "resamples": 500,
+            "method": "paired-percentile-bootstrap-95pct-v1"
+          }
+        }
+      ],
+      "deadlineMisses": {
+        "disabled": 0,
+        "warm": 1,
+        "background": 0,
+        "cold": 0
+      }
+    }
+  ],
+  "finding": "100/10000 record local objectives passed. At 100000 records, one warm sample exceeded the ten-ms deadline and safely omitted enrichment, so expected-detail coverage failed. All samples and failure retained.",
+  "exclusions": [
+    "Full prepared-context compiler and authorization latency",
+    "200 paired real provider/audio turns",
+    "GPU contention/pressure",
+    "physical acoustics",
+    "Human quality",
+    "production"
+  ]
+}

@@ -160,14 +160,14 @@ export function validateCheckpoint(checkpoint) {
   if (!checkpoint || required.some((key) => !Object.hasOwn(checkpoint, key)) || Object.keys(checkpoint).some((key) => ![...required, "notes"].includes(key))) return ["checkpoint: invalid fields"];
   if (checkpoint.schemaVersion !== "1.0.0" || checkpoint.repository !== "ggilchrest/lifestream" || !commit(checkpoint.baseRevision) || !(checkpoint.currentRevision === "WORKTREE" || commit(checkpoint.currentRevision))) errors.push("checkpoint: invalid repository/revision");
   if (!nonempty(checkpoint.branch) || !nonempty(checkpoint.nextAction) || !nonempty(checkpoint.updatedBy) || !utc(checkpoint.updatedAt)) errors.push("checkpoint: branch, next action, identity and UTC time required");
-  if (!["notStarted", "inProgress", "blocked", "implemented", "verified"].includes(checkpoint.sliceStatus)) errors.push("checkpoint: unknown slice status");
+  if (!["notStarted", "inProgress", "blocked", "implemented", "implementationCompleteVerificationPending", "verified"].includes(checkpoint.sliceStatus)) errors.push("checkpoint: unknown slice status");
   if (checkpoint.activeSlice !== null && !/^LS-S[0-9]{3}$/.test(checkpoint.activeSlice)) errors.push("checkpoint: invalid active slice");
   for (const name of ["completedSlices", "allowedFiles", "changedFiles", "decisions", "blockers"]) if (!strings(checkpoint[name])) errors.push("checkpoint: invalid " + name);
   for (const name of ["allowedFiles", "changedFiles"]) if (Array.isArray(checkpoint[name]) && checkpoint[name].some((path) => !safePath(path))) errors.push("checkpoint: unsafe " + name);
   if (Array.isArray(checkpoint.allowedFiles) && Array.isArray(checkpoint.changedFiles) && checkpoint.changedFiles.some((path) => !checkpoint.allowedFiles.includes(path))) errors.push("checkpoint: changed file outside exact writable scope");
   if (Array.isArray(checkpoint.completedSlices) && checkpoint.completedSlices.some((id) => !/^LS-S[0-9]{3}$/.test(id))) errors.push("checkpoint: invalid completed slice");
   if (!Array.isArray(checkpoint.validation) || checkpoint.validation.some((check) => !check || !nonempty(check.command) || !["pass", "fail", "notRun", "blocked"].includes(check.result) || (["pass", "fail"].includes(check.result) && !nonempty(check.evidence)))) errors.push("checkpoint: validation results need commands and executed evidence");
-  if (checkpoint.activeSlice === null && ["inProgress", "implemented", "verified"].includes(checkpoint.sliceStatus)) errors.push("checkpoint: progress claim without active slice");
+  if (checkpoint.activeSlice === null && ["inProgress", "implemented", "implementationCompleteVerificationPending", "verified"].includes(checkpoint.sliceStatus)) errors.push("checkpoint: progress claim without active slice");
   if (checkpoint.sliceStatus === "blocked" && !checkpoint.blockers?.length) errors.push("checkpoint: blocked without a reason");
   if (checkpoint.sliceStatus === "verified" && (checkpoint.blockers?.length || !checkpoint.validation?.length || checkpoint.validation.some((check) => check.result !== "pass"))) errors.push("checkpoint: verified with missing/failed evidence or blockers");
   return errors;
@@ -176,7 +176,7 @@ export function validateCheckpoint(checkpoint) {
 export function preflightErrors({ checkpoint, slice, packet, publicBranch, publicRevision, publicChanges = [], metadataOnlyRevisionAdvance = false }) {
   const errors = [...validateCheckpoint(checkpoint)];
   if (errors.length) return errors;
-  if (checkpoint.activeSlice !== slice || !["notStarted", "inProgress"].includes(checkpoint.sliceStatus) || checkpoint.blockers.length) errors.push("Checkpoint does not select this slice as current unblocked work.");
+  if (checkpoint.activeSlice !== slice || !["notStarted", "inProgress", "implementationCompleteVerificationPending"].includes(checkpoint.sliceStatus) || checkpoint.blockers.length) errors.push("Checkpoint does not select this slice as current unblocked work.");
   if (checkpoint.branch !== publicBranch) errors.push("Public branch does not match the checkpoint.");
   if (checkpoint.currentRevision !== "WORKTREE" && checkpoint.currentRevision !== publicRevision && !metadataOnlyRevisionAdvance) errors.push("Public revision does not match the checkpoint.");
   if (checkpoint.currentRevision === "WORKTREE" && checkpoint.baseRevision !== publicRevision) errors.push("WORKTREE checkpoint base is not the current public HEAD.");

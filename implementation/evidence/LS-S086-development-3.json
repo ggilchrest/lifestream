@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "status": "inProgress",
+  "result": "incomplete",
+  "sourceRevision": "33adaa04ae16ade3a6e5b45ca0f3a5bc19dc368b",
+  "recordedAt": "2026-09-20T10:42:06.119809+00:00",
+  "claimClass": "selected-development-provider-ordinary-attempt",
+  "funnel": {
+    "eligible": 3,
+    "admitted": 3,
+    "calls": 3,
+    "failures": 0,
+    "skips": 0,
+    "noChange": 0,
+    "published": 3,
+    "considered": 1,
+    "selected": 1,
+    "outputs": 1
+  },
+  "ordinaryTurnsCompleted": 5,
+  "openWorkspaceItems": 1,
+  "learnedValues": {
+    "attentionGardening": 0,
+    "attentionAstronomy": 0,
+    "attentionReading": 0,
+    "attentionCooking": 0,
+    "attentionMusic": 0,
+    "attentionGames": 0
+  },
+  "reflectionCalls": 3,
+  "measuredReflectionMs": [
+    3613.3642499999987,
+    8036.954124999989,
+    5279.117208999989
+  ],
+  "jobTokenCounts": [
+    {
+      "input": 2437,
+      "output": 352,
+      "state": "published"
+    },
+    {
+      "input": 1990,
+      "output": 388,
+      "state": "published"
+    },
+    {
+      "input": 1501,
+      "output": 234,
+      "state": "published"
+    }
+  ],
+  "restartPreserved": true,
+  "memoryExtractionFailureObserved": true,
+  "operatorLocalEvidence": {
+    "name": "s086-provider-3/report.json",
+    "sha256": "df267d7800cadde5bb22fd85647b3c5f0231c58b3a0421c369ff8e51bfbb3257"
+  },
+  "finding": "Actual ordinary source-to-reflection-to-persistent-workspace-to-later-output path completed. Numerical learned preference and causal behavior are separate criteria; zero changes are valid model decisions but do not prove the missing mechanism.",
+  "exclusions": [
+    "Synthetic owner statements; no real personal enablement or physical capture.",
+    "No causal ablation claim from this receipt alone.",
+    "No Human or production acceptance."
+  ],
+  "humanAcceptance": false
+}

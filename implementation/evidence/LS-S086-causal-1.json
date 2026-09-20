@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "preregistered-selected-provider-causal-study",
+  "sourceRevision": "90c04e50393400e04c4f28611e5e706224b0cb67",
+  "learnedSourceRevision": "90c04e50393400e04c4f28611e5e706224b0cb67",
+  "recordedAt": "2026-09-20T10:47:15.641949+00:00",
+  "result": "fail",
+  "attempts": 84,
+  "passed": 82,
+  "selectorMatches": 84,
+  "inputTokenRange": [
+    614,
+    989
+  ],
+  "maximumOutputTokens": 128,
+  "fixedContextGroups": 14,
+  "fixedContextHashesMatch": true,
+  "failedTrials": [
+    {
+      "repeat": 0,
+      "scenario": "activity",
+      "variant": "learned",
+      "selected": "gardening",
+      "expectedTopic": "gardening",
+      "observedFirstTopic": null,
+      "error": "provider_error"
+    },
+    {
+      "repeat": 1,
+      "scenario": "next",
+      "variant": "reversed",
+      "selected": "reading",
+      "expectedTopic": "reading",
+      "observedFirstTopic": null,
+      "error": "provider_error"
+    }
+  ],
+  "operatorLocalEvidence": {
+    "name": "s086-causal-1/report.json",
+    "sha256": "fe07510dedc457cb52af1ac48579105264c9c6429eff8b9127247f8375ece981"
+  },
+  "registeredProtocolSha256": "b4a2e965163d3fdbcd44346153d34d2d254f7592303b06255ea5074860440303",
+  "configurationDigest": "061e36f16079b9c8c787b212b48b432e015acee7082e6c7216e28744dbecfc58",
+  "notes": [
+    "Two correctly selected responses did not complete under the registered 128-token bound. Keep aggregate failure; no retrospective passing claim."
+  ],
+  "exclusions": [
+    "No deterministic model compliance, Human earnedness/quality, physical audience or production acceptance.",
+    "Whole-system no-workspace baseline is separate from fixed-context mechanism comparisons.",
+    "Request-level random seed is unavailable in the existing adapter."
+  ]
+}

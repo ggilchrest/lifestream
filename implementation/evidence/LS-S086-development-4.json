@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "status": "inProgress",
+  "result": "incomplete",
+  "sourceRevision": "2cc897e9bf1caa1001477bae3117ed3c6dcd24c7",
+  "recordedAt": "2026-09-20T10:42:06.119809+00:00",
+  "claimClass": "selected-development-provider-ordinary-attempt",
+  "funnel": {
+    "eligible": 4,
+    "admitted": 4,
+    "calls": 4,
+    "failures": 0,
+    "skips": 0,
+    "noChange": 0,
+    "published": 4,
+    "considered": 2,
+    "selected": 1,
+    "outputs": 1
+  },
+  "ordinaryTurnsCompleted": 5,
+  "openWorkspaceItems": 2,
+  "learnedValues": {
+    "attentionGardening": 0,
+    "attentionAstronomy": 0,
+    "attentionReading": 0,
+    "attentionCooking": 0,
+    "attentionMusic": 0,
+    "attentionGames": 0
+  },
+  "reflectionCalls": 4,
+  "measuredReflectionMs": [
+    4115.963458999999,
+    3118.6424579999875,
+    6340.637333999999,
+    4598.430208999955
+  ],
+  "jobTokenCounts": [
+    {
+      "input": 3255,
+      "output": 300,
+      "state": "published"
+    },
+    {
+      "input": 2727,
+      "output": 421,
+      "state": "published"
+    },
+    {
+      "input": 2040,
+      "output": 203,
+      "state": "published"
+    },
+    {
+      "input": 1524,
+      "output": 270,
+      "state": "published"
+    }
+  ],
+  "restartPreserved": true,
+  "memoryExtractionFailureObserved": false,
+  "operatorLocalEvidence": {
+    "name": "s086-provider-4/report.json",
+    "sha256": "a42e7e5b30edb82e968b63fb8a8e3d07233444cea69f556dab922fed7b582711"
+  },
+  "finding": "Actual ordinary source-to-reflection-to-persistent-workspace-to-later-output path completed. Numerical learned preference and causal behavior are separate criteria; zero changes are valid model decisions but do not prove the missing mechanism.",
+  "exclusions": [
+    "Synthetic owner statements; no real personal enablement or physical capture.",
+    "No causal ablation claim from this receipt alone.",
+    "No Human or production acceptance."
+  ],
+  "humanAcceptance": false
+}

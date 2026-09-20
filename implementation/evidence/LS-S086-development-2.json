@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "status": "inProgress",
+  "result": "incomplete",
+  "sourceRevision": "c3cdec3950e4975a660444b68666ad4667fc7da5",
+  "recordedAt": "2026-09-20T10:15:37Z",
+  "claimClass": "selected-development-provider-attempt",
+  "funnel": {
+    "eligible": 3,
+    "admitted": 6,
+    "calls": 6,
+    "failures": 6,
+    "skips": 0,
+    "noChange": 0,
+    "published": 0,
+    "considered": 0,
+    "selected": 0,
+    "outputs": 0
+  },
+  "finding": "Saved automatic memory succeeded after explicit extraction format instructions. Six real reflections were rejected atomically for insufficient episode support, fenced JSON or no-change/mutation inconsistency. Restart preserved valid prior state; no learned result or downstream behavior was fabricated.",
+  "operatorLocalEvidence": {
+    "name": "s086-provider-2/report.json",
+    "sha256": "98002857e02e933218c0d8b9133770e17964888896f534da69845069caa3323f"
+  },
+  "successorAction": "Clarified empty-change and no-change semantics, included prior rejection codes, accepted a single outer JSON fence without weakening semantic validation, and closed the same invariants at the machine boundary.",
+  "humanAcceptance": false
+}

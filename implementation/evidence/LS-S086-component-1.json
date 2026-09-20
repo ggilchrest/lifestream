@@ -1,0 +1,177 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "verified-software-and-bounded-selected-provider-components",
+  "sourceRevision": "90c04e50393400e04c4f28611e5e706224b0cb67",
+  "currentRuntimeEquivalentRevision": "230beb02550980a1b8490cebbffaa3a917fba6d7",
+  "effectiveSpecificationRevision": "fa7f8a0efa88ef80bdc68150e48da96f8f656b8a",
+  "recordedAt": "2026-09-20T10:54:24Z",
+  "scope": "Ordinary typed reflection and durable workspace/imprint selection, source-specific privacy/reversal and shared profile/relationship controls. No complete release or Human claim.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "count": 970,
+      "skipped": 0,
+      "elapsedMs": 54318.454083
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "count": 58,
+      "skipped": 0,
+      "elapsedMs": 195715.968458
+    },
+    {
+      "command": "pnpm build; pnpm lint; private validate; focused source/export/browser checks",
+      "result": "pass"
+    },
+    {
+      "command": "Selected-provider ordinary attempt 5",
+      "result": "pass",
+      "evidence": "Four eligible, admitted, called and published reflections; two eligible later opportunities, one selected and observed completed reply; learned gardening +0.02; real restart preserves state."
+    },
+    {
+      "command": "Preregistered causal studies",
+      "result": "fail",
+      "evidence": "128-token study 82/84; 512-token successor 79/84. All 168 host selections matched; all response/scoring failures retained. No whole causal acceptance."
+    },
+    {
+      "command": "Local performance: 2400 samples, 200/condition at three corpus sizes",
+      "result": "fail",
+      "evidence": "p50/p95 selection allowances hold in measured local component; one 18.791 ms warm deadline fallback omitted enrichment, failing expected-detail coverage. Full provider/audio pressure matrix is unmeasured."
+    },
+    {
+      "command": "Running candidate authenticated browser smoke",
+      "result": "pass",
+      "evidence": "New backend inspection, profile controls, personal learning off, real typed reply, published PWCE synthetic replay summary and shared-audience clearing. Predecessor stopped at unknown-audience protection; explicit fresh private declaration completes successor."
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs; private validate (checkpoint status successor)",
+      "result": "pass",
+      "workspaceTests": 44,
+      "privateTests": 60
+    }
+  ],
+  "receipts": [
+    {
+      "path": "implementation/evidence/LS-S086-development-1.json",
+      "sha256": "33ff1b852feee5ca693409f0cc012f11506597ef06dca2a92bc74ac7646f68b2"
+    },
+    {
+      "path": "implementation/evidence/LS-S086-development-2.json",
+      "sha256": "460e6012a3f2e9814eaa8d77fe4115bf703057cf16254cd93d2b673549d4f3dd"
+    },
+    {
+      "path": "implementation/evidence/LS-S086-development-3.json",
+      "sha256": "f742c2cb29d56eb18d775f6346dbb6c7b34dc33f47773323cbcb251d992d4737"
+    },
+    {
+      "path": "implementation/evidence/LS-S086-development-4.json",
+      "sha256": "c27bbf588c131df22d1b7584e1051caf24e2fc5ffb37316dbe5ad46288479bc3"
+    },
+    {
+      "path": "implementation/evidence/LS-S086-development-5.json",
+      "sha256": "f1e232ea90f78e00de6d533ce0a922bbe928b89cad089f01f7090d42d1b849ab"
+    },
+    {
+      "path": "implementation/evidence/LS-S086-causal-1.json",
+      "sha256": "c705b1f45bfad9e85e4cd3a316d0b7c4e2137d69083cbf7abf8a46f75522a685"
+    },
+    {
+      "path": "implementation/evidence/LS-S086-causal-2.json",
+      "sha256": "15123b47c451a2d2a9125aa0dd819434a6e0536084492ab1bac73481c3401db2"
+    },
+    {
+      "path": "implementation/evidence/LS-S086-performance-1.json",
+      "sha256": "ba41ef971f715d33cb91d23d290a3b44ad83fcfc5680460f09583832c1578750"
+    },
+    {
+      "path": "implementation/evidence/LS-S086-schema-export-1.json",
+      "sha256": "713113da9942ecf2630035c21d62a975c9e84a5a84d5709ab3f344086038e6b8"
+    },
+    {
+      "path": "implementation/evidence/LS-S086-schema-export-2.json",
+      "sha256": "dbb9e8760387fa70983ddd4461a9cce761b5c5996de8cafa92130dff00b2feda"
+    }
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "s086-source-final-90c04e5.log",
+      "sha256": "1364b17f702316f2e50e37e9b13f12d2056f29407087008ee06a08b20ea236eb"
+    },
+    {
+      "name": "s086-browser-final-90c04e5.log",
+      "sha256": "047a077846c8f6da0cd06f93f2373a1c698dd7520f3d876eefc39b29528a5849"
+    },
+    {
+      "name": "s086-profile-controls-tests.log",
+      "sha256": "72ad3561ba76e36ddbcabc16799b5347f34df8839bbea76d3633e1dab3f3608f"
+    },
+    {
+      "name": "s086-workspace-inverse-tests-2.log",
+      "sha256": "acd5b772bca2c4235eb5bd817782b887c3cf043a29513a38133ddbfb120cbbbd"
+    },
+    {
+      "name": "s086-partial-memory-browser.log",
+      "sha256": "a4d662ce58889137cb6d5e88fd800d5e8220a6b5079a8a54a16d9f6f582f055e"
+    },
+    {
+      "name": "s086-owner-final-validation.log",
+      "sha256": "3a9f71c595815d1722dd18679ae7b070ea6a0668c144bdc92714722a0ad13810"
+    },
+    {
+      "name": "s086-guide-validation-v5.log",
+      "sha256": "d65b6145538394183200671a5e68de6ac14b371d83bb5c082d5c1da97f019922"
+    },
+    {
+      "name": "v01-guide-validation-v5.json",
+      "sha256": "7803fdf035b7eee77f0268c92e0ab1389c51934eda94417e8e1bb8d141b2d665"
+    },
+    {
+      "name": "s086-candidate-smoke.json",
+      "sha256": "773e00afdb11c0c788e7b2c097f8315a8d9224a85c96272ec01fe6738f5be191"
+    },
+    {
+      "name": "s086-candidate-smoke-2.json",
+      "sha256": "5a79153ec85ebed87947e1d77391d9ebbdbbff6290100ad5cbc0da4df9198f59"
+    },
+    {
+      "name": "s086-final-s084-provider-priority.json",
+      "sha256": "6ddd2090d65e9375891edb3e936eabfc9ee8208637e4d82c971b0d827c9112ec"
+    },
+    {
+      "name": "s086-checkpoint-tests.log",
+      "sha256": "378838c145b63b2f1ced051ed3b31666c612b7462334277fe7133d7836f60805"
+    },
+    {
+      "name": "s086-checkpoint-owner-validation-2.log",
+      "sha256": "9146e54ad586f14d6a78ea3bb7aa1127ebd0e96c6feb425a65329fb7c9b89ce4"
+    }
+  ],
+  "caseDispositions": {
+    "LS-TEST-145": "verified within synthetic selected-provider ordinary path",
+    "LS-TEST-146": "verified software persistence/capacity/revision/closure; actual project revision and restart observed",
+    "LS-TEST-147": "verified deterministic bounds, independence, seeds and reversal; selected model learned 0.02",
+    "LS-TEST-148": "verified deterministic filters and bounded actual shared-audience examples; broad honesty and Human quality pending",
+    "LS-TEST-149": "verified deterministic/source/browser invalidation, stale results, controls and isolation",
+    "LS-TEST-150": "verified explicitly simulated error variants, independent lineage and authored seed; not a spontaneous observed error",
+    "LS-TEST-151": "implementationCompleteVerificationPending: guard tests and local timings pass within scope, one deadline omission, absolute voice objectives fail and full matrix missing",
+    "LS-TEST-152": "verified schema/export/migration/disable software boundaries",
+    "LS-TEST-153": "implementationCompleteVerificationPending: two actual preregistered studies, retained aggregate failures",
+    "LS-TEST-154": "Human acceptance pending; all evidence classes and failures retained"
+  },
+  "remainingReleaseGates": [
+    "Actual model response consistency and interpretation of preregistered lexical failures",
+    "Full real provider/audio performance, pressure and physical endpoint measurements",
+    "Human continuity, relevance, autonomy, curiosity, privacy comfort, earnedness and unwanted-pressure review"
+  ],
+  "boundaries": [
+    "All personal material remains operator-local outside connected Git roots.",
+    "No personal learning or live voice activation, new camera, pushes, publication, cloud uploads, new provider/model, training or external world effects.",
+    "Previous accepted S083/S084 24-journey decision is unchanged.",
+    "Removable-volume backup work and schedule remain deferred by operator."
+  ],
+  "checkpointSchemaOwnerRevision": "0212fd4a0c37fb89671ea5e6edbf147c81be13a4"
+}

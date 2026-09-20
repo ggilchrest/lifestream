@@ -15,6 +15,15 @@ const packet = () => ({ slice: "LS-S001", prerequisites: [], allowedFiles: ["pac
 const inspect = (overrides = {}) => preflightErrors({ checkpoint: checkpoint(), slice: "LS-S001", packet: packet(), publicBranch: "codex/s001", publicRevision: "d".repeat(40), publicChanges: [], ...overrides });
 
 test("consistent metadata satisfies the pure preflight check", () => assert.deepEqual(inspect(), []));
+test("pending verification can continue with retained failed evidence without claiming acceptance", () => {
+  const value = checkpoint(); value.sliceStatus = "implementationCompleteVerificationPending";
+  value.validation = [{ command: "measured qualification", result: "fail", evidence: "implementation/evidence/LS-S001.json" }];
+  assert.deepEqual(inspect({ checkpoint: value }), []);
+  value.activeSlice = null;
+  assert.match(validateCheckpoint(value).join("\n"), /without active slice/);
+  value.activeSlice = "LS-S001"; value.sliceStatus = "verified";
+  assert.match(validateCheckpoint(value).join("\n"), /verified with/);
+});
 test("HTTPS and SSH GitHub origins match only the expected repository", () => {
   assert.equal(repositoryMatches("https://github.com/ggilchrest/lifestream-specs.git", "ggilchrest/lifestream-specs"), true);
   assert.equal(repositoryMatches("git@github.com:ggilchrest/lifestream-specs.git", "ggilchrest/lifestream-specs"), true);
