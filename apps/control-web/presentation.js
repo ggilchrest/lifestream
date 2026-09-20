@@ -25,6 +25,7 @@ export function installPresentation({anchor,api,busy,playback,identity}) {
  const release=()=>{epoch++;pending?.abort();runtime?.dispose();runtime=null;initializing=null;effective='neutral';};
  section.querySelector('[data-restart]').onclick=run(async()=>{if(busy())throw new Error('Wait until the turn finishes before restarting the display.');release();const old=section.querySelector('canvas'),fresh=old.cloneNode(false);old.replaceWith(fresh);await refresh();say('Display restarted. '+(runtime?.current?.label??'Neutral reference'));});
  window.addEventListener('hashchange',()=>{if(location.hash==='#conversation')void refresh().catch(error=>say(error.message));else release();});
+ window.addEventListener('lifestream-audience',event=>{clear();if(event.detail?.privateAllowed&&location.hash==='#conversation')void refresh().catch(error=>say(error.message));});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)release();else if(location.hash==='#conversation')void refresh().catch(error=>say(error.message));});
  window.addEventListener('pagehide',()=>{clear();release();});
  return {refresh:run(refresh),clear,state(value){section.querySelector('.presentation-state').textContent=value;runtime?.applyState(value);},get pending(){return !!pending;}};

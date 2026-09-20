@@ -22,6 +22,8 @@
  const run=fn=>()=>void fn().catch(error=>{offline();status.textContent=error.message;});
  panel.querySelector('[data-audience-solo]').onclick=run(()=>declare('solo'));panel.querySelector('[data-audience-shared]').onclick=run(()=>declare('shared'));panel.querySelector('[data-audience-clear]').onclick=run(()=>declare('clear'));panel.querySelector('[data-audience-refresh]').onclick=run(refresh);
  for(const event of ['lifestream-auth','lifestream-session-context'])window.addEventListener(event,run(refresh));
+ let signedInSession=null;
+ window.addEventListener('lifestream-auth',()=>{const next=window.lifestreamAuth?.session?.sessionId??null;if(next&&next!==signedInSession&&root.dataset.audienceProtected==='true')panel.scrollIntoView({block:'start'});signedInSession=next;});
  const timer=setInterval(()=>{if(heartbeat&&performance.now()-heartbeat>2000||snapshot?.expiresAt&&Date.parse(snapshot.expiresAt)<=Date.now())offline();},100);
  document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();if(window.lifestreamAuth?.session)void declare('lock').catch(()=>{});}else if(window.lifestreamAuth?.session)void declare('unlock').catch(()=>{});});
  window.lifestreamDesktop?.onPrivacyLock?.(locked=>{nativeLocked=locked;protect(null);if(window.lifestreamAuth?.session)void declare(locked?'lock':'unlock').catch(()=>{});});

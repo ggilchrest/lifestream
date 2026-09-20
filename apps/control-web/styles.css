@@ -151,6 +151,7 @@
 [data-audience-protected="true"] #assistant-list,
 [data-audience-protected="true"] #new-assistant,
 [data-audience-protected="true"] #room-scope,
+[data-audience-protected="true"] .presentation-panel,
 [data-audience-protected="true"] .room-memory,
 [data-audience-protected="true"] .room-simulation,
 [data-audience-protected="true"] #session-context-details,
