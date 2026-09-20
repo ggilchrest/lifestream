@@ -44,3 +44,14 @@ test("approved extension exports compile and reject forged or unknown request fi
     }
   }
 });
+
+test("shared compiled schemas keep caller results, schema lists and inputs independent", () => {
+  const first=createContractValidator(),second=createContractValidator(),id="https://lifestream.dev/contracts/understanding-api/1.0.0";
+  const invalid={schemaVersion:"1.0.0",operation:"inspect",privatePayload:"SYNTHETIC_PRIVATE_VALUE"},before=JSON.stringify(invalid);
+  const failure=first.validate(id,invalid),saved=structuredClone(failure);
+  assert.equal(failure.valid,false);assert.doesNotMatch(JSON.stringify(failure),/SYNTHETIC_PRIVATE_VALUE/);
+  assert.equal(second.validate(id,{schemaVersion:"1.0.0",operation:"inspect"}).valid,true);assert.deepEqual(failure,saved);assert.equal(JSON.stringify(invalid),before);
+  failure.errors[0]!.message="caller mutation";assert.notEqual(second.validate(id,invalid).errors[0]!.message,"caller mutation");
+  const ids=first.schemaIds();ids.splice(0);assert.equal(second.schemaIds().length,24);
+  first.validate=()=>({valid:true,errors:[]});assert.equal(second.validate('unknown',{}).valid,false);
+});

@@ -35,7 +35,11 @@ const normalizeErrors = (errors: ErrorObject[] | null | undefined) => safeValida
   }))
 );
 
-export const createContractValidator = (): ContractValidator => {
+// Exported schemas are immutable for this process revision. Share compiled code,
+// not caller results or mutable public facades, across repositories and sessions.
+let compiled: { ajv: AjvLike; validators: Map<string, ValidateFunction> } | undefined;
+const compiledSchemas = () => {
+  if (compiled) return compiled;
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   addFormats(ajv);
   const schemas = loadSchemas();
@@ -48,6 +52,12 @@ export const createContractValidator = (): ContractValidator => {
       validators.set(schema.$id, validator);
     }
   }
+  compiled = { ajv, validators };
+  return compiled;
+};
+
+export const createContractValidator = (): ContractValidator => {
+  const { ajv, validators } = compiledSchemas();
   return {
     validate(schemaId, value) {
       const rootId = schemaId.split("#")[0]!;
