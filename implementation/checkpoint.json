@@ -2,8 +2,8 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "6c7cbfb76f385a123a3ad17bd38c4e478aeea788",
-  "currentRevision": "6c7cbfb76f385a123a3ad17bd38c4e478aeea788",
+  "baseRevision": "6491a3f1b97bab6181d861644cf0f58d6aeb40c0",
+  "currentRevision": "6491a3f1b97bab6181d861644cf0f58d6aeb40c0",
   "activeSlice": "LS-S066",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -690,6 +690,11 @@
       "command": "Native local application archive, extracted runtime and actual candidate proof",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S066-native-package-1.json"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed-local-runtime> node --test --test-concurrency=1 apps/control-web/test/local-auth.test.mjs apps/control-web/test/workspace-design.test.mjs",
+      "result": "pass",
+      "evidence": "2/2 rendered tests, zero skips; 13971.134625 ms. CSS source 6491a3f1b97bab6181d861644cf0f58d6aeb40c0. Native GUI sign-in layout and Permissions/return inspected after unlock."
     }
   ],
   "decisions": [
@@ -736,8 +741,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Assess remaining dependency-ready v0.1 work across canonical owners. Native application and private conversation motion are verified components. Checkpoint now names committed evidence and predicts only preserved unrelated work after its checkpoint-only commit; no prerequisite proof is relaxed.",
-  "updatedAt": "2026-09-20T18:45:06.379847Z",
+  "nextAction": "Continue dependency-ready endpoint effective-configuration assessment after recording the verified native package and unlocked-desktop sign-in repair. Preserve selected-provider and physical acceptance gates.",
+  "updatedAt": "2026-09-20T18:57:12.149342Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "Current backend/browser 6e4c2f0 (runtime-equivalent aaa421c); extracted local Mac app 85a000e. Private pack 0.3.0 actual previews and fresh encrypted recovery pass. Final Mac ZIP has seven allowlisted application files, required runtime notices and no private matches. Offline retry, direct URL, sandbox and synthetic lock pass. Guide v10: 17 journeys/151 actions. Failed archive attempts retained. No new provider generation or Human acceptance."
+  "notes": "Current backend/browser 6e4c2f0 (runtime-equivalent aaa421c); extracted local Mac app 85a000e. Private pack 0.3.0 actual previews and fresh encrypted recovery pass. Final Mac ZIP has seven allowlisted application files, required runtime notices and no private matches. Offline retry, direct URL, sandbox and synthetic lock pass. Guide v10: 17 journeys/151 actions. Failed archive attempts retained. No new provider generation or Human acceptance. Unlocked desktop inspection reproduced a narrow signed-out account column. CSS source 6491a3f1b97bab6181d861644cf0f58d6aeb40c0 uses the full workspace with a bounded centered form. Existing rendered local-auth and workspace checks pass 2/2, zero skips; lint and actual native Permissions/return navigation pass. Backend remains 6e4c2f0; browser assets are served from the current checkout. No physical lock acceptance inferred from inconsistent startup observations."
 }
