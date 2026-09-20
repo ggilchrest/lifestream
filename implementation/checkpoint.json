@@ -2,8 +2,8 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
-  "currentRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+  "baseRevision": "6c7cbfb76f385a123a3ad17bd38c4e478aeea788",
+  "currentRevision": "6c7cbfb76f385a123a3ad17bd38c4e478aeea788",
   "activeSlice": "LS-S066",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -181,8 +181,6 @@
     "README.md",
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
-    "implementation/checkpoint.json",
-    "implementation/evidence/LS-S066-native-package-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -738,8 +736,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Reconcile checkpoint change bookkeeping after scoped commits while preserving real prerequisite gates, then inspect remaining dependency-ready v0.1 work across owners. Native local package and private animation components are verified; selected provider/physical/Human claims remain open.",
-  "updatedAt": "2026-09-20T18:42:46.028586Z",
+  "nextAction": "Assess remaining dependency-ready v0.1 work across canonical owners. Native application and private conversation motion are verified components. Checkpoint now names committed evidence and predicts only preserved unrelated work after its checkpoint-only commit; no prerequisite proof is relaxed.",
+  "updatedAt": "2026-09-20T18:45:06.379847Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
   "notes": "Current backend/browser 6e4c2f0 (runtime-equivalent aaa421c); extracted local Mac app 85a000e. Private pack 0.3.0 actual previews and fresh encrypted recovery pass. Final Mac ZIP has seven allowlisted application files, required runtime notices and no private matches. Offline retry, direct URL, sandbox and synthetic lock pass. Guide v10: 17 journeys/151 actions. Failed archive attempts retained. No new provider generation or Human acceptance."
 }
