@@ -15,4 +15,8 @@ test("joined relationship surface exposes the complete review path and boundarie
   assert.match(insights, /active relationship state unchanged/);
   assert.match(lab, /Held-out/);
   assert.match(lab, /Human review/);
+  const builder=await readFile(new URL('../profile-builder.js',import.meta.url),"utf8");
+  assert.match(builder,/builder-prerequisite/);
+  assert.match(builder,/Start the relationship review first/);
+  assert.match(builder,/missingAssistant \|\| missingRelationship/);
 });

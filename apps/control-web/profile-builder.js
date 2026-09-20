@@ -4,6 +4,7 @@ export function installProfileBuilder({ anchor, api: transport, context, show, o
   const section = document.createElement('section'); section.className = 'memory-tools profile-builder';
   section.innerHTML = `<div class="section-head"><div><p class="eyebrow">PEOPLE &amp; CONTEXT</p><h3>Build Context From Selected Files</h3></div></div>
     <p class="muted">Inventory your selected files, pin a local snapshot, then review each extracted claim. Nothing enters ordinary conversation until you explicitly approve and admit it. All imported text stays untrusted.</p>
+    <div id="builder-prerequisite" class="notice blue" role="status" aria-live="polite" hidden></div>
     <div class="form-grid"><label>Declared Format<select id="builder-format"><option value="notes-v1">UTF-8 Notes v1</option><option value="canonical-user-profile-v1">Canonical User Profile JSON</option><option value="profile-v1">Structured Profile v1.0.0</option><option value="conversation-v1">Conversation JSON v1.0.0</option><option value="conversation-ndjson-v1">Conversation NDJSON v1</option></select></label>
     <label>Source Author<select id="builder-author"><option value="unknown">Unknown / Observation</option><option value="user">Me / User-Authored</option><option value="assistant">Assistant-Generated</option></select></label>
     <label>Original Source Date (Optional)<input id="builder-date" type="datetime-local"></label><label>Selected Files<input id="builder-files" type="file" multiple accept=".txt,.md,.json,.jsonl,.ndjson"></label></div>
@@ -16,12 +17,22 @@ export function installProfileBuilder({ anchor, api: transport, context, show, o
     <div id="builder-candidates" class="revisions"></div><div class="actions"><button id="builder-approve" type="button" disabled>Approve Selected</button><button id="builder-reject" type="button" class="quiet" disabled>Reject Selected</button><button id="builder-admit" type="button" disabled>Admit Approved Selection</button></div>`;
   anchor.after(section);
   const get = (id) => section.querySelector(`#${id}`);
+  const renderPrerequisite = () => {
+    const current = context(), missingAssistant = !current?.assistantId, missingRelationship = !missingAssistant && !current?.relationship;
+    const notice = get('builder-prerequisite');
+    notice.hidden = !(missingAssistant || missingRelationship);
+    notice.innerHTML = missingAssistant
+      ? '<strong>Select an Assistant first.</strong> Use the Assistant list, then return here.'
+      : '<strong>Start the relationship review first.</strong> Open <a href="#relationship">Relationship setup</a>, click <strong>Start relationship review</strong>, and return here. This import belongs to that selected relationship.';
+    get('builder-inventory').disabled = missingAssistant || missingRelationship;
+  };
   const escape = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let selected = null, job = null, candidates = [], scopeKey = null, epoch = 0;
   const api=async(...args)=>{const ticket=epoch,key=context()?.relationship?.relationshipId,result=await transport(...args);if(ticket!==epoch||key!==context()?.relationship?.relationshipId)throw new Error('Import scope changed; refresh the selected relationship.');return result;};
-  const clear=()=>{epoch++;selected=null;job=null;candidates=[];scopeKey=null;get('builder-files').value='';get('builder-candidates').replaceChildren();get('builder-status').replaceChildren();get('builder-jobs').innerHTML='<option value="">Refresh this relationship’s jobs</option>';for(const id of ['builder-snapshot','builder-extract','builder-resume','builder-cancel','builder-approve','builder-reject','builder-admit'])get(id).disabled=true;};
-  window.addEventListener('lifestream-assistant',clear);window.addEventListener('lifestream-auth',clear);
-  const path = () => { const current = context(); if (!current?.assistantId || !current?.relationship) throw new Error('Start an owned Assistant relationship review first.'); const key = `${current.assistantId}/${current.relationship.relationshipId}`; if (scopeKey !== key) { if (scopeKey !== null) get('builder-files').value = ''; scopeKey = key; job = null; candidates = []; selected = null; } return `/api/admin/v1/assistants/${current.assistantId}/relationships/${current.relationship.relationshipId}/profile-builder`; };
+  const clear=()=>{epoch++;selected=null;job=null;candidates=[];scopeKey=null;get('builder-files').value='';get('builder-candidates').replaceChildren();get('builder-status').replaceChildren();get('builder-jobs').innerHTML='<option value="">Refresh this relationship’s jobs</option>';for(const id of ['builder-snapshot','builder-extract','builder-resume','builder-cancel','builder-approve','builder-reject','builder-admit'])get(id).disabled=true;renderPrerequisite();};
+  window.addEventListener('lifestream-assistant',clear);window.addEventListener('lifestream-auth',clear);window.addEventListener('lifestream-relationship',renderPrerequisite);
+  renderPrerequisite();
+  const path = () => { const current = context(); if (!current?.assistantId || !current?.relationship) { renderPrerequisite(); throw new Error('Open Relationship setup and click Start relationship review first.'); } const key = `${current.assistantId}/${current.relationship.relationshipId}`; if (scopeKey !== key) { if (scopeKey !== null) get('builder-files').value = ''; scopeKey = key; job = null; candidates = []; selected = null; } return `/api/admin/v1/assistants/${current.assistantId}/relationships/${current.relationship.relationshipId}/profile-builder`; };
   const render = (body) => {
     job = body.job; candidates = body.candidates || [];
     if (job.status !== 'inventoried') { selected = null; get('builder-files').value = ''; }
