@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "7cf7be7f46aa8fb05e4d4ec31300aa11decef047",
-  "currentRevision": "8183d20d33110bc9234cac4f1e0c4ea2bca57532",
+  "currentRevision": "5f83b9194521a190e71a072233f978e38ffe889c",
   "activeSlice": "LS-S068",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -82,6 +82,7 @@
     "apps/control-web/conversation-room.js",
     "apps/control-web/conversation.js",
     "apps/control-web/endpoint-configuration.js",
+    "apps/control-web/incidents.js",
     "apps/control-web/presentation-runtime.js",
     "apps/control-web/presentation.js",
     "apps/control-web/preview-playback.js",
@@ -130,6 +131,7 @@
     "apps/server/test/session-handoff-retention.test.ts",
     "apps/server/test/session-handoff.test.ts",
     "apps/server/test/tts-playback.test.ts",
+    "docs/incident-evidence.md",
     "docs/presentation-reduced-motion.md",
     "docs/s083-s084-acceptance-guide.html",
     "docs/session-disclosure.md",
@@ -139,6 +141,7 @@
     "implementation/evidence/LS-S068-audio-playback-1.json",
     "implementation/evidence/LS-S068-authenticated-handoff-1.json",
     "implementation/evidence/LS-S068-effective-configuration-1.json",
+    "implementation/evidence/LS-S068-incident-playback-1.json",
     "implementation/evidence/LS-S068-output-only-playback-1.json",
     "implementation/evidence/LS-S068-preview-playback-1.json",
     "implementation/evidence/LS-S068-protected-setup-1.json",
@@ -174,7 +177,7 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-reduced-motion-1.json",
+    "implementation/evidence/LS-S068-incident-playback-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -815,6 +818,11 @@
       "command": "Reduced motion: rendered failing/passing regression, full source/browser, native clean install, current pinned candidate and owner checks",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S068-reduced-motion-1.json"
+    },
+    {
+      "command": "Incident playback: reproduced Close race and video continuation, corrected browser/native, full source/browser/PWCE/composition, pinned current candidate",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S068-incident-playback-1.json"
     }
   ],
   "decisions": [
@@ -861,8 +869,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Continue remaining endpoint presence/override composition and independent integration gaps. Candidate is pinned at 8183d20; provider, physical, Human and preserved performance/causal criteria stay open.",
-  "updatedAt": "2026-09-20T23:36:47.669273Z",
+  "nextAction": "Continue independent endpoint presence/override composition and integrated candidate gaps. Incident playback repair is pinned at 5f83b91; selected provider, physical, Human and preserved performance/causal criteria remain open.",
+  "updatedAt": "2026-09-20T23:58:27.388825Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "Reduced-motion component verified: 1014 source, 78 serial browser, actual packaged native against clean install, 44 served assets and data-preserving candidate restart. Guide v23 static; prior original 24 acceptance preserved. Full LS-S068 remains in progress."
+  "notes": "Incident playback privacy component verified: 1014 source, 78 serial browser, 335 PWCE, 108 composition, 2 actual packaged native against clean install; candidate data preserved and all 44 UI assets match. Guide v24 static; original 24 Human acceptance unchanged. Full LS-S068 in progress."
 }

@@ -1,0 +1,265 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "incident-media-playback-privacy-component",
+  "recordedAt": "2026-09-20T23:58:27.388825Z",
+  "sourceRevision": "5f83b9194521a190e71a072233f978e38ffe889c",
+  "pwceSourceRevision": "7cff7cf1d320f2c81234b55562f130800d1904da",
+  "specificationRevision": "b5df5b21a85195deb5f287870ebbcdb943ac4297",
+  "compositionTestRevision": "e3e449ff2c160168360c9d6dab6de47737e6940d",
+  "behavior": [
+    "Close cancels pending media downloads and fences stale completion/error state on each card.",
+    "Close and Hide explicitly pause video, remove its source, reset the media element and revoke the object URL before removing DOM.",
+    "Lifestream navigation out of Conversation and existing identity/session/audience/visibility cleanup release every loaded card. PWCE Hide/blur/visibility cleanup does the same.",
+    "A new explicit review can load media again. No evidence retention, deletion or authority grant is changed."
+  ],
+  "checks": {
+    "source": {
+      "tests": 1014,
+      "pass": 1014,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 61790.409042
+    },
+    "serialBrowser": {
+      "tests": 78,
+      "pass": 78,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 249790.967875
+    },
+    "pwce": {
+      "tests": 335,
+      "pass": 335,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1779.244709
+    },
+    "composition": {
+      "tests": 108,
+      "pass": 108,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 6937.359083
+    },
+    "nativeCleanInstall": {
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 8169.846625
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "privateValidation": "pass",
+    "workspaceCheck": "pass",
+    "pwceValidate": "pass",
+    "userDocumentation": {
+      "status": "verified",
+      "pages": 4,
+      "localLinks": 56,
+      "sharedStylesheet": true,
+      "qaLinkedInRelease": true,
+      "releaseIndexed": true,
+      "visual": "Generated clip screenshot from running PWCE page inspected; existing labels/layout unchanged."
+    }
+  },
+  "native": {
+    "sourceRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+    "frontendSourceRevision": "5f83b9194521a190e71a072233f978e38ffe889c",
+    "scope": "Actual packaged Mac executable and real HTTP with Lifestream incident UI from clean source install; synthetic metadata and decoded muted WebM, no device capture."
+  },
+  "genericArchive": {
+    "recordedAt": "2026-09-20T23:54:37.031512+00:00",
+    "sourceRevision": "5f83b9194521a190e71a072233f978e38ffe889c",
+    "archiveSha256": "57d15b19a3ec094ccfbf4e1eada4b74eecd196de8f18b447dd86e44068815c0b",
+    "archiveBytes": 19025920,
+    "members": 1310,
+    "privatePackageHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "status": "verified",
+    "priorReceipts": [
+      "generic-clean-package.json",
+      "generic-clean-package-2.json",
+      "generic-clean-package-3.json",
+      "generic-clean-package-4.json",
+      "generic-clean-package-5.json",
+      "generic-clean-package-6.json",
+      "generic-clean-package-7.json"
+    ],
+    "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+    "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+    "build": "pnpm build",
+    "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "effectiveConfiguration": true,
+      "presentationSelfContext": true,
+      "structuredSessionDefinition": true,
+      "authenticatedHandoffAvailable": true,
+      "reducedMotionExplained": true,
+      "profileTopicControls": 6,
+      "pageErrors": []
+    }
+  },
+  "guide": {
+    "at": "2026-09-20T23:46:13.951Z",
+    "version": "2026-09-20.v24",
+    "journeys": 18,
+    "actions": 172,
+    "links": 24,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "eaa044a3ad4752b6d4be5ca49cefc8411aa274c2622ac114d95fb4e1dc1f54b8",
+    "validation": "Static structure, unique/sequential action identifiers and named targets pass. Last full browser/visual guide check remains v13; file URL policy denied reopening. No workaround used.",
+    "humanAcceptance": false
+  },
+  "visual": {
+    "application": "PWCE and Lifestream rendered desktop screenshots inspected; PWCE screenshot uses a generated synthetic clip and is included in the user manual.",
+    "privateGuide": "Current static only; last full guide visual/browser remains v13 under URL policy."
+  },
+  "runningCandidate": {
+    "sourceRevision": "5f83b9194521a190e71a072233f978e38ffe889c",
+    "migration": 51,
+    "servedAssetsMatched": 44,
+    "authentication": true,
+    "newSessionProtected": true,
+    "preservedExistingData": true,
+    "changedExistingTables": [
+      "initiative_clock"
+    ],
+    "runtimeManifestSha256": "c1f8514413afce6e20ad3edd6d4f6a1026bebac2c9ff376fd6f9dcb9650c0a32",
+    "filesVerified": 6860,
+    "configurationDigest": "f1e304cbc15d2eabb72a71ed748101572725d915d9eba978532cad6679505a96",
+    "providers": {
+      "inference": "unavailable",
+      "stt": "unavailable",
+      "tts": "unavailable"
+    },
+    "acceptingInteractions": false,
+    "pwceStaticAssetSha256": "d6db46005d073c73ccea62af5f03828cfa8dfdf94dc5ab75d3ee93d4434b4501"
+  },
+  "retainedFailures": [
+    "All four original rendered cases failed: Close during download reopened media, and removing/revoking a playing video did not pause it. Successor checks pass.",
+    "First packaged Mac run had 1/2 test-hook setup failures; moving the fetch hook after navigation corrected the harness. Final packaged clean-install run passes 2/2.",
+    "A clean-install test invocation omitted required environment variables and skipped both tests; that result is retained and excluded. The explicit environment successor passes without skips."
+  ],
+  "exclusions": [
+    "Real HTTP, DOM, decoded synthetic WebM and actual packaged Mac execution are verified; incident metadata, authority and media capture are fixtures. No microphone/camera or audible/perceptual/Human acceptance is implied.",
+    "Existing public incident bundle and authentication/authority semantics are unchanged. Current replay remains explicitly simulated; no live recorder was activated.",
+    "No backend or migration change; existing encrypted backup and isolated recovery remain valid at their separately recorded source. This repair does not claim a new backup/restore.",
+    "Guide v24 retains 18 journeys/172 actions/24 named-tab links. Current guide is static only; last full guide visual/browser remains v13 under URL policy. Original 24 Human-accepted journeys are unchanged.",
+    "Selected providers, current LS-S062 qualification, full presence/override composition, preserved performance/causal and physical/Human release gates stay open. No push, publication, cloud upload, shared service restart, personal learning or new sensor."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "incident-playback-after-1.log",
+      "sha256": "65a583388fd7976c34d1f1df13526f25cc46deb4904c13f6e73115f922a1b839"
+    },
+    {
+      "name": "incident-playback-after-2.log",
+      "sha256": "1c3d5bf6b38f03809539fd6166336f150f865d55e8a66c17fd52c0c056aefd12"
+    },
+    {
+      "name": "incident-playback-before.log",
+      "sha256": "7245561baf535647fbf5924019a7d6e5e5b6a8e217acab7d491b17e65baf3f84"
+    },
+    {
+      "name": "incident-playback-build.log",
+      "sha256": "cfd32b15ebbd63799370ae2e66e080be832ac845bea2d7e43d2d81f6017205a7"
+    },
+    {
+      "name": "incident-playback-clean-build.log",
+      "sha256": "2af4f3bda80a2e1f0930c152c08512a449f1bf853585bb7f4305a3e937a21fe7"
+    },
+    {
+      "name": "incident-playback-clean-install.log",
+      "sha256": "cc371e188cf39fc5d467fca044ba247f34d5c5266e61bff89348e209f0e4a92a"
+    },
+    {
+      "name": "incident-playback-clean-smoke.log",
+      "sha256": "4014bef91ddac063ca3c0a1e18dc853c372e97529bc6acf07977a813113e82eb"
+    },
+    {
+      "name": "incident-playback-composition-final.log",
+      "sha256": "9b1ee04402d431b6337b163866c4d64bf2959aef44166b7d7bce3940baef0f93"
+    },
+    {
+      "name": "incident-playback-composition.log",
+      "sha256": "32cb6911367b43f0dbb192e8a0b62ef4896579c8b7feefa9cc13660af3f68e4f"
+    },
+    {
+      "name": "incident-playback-lifestream-browser.log",
+      "sha256": "540ffc3ef0fd92460fce426f1ea54d93768fc67c660b7e9b4432a5b886a85575"
+    },
+    {
+      "name": "incident-playback-lifestream-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "incident-playback-lifestream-source.log",
+      "sha256": "10777a5d409266623e9f03cef37ca571985bf3296bc4b1e63a9a850b77698fa2"
+    },
+    {
+      "name": "incident-playback-native-2.log",
+      "sha256": "a92a36980b4e9a234119f3197c57702d0396972ef9f20d358524c44e1279d174"
+    },
+    {
+      "name": "incident-playback-native-clean-2.log",
+      "sha256": "3d0d4ad081ed24b3ee77fdc852de6e09839db1647222f4375725470d79478364"
+    },
+    {
+      "name": "incident-playback-native-clean.log",
+      "sha256": "45af39f3c50309299ba358fac7dccf53ecc6a15d271087db8361e0c991a75027"
+    },
+    {
+      "name": "incident-playback-native.log",
+      "sha256": "e5e23c7c8c5a79a14800c34ddb54e3fc6577659d16b330036402d11986d63d0d"
+    },
+    {
+      "name": "incident-playback-preflight.log",
+      "sha256": "6df2c4989b417bbb5f82782f244e7f9021eebfb3a8ee71a46cfcd52c1d1c28b7"
+    },
+    {
+      "name": "incident-playback-private.log",
+      "sha256": "53630c87af0d1a7780c11bb1ba4fbe2a7b392b872869911386e9a69ab7f1e0bc"
+    },
+    {
+      "name": "incident-playback-pwce-validate.log",
+      "sha256": "e31118fd431327a2355113d49120584018feac09e64cf4bcd476ecd7e5ec0cbb"
+    },
+    {
+      "name": "incident-playback-pwce.log",
+      "sha256": "326e28a37b865e50623a51c8e1b6d4489b7406da776b8e76e0936b4c10742757"
+    },
+    {
+      "name": "incident-playback-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "incident-playback-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "name": "generic-clean-package-18.json",
+      "sha256": "61c698e9d2851df0b420f39cf709d620a0a8199e91b33f7f01fd1c22d4a7f8ca"
+    },
+    {
+      "name": "incident-playback-actual.json",
+      "sha256": "963c6cceb306f2335fdf64aaf0463904beb4cd2b990e64c678f89e72bdedc313"
+    },
+    {
+      "name": "incident-playback-runtime-pin.json",
+      "sha256": "02b53467ec3ff7527e88474f3257cd07838dcac2ef999f071b2c945ad874ad75"
+    },
+    {
+      "name": "v01-guide-static-v24.json",
+      "sha256": "c84026cba04e22b62b214096ac9a317c0146a04d502737246d4f76e11a1b0488"
+    }
+  ]
+}
