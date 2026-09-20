@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "fc21bf72f4addeb2ac98cd903b50c503c2f8edac",
-  "currentRevision": "230beb02550980a1b8490cebbffaa3a917fba6d7",
+  "currentRevision": "bca8c0fc3e0fbdbbd6a1227df8b8721c0feb0354",
   "activeSlice": "LS-S086",
   "sliceStatus": "implementationCompleteVerificationPending",
   "completedSlices": [
@@ -189,30 +189,8 @@
     "README.md",
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
-    "implementation/checkpoint.json",
-    "implementation/evidence/LS-S073-current-qualification.json",
-    "implementation/evidence/LS-S073-qualification-certification-8.json",
-    "implementation/evidence/LS-S076-current-qualification.json",
-    "implementation/evidence/LS-S076-qualification-certification-7.json",
-    "implementation/evidence/LS-S078-current-qualification.json",
-    "implementation/evidence/LS-S078-qualification-certification-6.json",
-    "implementation/evidence/LS-S080-current-qualification.json",
-    "implementation/evidence/LS-S080-qualification-certification-6.json",
-    "implementation/evidence/LS-S086-causal-1.json",
-    "implementation/evidence/LS-S086-causal-2.json",
-    "implementation/evidence/LS-S086-component-1.json",
-    "implementation/evidence/LS-S086-development-1.json",
-    "implementation/evidence/LS-S086-development-2.json",
-    "implementation/evidence/LS-S086-development-3.json",
-    "implementation/evidence/LS-S086-development-4.json",
-    "implementation/evidence/LS-S086-development-5.json",
-    "implementation/evidence/LS-S086-performance-1.json",
-    "implementation/evidence/LS-S086-schema-export-1.json",
-    "implementation/evidence/LS-S086-schema-export-2.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
-    "implementation/evidence/S083-S084-human-acceptance-1.json",
-    "scripts/workspace.mjs",
-    "scripts/workspace.test.mjs"
+    "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
   "validation": [
     {
@@ -663,8 +641,8 @@
     "2026-09-20: S086 implementation and bounded ordinary selected-provider learning complete. Source 970/970 and browser 58/58 pass at 90c04e5. Actual ordinary attempt 5 learns +0.02, preserves two projects and survives restart. Two causal studies retain aggregate failures (82/84 and 79/84); no Human, whole causal or full performance acceptance. Prerequisite successors retain original failed callback and punctuation observations."
   ],
   "blockers": [],
-  "nextAction": "Continue dependency-ready integrated performance measurement in an isolated synthetic scope, retain current causal and deadline failures, and reconcile exact runnable candidate/component/report revisions. Do not enable personal learning, access removable volumes, or ask questions during operator absence.",
-  "updatedAt": "2026-09-20T11:01:30Z",
+  "nextAction": "Continue the registered 200-pair real-provider typed timing study in an isolated synthetic account, then reconcile its exact results with the candidate and component lock. S086 remains implementationCompleteVerificationPending. Whole causal, full audio/pressure performance and Human acceptance are open; backup work stays deferred.",
+  "updatedAt": "2026-09-20T11:07:31Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
   "notes": "Current checkpoint reconciles scoped S086 implementation and bounded evidence. Earlier validation and decisions remain revision-bound history. The S083/S084 24-journey Human decision is unchanged; it does not accept later S086, physical or production claims. README.md, PRODUCT-REALITY-AUDIT.md and earlier acceptance-guide artifacts remain preserved unrelated work. Owning prerequisite successors reflect newly measured qualified cases and explicitly retained failures. No whole release acceptance is inferred."
 }
