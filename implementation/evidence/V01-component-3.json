@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "verified",
+  "claimClass": "local-component-and-replay-integration",
+  "sourceRevision": "68374812f4d99de42e45d4227515d9694a55e4a1",
+  "pwceRevision": "b777e9eb14161797305b7c3df10785eb655298e7",
+  "recordedAt": "2026-09-20T06:30:24.515411+00:00",
+  "scope": "PWCE independently retained incident evidence and private-session authenticated review. No live recorder, automatic sensor, away route, Human or full beta qualification.",
+  "bundleDigest": "04a53ca17bcfa9b37d6863c0612675cb590ea48e1c5b2228b498a716cb54cfc4",
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "20322c91846a0c5e007c1eb87f0aa75f8806fede70cacc57bd547f5f596870dc"
+    },
+    {
+      "path": "apps/control-web/incidents.js",
+      "sha256": "f033dd24754b2ca179022a9c7b7ce41817a83958af57576cf59b3d7dcb01990a"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "8d74ae75cffdefa8eab17a1dc8d0ecd41f5d55361a85f786160ad5407b8ed18e"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "16c7a9956eb6f4621b80dbcba20c4422beac1bba34a68d28d33197267928d9a3"
+    },
+    {
+      "path": "apps/server/src/runtime/audience.ts",
+      "sha256": "bd6987dc30f33fd6339811d70f1b138039a1c1a5d1e1c5d96940235039a1e7e6"
+    },
+    {
+      "path": "packages/providers-pwce/incident-compatibility-lock.json",
+      "sha256": "984fefe78709cc8908d791fd0fa106412dd61f6505e34425b29dfb20ff9b6aa9"
+    },
+    {
+      "path": "packages/providers-pwce/src/incident-bundle.ts",
+      "sha256": "fe7efff3bc3651a6d6b659306d272e1853ba4d8307e82d21532b4f38500be523"
+    },
+    {
+      "path": "packages/providers-pwce/src/incidents.ts",
+      "sha256": "d8a2b3edf627059cf2672def7d87213c7e7880f16bee07f5579f46ecbe0e77b9"
+    },
+    {
+      "path": "packages/providers-pwce/src/index.ts",
+      "sha256": "2447441696d2ffbe82fad55f5de29bba25c85969592adb186928b040c85bb28a"
+    },
+    {
+      "path": "packages/providers-pwce/test/incidents.test.ts",
+      "sha256": "e108cb1ffa606f5d9c9bd320d2013f39e9821f3e70bd75daea76a15a7528cb83"
+    },
+    {
+      "path": "scripts/start-candidate.mjs",
+      "sha256": "2841a2e024dc41a5dc479c6acdae2d8662eab06bbe899a45ab35a8e9d38902a0"
+    },
+    {
+      "path": "scripts/sync-pwce-incidents.mjs",
+      "sha256": "9682b9263626a4fadb70b343d62a00157a85ead8aa47a2ced33c197661b1e259"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "931/931 tests, zero skips, 122443.357917 ms."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<local-module> pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "52/52 tests, zero skips, 82543.176125 ms."
+    },
+    {
+      "command": "PWCE npm test and npm run validate",
+      "result": "pass",
+      "evidence": "332/332 source tests; 13 fixtures and 3 manifest checks."
+    },
+    {
+      "command": "Build, typecheck, lint, contract regeneration and diff checks",
+      "result": "pass",
+      "evidence": "Completed successfully on the recorded source; no external publication."
+    },
+    {
+      "command": "Authenticated Studio and integrated Lifestream browser journeys",
+      "result": "pass",
+      "evidence": "Ready media decoded, close/hide/refresh/retry/sign-out exercised. Shared audience clears displayed cards/media and rejects another read with 403. Synthetic records/image/clock; no live camera."
+    }
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "pwce-incident-ui.json",
+      "sha256": "fbcbed786b1278bc54d19766a92fd4e7352f02eb703c9226eeda37c136c9ea0e"
+    },
+    {
+      "name": "integrated-incident-review.json",
+      "sha256": "0dd3c34594b1db541cc5fa921a9e1d1c24b8fad09da17a4551c0e1cb11c76d3c"
+    },
+    {
+      "name": "pwce-studio-regression.log",
+      "sha256": "32170b1d133b68c7dbc1ff9b1c77758a86adcdc238326434399ac26cb5a2b6b3"
+    },
+    {
+      "name": "pwce-incidents-full-tests-final.log",
+      "sha256": "4369d1badcd1fd5ea6a425b300e3977acb373f8b06350b765afeb646d10c405f"
+    },
+    {
+      "name": "component-3-source-tests.log",
+      "sha256": "4b9063aad4627bb8a8dac164ec6589d81d36e599485aa7b3675250cb839f4321"
+    },
+    {
+      "name": "component-3-browser-tests-final.log",
+      "sha256": "65adebd5efcd2e7d4da54c6da84c1ba1bb8fb19babf59c56d8226a7c95090132"
+    }
+  ],
+  "exclusions": [
+    "No real recorder/zone enrollment or away notification route supplied.",
+    "Automatic physical audience and full native/perceptual voice acceptance remain open.",
+    "Backup/restore and joined voice/performance remain in flight.",
+    "No claim that all S066/S067/S068/S070 acceptance is complete."
+  ]
+}
