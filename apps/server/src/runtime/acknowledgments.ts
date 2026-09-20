@@ -53,14 +53,15 @@ export class AcknowledgmentCatalogService {
   private async put(bytes:Uint8Array){const sha=digest(bytes);await mkdir(this.directory,{recursive:true,mode:0o700});try{await writeFile(this.path(sha),bytes,{flag:'wx',mode:0o600});}catch(error){if((error as NodeJS.ErrnoException).code!=='EEXIST')throw error;try{await this.bytes(sha);}catch{const temporary=join(this.directory,randomUUID()+'.tmp');try{await writeFile(temporary,bytes,{flag:'wx',mode:0o600});await rename(temporary,this.path(sha));}finally{await unlink(temporary).catch(()=>{});}}}return sha;}
   private async valid(clip:AcknowledgmentClip){try{const bytes=await this.bytes(clip.audio.sha256);return bytes.length===clip.audio.bytes&&bytes.length%2===0&&bytes.length/96===clip.audio.durationMs&&clip.audio.durationMs>0&&clip.audio.durationMs<=3000;}catch{return false;}}
   private async paired(clip:AcknowledgmentClip){const alignment=this.host.alignment?.();if(!alignment||!clip.visemes)return false;try{const bytes=await this.bytes(clip.visemes.sha256);if(bytes.length!==clip.visemes.bytes)return false;validateAcknowledgmentTrack(JSON.parse(bytes.toString()),clip.audio,alignment);return true;}catch{return false;}}
+  private playbackBinding(catalog:AcknowledgmentCatalog){const alignment=this.host.alignment?.();return digest(JSON.stringify([catalog.binding,alignment?.cueSet??null,alignment?.analysisRevision??null]));}
   async manifest(assistantId:string){
     const {catalog}=this.current(assistantId),clips=[];
     for(const clip of catalog.clips){if(!await this.valid(clip))continue;const synchronized=await this.paired(clip);clips.push({...clip,synchronized,visemes:synchronized?clip.visemes:null});}
     if(this.repository.get(assistantId)?.revision!==catalog.revision)throw new Error('Catalog changed during manifest preparation.');
-    this.published.set(assistantId,{revision:catalog.revision,binding:catalog.binding,clipIds:clips.map(c=>c.id)});
-    return {schemaVersion:'1.0.0',assistantId,revision:catalog.revision,binding:catalog.binding,enabled:catalog.enabled,defaultTtlDays:catalog.defaultTtlDays,readyCount:clips.length,synchronizedReadyCount:clips.filter(c=>c.synchronized).length,alignment:this.host.alignment?.()?'configured':'unavailable',maintenance:this.outcomes.get(assistantId)??'not-run',clips};
+    const binding=this.playbackBinding(catalog);this.published.set(assistantId,{revision:catalog.revision,binding,clipIds:clips.map(c=>c.id)});
+    return {schemaVersion:'1.0.0',assistantId,revision:catalog.revision,binding,enabled:catalog.enabled,defaultTtlDays:catalog.defaultTtlDays,readyCount:clips.length,synchronizedReadyCount:clips.filter(c=>c.synchronized).length,alignment:this.host.alignment?.()?'configured':'unavailable',maintenance:this.outcomes.get(assistantId)??'not-run',clips};
   }
-  eligible(assistantId:string){const {catalog}=this.current(assistantId),known=this.published.get(assistantId);return catalog.enabled&&known?.revision===catalog.revision&&known.binding===catalog.binding?known:null;}
+  eligible(assistantId:string){const {catalog}=this.current(assistantId),known=this.published.get(assistantId);return catalog.enabled&&known?.revision===catalog.revision&&known.binding===this.playbackBinding(catalog)?known:null;}
   start(){if(this.timer)return;this.timer=setInterval(()=>{void this.maintain();},3600000);this.timer.unref();void this.maintain();}
   close(){this.closed=true;if(this.timer)clearInterval(this.timer);this.controller?.abort();}
   maintain(assistantId?:string):Promise<void>{

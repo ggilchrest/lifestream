@@ -25,6 +25,7 @@ async function setup(t:any,paired=false){
 }
 test('catalog generation publishes five complete pairs, survives restart and repairs only missing tracks',async t=>{
  const {db,state,service,host,root}=await setup(t,true);await service.maintain('assistant');let m=await service.manifest('assistant');assert.equal(m.readyCount,5);assert.equal(m.synchronizedReadyCount,5);assert.equal(state.llm,1);assert.equal(state.tts,5);
+ const oldBinding=m.binding;assert.ok(service.eligible('assistant'));state.analysis='analysis-2';assert.equal(service.eligible('assistant'),null,'analysis changes fence the published manifest before repair');assert.notEqual((await service.manifest('assistant')).binding,oldBinding);
  const previous=m.clips.map(c=>({id:c.id,audio:c.audio,expiresAt:c.expiresAt}));service.close();const restarted=new AcknowledgmentCatalogService(db,root,host);t.after(()=>restarted.close());state.analysis='analysis-2';await restarted.maintain('assistant');m=await restarted.manifest('assistant');assert.equal(state.tts,5);assert.equal(state.llm,1);assert.equal(state.alignment,10);assert.deepEqual(m.clips.map(c=>({id:c.id,audio:c.audio,expiresAt:c.expiresAt})),previous);
 });
 test('overdue clips remain ready, one oldest rotates per UTC day across concurrency, restart and missed days',async t=>{
