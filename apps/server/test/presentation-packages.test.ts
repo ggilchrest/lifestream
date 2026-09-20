@@ -55,3 +55,11 @@ test('actual HTTP authentication and CSRF protect private catalog, resources and
  assert.equal((await request('/api/auth/v1/sign-out',{})).status,200);assert.equal((await request('/api/runtime/v1/presentation/resources/neutral-test/model.gltf')).status,401);
  assert.equal(readFileSync(join(f.directory,'model.gltf')).length,f.manifest.resources[0]!.bytes);
 });
+
+test('versioned facial mappings are data-only and bound gaze axes, ownership targets and blink timing',t=>{
+ const f=fixture();t.after(f.close);const face={gaze:{nodes:[{node:'Eye',yawAxis:[0,1,0],pitchAxis:[1,0,0]}],yawLimit:.25,pitchLimit:.15},blink:{clip:'closed',periodSeconds:4,durationSeconds:.2}},manifest={...f.manifest,schemaVersion:'1.2.0',face,capabilities:{lipSync:'none',facialAnimation:true}};
+ assert.ok(validatePresentation(manifest).face?.gaze);assert.throws(()=>validatePresentation({...manifest,schemaVersion:'1.1.0'}),/Unsupported/);assert.throws(()=>validatePresentation({...manifest,face:{...face,script:'run'}}),/Unsupported/);
+ for(const bad of [{...face.gaze,yawLimit:1},{...face.gaze,pitchLimit:NaN},{...face.gaze,nodes:[]},{...face.gaze,nodes:[...face.gaze.nodes,...face.gaze.nodes]},{...face.gaze,nodes:[{node:'Eye',yawAxis:[0,0,0],pitchAxis:[1,0,0]}]}])assert.throws(()=>validatePresentation({...manifest,face:{...face,gaze:bad}}),/gaze/);
+ for(const durationSeconds of [0,2,Infinity,'fast'])assert.throws(()=>validatePresentation({...manifest,face:{blink:{...face.blink,durationSeconds}}}),/blink/);
+ assert.throws(()=>validatePresentation({...manifest,capabilities:{lipSync:'none',facialAnimation:false}}),/facial/);
+});
