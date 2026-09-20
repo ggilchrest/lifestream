@@ -1,0 +1,69 @@
+{
+  "slice": "LS-S056",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "deterministic-browser-playback-component",
+  "revision": "2a101273542ff7fa5f26bace7e6b23de50458e56",
+  "collectedAt": "2026-09-20T16:08:13.792653Z",
+  "behavior": [
+    "80 ms initial scheduling cushion instead of 250 ms",
+    "20 ms late-frame recovery cushion; queued PCM retains contiguous scheduling through arrival jitter",
+    "Stop and privacy fencing still discard sources and retired traces; mouth sampling follows actual scheduled PCM"
+  ],
+  "checks": [
+    {
+      "command": "node --test --test-concurrency=1 apps/control-web/test/*.test.mjs (PLAYWRIGHT_MODULE configured)",
+      "result": "pass",
+      "tests": 60,
+      "skipped": 0,
+      "durationMs": 184815.379875
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "tests": 44
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S056",
+      "result": "fail",
+      "reason": "Current S052 effective inputs differ from its recorded qualification. The fresh selected-provider qualification is unavailable; this receipt does not update that qualification."
+    },
+    {
+      "command": "node --experimental-strip-types scripts/qualify-s052-development.mjs",
+      "result": "fail",
+      "reason": "Pinned configuration passes; selected-provider identity request fails. Read-only ai5090 SSH succeeds, STT port 8080 absent, WSL reports E_UNEXPECTED."
+    }
+  ],
+  "regression": "Both added playback regressions fail before the source change and pass after it.",
+  "operatorLocalEvidence": [
+    {
+      "name": "resumed-playback-browser.log",
+      "sha256": "ee18e99491f2311a34059d458f1dfa1123ba8fbb31b233296818b4bdb06525f9"
+    },
+    {
+      "name": "resumed-s052-development.json",
+      "sha256": "0f5a1bf2867194f7d11c9db8209fce0809f3dd55880060af6d3122fdb06ec70b"
+    },
+    {
+      "name": "resumed-workspace-tests.log",
+      "sha256": "8dd0bd2ce23afe0c44f12681673681fafa3ba73d4bc06d67ea37492d61b668e6"
+    },
+    {
+      "name": "resumed-private-validation.log",
+      "sha256": "6cf9f965a5e78e3ccf420e48b37690e8b0534cb5f5b6deeaeb93efd1e38cb762"
+    }
+  ],
+  "limitations": [
+    "170 ms lower initial software scheduling lead is deterministic, not a measured end-to-end or physical improvement.",
+    "Original first-spoken-word targets and failing real-provider measurements remain unchanged.",
+    "Real provider replay, starvation/perceptual and physical Human acceptance pending.",
+    "No shared service restart, provider/model replacement or new live input."
+  ]
+}
