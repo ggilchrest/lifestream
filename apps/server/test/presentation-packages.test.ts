@@ -41,7 +41,7 @@ test('endpoint defaults and session overrides survive restart, conflict atomical
  selections.select('owner','endpoint','session-a',{scope:'default',id:item.id,digest:item.digest,expectedRevision:0},packages);
  selections.select('owner','endpoint','session-a',{scope:'session',id:'neutral',digest:'neutral-v1',expectedRevision:0},packages);
  assert.throws(()=>selections.select('owner','endpoint','session-a',{scope:'default',id:'neutral',digest:'neutral-v1',expectedRevision:0},packages),/conflict/);db.close();db=new Database({path});t.after(()=>db.close());selections=new PresentationSelection(db);
- assert.equal(selections.read('owner','endpoint','session-a').override?.id,'neutral');assert.equal(selections.read('owner','endpoint','session-b').default?.id,'neutral-test');assert.equal(selections.read('owner','endpoint','session-b').override,null);assert.deepEqual(selections.read('other','endpoint','session-a'),{default:null,override:null});
+ assert.equal(selections.read('owner','endpoint','session-a').override?.id,'neutral');assert.equal(selections.read('owner','endpoint','session-b').default?.id,'neutral-test');assert.equal(selections.read('owner','endpoint','session-b').override,null);assert.deepEqual(selections.read('other','endpoint','session-a'),{default:null,override:null,overrideRevision:0});
 });
 test('actual HTTP authentication and CSRF protect private catalog, resources and selection',async t=>{
  const f=fixture();t.after(f.close);const config=loadProfile('test');config.storage={databasePath:join(f.root,'runtime.sqlite'),artifactDirectory:join(f.root,'artifacts')};config.authority.authentication='local-password';const installerToken=randomBytes(32).toString('hex'),password=randomBytes(32).toString('hex');const localAuth={stateDirectory:join(f.root,'safety'),installerToken};let app=createLifestreamServer({config,localAuth});await app.start();let base=`http://127.0.0.1:${app.address().port}`,cookie='',csrf='';
@@ -52,6 +52,7 @@ test('actual HTTP authentication and CSRF protect private catalog, resources and
  const catalog=await (await request('/api/runtime/v1/presentation')).json() as {packages:{id:string;digest:string}[]};assert.equal(catalog.packages.length,1);assert.equal((await request('/api/runtime/v1/presentation/resources/neutral-test/model.gltf')).status,200);
  assert.equal((await request('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'unknown'})).status,200);
  const selection={scope:'default',id:catalog.packages[0]!.id,digest:catalog.packages[0]!.digest,expectedRevision:0};assert.equal((await request('/api/runtime/v1/presentation',selection,{'x-lifestream-csrf':'wrong'})).status,403);assert.equal((await request('/api/runtime/v1/presentation',selection)).status,200);assert.equal((await request('/api/runtime/v1/presentation',selection)).status,409);
+ const override={scope:'session',id:'neutral',digest:'neutral-v1',expectedRevision:0};assert.equal((await request('/api/runtime/v1/presentation',override)).status,200);const clear={operation:'clearSessionOverride',expectedRevision:1};assert.equal((await request('/api/runtime/v1/presentation',clear,{'x-lifestream-csrf':'wrong'})).status,403);const cleared=await request('/api/runtime/v1/presentation',clear);assert.equal(cleared.status,200);assert.equal((await cleared.json() as {selection:{override:unknown}}).selection.override,null);assert.equal((await request('/api/runtime/v1/presentation',override)).status,409);
  assert.equal((await request('/api/auth/v1/sign-out',{})).status,200);assert.equal((await request('/api/runtime/v1/presentation/resources/neutral-test/model.gltf')).status,401);
  assert.equal(readFileSync(join(f.directory,'model.gltf')).length,f.manifest.resources[0]!.bytes);
 });
@@ -62,4 +63,18 @@ test('versioned facial mappings are data-only and bound gaze axes, ownership tar
  for(const bad of [{...face.gaze,yawLimit:1},{...face.gaze,pitchLimit:NaN},{...face.gaze,nodes:[]},{...face.gaze,nodes:[...face.gaze.nodes,...face.gaze.nodes]},{...face.gaze,nodes:[{node:'Eye',yawAxis:[0,0,0],pitchAxis:[1,0,0]}]}])assert.throws(()=>validatePresentation({...manifest,face:{...face,gaze:bad}}),/gaze/);
  for(const durationSeconds of [0,2,Infinity,'fast'])assert.throws(()=>validatePresentation({...manifest,face:{blink:{...face.blink,durationSeconds}}}),/blink/);
  assert.throws(()=>validatePresentation({...manifest,capabilities:{lipSync:'none',facialAnimation:false}}),/facial/);
+});
+
+
+test('clearing only the current session override preserves the default and monotonic revisions across restart',t=>{
+ const f=fixture();t.after(f.close);const path=join(f.root,'clear.sqlite');let db=new Database({path});db.migrate();let selections=new PresentationSelection(db);const packages=f.open(),item=packages.list('owner')[0]!;
+ selections.select('owner','endpoint','session-a',{scope:'default',id:item.id,digest:item.digest,expectedRevision:0},packages);
+ selections.select('owner','endpoint','session-a',{scope:'session',id:'neutral',digest:'neutral-v1',expectedRevision:0},packages);
+ const cleared=selections.select('owner','endpoint','session-a',{operation:'clearSessionOverride',expectedRevision:1},packages);assert.equal(cleared.override,null);assert.equal(cleared.overrideRevision,2);assert.equal(cleared.default?.id,item.id);
+ assert.throws(()=>selections.select('owner','endpoint','session-a',{scope:'session',id:'neutral',digest:'neutral-v1',expectedRevision:0},packages),/conflict/);
+ assert.throws(()=>selections.select('owner','endpoint','session-a',{operation:'clearSessionOverride',scope:'default',expectedRevision:2},packages),/Unsupported/);
+ db.close();db=new Database({path});t.after(()=>db.close());selections=new PresentationSelection(db);assert.equal(selections.read('owner','endpoint','session-a').overrideRevision,2);
+ const updated=selections.select('owner','endpoint','session-a',{scope:'session',id:'neutral',digest:'neutral-v1',expectedRevision:2},packages);assert.equal(updated.override?.revision,3);
+ selections.select('owner','endpoint','session-b',{operation:'clearSessionOverride',expectedRevision:0},packages);assert.equal(selections.read('owner','endpoint','session-a').override?.revision,3);
+ assert.equal(selections.read('other','endpoint','session-a').overrideRevision,0);assert.equal(selections.read('owner','other-endpoint','session-a').overrideRevision,0);
 });

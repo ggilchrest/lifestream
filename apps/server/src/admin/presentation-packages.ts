@@ -119,14 +119,17 @@ export class PresentationSelection {
   constructor(database: Database) {this.database=database;}
   read(principalId: string, endpointId: string, sessionId: string) {
     const rows=this.database.connection.prepare('SELECT scope_id AS scope, package_id AS id, package_digest AS digest, revision FROM presentation_selections WHERE principal_id=? AND endpoint_id=? AND scope_id IN (?,?)').all(principalId,endpointId,'default',sessionId) as {scope:string;id:string;digest:string;revision:number}[];
-    return {default:rows.find(r=>r.scope==='default')??null,override:rows.find(r=>r.scope===sessionId)??null};
+    const override=rows.find(r=>r.scope===sessionId);
+    return {default:rows.find(r=>r.scope==='default')??null,override:override?.id==='@inherit'?null:override??null,overrideRevision:override?.revision??0};
   }
   select(principalId:string,endpointId:string,sessionId:string,input:Record<string,unknown>,catalog:PresentationPackages) {
-    keys(input,['scope','id','digest','expectedRevision']);
-    if(!['default','session'].includes(String(input.scope))||!Number.isSafeInteger(input.expectedRevision)||Number(input.expectedRevision)<0)throw new Error('Invalid presentation selection');
-    const selection=input.id==='neutral'?{id:'neutral',digest:'neutral-v1'}:catalog.list(principalId).find(p=>p.id===input.id&&p.digest===input.digest);
-    if(!selection||input.digest!==selection.digest)throw new Error('Presentation selection unavailable');
-    const scope=input.scope==='default'?'default':sessionId;
+    const clear=input.operation==='clearSessionOverride';
+    keys(input,clear?['operation','expectedRevision']:['scope','id','digest','expectedRevision']);
+    if((!clear&&!['default','session'].includes(String(input.scope)))||!Number.isSafeInteger(input.expectedRevision)||Number(input.expectedRevision)<0)throw new Error('Invalid presentation selection');
+    // A reserved non-package identity retains the revision after clearing, preventing ABA writes.
+    const selection=clear?{id:'@inherit',digest:'inherit-v1'}:input.id==='neutral'?{id:'neutral',digest:'neutral-v1'}:catalog.list(principalId).find(p=>p.id===input.id&&p.digest===input.digest);
+    if(!selection||!clear&&input.digest!==selection.digest)throw new Error('Presentation selection unavailable');
+    const scope=!clear&&input.scope==='default'?'default':sessionId;
     this.database.transaction(tx=>{
       const current=tx.get<{revision:number}>('SELECT revision FROM presentation_selections WHERE principal_id=? AND endpoint_id=? AND scope_id=?',principalId,endpointId,scope);
       if((current?.revision??0)!==input.expectedRevision)throw new Error('Presentation revision conflict');
