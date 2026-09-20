@@ -1,0 +1,264 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "http-preview-playback-ownership-component",
+  "recordedAt": "2026-09-20T22:05:10.841660Z",
+  "sourceRevision": "748d6a547486c85c71c7f0c052ed330d890edb34",
+  "specificationRevision": "45d9d1d9f79e6698126a38de0d124023ce213c52",
+  "behavior": [
+    "HTTP preview EOF no longer releases queued endpoint audio ownership. A principal/session-bound playbackSettled report or original expiry and provider cleanup are required.",
+    "Origin, current authentication and CSRF apply. Wrong-session, stale, malformed and wrong-count reports cannot release a successor. A restricted session can still report its own stopped output.",
+    "Saved voice and development preview screens report only after actual source completion or stop/disconnection, and stop locally at expiry. A shared-audience change stops saved preview output and clears prior review.",
+    "Headless qualification sinks report collected/discarded PCM as stopped, never played. Existing provider scripts were syntax checked; selected-provider execution remains unavailable."
+  ],
+  "checks": {
+    "source": {
+      "tests": 1000,
+      "pass": 1000,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 58094.025708
+    },
+    "serialBrowser": {
+      "tests": 76,
+      "pass": 76,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 224963.568958
+    },
+    "workspace": {
+      "tests": 44,
+      "pass": 44,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 20844.181292
+    },
+    "nativePackaged": {
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 22877.927708
+    },
+    "genericPlaybackGuards": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 3214.576
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "privateValidation": "pass",
+    "workspaceCheck": "pass"
+  },
+  "native": {
+    "sourceRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+    "backendSourceRevision": "748d6a547486c85c71c7f0c052ed330d890edb34",
+    "scope": "Actual packaged Mac app using real local HTTP/WebSocket/AudioContext with synthetic providers. Includes ordinary voice regression, development preview completion/stop, saved preview completion/stop/shared-audience cancellation and re-preview before review. No microphone or physical/Human claim."
+  },
+  "genericArchive": {
+    "recordedAt": "2026-09-20T22:00:34.386190+00:00",
+    "sourceRevision": "748d6a547486c85c71c7f0c052ed330d890edb34",
+    "archiveSha256": "a31449392c2bbc069b21bfb695b5448766dc5b28ac4970bf3609983d304d1e79",
+    "archiveBytes": 18872320,
+    "members": 1296,
+    "privatePackageHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "status": "verified",
+    "priorReceipts": [
+      "generic-clean-package.json",
+      "generic-clean-package-2.json",
+      "generic-clean-package-3.json",
+      "generic-clean-package-4.json",
+      "generic-clean-package-5.json",
+      "generic-clean-package-6.json",
+      "generic-clean-package-7.json"
+    ],
+    "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+    "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+    "build": "pnpm build",
+    "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "effectiveConfiguration": true,
+      "presentationSelfContext": true,
+      "structuredSessionDefinition": true,
+      "profileTopicControls": 6,
+      "pageErrors": [],
+      "previewPlaybackGuards": 7
+    }
+  },
+  "guide": {
+    "at": "2026-09-20T21:58:43.227Z",
+    "version": "2026-09-20.v21",
+    "journeys": 17,
+    "actions": 159,
+    "links": 23,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "faa38916f178148211068a66995fa6ea3482f6d95acd8cae7d3e28ce0f3617f7",
+    "validation": "Static structure, unique/sequential action identifiers and named targets pass. Last full browser/visual guide check remains v13; file URL policy denied reopening. No workaround used.",
+    "humanAcceptance": false
+  },
+  "retainedFailures": [
+    "Initial regression setup expected HTTP 200 for account creation; corrected to existing 201. The successor then reproduced missing ownership at HTTP EOF.",
+    "First audience browser test attempted private controls immediately after reload while the sign-in remained protected. Explicit Only me declaration after reload preserved the protection and made the successor pass."
+  ],
+  "selectedProvider": {
+    "status": "blockedEnvironment",
+    "inference": "unavailable",
+    "stt": "unavailable",
+    "tts": "unavailable",
+    "observedAt": "2026-09-20T21:24:34.1320278Z",
+    "hostTcp": {
+      "30000": false,
+      "8080": false,
+      "8787": false
+    },
+    "ssh": "reachable",
+    "sharedServicesRestarted": false
+  },
+  "exclusions": [
+    "Current candidate health remains degraded; no current selected-provider conversation or qualification pass. Shared services were not restarted.",
+    "Endpoint software reports do not establish physical silence, audibility or Human reception. Physical device arbitration, complete cross-endpoint handoff and its durable audit remain open.",
+    "Full presence/override composition, retained performance/causal criteria and physical/Human acceptance are not completed by this component.",
+    "Guide v21 is static checked; last full guide visual/browser remains v13 after URL policy denial. Original 24 accepted journeys remain unchanged.",
+    "No migration, private asset change, new camera, personal learning activation, provider replacement, push, publication or external exposure."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "preview-playback-baseline-2.log",
+      "sha256": "53d819757933badec5cc76e19cce657f39d0b142be598158bda12a0fe97c1f8a"
+    },
+    {
+      "name": "preview-playback-baseline.log",
+      "sha256": "3bc4da44d796e9cbde92aea45cf7d42599d2dd6821778e0806e569cac31df912"
+    },
+    {
+      "name": "preview-playback-browser-all.log",
+      "sha256": "98444f262afe83e1e5bf58d9ab9f0d6be1c8b4e19d5e0859a9b6da12810f6f80"
+    },
+    {
+      "name": "preview-playback-browser-first.log",
+      "sha256": "14dd71ee2aea9876a47d954ab6c3489bc64df42974d46a7bc8262b160a2e0ac3"
+    },
+    {
+      "name": "preview-playback-browser-focused.log",
+      "sha256": "191d9dd7bb66c4b2b397a7f2bf6a58901ec3b40338622f6478d20b5b2eef3744"
+    },
+    {
+      "name": "preview-playback-browser-privacy-2.log",
+      "sha256": "126fab490370490cb2e8ca01690f20a0c3023b836c4acc59d0d75ee423ede132"
+    },
+    {
+      "name": "preview-playback-browser-privacy.log",
+      "sha256": "5e225a63cf3f8f31c70bc9b1091a0a19db486a92dc23ce6b865f79772a38fcd7"
+    },
+    {
+      "name": "preview-playback-build-final.log",
+      "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446"
+    },
+    {
+      "name": "preview-playback-build.log",
+      "sha256": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042"
+    },
+    {
+      "name": "preview-playback-first.log",
+      "sha256": "ac48e3170859446f4e681b5e411b0db6dfeb9a553bfccf36b6edfafa0835f7cd"
+    },
+    {
+      "name": "preview-playback-focused.log",
+      "sha256": "098fff1b9c28cf9bd0d5e2b2c60db2b8fcf4350443b8de7f0703eb46726f8483"
+    },
+    {
+      "name": "preview-playback-generic-build.log",
+      "sha256": "66ef50e688e92fec799303590a743b7ecf516aff1d33774b6746dd9e18701c95"
+    },
+    {
+      "name": "preview-playback-generic-guards.log",
+      "sha256": "5d53a634b775524b05f09c0cf7fc897ab2743c14ec30bec9f75203068bc29970"
+    },
+    {
+      "name": "preview-playback-generic-install.log",
+      "sha256": "98b1bc24079a015f1a48fe4fd7750f7d5e93d4e28887f89dc933b2c75702c77a"
+    },
+    {
+      "name": "preview-playback-generic-smoke.log",
+      "sha256": "81831a025448c0cdd816767eb31d837328855088260d0a9ec39d3ae71adb4174"
+    },
+    {
+      "name": "preview-playback-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "preview-playback-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "preview-playback-native.log",
+      "sha256": "45c20394fc153b356616249ad5c02dee1ace0f0b7e6286d3ec594cf86e7f9456"
+    },
+    {
+      "name": "preview-playback-preflight-2.log",
+      "sha256": "6df2c4989b417bbb5f82782f244e7f9021eebfb3a8ee71a46cfcd52c1d1c28b7"
+    },
+    {
+      "name": "preview-playback-preflight.log",
+      "sha256": "9b0f89b9913488b842aceeabef939d8a2c02d54e49100c41b367a98305b5f064"
+    },
+    {
+      "name": "preview-playback-private.log",
+      "sha256": "0ca3ca5f53b17d65c259e3586d18215739320ca5237f924a1edf10c2334e0b52"
+    },
+    {
+      "name": "preview-playback-source-all.log",
+      "sha256": "3904610c142603dfc1c045944867ab884ca8edf17dfeda44231c43bc95479d3a"
+    },
+    {
+      "name": "preview-playback-typecheck-2.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "preview-playback-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "preview-playback-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "preview-playback-workspace-final.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "name": "preview-playback-workspace-tests.log",
+      "sha256": "f2ee0886e3934c92e29753888a5b30bf747b9763f0f0066ad3a95c06cbc3135c"
+    },
+    {
+      "name": "preview-playback-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "name": "preview-playback-current-health.json",
+      "sha256": "c1bdb9f2fe1ce559106e665a8dbc598350674eb013303dda54c0b72ef0aedeb5"
+    },
+    {
+      "name": "preview-playback-current-assets.json",
+      "sha256": "520fc1478904722ea58b13c37ed4b227bc16cc7dadb6a98d32810e15e5df3743"
+    },
+    {
+      "name": "generic-clean-package-15.json",
+      "sha256": "9e008119bf05c19002195deb47f071e7c04319219523bd3e5bda8548f9ff1c00"
+    },
+    {
+      "name": "v01-guide-static-v21.json",
+      "sha256": "1b08b28b8e6aa3ef59799dcd0d527435a405befac9fc97e33e53dcb672bfa9e3"
+    }
+  ]
+}
