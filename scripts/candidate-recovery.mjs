@@ -1,0 +1,5 @@
+import {snapshotCandidate,restoreCandidate} from '../apps/server/src/admin/candidate-snapshot.ts';
+const [operation,...args]=process.argv.slice(2),values={};for(let i=0;i<args.length;i+=2){if(!['--candidate','--packages','--destination','--snapshot','--current-safety'].includes(args[i])||!args[i+1])throw Error('Invalid recovery argument');values[args[i].slice(2).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=args[i+1];}
+if(operation==='snapshot'){const result=await snapshotCandidate(values);console.log(JSON.stringify({schemaVersion:result.schemaVersion,kind:result.kind,snapshotId:result.snapshotId,createdAt:result.createdAt,safetyEpoch:result.safetyEpoch,packageCount:result.packageCount,fileCount:result.files.length,bytes:result.files.reduce((sum,f)=>sum+f.bytes,0)}));}
+else if(operation==='restore')console.log(JSON.stringify(await restoreCandidate(values)));
+else throw Error('Use snapshot --candidate DIR --packages DIR --destination NEW_DIR, or restore --snapshot DIR --current-safety DIR --destination NEW_DIR');
