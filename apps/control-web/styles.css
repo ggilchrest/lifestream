@@ -170,3 +170,5 @@
 .room-incidents{border-top:1px solid #d1dedd;margin-top:24px;padding-top:20px}.room-incidents article{margin-top:16px;overflow-wrap:anywhere}.room-incidents img,.room-incidents video{display:block;max-width:100%;max-height:28rem;margin:12px auto}
 
 .saved-voice-candidate{align-items:start;flex-wrap:wrap}.saved-voice-candidate h3{margin:0}.saved-voice-candidate .actions{flex-wrap:wrap}.saved-voice-candidate label{display:flex;align-items:center;gap:.4rem}.saved-voice-candidate input[type=checkbox]{width:auto}.saved-voices form{margin-block:1rem;padding-block:1rem;border-block:1px solid var(--border,#cfdee7)}
+
+.profile-attention{margin:1rem 0;padding:1rem;border:1px solid var(--line,#d5e4ed);border-radius:12px}.profile-attention legend{font-weight:700}.profile-attention .check{display:inline-flex;align-items:center;gap:.4rem;margin:.4rem 1rem .4rem 0}.profile-attention input[type=checkbox]{width:auto;margin:0}
