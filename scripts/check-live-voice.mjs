@@ -64,6 +64,8 @@ try {
     // Interrupt two turns while submitting the next utterance on the same socket.
     if (turn < 2) { send({type:'interrupt',interactionTraceId:trace,reason:'automated barge-in recovery check'}); submit(); }
     await wait(terminal);
+    // Received PCM was discarded, not played by this headless sink.
+    send({type:'playbackSettled',interactionTraceId:trace,outcome:'stopped',receivedSamples:events.filter(e=>e.type==='audio'&&e.interactionTraceId===trace).reduce((sum,e)=>sum+e.chunk.frame.sampleCount,0)});
     const transcription = events.find(e => e.type === 'transcript' && e.interactionTraceId === trace);
     assert.ok(transcription?.text);
     const payload=terminal().event.payload;

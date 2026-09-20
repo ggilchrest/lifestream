@@ -82,7 +82,7 @@ test('ordinary voice transport and HTTP speech preview share the same server aud
  socket.send(JSON.stringify({type:'frame',audioInputId,frame:{frameId:randomUUID(),sequence:0,format:{encoding:'pcm_s16le',sampleRateHz:16000,channels:1},sampleOffset:0,sampleCount:10,dataBase64:Buffer.alloc(20).toString('base64')}}));socket.send(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:10}));await started;
  const preview=()=>fetch(base+'/api/runtime/v1/tts',{method:'POST',headers:{origin:base,'content-type':'application/json','x-lifestream-fixture-session':sessionId,'x-lifestream-fixture-principal':'human'},body:JSON.stringify({text:'Synthetic preview.'})});
  try{const rejected=await preview();assert.equal(rejected.status,409);assert.equal((await rejected.json() as any).code,'audio_output_owned');assert.equal(calls,1);}finally{release();}
- await done;assert.equal(messages.at(-1).event.payload.state,'completed');const after=await preview();assert.equal(after.status,200);assert.match(await after.text(),/succeeded/u);assert.equal(calls,2);
+ await done;assert.equal(messages.at(-1).event.payload.state,'completed');const held=await preview();assert.equal(held.status,409,'synthesis completion cannot release queued endpoint playback');const trace=messages.findLast(e=>e.type==='turnStarted').interactionTraceId;socket.send(JSON.stringify({type:'playbackSettled',interactionTraceId:trace,outcome:'completed',receivedSamples:messages.filter(e=>e.type==='audio'&&e.interactionTraceId===trace).reduce((sum,e)=>sum+e.chunk.frame.sampleCount,0)}));await new Promise(r=>setTimeout(r,20));const after=await preview();assert.equal(after.status,200);assert.match(await after.text(),/succeeded/u);assert.equal(calls,2);
 });
 
 

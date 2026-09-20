@@ -3141,6 +3141,35 @@
               "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "interactionTraceId",
+            "outcome",
+            "receivedSamples"
+          ],
+          "properties": {
+            "type": {
+              "const": "playbackSettled"
+            },
+            "interactionTraceId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "outcome": {
+              "enum": [
+                "completed",
+                "stopped"
+              ]
+            },
+            "receivedSamples": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8640000
+            }
+          }
         }
       ]
     },
