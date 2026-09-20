@@ -6,6 +6,7 @@ import { buildCanonicalPrompt } from "@lifestream/runtime/inference/prompt";
 import type { AudioFrame, SpeechToTextProvider } from "@lifestream/runtime/voice";
 import type { VoxCpmProvider } from "@lifestream/providers-voxcpm";
 import { defaultVoiceSettings, parseVoiceSettings, type VoiceSettings } from "./voice-settings.ts";
+import type {VoiceBinding} from '../admin/saved-voices.ts';
 import { SpeechQueue } from "./speech-queue.ts";
 import { prepareHostWorld, type HostRuntimeInput } from "./inference.ts";
 import {validateAudioFrame} from "@lifestream/runtime/voice";
@@ -23,9 +24,9 @@ export const hasAudioEnergy = (dataBase64: string, threshold = 0.015): boolean =
 export const VOICE_TURN_DEADLINE_MS = 180_000;
 export const SPEECH_SEGMENT_DEADLINE_MS = 45_000;
 export type AudioOutputLease={current:()=>boolean;release:()=>void};
-export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; inputCurrent?: (request: AudioRequest) => boolean; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
+export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; resolveVoice?:(request:{assistantId?:string})=>VoiceBinding; inputCurrent?: (request: AudioRequest) => boolean; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
 export type SpeechExpressionObservation={speechStage:"providerReported"|"audioEmitted"|"synthesized";mappingRevision:string;disposition:"notObserved"|"fullyApplied"|"partiallyApplied"|"providerFailure"|"cancelled"|"timedOut";degradedDimensions:string[];appliedDelivery:{deliveryMode?:string;pace?:number;energy?:number}};
-export type OutputOnlySpeech={expressionObserved?:(observation:SpeechExpressionObservation)=>void;text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
+export type OutputOnlySpeech={assistantId?:string;expressionObserved?:(observation:SpeechExpressionObservation)=>void;text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
 
 async function waitForPreviousOutput(previous:Promise<void>,signal:AbortSignal):Promise<void>{
   let timer:ReturnType<typeof setTimeout>|undefined,abort=()=>{};
@@ -49,6 +50,7 @@ export class AudioSession {
   private pendingTurns = 0;
   private starting = false;
   private outputSettlement:Promise<void>|undefined;
+  private voiceBinding:VoiceBinding|undefined;
   private voiceSettings: VoiceSettings = { ...defaultVoiceSettings };
   private sequence = 0;
   private currentInput: HostRuntimeInput | undefined;
@@ -63,6 +65,7 @@ export class AudioSession {
    * fabricated transcript or second inference call. Host policy owns admission. */
   async speakOutputOnly(input:OutputOnlySpeech):Promise<{samples:number;frames:number;mappingRevision:string;warmth:"unsupported";degradedDimensions:string[]}>{
     if(!this.outputAvailable||!this.deps.outputLease||!validUuid(input.interactionId)||!validUuid(input.endpointId)||!input.text.trim()||input.text.length>4000||!Number.isFinite(input.warmth)||input.warmth<0||input.warmth>1||input.current()!==true||input.signal.aborted)throw new Error("Output-only speech is unavailable");
+    const voice=this.deps.resolveVoice?.(input),settings=voice?.settings??this.voiceSettings;
     const deadline=Math.min(Date.parse(input.deadlineAt),Date.now()+SPEECH_SEGMENT_DEADLINE_MS);
     if(!Number.isFinite(deadline)||deadline<=Date.now())throw new Error("Output-only speech expired");
     const lease=this.deps.outputLease(input.endpointId,new Date(deadline).toISOString()),controller=new AbortController(),signal=AbortSignal.any([controller.signal,input.signal]);
@@ -74,11 +77,11 @@ export class AudioSession {
     let expressionStage:SpeechExpressionObservation['speechStage']='providerReported',disposition:SpeechExpressionObservation['disposition']='notObserved',appliedDelivery:SpeechExpressionObservation['appliedDelivery']={};
     const observeExpression=()=>input.expressionObserved?.({speechStage:expressionStage,mappingRevision,disposition,degradedDimensions:[...degraded],appliedDelivery:{...appliedDelivery}});
 
-    const current=()=>!this.closed&&this.socket.readyState===OPEN&&!signal.aborted&&Date.now()<deadline&&input.current()===true&&lease.current();
-    const request={contractVersion:"2.0.0" as const,text:input.text,segmentId,format:{encoding:"pcm_s16le" as const,sampleRateHz:48000 as const,channels:1 as const},voiceProfile:{voiceRef:"fixture-voice-design",revision:1},decision:{decisionId,revision:1},delivery:{interactionId:input.interactionId,segmentId,decisionId,decisionRevision:1,deliveryMode:this.voiceSettings.deliveryMode,urgency:"low",pace:this.voiceSettings.pace,energy:this.voiceSettings.energy},deadlineAt:new Date(deadline).toISOString()};
+    const current=()=>!this.closed&&this.socket.readyState===OPEN&&!signal.aborted&&Date.now()<deadline&&input.current()===true&&lease.current()&&(voice?.current()??true);
+    const request={contractVersion:"2.0.0" as const,text:input.text,segmentId,format:{encoding:"pcm_s16le" as const,sampleRateHz:48000 as const,channels:1 as const},voiceProfile:voice?.voiceProfile??{voiceRef:"fixture-voice-design",revision:1},decision:{decisionId,revision:1},delivery:{interactionId:input.interactionId,segmentId,decisionId,decisionRevision:1,deliveryMode:settings.deliveryMode,urgency:"low",pace:settings.pace,energy:settings.energy},deadlineAt:new Date(deadline).toISOString()};
     try{
       if(!current())throw new Error("Output-only ownership changed");
-      const tts=this.deps.tts.withoutAdmissionRetries();
+      let tts=this.deps.tts.withoutAdmissionRetries();if(settings.description||settings.seed!==0||settings.reference)tts=tts.withVoiceDesign({description:settings.description,seed:settings.seed,reference:settings.reference});
       for await(const event of bufferedStream(tts.synthesize(request,signal),signal,64,()=>controller.abort(),(pending,complete)=>{settlement=pending;settled=complete;})){
         if(!current()||done)throw new Error("Output-only speech became stale or emitted after terminal");
         if(mappingRevision!=="unknown"&&event.mappingRevision!==mappingRevision)throw new Error("Speech mapping changed");mappingRevision=event.mappingRevision;
@@ -110,7 +113,7 @@ export class AudioSession {
   private ensureInputCurrent(request = this.request): boolean {
     if (!request) return !this.closed;
     let current = false;
-    try { current = !this.closed && (this.deps.inputCurrent?.(request) ?? true); } catch { /* Failed authority lookup is not current input. */ }
+    try { current = !this.closed && (this.deps.inputCurrent?.(request) ?? true) && (this.voiceBinding?.current()??true); } catch { /* Failed authority lookup is not current input. */ }
     if (current) return true;
     if (!this.closed) {
       send(this.socket, { type: "error", requestId: request.requestId, problem: problem("audio_input_scope_changed", "Audio session revision, endpoint or authority changed; reconnect microphone using the current session.", request.correlationId) });
@@ -157,7 +160,7 @@ export class AudioSession {
     if (!this.ensureInputCurrent(request)) return;
     this.starting = true;
     let settings: VoiceSettings;
-    try { settings = parseVoiceSettings(request.voiceSettings); }
+    try { this.voiceBinding=this.deps.resolveVoice?.(request);settings = request.voiceSettings===undefined&&this.voiceBinding?this.voiceBinding.settings:parseVoiceSettings(request.voiceSettings); }
     catch (error) { send(this.socket, { type: "error", problem: { message: error instanceof Error ? error.message : "Invalid voice settings" } }); this.close(); return; }
     if (settings.description || settings.seed !== 0 || settings.reference) {
       const controls = await this.deps.tts.voiceControls();
@@ -211,13 +214,13 @@ export class AudioSession {
         const pacer = new PcmPacer();
         const decisionId = randomUUID();
         const tts = this.voiceSettings.description || this.voiceSettings.seed !== 0 || this.voiceSettings.reference ? this.deps.tts.withVoiceDesign({ description: this.voiceSettings.description, seed: this.voiceSettings.seed, reference: this.voiceSettings.reference }) : this.deps.tts;
-        const voiceSettings=this.voiceSettings;
+        const voiceSettings=this.voiceSettings,voiceProfile=request.voiceSettings!==undefined?{voiceRef:"session-preview",revision:1}:this.voiceBinding?.voiceProfile??{voiceRef:"configured-default",revision:1};
         const speak = async function* (text: string) {
         const speechDeadlineAt = new Date(Math.min(Date.parse(deadlineAt), Date.now() + SPEECH_SEGMENT_DEADLINE_MS)).toISOString();
         const segmentId = randomUUID();
         let speechSucceeded = false;
         let speechSamples = 0;
-        for await (const speech of tts.synthesize({ contractVersion: "2.0.0", text, segmentId, format: { encoding: "pcm_s16le", sampleRateHz: 48000, channels: 1 }, voiceProfile: { voiceRef: "fixture-voice-design", revision: 1 }, decision: { decisionId, revision: 1 }, delivery: { interactionId: traceId, segmentId, decisionId, decisionRevision: 1, deliveryMode: voiceSettings.deliveryMode, urgency: "normal", pace: voiceSettings.pace, energy: voiceSettings.energy }, deadlineAt: speechDeadlineAt }, controller.signal)) {
+        for await (const speech of tts.synthesize({ contractVersion: "2.0.0", text, segmentId, format: { encoding: "pcm_s16le", sampleRateHz: 48000, channels: 1 }, voiceProfile, decision: { decisionId, revision: 1 }, delivery: { interactionId: traceId, segmentId, decisionId, decisionRevision: 1, deliveryMode: voiceSettings.deliveryMode, urgency: "normal", pace: voiceSettings.pace, energy: voiceSettings.energy }, deadlineAt: speechDeadlineAt }, controller.signal)) {
           if (controller.signal.aborted) throw new Error("audio turn interrupted");
           if (speech.kind === "data") { speechSamples += speech.frame.sampleCount; yield speech; }
           if (speech.kind === "terminal") {

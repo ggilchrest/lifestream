@@ -6,6 +6,7 @@ export function installWorkspace() {
   const destinations = [
     ['conversation','Conversation','Typed and spoken replies, with explicitly enabled openings in this session.',['.conversation-room'],'Interact'],
     ['profile','Assistant profile','Identity, presentation and version history.',['#profile-editor','#profile-rollback'],'Manage'],
+    ['voice','Saved voice','Define, compare and activate the selected Assistant voice.',['.saved-voices'],'Manage'],
     ['person','People & context','Your profile and the context you choose to share.',['#user-profile'],'Manage'],
     ['relationship','Relationship setup','Start or skip a relationship review for the selected Assistant.',['#relationship-overview'],'Manage'],
     ['intake','Import & review','Inventory selected files, review candidates, then admit your choices.',['.profile-builder'],'Context'],

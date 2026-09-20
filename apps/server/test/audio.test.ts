@@ -2,8 +2,19 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 import { AudioSession, hasAudioEnergy, VOICE_TURN_DEADLINE_MS } from "../src/runtime/audio.ts";
+import {defaultVoiceSettings} from '../src/runtime/voice-settings.ts';
 
 const frame = (value: number) => { const bytes = Buffer.alloc(4800 * 2); for (let offset = 0; offset < bytes.length; offset += 2) bytes.writeInt16LE(value, offset); return { frameId: randomUUID(), sequence: 0, format: { encoding: "pcm_s16le" as const, sampleRateHz: 16000 as const, channels: 1 as const }, sampleOffset: 0, sampleCount: 4800, dataBase64: bytes.toString("base64") }; };
+test('saved voice settings reach ordinary speech and voice replacement fences the microphone binding',async()=>{
+ const events:any[]=[],spoken:any[]=[],designs:any[]=[];let current=true;
+ const settings={...defaultVoiceSettings,description:'Synthetic saved voice',seed:7,pace:.35};
+ const tts={voiceControls:async()=>({description:true,reference:true}),withVoiceDesign(design:any){designs.push(design);return this;},async *synthesize(request:any){spoken.push(request);yield {kind:'data',segmentId:request.segmentId,frame:frame(1200)};yield {kind:'terminal',outcome:'succeeded'};}};
+ const stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Hello.'}};yield {kind:'terminal',outcome:'succeeded'};}},inference={async *generate(){yield {kind:'text',text:'A synthetic reply.'};}};
+ const sessionId=randomUUID(),audioInputId=randomUUID(),session=new AudioSession({readyState:1,send:value=>events.push(JSON.parse(value)),close:()=>{}},{stt:stt as never,inference:inference as never,tts:tts as never,resolveVoice:()=>({settings,voiceProfile:{voiceRef:'saved-voice:synthetic',revision:3},language:'en',current:()=>current})},sessionId);
+ await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,expectedSessionRevision:1,endpointId:randomUUID(),audioInputId,format:frame(0).format}}));
+ await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(100)}));await session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));assert.equal(events.at(-1).event.payload.state,'completed');assert.deepEqual(spoken[0].voiceProfile,{voiceRef:'saved-voice:synthetic',revision:3});assert.equal(spoken[0].delivery.pace,.35);assert.equal(designs[0].description,settings.description);assert.doesNotMatch(spoken[0].text,/Synthetic saved voice/);
+ current=false;session.invalidateIfStale();assert.equal(session.outputConnected,false);assert.equal(events.at(-1).problem.code,'audio_input_scope_changed');assert.equal(spoken.length,1);
+});
 
 test("PCM level diagnostic measures energy only, not speech qualification", () => { assert.equal(hasAudioEnergy(frame(0).dataBase64), false); assert.equal(hasAudioEnergy(frame(1200).dataBase64), true); });
 
