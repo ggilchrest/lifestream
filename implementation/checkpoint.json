@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "7cf7be7f46aa8fb05e4d4ec31300aa11decef047",
-  "currentRevision": "fcc685950087ae590640d049357412f43135c7f5",
+  "currentRevision": "e96e30c781fde5fd12bef974d2cdedf93748f8e7",
   "activeSlice": "LS-S068",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -78,9 +78,13 @@
   "allowedFiles": [
     "README.md",
     "apps/control-web/session-context.js",
+    "apps/control-web/styles.css",
+    "apps/control-web/test/audience-privacy.test.mjs",
     "apps/control-web/test/local-auth.test.mjs",
+    "apps/control-web/workspace.js",
     "apps/server/src/admin/candidate-snapshot.ts",
     "apps/server/src/index.ts",
+    "apps/server/src/runtime/audience.ts",
     "apps/server/src/runtime/session-context.ts",
     "apps/server/test/candidate-snapshot.test.ts",
     "apps/server/test/endpoint-bindings.test.ts",
@@ -90,6 +94,7 @@
     "docs/session-disclosure.md",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
+    "implementation/evidence/LS-S068-protected-setup-1.json",
     "implementation/evidence/LS-S068-session-isolation-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json",
@@ -101,26 +106,12 @@
   ],
   "changedFiles": [
     "README.md",
-    "apps/control-web/session-context.js",
-    "apps/control-web/test/local-auth.test.mjs",
-    "apps/server/src/admin/candidate-snapshot.ts",
-    "apps/server/src/index.ts",
-    "apps/server/src/runtime/session-context.ts",
-    "apps/server/test/candidate-snapshot.test.ts",
-    "apps/server/test/endpoint-bindings.test.ts",
-    "apps/server/test/local-auth-http.test.ts",
-    "apps/server/test/server.test.ts",
     "docs/s083-s084-acceptance-guide.html",
-    "docs/session-disclosure.md",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-session-isolation-1.json",
+    "implementation/evidence/LS-S068-protected-setup-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
-    "implementation/evidence/S083-S084-human-acceptance-1.json",
-    "packages/storage-sqlite/src/migrations/0050_session_endpoint_settings.sql",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/test/initiative-delivery.test.ts",
-    "packages/storage-sqlite/test/initiative-expression.test.ts"
+    "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
   "validation": [
     {
@@ -644,6 +635,11 @@
       "result": "pass",
       "details": "8d66a91: 984 source, 70 serial browser, 44 workspace, zero skips; typecheck/lint/build/private validation pass. Actual native/browser and schema 49->50 preservation pass. Encrypted current backup/restore clears session consent; whole LS-TEST-086 not claimed.",
       "evidence": "implementation/evidence/LS-S068-session-isolation-1.json"
+    },
+    {
+      "command": "71 serial browser, 9 affected source, actual native protected setup; typecheck/lint/build/private validation",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S068-protected-setup-1.json"
     }
   ],
   "decisions": [
@@ -690,8 +686,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Assess and implement the remaining S068 explainable effective endpoint settings and handoff/audio-ownership gaps using existing contracts; continue independent software work while selected-provider and physical/Human qualification remain open.",
-  "updatedAt": "2026-09-20T19:37:13.896120Z",
+  "nextAction": "Implement explainable effective endpoint configuration using existing contracts, with revision/source/compatibility and privacy fences; then assess remaining handoff/audio ownership.",
+  "updatedAt": "2026-09-20T19:53:41.348840+00:00",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "S068 session isolation component verified at 8d66a91 and deployed locally after encrypted backup; current candidate migration 50. Source 984/984, browser 70/70, workspace 44/44. Same remembered endpoint no longer shares disclosure or negotiated audio between sessions. Guide v12 has 17 journeys/155 actions; native app executable remains 85a000e. S066 selection precedence component 4efa839 remains verified. LS-S062 effective-input qualification remains stale and blocks only claims requiring current provider qualification. Inference/STT unavailable; no shared service restart, provider replacement or new Human acceptance. One historical default has unavailable pinned package bytes and remains explicit."
+  "notes": "S068 protected-setup component verified at e96e30c: 71/71 browser, 9/9 affected source, typecheck/lint/build/private validation and actual packaged native UI-only setup pass. Full source 984/984 inherited at 8d66a91. Guide v13 has 17 journeys/156 actions. S068 remains inProgress and LS-S062 current qualification remains stale. No new provider, physical or Human claims."
 }

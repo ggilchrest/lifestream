@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "protected-session-setup-component",
+  "recordedAt": "2026-09-20T19:53:41.348840+00:00",
+  "sourceRevision": "e96e30c781fde5fd12bef974d2cdedf93748f8e7",
+  "specificationRevision": "24a8a2cb8d371dd7bd810120ee87513d6ace48f7",
+  "behavior": [
+    "Fresh protected sign-in routes to Session disclosure.",
+    "Unknown/shared audience permits safe disclosure controls while private details, Assistant records and Appearance stay hidden.",
+    "Unknown disclosure can bind an endpoint through visible controls. Solo audience declaration alone does not allow private context.",
+    "Explicit disclosure and audience decisions remain separate; initial setup preserves visible recovery codes."
+  ],
+  "checks": {
+    "serialBrowser": {
+      "passed": 71,
+      "skipped": 0,
+      "durationMs": 202449.6525
+    },
+    "affectedSource": {
+      "passed": 9,
+      "skipped": 0,
+      "durationMs": 4558.155541
+    },
+    "inheritedFullSource": {
+      "passed": 984,
+      "sourceRevision": "8d66a91290b34700c9709313a0ca6303453ceb43"
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "privateValidation": "pass",
+    "actualNative": {
+      "at": "2026-09-20T19:52:09.674Z",
+      "status": "verified",
+      "browserSourceRevision": "e96e30c781fde5fd12bef974d2cdedf93748f8e7",
+      "nativeSourceRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+      "checks": [
+        "fresh native sign-in reaches Session disclosure while unknown",
+        "unknown disclosure applied through visible UI binds endpoint without revealing private content",
+        "Only me declaration alone still withholds private context",
+        "explicit authenticated disclosure works after separate audience choice",
+        "shared audience hides private details but retains safe disclosure controls",
+        "normal sign-out"
+      ],
+      "scope": "Actual existing candidate, fresh temporary native profile and signed-in session; no API-seeded endpoint, provider generation, physical input, memory, learning, existing appearance default or Human acceptance change.",
+      "errors": [],
+      "humanAcceptance": false
+    },
+    "visual": "Actual native setup and generated guide desktop/mobile screenshots inspected."
+  },
+  "guide": {
+    "version": "2026-09-20.v13",
+    "journeys": 17,
+    "actions": 156,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "humanAcceptance": false
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "protected-setup-stable-baseline.log",
+      "sha256": "545a388b696337831abae5cd8fb2025483e8aacd7d9c34b16a7d3ae33e1565a0"
+    },
+    {
+      "name": "protected-setup-source.log",
+      "sha256": "de563f3bfac1ea3336ff88f484163e37465cfccf3a2d198194d98e27f8f269c5"
+    },
+    {
+      "name": "protected-setup-browser-all.log",
+      "sha256": "ee5405d862820325fba724febfaf20e3b04cccff6aab20978000d64699181c50"
+    },
+    {
+      "name": "protected-setup-focused.log",
+      "sha256": "fa54b9ce3787b3480b9b5afe632f398882e709895f54a8e2b215818c35b34b6c"
+    },
+    {
+      "name": "protected-setup-private-validation.log",
+      "sha256": "c534968d6061ed4ff01df96ca1999777e9269c1c79299eb32e7fe549a4ca763e"
+    },
+    {
+      "name": "protected-setup-preflight.log",
+      "sha256": "ce8d9d4ad2cb00adb0cc0af21e4dbdb0992ebc62462692d5bffec47db584cf66"
+    },
+    {
+      "name": "native-protected-setup.json",
+      "sha256": "7f09577efb20648f1a728842751f190bda6cac7223e5116e0c667d692ade9bec"
+    },
+    {
+      "name": "v01-guide-validation-v13.json",
+      "sha256": "6f78eef20e289ff237ddacbdd98214bb51c0d7980ca7da96a011e25efbb13c21"
+    }
+  ],
+  "retainedFailures": [
+    "Stable-wait rendered regression fails with predecessor CSS and passes with current CSS.",
+    "An initial new-test navigation wait raced the route handler; corrected wait observes actual view visibility."
+  ],
+  "exclusions": [
+    "Full LS-TEST-086 effective configuration/handoff remains open.",
+    "Current LS-S062 provider qualification remains stale. Selected inference/STT unavailable; no model substitution or service restart.",
+    "No physical sensing, microphone, camera, personal learning or Human acceptance.",
+    "Original 24 accepted S083/S084 journeys preserved. No publication or pushes."
+  ]
+}
