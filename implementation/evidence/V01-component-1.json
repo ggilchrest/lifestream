@@ -1,0 +1,179 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "v01-implementation-component",
+  "status": "verified",
+  "claimClass": "local-component-tests",
+  "sourceRevision": "6d9208457b701a2b5a82d8ed05cb2c45a02e0bfe",
+  "owningSlices": [
+    "LS-S066",
+    "LS-S067",
+    "LS-S068",
+    "LS-S063",
+    "LS-S008",
+    "LS-S010",
+    "LS-S011",
+    "LS-S012"
+  ],
+  "completedSliceClaim": false,
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 920,
+      "durationMs": 119804.620417
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<local runtime> pnpm test:browser-surface",
+      "result": "pass",
+      "tests": 50,
+      "durationMs": 64586.542458
+    },
+    {
+      "command": "git diff --cached --check",
+      "result": "pass"
+    }
+  ],
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/app.js",
+      "sha256": "237fa15c9cd5fc736623ee69c52883722f3c0eb8c611e3cecb284f48fa50dfa1"
+    },
+    {
+      "path": "apps/control-web/automatic-memory.js",
+      "sha256": "de80149f31b3f8528de711feacf84911d0d9be52fa90e12d9075cb34c9b4309a"
+    },
+    {
+      "path": "apps/control-web/conversation-output.js",
+      "sha256": "5f7954fd85bc68f35b419e8a83cd968adf6c8c793a16034bd435f998713291eb"
+    },
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "7797b02cc9862195b6c12639697a6155d1550e55bf940b96448e519b580ce4be"
+    },
+    {
+      "path": "apps/control-web/index.html",
+      "sha256": "99bb7b89aa4f010bb606c54aff75ace52f594f3eabae6f9cb407fe9ccbfbc9c6"
+    },
+    {
+      "path": "apps/control-web/presentation-runtime.js",
+      "sha256": "75d1b2326c284b7be09b0f418f6bc682df49a184196c2fec962f7da3cc79e35e"
+    },
+    {
+      "path": "apps/control-web/presentation.js",
+      "sha256": "a043bd03a782004bf949670a4cf0221c3f32d74c4b44cd2262e26334b633f034"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "0c3ec55557b716b3b4f5fc2d0d4709e37f6ed6e8c778df6bff6941edc29fcf27"
+    },
+    {
+      "path": "apps/desktop/main.cjs",
+      "sha256": "a42b59d852e5c081e11f47a09abc0b5fef52efc890175641c49fd88655600abb"
+    },
+    {
+      "path": "apps/server/src/admin/presentation-packages.ts",
+      "sha256": "16a2e335f55ed6f270a36600f06a389837cfdc207e0c3cb427cb157d45a62a1e"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "2cbabf8f3d543aea9afc706c90df3a2001eb1bd886a42e36f813eee71d4c1a0a"
+    },
+    {
+      "path": "apps/server/src/runtime/automatic-memory.ts",
+      "sha256": "9636e7bbf1fdf4c8c71413e930803d6e4f928189b090904cb5433a72bdb770c8"
+    },
+    {
+      "path": "apps/server/src/runtime/presentation-vendor.ts",
+      "sha256": "af32b3ceb2b8aa27656f4b021ddf97e5f65cecbf79f0dbc4bbaa44d85ec84cdf"
+    },
+    {
+      "path": "apps/server/test/automatic-memory.test.ts",
+      "sha256": "b77076a60b99e6a5b759c2ff3733d10a46da79ab4729c10486bcd9680a1cd97b"
+    },
+    {
+      "path": "apps/server/test/presentation-packages.test.ts",
+      "sha256": "2ae85d8698ef07a73e26b3e871d9768334b2db8980cbe8495f8b837bfd89803d"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "9361e51c7c403f50ef81d0ccd53a7f51234fc20010beb8c14e82ff9c22d85249"
+    },
+    {
+      "path": "docs/v0.1-candidate.md",
+      "sha256": "c8b719fdec4f1c9390623f188d513f772b183d6736cf2bab2e8b3d3b7a178893"
+    },
+    {
+      "path": "package.json",
+      "sha256": "bb85f063f5cb2698e8228d5f5ac51f12f155cdf518e8550eeac4b5241ca0ec4d"
+    },
+    {
+      "path": "packages/storage-sqlite/src/memory.ts",
+      "sha256": "e00141817040365e9876f53f61217ad77300562a138a56d4177635a7f14d9184"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0042_presentation.sql",
+      "sha256": "7e3509c3917574df32366085ee23957a8d4f30fe9aebc72a2efe3c3a3e05f9ca"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0043_automatic_memory.sql",
+      "sha256": "530ae18d799ee5f0ba8a4ccc50355c2405bfb3e472bb87b39bfb1d06934b5d42"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "9ec5097c666002bcbb7b7302d3335b199631a3d758f7a8c9b5071772720dbd88"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "22bedc3bf15901bead3283daff7552cde729c351fb3ec7474d3129769dc3617f"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "6bf256ef61879a0b45694d258e379bd51383105dd94920c0b5d4402123eea15b"
+    },
+    {
+      "path": "packages/storage-sqlite/test/understanding.test.ts",
+      "sha256": "ab89530c6e2b9fdebdc074fc0b979e1be889d9405977e48349f605d694c5cc6f"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "02f5e4472bb14d3d3d5b8987d56ed8bf543dcd759b54328436b6c5d9d1be105e"
+    },
+    {
+      "path": "scripts/start-candidate.mjs",
+      "sha256": "48bebdbc28673f0364174b3964b009ffa7dbecaae7a8850c62c0545d9560b532"
+    }
+  ],
+  "priorFailures": {
+    "initialSourceBaseline": "911/912; corrected the test frozen-clock mismatch without relaxing production freshness",
+    "firstCombinedRegression": "918/920 source and47/50 browser; browser auth/session race fixed and renderer loading made lazy; isolated Discovery reruns passed; then full suites passed separately",
+    "evidencePreserved": true
+  },
+  "realProviderObservation": {
+    "inference": "existing ai5090 selected model, non-fixture response",
+    "typedResponseCompletedMs": 1323.2345,
+    "syntheticInput": true,
+    "physicalOrHumanAcceptance": false
+  },
+  "privateAssets": "Curated and retained operator-local outside connected repositories. No private asset bytes in this receipt. Visual packaging corrections require fresh integration review.",
+  "exclusions": [
+    "No full S066/S067/S068/S070 acceptance",
+    "No automatic audience-source acceptance yet",
+    "No incident recorder/away notification qualification",
+    "No native physical/perceptual acceptance",
+    "No encrypted restore acceptance yet",
+    "No production acceptance or publication",
+    "Memory real-provider and end-to-end recall checks remain pending"
+  ]
+}

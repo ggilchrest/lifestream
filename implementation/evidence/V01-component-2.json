@@ -1,0 +1,211 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "verified",
+  "claimClass": "local-component-tests",
+  "sourceRevision": "6860c2c41ddbe9d4c8f577ef803f04f9c1264967",
+  "recordedAt": "2026-09-20T05:49:45.357781+00:00",
+  "scope": "Component integration only; no full S066/S067/S068/S070 or v0.1 release acceptance claim.",
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/app.js",
+      "sha256": "8ac38a87bc4b4bb4b5b0f19a86bed62738503f2bd477614ae2ad52ce396f23b6"
+    },
+    {
+      "path": "apps/control-web/audience.js",
+      "sha256": "afdabd4ac97d47814776e5c7610a72e2f677d4da66dd41f502d75c44b3f1f157"
+    },
+    {
+      "path": "apps/control-web/auth.js",
+      "sha256": "cab0bc24322217d10cf3a48b7a8bb4d1136a7be9bfbe76c249db351d5993dfc3"
+    },
+    {
+      "path": "apps/control-web/automatic-memory.js",
+      "sha256": "b2461bb1a4125d9b61bb62867d9f52ed6f67b67f60388305908e15523c02a77b"
+    },
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "216c463669d85e1b6585a5695da0196229350f653914c0ab04f46cb88572910d"
+    },
+    {
+      "path": "apps/control-web/index.html",
+      "sha256": "1d6e6f4ea1ce0a375287b48b8b9f3ce5a5c2a83ed218b0d8ed170a1217be7d1d"
+    },
+    {
+      "path": "apps/control-web/presentation-runtime.js",
+      "sha256": "49d179ee99d120830fd8d1903372e2553349c2c020762556c28accc2c0d3bc00"
+    },
+    {
+      "path": "apps/control-web/presentation.js",
+      "sha256": "39f3eb18b988e788f9118713ef36bf6ab6576eee6eb53ea065ac08103515d604"
+    },
+    {
+      "path": "apps/control-web/security.html",
+      "sha256": "cb5bac333b9bb1b8cc0a8c3b994c69413b69d0b62eea1dc6e8bcb96b948c5a4c"
+    },
+    {
+      "path": "apps/control-web/session-context.js",
+      "sha256": "aa0605799abd2702966c6d9b49abf2a3585e260c630811f13c3a592528d3cf1a"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "6b57d1fb8789243598e65e2c065a8a2136a42a4c5cc2c06b6e8a7219b78621f9"
+    },
+    {
+      "path": "apps/control-web/test/audience-privacy.test.mjs",
+      "sha256": "532175b50ac124745bbf3b65806c9720b8eedc16d3d638f26cd2cb0fd2b4e68a"
+    },
+    {
+      "path": "apps/control-web/test/presentation-playback.test.mjs",
+      "sha256": "6a79e4e2f08461fbeee09d9d1523e3e14bda92fc8d828e21c3ba389a78643fb8"
+    },
+    {
+      "path": "apps/desktop/main.cjs",
+      "sha256": "9d47cbe1bff6ee587687291c304e33357c9ac202b6fe070cfed2625afbfe805b"
+    },
+    {
+      "path": "apps/desktop/preload.cjs",
+      "sha256": "f89099696008bfe5bad123424f02731610cd291e6474ee47829f58a6b122bf5d"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "cbbf66d6cdfcf28547c16dbf5a0c79d129a2a95ed8d5c1c9c29b7283bbf6b6d1"
+    },
+    {
+      "path": "apps/server/src/runtime/audience.ts",
+      "sha256": "adfe3b0abeea42369d1fc18a789192f21ef600a86f1a54215d07aa89f1349e3c"
+    },
+    {
+      "path": "apps/server/src/runtime/automatic-memory.ts",
+      "sha256": "51105a449d6e190e0d3533ec4b0bd6b1f8452e3c7e550c574b462b457ad6d6da"
+    },
+    {
+      "path": "apps/server/src/runtime/presentation-vendor.ts",
+      "sha256": "2ad12cd974a387b29611e80f44de0648a1c20afab9296d60104fa4f9eb2303c9"
+    },
+    {
+      "path": "apps/server/src/runtime/session-context.ts",
+      "sha256": "14adc80f5805c0bcf0461740503159f8ae2c202373230b241bd73d7156a569df"
+    },
+    {
+      "path": "apps/server/test/audience.test.ts",
+      "sha256": "59bf8ee4cd810514a14c84317bb8d287c0fbdd5cde1108e87ae5ceeb1291ecac"
+    },
+    {
+      "path": "apps/server/test/automatic-memory.test.ts",
+      "sha256": "01814eea305c5292ba801dadbc20de1e66b852c6d89f5b28e81f17accd25f6fd"
+    },
+    {
+      "path": "apps/server/test/endpoint-bindings.test.ts",
+      "sha256": "d633ba7d50ed703acabdf03c921ebd3ed80f4ba5b78737c4f3193c2a1a73712e"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "24a57e7fe6931bfa48261bf40278b268249aea0c930a75ce326a21cc27560d70"
+    },
+    {
+      "path": "docs/v0.1-candidate.md",
+      "sha256": "3db6dd2935dff216e8b8ac02a1b1609133b2de59f11c1bb0401e2b37a330b9c4"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "305b207dd610d286d34d1ed900e63c17bc470a2b8b56ca9e425139f3913ddc71"
+    },
+    {
+      "path": "packages/runtime/src/embodiment/controller.ts",
+      "sha256": "6db546bdbc3150c408ec95f841b1d1c5f6fc205bac94663ad1f4a7f4985fe454"
+    },
+    {
+      "path": "packages/runtime/src/inference/prompt.ts",
+      "sha256": "61f46d320d6ebf8a0767dbba68866b3dc8fc12a6f4ddb0fd33a419ac34ae1bb6"
+    },
+    {
+      "path": "packages/runtime/test/embodiment.test.ts",
+      "sha256": "0c20f5f547295eedc11e848906621c26769568ac06b9b1348e9642a65a0843cd"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0044_endpoint_bindings.sql",
+      "sha256": "4cb7436999f8985418b6ddc758b2b6f5f0df3e216006a39fc915c6f0f3ed7578"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "ef13d04187e529f75e72d06b536eb597a52b62b20099daad4cc4c9690427af58"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "65c34802cbcf3cd9ccb37a31f642181b0972cd6fb9fa72779e576b50ba15ee81"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "0d48d9e420884db58b5cbe98e79fc768d0dae0492ef0feb0f9548a2bcaf3bdb1"
+    },
+    {
+      "path": "scripts/start-candidate.mjs",
+      "sha256": "05227075f6936aaa6ad37941cff083d211ee84aa72a97f01490a55c62d2283c7"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm build",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "926 tests passed in 118047.924792 ms; then the trace-expiry refinement and added playback test passed the 11-case focused suite."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<local-module> pnpm test:browser-surface",
+      "result": "pass",
+      "evidence": "51 tests passed, zero skips, 73007.074584 ms."
+    },
+    {
+      "command": "node --test packages/runtime/test/embodiment.test.ts apps/control-web/test/presentation-playback.test.mjs apps/server/test/automatic-memory.test.ts",
+      "result": "pass",
+      "evidence": "11 tests passed after final semantic trace and playback additions."
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    }
+  ],
+  "realProviderObservations": {
+    "input": "Synthetic owner statements; existing ai5090 inference profile; no new provider selection.",
+    "automaticMemory": "Exact owner quotes persisted, corrected, recalled in a new authenticated session, then forgotten through the canonical privacy journal; later recall withheld.",
+    "saveMs": [
+      2342.499667,
+      1551.45875
+    ],
+    "recallMs": 153.342,
+    "afterForgetMs": 676.983,
+    "caveat": "Small functional sample; not model quality or performance acceptance."
+  },
+  "native": {
+    "host": "Electron 44.3.0",
+    "sandbox": true,
+    "contextIsolation": true,
+    "nodeIntegration": false,
+    "lockProtectionMs": 4.567,
+    "lockSource": "Synthetic powerMonitor event in the actual native window; not a physical OS-lock test."
+  },
+  "audience": {
+    "automaticSource": "Enrolled-source adapter exercised with synthetic observations; no physical audience source configured.",
+    "claims": [
+      "Fresh scoped solo evidence permits private context; shared, unknown and expiry restrict.",
+      "Manual fallback expires and cannot override fresh automatic shared evidence.",
+      "Rendered private views and old transcript protected while generic replies remain available."
+    ]
+  },
+  "exclusions": [
+    "Physical microphone/speaker/OS-lock/perceptual acceptance",
+    "Enrolled automatic audience coverage",
+    "PWCE incident recorder and away notification integration",
+    "Sustained voice/performance/resource measurements",
+    "Isolated encrypted backup and restore",
+    "Human v0.1 acceptance and production release"
+  ],
+  "privateEvidenceCustody": "Redacted public summary only; screenshots, private assets, actual provider output and detailed synthetic receipts remain operator-local."
+}
