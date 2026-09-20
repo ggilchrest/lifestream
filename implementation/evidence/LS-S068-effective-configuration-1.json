@@ -1,0 +1,196 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "read-only-effective-endpoint-configuration-component",
+  "recordedAt": "2026-09-20T20:12:34.632083Z",
+  "sourceRevision": "783ce1e72a21bcd7f52794e9781b2a311ffc4cd1",
+  "testRevision": "fb89c26725d6f3c075ed5f611b38b11083cb684f",
+  "specificationRevision": "215721bf06892e121c6b3079d9aeef6bb8e4e534",
+  "behavior": [
+    "Current session, active Assistant/persona and voice references, pinned appearance selection and current-session lease projected from existing owners without mutation.",
+    "Explicit source/precedence, unavailable pinned appearance/voice and unsupported administration handoff are visible.",
+    "Audience and administration checks protect the API. UI clears immediately on privacy/auth/scope change and fences late responses.",
+    "Text/audio inspection works without renderer or private assets; no physical capture/playback inference."
+  ],
+  "checks": {
+    "source": {
+      "passed": 986,
+      "skipped": 0,
+      "durationMs": 55376.7195
+    },
+    "serialBrowser": {
+      "passed": 72,
+      "skipped": 0,
+      "durationMs": 215420.563542
+    },
+    "workspace": {
+      "passed": 44,
+      "skipped": 0
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "privateValidation": "pass",
+    "actualNative": {
+      "at": "2026-09-20T20:04:42.993Z",
+      "status": "verified",
+      "sourceRevision": "783ce1e72a21bcd7f52794e9781b2a311ffc4cd1",
+      "nativeSourceRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+      "checks": [
+        "Actual native read-only inspector visible only with permitted audience",
+        "Session revision stays unchanged across refresh",
+        "Private context stays unknown after solo declaration",
+        "Neutral fallback and no active audio lease shown without loading an avatar",
+        "Source details expand",
+        "Shared audience clears details synchronously",
+        "Normal sign-out"
+      ],
+      "observed": {
+        "modalities": {
+          "negotiatedInput": [
+            "text"
+          ],
+          "negotiatedOutput": [
+            "text"
+          ],
+          "source": "currentSessionNegotiation",
+          "inference": "unavailable",
+          "speechRecognition": "unavailable",
+          "speechGeneration": "healthy",
+          "physicalCapture": "notObserved",
+          "physicalAudibility": "notObserved"
+        },
+        "voiceCompatible": true,
+        "presentationSource": "neutralFallback",
+        "privateContext": "unknown",
+        "activeProfile": true
+      },
+      "scope": "Existing actual candidate and new temporary native profile. No provider generation, playback, capture, saved preference, learning or Human acceptance change.",
+      "errors": [],
+      "humanAcceptance": false
+    },
+    "genericArchive": {
+      "recordedAt": "2026-09-20T20:04:43.406601+00:00",
+      "sourceRevision": "783ce1e72a21bcd7f52794e9781b2a311ffc4cd1",
+      "archiveSha256": "6cb5d4d696ee905f0c37db68d528250a558d765971c9811ce138e281e7c1a5cb",
+      "archiveBytes": 18708480,
+      "members": 1278,
+      "privatePackageHashMatches": 0,
+      "privateOrMediaPaths": [],
+      "status": "verified",
+      "priorReceipts": [
+        "generic-clean-package.json",
+        "generic-clean-package-2.json",
+        "generic-clean-package-3.json",
+        "generic-clean-package-4.json",
+        "generic-clean-package-5.json",
+        "generic-clean-package-6.json",
+        "generic-clean-package-7.json"
+      ],
+      "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+      "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+      "build": "pnpm build",
+      "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+      "runtimeChecks": {
+        "passwordSetup": true,
+        "initialAudienceProtected": true,
+        "privatePackageCount": 0,
+        "neutralAvailable": true,
+        "fixtureConversation": true,
+        "effectiveConfiguration": true,
+        "profileTopicControls": 6,
+        "pageErrors": []
+      }
+    }
+  },
+  "guide": {
+    "at": "2026-09-20T20:02:56.958100+00:00",
+    "version": "2026-09-20.v14",
+    "journeys": 17,
+    "actions": 157,
+    "links": 23,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "f670f49a810d723b0e32cbed9a9e85f0043774e01949a0ef1f56449fd911d44e",
+    "validation": "Static structure, unique action identifiers, version invalidation and named link targets pass. Guide v13 retained full browser/desktop/mobile visual verification; v14 adds one standard action. Current v14 live visual/browser recheck was not performed after the browser file URL policy denied access. No alternate browser surface or policy workaround used.",
+    "humanAcceptance": false
+  },
+  "retainedFailures": [
+    "Initial HTTP read-only comparison incorrectly compared asOf timestamps, then restart harness used an unsupported start argument. Corrected canonical-state comparison and same-origin startup pass.",
+    "Initial browser test awaited network idle despite an open SSE channel; response-specific wait passes.",
+    "First full browser run: 71/72, new-test setup timeout. Added explicit workspace-ready wait and enrollment diagnostics. Focused and full successor pass; original timeout root cause was not conclusively reproduced.",
+    "First bookkeeping preflight used a timestamp offset where checkpoint requires UTC Z. Corrected checkpoint passes shape checks; current LS-S062 qualification remains stale."
+  ],
+  "exclusions": [
+    "Whole LS-TEST-086 including structured overrides and actual handoff remains open.",
+    "Current inference/STT unavailable on ai5090 itself; no shared service restart or provider replacement.",
+    "Full guide v14 visual/browser recheck blocked by file URL policy; static check and v13 full browser/visual evidence are separate.",
+    "No new physical capture, recorder, learning, Human acceptance, publication or push. Original 24 accepted S083/S084 journeys preserved."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "effective-configuration-source-focused.log",
+      "sha256": "5f66cc473f1424f55cb8b32234da2777f37f3f72ac060eb20fa0da3fcb92794e"
+    },
+    {
+      "name": "effective-configuration-source-focused-2.log",
+      "sha256": "03dfdb4c3fc7c2e4b23c6e3c4cac847718553bdaa6e8838f21edb563df596470"
+    },
+    {
+      "name": "effective-configuration-source-focused-3.log",
+      "sha256": "071fe2407f9e3713718ab46afcdb83b31b9e4427080f82342d89543b50fae25f"
+    },
+    {
+      "name": "effective-configuration-source-all.log",
+      "sha256": "98d44c1834692aecbc9bab6f934b40e722c888d864b4437f4bc1f490cc1ac12d"
+    },
+    {
+      "name": "effective-configuration-browser-focused.log",
+      "sha256": "c42bf54b316ddfa5d1e2e6553e695e4d5386fb36799d9d07c20933b9804bf085"
+    },
+    {
+      "name": "effective-configuration-browser-focused-2.log",
+      "sha256": "84846c1eb9afaa40645e73d653f01e0ff1f4c5209fed50ff0d1173504c9ce09e"
+    },
+    {
+      "name": "effective-configuration-browser-focused-3.log",
+      "sha256": "445051237c1f63672d778ceae77e1b4858640b802e461b164a42c6e732be46b0"
+    },
+    {
+      "name": "effective-configuration-browser-all.log",
+      "sha256": "314750028b61390bff96fb61cd78b256a2e6705cc4c2e4ce1c4d4f82e524707f"
+    },
+    {
+      "name": "effective-configuration-browser-all-2.log",
+      "sha256": "b8035285bcbed91c3e19259ba01741abffadd1c45839bb6423c93627e748606e"
+    },
+    {
+      "name": "effective-configuration-workspace.log",
+      "sha256": "d9000dc10ccf3cc5133fac1aad4f93ac57b0d2158d793a2da75569854c776b39"
+    },
+    {
+      "name": "effective-configuration-private-validation.log",
+      "sha256": "d1af43e93567da71b817fba525c7ab1b35c9b5c5cf07416889205ea50204d5f8"
+    },
+    {
+      "name": "native-effective-configuration.json",
+      "sha256": "29f3c56826ae798de31b6d8901b328d7bc33f9a7a97e0c702d5680640a832016"
+    },
+    {
+      "name": "generic-clean-package-10.json",
+      "sha256": "59357a72a55fc3cc557728a0ca618ab681f604e83ec2d371c9aeccc463c19101"
+    },
+    {
+      "name": "v01-guide-static-v14.json",
+      "sha256": "3f560d16cadf1eb308110a8f6d68e1fbf7a2975a0f4fee9bcef1a2dd727b8fe6"
+    },
+    {
+      "name": "effective-configuration-current-health.json",
+      "sha256": "2c2bec05ab37c94595f1c43ef162030195c65d53c3a20d5d2965f82aaac1b630"
+    },
+    {
+      "name": "ai5090-readonly-runtime-current.json",
+      "sha256": "52db15f72114082fc0507661f192a892b2a92af1d0872be43c7c7743c6a09fcd"
+    }
+  ]
+}
