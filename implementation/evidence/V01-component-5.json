@@ -1,0 +1,161 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "verified",
+  "claimClass": "local-component-verification",
+  "sourceRevision": "29424ca69085741f9bfe145c175b3cd81e7068cd",
+  "privateSpecificationRevision": "1621697b51d565c4bacf25cc849329f553963665",
+  "pwceRevision": "26c038fe58f3257718cbb7d4e7e73f15afdd66c0",
+  "recordedAt": "2026-09-20T07:54:33.063087+00:00",
+  "scope": "Portable source installation, durable memory mode display, native embedded texture loading and explicit failed-resource rejection. Joined voice evidence remains scoped by its measured source and exclusions.",
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/automatic-memory.js",
+      "sha256": "cf99fe3fcf4c320c7c0eb339e1b8b5729835998d31e975888eef9bb5c250e41f"
+    },
+    {
+      "path": "apps/control-web/presentation-runtime.js",
+      "sha256": "7b8d4d43a5d608e3ce9f781a4a5a06eeb01fee349efa6eb127124145a424fe44"
+    },
+    {
+      "path": "apps/control-web/test/automatic-memory.test.mjs",
+      "sha256": "2a74ba78a3e1bd49fe9e40212c25e92018692e885b367e1ef13ce158c108a36d"
+    },
+    {
+      "path": "apps/control-web/test/presentation-playback.test.mjs",
+      "sha256": "a9a6da287ad69625e8d7d4f43194e5bd341aff37b6df3b409b903bd78a72d45b"
+    },
+    {
+      "path": "apps/desktop/main.cjs",
+      "sha256": "094c962aedbe78b80f4c990e8bd4b7478cebdc25765e60a35212f8f8a08b3bf0"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "7f03ef81713fca59762c0eb666ce0cb18001d0bd1a7cd3f8c8618a87ae7e02c1"
+    },
+    {
+      "path": "packages/storage-sqlite/test/database.test.ts",
+      "sha256": "ae2bfde1b7285cb439ef1ba9e3cd989a47a09f27a891f2343f12d1800485d911"
+    },
+    {
+      "path": "package.json",
+      "sha256": "e59caeec67b7b3ad1a2e6e4f1d0cede737dd0e5bfca8f99455d0f5ec9cc99f3e"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "398a14c6c356c061692f767f5660aabdef037a49047a44cb1e25b3d32b6372bb"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "935/935, zero skips, 49563.87025 ms; subsequent edits affect browser presentation and desktop CSP only."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<local-module> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "53/53, zero skips, 154502.328875 ms before the focused texture guard addition."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<local-module> node --test apps/control-web/test/presentation-playback.test.mjs",
+      "result": "pass",
+      "evidence": "2/2, zero skips, 19246.26575 ms; actual browser GLTFLoader loads valid texture and rejects broken replacement with URL cleanup."
+    },
+    {
+      "command": "pnpm build; pnpm typecheck; pnpm lint; node --test scripts/workspace.test.mjs; git diff --check",
+      "result": "pass",
+      "evidence": "Build/typecheck/lint/diff pass; workspace 43/43, zero skips."
+    },
+    {
+      "command": "Clean tracked archive; offline install/build; browser runtime check",
+      "result": "pass",
+      "evidence": "1170 archive members; zero private package hash or model/media path matches. Startup from a spaced path, password setup, unknown audience, neutral-only catalog and fixture reply pass."
+    },
+    {
+      "command": "Actual Electron host with existing private presentation package; synthetic powerMonitor lock",
+      "result": "pass",
+      "evidence": "Textures visually inspected, zero texture/CSP/page errors; native sandbox/context isolation remain enabled and Node integration disabled. Corrected selection remains stable. Synthetic lock protection 50.081375 ms; physical lock is not claimed."
+    }
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "component-5-source-tests.log",
+      "sha256": "ca99f4bbac10db6bbde7559dc4d7d950d68d2833449dd6f54b59f167251f8dc9"
+    },
+    {
+      "name": "component-5-browser-tests.log",
+      "sha256": "d5b4a1c70059c081500c1ce5a2a98d7c9606030a03f93d489dc2152361b4a3e3"
+    },
+    {
+      "name": "component-5-texture-tests.log",
+      "sha256": "10855febcd3896d0aa486c92fa109e2c135fe56a0830d52888021fd74e0458c3"
+    },
+    {
+      "name": "component-5-lint-texture.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "component-5-build-texture.log",
+      "sha256": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155"
+    },
+    {
+      "name": "component-5-workspace-tests.log",
+      "sha256": "a8a650e839b6f25ace06bfb249a074cb03af542f4bdc23a3716ea16a283ef6e1"
+    },
+    {
+      "name": "native-texture-failed-predecessor.json",
+      "sha256": "9577be20b5a3a3ed5c9570d0bdec3f53aa065f2da7fdc5aa92a52f4acc86bd1a"
+    },
+    {
+      "name": "native-texture-corrected.json",
+      "sha256": "9e6f19a60c0e14de056fa36aa2dc35aee4225a59145ced465e8a53147644a3fe"
+    },
+    {
+      "name": "generic-clean-package-2.json",
+      "sha256": "2fa3447fe1afce0eac920981889b03ea17b61c1630989986c7f23a05e47f9812"
+    },
+    {
+      "name": "generic-clean-runtime.log",
+      "sha256": "a6805109186c6ac5b41f603d367391d4b6df018f0a364614f781c78e88f0720d"
+    },
+    {
+      "name": "generic-clean-browser-2.log",
+      "sha256": "0a0eef06d9911dece975c09ff6a1fae08bda48f2175b8cf755523c999b978ac6"
+    },
+    {
+      "name": "integrated-voice-baseline.json",
+      "sha256": "a86b902961b7d76e10fbc803e9861badb66d16cd82c7ae79c16d8d188efbfc0f"
+    },
+    {
+      "name": "v01-guide-validation.json",
+      "sha256": "833cdf7d26c1d2671f802ed4815014ec2e6a8368d5ee9e135d6350438be68ff8"
+    }
+  ],
+  "retainedFailures": [
+    {
+      "scope": "Native appearance",
+      "observation": "Earlier joined voice run rendered an untextured model. Voice transport/timing results do not certify appearance. Failed predecessor retained; corrected native texture proof is supplemental."
+    },
+    {
+      "scope": "Clean install",
+      "observation": "Initial clean runtime failed on URL-encoded migration directory. New exact revision installs and runs from a spaced path."
+    }
+  ],
+  "measuredVoice": {
+    "sourceRevision": "361c72211bdcb17cee97140085e73b63797cefc7",
+    "completedRepliesPerHost": 5,
+    "browserOnsetP50Ms": 1991.9,
+    "browserOnsetP95Ms": 2144.6,
+    "nativeOnsetP50Ms": 2002.4,
+    "nativeOnsetP95Ms": 3293.7,
+    "firstAudibleWordObjectivesMet": false,
+    "scope": "Generated speech input through real selected STT/inference/TTS and WebAudio. Scheduling is not acoustic audibility; small warmed samples are not production percentiles."
+  },
+  "exclusions": [
+    "No whole-slice or beta acceptance. Prior 24 S083/S084 Human acceptance remains unchanged.",
+    "No physical microphone/speaker, live camera, automatic physical audience, away-route or new Human acceptance.",
+    "Native appearance now loads textures; no new joined voice performance measurement is implied.",
+    "Removable-volume backup remains operator-deferred; no additional volume access or schedule restart.",
+    "No push, publication, private package redistribution or external exposure."
+  ]
+}
