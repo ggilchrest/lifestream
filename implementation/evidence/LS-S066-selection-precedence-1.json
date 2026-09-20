@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S066",
+  "status": "verified",
+  "claimClass": "presentation-selection-component",
+  "recordedAt": "2026-09-20T19:12:45.013355Z",
+  "sourceRevision": "4efa83963424853f3b70959b341f4a85c9cdcd4b",
+  "specificationRevision": "5901a0aa0326096a2544f907b6519ef3c400e3a8",
+  "behavior": [
+    "Endpoint defaults do not replace an active session override.",
+    "Explicit Use endpoint default validates the default before clearing the override.",
+    "Monotonic override revision survives clearing and restart; stale requests cannot recreate older selection.",
+    "Automatic refresh requires the saved package digest; changed bytes require an explicit new selection.",
+    "Failure, busy turn, scope change and audience protection retain existing fences."
+  ],
+  "checks": {
+    "source": {
+      "passed": 981,
+      "skipped": 0,
+      "durationMs": 59035.632333
+    },
+    "serialBrowser": {
+      "passed": 69,
+      "skipped": 0,
+      "durationMs": 201195.2055
+    },
+    "workspace": {
+      "passed": 44,
+      "skipped": 0
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "privateValidation": "pass",
+    "actualPackagedNative": "Authenticated private-pack default/override/clear/reselect/shared-audience checks pass in a fresh test endpoint; no existing endpoint default changed.",
+    "launcher": "Existing-core reuse and stopped-core startup/open both verified; same selected providers."
+  },
+  "genericArchive": {
+    "sourceRevision": "4efa83963424853f3b70959b341f4a85c9cdcd4b",
+    "archiveSha256": "c08c2c25a0ac25cc235b40760de1681109b329bdcdb1022af08219ebb0475302",
+    "archiveBytes": 18636800,
+    "members": 1269,
+    "privatePackageHashMatches": 0,
+    "status": "verified",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "profileTopicControls": 6,
+      "pageErrors": []
+    }
+  },
+  "guide": {
+    "version": "2026-09-20.v11",
+    "journeys": 17,
+    "actions": 153,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "humanAcceptance": false
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "presentation-precedence-before.log",
+      "sha256": "0102b6b5e2790ae8792f808a796e9b734993b09731ff0fb0d57af5ae85c7eadd"
+    },
+    {
+      "name": "selection-source-all.log",
+      "sha256": "e154949ae60a436e219325d169bc2f8adcc15d2833b96d2ece694ccab86321b2"
+    },
+    {
+      "name": "selection-browser-all.log",
+      "sha256": "d035867dd2f0f59725f149d1421ff2bc64eab86b9d9085b27d9019eb8ce71fcc"
+    },
+    {
+      "name": "native-selection-initial-harness.log",
+      "sha256": "e49f1d0bbae44fffe38c1dbcfcf0656f400e2f2f07cad19f8b4c09da0dd7fb8e"
+    },
+    {
+      "name": "native-selection-precedence.json",
+      "sha256": "66bc36779035cd2eeb8ae76962485cfce46db46fcb4c5d08bf2454f4b0654021"
+    },
+    {
+      "name": "native-launch-cold.json",
+      "sha256": "f86433c705269c7f4014c9ad4ec2d1ec5f98f75698254a78fb1aa7c9537ceb5e"
+    },
+    {
+      "name": "generic-clean-package-8.json",
+      "sha256": "1b8bb89b8a5813fb22f983af69b5c90c8d6df84b430fcecbe21465cf8eb940c7"
+    },
+    {
+      "name": "v01-guide-validation-v11.json",
+      "sha256": "f621351e51674e0eba866fedfb15f7e375549c8ba1f8c74af79805cafbfe7644"
+    }
+  ],
+  "retainedFailures": [
+    "A rendered regression reproduced the prior default replacing an active override before the repair.",
+    "Initial native successor harness asserted a nonexistent runtime.current.id; corrected to the actual manifest.id and passed without another product change."
+  ],
+  "exclusions": [
+    "No fresh provider generation, physical capture, Human acceptance or whole LS-TEST-084 pass.",
+    "Private packages, mappings, screenshots, credentials and tools remain operator-local.",
+    "Selected inference and STT remain unavailable; real voice/performance criteria remain open.",
+    "Original 24 S083/S084 accepted journeys unchanged."
+  ]
+}
