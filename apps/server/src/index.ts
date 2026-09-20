@@ -901,7 +901,9 @@ export class LifestreamServer {
     if (method === "GET" && path === "/api/admin/v1/assistants") { const rows = this.database.connection.prepare("SELECT DISTINCT a.assistant_id AS assistantId FROM assistant_profiles a JOIN local_assistant_permissions p ON p.assistant_id=a.assistant_id WHERE p.principal_id=? AND p.administer=1").all(context.principalId) as Array<{ assistantId: string }>; return { status: 200, body: { assistants: rows.map(row => ({ assistantId: row.assistantId, profiles: new AssistantProfileRepository(this.database).list(row.assistantId) })) } }; }
     if (method === "POST" && path === "/api/admin/v1/assistants") { if (!context.owner) throw new AuthenticationError(403, "assistant_creation_scope_required"); const result = this.admin.handle(method, path, context.principalId, body, false, this.runtimeSelfContext("inactive","none",context)); if (result.status < 400 && typeof result.body.assistantId === "string") auth.permitCreator(context, result.body.assistantId); return result; }
     if (!assistantId || !auth.canAdminister(context, assistantId)) throw new AuthenticationError(403, "assistant_scope_denied");
-    return this.admin.handle(method, path, context.principalId, body, true, this.runtimeSelfContext("inactive","none",context),()=>{try{auth.assertCurrent(context);return auth.canAdminister(context,assistantId);}catch{return false;}});
+    const result = this.admin.handle(method, path, context.principalId, body, true, this.runtimeSelfContext("inactive","none",context),()=>{try{auth.assertCurrent(context);return auth.canAdminister(context,assistantId);}catch{return false;}});
+    if(method==='POST'&&result.status<400&&parts.length===6&&parts[5]==='activate')void this.acknowledgments.maintain(assistantId);
+    return result;
   }
   private assertProposedOperation(operation: ProposedOperation, context: LocalContext): void {
     if(!operation || operation.method!=="POST" || !operation.body || typeof operation.body!=="object")throw new AuthenticationError(422,"unsupported_proposed_operation");
