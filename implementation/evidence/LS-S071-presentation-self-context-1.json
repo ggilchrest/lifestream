@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S071",
+  "status": "verified",
+  "claimClass": "saved-presentation-runtime-self-context-component",
+  "recordedAt": "2026-09-20T20:30:25.919Z",
+  "sourceRevision": "20a7172aae9dbd12d4aa20c7b063658e1884a9e7",
+  "specificationRevision": "53da7532156c1e65fa666bfd8f5fc82d34fc1674",
+  "behavior": [
+    "Saved session override precedes endpoint default and contributes an opaque pinned revision to host-owned runtime context.",
+    "Validated saved choice is configuredNotObserved; absent choice is notConfigured; stale/missing package and protected audience cannot claim configured presentation.",
+    "Actual authenticated typed and audio prepared inputs use the same host projection and ignore client self-context. No asset names, paths or mappings enter it.",
+    "No renderer activity, camera input, physical visibility or playback inferred from saved configuration.",
+    "Selected-provider qualification uses current negotiated audio revision and refuses generation when prerequisites are unavailable."
+  ],
+  "checks": {
+    "source": {
+      "passed": 988,
+      "skipped": 0,
+      "durationMs": 54981.774583
+    },
+    "workspace": {
+      "passed": 44,
+      "skipped": 0,
+      "durationMs": 15798.911042
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "privateValidation": "pass",
+    "workspaceCheck": "pass",
+    "actualNative": {
+      "at": "2026-09-20T20:27:37.769Z",
+      "status": "verified",
+      "sourceRevision": "20a7172aae9dbd12d4aa20c7b063658e1884a9e7",
+      "nativeSourceRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+      "checks": [
+        "Visible controls bind a fresh native session",
+        "Explicit neutral session appearance reaches runtime self-context",
+        "No physical rendering, vision or playback claim",
+        "Source revision changes on saved appearance selection",
+        "Shared audience withholds configuration",
+        "Normal sign-out"
+      ],
+      "observed": {
+        "presentation": "configuredNotObserved",
+        "physicalVision": "notConfigured",
+        "renderingActive": false,
+        "sharedPresentation": "unavailable"
+      },
+      "scope": "Actual authenticated candidate and packaged native UI. Neutral session override only; endpoint defaults unchanged. No provider generation, capture, learning or Human acceptance.",
+      "errors": [],
+      "humanAcceptance": false
+    },
+    "genericArchive": {
+      "recordedAt": "2026-09-20T20:27:08.200076+00:00",
+      "sourceRevision": "20a7172aae9dbd12d4aa20c7b063658e1884a9e7",
+      "archiveSha256": "e4c593557e2d058ea14d638554a7055592ac27c64a7dbb0b29a21a9027dd42a4",
+      "archiveBytes": 18739200,
+      "members": 1280,
+      "privatePackageHashMatches": 0,
+      "privateOrMediaPaths": [],
+      "status": "verified",
+      "priorReceipts": [
+        "generic-clean-package.json",
+        "generic-clean-package-2.json",
+        "generic-clean-package-3.json",
+        "generic-clean-package-4.json",
+        "generic-clean-package-5.json",
+        "generic-clean-package-6.json",
+        "generic-clean-package-7.json"
+      ],
+      "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+      "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+      "build": "pnpm build",
+      "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+      "runtimeChecks": {
+        "passwordSetup": true,
+        "initialAudienceProtected": true,
+        "privatePackageCount": 0,
+        "neutralAvailable": true,
+        "fixtureConversation": true,
+        "effectiveConfiguration": true,
+        "presentationSelfContext": true,
+        "profileTopicControls": 6,
+        "pageErrors": []
+      }
+    },
+    "fullBrowser": "Previous 72/72 at source 783ce1e/test fb89c26; no frontend changes in this component. Actual native and clean-install affected flows re-executed."
+  },
+  "guide": {
+    "at": "2026-09-20T20:30:25.919Z",
+    "version": "2026-09-20.v15",
+    "journeys": 17,
+    "actions": 157,
+    "links": 23,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "1b82b754c133f639b5d0e55a4004b72a6ba0ce89bf1bf127e8f220721f886614",
+    "validation": "Static structure, unique identifiers and named targets pass. Last full browser/visual check remains v13; current re-opening is denied by browser file URL policy. No workaround used. v15 updates existing self-context expectations only.",
+    "humanAcceptance": false
+  },
+  "selectedProvider": {
+    "status": "blockedEnvironment",
+    "inference": "unavailable",
+    "stt": "unavailable",
+    "tts": "healthy",
+    "generationAttempted": false,
+    "sharedServicesRestarted": false
+  },
+  "retainedFailures": [
+    "Baseline saved-selection assertion failed before repair.",
+    "Expanded audio test requested audio mode before installing synthetic providers; server correctly refused. Corrected fixture ordering passes.",
+    "First native harness expected a nonexistent status string; corrected assertion for Session override passes without product changes.",
+    "LS-S052 effective-input qualification remains stale; current source tests do not replace selected-provider qualification."
+  ],
+  "exclusions": [
+    "Whole current LS-TEST-089 provider-response qualification remains open.",
+    "Guide v15 static-only; full guide visual/browser evidence remains v13 under file URL restriction.",
+    "Physical/Human/production acceptance and performance objectives remain separate.",
+    "No new sensors, personal learning, provider replacement, shared restart, pushes or publication. Original 24 accepted journeys preserved."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "presentation-self-context-before.log",
+      "sha256": "fa163d76a306cd6de2b10e23c00eb859a0f3729275cd53db867578e782c950ca"
+    },
+    {
+      "name": "presentation-self-context-focused.log",
+      "sha256": "d7feba2d15ca57a13d006b3a7141b98ab0c3486d267dc629a8353fb33a34f2ef"
+    },
+    {
+      "name": "presentation-self-context-expanded.log",
+      "sha256": "91f5aa0bea56a7f1ddd2bff351bf440157879b758fceddf9edc092ab4fd82f12"
+    },
+    {
+      "name": "presentation-self-context-expanded-2.log",
+      "sha256": "3e931a8a4bcf1b9f87214fe4deea784e753f00c66a7050d8b96f54165b943449"
+    },
+    {
+      "name": "presentation-self-context-expanded-3.log",
+      "sha256": "52cf8295f4401241c473be15b449f2786aa59c0ae2333db04a2effc1ddcf0a83"
+    },
+    {
+      "name": "presentation-self-context-source.log",
+      "sha256": "2385783b69fa8cf77127e17bb50903bcb1c9c3e082d74e5cf3d3eed7a6f6ec2d"
+    },
+    {
+      "name": "presentation-self-context-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "presentation-self-context-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "presentation-self-context-build.log",
+      "sha256": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155"
+    },
+    {
+      "name": "presentation-self-context-workspace-check.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "name": "presentation-self-context-workspace-tests.log",
+      "sha256": "86c8829b6630ee91ee2585edf30218c4a95659834c45c8cc08f4112a12db628a"
+    },
+    {
+      "name": "presentation-self-context-private-final.log",
+      "sha256": "32c2023a818015eeea7ebe4c3fa5af238c127d5fc50a87879da4a2721e03614a"
+    },
+    {
+      "name": "presentation-self-context-selected-provider.json",
+      "sha256": "3a044b7070ee15d0e68c017eabf8ade11442e3268e72ca0be297086d2ec22041"
+    },
+    {
+      "name": "native-presentation-self-context.log",
+      "sha256": "6a97f78a126fa0f19b04d0c5042c403e769fbbdcc7cda5c358a1c89d0cd3b837"
+    },
+    {
+      "name": "native-presentation-self-context-2.log",
+      "sha256": "8dd6baf2dc3a1d12b9db6b8c5503bf0145f2866df0daee35281b8a9a527b9549"
+    },
+    {
+      "name": "native-presentation-self-context.json",
+      "sha256": "a2f3695ff58fd249a66e9c8e1472c805e71e56a658f708cc67e3b4bd0c298750"
+    },
+    {
+      "name": "generic-clean-package-11.json",
+      "sha256": "38ba1fe04c92b611ea957c97eb4ef399728a0a3e67bf4088539a957dd970a6f2"
+    },
+    {
+      "name": "v01-guide-static-v15.json",
+      "sha256": "1fe035f11d41571494fd8ba3dd2127e399536f9b0641cc8666e9b58bfc44722f"
+    },
+    {
+      "name": "presentation-self-context-current-health.json",
+      "sha256": "5e24ca42c7fbf84aa71ef7b3f5d6ee52b8a984b5a192b7d525b9f537affb0b67"
+    }
+  ]
+}

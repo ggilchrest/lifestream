@@ -3,9 +3,9 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "7cf7be7f46aa8fb05e4d4ec31300aa11decef047",
-  "currentRevision": "fb89c26725d6f3c075ed5f611b38b11083cb684f",
-  "activeSlice": "LS-S068",
-  "sliceStatus": "inProgress",
+  "currentRevision": "20a7172aae9dbd12d4aa20c7b063658e1884a9e7",
+  "activeSlice": "LS-S071",
+  "sliceStatus": "implementationCompleteVerificationPending",
   "completedSlices": [
     "LS-S001",
     "LS-S002",
@@ -77,45 +77,60 @@
   ],
   "allowedFiles": [
     "README.md",
-    "apps/control-web/app.js",
-    "apps/control-web/endpoint-configuration.js",
+    "apps/control-web/index.html",
     "apps/control-web/session-context.js",
-    "apps/control-web/styles.css",
-    "apps/control-web/test/audience-privacy.test.mjs",
-    "apps/control-web/test/endpoint-configuration.test.mjs",
-    "apps/control-web/test/local-auth.test.mjs",
-    "apps/control-web/workspace.js",
-    "apps/server/src/admin/candidate-snapshot.ts",
+    "apps/server/src/admin/presentation-packages.ts",
     "apps/server/src/index.ts",
-    "apps/server/src/runtime/audience.ts",
-    "apps/server/src/runtime/endpoint-configuration.ts",
+    "apps/server/src/runtime/audio.ts",
+    "apps/server/src/runtime/inference.ts",
     "apps/server/src/runtime/session-context.ts",
-    "apps/server/test/candidate-snapshot.test.ts",
-    "apps/server/test/endpoint-bindings.test.ts",
-    "apps/server/test/endpoint-configuration.test.ts",
+    "apps/server/test/audio.test.ts",
+    "apps/server/test/inference.test.ts",
     "apps/server/test/local-auth-http.test.ts",
+    "apps/server/test/presentation-self-context.test.ts",
     "apps/server/test/server.test.ts",
+    "docs/presentation-packages.md",
     "docs/s083-s084-acceptance-guide.html",
-    "docs/session-disclosure.md",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-effective-configuration-1.json",
-    "implementation/evidence/LS-S068-protected-setup-1.json",
-    "implementation/evidence/LS-S068-session-isolation-1.json",
+    "implementation/evidence/LS-S052-current-qualification.json",
+    "implementation/evidence/LS-S052-development-resume-2.json",
+    "implementation/evidence/LS-S052-qualification-resume-2.json",
+    "implementation/evidence/LS-S071-current-qualification.json",
+    "implementation/evidence/LS-S071-development-certification-1.json",
+    "implementation/evidence/LS-S071-development-recovery-v2.json",
+    "implementation/evidence/LS-S071-development-resume-1.json",
+    "implementation/evidence/LS-S071-development-resume-2.json",
+    "implementation/evidence/LS-S071-development-resume-3.json",
+    "implementation/evidence/LS-S071-presentation-self-context-1.json",
+    "implementation/evidence/LS-S071-qualification-certification-1.json",
+    "implementation/evidence/LS-S071-qualification-certification-2.json",
+    "implementation/evidence/LS-S071-qualification-recovery-v2.json",
+    "implementation/evidence/LS-S071-qualification-resume-1.json",
+    "implementation/evidence/LS-S071-qualification-resume-2.json",
+    "implementation/evidence/LS-S071-qualification-resume-3.json",
+    "implementation/evidence/LS-S071-qualification-review-1.json",
+    "implementation/evidence/LS-S071-qualification-review-2.json",
+    "implementation/evidence/LS-S071.json",
+    "implementation/evidence/RECOVERY-V2-CERTIFICATION-2026-09-14.json",
+    "implementation/evidence/RECOVERY-V2-SELECTION-CERTIFICATION-2026-09-14.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json",
-    "packages/storage-sqlite/src/migrations/0050_session_endpoint_settings.sql",
-    "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/test/database.test.ts",
-    "packages/storage-sqlite/test/initiative-delivery.test.ts",
-    "packages/storage-sqlite/test/initiative-expression.test.ts"
+    "packages/runtime/package.json",
+    "packages/runtime/src/context/builder.ts",
+    "packages/runtime/src/context/cache.ts",
+    "packages/runtime/src/inference/port.ts",
+    "packages/runtime/src/inference/prompt.ts",
+    "packages/runtime/src/persona/projection.ts",
+    "packages/runtime/test/inference.test.ts",
+    "scripts/qualify-s071-development.mjs"
   ],
   "changedFiles": [
     "README.md",
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-effective-configuration-1.json",
+    "implementation/evidence/LS-S071-presentation-self-context-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -651,6 +666,46 @@
       "command": "986 source, 72 serial browser, 44 workspace; actual native and clean generic install; typecheck/lint/build/private validation",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S068-effective-configuration-1.json"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S071-presentation-self-context-1.json"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S071-presentation-self-context-1.json"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S071-presentation-self-context-1.json"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S071-presentation-self-context-1.json"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S071-presentation-self-context-1.json"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S071-presentation-self-context-1.json"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S071-presentation-self-context-1.json"
+    },
+    {
+      "command": "node --experimental-strip-types scripts/qualify-s071-development.mjs",
+      "result": "fail",
+      "evidence": "implementation/evidence/LS-S071-presentation-self-context-1.json"
     }
   ],
   "decisions": [
@@ -697,8 +752,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Continue LS-S071 presentation self-context integration: replace hard-coded unconfigured claim with truthful saved-configuration state, retaining unobserved playback and privacy qualification.",
-  "updatedAt": "2026-09-20T20:12:34.632083Z",
+  "nextAction": "Continue S068 structured endpoint definitions and handoff through existing contracts. S071 saved-presentation component verified; whole selected-provider reply qualification waits for current inference/STT health. Preserve original acceptance and no new live effects.",
+  "updatedAt": "2026-09-20T20:30:25.919Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
   "notes": "S068 read-only effective endpoint inspection verified at 783ce1e (test successor fb89c26): 986 source, 72 serial browser, 44 workspace, actual packaged native and clean generic install pass. First 71/72 browser run retained. Guide v14 static checks pass; full guide browser/visual remains v13 after file URL policy denial. S068 whole structured override/handoff and provider/physical/Human criteria remain open."
 }
