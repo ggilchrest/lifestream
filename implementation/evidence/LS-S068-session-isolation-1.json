@@ -1,0 +1,182 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "session-disclosure-isolation-component",
+  "recordedAt": "2026-09-20T19:36:52.039928+00:00",
+  "sourceRevision": "8d66a91290b34700c9709313a0ca6303453ceb43",
+  "specificationRevision": "fbfa43912be97c19ed8dd59c0930be70440b14bb",
+  "behavior": [
+    "Remembered endpoint identity and appearance defaults stay shared; disclosure and negotiated modalities are session-owned.",
+    "Legacy sessions resolve unknown/text until an explicit current-session choice.",
+    "Independent session configuration revisions survive another session changing the endpoint.",
+    "Prepared synthetic private memory is withheld from the unknown session and present in the permitted session before and after real HTTP server restart.",
+    "Unbinding deletes only its own session settings; stale revisions are rejected.",
+    "Isolated restore clears consent-bearing session settings and revokes sessions."
+  ],
+  "checks": {
+    "source": {
+      "passed": 984,
+      "skipped": 0,
+      "durationMs": 55754.322375
+    },
+    "serialBrowser": {
+      "passed": 70,
+      "skipped": 0,
+      "durationMs": 198886.27125
+    },
+    "focused": {
+      "passed": 14,
+      "skipped": 0,
+      "durationMs": 10117.570542
+    },
+    "workspace": {
+      "passed": 44,
+      "skipped": 0
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "privateValidation": "pass",
+    "actualNativeAndBrowser": "Shared-endpoint scope and mode isolation passes against current candidate; no page errors.",
+    "migration": {
+      "from": 49,
+      "to": 50,
+      "preservedTables": 12,
+      "integrity": "ok",
+      "inferredLegacyConsentRows": 0
+    }
+  },
+  "genericArchive": {
+    "sourceRevision": "8d66a91290b34700c9709313a0ca6303453ceb43",
+    "archiveSha256": "e111efbcca1bd8b45d0130d25be42c2d3067028e1bc4688da4388dc35bf1dbb0",
+    "archiveBytes": 18667520,
+    "members": 1272,
+    "privatePackageHashMatches": 0,
+    "status": "verified",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "profileTopicControls": 6,
+      "pageErrors": []
+    }
+  },
+  "recovery": {
+    "encrypted": true,
+    "separateVolume": true,
+    "snapshotId": "489a1444d55994babd85738316d4c79baf3542c415228540fac79e6c31b04c94",
+    "dataProcessedBytes": 286107220,
+    "newDataBytes": 1142658,
+    "files": 44,
+    "integrity": "full-data-checked",
+    "restoredMigration": 50,
+    "restoredSessionSettings": 0,
+    "restoredActiveSessions": 0,
+    "packageCount": 3,
+    "unavailableHistoricalDefaults": 1,
+    "authority": "quarantined",
+    "audience": "unknown",
+    "learningScopes": 0,
+    "pwceRecorderActivated": false
+  },
+  "guide": {
+    "version": "2026-09-20.v12",
+    "journeys": 17,
+    "actions": 155,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "humanAcceptance": false
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "session-disclosure-before.log",
+      "sha256": "28517243039948c7ca1308ec58513604baaf78dee6cb24abb83a347bb96ccf02"
+    },
+    {
+      "name": "session-isolation-source-first.log",
+      "sha256": "bbed55112d8a6c546414c42c9b8e093b9e16fcb76ce029f7d372c5241b378de6"
+    },
+    {
+      "name": "session-isolation-source-all.log",
+      "sha256": "b8a2d5971980ba89d6824d434910cc9d15f1dec63b044d6d92223d5729730646"
+    },
+    {
+      "name": "session-isolation-focused.log",
+      "sha256": "4565aeda021423b630692b48f22c0a8e781cfb349f2fe2a717cb1cb3a1e490fd"
+    },
+    {
+      "name": "session-isolation-http.log",
+      "sha256": "1a239b2a3b44de2894af96e5a621d79de03cd233e6e1b0b81734c73b686c0471"
+    },
+    {
+      "name": "session-isolation-browser-all.log",
+      "sha256": "21a4a3a686895ea79b12d683d3deff48464c1af1999d03854d781b236eaca49f"
+    },
+    {
+      "name": "session-isolation-workspace.log",
+      "sha256": "4cb585ee94b3966549cd02ec3bd20c6398fbbc2316c9f3d847e88e596d1bc54c"
+    },
+    {
+      "name": "session-isolation-private-validation.log",
+      "sha256": "21cca5761d8333183fe76278a427bc444159b5fbdffbd728956ae0c398aef59b"
+    },
+    {
+      "name": "native-session-isolation-initial-harness.log",
+      "sha256": "c0ff870d890db3e5515eed09478c422522a74d644114e3a7c1f6d3c5016ff107"
+    },
+    {
+      "name": "native-session-isolation-audience-harness.log",
+      "sha256": "66dc68d34c0959f15ed8d1e3593ccc9ab420f6fa0a72f9e138692ecb2017b67a"
+    },
+    {
+      "name": "native-session-isolation.json",
+      "sha256": "60430df7e8561d484b1be825a738f7ae937f74904d1fb2710337809fc81e8798"
+    },
+    {
+      "name": "session-migration-before.json",
+      "sha256": "773c296d6e39303593dae15a928c23535bb3d159b51b59bfcfa0caf32eb6b44b"
+    },
+    {
+      "name": "session-migration-after.json",
+      "sha256": "0b912736c1fae02ea07d099c31cb611b2c9bb0d82956968dd728850ef3933a61"
+    },
+    {
+      "name": "session-isolation-pre-migration-backup.json",
+      "sha256": "28c3acebec9928682713252cfc7200162b3c6ca3907099319aaf1ce1d3a03124"
+    },
+    {
+      "name": "session-isolation-pre-migration-restore.json",
+      "sha256": "5dd0ca7db7cd9f0bf7fd3748c76fbe5a399212ae3a9992578d0b53c6e3489a05"
+    },
+    {
+      "name": "session-isolation-current-backup.json",
+      "sha256": "a7d0dd0b132a80985e89bb35f668945a525db2a44e61dfa227371ad20886345a"
+    },
+    {
+      "name": "session-isolation-current-restore.json",
+      "sha256": "1171147e9d67f98f9753daa914f6ce82f84670a286b25f96980e36bf0c081f21"
+    },
+    {
+      "name": "generic-clean-package-9.json",
+      "sha256": "7238d6ae75cd6beceed8031cab5d04769dc57d11245c4af2e404a1ebf522591c"
+    },
+    {
+      "name": "v01-guide-validation-v12.json",
+      "sha256": "6566cb530db2418f4bf332e5b35c1c4c87d19eed04f1d89a4903d4510ec5b642"
+    }
+  ],
+  "retainedFailures": [
+    "Baseline regression reproduced cross-session private disclosure.",
+    "First full source run failed three stale migration inventories; exact expectations and runtime health inventory were updated. Final full run passes.",
+    "Initial native harness omitted real workspace navigation and audience precondition. Corrected harness follows actual controls; product privacy guard remains intact."
+  ],
+  "exclusions": [
+    "Whole LS-TEST-086 effective configuration/handoff and physical audio ownership remain open.",
+    "Selected inference/STT unavailable; no provider substitution, new generation or fresh performance claim.",
+    "No new sensing, camera, microphone, learning enablement, publication or Human acceptance.",
+    "One historical endpoint default pins an unavailable old package digest; preserved without silently adopting replacement bytes.",
+    "Private assets, mapping, credentials, screenshots and raw evidence stay operator-local. Original 24 accepted S083/S084 journeys preserved."
+  ]
+}

@@ -1,6 +1,6 @@
 # Session disclosure on a remembered endpoint
 
-Account → Session disclosure controls whether the current signed-in session may use approved private relationship context. Apply Session Disclosure saves the choice; Refresh Session State reads the current choice and its revision. This does not identify people nearby, start capture, or grant tool authority. Audience privacy must separately permit private output.
+Protect → Session disclosure controls whether the current signed-in session may use approved private relationship context. Apply Session Disclosure saves the choice; Refresh Session State reads the current choice and its revision. This does not identify people nearby, start capture, or grant tool authority. Audience privacy must separately permit private output.
 
 A remembered endpoint shares its identity and saved Appearance default across sign-ins by the same account. It does not share disclosure, negotiated text/audio mode, or session appearance overrides. Tabs using the same authentication cookie share one session; use another browser profile or isolated browser context to test separate sign-ins. Changing either session does not grant or revoke the other session's disclosure or negotiate audio for it. Output and prepared private context remain subject to current authentication, audience and session fences.
 
