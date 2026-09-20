@@ -27,3 +27,5 @@ export type {PwceApprovalCustody,PwceApprovalIntent,PwceApprovalObservation,Pwce
 
 export {PwceGrantQuery} from './grant-query.ts';
 export type {PwceGrantQueryOptions} from './grant-query.ts';
+export {PwceIncidentClient} from './incidents.ts';
+export type {PwceIncident,PwceIncidentOptions,PwceIncidentIdentity} from './incidents.ts';

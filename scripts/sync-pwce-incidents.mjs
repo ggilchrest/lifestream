@@ -1,0 +1,11 @@
+// The producer owns every schema. This copies only digest-verified public artifacts.
+import {readFile,writeFile} from 'node:fs/promises';
+import {resolve,join} from 'node:path';
+import {createHash} from 'node:crypto';
+const root=resolve(import.meta.dirname,'..'),producer=resolve(process.argv.find(a=>a.startsWith('--producer='))?.slice(11)??join(root,'../PWCE'));
+const bundle=JSON.parse(await readFile(join(producer,'contracts/incident-evidence/bundle-manifest.json'),'utf8')),hash=createHash('sha256'),sources=[];
+for(const [index,name]of ['profile.json','request.schema.json','response.schema.json'].entries()){const path='contracts/incident-evidence/'+name,item=bundle.artifacts[index],bytes=await readFile(join(producer,path));if(item.path!==path||item.sha256!==createHash('sha256').update(bytes).digest('hex'))throw Error('Producer incident artifact digest mismatch');hash.update(path).update('\0').update(bytes);sources.push(JSON.parse(bytes));}
+if(hash.digest('hex')!==bundle.bundleDigest||bundle.bundleVersion!=='1.0.0')throw Error('Producer incident bundle mismatch');
+const output='// Generated exclusively from digest-verified PWCE public incident contracts.\nconst freeze=<T>(v:T):T=>{if(v&&typeof v===\'object\'){for(const child of Object.values(v))freeze(child);Object.freeze(v);}return v;};\n'+[['EXPECTED_PWCE_INCIDENT_BUNDLE',bundle],['PWCE_INCIDENT_REQUEST_SCHEMA',sources[1]],['PWCE_INCIDENT_RESPONSE_SCHEMA',sources[2]]].map(([name,value])=>'export const '+name+'=freeze('+JSON.stringify(value,null,2)+');\n').join('');
+const file=join(root,'packages/providers-pwce/src/incident-bundle.ts');if(process.argv.includes('--write'))await writeFile(file,output);else if(await readFile(file,'utf8')!==output)throw Error('Consumer incident contract is stale');if(!process.argv.includes('--write')){const lock=JSON.parse(await readFile(join(root,'packages/providers-pwce/incident-compatibility-lock.json'),'utf8'));if(lock.bundleDigest!==bundle.bundleDigest||lock.generatedBoundarySha256!==createHash('sha256').update(output).digest('hex'))throw Error('Incident compatibility lock differs');}
+console.log(JSON.stringify({bundleId:bundle.bundleId,bundleDigest:bundle.bundleDigest,byteIdentical:true}));

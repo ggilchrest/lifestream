@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0.0",
+  "producer": "PWCE",
+  "producerRevision": "b777e9eb14161797305b7c3df10785eb655298e7",
+  "bundleId": "pwce-incident-evidence.bundle.v1",
+  "bundleVersion": "1.0.0",
+  "bundleDigest": "04a53ca17bcfa9b37d6863c0612675cb590ea48e1c5b2228b498a716cb54cfc4",
+  "generatedBoundary": "src/incident-bundle.ts",
+  "generatedBoundarySha256": "fe7efff3bc3651a6d6b659306d272e1853ba4d8307e82d21532b4f38500be523",
+  "claim": "Local authenticated contract and replay integration; no live camera or away notification acceptance."
+}

@@ -165,3 +165,5 @@
 [data-audience-protected="true"] .room-dialogue > :not(.section-head):not(#room-status):not(#room-turns):not(#room-message-form):not(.room-microphone),
 [data-audience-protected="true"] #auth-recovery-codes,
 [data-audience-protected="true"] #auth-mfa-seed {display:none!important}
+
+.room-incidents{border-top:1px solid #d1dedd;margin-top:24px;padding-top:20px}.room-incidents article{margin-top:16px;overflow-wrap:anywhere}.room-incidents img,.room-incidents video{display:block;max-width:100%;max-height:28rem;margin:12px auto}
