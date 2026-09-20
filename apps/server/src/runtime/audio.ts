@@ -24,7 +24,7 @@ export const hasAudioEnergy = (dataBase64: string, threshold = 0.015): boolean =
 export const VOICE_TURN_DEADLINE_MS = 180_000;
 export const SPEECH_SEGMENT_DEADLINE_MS = 45_000;
 export type AudioOutputLease={current:()=>boolean;release:()=>void};
-export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; resolveVoice?:(request:{assistantId?:string})=>VoiceBinding; inputCurrent?: (request: AudioRequest) => boolean; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
+export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; resolveVoice?:(request:{assistantId?:string})=>VoiceBinding; acknowledgment?:(request:AudioRequest)=>{revision:number;binding:string;clipIds:string[]}|null; inputCurrent?: (request: AudioRequest) => boolean; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
 export type SpeechExpressionObservation={speechStage:"providerReported"|"audioEmitted"|"synthesized";mappingRevision:string;disposition:"notObserved"|"fullyApplied"|"partiallyApplied"|"providerFailure"|"cancelled"|"timedOut";degradedDimensions:string[];appliedDelivery:{deliveryMode?:string;pace?:number;energy?:number}};
 export type OutputOnlySpeech={assistantId?:string;expressionObserved?:(observation:SpeechExpressionObservation)=>void;text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
 
@@ -236,6 +236,7 @@ export class AudioSession {
         const generation = (async () => {
         this.invalidateIfStale();if(controller.signal.aborted)throw new Error('audio turn interrupted');
         if (this.currentInput?.admitWorld && !this.currentInput.admitWorld()) throw new Error("World context expired before speech inference admission");
+        if(!controller.signal.aborted&&current()&&(!outputLease||outputLease.current())){try{const catalog=this.deps.acknowledgment?.(request);if(catalog?.clipIds.length)send(this.socket,{type:'acknowledgment',interactionTraceId:traceId,catalog});}catch{/* Optional cached presentation cannot fail an ordinary reply. */}}
         try{this.currentInput?.onInferenceRequest?.(prompt);}catch{/* Optional inclusion bookkeeping is not speech authority. */}
         for await (const chunk of this.deps.inference.generate(prompt, { signal: controller.signal })) {
           this.invalidateIfStale();

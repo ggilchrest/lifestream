@@ -25,3 +25,4 @@ export type { InitiativeExpression, InitiativeExpressionObservation } from './in
 export { CanonicalGrantRepository, CanonicalGrantError, canonicalDispatchTerminal } from './authority/canonical-grants.js';
 export type { CanonicalGrant, CanonicalHumanContext, TrustedGrantProposal, AuthorityCommand, AuthorityMutation, GrantOwnerBinding, CanonicalAdmission, CanonicalDispatchView, CanonicalDispatchObservation } from './authority/canonical-grants.js';
 export {SavedVoiceRepository, type SavedVoice} from './saved-voices.ts';
+export * from './acknowledgments.ts';

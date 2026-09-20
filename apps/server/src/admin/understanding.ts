@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 import { createContractValidator } from "@lifestream/contracts";
 import { UnderstandingRepository, understandingDigest, hypothesisFingerprint, candidateFingerprint, type Database, type UnderstandingRecord, type UnderstandingScope } from "@lifestream/storage-sqlite";
 import type {HypothesisRejection,CandidateSuppression} from './recovery-journal.ts';
-import { UnderstandingWorkCoordinator, SHARED_PROVIDER_PREEMPTION_BOUND_MS, SHARED_PROVIDER_SLOT_RELEASE_BOUND_MS } from "@lifestream/runtime/understanding/coordinator";
+import { UnderstandingWorkCoordinator, SHARED_PROVIDER_PREEMPTION_BOUND_MS, SHARED_PROVIDER_SLOT_RELEASE_BOUND_MS, type BackgroundWork } from "@lifestream/runtime/understanding/coordinator";
 import {selectDiscoveryContext} from "./discovery-selection.ts";
 import { extensionError, type RelationshipConfiguration } from "../relationship-extensions.ts";
 
@@ -46,6 +46,7 @@ export class DiscoveryAdministration {
     while(entry.ids.size>32)entry.ids.delete(entry.ids.keys().next().value!);entry.revision++;this.recent.delete(key);this.recent.set(key,entry);while(this.recent.size>128)this.recent.delete(this.recent.keys().next().value!);
   }
   foregroundStarted():()=>void{return this.coordinator.foregroundStarted();}
+  runBackground<T>(work:BackgroundWork<T>){return this.coordinator.run(work);}
   close():void{if(this.closed)return;this.closed=true;this.inputLab.close();this.recent.clear();clearInterval(this.cleanupTimer);clearInterval(this.retryTimer);this.removeIdleListener();this.retryQueue.clear();for(const [key,task] of this.tasks){this.coordinator.cancel(key,"shutdown");this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
   invalidate(relationshipId:string):void{for(const [key,entry]of this.retryQueue)if(entry.relationshipId===relationshipId){this.retryQueue.delete(key);this.repository.finish(entry.scope,key,"cancelled","Current authorization or evidence changed; idle retry withheld.");}for(const [key,task]of this.tasks)if(task.relationshipId===relationshipId)this.coordinator.cancel(key,"scopeInvalidated");}
   private queueRetry(key:string,entry:{relationshipId:string;scope:UnderstandingScope;run:()=>Promise<void>;attempt:number},reason:string):void {
