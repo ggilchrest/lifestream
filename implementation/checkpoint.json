@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "fc21bf72f4addeb2ac98cd903b50c503c2f8edac",
-  "currentRevision": "75b43f9ff637cbb4f8280bf7fdd4e6e75fe66378",
+  "currentRevision": "1f043b8bf56c0a409513255f381eb0e96a1b3c61",
   "activeSlice": "LS-S086",
   "sliceStatus": "implementationCompleteVerificationPending",
   "completedSlices": [
@@ -198,18 +198,6 @@
     "README.md",
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
-    "implementation/checkpoint.json",
-    "implementation/evidence/LS-S073-current-qualification.json",
-    "implementation/evidence/LS-S073-qualification-certification-9.json",
-    "implementation/evidence/LS-S076-current-qualification.json",
-    "implementation/evidence/LS-S076-qualification-certification-8.json",
-    "implementation/evidence/LS-S078-current-qualification.json",
-    "implementation/evidence/LS-S078-qualification-certification-7.json",
-    "implementation/evidence/LS-S080-current-qualification.json",
-    "implementation/evidence/LS-S080-qualification-certification-7.json",
-    "implementation/evidence/LS-S086-component-2.json",
-    "implementation/evidence/LS-S086-performance-2.json",
-    "implementation/evidence/LS-S086-performance-3.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -699,7 +687,7 @@
   ],
   "blockers": [],
   "nextAction": "Continue only against the recorded candidate and owners: unresolved selected-model completion/causal quality, the full audio/pressure/corpus performance matrix, trusted audience and existing recorder/away-route input, and separate physical/Human acceptance remain open. The measured baseline already fails original audio objectives; do not relax targets or claim unmeasured passes. Keep removable-volume work and scheduling deferred; no questions before 15:03 UTC during operator absence.",
-  "updatedAt": "2026-09-20T11:33:26Z",
+  "updatedAt": "2026-09-20T11:33:40Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
   "notes": "Current implementation and selected-provider component evidence are committed separately from whole acceptance. S086 remains implementationCompleteVerificationPending; original causal, deadline, audio latency and prior qualifier failures are preserved. The private runnable report, named-tab 17-journey guide and complete raw synthetic evidence remain operator-local. The original accepted 24 S083/S084 journeys and their guide bytes are unchanged. README.md, PRODUCT-REALITY-AUDIT.md and earlier acceptance artifacts remain preserved unrelated work. No pushes, publication, cloud upload, new camera, external exposure, personal learning activation or provider/model replacement."
 }
