@@ -1,0 +1,143 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "context-expiry-repair-and-bounded-component-verification",
+  "sourceRevision": "75b43f9ff637cbb4f8280bf7fdd4e6e75fe66378",
+  "effectiveSpecificationRevision": "3e65ebe3a4273d3e09545cfa7888e294f836ec0f",
+  "recordedAt": "2026-09-20T11:31:22.097475+00:00",
+  "priorComponent": {
+    "path": "implementation/evidence/LS-S086-component-1.json",
+    "sha256": "c379e5191fe5d2d06c95a7dab73ba98af697e6e10ffa7fb40930136f480d22fe"
+  },
+  "problem": "A new reply could reuse a prepared context with almost no lifetime remaining and be cancelled midstream at cache expiry. The first 400-request selected-provider study observed two such failures.",
+  "change": "New inference admission rebuilds a cached prepared view with <=10 seconds remaining. It never extends actual feedback expiry or the lifetime of an already admitted view; current-source/privacy/revocation guards remain active.",
+  "checks": [
+    {
+      "command": "Deterministic failing regression, then focused inference and existing performance framework tests",
+      "result": "pass",
+      "count": 14,
+      "evidence": "Near-expiry new turn completes after rebuild; a genuinely expired active view still rejects late output. The before-fix failed regression is retained."
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "count": 971,
+      "skipped": 0,
+      "elapsedMs": 53054.445416
+    },
+    {
+      "command": "Serial full browser regression",
+      "result": "pass",
+      "count": 58,
+      "skipped": 0,
+      "elapsedMs": 194780.612625
+    },
+    {
+      "command": "pnpm build; pnpm lint; private validate",
+      "result": "pass"
+    },
+    {
+      "command": "Current generic clean tracked archive; offline install/build; authenticated fixture runtime",
+      "result": "pass",
+      "evidence": "No private package hash/media paths; six profile topic controls, protected audience, neutral-only presentation and fixture reply from a spaced directory."
+    },
+    {
+      "command": "Current selected-provider authenticated main candidate smoke",
+      "result": "pass",
+      "evidence": "Ordinary real reply, personal learning off, profile controls and shared-audience PWCE card protection."
+    },
+    {
+      "command": "S073/S076/S078/S080 and S084 priority selected-provider successor checks",
+      "result": "pass",
+      "evidence": "All six current-source harnesses pass; original failures remain in predecessor evidence."
+    },
+    {
+      "command": "Visual review and guide continuity",
+      "result": "pass",
+      "evidence": "Desktop clean installation and mobile profile inspected; original accepted S083/S084 guide hash unchanged. Current 17-journey/134-action guide validation remains v5."
+    }
+  ],
+  "typedStudies": [
+    {
+      "path": "implementation/evidence/LS-S086-performance-2.json",
+      "sha256": "0b04174243621c81fe8442d73102b1ffcc2b14bc0227a6e5edac693da8cc56b6",
+      "result": "fail",
+      "sourceRevision": "bca8c0fc3e0fbdbbd6a1227df8b8721c0feb0354"
+    },
+    {
+      "path": "implementation/evidence/LS-S086-performance-3.json",
+      "sha256": "1c1fb6101f2d844bf3da24e68ba0e0cfd23b164c364d83d7e59bdf027c9ea57e",
+      "result": "fail",
+      "sourceRevision": "75b43f9ff637cbb4f8280bf7fdd4e6e75fe66378"
+    }
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "s086-context-expiry-before.log",
+      "sha256": "8f31fdc5a31c08cc349852a761cf64af42a8599336c6d0811f40e35700941c06"
+    },
+    {
+      "name": "s086-context-expiry-after.log",
+      "sha256": "80c36b2c566bb28b0e98182a1edf172e8244860c8459adf8983e97b911c3903f"
+    },
+    {
+      "name": "s086-source-expiry-final.log",
+      "sha256": "c0d2f65f811c706336cbb05472efee5ca85dc0dc1d531412ae7de7f91582b4dd"
+    },
+    {
+      "name": "s086-browser-expiry-final.log",
+      "sha256": "9d437cb7b27bb6de24f3fe4297bc10088619c2c9d8dfe47ef50e34a867a1592b"
+    },
+    {
+      "name": "s086-expiry-build.log",
+      "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446"
+    },
+    {
+      "name": "s086-expiry-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "s086-expiry-owner-validation.log",
+      "sha256": "9d4a733b3266bbd0bb6aa18be18045b76ac36f6a415212e9941e4605a491e0ae"
+    },
+    {
+      "name": "generic-clean-package-3.json",
+      "sha256": "60008221ff42057fd0ca43b5be6da2c45f98656fe2ae02da860aaad2d26c42a2"
+    },
+    {
+      "name": "generic-clean-browser-3.log",
+      "sha256": "a5da174677361650f0b4cc9c0f07620b28db6922fc8d7cec3eff3c7a7f6ef895"
+    },
+    {
+      "name": "s086-candidate-smoke-3.json",
+      "sha256": "27af77794dcec6101ea69368f38eef3e53043cdb4338b69db6fcc548850a6587"
+    },
+    {
+      "name": "s086-candidate-smoke-4.json",
+      "sha256": "49b254efaed3f3518f38017f47bfd13234a46b5e2726ece31bd3c156a547218a"
+    },
+    {
+      "name": "s086-current-visual-review.json",
+      "sha256": "e25a38ef2ac602bbbf641d654fe174bbe9a8fc973b49290bebc027dd08913a02"
+    },
+    {
+      "name": "s086-expiry-s084-provider-priority.json",
+      "sha256": "d6d8fe75f79411a198106d51f1efc063fb7df5cbecf2574dfe72e31c693bf53f"
+    },
+    {
+      "name": "v01-owning-status-validation-final.log",
+      "sha256": "c42bf070788bb7a6664821bd069f046ffdd997c4aa15fa4efedb216c085a8781"
+    },
+    {
+      "name": "generic-clean-archive-3-failure.txt",
+      "sha256": "e5f6975ea945616bf4d726bcc5b3a228bacae727739374b902e711b312d42119"
+    }
+  ],
+  "exclusions": [
+    "No whole causal, full provider/audio performance or Human acceptance.",
+    "Causal study failures, earlier cache-expiry samples, model deadline, local deadline omission and absolute audio latency failures remain immutable.",
+    "No pushes, publication, cloud uploads, new camera, external exposure, personal learning activation, provider/model change, training or world effects.",
+    "Removable-volume work and schedule remain deferred. Original 24 S083/S084 Human acceptance unchanged."
+  ]
+}

@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "fc21bf72f4addeb2ac98cd903b50c503c2f8edac",
-  "currentRevision": "bca8c0fc3e0fbdbbd6a1227df8b8721c0feb0354",
+  "currentRevision": "75b43f9ff637cbb4f8280bf7fdd4e6e75fe66378",
   "activeSlice": "LS-S086",
   "sliceStatus": "implementationCompleteVerificationPending",
   "completedSlices": [
@@ -97,6 +97,7 @@
     "apps/server/src/runtime/session-context.ts",
     "apps/server/test/automatic-memory.test.ts",
     "apps/server/test/experience.test.ts",
+    "apps/server/test/inference.test.ts",
     "apps/server/test/server.test.ts",
     "docs/human-testing-guide.html",
     "docs/s083-s084-acceptance-guide.html",
@@ -109,20 +110,25 @@
     "implementation/evidence/LS-S073-current-qualification.json",
     "implementation/evidence/LS-S073-qualification-certification-7.json",
     "implementation/evidence/LS-S073-qualification-certification-8.json",
+    "implementation/evidence/LS-S073-qualification-certification-9.json",
     "implementation/evidence/LS-S076-current-qualification.json",
     "implementation/evidence/LS-S076-qualification-certification-6.json",
     "implementation/evidence/LS-S076-qualification-certification-7.json",
+    "implementation/evidence/LS-S076-qualification-certification-8.json",
     "implementation/evidence/LS-S078-current-qualification.json",
     "implementation/evidence/LS-S078-qualification-certification-5.json",
     "implementation/evidence/LS-S078-qualification-certification-6.json",
+    "implementation/evidence/LS-S078-qualification-certification-7.json",
     "implementation/evidence/LS-S080-current-qualification.json",
     "implementation/evidence/LS-S080-qualification-certification-5.json",
     "implementation/evidence/LS-S080-qualification-certification-6.json",
+    "implementation/evidence/LS-S080-qualification-certification-7.json",
     "implementation/evidence/LS-S084.json",
     "implementation/evidence/LS-S085-component-1.json",
     "implementation/evidence/LS-S086-causal-1.json",
     "implementation/evidence/LS-S086-causal-2.json",
     "implementation/evidence/LS-S086-component-1.json",
+    "implementation/evidence/LS-S086-component-2.json",
     "implementation/evidence/LS-S086-development-1.json",
     "implementation/evidence/LS-S086-development-2.json",
     "implementation/evidence/LS-S086-development-3.json",
@@ -130,6 +136,8 @@
     "implementation/evidence/LS-S086-development-5.json",
     "implementation/evidence/LS-S086-development-6.json",
     "implementation/evidence/LS-S086-performance-1.json",
+    "implementation/evidence/LS-S086-performance-2.json",
+    "implementation/evidence/LS-S086-performance-3.json",
     "implementation/evidence/LS-S086-schema-export-1.json",
     "implementation/evidence/LS-S086-schema-export-2.json",
     "implementation/evidence/LS-S086.json",
@@ -140,6 +148,7 @@
     "packages/contracts/src/schemas/experiential-learning.schema.json",
     "packages/contracts/src/validator.ts",
     "packages/contracts/test/contract-validation.test.ts",
+    "packages/performance/src/benchmark.ts",
     "packages/performance/test/experience.test.ts",
     "packages/providers-sglang/src/provider.ts",
     "packages/providers-sglang/test/provider.test.ts",
@@ -189,6 +198,18 @@
     "README.md",
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
+    "implementation/checkpoint.json",
+    "implementation/evidence/LS-S073-current-qualification.json",
+    "implementation/evidence/LS-S073-qualification-certification-9.json",
+    "implementation/evidence/LS-S076-current-qualification.json",
+    "implementation/evidence/LS-S076-qualification-certification-8.json",
+    "implementation/evidence/LS-S078-current-qualification.json",
+    "implementation/evidence/LS-S078-qualification-certification-7.json",
+    "implementation/evidence/LS-S080-current-qualification.json",
+    "implementation/evidence/LS-S080-qualification-certification-7.json",
+    "implementation/evidence/LS-S086-component-2.json",
+    "implementation/evidence/LS-S086-performance-2.json",
+    "implementation/evidence/LS-S086-performance-3.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -598,6 +619,41 @@
       "command": "Refreshed LS-S080 prerequisite qualification",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S080-qualification-certification-6.json"
+    },
+    {
+      "command": "Context expiry repair: 971 source, 58 browser, 14 focused; build, lint and owner validation",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S086-component-2.json"
+    },
+    {
+      "command": "First authenticated real-provider 200-pair typed study: 397/400; two cache expiries and a model deadline",
+      "result": "fail",
+      "evidence": "implementation/evidence/LS-S086-performance-2.json"
+    },
+    {
+      "command": "Context repair 200-pair typed successor: 399/400; zero cache expiries, one model deadline",
+      "result": "fail",
+      "evidence": "implementation/evidence/LS-S086-performance-3.json"
+    },
+    {
+      "command": "Current LS-S073 selected-provider qualification after context-expiry repair",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S073-qualification-certification-9.json"
+    },
+    {
+      "command": "Current LS-S076 selected-provider qualification after context-expiry repair",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S076-qualification-certification-8.json"
+    },
+    {
+      "command": "Current LS-S078 selected-provider qualification after context-expiry repair",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S078-qualification-certification-7.json"
+    },
+    {
+      "command": "Current LS-S080 selected-provider qualification after context-expiry repair",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S080-qualification-certification-7.json"
     }
   ],
   "decisions": [
@@ -638,11 +694,12 @@
     "2026-09-20: S064 durable candidates and reviewed activation pass software verification. Actual selected provider supports delivery controls but advertises no description/reference conditioning; supported previews pass without voice activation. Continue S085.",
     "S064 and S085 dependency-ready software work has component verification; selected alignment and Human claims remain open. S086 is approved and proceeds independently of missing speech/environment acceptance.",
     "S084 completedSlices entry is the existing technical prerequisite scope reused by S086 (bounded background admission, provenance and correction fences), not a whole Discovery release claim; existing S083/S084 Human acceptance stays within its 24 recorded journeys.",
-    "2026-09-20: S086 implementation and bounded ordinary selected-provider learning complete. Source 970/970 and browser 58/58 pass at 90c04e5. Actual ordinary attempt 5 learns +0.02, preserves two projects and survives restart. Two causal studies retain aggregate failures (82/84 and 79/84); no Human, whole causal or full performance acceptance. Prerequisite successors retain original failed callback and punctuation observations."
+    "2026-09-20: S086 implementation and bounded ordinary selected-provider learning complete. Source 970/970 and browser 58/58 pass at 90c04e5. Actual ordinary attempt 5 learns +0.02, preserves two projects and survives restart. Two causal studies retain aggregate failures (82/84 and 79/84); no Human, whole causal or full performance acceptance. Prerequisite successors retain original failed callback and punctuation observations.",
+    "2026-09-20: Two actual 200-pair text studies retain 800 requests. Initial cache-expiry interruptions were reproduced and repaired; new source 75b43f9 passes 971 source/58 browser tests and current provider prerequisites. Successor first-text p95 157.25 ms disabled/160.14 ms enabled, added 2.89 ms with 95% paired bootstrap -13.58..19.07 ms; 399/400 completions retain one model deadline. No whole performance or quality pass. Clean current-source install and running-candidate smoke pass. Owning S066/S067/S068/S070 rows now distinguish implemented beta subsets from remaining broad acceptance."
   ],
   "blockers": [],
-  "nextAction": "Continue the registered 200-pair real-provider typed timing study in an isolated synthetic account, then reconcile its exact results with the candidate and component lock. S086 remains implementationCompleteVerificationPending. Whole causal, full audio/pressure performance and Human acceptance are open; backup work stays deferred.",
-  "updatedAt": "2026-09-20T11:07:31Z",
+  "nextAction": "Continue only against the recorded candidate and owners: unresolved selected-model completion/causal quality, the full audio/pressure/corpus performance matrix, trusted audience and existing recorder/away-route input, and separate physical/Human acceptance remain open. The measured baseline already fails original audio objectives; do not relax targets or claim unmeasured passes. Keep removable-volume work and scheduling deferred; no questions before 15:03 UTC during operator absence.",
+  "updatedAt": "2026-09-20T11:33:26Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "Current checkpoint reconciles scoped S086 implementation and bounded evidence. Earlier validation and decisions remain revision-bound history. The S083/S084 24-journey Human decision is unchanged; it does not accept later S086, physical or production claims. README.md, PRODUCT-REALITY-AUDIT.md and earlier acceptance-guide artifacts remain preserved unrelated work. Owning prerequisite successors reflect newly measured qualified cases and explicitly retained failures. No whole release acceptance is inferred."
+  "notes": "Current implementation and selected-provider component evidence are committed separately from whole acceptance. S086 remains implementationCompleteVerificationPending; original causal, deadline, audio latency and prior qualifier failures are preserved. The private runnable report, named-tab 17-journey guide and complete raw synthetic evidence remain operator-local. The original accepted 24 S083/S084 journeys and their guide bytes are unchanged. README.md, PRODUCT-REALITY-AUDIT.md and earlier acceptance artifacts remain preserved unrelated work. No pushes, publication, cloud upload, new camera, external exposure, personal learning activation or provider/model replacement."
 }

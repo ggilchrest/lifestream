@@ -1,0 +1,193 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "claimClass": "bounded-selected-provider-authenticated-typed-measurement",
+  "sourceRevision": "bca8c0fc3e0fbdbbd6a1227df8b8721c0feb0354",
+  "recordedAt": "2026-09-20T11:17:18.827022+00:00",
+  "result": "fail",
+  "fullPerformanceAcceptance": false,
+  "scriptSha256": "6b9e7042fea99776ecdf3607e572bca6d13c4b2b3393daf04de5211e372950c2",
+  "protocolSha256": "3176b0ad5a0ded4eb49a1f3a58e2f5e5bc0f2f70ed69fab2b47d9d8aceb12481",
+  "configurationDigest": "73ea206efec57c8bce679f7b6113c115dd5ffb5f0e82f7722eafaa2ee6bde760",
+  "pairs": 200,
+  "rawMeasuredRequests": 400,
+  "retainedWarmups": 4,
+  "actualCorpusRecords": 102,
+  "distributions": {
+    "disabled": {
+      "count": 200,
+      "complete": 199,
+      "firstTextMs": {
+        "p50": 132.7591250000114,
+        "p95": 153.7711249999993,
+        "max": 196.56654199998593
+      },
+      "providerFirstTextMs": {
+        "p50": 126.12604100001045,
+        "p95": 144.3216249999823,
+        "max": 190.5456669999985
+      },
+      "preparedMs": {
+        "p50": 0.9272500000079162,
+        "p95": 1.4205829999991693,
+        "max": 2.610750000050757
+      },
+      "selectionMs": {
+        "p50": 0.052792000002227724,
+        "p95": 0.08054099999935715,
+        "max": 0.23137500003213063
+      },
+      "completedMs": {
+        "p50": 581.883290999991,
+        "p95": 977.353750000002,
+        "max": 9231.482583000005
+      },
+      "cpuMicroseconds": {
+        "p50": 127849,
+        "p95": 230305,
+        "max": 2249645
+      },
+      "rssMiB": {
+        "p50": 377.609375,
+        "p95": 416.390625,
+        "max": 417.8125
+      },
+      "inputTokens": {
+        "p50": 1476,
+        "p95": 1479,
+        "max": 1480
+      },
+      "outputTokens": {
+        "p50": 32,
+        "p95": 60,
+        "max": 654
+      }
+    },
+    "warm": {
+      "count": 200,
+      "complete": 198,
+      "firstTextMs": {
+        "p50": 134.02062500000466,
+        "p95": 156.229290999996,
+        "max": 221.1784159999952
+      },
+      "providerFirstTextMs": {
+        "p50": 126.96129199996358,
+        "p95": 148.42058299999917,
+        "max": 204.17437500000233
+      },
+      "preparedMs": {
+        "p50": 1.3897909999941476,
+        "p95": 1.8159160000068368,
+        "max": 2.783125000016298
+      },
+      "selectionMs": {
+        "p50": 0.5098330000182614,
+        "p95": 0.7434579999535345,
+        "max": 1.0786670000234153
+      },
+      "completedMs": {
+        "p50": 962.9882919999945,
+        "p95": 2029.808458000014,
+        "max": 10010.037917000009
+      },
+      "cpuMicroseconds": {
+        "p50": 181817,
+        "p95": 495388,
+        "max": 2273232
+      },
+      "rssMiB": {
+        "p50": 376.296875,
+        "p95": 416.34375,
+        "max": 417.71875
+      },
+      "inputTokens": {
+        "p50": 1569,
+        "p95": 1572,
+        "max": 1573
+      },
+      "outputTokens": {
+        "p50": 59,
+        "p95": 134,
+        "max": 715
+      }
+    }
+  },
+  "addedFirstTextP95Ms": 2.4581659999967087,
+  "pairedFirstTextDelta": {
+    "p50": 0.9117089999999735,
+    "p95": 29.04904199996963
+  },
+  "uncertainty": {
+    "lower": -10.49866699994891,
+    "upper": 15.695331999997507,
+    "resamples": 500,
+    "method": "paired-percentile-bootstrap-95pct-v1"
+  },
+  "pairedFirstTextSamples": 199,
+  "failedRequests": [
+    {
+      "pair": 119,
+      "condition": "warm",
+      "firstTextMs": 131.28424999999697,
+      "completedMs": 10010.037917000009,
+      "outputTokens": 715,
+      "errors": [
+        "deadline_exceeded"
+      ],
+      "selectedTopic": "gardening"
+    },
+    {
+      "pair": 121,
+      "condition": "disabled",
+      "firstTextMs": null,
+      "completedMs": 133.27391600000556,
+      "outputTokens": 0,
+      "errors": [
+        "runtime_input_stale"
+      ],
+      "selectedTopic": null
+    },
+    {
+      "pair": 187,
+      "condition": "warm",
+      "firstTextMs": 136.1197079999838,
+      "completedMs": 880.6286250000121,
+      "outputTokens": 53,
+      "errors": [
+        "runtime_input_stale"
+      ],
+      "selectedTopic": "gardening"
+    }
+  ],
+  "unexpectedProviderCalls": 0,
+  "operatorLocalEvidence": [
+    {
+      "name": "s086-typed-1/report.json",
+      "sha256": "7d10e2b45d0fa53087c6e4293b41f1c50609f7d5957e20d5bf86f0f70f6de9c1"
+    },
+    {
+      "name": "s086-typed-1/analysis.json",
+      "sha256": "716f592ebd7b3b64fc49de55636cadcb6e258fff379cf0d0502aeaac3aa6264e"
+    }
+  ],
+  "controls": [
+    "Same Assistant, relationship, session, retained facts, profile and current utterance.",
+    "Clear only disposable in-memory conversation history before every sample to prevent previous output from changing the next input.",
+    "Automatic-memory and reflection background workers stopped equally for both measured conditions; retained memory consent stays enabled, enqueue/read/privacy paths remain real.",
+    "Clear disposable queued extraction jobs before each sample so the paused worker queue has identical depth; no background-pressure claim.",
+    "Feature configuration changes occur outside the timed interval through the normal authenticated API.",
+    "Provider service remains warm; exact prompt cache is uncontrolled and pair order alternates.",
+    "No request retry, result removal or regenerated sample. Warmups are retained separately."
+  ],
+  "scope": "Real authenticated HTTP/SSE, prepared context, optional selection and existing selected inference; warm service and no worker/provider background pressure. Synthetic supported-memory/workspace setup is not learned-state evidence. First non-whitespace text may not yet be useful answer text.",
+  "exclusions": [
+    "No physical or synthetic audio in this study.",
+    "No browser rendering; normal authenticated HTTP/SSE path is exercised.",
+    "No cold-cache, GPU/background pressure, large-corpus or cancellation claim.",
+    "First non-whitespace text timing is an instrumentation milestone; human usefulness/quality is not established.",
+    "No whole LS-PERF-060-062 or S086 pass; missing audio, cold, growth, pressure, invalidation and Human claims remain separate.",
+    "Original failure records, prior causal studies and voice latency targets are unchanged."
+  ],
+  "interpretation": "First-text and local preparation distributions meet their numerical targets in the observed subset. Completion failures remain aggregate failures. Complete-case bootstrap excludes only pairs without a first-text milestone for its numerical interval, not from the study result."
+}

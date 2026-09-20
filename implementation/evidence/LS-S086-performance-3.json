@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "claimClass": "bounded-selected-provider-authenticated-typed-measurement",
+  "sourceRevision": "75b43f9ff637cbb4f8280bf7fdd4e6e75fe66378",
+  "recordedAt": "2026-09-20T11:31:22.023455+00:00",
+  "result": "fail",
+  "fullPerformanceAcceptance": false,
+  "scriptSha256": "6b9e7042fea99776ecdf3607e572bca6d13c4b2b3393daf04de5211e372950c2",
+  "protocolSha256": "167a14011107f8c0d0a544039e23bedf3bf03e804c05514c40d8aeb525ec2c94",
+  "configurationDigest": "085b247a73311bf52ed18711d271665ab4e83947a1a2fed6932b98c40b1088ca",
+  "pairs": 200,
+  "rawMeasuredRequests": 400,
+  "retainedWarmups": 4,
+  "actualCorpusRecords": 102,
+  "distributions": {
+    "disabled": {
+      "count": 200,
+      "complete": 200,
+      "firstTextMs": {
+        "p50": 133.73379200001364,
+        "p95": 157.24683299998287,
+        "max": 179.18445900000006
+      },
+      "providerFirstTextMs": {
+        "p50": 126.70625000001746,
+        "p95": 148.9117499999702,
+        "max": 169.49862500000745
+      },
+      "preparedMs": {
+        "p50": 0.9308749999909196,
+        "p95": 1.2292079999897396,
+        "max": 1.7576659999904223
+      },
+      "selectionMs": {
+        "p50": 0.05208399999537505,
+        "p95": 0.08129099999950995,
+        "max": 0.13766700000269338
+      },
+      "completedMs": {
+        "p50": 575.4488750000019,
+        "p95": 971.1670839999861,
+        "max": 1976.7965839999997
+      },
+      "cpuMicroseconds": {
+        "p50": 130259,
+        "p95": 246848,
+        "max": 487477
+      },
+      "rssMiB": {
+        "p50": 357.8125,
+        "p95": 394,
+        "max": 396.890625
+      },
+      "inputTokens": {
+        "p50": 1486,
+        "p95": 1490,
+        "max": 1491
+      },
+      "outputTokens": {
+        "p50": 31,
+        "p95": 58,
+        "max": 115
+      }
+    },
+    "warm": {
+      "count": 200,
+      "complete": 199,
+      "firstTextMs": {
+        "p50": 134.8564999999944,
+        "p95": 160.13733299999876,
+        "max": 255.54525000001013
+      },
+      "providerFirstTextMs": {
+        "p50": 127.47112499998184,
+        "p95": 150.6386249999996,
+        "max": 233.98616699999548
+      },
+      "preparedMs": {
+        "p50": 1.4168750000098953,
+        "p95": 1.8728330000012647,
+        "max": 2.5320000000065193
+      },
+      "selectionMs": {
+        "p50": 0.5263749999940046,
+        "p95": 0.7502499999973224,
+        "max": 1.3792500000126893
+      },
+      "completedMs": {
+        "p50": 897.3092089999991,
+        "p95": 2025.1852499999804,
+        "max": 10012.241625000002
+      },
+      "cpuMicroseconds": {
+        "p50": 213817,
+        "p95": 532730,
+        "max": 2665201
+      },
+      "rssMiB": {
+        "p50": 357.453125,
+        "p95": 394.34375,
+        "max": 396.8125
+      },
+      "inputTokens": {
+        "p50": 1580,
+        "p95": 1582,
+        "max": 1584
+      },
+      "outputTokens": {
+        "p50": 53,
+        "p95": 132,
+        "max": 711
+      }
+    }
+  },
+  "addedFirstTextP95Ms": 2.8905000000158907,
+  "pairedFirstTextDelta": {
+    "p50": 1.2387500000186265,
+    "p95": 24.383625000002212
+  },
+  "uncertainty": {
+    "lower": -13.583668000006583,
+    "upper": 19.06991600006586,
+    "resamples": 500,
+    "method": "paired-percentile-bootstrap-95pct-v1"
+  },
+  "pairedFirstTextSamples": 200,
+  "failedRequests": [
+    {
+      "pair": 5,
+      "condition": "warm",
+      "firstTextMs": 134.99429200000122,
+      "completedMs": 10012.241625000002,
+      "outputTokens": 711,
+      "errors": [
+        "deadline_exceeded"
+      ],
+      "selectedTopic": "gardening"
+    }
+  ],
+  "unexpectedProviderCalls": 0,
+  "operatorLocalEvidence": [
+    {
+      "name": "s086-typed-2/report.json",
+      "sha256": "702367a16d5a9b28e1b902dd7d413517b52793ffa43cbaf2e3e7145e96717f7b"
+    },
+    {
+      "name": "s086-typed-2/analysis.json",
+      "sha256": "f6de682032bd26f4ec3e77fdd1774dcf00c8ac55a0e2ce865ad0ae4dbef06d11"
+    }
+  ],
+  "controls": [
+    "Same Assistant, relationship, session, retained facts, profile and current utterance.",
+    "Clear only disposable in-memory conversation history before every sample to prevent previous output from changing the next input.",
+    "Automatic-memory and reflection background workers stopped equally for both measured conditions; retained memory consent stays enabled, enqueue/read/privacy paths remain real.",
+    "Clear disposable queued extraction jobs before each sample so the paused worker queue has identical depth; no background-pressure claim.",
+    "Feature configuration changes occur outside the timed interval through the normal authenticated API.",
+    "Provider service remains warm; exact prompt cache is uncontrolled and pair order alternates.",
+    "No request retry, result removal or regenerated sample. Warmups are retained separately."
+  ],
+  "scope": "Real authenticated HTTP/SSE, prepared context, optional selection and existing selected inference; warm service and no worker/provider background pressure. Synthetic supported-memory/workspace setup is not learned-state evidence. First non-whitespace text may not yet be useful answer text.",
+  "exclusions": [
+    "No physical or synthetic audio in this study.",
+    "No browser rendering; normal authenticated HTTP/SSE path is exercised.",
+    "No cold-cache, GPU/background pressure, large-corpus or cancellation claim.",
+    "First non-whitespace text timing is an instrumentation milestone; human usefulness/quality is not established.",
+    "The inference contract has no pinned request seed; output variation is retained.",
+    "No whole LS-PERF-060-062 or S086 pass; missing audio, cold, growth, pressure, invalidation and Human claims remain separate.",
+    "Original failure records, prior causal studies and voice latency targets are unchanged."
+  ],
+  "interpretation": "First-text and local preparation distributions meet their numerical targets in the observed subset. Completion failures remain aggregate failures. Complete-case bootstrap excludes only pairs without a first-text milestone for its numerical interval, not from the study result."
+}
