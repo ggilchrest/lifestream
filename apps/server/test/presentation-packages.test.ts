@@ -27,6 +27,15 @@ test('presentation rejects script fields, undeclared network references, symlink
  const model=Buffer.from(JSON.stringify({asset:{version:'2.0'},images:[{uri:'https://untrusted.invalid/pixel.png'}]}));writeFileSync(join(f.directory,'model.gltf'),model);f.manifest.resources[0]!.bytes=model.length;f.manifest.resources[0]!.sha256=createHash('sha256').update(model).digest('hex');f.save();assert.deepEqual(f.open().failures,['neutral-test']);
  const outside=join(f.root,'outside.gltf');writeFileSync(outside,model);rmSync(join(f.directory,'model.gltf'));symlinkSync(outside,join(f.directory,'model.gltf'));assert.equal(f.open().list('owner').length,0);
 });
+test('versioned presentation mappings accept every conversation state and reject unbounded transitions or silent legacy changes',t=>{
+ const f=fixture();t.after(f.close);
+ const newer={...f.manifest,schemaVersion:'1.1.0',animations:{idle:'rest',preparing:'ready',interrupted:'stop',working:'task',waiting:'wait',failure:'degraded'},transitionSeconds:.3};
+ assert.equal(validatePresentation(newer).animations.preparing,'ready');
+ assert.throws(()=>validatePresentation({...newer,schemaVersion:'1.0.0'}),/Unsupported/);
+ for(const transitionSeconds of [-1,1.01,NaN,Infinity,'fast'])assert.throws(()=>validatePresentation({...newer,transitionSeconds}),/transition/);
+ assert.throws(()=>validatePresentation({...newer,animations:{...newer.animations,execute:'script'}}),/Unsupported/);
+ assert.equal(validatePresentation(f.manifest).schemaVersion,'1.0.0');
+});
 test('endpoint defaults and session overrides survive restart, conflict atomically and never cross owners',t=>{
  const f=fixture();t.after(f.close);const path=join(f.root,'state.sqlite');let db=new Database({path});db.migrate();let selections=new PresentationSelection(db);const packages=f.open(),item=packages.list('owner')[0]!;
  selections.select('owner','endpoint','session-a',{scope:'default',id:item.id,digest:item.digest,expectedRevision:0},packages);

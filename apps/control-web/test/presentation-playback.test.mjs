@@ -16,7 +16,7 @@ test('a failed GLTF texture rejects the replacement and releases its package URL
  await page.route('http://127.0.0.1:9/**',async route=>{
   const name=new URL(route.request().url()).pathname.slice(1);
   if(!name)return route.fulfill({contentType:'text/html',body:'<script type="importmap">{"imports":{"three":"/three.module.js"}}</script>'});
-  const body=name==='presentation-runtime.js'?await readFile(new URL('../presentation-runtime.js',import.meta.url)):await presentationVendor(name);
+  const body=['presentation-runtime.js','presentation-state.js'].includes(name)?await readFile(new URL('../'+name,import.meta.url)):await presentationVendor(name);
   if(!body)return route.abort();return route.fulfill({contentType:'text/javascript',body});
  });await page.goto('http://127.0.0.1:9/');
  const result=await page.evaluate(async()=>{
@@ -29,8 +29,9 @@ test('a failed GLTF texture rejects the replacement and releases its package URL
   const nativeFetch=window.fetch;window.fetch=(url,options)=>String(url).startsWith('/api/runtime/v1/presentation/resources/')?Promise.resolve(new Response(files.get(String(url).split('/').pop()))):nativeFetch(url,options);
   const item=async()=>({id:'synthetic',label:'synthetic',manifest:{model:'model.gltf',animations:{},resources:await Promise.all([...files].map(async([path,data])=>({path,bytes:data.byteLength,mime:path.endsWith('.png')?'image/png':'application/octet-stream',sha256:[...new Uint8Array(await crypto.subtle.digest('SHA-256',data))].map(x=>x.toString(16).padStart(2,'0')).join('')})))}});
   const loaded=await runtime.prepare(await item());let textureLoaded=false;loaded.root.traverse(node=>{if(node.material?.map?.source?.data?.width===2)textureLoaded=true;});runtime.release(loaded);
+  const missing=await item();missing.manifest.animations.speaking='absent';let missingAnimation='';try{await runtime.prepare(missing);}catch(error){missingAnimation=error.message;}
   const before=created.length;files.set('texture.png',new Uint8Array([0,1,2,3]));let failure='';try{await runtime.prepare(await item());}catch(error){failure=error.message;}
-  return {textureLoaded,failure,priorRetained:runtime.current===prior,failedUrlsReleased:created.slice(before).every(url=>revoked.includes(url)),failedUrlCount:created.length-before};
+  return {textureLoaded,missingAnimation,failure,priorRetained:runtime.current===prior,failedUrlsReleased:created.slice(before).every(url=>revoked.includes(url)),failedUrlCount:created.length-before};
  });
- assert.equal(result.textureLoaded,true);assert.match(result.failure,/texture could not be loaded/);assert.equal(result.priorRetained,true);assert.equal(result.failedUrlsReleased,true);assert.equal(result.failedUrlCount,3);
+ assert.equal(result.textureLoaded,true);assert.match(result.missingAnimation,/missing or ambiguous/);assert.match(result.failure,/texture could not be loaded/);assert.equal(result.priorRetained,true);assert.equal(result.failedUrlsReleased,true);assert.equal(result.failedUrlCount,3);
 });
