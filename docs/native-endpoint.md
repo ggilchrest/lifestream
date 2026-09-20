@@ -29,7 +29,8 @@ The builder uses the already installed exact Electron pin and an explicit
 application-file allowlist. It never installs or downloads dependencies,
 replaces existing output, embeds private packs or copies the repository.
 It produces `Lifestream.app`, an architecture-specific ZIP and a receipt with
-source hashes, revision, file counts and archive digest. Third-party Electron
+source hashes, revision, file counts and archive digest. The final ZIP is checked
+against the application allowlist and omits local filesystem metadata. Third-party Electron
 resources retain their own notices; Apache-2.0 applies only where eligible.
 
 Open `Lifestream.app` after starting the configured core. For an explicit local
