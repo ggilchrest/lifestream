@@ -105,6 +105,7 @@ export class PresentationPackages {
     if(principalId!==this.owner())return [];
     return [...this.packages].map(([id,e])=>({id,label:e.manifest.label,digest:e.digest,manifest:structuredClone(e.manifest)}));
   }
+  matches(principalId: string, id: string, digest: string): boolean { return principalId===this.owner() && this.packages.get(id)?.digest===digest; }
   resource(principalId: string, id: string, path: string): { bytes: Buffer; mime: string } {
     const entry=principalId===this.owner()?this.packages.get(id):undefined, resource=entry?.manifest.resources.find(r=>r.path===path);
     if(!entry||!resource)throw new Error('Presentation resource unavailable');
@@ -121,6 +122,15 @@ export class PresentationSelection {
     const rows=this.database.connection.prepare('SELECT scope_id AS scope, package_id AS id, package_digest AS digest, revision FROM presentation_selections WHERE principal_id=? AND endpoint_id=? AND scope_id IN (?,?)').all(principalId,endpointId,'default',sessionId) as {scope:string;id:string;digest:string;revision:number}[];
     const override=rows.find(r=>r.scope===sessionId);
     return {default:rows.find(r=>r.scope==='default')??null,override:override?.id==='@inherit'?null:override??null,overrideRevision:override?.revision??0};
+  }
+  runtimeState(principalId:string,endpointId:string|null,sessionId:string,catalog:PresentationPackages,permitted:boolean):{state:'notConfigured'|'configuredNotObserved'|'unavailable';revision:string} {
+    if(!permitted)return {state:'unavailable',revision:'audience-restricted'};
+    if(!endpointId)return {state:'notConfigured',revision:'unbound'};
+    const selection=this.read(principalId,endpointId,sessionId),chosen=selection.override??selection.default;
+    if(!chosen)return {state:'notConfigured',revision:'no-saved-selection'};
+    const available=chosen.id==='neutral'?chosen.digest==='neutral-v1':catalog.matches(principalId,chosen.id,chosen.digest);
+    // Only an opaque revision crosses into cognition. Asset names, paths and mappings stay endpoint-local.
+    return {state:available?'configuredNotObserved':'unavailable',revision:createHash('sha256').update(JSON.stringify([selection.override?'session':'default',chosen.id,chosen.digest,chosen.revision])).digest('hex')};
   }
   select(principalId:string,endpointId:string,sessionId:string,input:Record<string,unknown>,catalog:PresentationPackages) {
     const clear=input.operation==='clearSessionOverride';
