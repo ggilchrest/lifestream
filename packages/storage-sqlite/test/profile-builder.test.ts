@@ -29,6 +29,8 @@ test("LS-TEST-101 inventory and snapshot are bounded, pinned and durable with no
 test("LS-TEST-101 rejects traversal, symlink paths, archives, credential names, unsupported and oversized input", t => {
   const repo = new ProfileBuilderRepository(); t.after(() => repo.database.close());
   for (const name of ["../secrets.txt", "/home/user.txt", "link/notes.txt", "folder\\notes.txt", "notes.zip", "id.key", ".env", "browser-profile.json", "password.txt"]) assert.throws(() => repo.createJob(scope, [upload({ name })]), /excluded|safe names/);
+  assert.throws(() => repo.createJob(scope, [upload({ name: "synthetic-memory-token.txt" })]), /synthetic-memory-token\.txt.*excluded/);
+  assert.doesNotThrow(() => repo.createJob(scope, [upload({ name: "synthetic-memory-note.txt" })]));
   for (const bad of [upload({ content: "x".repeat(65_537) }), upload({ format: "vendor-unknown" as never }), upload({ authoredBy: "unknown", ownedBySubject: false as never }), upload({ content: "API_KEY=synthetic-test-value" }), upload({ content: "-----BEGIN PRIVATE KEY-----" }), upload({ content: "binary\0bytes" })]) assert.throws(() => repo.createJob(scope, [bad]));
   assert.throws(() => inventoryUploads(scope.userId, Array.from({ length: 9 }, (_, i) => upload({ name: `file${i}.txt` }))), /eight/);
   assert.throws(() => inventoryUploads(scope.userId, Array.from({ length: 5 }, (_, i) => upload({ name: `file${i}.txt`, content: "x".repeat(65_536) }))), /byte limits/);

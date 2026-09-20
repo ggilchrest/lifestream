@@ -37,7 +37,7 @@ export function inventoryUploads(userId: string, uploads: ProfileUpload[]): Prof
   const sources = uploads.map((upload) => {
     ensure(upload && !Object.keys(upload).some(key => !["name", "format", "content", "observedAt", "authoredBy", "ownedBySubject"].includes(key)), "Unknown upload controls are not accepted");
     ensure(upload?.ownedBySubject === true, "Explicit subject-owned input confirmation is required; third-party material is excluded");
-    ensure(upload && safeProfileName(upload.name), "Selected filenames must be plain safe names; directories, paths, archives and credential-like files are excluded");
+    ensure(upload && safeProfileName(upload.name), `Selected filename "${typeof upload?.name === "string" ? upload.name : "(unnamed)"}" must be a plain safe name; directories, paths, archives and credential-like files are excluded`);
     ensure(["notes-v1", "profile-v1", "conversation-v1", "conversation-ndjson-v1", "canonical-user-profile-v1"].includes(upload.format), "Unsupported input format/version; only declared UTF-8 notes and structured profile/conversation v1 are accepted");
     ensure(typeof upload.content === "string" && !upload.content.includes("\0") && !upload.content.includes("\ufffd"), "Input must be valid UTF-8 text without binary data");
     ensure(!/-----BEGIN [A-Z ]*PRIVATE KEY-----|(?:^|\n)\s*(?:AWS_SECRET_ACCESS_KEY|API_KEY|PASSWORD|ACCESS_TOKEN|SECRET_KEY)\s*[:=]\s*\S+/miu.test(upload.content), "Credential-like payloads and private keys are excluded from intake");
