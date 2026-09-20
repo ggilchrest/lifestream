@@ -1,0 +1,140 @@
+{
+  "slice": "LS-S066",
+  "status": "inProgress",
+  "claimClass": "verified-native-local-package-component",
+  "collectedAt": "2026-09-20T18:42:46.028586Z",
+  "revision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+  "behavior": [
+    "Allowlisted local application and ZIP use the installed exact Electron pin, preserve runtime notices and exclude local filesystem metadata.",
+    "Native outage page provides same-endpoint Retry connection; original core/data are not changed.",
+    "Direct packaged and development URL arguments retain the selected loopback endpoint; external endpoints and credentials remain rejected.",
+    "Extracted application preserves sandbox, context isolation, narrow preload, private catalog, eight body/six face preview controls, and synthetic lock cleanup."
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 980,
+      "skipped": 0,
+      "durationMs": 55137.616292,
+      "source": "d28bab2d6f458548a56153ace841a4100e0a8e6a",
+      "scope": "Inherited: later changes affect native argv and archive recipe only."
+    },
+    {
+      "command": "Complete serial control-web suite with PLAYWRIGHT_MODULE",
+      "result": "pass",
+      "tests": 68,
+      "skipped": 0,
+      "durationMs": 189274.902125,
+      "source": "d28bab2d6f458548a56153ace841a4100e0a8e6a"
+    },
+    {
+      "command": "Final ZIP extraction, deep/strict ad-hoc signature verification and pnpm test:desktop with final executable",
+      "result": "pass",
+      "tests": 3,
+      "skipped": 0,
+      "durationMs": 13463.615375
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build; private owner validation; workspace check",
+      "result": "pass"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "tests": 44,
+      "skipped": 0
+    }
+  ],
+  "package": {
+    "sourceRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+    "electronVersion": "44.3.0",
+    "architecture": "arm64",
+    "archiveSha256": "5013c110650e9f47547f218fb56e879b7d044fbe7c27f2ac4e77006f354af6e2",
+    "archiveBytes": 128384192,
+    "archiveMembers": 607,
+    "files": 273,
+    "uncompressedBytes": 319059633,
+    "localFilesystemMetadataOmitted": true,
+    "applicationFiles": [
+      "LICENSE",
+      "THIRD_PARTY_NOTICES.md",
+      "build.json",
+      "connection-status.cjs",
+      "main.cjs",
+      "package.json",
+      "preload.cjs"
+    ],
+    "thirdPartyNotices": [
+      {
+        "path": "Contents/Resources/LICENSE.electron.txt",
+        "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d",
+        "bytes": 1096
+      },
+      {
+        "path": "Contents/Resources/LICENSES.chromium.html",
+        "sha256": "a62dabd1c6ef1327365b2a3fdffb806222684a746dcb8f4afd1c1f690eba5535",
+        "bytes": 20111209
+      }
+    ],
+    "signing": "ad-hoc local; no Developer ID, notarization or distribution claim"
+  },
+  "measurements": {
+    "privateAppearanceMs": 1809.279,
+    "syntheticLockProtectionMs": 59.04029100000025,
+    "scope": "Single actual extracted-app observations. Synthetic lock, no physical audio/lock or provider generation."
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "native-package-source-tests.log",
+      "sha256": "20c6515b022c8a42b748d54a92b1c85997dbe52529b074bd4e98f374b9083f8f"
+    },
+    {
+      "name": "native-package-browser-tests.log",
+      "sha256": "64e9a69724448b06ce3752af8733e25a9ee619eea19e673d4e49f0f974653c12"
+    },
+    {
+      "name": "native-package-workspace-tests.log",
+      "sha256": "05ff2cd348de17af707c2cec10baa9bfb6ce9d89e57273ed50be19281963ff51"
+    },
+    {
+      "name": "native-package-owner-validation.log",
+      "sha256": "b706a7aef481934166d061ab4e09b7264488cc5212f7f6c5bc41a753f10f6783"
+    },
+    {
+      "name": "native-extracted-tests-v4.log",
+      "sha256": "24993b01072f7786cf0084cc2eabd42e1c1da6d536d288a06f0ae4dd660d4ca6"
+    },
+    {
+      "name": "native-mac-package.json",
+      "sha256": "055b314000fb829d3b07e2346a2eccd6025121797193f3fdad2bb368615500bd"
+    },
+    {
+      "name": "native-mac-archive-inspection-v4.json",
+      "sha256": "d0e8822ccf2809ff315ec58df88da8842f8312248ba88377c9b9c03394b97a38"
+    },
+    {
+      "name": "native-packaged-motion.json",
+      "sha256": "ece6480ceaaaa1befd4e21a7a1ee9db83887fff1ceef9a9b8c7a12268929c128"
+    },
+    {
+      "name": "native-mac-initial-archive-findings.json",
+      "sha256": "e30a4a6935cb52dbfbe7780ef0b164953fbd0b3edf2cc1e802935e9052bf1356"
+    },
+    {
+      "name": "v01-guide-validation-v10.json",
+      "sha256": "0800402241a6bca55dae7078a5b885c130933a5ba9ec5c0fa685fa8273d1bd89"
+    }
+  ],
+  "retainedFailures": [
+    "First archive contained unexpected AppleDouble sidecars.",
+    "Second omitted adjacent installed Chromium notices.",
+    "Third archive passed privacy/notices, but executable classification exposed direct-launch argv handling. Final builder/runtime repair and direct no-debugger regression pass."
+  ],
+  "limitations": [
+    "Native runtime component only; no whole S066, signed installer, Developer ID, notarization, redistribution, physical or Human acceptance.",
+    "Selected inference/STT remain unavailable; no shared-service restart or provider substitution.",
+    "Private assets, mappings, screenshots, Lab, configuration and state remain outside connected repositories. No pushes/publication."
+  ],
+  "specificationRevision": "630eab744f970d4c4022ea1e024f6ff3e6a9097f"
+}

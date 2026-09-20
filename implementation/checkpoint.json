@@ -2,8 +2,8 @@
   "schemaVersion": "1.0.0",
   "repository": "ggilchrest/lifestream",
   "branch": "main",
-  "baseRevision": "269e9aee874d7dd3027f47ec2369b2f68eb37f66",
-  "currentRevision": "269e9aee874d7dd3027f47ec2369b2f68eb37f66",
+  "baseRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+  "currentRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
   "activeSlice": "LS-S066",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -100,8 +100,12 @@
     "apps/control-web/test/presentation-preview.test.mjs",
     "apps/control-web/test/presentation-state.test.mjs",
     "apps/control-web/test/presentation.test.mjs",
+    "apps/desktop/connection-status.cjs",
     "apps/desktop/main.cjs",
+    "apps/desktop/package.json",
     "apps/desktop/preload.cjs",
+    "apps/desktop/test/connection.test.mjs",
+    "apps/desktop/test/runtime.test.mjs",
     "apps/server/src/admin/candidate-snapshot.ts",
     "apps/server/src/admin/presentation-packages.ts",
     "apps/server/src/index.ts",
@@ -117,6 +121,7 @@
     "apps/server/test/presentation-packages.test.ts",
     "apps/server/test/server.test.ts",
     "docs/candidate-recovery.md",
+    "docs/native-endpoint.md",
     "docs/presentation-packages.md",
     "docs/s083-s084-acceptance-guide.html",
     "docs/v0.1-candidate.md",
@@ -132,6 +137,7 @@
     "implementation/evidence/LS-S062-qualification-certification-7.json",
     "implementation/evidence/LS-S066-degraded-startup-1.json",
     "implementation/evidence/LS-S066-face-motion-1.json",
+    "implementation/evidence/LS-S066-native-package-1.json",
     "implementation/evidence/LS-S066-scope-refresh-1.json",
     "implementation/evidence/LS-S066-semantic-preview-1.json",
     "implementation/evidence/LS-S066-v01-component-1.json",
@@ -167,6 +173,7 @@
     "packages/storage-sqlite/test/understanding.test.ts",
     "pnpm-lock.yaml",
     "scripts/candidate-recovery.mjs",
+    "scripts/package-desktop.mjs",
     "scripts/start-candidate.mjs",
     "scripts/sync-pwce-incidents.mjs"
   ],
@@ -175,6 +182,7 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
+    "implementation/evidence/LS-S066-native-package-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -679,6 +687,11 @@
       "command": "operator-local guide browser QA and desktop/mobile visual inspection",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S086-recovery-1.json"
+    },
+    {
+      "command": "Native local application archive, extracted runtime and actual candidate proof",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S066-native-package-1.json"
     }
   ],
   "decisions": [
@@ -725,8 +738,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Continue operator-local semantic animation mappings beyond idle and remaining dependency-ready v0.1 integration. Shared face motion, same-scope refresh repair, private tangent validation and actual browser/native checks are complete as bounded components; real provider, physical and Human criteria remain open.",
-  "updatedAt": "2026-09-20T18:07:29.146952Z",
+  "nextAction": "Reconcile checkpoint change bookkeeping after scoped commits while preserving real prerequisite gates, then inspect remaining dependency-ready v0.1 work across owners. Native local package and private animation components are verified; selected provider/physical/Human claims remain open.",
+  "updatedAt": "2026-09-20T18:42:46.028586Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "Candidate source 269e9ae (runtime-equivalent aaa421c) has actual browser/native private-package 0.2.1 proof; six previews, unchanged-context retention, real-context/privacy cleanup and synthetic native lock pass. Public source 980 at e74ec9d; final serial browser 68 at aaa421c; private Lab 57. Isolated private derivative repairs 86 zero tangents with zero validator errors and 14 inherited warnings, preserving source/history and positions/normals/textures/skin/animations. Guide v8 is 17 journeys/148 actions. Current generic source archive at aaa421c passes offline install/build/runtime with no private assets. Encrypted current snapshot completed; fresh isolated restore is recorded by composition. No whole acceptance or new activation is inferred. Continue."
+  "notes": "Current backend/browser 6e4c2f0 (runtime-equivalent aaa421c); extracted local Mac app 85a000e. Private pack 0.3.0 actual previews and fresh encrypted recovery pass. Final Mac ZIP has seven allowlisted application files, required runtime notices and no private matches. Offline retry, direct URL, sandbox and synthetic lock pass. Guide v10: 17 journeys/151 actions. Failed archive attempts retained. No new provider generation or Human acceptance."
 }
