@@ -50,7 +50,7 @@ const metricValue = (sample: DiscoverySample, metric: DiscoveryMetric): number |
 };
 
 /** Seeded paired bootstrap of the difference in p95s, for offline uncertainty reporting. */
-function pairedP95Interval(pairs: readonly (readonly [number, number])[], seed: number): { lower: number; upper: number; resamples: 500; method: string } {
+export function pairedP95Interval(pairs: readonly (readonly [number, number])[], seed: number): { lower: number; upper: number; resamples: 500; method: string } {
   let state = seed >>> 0;
   const random = () => { state = (Math.imul(1664525, state) + 1013904223) >>> 0; return state / 4294967296; };
   const differences: number[] = [];

@@ -306,7 +306,10 @@ class AssistantAdminApi {
     const profile = this.profiles.list(assistantId).find(item => item.status === "active");
     const profileRevision = `${profile?.profileId ?? "unselected"}:${profile?.revision ?? 0};user-profile:${this.userProfiles.boundary(actor)}`;
     const key = createHash("sha256").update(JSON.stringify([this.contextBoundary(assistantId,relationshipId,actor),profileRevision,options,relationship.deploymentId?this.discovery.selectionRevision(relationship as UnderstandingScope,options.inferenceSessionId):0])).digest("hex");
-    const cached = this.preparedCache.get(key); if (cached && Date.parse(cached.freshUntil) > Date.now()) return cached;
+    // Rebuild near-expiry cache entries before admitting a normal inference turn.
+    // Actual feedback expiry below and active-turn invalidation remain authoritative.
+    const minimumRemainingMs = options.inferenceSessionId ? 10_000 : 0;
+    const cached = this.preparedCache.get(key); if (cached && Date.parse(cached.freshUntil) > Date.now() + minimumRemainingMs) return cached;
     const records=this.relationshipContextRecords(relationship,actor,assistantId);
     const view = compileRelationshipContext({ records,userInput:options.userInput ?? "",audienceScope:options.audienceScope ?? "unknown",profileRevision,relationshipRevision:`${relationship.relationshipId}:${relationship.revision}`,configurationRevision:active ? `${active.configurationId}:${active.revision}` : "default:1",controls:{...(active?.controls ?? relationshipControlDefaults),...(options.expressionWarmth!==undefined?{warmth:options.expressionWarmth}:active?.extensions?.initiative?{warmth:Number(asObject(active.extensions.initiative.dimensions)?.warmth)/11}:{})},representation:active?.representation??"recordOriented" });
     const feedbackExpiry=relationship.candidates.filter(item=>feedbackIsCurrent(item)&&item.discoveryFeedback?.until).map(item=>Date.parse(item.discoveryFeedback!.until!));

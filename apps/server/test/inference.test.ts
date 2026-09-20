@@ -11,6 +11,26 @@ import { createLifestreamServer } from "../src/index.ts";
 import { loadProfile } from "../src/config/loader.ts";
 import type { InferenceRequest } from "@lifestream/runtime/inference";
 
+test("a new typed turn refreshes nearly expired prepared context without weakening active-turn fences", async t => {
+  const {randomBytes}=await import('node:crypto');
+  const root=await mkdtemp(join(tmpdir(),'ls-context-expiry-'));t.after(()=>rm(root,{recursive:true,force:true}));
+  const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};
+  const installerToken=randomBytes(32).toString('hex'),app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'safety'),installerToken}});await app.start();t.after(()=>app.shutdown());
+  const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={'content-type':'application/json',origin:base};
+  const post=async(path:string,body:unknown)=>{const response=await fetch(base+path,{method:'POST',headers,body:JSON.stringify(body)});assert.ok(response.ok);return response.json() as Promise<Record<string,any>>;};
+  const setup=await fetch(base+'/api/auth/v1/setup',{method:'POST',headers,body:JSON.stringify({username:'owner',password:randomBytes(32).toString('hex'),installerToken})});assert.equal(setup.status,201);headers.cookie=setup.headers.get('set-cookie')!.split(';')[0]!;headers['x-lifestream-csrf']=(await setup.json() as any).session.csrfToken;
+  const a=await post('/api/admin/v1/assistants',{displayName:'Synthetic expiry check'});await post(`/api/admin/v1/assistants/${a.assistantId}/activate`,{profileId:a.profile.profileId,expectedActiveRevision:null});
+  const {relationship}=await post(`/api/admin/v1/assistants/${a.assistantId}/relationships`,{});await post('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession'});
+  const start=Date.now();t.mock.timers.enable({apis:['Date'],now:start});let advanceMs=0;
+  t.mock.method(FixtureInferenceProvider.prototype,'generate',async function*(){if(advanceMs)t.mock.timers.setTime(Date.now()+advanceMs);yield {kind:'text',text:'Synthetic current reply'};yield {kind:'done'};});
+  const turn=async()=>{const response=await fetch(base+'/api/runtime/v1/messages',{method:'POST',headers,body:JSON.stringify({assistantId:a.assistantId,relationshipId:relationship.relationshipId,userInput:'Explain a cache.'})});assert.equal(response.status,200);return response.text();};
+  assert.match(await turn(),/interaction.completed/);
+  t.mock.timers.setTime(start+119900);advanceMs=200;
+  assert.match(await turn(),/interaction.completed/,'a nearly expired cached view must be rebuilt before admission');
+  // The newly compiled view still expires. Never extend an already admitted view.
+  advanceMs=120001;const expired=await turn();assert.match(expired,/runtime_input_stale/);assert.doesNotMatch(expired,/Synthetic current reply|interaction.completed/);
+});
+
 test("actual typed runtime uses active profile and host modality truth, ignoring client claims", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "lifestream-self-context-")); t.after(() => rm(root, { recursive: true, force: true }));
   const selected = loadProfile("test"); const app = createLifestreamServer({ config: { ...selected, storage: { databasePath: join(root, "data.sqlite"), artifactDirectory: join(root, "artifacts") } } }); await app.start(); t.after(() => app.shutdown());
