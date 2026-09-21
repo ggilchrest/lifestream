@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "a8ea84a6d17feb3480838caa2dc507abc3e788fd",
-  "currentRevision": "2e1e8912152582dd24f76912a3c03b7d5a9a8a38",
+  "currentRevision": "5e04ff4c7fa8dd7a0bad4d86ddac95b4fd509c6e",
   "activeSlice": "LS-S068",
   "sliceStatus": "implementationCompleteVerificationPending",
   "completedSlices": [
@@ -142,6 +142,7 @@
     "implementation/evidence/LS-S062-current-qualification.json",
     "implementation/evidence/LS-S062-qualification-certification-12.json",
     "implementation/evidence/LS-S062-qualification-certification-13.json",
+    "implementation/evidence/LS-S062-qualification-certification-14.json",
     "implementation/evidence/LS-S068-audience-presentation-1.json",
     "implementation/evidence/LS-S068-audio-playback-1.json",
     "implementation/evidence/LS-S068-authenticated-handoff-1.json",
@@ -184,12 +185,9 @@
   ],
   "changedFiles": [
     "README.md",
-    "apps/control-web/conversation-room.js",
-    "apps/control-web/test/audience-privacy.test.mjs",
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-audience-presentation-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -875,6 +873,11 @@
       "command": "Audience/session presentation: failing/passing rendered regression, 1024 source, 79 browser, 7 focused, clean offline install and actual private browser/Mac checks",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S068-audience-presentation-1.json; initial build/test scheduling failure retained."
+    },
+    {
+      "command": "Current host compiled-provider qualification and warm startup",
+      "result": "pass",
+      "evidence": "../orchestration/evidence/receipts/V01-compiled-voice-20260921.json; not whole latency, acoustic or Human acceptance."
     }
   ],
   "decisions": [
@@ -921,11 +924,12 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off.",
     "2026-09-21: operator authorizes remote ai5090 repair. NeMo restored through existing launcher; Qwen/Vox were already healthy and not restarted. Pinned model, GPU assignment and network exposure preserved. Real functional speech completed but omitted the first word of the known phrase; quality failure retained. Resumed goal routes to dependency-ready integrated verification without inferring new Human acceptance.",
     "2026-09-21: Bounded first-clause segmentation admitted after current S052 qualification and S056 preflight; real-provider browser/native functional checks pass. Controlled scripted-inference comparison starts scheduled speech 366.1 ms earlier at the median. Absolute latency and native 288 ms gap remain failed; no physical or perceptual acceptance.",
-    "2026-09-21: Repaired duplicate presentation reset after audience/session events. Private browser and packaged Mac restore the saved appearance automatically while shared/unknown disposal and closed capture remain intact. This is a component result, not whole v0.1 acceptance."
+    "2026-09-21: Repaired duplicate presentation reset after audience/session events. Private browser and packaged Mac restore the saved appearance automatically while shared/unknown disposal and closed capture remain intact. This is a component result, not whole v0.1 acceptance.",
+    "2026-09-21: Corrected selected CUDA optimization guard and pinned the read-only host patch after three direct synthesis samples and 14 real browser/Mac turns. Original runtime retained for rollback. Current warm recovery preserves services. No provider/model/GPU/sampling or release-acceptance change. Deployment implementation stays operator-local and composition owns host evidence."
   ],
   "blockers": [],
-  "nextAction": "Perform a bounded diagnosis of sustained selected-provider speech delivery using the retained long-reply stages before any new benchmark or runtime change. Preserve the 180-second product deadline, distinguish the earlier 180-second observer timeout from a product failure, and retain all latency, diversity, causal and physical/Human gates. Continue independent work only where a concrete repair is supported.",
-  "updatedAt": "2026-09-21T17:07:48.373992Z",
+  "nextAction": "Complete sustained selected-provider speech verification under the corrected CUDA optimization guard, preserving the native audience-protection interruption and all existing criteria; then repair the selected reference-conditioning protocol without model replacement or personal voice activation.",
+  "updatedAt": "2026-09-21T18:21:03.223455Z",
   "updatedBy": "Codex",
-  "notes": "Run disposition continue. Restored selected providers pass current joined browser/Mac conversation, automatic memory, logical handoff and privacy checks. Audio onset remains failed; separate stage instrumentation diagnoses endpointing, recognition, segmentation and synthesis without weakening criteria. Physical audience/recorder/away-route, selected alignment, device/perceptual checks and independent recovery-key custody remain open release gates."
+  "notes": "Run disposition continue. Composition owns the operator-local CUDA guard/startup repair and immutable V01-compiled-voice-20260921 receipt. Fourteen joined real-provider turns pass with zero playback gaps; absolute onset and physical/Human gates remain unmet. Current source checks are unchanged at 1024 source/79 browser. Three-reply long-form verification is in progress."
 }
