@@ -108,6 +108,7 @@
     "docs/presentation-packages.md",
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
+    "implementation/checkpoint.json",
     "implementation/evidence/LS-S047-current-qualification.json",
     "implementation/evidence/LS-S047-qualification-certification-1.json",
     "implementation/evidence/LS-S047-qualification-certification-2.json",
@@ -147,7 +148,6 @@
     "README.md",
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
-    "implementation/checkpoint.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
