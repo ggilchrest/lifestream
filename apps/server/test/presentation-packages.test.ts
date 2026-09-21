@@ -78,3 +78,15 @@ test('clearing only the current session override preserves the default and monot
  selections.select('owner','endpoint','session-b',{operation:'clearSessionOverride',expectedRevision:0},packages);assert.equal(selections.read('owner','endpoint','session-a').override?.revision,3);
  assert.equal(selections.read('other','endpoint','session-a').overrideRevision,0);assert.equal(selections.read('owner','other-endpoint','session-a').overrideRevision,0);
 });
+
+test('speech pose mappings require the additive schema and bounded explicit cue data',t=>{
+ const f=fixture();t.after(f.close);
+ const value={...f.manifest,schemaVersion:'1.3.0',animations:{mouthAmplitude:'mouth.open'},capabilities:{lipSync:'amplitude',facialAnimation:false},speech:{cueSet:'neutral-two-poses',poses:{open:'mouth.open',rest:'mouth.rest'},transitionSeconds:.04}};
+ assert.equal(validatePresentation(value).speech?.poses.open,'mouth.open');assert.throws(()=>validatePresentation({...value,animations:{}}),/mapping/);
+ for(const schemaVersion of ['1.0.0','1.1.0','1.2.0'])assert.throws(()=>validatePresentation({...value,schemaVersion}),/Unsupported/);
+ for(const transitionSeconds of [-1,.101,NaN,Infinity,'fast'])assert.throws(()=>validatePresentation({...value,speech:{...value.speech,transitionSeconds}}),/transition/);
+ for(const poses of [{},{'not a cue':'pose'},{open:''},Object.fromEntries(Array.from({length:33},(_,i)=>['cue'+i,'pose']))])assert.throws(()=>validatePresentation({...value,speech:{...value.speech,poses}}),/mapping/);
+ assert.throws(()=>validatePresentation({...value,speech:{...value.speech,script:'run'}}),/Unsupported/);
+ assert.throws(()=>validatePresentation({...value,capabilities:{lipSync:'none',facialAnimation:false}}),/mapping/);
+ assert.equal(validatePresentation(f.manifest).schemaVersion,'1.0.0');
+});

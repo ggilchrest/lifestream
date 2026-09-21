@@ -57,7 +57,7 @@ export function installPresentation({anchor,api,busy,playback,identity}) {
     const accepted=savedItem();if(!accepted||accepted.id!==target.id||accepted.digest!==target.digest)throw new Error('The effective selection changed during the save. Current display retained; refresh appearances before continuing.');
    }
    if(candidate){renderer.commit(candidate);prepared.delete(candidate);effective=target.id;effectiveDigest=target.digest;}
-   say(`${target.label} · ${target.manifest?.capabilities.lipSync==='amplitude'||target.id==='neutral'?'Amplitude-driven mouth; no phoneme timing':'No live mouth mapping'}.`);
+   say(`${target.label} · ${target.manifest?.speech?'Timed mouth cues for compatible acknowledgments; ':''}${target.manifest?.capabilities.lipSync==='amplitude'||target.id==='neutral'?'Amplitude-driven mouth; no phoneme timing':'No live mouth mapping'}.`);
    if(clearOverride)select.value=target.id;
   }catch(error){if(ticket===epoch)say(`Requested ${requested.label}; current appearance retained. ${error.message}`);throw error;}
   finally{for(const candidate of prepared)renderer?.release(candidate);clearTimeout(timer);if(pending===controller)pending=null;if(ticket===epoch){button.disabled=!snapshot?.endpointId;selectionSummary();settle();}}
@@ -77,5 +77,5 @@ export function installPresentation({anchor,api,busy,playback,identity}) {
  window.addEventListener('lifestream-audience',event=>{clear();if(event.detail?.privateAllowed&&location.hash==='#conversation')void refresh().catch(error=>say(error.message));});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)release();else if(location.hash==='#conversation')void refresh().catch(error=>say(error.message));});
  window.addEventListener('pagehide',()=>{clear();release();});
- return {refresh:run(refresh),clear,settle,state(value){section.querySelector('.presentation-state').textContent=value;runtime?.applyState(value);settle();},get pending(){return !!pending;}};
+ return {refresh:run(refresh),clear,settle,acceptsSpeech(track){return runtime?.disposed===false&&!runtime.renderer.getContext().isContextLost()&&runtime.current?.speechMotion?.accepts(track)===true;},state(value){section.querySelector('.presentation-state').textContent=value;runtime?.applyState(value);settle();},get pending(){return !!pending;}};
 }
