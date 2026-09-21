@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S071",
+  "status": "verified",
+  "claimClass": "selected-provider-self-context-and-signout-fencing-component",
+  "recordedAt": "2026-09-21T15:38:51.697729Z",
+  "sourceRevision": "86f70085171a969488b839aa8764f21b70b6c6ac",
+  "runtimeEquivalentTo": "502f1485e4ffa1975a1e71f2bb566c6965d203d2",
+  "specificationRevision": "224aff6c3ea57f36a151b56f9711393c285df2ff",
+  "checks": [
+    {
+      "id": "typed-speech-available-capture-inactive",
+      "result": "pass",
+      "elapsedMs": 790
+    },
+    {
+      "id": "speech-outage-refresh-preserves-text",
+      "result": "pass",
+      "elapsedMs": 618
+    },
+    {
+      "id": "authorized-session-inspection-and-observed-scope-changes",
+      "result": "pass",
+      "elapsedMs": 1067
+    },
+    {
+      "id": "saved-presentation-truth-in-selected-provider-reply",
+      "result": "pass",
+      "elapsedMs": 600
+    },
+    {
+      "id": "actual-synthetic-audio-route",
+      "result": "pass",
+      "elapsedMs": 7969
+    }
+  ],
+  "qualificationHarnessRepair": [
+    "Normalize punctuation only in spoken words, matching the existing S080 policy; missing or changed words still fail.",
+    "Require revoked audio input scope to report scope-change/playback stop and close; require old cookie rejection and zero late text/PCM. No terminal is demanded after transport closure."
+  ],
+  "retainedFailures": [
+    "First attempt rejected punctuation in the otherwise matching audio response.",
+    "Second attempt demanded a terminal on a socket correctly closed after sign-out.",
+    "Separate service probe missed the opening word; that quality failure is unchanged."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "provider-recovery-s071-20260921.json",
+      "sha256": "d6942e31dea123a4963a5aa86123d6fb3418b0a036c525d9f5b8115db982bd3b"
+    },
+    {
+      "name": "provider-recovery-s071-20260921-2.json",
+      "sha256": "d21e911ab9f4025b6e0d386ce5b8dac15614b3ca181c579ae03480330421ed28"
+    },
+    {
+      "name": "provider-recovery-s071-20260921-3.json",
+      "sha256": "d79cf99ae458489c6bc51e778a0010bbcc811c7693d048719bdb45efe0918e45"
+    }
+  ],
+  "exclusions": [
+    "Synthetic identities and audio; isolated authentication and database; real existing inference/STT/TTS.",
+    "No actual microphone, camera, acoustic playback, perceptual or Human acceptance.",
+    "No model/provider/GPU policy changes or whole slice/release acceptance."
+  ]
+}
