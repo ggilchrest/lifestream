@@ -1,7 +1,41 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { calculateLatency } from "../src/performance/metrics.ts";
-import { SpeechSafeSegmenter } from "../src/voice/segmenter.ts";
+import { SpeechSafeSegmenter, projectSpeech } from "../src/voice/segmenter.ts";
+
+test('first-clause mode releases a substantial natural pause once, retaining every word',()=>{
+  const first='The gardener carefully checked the quiet greenhouse before opening the door,';
+  const rest=' and found a smooth blue stone beside the oldest rose bush.';
+  const segmenter=new SpeechSafeSegmenter(360,{firstClauseMinChars:64});
+  assert.deepEqual(segmenter.push(first),[],'a comma needs whitespace lookahead');
+  assert.deepEqual(segmenter.push(' '),[{segmentId:'segment-0',sequence:0,text:first}]);
+  assert.deepEqual(segmenter.push(rest.trimStart()),[]);
+  assert.deepEqual(segmenter.flush().map(s=>s.text),[rest.trim()]);
+  const later=new SpeechSafeSegmenter(360,{firstClauseMinChars:64});
+  assert.deepEqual(later.push('Hello. '+first+' ').map(s=>s.text),['Hello.'],'later clauses keep sentence grouping');
+  later.cancel();assert.deepEqual(later.push(rest),[]);assert.deepEqual(later.flush(),[]);
+});
+
+test('first-clause split matrix keeps markup, numbers, addresses and short openings intact',()=>{
+  const inputs=[
+    'After checking the full inventory and preserving the existing version of every file, do not delete 1,234 records or change 3.14 mg.',
+    '<think>A long hidden discussion, with internal instructions, must never be spoken.</think> Dr. Smith says **do not** change the settings of the current installed service, and keep file_name.txt unchanged.',
+    'Read [the detailed reference guide, including its examples](https://example.com/reference?q=1,2). Keep the current state.',
+    'Here is a deliberately long line of prose before `private, code, details` and {"hidden":"private, value"}, followed by [[CONTROL, SECRET]] visible words.',
+    'Yes, I can explain it. The gardener carefully checked the quiet greenhouse before opening the door, and found a stone.'
+  ];
+  for(const raw of inputs){
+    for(let split=0;split<=raw.length;split++){
+      const segmenter=new SpeechSafeSegmenter(360,{firstClauseMinChars:64});
+      const result=[...segmenter.push(raw.slice(0,split)),...segmenter.push(raw.slice(split)),...segmenter.flush()].map(s=>s.text).join(' ');
+      assert.equal(result,projectSpeech(raw),`split ${split}: ${raw}`);
+    }
+    const segmenter=new SpeechSafeSegmenter(360,{firstClauseMinChars:64});
+    const result=[...Array.from(raw).flatMap(c=>segmenter.push(c)),...segmenter.flush()].map(s=>s.text).join(' ');
+    assert.equal(result,projectSpeech(raw),`single-character deltas: ${raw}`);
+  }
+  const short=new SpeechSafeSegmenter(360,{firstClauseMinChars:64});assert.deepEqual(short.push('Yes, I can explain it'),[]);
+});
 
 test("segmenter waits for semantic boundary and strips control markup", () => { const segmenter = new SpeechSafeSegmenter(); assert.deepEqual(segmenter.push("Hello [[CAPABILITY_SUCCESS]]"), []); assert.deepEqual(segmenter.push(" world."), []); assert.deepEqual(segmenter.flush(), [{ segmentId: "segment-0", sequence: 0, text: "Hello world." }]); });
 test("segmenter flushes and cancellation fences late text", () => { const segmenter = new SpeechSafeSegmenter(10); assert.equal(segmenter.push("one two three").length, 1); segmenter.cancel(); assert.deepEqual(segmenter.push("late."), []); assert.deepEqual(segmenter.flush(), []); });

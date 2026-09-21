@@ -4,6 +4,8 @@ Browser and native conversations share the same playback controller. Speech star
 
 These values describe software scheduling, not end-to-end response latency or physical audibility. Recognition, turn detection, model generation, synthesis, transport and the output device still contribute delay. A provider gap can still produce silence. Playback-driven mouth animation follows the actual scheduled samples and stays silent during a gap.
 
+An ordinary voice reply may start at the first natural comma pause after at least 64 characters of speech-safe text. The segmenter waits for whitespace after the comma, excludes protected markup and addresses, and preserves the remaining words. Short openings and later segments keep sentence grouping. This can overlap the first clause's synthesis with the rest of model generation; it does not shorten microphone endpointing or establish the overall latency target. Acceptance must include the first clause's delivery and the gap into its continuation, alongside whole-answer content and voice consistency.
+
 Stop, interruption, privacy changes and connection loss discard queued output and fence retired responses. Reducing the scheduling cushion does not change these controls, microphone endpointing, provider selection or speech projection.
 
 For acceptance, compare first admitted PCM to the first scheduled sample and measure actual end-of-turn to audible speech separately. Exercise normal replies, delayed chunks, gaps between speech segments, Stop, shared/unknown audience, reconnect and a subsequent reply. Record any starvation, click or perceptual discontinuity. Keep the existing 900 ms median and 1,500 ms p95 first-spoken-word objectives until actual acceptance evidence satisfies them.

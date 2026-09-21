@@ -3,24 +3,31 @@ export type SpeechSegment = { segmentId: string; sequence: number; text: string 
 export class SpeechSafeSegmenter {
   private buffer = ""; private sequence = 0; private cancelled = false;
   private readonly maxChars: number;
-  constructor(maxChars = 240) { this.maxChars = maxChars; }
+  private readonly firstClauseMinChars: number | undefined;
+  constructor(maxChars = 240, options: {firstClauseMinChars?: number} = {}) {
+    this.maxChars = maxChars;
+    const minimum=options.firstClauseMinChars;
+    if(minimum!==undefined&&(!Number.isInteger(minimum)||minimum<32||minimum>maxChars))throw new Error('Invalid first-clause speech bound');
+    this.firstClauseMinChars=minimum;
+  }
   push(text: string): SpeechSegment[] {
     if (this.cancelled) return [];
     // Keep incomplete markup and whitespace intact until a safe boundary.
     this.buffer += text;
     if (this.buffer.length > 16_384) throw new Error("speech projection buffer limit exceeded");
     const segments: SpeechSegment[] = [];
-    let boundary = findBoundary(this.buffer, this.maxChars);
+    let boundary = this.boundary();
     while (boundary > 0) {
       const value = projectSpeech(this.buffer.slice(0, boundary));
       this.buffer = this.buffer.slice(boundary);
       if (value) segments.push(this.segment(value));
-      boundary = findBoundary(this.buffer, this.maxChars);
+      boundary = this.boundary();
     }
     return segments;
   }
   flush(): SpeechSegment[] { if (this.cancelled) return []; const value = projectSpeech(this.buffer); this.buffer = ""; return value ? [this.segment(value)] : []; }
   cancel(): void { this.cancelled = true; this.buffer = ""; }
+  private boundary(): number { return findBoundary(this.buffer,this.maxChars,this.sequence===0?this.firstClauseMinChars:undefined); }
   private segment(text: string): SpeechSegment { return { segmentId: `segment-${this.sequence}`, sequence: this.sequence++, text }; }
 }
 
@@ -40,7 +47,7 @@ export function projectSpeech(raw: string): string {
     .replace(/[\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}\u200d\ufe0f\u20e3]/gu, "")
     .replace(/\s+/gu, " ").trim();
 }
-function findBoundary(text: string, maxChars: number): number {
+function findBoundary(text: string, maxChars: number, firstClauseMinChars?: number): number {
   let bracket = 0, angle = false, ticks = 0, lastSpace = 0;
   for (let index = 0; index < text.length; index++) {
     const character = text[index]!;
@@ -79,6 +86,10 @@ function findBoundary(text: string, maxChars: number): number {
     const tokenStart = text.lastIndexOf(" ", index - 1) + 1;
     const token = text.slice(tokenStart, index + 1);
     const inAddress = /https?:\/\/|[/\\@]|\]\(/u.test(token);
+    // Only the first substantial spoken clause may use a comma pause. Wait for
+    // whitespace so numeric separators and unfinished tokens remain intact;
+    // measure projected text so hidden markup cannot satisfy the minimum.
+    if(firstClauseMinChars!==undefined&&character===','&&!inAddress&&/\s/u.test(text[index+1]??'')&&projectSpeech(text.slice(0,index)).length>=firstClauseMinChars)return index+1;
     if (/[.!?;]/u.test(character) && !inAddress) {
       if (character === "." && (/\d\.$/u.test(token) || /^(?:Dr|Mr|Mrs|Ms|Prof|St|vs|etc|e\.g|i\.e)\.$/iu.test(token) || /^[A-Z]\.$/u.test(token))) continue;
       const following = text[index + 1];

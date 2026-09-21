@@ -5,6 +5,23 @@ import { AudioSession, hasAudioEnergy, VOICE_TURN_DEADLINE_MS } from "../src/run
 import {defaultVoiceSettings} from '../src/runtime/voice-settings.ts';
 
 const frame = (value: number) => { const bytes = Buffer.alloc(4800 * 2); for (let offset = 0; offset < bytes.length; offset += 2) bytes.writeInt16LE(value, offset); return { frameId: randomUUID(), sequence: 0, format: { encoding: "pcm_s16le" as const, sampleRateHz: 16000 as const, channels: 1 as const }, sampleOffset: 0, sampleCount: 4800, dataBase64: bytes.toString("base64") }; };
+test('ordinary voice starts a substantial first clause before inference completes without dropping its continuation',async()=>{
+ const events:any[]=[],spoken:string[]=[];
+ const first='The gardener carefully checked the quiet greenhouse before opening the door,',rest='and found a smooth blue stone beside the oldest rose bush.';
+ let synthesisStarted!:()=>void,timer:ReturnType<typeof setTimeout>|undefined;
+ const started=new Promise<void>((resolve,reject)=>{synthesisStarted=resolve;timer=setTimeout(()=>reject(new Error('First clause did not reach synthesis while inference was pending')),1000);});
+ const stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Tell me a story.'}};yield {kind:'terminal',outcome:'succeeded'};}};
+ const inference={async *generate(){yield {kind:'text',text:first+' '};await started;assert.deepEqual(spoken,[first]);yield {kind:'text',text:rest};}};
+ const tts={async *synthesize(request:any){spoken.push(request.text);synthesisStarted();yield {kind:'data',segmentId:request.segmentId,frame:{...frame(100),format:request.format}};yield {kind:'terminal',outcome:'succeeded'};}};
+ const sessionId=randomUUID(),audioInputId=randomUUID(),session=new AudioSession({readyState:1,send:raw=>events.push(JSON.parse(raw)),close(){}},{stt:stt as never,inference:inference as never,tts:tts as never},sessionId);
+ try{
+  await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,expectedSessionRevision:0,endpointId:randomUUID(),audioInputId,format:frame(0).format}}));
+  await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(100)}));
+  await session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));
+  assert.deepEqual(spoken,[first,rest]);assert.equal(events.at(-1).event.payload.state,'completed');
+  assert.equal(events.filter(e=>e.event?.payload.type==='textDelta').map(e=>e.event.payload.text).join(''),first+' '+rest);
+ }finally{clearTimeout(timer);session.close();}
+});
 test('a cached acknowledgment follows accepted recognition and lease, before inference, without entering the answer',async()=>{
  const events:any[]=[],order:string[]=[],prompts:any[]=[];let failed=false,cacheBroken=false;
  const socket={readyState:1,send:(raw:string)=>{const value=JSON.parse(raw);events.push(value);order.push(value.type);},close(){}},stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Synthetic speech.'}};order.push('recognition-settled');yield {kind:'terminal',outcome:failed?'failed':'succeeded'};}},inference={async *generate(request:any){order.push('inference');prompts.push(request);yield {kind:'text',text:'Actual answer.'};}},tts={async *synthesize(request:any){yield {kind:'data',segmentId:request.segmentId,frame:frame(100)};yield {kind:'terminal',outcome:'succeeded'};}};
