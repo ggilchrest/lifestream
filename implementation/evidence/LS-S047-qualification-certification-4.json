@@ -1,0 +1,115 @@
+{
+  "slice": "LS-S047",
+  "status": "verified",
+  "claimClass": "structural-contract",
+  "caseIds": [
+    "LS-TEST-060",
+    "LS-TEST-061",
+    "LS-TEST-062",
+    "LS-TEST-063",
+    "LS-TEST-064"
+  ],
+  "revision": "53eef7519b13caf20bb8741d730dfe355014fc68",
+  "collectedAt": "2026-09-21T23:03:23.927199Z",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "1028/1028; zero skipped."
+    },
+    {
+      "command": "node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "89/89; zero skipped. Includes actual WebAudio/Three.js cached-cue and answer-preemption check."
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build",
+      "result": "pass",
+      "evidence": "All passed."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "60 specification checks passed; structural only."
+    }
+  ],
+  "qualification": {
+    "kind": "prospective-qualification",
+    "sourceRepository": "ggilchrest/lifestream",
+    "testedRevision": "53eef7519b13caf20bb8741d730dfe355014fc68",
+    "supersedes": "implementation/evidence/LS-S047.json",
+    "supersedesSha256": "23c747fa2aed9eb9b0153d16f0a753af5890ffcd16c3a991af0e4bc379da35d8",
+    "sourceArtifacts": [
+      {
+        "path": "packages/contracts/src/schemas/provider-messages.schema.json",
+        "sha256": "f73a90a63d5e70d3e366516b2628f4bac84a0fa690fb9b4a4ba883fde870cf8b"
+      },
+      {
+        "path": "packages/contracts/src/schemas/interaction-trace-event.schema.json",
+        "sha256": "135c611137e2f69b6d164d0313116de1d67bc7494538491da40103ea30938f3c"
+      },
+      {
+        "path": "packages/contracts/src/provider-messages.ts",
+        "sha256": "d7a67dbc3d53bd51c6a91683040ed662fc913c5f606bffd8adc028a99640222b"
+      },
+      {
+        "path": "packages/contracts/test/provider-types.test.ts",
+        "sha256": "8a81330930fb2cfb3618f54496cde12e862d98d2417f24cd46c96ab6cb4d8186"
+      },
+      {
+        "path": "packages/contracts/test/contract-validation.test.ts",
+        "sha256": "dbeb7f9b4ad2daddf139f89ec0df6ac204e3369c350a74cd6e7826d215697a37"
+      }
+    ],
+    "effectiveSpecification": {
+      "sourceRepository": "ggilchrest/lifestream-specs",
+      "revision": "ceb872df672b6f0a009b35a9d10e153117f88d85",
+      "artifacts": [
+        {
+          "path": "docs/11-provider-interfaces.md",
+          "sha256": "1e290870a4a5150c3c9a06a9f08e6715bb7f6a703ab757d8fac8b149cb36162d"
+        },
+        {
+          "path": "docs/20-concrete-port-and-transport-contracts.md",
+          "sha256": "6e22ec6f490a13d6fd99203cc207f6047199c57ca4246b3e10feacaef64abc92"
+        },
+        {
+          "path": "docs/23-expressive-speech.md",
+          "sha256": "4e1e0be32deb79df91c214f45ab71ff04da0a45a3c3748e6e2ac40722f6d2cc9"
+        },
+        {
+          "path": "contracts/provider-messages-2.0.0.schema.json",
+          "sha256": "5590cda5aafdd37a2132922efa2241e077ca850fd4e0662be6c056a950d900e0"
+        },
+        {
+          "path": "fixtures/requirement-traceability.json",
+          "sha256": "8b259bf6d60879758b6a87400183b04a97e7c71ae8964a3d7d23697dd49373cc"
+        }
+      ]
+    }
+  },
+  "exclusions": [
+    "Refreshes the expressive-speech contract amendment, not full scenario execution or perceptual identity acceptance.",
+    "Historical specification-only receipt remains unchanged; no provider/model or live effect is authorized."
+  ],
+  "priorQualification": {
+    "path": "implementation/evidence/LS-S047-qualification-certification-3.json",
+    "sha256": "d69a8253465d18af19792d8010ae6abae928abed5e48d7a157378bd68f8bdfa3"
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "s085-cue-source.log",
+      "sha256": "241c9bc752940c928cfc1560b0ae17d18c373b1621d57204a49d6b0886242998"
+    },
+    {
+      "name": "s085-cue-browser.log",
+      "sha256": "934d12a3e2d66ee19127edc850a815759e258df7a362cec5c60228415b53fb58"
+    },
+    {
+      "name": "s085-prerequisite-owner-validation-2.log",
+      "sha256": "dff173c2244288135a733053ef24713bbaa66dc3e4df31b2f628871164fc9d13"
+    }
+  ],
+  "evidence": [],
+  "qualificationScope": "Structural speech contract prerequisite after bounded optional renderer cue schema amendment. Unchanged provider schemas plus 1028 source/89 browser and current specification validation. Not whole S085, selected answer phonemes or Human acceptance."
+}
