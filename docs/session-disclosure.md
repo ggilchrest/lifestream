@@ -18,6 +18,8 @@ Verification covers real local-password HTTP sessions, prepared memory isolation
 
 The read-only Effective endpoint configuration panel composes current session, active Assistant/persona and voice references, pinned Appearance selections and the current session audio lease. It explains precedence, compatibility and unavailable handoff operations. Refresh after another tab changes settings. Saved choices are not proof of actual playback, physical capture or audibility. Unknown/shared audiences conceal this inspector and its API requires current administration access. The panel is usable without a renderer or private asset pack.
 
+Appearance changes wait for turns and playback to finish, including preview audio that has finished generating but is still queued at the endpoint. If sign-out, session settings or playback changes while a save is arriving, the save is rejected without changing the stored selection. Sign in again when needed, wait for playback to finish, then refresh and retry. Appearance defaults and session overrides do not replace the active Assistant or saved voice; a reviewed voice activation creates a new Assistant profile revision and invalidates an older handoff review.
+
 ## Structured session settings
 
 In Session disclosure, **Structured session settings** supports a bounded JSON definition for this sign-in:

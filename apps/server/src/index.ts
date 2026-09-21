@@ -805,11 +805,16 @@ export class LifestreamServer {
         catch { return json(response,404,{code:"presentation_unavailable",message:"Presentation resource unavailable."}); }
       }
       if(path!=="/api/runtime/v1/presentation")return json(response,404,{code:"not_found"});
-      const endpoint=readSessionEndpoint(this.database,context.sessionId).endpoint;
+      const session=readSessionEndpoint(this.database,context.sessionId),endpoint=session.endpoint;
       if(method==="POST") {
         if(this.localAuth)this.localAuth.csrf(context as LocalContext,String(request.headers["x-lifestream-csrf"]??""));
         if(!endpoint||this.activeWork.size>0||this.runtimeFences.size>0)return json(response,409,{code:"presentation_busy",message:"Apply a session endpoint and wait until the turn has finished."});
         const body=asObject(await readBody(request));if(!body)return json(response,422,{code:"invalid_request"});
+        // A streamed body may arrive after sign-out, a session revision or the
+        // start of playback. Selection is a between-turn operation at commit.
+        if(this.localAuth)this.localAuth.assertCurrent(context as LocalContext);
+        const current=readSessionEndpoint(this.database,context.sessionId);
+        if(current.revision!==session.revision||current.endpoint?.endpointId!==endpoint.endpointId||this.activeWork.size>0||this.runtimeFences.size>0)return json(response,409,{code:"presentation_busy",message:"Session or playback changed. Wait for playback to finish, refresh and try again."});
         try {if(body.id!=="neutral"&&!this.audiencePermits(context))throw new Error("audience restricted");this.presentationSelection.select(context.principalId,endpoint.endpointId,context.sessionId,body,this.presentationPackages);}
         catch{return json(response,409,{code:"presentation_conflict",message:"The package or selection revision changed. Refresh and try again."});}
       } else if(method!=="GET")return json(response,405,{code:"method_not_allowed"});
