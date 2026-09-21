@@ -9,6 +9,29 @@ import {loadProfile} from '../../server/src/config/loader.ts';
 import {savedVoiceFixture} from '../../server/test/saved-voice-fixture.ts';
 import {FixtureInferenceProvider} from '../../../packages/runtime/dist/inference/fixture.js';
 
+test('expired acknowledgment polling skips optional cues without expiring the conversation or renewing administration',{skip:!process.env.PLAYWRIGHT_MODULE,timeout:45000},async t=>{
+ const root=await mkdtemp(join(tmpdir(),'ack-idle-'));t.after(()=>rm(root,{recursive:true,force:true}));let now=Date.now();
+ const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};
+ const installerToken=randomBytes(32).toString('hex'),password=randomBytes(32).toString('hex');
+ const app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'safety'),installerToken,now:()=>now}});await app.start();t.after(()=>app.shutdown());
+ // Silence is injected at the device seam; no physical capture or provider call.
+ app.providers.stt={async *transcribe(){throw Error('Silent capture must not invoke recognition');}};app.providers.tts={};
+ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE),browser=await chromium.launch({channel:'chrome',headless:true});t.after(()=>browser.close());const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(12000);
+ await page.addInitScript(()=>{navigator.mediaDevices.getUserMedia=async()=>{const audio=new AudioContext();await audio.resume();const source=audio.createMediaStreamDestination();window.syntheticCapture=source.stream;return source.stream;};});
+ const base=`http://127.0.0.1:${app.address().port}`;await page.goto(base+'/control/');await page.waitForFunction(()=>window.lifestreamUI);await page.locator('#auth-username').fill('synthetic-owner');await page.locator('#auth-password').fill(password);await page.locator('#auth-installer-token').fill(installerToken);await page.locator('#auth-setup').click();await page.waitForFunction(()=>window.lifestreamAuth.session);
+ const assistantId=await page.evaluate(async()=>{const r=(p,b)=>window.lifestreamAuth.request(p,b,b!==undefined),a=await r('/api/admin/v1/assistants',{displayName:'Synthetic idle conversation'});await r(`/api/admin/v1/assistants/${a.assistantId}/activate`,{profileId:a.profile.profileId,expectedActiveRevision:null});await r('/api/runtime/v1/session-context',{expectedRevision:0,mode:'audio',audienceScope:'authenticatedSession'});return a.assistantId;});
+ await page.reload();await page.waitForFunction(()=>window.lifestreamUI);await page.locator('[data-destination=conversation]').click();await page.locator('#room-mic-start').click();await page.waitForFunction(()=>document.querySelector('#room-mic-status').textContent.startsWith('Microphone on'));
+ const sessionId=await page.evaluate(()=>window.lifestreamAuth.session.sessionId),activity=()=>app.database.connection.prepare('SELECT admin_last_activity FROM local_sessions WHERE session_id=?').get(sessionId).admin_last_activity,originalActivity=activity();
+ now+=1_800_000;
+ const denied=page.waitForResponse(r=>r.url()===base+`/api/admin/v1/assistants/${assistantId}/acknowledgments`&&r.status()===401);
+ await page.locator('#room-ack-audio-only').check();await denied;await page.locator('#room-ack-status').filter({hasText:'Acknowledgments unavailable; ordinary replies continue.'}).waitFor();
+ assert.equal(await page.evaluate(()=>window.lifestreamAuth.session?.sessionId),sessionId,'Optional catalog expiry must not sign out the conversation');
+ assert.equal(await page.locator('#room-mic-stop').isEnabled(),true);assert.equal(await page.evaluate(()=>window.syntheticCapture.getAudioTracks()[0].readyState),'live');assert.equal(activity(),originalActivity);
+ const protectedEdit=await page.evaluate(async id=>{const r=await fetch(`/api/admin/v1/assistants/${id}/revisions`,{method:'POST',headers:{'content-type':'application/json','x-lifestream-csrf':window.lifestreamAuth.session.csrfToken},body:JSON.stringify({expectedRevision:1,displayName:'Expired edit must fail'})});return r.status;},assistantId);assert.equal(protectedEdit,401);assert.equal(activity(),originalActivity);
+ await page.locator('#room-message').fill('Continue this synthetic conversation after administration expiry.');await page.locator('#room-send').click();await page.locator('#room-status').filter({hasText:'Reply completed'}).waitFor();assert.match(await page.locator('.room-turn.assistant').textContent(),/Fixture response/);assert.equal(activity(),originalActivity);
+ await page.locator('[data-destination=account]').click();await page.locator('#auth-sign-out').click();await page.waitForFunction(()=>!window.lifestreamAuth.session);assert.equal(await page.evaluate(()=>window.syntheticCapture.getAudioTracks()[0].readyState),'ended');assert.deepEqual(errors,[]);
+});
+
 test('rendered acknowledgment cache uses paired audio clock, skips cold/stale work and yields to answer audio',{skip:!process.env.PLAYWRIGHT_MODULE},async t=>{
  const {chromium}=await import(process.env.PLAYWRIGHT_MODULE),browser=await chromium.launch({channel:'chrome',headless:true});t.after(()=>browser.close());const page=await browser.newPage();
  await page.route('http://127.0.0.1:9/**',async route=>{const name=new URL(route.request().url()).pathname.slice(1);if(!name)return route.fulfill({contentType:'text/html',body:'<main><h1>Synthetic acknowledgment playback</h1><div id="mouth">Ready</div></main>'});if(!['acknowledgments.js','conversation-output.js'].includes(name))return route.abort();return route.fulfill({contentType:'text/javascript',body:await readFile(new URL('../'+name,import.meta.url))});});await page.goto('http://127.0.0.1:9/');
