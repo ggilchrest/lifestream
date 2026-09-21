@@ -1,0 +1,332 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "current-selected-provider-joined-functional-verification-with-open-performance-and-human-criteria",
+  "recordedAt": "2026-09-21T16:00:23.301012+00:00",
+  "sourceRevision": "502f1485e4ffa1975a1e71f2bb566c6965d203d2",
+  "nativeHostRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+  "harnessRevision": "5f93c7a0e9fcf99d3c50d17c43edaa70d9c7cc38",
+  "specificationRevision": "dd2cb9e6cc16ce175b516751f1b6443728bcf9f6",
+  "functionalResult": "pass",
+  "releaseAcceptance": false,
+  "behavior": [
+    "Real existing inference, speech recognition and speech synthesis serve both browser and packaged Mac voice journeys; synthetic PCM replaces only physical microphone input.",
+    "Stop, barge-in, reconnect and actual playback-driven renderer motion pass on both hosts; no late scheduled PCM or page errors.",
+    "Ordinary automatic memory save, correction and recall survive actual server restart; shared audience excludes private context and forgotten content stays erased after another restart.",
+    "Same-owner between-turn handoff preserves destination settings and real-model conversational continuity, transfers no authority and rejects transfer while synthesized playback is still owned. Durable handoff receipts retain metadata rather than raw conversation.",
+    "Current selected-provider ordinary context, current-request precedence, correction and audience fences pass. Forgetting while a real audio response is pending permits zero late text/PCM and subsequent audio completes."
+  ],
+  "joinedHosts": {
+    "browser": {
+      "turns": 7,
+      "completed": 5,
+      "stopAndBargeIn": true,
+      "connections": 2,
+      "lateFramesScheduled": 0,
+      "pageErrors": 0,
+      "mouthSamples": 1248,
+      "scriptedStopToAudioNodeStopMs": 3.7,
+      "scheduledOnsetMs": {
+        "n": 7,
+        "p50": 1840.6,
+        "p95NearestRank": 2269.1,
+        "min": 1589.2,
+        "max": 2269.1
+      },
+      "stageRows": [
+        {
+          "outcome": "completed",
+          "onsetMs": 1973.2,
+          "endpointMs": 596.8,
+          "transcriptionMs": 413.7,
+          "transcriptToTextMs": 142.3,
+          "textToPcmMs": 739.5,
+          "playbackLeadMs": 80.9
+        },
+        {
+          "outcome": "completed",
+          "onsetMs": 1840.6,
+          "endpointMs": 597.3,
+          "transcriptionMs": 436.0,
+          "transcriptToTextMs": 153.6,
+          "textToPcmMs": 572.9,
+          "playbackLeadMs": 80.8
+        },
+        {
+          "outcome": "completed",
+          "onsetMs": 1782.6,
+          "endpointMs": 577.0,
+          "transcriptionMs": 374.8,
+          "transcriptToTextMs": 148.5,
+          "textToPcmMs": 601.1,
+          "playbackLeadMs": 81.2
+        },
+        {
+          "outcome": "stopped-by-endpoint",
+          "onsetMs": 2230.2,
+          "endpointMs": 705.9,
+          "transcriptionMs": 301.1,
+          "transcriptToTextMs": 267.4,
+          "textToPcmMs": 875.1,
+          "playbackLeadMs": 80.7
+        },
+        {
+          "outcome": "completed",
+          "onsetMs": 1611.3,
+          "endpointMs": 589.9,
+          "transcriptionMs": 206.7,
+          "transcriptToTextMs": 170.1,
+          "textToPcmMs": 563.9,
+          "playbackLeadMs": 80.7
+        },
+        {
+          "outcome": "interrupted",
+          "onsetMs": 2269.1,
+          "endpointMs": 667.6,
+          "transcriptionMs": 399.5,
+          "transcriptToTextMs": 184.0,
+          "textToPcmMs": 937.5,
+          "playbackLeadMs": 80.5
+        },
+        {
+          "outcome": "completed",
+          "onsetMs": 1589.2,
+          "endpointMs": 591.9,
+          "transcriptionMs": 226.4,
+          "transcriptToTextMs": 205.3,
+          "textToPcmMs": 485.2,
+          "playbackLeadMs": 80.4
+        }
+      ],
+      "physicalInput": false,
+      "physicalAudibility": false,
+      "nativeOutputMuted": false,
+      "modelColdStart": false
+    },
+    "native": {
+      "turns": 7,
+      "completed": 5,
+      "stopAndBargeIn": true,
+      "connections": 2,
+      "lateFramesScheduled": 0,
+      "pageErrors": 0,
+      "mouthSamples": 2245,
+      "scriptedStopToAudioNodeStopMs": 2.8,
+      "scheduledOnsetMs": {
+        "n": 7,
+        "p50": 1777.9,
+        "p95NearestRank": 3953.2,
+        "min": 1552.9,
+        "max": 3953.2
+      },
+      "stageRows": [
+        {
+          "outcome": "completed",
+          "onsetMs": 1713.4,
+          "endpointMs": 617.0,
+          "transcriptionMs": 312.6,
+          "transcriptToTextMs": 136.9,
+          "textToPcmMs": 565.9,
+          "playbackLeadMs": 81.0
+        },
+        {
+          "outcome": "completed",
+          "onsetMs": 1777.9,
+          "endpointMs": 615.3,
+          "transcriptionMs": 349,
+          "transcriptToTextMs": 144.9,
+          "textToPcmMs": 588.0,
+          "playbackLeadMs": 80.7
+        },
+        {
+          "outcome": "completed",
+          "onsetMs": 1775.9,
+          "endpointMs": 568.5,
+          "transcriptionMs": 408.0,
+          "transcriptToTextMs": 183.4,
+          "textToPcmMs": 535.4,
+          "playbackLeadMs": 80.6
+        },
+        {
+          "outcome": "stopped-by-endpoint",
+          "onsetMs": 2518.1,
+          "endpointMs": 660.7,
+          "transcriptionMs": 401.8,
+          "transcriptToTextMs": 163.9,
+          "textToPcmMs": 1211.2,
+          "playbackLeadMs": 80.5
+        },
+        {
+          "outcome": "completed",
+          "onsetMs": 1552.9,
+          "endpointMs": 610.0,
+          "transcriptionMs": 209.5,
+          "transcriptToTextMs": 168.4,
+          "textToPcmMs": 484.5,
+          "playbackLeadMs": 80.5
+        },
+        {
+          "outcome": "interrupted",
+          "onsetMs": 2282.1,
+          "endpointMs": 696.5,
+          "transcriptionMs": 328.5,
+          "transcriptToTextMs": 181.9,
+          "textToPcmMs": 994.6,
+          "playbackLeadMs": 80.6
+        },
+        {
+          "outcome": "completed",
+          "onsetMs": 3953.2,
+          "endpointMs": 602.3,
+          "transcriptionMs": 2449.6,
+          "transcriptToTextMs": 227.7,
+          "textToPcmMs": 593.2,
+          "playbackLeadMs": 80.4
+        }
+      ],
+      "physicalInput": false,
+      "physicalAudibility": false,
+      "nativeOutputMuted": true,
+      "modelColdStart": false
+    }
+  },
+  "automaticMemory": {
+    "checks": [
+      "ordinary statement automatically saved without per-memory review",
+      "ordinary recall uses memory; question creates no new memory",
+      "ordinary correction automatically persisted",
+      "corrected memory influences real reply after actual server restart and new sign-in",
+      "shared audience removes private prepared memory",
+      "forgetting erases content and prevents recall after another server restart"
+    ],
+    "ordinarySaveMs": 2502.34,
+    "ordinaryCorrectionMs": 1766.25,
+    "actualServerRestarts": 2,
+    "personalPolicyChanged": false,
+    "timingCaveat": "The shared-audience harness waited 61.7 seconds for a nonexistent job; policy correctly prevented admission. This is a harness wait, not memory processing latency."
+  },
+  "handoff": {
+    "checks": [
+      "Real synthesized audio retains ownership until explicit discard; handoff rejected while owned",
+      "Committed same-owner handoff preserves destination audio/appearance and identity; source ended; no authority or audio lease transferred",
+      "Real destination model reply uses transferred bounded dialogue",
+      "Durable handoff receipt stores metadata without raw dialogue",
+      "Receipt replay survives restart; volatile dialogue does not silently become durable memory"
+    ],
+    "physicalDeviceTransfer": false
+  },
+  "selectedProviderRegressions": [
+    {
+      "script": "node --experimental-strip-types scripts/qualify-s080-audio-development.mjs",
+      "sourceRevision": "5f93c7a0e9fcf99d3c50d17c43edaa70d9c7cc38",
+      "scriptSha256": "96305dc24454c857f2f478c1d173cdee7484968485c605b46c32e86de49f5a0b",
+      "checks": [
+        {
+          "id": "actual-synthetic-audio-route",
+          "result": "pass",
+          "elapsedMs": 16436
+        }
+      ]
+    },
+    {
+      "script": "node --experimental-strip-types scripts/qualify-s073-development.mjs",
+      "sourceRevision": "5f93c7a0e9fcf99d3c50d17c43edaa70d9c7cc38",
+      "scriptSha256": "2a97df98f519698156f10b72ea0ea871d54481209c86ec095e4c086c07f017e7",
+      "checks": [
+        {
+          "id": "LS-TEST-092-baseline-cold-warm-no-recall",
+          "result": "pass"
+        },
+        {
+          "id": "LS-TEST-093-current-request-precedence",
+          "result": "pass"
+        },
+        {
+          "id": "LS-TEST-094-relevance-and-disabled-callbacks",
+          "result": "pass"
+        },
+        {
+          "id": "LS-TEST-096-correction-real-reply-and-pending-fence",
+          "result": "pass"
+        },
+        {
+          "id": "LS-TEST-100-audience-transition-and-safe-ordinary-fallback",
+          "result": "pass"
+        }
+      ]
+    }
+  ],
+  "performance": {
+    "result": "fail",
+    "firstAudibleWordTargetsMs": {
+      "p50": 900,
+      "p95": 1500
+    },
+    "claimBoundary": "Seven warm synthetic-input turns per host; scheduled first PCM is a lower bound for first audible word. Small-sample empirical quantiles are diagnostic, not full qualification. No acoustic measurement.",
+    "diagnosis": "Observed delay includes endpointing, transcription, model/context plus speech segmentation/synthesis and approximately 81 ms playback lead. The transcription outlier is retained. The endpoint wait bridges an existing natural-pause regression and is not reduced without a supported repair.",
+    "instrumentedStages": {
+      "stt": {
+        "n": 7,
+        "minMs": 210.64,
+        "medianMs": 297.89,
+        "maxMs": 420.25,
+        "samplesMs": [
+          376.63,
+          297.89,
+          331.43,
+          282.31,
+          210.64,
+          420.25,
+          227.59
+        ],
+        "measure": "transcribe invocation through successful terminal"
+      },
+      "inference": {
+        "n": 7,
+        "minMs": 140.26,
+        "medianMs": 160.04,
+        "maxMs": 309.35,
+        "samplesMs": [
+          160.04,
+          140.46,
+          140.26,
+          153.58,
+          267.57,
+          309.35,
+          200.64
+        ],
+        "measure": "generation invocation to first text chunk"
+      },
+      "tts": {
+        "n": 7,
+        "minMs": 377.89,
+        "medianMs": 425.22,
+        "maxMs": 481.77,
+        "samplesMs": [
+          432.21,
+          425.22,
+          407.97,
+          409.95,
+          377.89,
+          481.77,
+          435.72
+        ],
+        "measure": "synthesize invocation to first PCM chunk"
+      }
+    },
+    "furtherDiagnosis": "A separate instrumented seven-turn successor isolates 378-482 ms TTS first PCM, 210-420 ms recognition and 140-309 ms model first text. Long safe speech segments add waiting before TTS admission. No stage-level code defect demonstrated; earlier outlier retained."
+  },
+  "retainedFailures": [
+    "Earlier native attempt sampled an offscreen renderer and recorded zero mouth samples; the bounded visible-canvas successor passes.",
+    "Earlier service phrase probe omitted its opening word; speech quality remains unaccepted.",
+    "Earlier S086 causal and paired-completion failures and all absolute latency criteria remain unchanged."
+  ],
+  "exclusions": [
+    "No physical microphone, acoustic audibility, perceptual synchronization, live camera, physical audience or new Human acceptance.",
+    "Current playback amplitude mode is not phoneme/viseme alignment or selected-provider conditioning support.",
+    "Synthetic isolated owners, relationships, audio and audience changes; existing user data and learning policy untouched.",
+    "Private assets, mappings, raw transcripts, screenshots and test databases remain outside Git-connected roots.",
+    "No whole LS-S067/068/070/086, causal, production or full performance acceptance. Original 24 accepted S083/S084 journeys remain unchanged."
+  ]
+}

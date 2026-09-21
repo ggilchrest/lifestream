@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "7cf7be7f46aa8fb05e4d4ec31300aa11decef047",
-  "currentRevision": "ab253ea62b6cf433d80519faec31b7ebbbac6b06",
+  "currentRevision": "5f93c7a0e9fcf99d3c50d17c43edaa70d9c7cc38",
   "activeSlice": "LS-S068",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -139,11 +139,14 @@
     "docs/voice-playback.md",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
+    "implementation/evidence/LS-S062-current-qualification.json",
+    "implementation/evidence/LS-S062-qualification-certification-12.json",
     "implementation/evidence/LS-S068-audio-playback-1.json",
     "implementation/evidence/LS-S068-authenticated-handoff-1.json",
     "implementation/evidence/LS-S068-disclosure-mode-1.json",
     "implementation/evidence/LS-S068-effective-configuration-1.json",
     "implementation/evidence/LS-S068-incident-playback-1.json",
+    "implementation/evidence/LS-S068-integrated-provider-1.json",
     "implementation/evidence/LS-S068-output-only-playback-1.json",
     "implementation/evidence/LS-S068-presence-composition-1.json",
     "implementation/evidence/LS-S068-preview-playback-1.json",
@@ -152,6 +155,7 @@
     "implementation/evidence/LS-S068-session-admission-1.json",
     "implementation/evidence/LS-S068-session-definition-1.json",
     "implementation/evidence/LS-S068-session-isolation-1.json",
+    "implementation/evidence/LS-S071-provider-recovery-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json",
     "packages/contracts/src/provider-messages.ts",
@@ -181,6 +185,7 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
+    "implementation/evidence/LS-S068-integrated-provider-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -841,6 +846,16 @@
       "command": "Joined presence public API journey and delayed appearance races; source/browser/focused/clean install and actual protected candidate checks",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S068-presence-composition-1.json"
+    },
+    {
+      "command": "Current provider recovery: 20 focused source, 8 browser and 5 real provider self-context groups",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S071-provider-recovery-1.json; prospective S062 certification-12."
+    },
+    {
+      "command": "Current mapped browser and packaged Mac real-provider 7-turn journeys; 6 automatic-memory checks; 5 real handoff checks; 5 S073 groups; S080 pending-audio forget fence",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S068-integrated-provider-1.json; absolute audio latency remains failed and excluded from this functional result."
     }
   ],
   "decisions": [
@@ -884,14 +899,12 @@
     "2026-09-20: S086 implementation and bounded ordinary selected-provider learning complete. Source 970/970 and browser 58/58 pass at 90c04e5. Actual ordinary attempt 5 learns +0.02, preserves two projects and survives restart. Two causal studies retain aggregate failures (82/84 and 79/84); no Human, whole causal or full performance acceptance. Prerequisite successors retain original failed callback and punctuation observations.",
     "2026-09-20: Two actual 200-pair text studies retain 800 requests. Initial cache-expiry interruptions were reproduced and repaired; new source 75b43f9 passes 971 source/58 browser tests and current provider prerequisites. Successor first-text p95 157.25 ms disabled/160.14 ms enabled, added 2.89 ms with 95% paired bootstrap -13.58..19.07 ms; 399/400 completions retain one model deadline. No whole performance or quality pass. Clean current-source install and running-candidate smoke pass. Owning S066/S067/S068/S070 rows now distinguish implemented beta subsets from remaining broad acceptance.",
     "2026-09-20: Operator confirms Node removable-media approval and resumes the goal. Fresh encrypted incremental and current-candidate isolated restore pass; existing daily/weekly/monthly schedule restored. Independent software work continues without renewed approval. Physical offline-key custody and Human acceptance remain separate.",
-    "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
+    "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off.",
+    "2026-09-21: operator authorizes remote ai5090 repair. NeMo restored through existing launcher; Qwen/Vox were already healthy and not restarted. Pinned model, GPU assignment and network exposure preserved. Real functional speech completed but omitted the first word of the known phrase; quality failure retained. Resumed goal routes to dependency-ready integrated verification without inferring new Human acceptance."
   ],
-  "blockers": [
-    "Current real-provider qualification and integrated conversation: fresh read-only ai5090 check at 2026-09-21T00:49:48Z confirms ports 30000/8080/8787 closed; candidate inference/STT/TTS readiness times out. Current LS-S062 qualification is stale. Existing shared services were not changed.",
-    "Only affected physical/real-source and Human criteria wait on authorized audience/recorder/away-route inputs, perceptual/device tests and independent offline recovery-key verification. These are not blockers to a future concrete independent software repair."
-  ],
-  "nextAction": "Resume current qualification and joined browser/native real-provider checks when existing ai5090 inference/STT/TTS recover. Cross-workspace v0.1 assessment found no remaining evidence-backed dependency-ready code item; continue on a concrete independent defect or restored authorized input, without repeating verified work.",
-  "updatedAt": "2026-09-21T00:53:52.272895Z",
+  "blockers": [],
+  "nextAction": "Review the already-approved low-latency recognition/segmentation contracts for a bounded overlap improvement that preserves complete utterances, scope checks, cancellation and safe speech projection. Keep selected model/provider/GPU and acceptance thresholds fixed.",
+  "updatedAt": "2026-09-21T16:01:41.483780Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "Run disposition waiting after current Lifestream/PWCE/composition/private Lab assessment; see composition V01-presence-composition-20260920 receipt and operator-local remaining-work assessment. Joined component is verified, whole release remains unaccepted. Production/mobile/training/broad asset tooling remain separate."
+  "notes": "Run disposition continue. Restored selected providers pass current joined browser/Mac conversation, automatic memory, logical handoff and privacy checks. Audio onset remains failed; separate stage instrumentation diagnoses endpointing, recognition, segmentation and synthesis without weakening criteria. Physical audience/recorder/away-route, selected alignment, device/perceptual checks and independent recovery-key custody remain open release gates."
 }
