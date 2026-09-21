@@ -1,0 +1,285 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "session-settings-admission-privacy-component",
+  "recordedAt": "2026-09-21T00:16:29.996516Z",
+  "sourceRevision": "30dd489947d82dce99b48361a970e8b04e4a34ef",
+  "specificationRevision": "532d96932e45587d97177b6713634698923dac66",
+  "behavior": [
+    "Direct session settings require exact string mode and audience scope plus a nonnegative safe integer revision; coerced arrays/objects cannot persist disclosure or bypass unavailable audio checks.",
+    "Current authentication is revalidated after the full request body arrives and before synchronous settings mutation. Pending requests cannot apply after sign-out, account revocation or administration expiry.",
+    "Rejection preserves both existing session settings and absence of a new binding. Valid configured audio still uses the existing session operation."
+  ],
+  "checks": {
+    "source": {
+      "tests": 1016,
+      "pass": 1016,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 63562.328125
+    },
+    "serialBrowser": {
+      "tests": 78,
+      "pass": 78,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 242101.832875
+    },
+    "cleanInstallGuards": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 4655.885667
+    },
+    "focused": {
+      "tests": 9,
+      "pass": 9,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 4696.289791
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "privateValidation": "pass",
+    "workspaceCheck": "pass",
+    "offlineCleanInstall": "pass",
+    "cleanBrowserSmoke": "pass"
+  },
+  "retainedFailures": [
+    "Two original regressions failed: array values were admitted and a delayed settings request succeeded after sign-out. Both successors pass."
+  ],
+  "genericArchive": {
+    "recordedAt": "2026-09-21T00:10:26.436670+00:00",
+    "sourceRevision": "30dd489947d82dce99b48361a970e8b04e4a34ef",
+    "archiveSha256": "384be5882314d20c913a3a37ffabe57940295ecf60008b9c26bfa8a4b82b28ad",
+    "archiveBytes": 19036160,
+    "members": 1311,
+    "privatePackageHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "status": "verified",
+    "priorReceipts": [
+      "generic-clean-package.json",
+      "generic-clean-package-2.json",
+      "generic-clean-package-3.json",
+      "generic-clean-package-4.json",
+      "generic-clean-package-5.json",
+      "generic-clean-package-6.json",
+      "generic-clean-package-7.json"
+    ],
+    "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+    "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+    "build": "pnpm build",
+    "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "effectiveConfiguration": true,
+      "presentationSelfContext": true,
+      "structuredSessionDefinition": true,
+      "authenticatedHandoffAvailable": true,
+      "reducedMotionExplained": true,
+      "profileTopicControls": 6,
+      "pageErrors": []
+    }
+  },
+  "guide": {
+    "at": "2026-09-20T23:46:13.951Z",
+    "version": "2026-09-20.v24",
+    "journeys": 18,
+    "actions": 172,
+    "links": 24,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "eaa044a3ad4752b6d4be5ca49cefc8411aa274c2622ac114d95fb4e1dc1f54b8",
+    "validation": "Static structure, unique/sequential action identifiers and named targets pass. Last full browser/visual guide check remains v13; file URL policy denied reopening. No workaround used.",
+    "humanAcceptance": false
+  },
+  "runningCandidate": {
+    "sourceRevision": "30dd489947d82dce99b48361a970e8b04e4a34ef",
+    "migration": 51,
+    "servedAssetsMatched": 44,
+    "authentication": true,
+    "newSessionProtected": true,
+    "malformedSettingsRejected": 3,
+    "sessionUnchanged": true,
+    "preservedExistingData": true,
+    "changedExistingTables": [
+      "initiative_clock"
+    ],
+    "runtimeManifestSha256": "fc366f93e337c543ead355884938f206eb5c5bf279bb93b7d3e7d29ab42e0cda",
+    "filesVerified": 6861,
+    "configurationDigest": "f1e304cbc15d2eabb72a71ed748101572725d915d9eba978532cad6679505a96",
+    "providers": {
+      "inference": "unavailable",
+      "stt": "unavailable",
+      "tts": "unavailable"
+    },
+    "acceptingInteractions": false
+  },
+  "recovery": {
+    "backup": {
+      "schemaVersion": "1.0.0",
+      "status": "verified",
+      "operation": "backup",
+      "completedAt": "2026-09-21T00:14:14.425Z",
+      "snapshotId": "870da19f71426bf93489f4fc4c5eec712cf342e3885bfce080ee4ec6cf25b402",
+      "applicationSnapshotId": "8cf033cf-df03-4b97-abb3-d40aa59d541c",
+      "mode": "daily-incremental",
+      "dataProcessedBytes": 286159273,
+      "newDataBytes": 676972,
+      "files": 57,
+      "durationSeconds": 1.3105646659999999,
+      "integrity": "full-data-checked",
+      "separateVolume": true,
+      "encrypted": true,
+      "retentionDays": 30,
+      "humanAcceptance": false
+    },
+    "restore": {
+      "schemaVersion": "1.0.0",
+      "status": "verified",
+      "snapshotId": "8cf033cf-df03-4b97-abb3-d40aa59d541c",
+      "restoredAt": "2026-09-21T00:14:44.355Z",
+      "safetyEpoch": 1,
+      "packageCount": 3,
+      "unavailableDefaultPresentations": 1,
+      "authority": "quarantined",
+      "sessions": "revoked",
+      "audience": "unknown",
+      "automaticMemory": "requiresFreshScopeApproval",
+      "experientialLearning": {
+        "scopes": 0,
+        "retainedScopes": 0,
+        "cancelledJobs": 0,
+        "status": "disabledAndFrozen",
+        "approval": "freshMemoryAndLearningApprovalRequired"
+      },
+      "humanAcceptance": false,
+      "pwce": {
+        "stateIntegrityVerified": true,
+        "schemaVersion": "1.0.0",
+        "status": "verified",
+        "incidents": 4,
+        "retained": 1,
+        "authority": "quarantined",
+        "recorderActivated": false
+      },
+      "operation": "restore",
+      "encryptedRepositoryVerified": true
+    },
+    "restoredState": {
+      "migration": 51,
+      "activeSignIns": 0,
+      "sessionSettings": 0,
+      "openRuntimeSessions": 0,
+      "handoffRecords": 1,
+      "usedSignIns": 61
+    },
+    "runtimeSources": {
+      "lifestream": "30dd489947d82dce99b48361a970e8b04e4a34ef",
+      "pwce": "7cff7cf1d320f2c81234b55562f130800d1904da"
+    },
+    "restoredRuntimeServed": false
+  },
+  "exclusions": [
+    "No UI controls or native executable changed. Guide v24 remains static only; last full guide visual/browser is v13 under URL policy. Original 24 Human-accepted journeys are unchanged.",
+    "Real local HTTP/authentication/SQLite and browser behavior are verified. Generic smoke uses fixture inference; configured-audio validation uses provider-presence stubs without capture or playback.",
+    "The actual candidate remains administration-only because existing inference/STT/TTS are unavailable. No current real-provider or physical/Human acceptance is claimed.",
+    "Full endpoint composition, current LS-S062 qualification and preserved performance/causal criteria remain open. No shared service restart, new camera, personal learning activation, provider replacement, external publication or push."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "session-admission-backup.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "session-admission-before.log",
+      "sha256": "c8bf920ac4dfa67a721db21374aa2a3fc5cfc054157a757bf389dddf98668dd7"
+    },
+    {
+      "name": "session-admission-browser.log",
+      "sha256": "4f8dcb7d3f734857a4804a028101fd4922a49f24384545896ba139b347078d76"
+    },
+    {
+      "name": "session-admission-build.log",
+      "sha256": "a1466e781747b59d7f4aae19847fa2c9f37e009537086d87baae9a619d8d7064"
+    },
+    {
+      "name": "session-admission-clean-build.log",
+      "sha256": "f625680a4ff13acba0ef9a07b1c3debacf1e6eb401fbd6e756f311bd936f42ed"
+    },
+    {
+      "name": "session-admission-clean-guards.log",
+      "sha256": "ff95139a8ecacb1fd9f7bae0bca81bc2835ac941b19eddc804f3d7f15e935c6e"
+    },
+    {
+      "name": "session-admission-clean-install.log",
+      "sha256": "a6683228b878ba7184f95a457aadcaf7ff411c744f3fe50a2c46bd37ea1bc10a"
+    },
+    {
+      "name": "session-admission-clean-smoke.log",
+      "sha256": "7da071993592c28e40d018e2e5e325d74357bed9825ed563ca6c272d85ef2d2b"
+    },
+    {
+      "name": "session-admission-focused.log",
+      "sha256": "b94c3211e34934b2f4767f0f667ddfa71c10ae508081565a131b869da88f04a8"
+    },
+    {
+      "name": "session-admission-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "session-admission-preflight.log",
+      "sha256": "6df2c4989b417bbb5f82782f244e7f9021eebfb3a8ee71a46cfcd52c1d1c28b7"
+    },
+    {
+      "name": "session-admission-private.log",
+      "sha256": "91b0cd94d844e6af662312f8cde9d0a335ae126aa982a7240055accaedb750b2"
+    },
+    {
+      "name": "session-admission-restore.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "session-admission-source.log",
+      "sha256": "416ce34fe55d42ca54c1e83453db760903d30ae8c486588cf3ceb5c50db031d4"
+    },
+    {
+      "name": "session-admission-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "session-admission-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "name": "generic-clean-package-19.json",
+      "sha256": "c277b7d94a923329f3b19b39b993c9caea74b8e707d42a055354a6ba806119bf"
+    },
+    {
+      "name": "session-admission-actual.json",
+      "sha256": "2358ffab1c72eddbf69a765ad1d45c50ebd071b481a4b399b36f2f919c131980"
+    },
+    {
+      "name": "session-admission-runtime-pin.json",
+      "sha256": "c10801f0a7774c82869ee62dfb7c6a9b63d36642a4d37770f0e747a474b82a86"
+    },
+    {
+      "name": "session-admission-backup.json",
+      "sha256": "3134c97a72b8f89ce485625ed8666c9d0dd63be7a75205b7c99331df1d4b9789"
+    },
+    {
+      "name": "session-admission-restore.json",
+      "sha256": "84f74ae6136fd2e1ec7c8e56cb683b552078c8a94f828eb9cbf0e161e8edcdc2"
+    },
+    {
+      "name": "session-admission-restored-state.json",
+      "sha256": "6f80b5785a6e81f9afb0531efc082eb88a39941a8fc092060feb075bd5edadae"
+    }
+  ]
+}
