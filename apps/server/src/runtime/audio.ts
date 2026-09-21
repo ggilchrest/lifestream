@@ -171,7 +171,7 @@ export class AudioSession {
     if (settings.description || settings.seed !== 0 || settings.reference) {
       const controls = await this.deps.tts.voiceControls();
       if (this.closed) return;
-      if (!controls.description || (settings.reference && !controls.reference)) { send(this.socket, { type: "error", problem: { message: "Requested voice controls are unavailable on this sidecar. Clear them or use a supported profile." } }); this.close(); return; }
+      if (((settings.description || settings.seed !== 0) && !controls.description) || (settings.reference && !controls.reference)) { send(this.socket, { type: "error", problem: { message: "Requested voice controls are unavailable on this sidecar. Clear them or use a supported profile." } }); this.close(); return; }
     }
     if (this.closed) return;
     this.voiceSettings = settings;

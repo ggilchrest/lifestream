@@ -2,13 +2,13 @@ import {createServer} from 'node:http';
 import {createHash} from 'node:crypto';
 import {loadProfile} from '../src/config/loader.ts';
 // Synthetic loopback service: protocol and playback proof, never voice quality.
-export async function savedVoiceFixture(){
+export async function savedVoiceFixture(controls={description:true,reference:true}){
   const requests:Record<string,any>[]=[],state={fail:false,delayMs:0,ready:true,frames:1};
   const profile={...loadProfile('ai5090').ttsProfile!};
   const server=createServer(async(req,res)=>{
     res.setHeader('content-type','application/json');
     if(req.url==='/readyz'){res.statusCode=state.ready?200:503;return res.end(JSON.stringify({runtimeRevision:profile.runtimeVersion,modelRevision:profile.modelRevision,mappingRevision:profile.mappingRevision}));}
-    if(req.url==='/v1/capabilities')return res.end(JSON.stringify({voiceDesignControl:'voxcpm.voice-design.v1',voiceReferenceControl:'voxcpm.voice-reference.v1'}));
+    if(req.url==='/v1/capabilities')return res.end(JSON.stringify({...(controls.description?{voiceDesignControl:'voxcpm.voice-design.v1'}:{}),...(controls.reference?{voiceReferenceControl:'voxcpm.voice-reference.v1'}:{})}));
     if(req.url!=='/v1/tts/synthesize'){res.statusCode=404;return res.end('{}');}
     let raw='';for await(const chunk of req)raw+=chunk;const body=JSON.parse(raw);requests.push(body);
     if(state.delayMs)await new Promise(resolve=>setTimeout(resolve,state.delayMs));if(res.destroyed)return;

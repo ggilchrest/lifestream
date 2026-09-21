@@ -5,6 +5,20 @@ import { AudioSession, hasAudioEnergy, VOICE_TURN_DEADLINE_MS } from "../src/run
 import {defaultVoiceSettings} from '../src/runtime/voice-settings.ts';
 
 const frame = (value: number) => { const bytes = Buffer.alloc(4800 * 2); for (let offset = 0; offset < bytes.length; offset += 2) bytes.writeInt16LE(value, offset); return { frameId: randomUUID(), sequence: 0, format: { encoding: "pcm_s16le" as const, sampleRateHz: 16000 as const, channels: 1 as const }, sampleOffset: 0, sampleCount: 4800, dataBase64: bytes.toString("base64") }; };
+test('ordinary audio admits reference-only controls while rejecting unsupported description and seed',async()=>{
+ const reference={sampleRateHz:16000 as const,dataBase64:Buffer.alloc(64000).toString('base64'),transcript:'Synthetic sample',consent:true as const};
+ for(const [extra,referenceSupported,accepted] of [[{},true,true],[{description:'Unsupported'},true,false],[{seed:4},true,false],[{},false,false]] as const){
+  const events:any[]=[],designs:any[]=[];const settings={...defaultVoiceSettings,reference,...extra};
+  const tts={voiceControls:async()=>({description:false,reference:referenceSupported}),withVoiceDesign(design:any){designs.push(design);return this;},async *synthesize(request:any){yield {kind:'data',segmentId:request.segmentId,frame:frame(100)};yield {kind:'terminal',outcome:'succeeded'};}};
+  const stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Hello.'}};yield {kind:'terminal',outcome:'succeeded'};}},inference={async *generate(){yield {kind:'text',text:'A neutral reply.'};}};
+  const sessionId=randomUUID(),audioInputId=randomUUID(),session=new AudioSession({readyState:1,send:raw=>events.push(JSON.parse(raw)),close(){}},{stt:stt as never,inference:inference as never,tts:tts as never},sessionId);
+  try{
+   await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,expectedSessionRevision:0,endpointId:randomUUID(),audioInputId,format:frame(0).format,voiceSettings:settings}}));assert.equal(events.some(e=>e.type==='accepted'),accepted);
+   if(accepted){await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(100)}));await session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));assert.equal(events.at(-1).event.payload.state,'completed');assert.deepEqual(designs[0],{description:'',seed:0,reference});}
+   else {assert.equal(events.at(-1).type,'error');assert.equal(designs.length,0);}
+  }finally{session.close();}
+ }
+});
 test('ordinary voice starts a substantial first clause before inference completes without dropping its continuation',async()=>{
  const events:any[]=[],spoken:string[]=[];
  const first='The gardener carefully checked the quiet greenhouse before opening the door,',rest='and found a smooth blue stone beside the oldest rose bush.';
