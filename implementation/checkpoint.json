@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "7cf7be7f46aa8fb05e4d4ec31300aa11decef047",
-  "currentRevision": "5f83b9194521a190e71a072233f978e38ffe889c",
+  "currentRevision": "adcedf1c505ac332b46bff7cffc97fde0327cd15",
   "activeSlice": "LS-S068",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -177,7 +177,6 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-incident-playback-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -870,7 +869,7 @@
   ],
   "blockers": [],
   "nextAction": "Continue independent endpoint presence/override composition and integrated candidate gaps. Incident playback repair is pinned at 5f83b91; selected provider, physical, Human and preserved performance/causal criteria remain open.",
-  "updatedAt": "2026-09-20T23:58:27.388825Z",
+  "updatedAt": "2026-09-21T00:00:40.483660Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
   "notes": "Incident playback privacy component verified: 1014 source, 78 serial browser, 335 PWCE, 108 composition, 2 actual packaged native against clean install; candidate data preserved and all 44 UI assets match. Guide v24 static; original 24 Human acceptance unchanged. Full LS-S068 in progress."
 }
