@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "7cf7be7f46aa8fb05e4d4ec31300aa11decef047",
-  "currentRevision": "502f1485e4ffa1975a1e71f2bb566c6965d203d2",
+  "currentRevision": "ab253ea62b6cf433d80519faec31b7ebbbac6b06",
   "activeSlice": "LS-S068",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -181,7 +181,6 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-presence-composition-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -887,9 +886,12 @@
     "2026-09-20: Operator confirms Node removable-media approval and resumes the goal. Fresh encrypted incremental and current-candidate isolated restore pass; existing daily/weekly/monthly schedule restored. Independent software work continues without renewed approval. Physical offline-key custody and Human acceptance remain separate.",
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
-  "blockers": [],
-  "nextAction": "Finish cross-workspace remaining-work assessment against current selected-provider availability; preserve full presence, performance, physical and Human gates. Do not repeat completed component work.",
-  "updatedAt": "2026-09-21T00:48:36.181971Z",
+  "blockers": [
+    "Current real-provider qualification and integrated conversation: fresh read-only ai5090 check at 2026-09-21T00:49:48Z confirms ports 30000/8080/8787 closed; candidate inference/STT/TTS readiness times out. Current LS-S062 qualification is stale. Existing shared services were not changed.",
+    "Only affected physical/real-source and Human criteria wait on authorized audience/recorder/away-route inputs, perceptual/device tests and independent offline recovery-key verification. These are not blockers to a future concrete independent software repair."
+  ],
+  "nextAction": "Resume current qualification and joined browser/native real-provider checks when existing ai5090 inference/STT/TTS recover. Cross-workspace v0.1 assessment found no remaining evidence-backed dependency-ready code item; continue on a concrete independent defect or restored authorized input, without repeating verified work.",
+  "updatedAt": "2026-09-21T00:53:52.272895Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "Joined presence and three reproduced delayed appearance save races verified at 502f148: 1021 source / 78 browser / 21 focused / 5 clean-install guards, no skips. Actual protected candidate rejects late session/sign-out saves without appearance writes; pinned clean runtime preserves existing data. Guide v25 unchanged."
+  "notes": "Run disposition waiting after current Lifestream/PWCE/composition/private Lab assessment; see composition V01-presence-composition-20260920 receipt and operator-local remaining-work assessment. Joined component is verified, whole release remains unaccepted. Production/mobile/training/broad asset tooling remain separate."
 }
