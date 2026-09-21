@@ -1,0 +1,251 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S064",
+  "status": "verified",
+  "claimClass": "reference-controls-component",
+  "caseIds": [
+    "LS-TEST-082"
+  ],
+  "sourceRevision": "6b19ec39bcab84e75970c24cd06a3487f7134492",
+  "privateSpecificationRevision": "5b2a49c398b308abe33031c0caaf6302bf67fc5f",
+  "recordedAt": "2026-09-21T18:54:45.882687+00:00",
+  "scope": "Independent reference-only capability admission in saved-voice HTTP preview and ordinary audio. Existing same-session review and explicit activation requirements are preserved. This is not whole-slice voice identity or quality acceptance.",
+  "sourceArtifacts": [
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "65f95c1109310339aac8ad77b06b18170a60e5093db10d05a898b1c280eb2646"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "4c6711b9df272dca5b89e597fe718160baec71d4214c0b21ed0fe9730c8b70be"
+    },
+    {
+      "path": "apps/server/test/audio.test.ts",
+      "sha256": "3dec2c50e7a0367549c399e27b4c69ce9381826b4ca3a2c9b87a70162cc2a54a"
+    },
+    {
+      "path": "apps/server/test/saved-voice-fixture.ts",
+      "sha256": "06b338730b71f225e91f134a1935dca8bb3d08a7dbe355cef59c00ca603a5348"
+    },
+    {
+      "path": "apps/server/test/saved-voices.test.ts",
+      "sha256": "b79f0fd95924952ab4dff73dfb2c89fd1a4027409cc3b52bb78c49bb3f5eedde"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "1026 source checks, zero skips; 65535.827791 ms."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<local-module> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "79 browser checks, zero skips; 243494.169458 ms."
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/saved-voices.test.ts apps/server/test/audio.test.ts packages/storage-sqlite/test/saved-voices.test.ts",
+      "result": "pass",
+      "evidence": "24 focused checks, zero skips; 3438.582542 ms."
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build",
+      "result": "pass",
+      "evidence": "All pass on exact source revision."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "60 tests and structural specification validation pass after correcting packet digests."
+    },
+    {
+      "command": "Operator-local real provider reference/continuation/cancellation/ordinary-audio probe",
+      "result": "pass",
+      "evidence": "Reference and transcript-continuation previews complete; cancellation is not activation eligible; default recovers; real recognition/inference/reference speech turn completes using synthetic input."
+    },
+    {
+      "command": "Operator-local actual saved-voice browser probe",
+      "result": "pass",
+      "evidence": "Expand reference details, upload consented synthetic WAV, save, preview completion, unreviewed activation disabled, Stop clears review, remove. Screenshot visually inspected; zero page errors."
+    },
+    {
+      "command": "Clean offline package install and current-candidate verification",
+      "result": "pass",
+      "evidence": "Archive inspected; no private asset hash matches/media paths. Runtime pinned to tested source, served assets match, all three selected providers healthy, 99-table comparison preserves existing data and migration 51."
+    }
+  ],
+  "selectedProvider": {
+    "fixture": false,
+    "controls": {
+      "description": false,
+      "reference": true
+    },
+    "ordinaryAudio": {
+      "accepted": true,
+      "state": "completed",
+      "samples": 168960,
+      "physicalInput": false,
+      "physicalPlayback": false
+    },
+    "samples": [
+      {
+        "label": "reference",
+        "aborted": false,
+        "firstPcmMs": 32096.588042,
+        "wallMs": 35133.958957999996,
+        "samples": 192000,
+        "audioMs": 4000
+      },
+      {
+        "label": "continuation",
+        "aborted": false,
+        "firstPcmMs": 734.596458,
+        "wallMs": 3625.909999999996,
+        "samples": 184320,
+        "audioMs": 3840
+      },
+      {
+        "label": "cancelled-reference",
+        "aborted": true,
+        "firstPcmMs": 158.96695800000452,
+        "wallMs": 160.78295800000342,
+        "samples": 4800,
+        "audioMs": 100
+      },
+      {
+        "label": "configured-default-after-cancel",
+        "aborted": false,
+        "firstPcmMs": 128.6186250000028,
+        "wallMs": 5057.956959000003,
+        "samples": 307200,
+        "audioMs": 6400
+      }
+    ],
+    "referenceDeliveryDegradation": [
+      "deliveryMode",
+      "energy",
+      "pace"
+    ],
+    "activation": false
+  },
+  "browser": {
+    "referenceEnabled": true,
+    "descriptionDisabled": true,
+    "seedDisabled": true,
+    "uploadSaved": true,
+    "previewCompleted": true,
+    "activationRequiresReview": true,
+    "stopClearedReview": true,
+    "removed": true,
+    "errors": []
+  },
+  "candidate": {
+    "runtimeRevision": "6b19ec39bcab84e75970c24cd06a3487f7134492",
+    "archiveSha256": "071ef0a711222d7e7e748d605da05362ba055af0a69b2794bf63e1f7328f7f30",
+    "archiveBytes": 19404800,
+    "archiveMembers": 1323,
+    "privatePackageHashMatches": 0,
+    "databaseTablesPreserved": 99,
+    "migration": 51
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "reference-gates-before.log",
+      "sha256": "b6d0a52399854312aa27bdde8f59f5a347b1a6da54872fc443915bc549808826"
+    },
+    {
+      "name": "reference-gates-focused.log",
+      "sha256": "5867640eb303e458966dae696d9e283a2a62eef1bb9e24185325668bcb433c63"
+    },
+    {
+      "name": "reference-gates-source.log",
+      "sha256": "baf40beca9c53869dfd53901cb5a3884866cd01b0560f7d4427acc0c1990e73a"
+    },
+    {
+      "name": "reference-gates-browser.log",
+      "sha256": "c4d113c35e5174d65f693ba29a5bc3a08a25e1477254b51fa5e26691527e0b8d"
+    },
+    {
+      "name": "reference-gates-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "reference-gates-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "reference-gates-build.log",
+      "sha256": "a1466e781747b59d7f4aae19847fa2c9f37e009537086d87baae9a619d8d7064"
+    },
+    {
+      "name": "reference-controls-spec-final-2.log",
+      "sha256": "dca79b071dfa82ba02f5ed3b1a7e4e4513a82a29ddb7c110078de90b29f2353f"
+    },
+    {
+      "name": "reference-protocol-unit-before.log",
+      "sha256": "61af21b8b07b30cfe121641376a2f37d89fc4f25db6fc1a3132117455320ea81"
+    },
+    {
+      "name": "reference-protocol-unit-after-2.log",
+      "sha256": "9a0d1091951518f9c4089029ec6bdd1d27e81aebe0463a91801362af1a29044e"
+    },
+    {
+      "name": "reference-contract-real.json",
+      "sha256": "b294620e65ffade7fe7e60eec8e367fdd5f4897509e32aacc79269281b8bda91"
+    },
+    {
+      "name": "reference-contract-browser-attempt-1.json",
+      "sha256": "3bbf7d67ec8b11b4fceeb4bb38ffd0094fa63232158f26e866d62677242b886f"
+    },
+    {
+      "name": "reference-contract-browser.json",
+      "sha256": "0ade54556a0b436d0d6449589394662ba90e920264f1ed796b7edef8f4a9dd17"
+    },
+    {
+      "name": "reference-contract-browser.png",
+      "sha256": "f4b565d4a5f054badf1d2608862166ae693193654daafcc4df73f703e3d544ab"
+    },
+    {
+      "name": "reference-voice-promotion.json",
+      "sha256": "64c1a0dbf251f530cbff2bf0a69390ec4d03ee2675ab7a2e5f74a3c5f2188953"
+    },
+    {
+      "name": "reference-voice-current-health.json",
+      "sha256": "af11ceb9cca424bc5264df338b1d07cf473e8c357a48d4d5a425b714ddf3b35c"
+    },
+    {
+      "name": "reference-controls-current-health.json",
+      "sha256": "4df91c4f4fe3eb6bff2870c2725df30b3efd1678e658b8a3d8098d97e4ff701f"
+    },
+    {
+      "name": "reference-controls-candidate-before.json",
+      "sha256": "be3470b8e7065ce8216cda86317864a57eada7d6ddbf27a34900350a7c5ee3f0"
+    },
+    {
+      "name": "reference-controls-candidate-after.json",
+      "sha256": "a1b2d677bd255d7455d34deb6d6feb433eec537aa7a193962ee290f7fc3f9f02"
+    },
+    {
+      "name": "generic-clean-package-24.json",
+      "sha256": "1ee20e62bb0cd681132b0c06230b468d3e91d1a1c5c0d7f881c6117adb79df17"
+    },
+    {
+      "name": "reference-pin-tests.log",
+      "sha256": "07351b366051f49a8bf8868c5bdcaa0f0b776b2d4498756a3f487251165db9bc"
+    }
+  ],
+  "retainedFailures": [
+    "Pre-repair source regressions rejected reference-only preview and ordinary audio.",
+    "Original sidecar handler failed required reference capability/effective-conditioning checks.",
+    "First browser harness omitted expanding Optional reference conditioning and could not click its hidden consent checkbox; successor uses the visible disclosure control.",
+    "Initial specification validation reported stale S064/S068 packet digests; corrected digests and full validation pass.",
+    "Cold first reference preview took 32096.588 ms to first PCM; no latency pass is claimed."
+  ],
+  "exclusions": [
+    "No personal reference import, live saved-voice activation, training, model/provider replacement, publication, cloud upload or external exposure.",
+    "Synthetic input, real selected inference/recognition/synthesis, software playback. No physical acoustic, perceptual or Human voice identity acceptance.",
+    "Description/nondefault-seed conditioning and phoneme alignment remain unsupported. Reference-conditioned pace/energy/delivery are reported partially applied.",
+    "Whole S064, S056 and v0.1 acceptance and original performance targets remain pending; original 24 Human-accepted S083/S084 journeys are preserved.",
+    "Host deployment patches and private runtime material remain operator-local; composition owns deployment provenance."
+  ]
+}
