@@ -1,0 +1,229 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "disclosure-only-modality-preservation-component",
+  "recordedAt": "2026-09-21T00:28:55.200395Z",
+  "sourceRevision": "d62eb96652d9597f4d8a25ae49852b4b8b2e6124",
+  "specificationRevision": "2a5d0e48b7f367dcb8322d6df8bdb57c73da7bd0",
+  "behavior": [
+    "Apply Session Disclosure preserves the current session text/audio negotiation instead of silently selecting text.",
+    "Fresh authentication clears the remembered local mode; the existing independent session defaults remain unknown/text.",
+    "Revision conflict protection, audience fencing and configured-audio checks are unchanged; no microphone or playback starts."
+  ],
+  "checks": {
+    "serialBrowser": {
+      "tests": 78,
+      "pass": 78,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 232643.379333
+    },
+    "focusedBrowser": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 9225.636417
+    },
+    "backendInherited": {
+      "sourceRevision": "30dd489947d82dce99b48361a970e8b04e4a34ef",
+      "unchangedTrees": [
+        "apps/server",
+        "packages",
+        "tests",
+        "scripts",
+        "package.json",
+        "pnpm-lock.yaml",
+        "tsconfig.json"
+      ],
+      "source": {
+        "tests": 1016,
+        "pass": 1016,
+        "fail": 0,
+        "skipped": 0,
+        "durationMs": 63562.328125
+      },
+      "cleanInstallGuards": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "skipped": 0,
+        "durationMs": 4655.885667
+      },
+      "scope": "Verified predecessor backend is byte-identical across these trees; these source tests were not redundantly rerun for a UI-only repair."
+    },
+    "lint": "pass",
+    "privateValidation": "pass",
+    "workspaceCheck": "pass",
+    "offlineCleanInstall": "pass",
+    "cleanBuild": "pass",
+    "cleanBrowserSmoke": "pass"
+  },
+  "retainedFailures": [
+    "The original rendered test reproduced Apply Session Disclosure resetting an audio session to text; the corrected same-endpoint/two-sign-in sequence preserves audio while changing disclosure."
+  ],
+  "genericArchive": {
+    "recordedAt": "2026-09-21T00:21:40.894239+00:00",
+    "sourceRevision": "d62eb96652d9597f4d8a25ae49852b4b8b2e6124",
+    "archiveSha256": "01195bb6074276a3c596eae5519c8adf39496a2453d491a4fd187da1ab395d25",
+    "archiveBytes": 19056640,
+    "members": 1312,
+    "privatePackageHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "status": "verified",
+    "priorReceipts": [
+      "generic-clean-package.json",
+      "generic-clean-package-2.json",
+      "generic-clean-package-3.json",
+      "generic-clean-package-4.json",
+      "generic-clean-package-5.json",
+      "generic-clean-package-6.json",
+      "generic-clean-package-7.json"
+    ],
+    "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+    "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+    "build": "pnpm build",
+    "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "effectiveConfiguration": true,
+      "presentationSelfContext": true,
+      "structuredSessionDefinition": true,
+      "authenticatedHandoffAvailable": true,
+      "reducedMotionExplained": true,
+      "profileTopicControls": 6,
+      "pageErrors": []
+    }
+  },
+  "guide": {
+    "at": "2026-09-21T00:20:53.290Z",
+    "version": "2026-09-20.v25",
+    "journeys": 18,
+    "actions": 172,
+    "links": 24,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "5edd8ef75c0fcfeda5e2d3ed541f1965e2220e2c537bfeb3f917f041727d1426",
+    "validation": "Static structure, unique/sequential action identifiers and named targets pass. Last full browser/visual guide check remains v13; file URL policy denied reopening. No workaround used.",
+    "humanAcceptance": false
+  },
+  "actualBrowser": {
+    "recordedAt": "2026-09-21T00:26:44.944Z",
+    "status": "verified",
+    "sourceRevision": "d62eb96652d9597f4d8a25ae49852b4b8b2e6124",
+    "authentication": true,
+    "protectedThroughout": true,
+    "negotiatedModePreserved": "audio",
+    "sessionRevision": 3,
+    "captureCalls": 0,
+    "signedOut": true,
+    "pageErrors": [],
+    "scope": "Actual candidate browser and API with one temporary sign-in. Audio negotiation only under unknown audience; no microphone, private disclosure, provider generation or playback. Existing selected speech services remain unavailable."
+  },
+  "visual": {
+    "application": "Clean-install Session settings screenshot inspected; layout and controls remain readable. No markup/layout changes in this repair.",
+    "privateGuide": "Current static only; last full guide visual/browser remains v13 under URL policy."
+  },
+  "runningCandidate": {
+    "sourceRevision": "d62eb96652d9597f4d8a25ae49852b4b8b2e6124",
+    "migration": 51,
+    "servedAssetsMatched": 44,
+    "authentication": true,
+    "newSessionProtected": true,
+    "malformedSettingsRejected": 3,
+    "preservedExistingData": true,
+    "changedExistingTables": [
+      "initiative_clock"
+    ],
+    "runtimeManifestSha256": "fb3e061fe5fe7fee64fbc0a407b6fa3cc807d64233dbde8e609628f77416f876",
+    "filesVerified": 6862,
+    "configurationDigest": "f1e304cbc15d2eabb72a71ed748101572725d915d9eba978532cad6679505a96",
+    "providers": {
+      "inference": "unavailable",
+      "stt": "unavailable",
+      "tts": "unavailable"
+    },
+    "acceptingInteractions": false
+  },
+  "exclusions": [
+    "Only browser control behavior, tests and documentation changed. No new native executable, backend, migration, private asset or personal learning policy.",
+    "Rendered tests use provider-presence stubs to negotiate audio. Actual candidate check uses the configured but unavailable speech providers and stays protected/unknown throughout; captureCalls is zero. No provider generation or physical audibility is claimed.",
+    "Current encrypted backup/restore is separately recorded at unchanged backend 30dd489 and PWCE 7cff7cf. No new backup is claimed for this UI repair.",
+    "Guide v25 retains 18 journeys/172 actions/24 named-tab links. Original 24 Human-accepted journeys and all existing release criteria remain unchanged.",
+    "Current provider qualification, full endpoint composition, preserved performance/causal and physical/Human criteria remain open. No push, publication, cloud upload, shared service restart or new camera."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "disclosure-mode-actual-browser.log",
+      "sha256": "7a2f603bdde7478e20a993fd90fb51cf0ff329594052c92da375e953d9bcabd6"
+    },
+    {
+      "name": "disclosure-mode-before.log",
+      "sha256": "ebe84999b9674db58df2cd1a2928479eee67ddb4c5a70443f4a8c0c4f30a7563"
+    },
+    {
+      "name": "disclosure-mode-browser.log",
+      "sha256": "fc8ed395647d22b05c69263b6150e905eeb3aebc4ee251b2607e8d0b38a6d56d"
+    },
+    {
+      "name": "disclosure-mode-clean-build.log",
+      "sha256": "43490528fbcc374501082543ffa0ce708ede3c440d952b3ac93f0c263cc39d89"
+    },
+    {
+      "name": "disclosure-mode-clean-install.log",
+      "sha256": "c62132e60d076cc2ca3b3d12769e5485ef365b27921557bf7d852f4d0afbe589"
+    },
+    {
+      "name": "disclosure-mode-clean-smoke.log",
+      "sha256": "a9dc4999035929666575e00b9a07837444424b1646bd5775353ab9bcfdf3aa57"
+    },
+    {
+      "name": "disclosure-mode-focused.log",
+      "sha256": "0604407bf7aa56d87c92a91669a25b198ad9acf1df8ce0ec92e83d7deacd2be4"
+    },
+    {
+      "name": "disclosure-mode-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "disclosure-mode-preflight.log",
+      "sha256": "6df2c4989b417bbb5f82782f244e7f9021eebfb3a8ee71a46cfcd52c1d1c28b7"
+    },
+    {
+      "name": "disclosure-mode-private-successor.log",
+      "sha256": "7a597c8d3ad9080a6ce36eb53736a7a34750a229fcf187c351e687f3a294bffe"
+    },
+    {
+      "name": "disclosure-mode-private.log",
+      "sha256": "4e8f8d1c97fb07d47fae0b305c98a7739a2dbf73eea5fd5f443fdcac1234605f"
+    },
+    {
+      "name": "disclosure-mode-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "name": "generic-clean-package-20.json",
+      "sha256": "89c35de3e60d1b08aa42cf3b4e3fe8795987af6781864ba42269e946dce04e6d"
+    },
+    {
+      "name": "disclosure-mode-actual.json",
+      "sha256": "8115df8840288a00ac133b85434d24a97c2d42288c6fe827c071b66edc0f8a66"
+    },
+    {
+      "name": "disclosure-mode-runtime-pin.json",
+      "sha256": "3cef3c8c58e367339877eae73e9432fc9bd8c94cca0aff2d1dc2953e7e8af0d8"
+    },
+    {
+      "name": "disclosure-mode-actual-browser.json",
+      "sha256": "fcb1b82f69c7025f13bc8a4b7d2650800f40e9aeb94ac919cb7e940d0354988e"
+    },
+    {
+      "name": "v01-guide-static-v25.json",
+      "sha256": "18d0bd9ef1a4ce0c3dbe263ea932b60bcab832706fb1a86373650141dc837b89"
+    }
+  ]
+}
