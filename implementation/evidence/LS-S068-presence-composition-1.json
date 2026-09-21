@@ -1,0 +1,232 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "joined-presence-composition-and-delayed-selection-component",
+  "recordedAt": "2026-09-21T00:48:36.181971Z",
+  "sourceRevision": "502f1485e4ffa1975a1e71f2bb566c6965d203d2",
+  "specificationRevision": "fbd894ae545739f835ae9baefff6adf53d7e409e",
+  "behavior": [
+    "Structured text/audio configuration, endpoint defaults, revisioned session override/inheritance and global saved voice compose through authenticated public operations.",
+    "Reviewed voice activation changes the existing active profile revision without changing persona content; older handoff review is rejected.",
+    "Handoff preserves destination mode/presentation and Assistant/voice, ends source, and transfers no authority or capture permission. Restart keeps durable voice/presentation pins and requires fresh audience declaration.",
+    "Missing pinned appearance after restart does not gate text or synthetic TTS. Synthesis completion retains playback ownership until scoped settlement; appearance switching and handoff wait.",
+    "Appearance save rechecks current authentication, session revision and between-turn state after reading a delayed body. Sign-out, new playback or session revision rejects without persistence."
+  ],
+  "checks": {
+    "source": {
+      "tests": 1021,
+      "pass": 1021,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 85115.771083
+    },
+    "browser": {
+      "tests": 78,
+      "pass": 78,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 62169.117292
+    },
+    "focusedIntegration": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 6190.871875
+    },
+    "cleanInstallGuards": {
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 4747.609958
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "privateScopeValidation": "pass",
+    "workspaceCheck": "pass",
+    "offlineCleanInstall": "pass",
+    "cleanBuild": "pass",
+    "cleanBrowserSmoke": "pass"
+  },
+  "retainedFailures": [
+    "Initial composition assertion incorrectly expected persona source revision to stay unchanged after saved-voice profile activation; corrected to require unchanged persona content and the new shared profile revision.",
+    "Three actual HTTP regressions returned 200 and persisted a delayed appearance save after sign-out, playback start or session revision. All three successors reject and preserve zero selections."
+  ],
+  "genericArchive": {
+    "recordedAt": "2026-09-21T00:44:04.605821+00:00",
+    "sourceRevision": "502f1485e4ffa1975a1e71f2bb566c6965d203d2",
+    "archiveSha256": "3f619e917e93d52b47de19eeae90e51002df7aeaeb5087d89026586386c9670f",
+    "archiveBytes": 19077120,
+    "members": 1314,
+    "privatePackageHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "status": "verified",
+    "priorReceipts": [
+      "generic-clean-package.json",
+      "generic-clean-package-2.json",
+      "generic-clean-package-3.json",
+      "generic-clean-package-4.json",
+      "generic-clean-package-5.json",
+      "generic-clean-package-6.json",
+      "generic-clean-package-7.json"
+    ],
+    "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+    "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+    "build": "pnpm build",
+    "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "effectiveConfiguration": true,
+      "presentationSelfContext": true,
+      "structuredSessionDefinition": true,
+      "authenticatedHandoffAvailable": true,
+      "reducedMotionExplained": true,
+      "profileTopicControls": 6,
+      "pageErrors": []
+    }
+  },
+  "actualAdmission": {
+    "recordedAt": "2026-09-21T00:47:14.411Z",
+    "status": "verified",
+    "candidateSource": "502f1485e4ffa1975a1e71f2bb566c6965d203d2",
+    "delayedAfterSessionRevision": 409,
+    "delayedAfterSignOut": 401,
+    "appearanceWrites": 0,
+    "audience": "unknown",
+    "captureCalls": 0,
+    "providerGeneration": false,
+    "signedOut": true
+  },
+  "runningCandidate": {
+    "sourceRevision": "502f1485e4ffa1975a1e71f2bb566c6965d203d2",
+    "migration": 51,
+    "servedAssetsMatched": 44,
+    "authentication": true,
+    "newSessionProtected": true,
+    "preservedExistingData": true,
+    "changedExistingTables": [
+      "initiative_clock"
+    ],
+    "runtimeManifestSha256": "1e22616dee0f805ea3eeee2248a2d7eb39695177e07796f8a0603c3269356465",
+    "filesVerified": 6864,
+    "configurationDigest": "f1e304cbc15d2eabb72a71ed748101572725d915d9eba978532cad6679505a96",
+    "providers": {
+      "inference": "unavailable",
+      "stt": "unavailable",
+      "tts": "unavailable"
+    },
+    "acceptingInteractions": false
+  },
+  "visual": {
+    "cleanInstall": "Actual clean-install Session settings screenshot inspected; readable labels, buttons and applied-state message; zero page errors. No layout change.",
+    "guide": "Guide v25 unchanged/static; last full guide visual/browser remains v13 under URL policy."
+  },
+  "exclusions": [
+    "Joined tests use fixture inference, synthetic Vox protocol/PCM and a provider-presence STT stub, with real loopback HTTP, SQLite, authentication and playback-lease machinery. No physical capture, audible speech, renderer execution or Human audition in these tests.",
+    "Actual pinned candidate checks stay unknown-audience, reject two delayed saves and sign out, with zero appearance writes and no generation. Existing private data are preserved.",
+    "Selected-provider qualification, full presence/physical arbitration, retained latency/causal and Human criteria remain open. This component does not close whole LS-S068.",
+    "Original 24 Human-accepted S083/S084 journeys and guide v25 actions are unchanged. Existing native and PWCE source revisions are unchanged.",
+    "No push, publication, cloud upload, shared-service restart, camera/recorder activation or personal learning. Latest encrypted recovery remains separately source-bound at backend 30dd489/PWCE 7cff7cf; no fresh restore is claimed for an admission-only repair."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "presence-composition-browser.log",
+      "sha256": "87c46ade2d86717c199369df9708fe418b6e957c652c76f4379380341bca6b22"
+    },
+    {
+      "name": "presence-composition-build-final.log",
+      "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446"
+    },
+    {
+      "name": "presence-composition-build.log",
+      "sha256": "a1466e781747b59d7f4aae19847fa2c9f37e009537086d87baae9a619d8d7064"
+    },
+    {
+      "name": "presence-composition-clean-browser.log",
+      "sha256": "fdb2522315b788d8cba1ed17e037d8dc5df051b23cb2bd19ba37ce82965ead02"
+    },
+    {
+      "name": "presence-composition-clean-build.log",
+      "sha256": "872e5c9670672a3238f5116d9be28b73d6e5a0593cf4eba9d4d67b70f79df71d"
+    },
+    {
+      "name": "presence-composition-clean-guards.log",
+      "sha256": "f6ad66fe6e552cb11ea78d8c082513d14744bd2ff56a1bea1e58e1f9a29d3267"
+    },
+    {
+      "name": "presence-composition-clean-install.log",
+      "sha256": "328632760030f4775f0ac3b51e182e6fd8725e62a0a7a927186e2d8674327cc2"
+    },
+    {
+      "name": "presence-composition-delayed-initial.log",
+      "sha256": "179921e46d8e07632db70ac5218c6ceec44701359cdc3c00c1fc2226f2be6c39"
+    },
+    {
+      "name": "presence-composition-focused.log",
+      "sha256": "17e0ed6ea5946805409e87e735d73556df6a678732306f8b5ffb567aa96540f0"
+    },
+    {
+      "name": "presence-composition-guards.log",
+      "sha256": "9f32f59dfecc8754501496b4110cbf8e2b9fa56418c55fe8b4c71ad2c7a875e9"
+    },
+    {
+      "name": "presence-composition-initial.log",
+      "sha256": "f2440a28209847b85f96a68b8864995cfe245a10c6e1547703ed540bacd63a3a"
+    },
+    {
+      "name": "presence-composition-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "presence-composition-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "presence-composition-scope.log",
+      "sha256": "acd0f8f21dde14ceb32bd20b44f251f0fa965593283f3cb5012ba4fa35d99618"
+    },
+    {
+      "name": "presence-composition-source-final.log",
+      "sha256": "7ae2ef186784faec4aa0dce20c86b3ab444be70336571a6253af8d3cefaf3766"
+    },
+    {
+      "name": "presence-composition-source.log",
+      "sha256": "6cc445a21e10493248cb35c140fb6d4460ed7eefe9a0f95dcdea9ccc83dbd140"
+    },
+    {
+      "name": "presence-composition-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "presence-composition-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "presence-composition-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "name": "generic-clean-package-21.json",
+      "sha256": "6bc373d9d0186d3b9a56b5ee3e3f116bffda232bff8fdb14bd2642fe7ea9dddd"
+    },
+    {
+      "name": "presence-composition-actual.json",
+      "sha256": "0062a83e809d2a094197640d445953c545568257cb9151c54016ed31400ee5dd"
+    },
+    {
+      "name": "presence-composition-runtime-pin.json",
+      "sha256": "68dec347fc446f0f1f072bb43034986e54df7756c7bc1fcc185da71343bce149"
+    },
+    {
+      "name": "presence-composition-actual-admission.json",
+      "sha256": "6f698a19a60883900acea4c6d9b0b76ae071a68139ca7f0d79d7037b7d14fe28"
+    }
+  ]
+}

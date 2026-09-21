@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "7cf7be7f46aa8fb05e4d4ec31300aa11decef047",
-  "currentRevision": "d62eb96652d9597f4d8a25ae49852b4b8b2e6124",
+  "currentRevision": "502f1485e4ffa1975a1e71f2bb566c6965d203d2",
   "activeSlice": "LS-S068",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -124,6 +124,7 @@
     "apps/server/test/endpoint-configuration.test.ts",
     "apps/server/test/initiative-host.test.ts",
     "apps/server/test/local-auth-http.test.ts",
+    "apps/server/test/presence-composition.test.ts",
     "apps/server/test/saved-voice-fixture.ts",
     "apps/server/test/saved-voices.test.ts",
     "apps/server/test/server.test.ts",
@@ -144,6 +145,7 @@
     "implementation/evidence/LS-S068-effective-configuration-1.json",
     "implementation/evidence/LS-S068-incident-playback-1.json",
     "implementation/evidence/LS-S068-output-only-playback-1.json",
+    "implementation/evidence/LS-S068-presence-composition-1.json",
     "implementation/evidence/LS-S068-preview-playback-1.json",
     "implementation/evidence/LS-S068-protected-setup-1.json",
     "implementation/evidence/LS-S068-reduced-motion-1.json",
@@ -179,7 +181,7 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-disclosure-mode-1.json",
+    "implementation/evidence/LS-S068-presence-composition-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -835,6 +837,11 @@
       "command": "Disclosure-only mode: rendered failing/passing regression, full browser, clean install, actual protected candidate and source-equivalence check",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S068-disclosure-mode-1.json"
+    },
+    {
+      "command": "Joined presence public API journey and delayed appearance races; source/browser/focused/clean install and actual protected candidate checks",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S068-presence-composition-1.json"
     }
   ],
   "decisions": [
@@ -881,8 +888,8 @@
     "2026-09-20: isolated restore suspends processing without treating suspension as consent withdrawal. Exact-policy retention exception, fresh processing approval, current forgetting and job fencing are verified locally; personal learning remains off."
   ],
   "blockers": [],
-  "nextAction": "Inspect and complete joined structured presence configuration/override verification using existing owners; preserve standalone text/audio, active profile identity and between-turn selection. Current provider/physical/Human gates stay open.",
-  "updatedAt": "2026-09-21T00:28:55.200395Z",
+  "nextAction": "Finish cross-workspace remaining-work assessment against current selected-provider availability; preserve full presence, performance, physical and Human gates. Do not repeat completed component work.",
+  "updatedAt": "2026-09-21T00:48:36.181971Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
-  "notes": "Disclosure-only mode preservation verified: 78 browser, 4 focused, clean install and actual protected candidate browser preserve audio without capture. Backend unchanged from 30dd489 (1016 source, current encrypted recovery). Guide v25 static. Full LS-S068 remains in progress."
+  "notes": "Joined presence and three reproduced delayed appearance save races verified at 502f148: 1021 source / 78 browser / 21 focused / 5 clean-install guards, no skips. Actual protected candidate rejects late session/sign-out saves without appearance writes; pinned clean runtime preserves existing data. Guide v25 unchanged."
 }
