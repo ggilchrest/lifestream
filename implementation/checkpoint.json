@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "6432822d93ff1a1715a27fe58710b5e6e6f183f9",
-  "currentRevision": "f77f7dedf34fe6cb4d2f19e065d5296b28beb69e",
+  "currentRevision": "3b762dfc912bdbe2542ea6e4ed3e93e52427fade",
   "activeSlice": "LS-S068",
   "sliceStatus": "implementationCompleteVerificationPending",
   "completedSlices": [
@@ -143,15 +143,18 @@
     "implementation/evidence/LS-S047-qualification-certification-3.json",
     "implementation/evidence/LS-S052-current-qualification.json",
     "implementation/evidence/LS-S052-qualification-certification-7.json",
+    "implementation/evidence/LS-S052-qualification-certification-8.json",
     "implementation/evidence/LS-S062-current-qualification.json",
     "implementation/evidence/LS-S062-qualification-certification-12.json",
     "implementation/evidence/LS-S062-qualification-certification-13.json",
     "implementation/evidence/LS-S062-qualification-certification-14.json",
     "implementation/evidence/LS-S062-qualification-certification-17.json",
+    "implementation/evidence/LS-S062-qualification-certification-18.json",
     "implementation/evidence/LS-S068-admin-idle-1.json",
     "implementation/evidence/LS-S068-audience-presentation-1.json",
     "implementation/evidence/LS-S068-audio-playback-1.json",
     "implementation/evidence/LS-S068-authenticated-handoff-1.json",
+    "implementation/evidence/LS-S068-avatar-idle-1.json",
     "implementation/evidence/LS-S068-disclosure-mode-1.json",
     "implementation/evidence/LS-S068-effective-configuration-1.json",
     "implementation/evidence/LS-S068-incident-playback-1.json",
@@ -194,13 +197,11 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S047-current-qualification.json",
-    "implementation/evidence/LS-S047-qualification-certification-3.json",
     "implementation/evidence/LS-S052-current-qualification.json",
-    "implementation/evidence/LS-S052-qualification-certification-7.json",
+    "implementation/evidence/LS-S052-qualification-certification-8.json",
     "implementation/evidence/LS-S062-current-qualification.json",
-    "implementation/evidence/LS-S062-qualification-certification-17.json",
-    "implementation/evidence/LS-S068-admin-idle-1.json",
+    "implementation/evidence/LS-S062-qualification-certification-18.json",
+    "implementation/evidence/LS-S068-avatar-idle-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -981,6 +982,31 @@
       "command": "node --experimental-strip-types scripts/qualify-s052-development.mjs",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S052-qualification-certification-7.json"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "1027/1027, zero skips."
+    },
+    {
+      "command": "node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "81/81, zero skips. Initial default-concurrency run 80/81 timed out on existing isolation navigation; isolated recheck and full bounded successor pass. All logs preserved."
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build",
+      "result": "pass",
+      "evidence": "All three commands passed on source 3b762df."
+    },
+    {
+      "command": "node --experimental-strip-types scripts/qualify-s052-development.mjs",
+      "result": "pass",
+      "evidence": "10 current selected-provider/configuration/fault groups."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "Specification structural validation and 60 tests."
     }
   ],
   "decisions": [
@@ -1032,8 +1058,8 @@
     "2026-09-21: Existing same-provider reference protocol and independent reference capability gates are repaired and verified; clean 6b19ec3 candidate preserves existing data. Three distinct native long replies pass with audience-channel tracing; the earlier uninstrumented interruption remains unexplained. Original latency and Human/physical/source criteria are unchanged."
   ],
   "blockers": [],
-  "nextAction": "Complete clean current-source installation, then browser and packaged Mac 1800/600-second mixed-input observations with a real spoken reply after administration expiry. Keep the earlier failed soak and unchanged authority/performance/Human criteria.",
-  "updatedAt": "2026-09-21T20:46:43.867488Z",
+  "nextAction": "Implement compatible cached-cue renderer mapping and playback-clock cancellation under S085 while the isolated S068 native v5 observation continues at pinned 3b762df. Promote package 27 only after that observation passes. Keep current private package unchanged and intended Lab location question scoped to Lab writes.",
+  "updatedAt": "2026-09-21T22:28:38.060293Z",
   "updatedBy": "Codex",
-  "notes": "Run disposition continue. S068 audience heartbeat/declaration and hidden voice refresh preserve conversation after administration expiry; before/after regression, 1027 source and 80 browser checks pass. Selected-provider S052 prerequisite passes 10/10. Clean-install/current real-provider soak evidence remains in progress. Whole S064 Human voice quality and selected alignment are not accepted."
+  "notes": "Continue. Saved appearance race repaired and focused/complete suites pass at 3b762df. Clean package 27 verified. Native v5 forced overlap passed; 30-minute observation still running. Existing candidate remains 6b19ec3 until verified promotion. Independent aligned renderer continuation is authorized."
 }

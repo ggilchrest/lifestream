@@ -1,0 +1,134 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "saved-appearance-idle-restoration-component",
+  "recordedAt": "2026-09-21T22:27:51.583057Z",
+  "sourceRevision": "3b762dfc912bdbe2542ea6e4ed3e93e52427fade",
+  "specificationRevision": "31ca93e5698d15b8763ebfdedcb4673ff4e5a6b9",
+  "behavior": "Saved appearance restoration interrupted by microphone setup or a turn defers until the next idle boundary. Prepared interrupted geometry is released. Privacy/scope/sign-out/navigation cancels pending restoration; invalid packages are not automatically retried. Saved selection is never rewritten by restoration.",
+  "reproduction": {
+    "predecessor": "f77f7dedf34fe6cb4d2f19e065d5296b28beb69e",
+    "nativeSeconds": 1808.005783542,
+    "completedReplies": 20,
+    "interruptions": 6,
+    "scheduledGapMs": 0,
+    "latePcm": 0,
+    "postAdminExpiryReply": "passed",
+    "finalAppearance": "failed; neutral remained after an overlapping microphone restart",
+    "focusedBefore": "Timeout waiting for deferred restoration to start; no idle retry existed."
+  },
+  "regression": {
+    "focusedBrowser": 9,
+    "fixture": "Real Three renderer and neutral geometry; test-only preparation promises reproduce asynchronous overlap. No physical input.",
+    "source": 1027,
+    "browser": 81,
+    "nativeForcedOverlap": {
+      "result": "pass",
+      "restoreAfterMicrophoneSetupMs": 1009.8708339999998,
+      "evidenceClass": "Actual packaged Electron and private package; test-only getUserMedia/preparation promise gates. Synthetic PCM, no physical audio.",
+      "longObservation": "Native v5 in progress; not accepted by this component receipt."
+    }
+  },
+  "cleanPackage": {
+    "sourceRevision": "3b762dfc912bdbe2542ea6e4ed3e93e52427fade",
+    "sha256": "971f7b380c18f47ff3bd8a85e6c43ccfe756272ccf8a16c9252f646fc9cc732e",
+    "privateHashMatches": 0,
+    "privateOrMediaPaths": 0,
+    "offlineInstallAndBuild": "pass",
+    "fixtureUi": "pass",
+    "genericScreenshotVisuallyInspected": true
+  },
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/presentation.js",
+      "sha256": "789540de586160050eba5027ca77f8edd91b8173c41afeaa642d1f5993693556"
+    },
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "f1da6acf3489d502e2a1d1596b3402c865e45f54105dfa198851be96dd3dd4a5"
+    },
+    {
+      "path": "apps/control-web/test/audience-privacy.test.mjs",
+      "sha256": "26dcde3508513a4ac679d174abfec23c730df92e533aafa3bb59df416f6cdf57"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "1027/1027, zero skips."
+    },
+    {
+      "command": "node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "81/81, zero skips. Initial default-concurrency run 80/81 timed out on existing isolation navigation; isolated recheck and full bounded successor pass. All logs preserved."
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build",
+      "result": "pass",
+      "evidence": "All three commands passed on source 3b762df."
+    },
+    {
+      "command": "node --experimental-strip-types scripts/qualify-s052-development.mjs",
+      "result": "pass",
+      "evidence": "10 current selected-provider/configuration/fault groups."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "Specification structural validation and 60 tests."
+    }
+  ],
+  "exclusions": [
+    "Native v4 final display remains failed; successor endurance is pending.",
+    "Browser f77 predecessor endurance is not relabeled as the new source.",
+    "Physical capture/output, provider latency targets, selected phoneme mapping and Human acceptance remain separate."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "avatar-idle-regression-before.log",
+      "sha256": "0c541bafe50488dabc64592d6a263c932070ad2fd361822277f0b52238f705fd"
+    },
+    {
+      "name": "avatar-idle-focused-browser.log",
+      "sha256": "fdbb1e0c8d3ed38e0f66b2252b2f6298522181ada997e119d8edb6b60f28047a"
+    },
+    {
+      "name": "avatar-idle-source.log",
+      "sha256": "94951d243b9d5df4f12d1bc86b5f69fc924143496f8f34f9910adfaada229431"
+    },
+    {
+      "name": "avatar-idle-browser.log",
+      "sha256": "cb4d3fd3fcddfe6f448fb019d8c4454402191ac51777495883830713ec630333"
+    },
+    {
+      "name": "avatar-idle-browser-isolation-recheck.log",
+      "sha256": "a4bc8f66df3264b3c4db3615eafc3ba1d865fa92c64400e5f4757897fd4a3281"
+    },
+    {
+      "name": "avatar-idle-browser-bounded.log",
+      "sha256": "d3e016f9d0060786ed68a5b32f746c219938367586801cbcb5f51bcdbae62eed"
+    },
+    {
+      "name": "avatar-idle-s052-qualification.json",
+      "sha256": "e84a8b69cf8cfbab776870269d7bfcf9fe316b9cc102362658bc0e06c673d08e"
+    },
+    {
+      "name": "avatar-idle-spec.log",
+      "sha256": "6f96f48816e0d2ad232383a0193502a29fd92c1d95377cc21f6ff81ddf4decff"
+    },
+    {
+      "name": "generic-clean-package-27.json",
+      "sha256": "b76ebaadd583cc13b66fa817e78141b95c15bc8f6573d21d2e5081e9d7376db5"
+    },
+    {
+      "name": "generic-clean-browser-27.png",
+      "sha256": "8cacde0c25e470894879a30c9aecad9eac2799d64971e8002d2b0d9a5371ccd0"
+    },
+    {
+      "name": "current-soak-native-summary-v4.json",
+      "sha256": "fae123361ba3b459e15e6543d7eeaf7ddd86581d6270550e9426bc5f5ac677f7"
+    }
+  ]
+}
