@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {mkdtemp,rm,readFile} from 'node:fs/promises';
+import {presentationVendor} from '../../server/src/runtime/presentation-vendor.ts';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomBytes} from 'node:crypto';
@@ -60,4 +61,42 @@ test('a fresh protected sign-in can configure disclosure and declare audience en
  await page.locator('#session-audience').selectOption('authenticatedSession');await page.locator('#session-context-apply').click();await page.waitForFunction(()=>document.querySelector('#session-context-status').textContent.includes('revision 2'));await page.waitForFunction(()=>document.documentElement.dataset.audienceProtected==='false');
  await page.locator('#session-context-panel summary').click();assert.equal(await page.locator('#session-context-details').isVisible(),true);await page.locator('[data-audience-shared]').click();await page.waitForFunction(()=>document.documentElement.dataset.audienceProtected==='true');assert.equal(await page.locator('#session-context-details').isVisible(),false);assert.equal(await page.locator('#session-context-apply').isVisible(),true);assert.equal(await page.locator('#assistant-list').isVisible(),false);assert.equal(await page.locator('.presentation-panel').isVisible(),false);
  await page.locator('[data-destination=account]').click();await page.locator('#auth-sign-out').click();await page.waitForFunction(()=>!window.lifestreamAuth.session);await page.locator('#auth-username').fill('synthetic-owner');await page.locator('#auth-password').fill('Synthetic-entry-password-1');await page.locator('#auth-sign-in').click();await page.waitForFunction(()=>!!window.lifestreamAuth.session);await page.waitForFunction(()=>location.hash==='#session');assert.equal(await page.locator('#session-context-apply').isVisible(),true);assert.equal(await page.locator('#session-audience').inputValue(),'unknown');assert.deepEqual(errors,[]);
+});
+
+
+test('saved display restoration waits for an idle boundary and is cancelled by privacy, navigation or invalid assets',{skip:!process.env.PLAYWRIGHT_MODULE},async t=>{
+ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE),browser=await chromium.launch({channel:'chrome',headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(10000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('http://127.0.0.1:9/**',async route=>{const name=new URL(route.request().url()).pathname.slice(1);if(!name)return route.fulfill({contentType:'text/html',body:'<script type="importmap">{"imports":{"three":"/three.module.js"}}</script><main><div class="room-layout"></div></main>'});const body=name.startsWith('presentation-')||name==='presentation.js'?await readFile(new URL('../'+name,import.meta.url)):await presentationVendor(name);if(!body)return route.abort();return route.fulfill({contentType:'text/javascript',body});});
+ await page.goto('http://127.0.0.1:9/#conversation');
+ await page.evaluate(async()=>{
+  window.lifestreamAuth={session:{principalId:'synthetic'}};window.displayBusy=true;window.displayAttempts=0;window.displayCommits=[];window.displayReleases=[];window.displayWrites=0;
+  const {PresentationRuntime}=await import('/presentation-runtime.js'),commit=PresentationRuntime.prototype.commit,release=PresentationRuntime.prototype.release;
+  // Real renderer and neutral geometry; only package preparation is gated to
+  // deterministically reproduce loading overlapping microphone/turn setup.
+  PresentationRuntime.prototype.prepare=async function(item,signal){window.displayAttempts++;await new Promise(resolve=>window.finishDisplayPrepare=resolve);if(window.rejectDisplayPrepare)throw Error('Synthetic invalid package');signal.throwIfAborted();const candidate=this.neutral();candidate.label=item.label;return candidate;};
+  PresentationRuntime.prototype.commit=function(candidate){window.displayCommits.push(candidate.label);return commit.call(this,candidate);};
+  PresentationRuntime.prototype.release=function(candidate){window.displayReleases.push(candidate.label);return release.call(this,candidate);};
+  const {installPresentation}=await import('/presentation.js');window.fixtureDisplay={endpointId:'synthetic-endpoint',neutral:{id:'neutral',label:'Neutral reference',digest:'neutral-v1'},packages:[{id:'saved-fixture',label:'Saved fixture',digest:'synthetic-digest',manifest:{capabilities:{lipSync:'amplitude'}}}],selection:{default:{id:'saved-fixture',digest:'synthetic-digest',revision:1}}};
+  window.presentation=installPresentation({anchor:document.querySelector('main'),busy:()=>window.displayBusy,identity:()=>({assistantId:'synthetic'}),playback:()=>({playing:false,amplitude:0}),api:async(_path,options)=>{if(options)window.displayWrites++;return window.fixtureDisplay;}});window.presentation.refresh();
+ });
+ await page.waitForFunction(()=>document.querySelector('[aria-label="Appearance"]').value==='saved-fixture');
+ assert.equal(await page.evaluate(()=>window.displayAttempts),0,'busy refresh must defer package preparation');
+ await page.evaluate(()=>{window.displayBusy=false;window.presentation.settle?.();});
+ await page.waitForFunction(()=>window.displayAttempts===1);await page.evaluate(()=>window.finishDisplayPrepare());await page.waitForFunction(()=>window.displayCommits.includes('Saved fixture'));
+ await page.evaluate(()=>{dispatchEvent(new CustomEvent('lifestream-audience',{detail:{privateAllowed:true}}));});
+ await page.waitForFunction(()=>window.displayAttempts===2);const before=await page.evaluate(()=>window.displayCommits.filter(x=>x==='Saved fixture').length);
+ await page.evaluate(()=>{window.displayBusy=true;window.finishDisplayPrepare();});await page.waitForFunction(()=>!window.presentation.pending);
+ assert.equal(await page.evaluate(()=>window.displayCommits.filter(x=>x==='Saved fixture').length),before,'saved display cannot commit during speech or microphone setup');assert.ok(await page.evaluate(()=>window.displayReleases.includes('Saved fixture')),'interrupted prepared geometry must be released');
+ await page.evaluate(()=>{window.displayBusy=false;window.presentation.settle?.();window.presentation.settle?.();});await page.waitForFunction(()=>window.displayAttempts===3);await page.evaluate(()=>window.finishDisplayPrepare());await page.waitForFunction(n=>window.displayCommits.filter(x=>x==='Saved fixture').length===n,before+1);
+ for(const event of ['privacy','navigation','signout']){
+  await page.evaluate(()=>{window.displayBusy=true;dispatchEvent(new CustomEvent('lifestream-audience',{detail:{privateAllowed:true}}));});await page.waitForFunction(()=>!window.presentation.pending);
+  const attempts=await page.evaluate(()=>window.displayAttempts);
+  await page.evaluate(event=>{if(event==='privacy')dispatchEvent(new CustomEvent('lifestream-audience',{detail:{privateAllowed:false}}));if(event==='navigation')location.hash='#account';if(event==='signout'){window.lifestreamAuth.session=null;dispatchEvent(new Event('lifestream-auth'));}},event);
+  await page.evaluate(async()=>{await new Promise(r=>setTimeout(r,0));window.displayBusy=false;window.presentation.settle?.();await new Promise(r=>setTimeout(r,0));});assert.equal(await page.evaluate(()=>window.displayAttempts),attempts,`${event} must discard the deferred appearance`);
+  await page.evaluate(()=>{window.displayBusy=true;window.lifestreamAuth.session={principalId:'synthetic'};location.hash='#conversation';dispatchEvent(new CustomEvent('lifestream-audience',{detail:{privateAllowed:true}}));});
+  await page.waitForFunction(()=>document.querySelector('[aria-label="Appearance"]').value==='saved-fixture');
+ }
+ await page.evaluate(()=>{window.displayBusy=false;window.rejectDisplayPrepare=true;window.presentation.settle?.();});const next=await page.evaluate(()=>window.displayAttempts);await page.waitForFunction(()=>window.presentation.pending);await page.evaluate(()=>window.finishDisplayPrepare());await page.waitForFunction(()=>!window.presentation.pending);
+ await page.evaluate(async()=>{window.presentation.settle?.();window.presentation.settle?.();await new Promise(r=>setTimeout(r,0));});assert.equal(await page.evaluate(()=>window.displayAttempts),next,'invalid packages must not retry automatically');assert.match(await page.locator('.presentation-controls > [role=status]').textContent(),/Synthetic invalid package/);
+ assert.equal(await page.evaluate(()=>window.displayWrites),0,'restoration must not rewrite the saved selection');assert.deepEqual(errors,[]);
 });
