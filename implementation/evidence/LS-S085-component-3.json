@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S085",
+  "status": "verified",
+  "claimClass": "cached-speech-cue-renderer-component",
+  "recordedAt": "2026-09-21T22:52:06.363629+00:00",
+  "sourceRevision": "d1b205d36393e8d0444740ca6766e370c7cea363",
+  "specificationRevision": "c7d08ae1d2697d327842c422a349bbda3b416496",
+  "behavior": "Manifest 1.3.0 optionally maps bounded cue symbols to terminal animation poses. Cached acknowledgment cues follow the same WebAudio sample clock as sound. Actual answer audio preempts cues in the same frame. Stop, silence, stale callbacks, rewinds, privacy changes and release restore the current base pose. Unsupported mappings retain explicit skip/audio-only policy. Generic amplitude fallback remains required.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "1028/1028; zero skipped."
+    },
+    {
+      "command": "node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "89/89; zero skipped. Includes actual WebAudio/Three.js cached-cue and answer-preemption check."
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build",
+      "result": "pass",
+      "evidence": "All passed."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "60 specification checks passed; structural only."
+    }
+  ],
+  "focused": {
+    "pureMotionTests": 7,
+    "renderedBrowserTests": 17,
+    "packageServerTests": 8,
+    "fixture": "Generic generated geometry and synthetic audio, actual Three.js renderer and WebAudio; no provider or physical audio in these tests.",
+    "retainedHarnessFailure": "Initial renderer test used a 9600-sample frame above the existing 4800-sample transport limit. Test changed to 4800; product guard unchanged."
+  },
+  "cleanPackage": {
+    "sourceRevision": "d1b205d36393e8d0444740ca6766e370c7cea363",
+    "archiveSha256": "e3146c6a283dd9c758e58d8c34b2d91f30d8dfc4c3e156e8efc918e58c05de2e",
+    "privateHashMatches": 0,
+    "privateMediaPaths": 0,
+    "offlineInstallBuildAndFixtureUi": "passed",
+    "screenshotVisuallyInspected": true
+  },
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/conversation-room.js",
+      "sha256": "33c72825a2362120e4fb7f6b509aa05954c72c32724e514e856ebf0b7d37c727"
+    },
+    {
+      "path": "apps/control-web/presentation-runtime.js",
+      "sha256": "81a8c9a7a77545f5394e9461616d262acedc91caf67ccd43f310c2f4704ee367"
+    },
+    {
+      "path": "apps/control-web/presentation-speech.js",
+      "sha256": "da44e06c8f9609f346b5e171c2b074a9f4636fde839d653d25b111b721a1b699"
+    },
+    {
+      "path": "apps/control-web/presentation.js",
+      "sha256": "0ac1a38d1652292347a572a5fd2a61518447a514a5548382c0399e9e30d3e3a7"
+    },
+    {
+      "path": "apps/control-web/test/presentation-playback.test.mjs",
+      "sha256": "712b3989dc659df0136005a176e053f678cfd57b713d6e021a04b52c2b1feb2d"
+    },
+    {
+      "path": "apps/control-web/test/presentation-speech.test.mjs",
+      "sha256": "571cb0117af771248737a5a595486979c20fff8c528b6bd876aee795bdfa6c70"
+    },
+    {
+      "path": "apps/server/src/admin/presentation-packages.ts",
+      "sha256": "81354a9ad1d6028b46bff42af392a60f72e848725b5114baeb27cd8f1b353e68"
+    },
+    {
+      "path": "apps/server/test/presentation-packages.test.ts",
+      "sha256": "ba4000e962b10ca52560baae20c79b25b1c7f73b2ba26f361e74420c3b2e1947"
+    },
+    {
+      "path": "docs/presentation-packages.md",
+      "sha256": "71c9f4efc2f50c590298d8abbfa4bdfb750cad52f68be4ab069c1703a5430abe"
+    }
+  ],
+  "exclusions": [
+    "Whole LS-S085 and Human acceptance remain open. The Saved Voice same-renderer preview is pending.",
+    "Operator-local cached real-artifact preview uses verifier injection; it is not normal live catalog activation or a physical/perceptual claim.",
+    "Current live candidate and its private package remain unchanged by this component.",
+    "Selected-provider catalog fill/restart is partial: one run prepared five validated pairs but failed harness restart authentication; the next retained two pairs and workFailed. Both failed overall results are preserved.",
+    "Current development qualification must be refreshed for this source before a dependent slice is selected."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "s085-cue-source.log",
+      "sha256": "241c9bc752940c928cfc1560b0ae17d18c373b1621d57204a49d6b0886242998"
+    },
+    {
+      "name": "s085-cue-browser.log",
+      "sha256": "934d12a3e2d66ee19127edc850a815759e258df7a362cec5c60228415b53fb58"
+    },
+    {
+      "name": "s085-cue-focused-browser.log",
+      "sha256": "cff7c98a63a2e343ff6409b5fbfd8a572689f3d7776e19eaa251074221f54887"
+    },
+    {
+      "name": "s085-cue-focused-browser-2.log",
+      "sha256": "20b46283bed8e12fd1d3d72e6d5068600d351777cea84cdf89703229ce0b2463"
+    },
+    {
+      "name": "s085-cue-spec.log",
+      "sha256": "705da8388a9b0657b269d5280602764858c2cdcee2ea3e51339f497a0a90276f"
+    },
+    {
+      "name": "s085-cue-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "generic-clean-package-28.json",
+      "sha256": "c7900e10dd5fb1c18872374d5c7d570eeca0760b69eb0ad0741c7cda9dc33904"
+    },
+    {
+      "name": "speech-cue-visual-review.json",
+      "sha256": "6150b94f8bd5148826e48711135817c4045e017ef7347fffa53f27ffe5e5d917"
+    }
+  ]
+}
