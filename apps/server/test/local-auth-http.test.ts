@@ -64,3 +64,15 @@ test('authenticated sessions on one remembered endpoint isolate actual prepared 
   if(attempt===0){const port=app.address().port;await app.shutdown();app=createLifestreamServer({...options,port});await app.start();base=`http://127.0.0.1:${app.address().port}`;}
  }
 });
+
+
+test('sign-out while a session settings request body is pending prevents its later mutation',{timeout:10000},async t=>{
+ const {request:httpRequest}=await import('node:http');
+ const root=await mkdtemp(join(tmpdir(),'ls-delayed-settings-'));t.after(()=>rm(root,{recursive:true,force:true}));const config=loadProfile('test');config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};config.authority.authentication='local-password';const installerToken=secret(),app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'auth'),installerToken}});await app.start();t.after(()=>app.shutdown());const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={origin:base,'content-type':'application/json'};
+ const post=(path:string,body:unknown)=>fetch(base+path,{method:'POST',headers,body:JSON.stringify(body)}),setup=await post('/api/auth/v1/setup',{username:'owner',password:secret(),installerToken});assert.equal(setup.status,201);headers.cookie=setup.headers.get('set-cookie')!.split(';')[0]!;const identity=await setup.json();headers['x-lifestream-csrf']=identity.session.csrfToken;
+ assert.equal((await post('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'unknown'})).status,200);
+ const state=()=>app.database.connection.prepare('SELECT * FROM session_endpoint_settings WHERE session_id=?').get(identity.session.sessionId);const before=state();assert.ok(before);
+ const body=JSON.stringify({expectedRevision:1,mode:'text',audienceScope:'authenticatedSession'});let observed!:()=>void;const received=new Promise<void>(r=>{observed=r;});app.server.once('request',request=>request.once('data',observed));
+ let send!:import('node:http').ClientRequest;const result=new Promise<number>((resolve,reject)=>{send=httpRequest(base+'/api/runtime/v1/session-context',{method:'POST',headers:{...headers,'content-length':String(Buffer.byteLength(body))}},response=>{response.resume();response.on('end',()=>resolve(response.statusCode!));});send.on('error',reject);});t.after(()=>send.destroy());send.write(body.slice(0,10));await received;
+ assert.equal((await post('/api/auth/v1/sign-out',{})).status,200);send.end(body.slice(10));assert.equal(await result,401);assert.deepEqual(state(),before,'revoked authentication cannot persist a later private disclosure');
+});

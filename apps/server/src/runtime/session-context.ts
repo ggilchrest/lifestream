@@ -17,7 +17,7 @@ export function readSessionEndpoint(database: Database, sessionId: string): { re
   return { revision: row?.revision ?? 0, endpoint };
 }
 export function reviseSessionEndpoint(database: Database, sessionId: string, input: Record<string, unknown>, audioConfigured: boolean, principalId?: string): ReturnType<typeof readSessionEndpoint> {
-  if (Object.keys(input).some(key => !["expectedRevision", "mode", "audienceScope", "bindingKey"].includes(key)) || !Number.isInteger(input.expectedRevision) || !["none", "text", "audio"].includes(String(input.mode)) || !["unknown", "authenticatedSession"].includes(String(input.audienceScope))) throw new Error("A revision, supported logical mode and disclosure scope are required");
+  if (Object.keys(input).some(key => !["expectedRevision", "mode", "audienceScope", "bindingKey"].includes(key)) || typeof input.expectedRevision !== "number" || !Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0 || typeof input.mode !== "string" || !["none", "text", "audio"].includes(input.mode) || typeof input.audienceScope !== "string" || !["unknown", "authenticatedSession"].includes(input.audienceScope)) throw new Error("A revision, supported logical mode and disclosure scope are required");
   if (input.bindingKey !== undefined && (!principalId || typeof input.bindingKey !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(input.bindingKey))) throw new Error('A principal-scoped endpoint binding is required');
   if (input.mode === "audio" && !audioConfigured) throw new Error("Audio transport is not configured");
   if (input.mode === "none" && input.audienceScope !== "unknown") throw new Error("An unbound endpoint has unknown audience scope");

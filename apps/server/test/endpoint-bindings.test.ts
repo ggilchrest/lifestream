@@ -40,3 +40,17 @@ test('legacy shared endpoint metadata cannot invent session consent; explicit se
  assert.throws(()=>reviseSessionEndpoint(db,'legacy-a',{expectedRevision:1,mode:'text',audienceScope:'unknown'},true,'owner'),/conflict/);assert.equal(readSessionEndpoint(db,'legacy-a').endpoint!.privacyClass,'personal');
  reviseSessionEndpoint(db,'legacy-a',{expectedRevision:2,mode:'none',audienceScope:'unknown'},true,'owner');assert.equal(readSessionEndpoint(db,'legacy-a').endpoint,null);assert.equal(db.connection.prepare('SELECT COUNT(*) AS n FROM session_endpoint_settings WHERE session_id=?').get('legacy-a')!.n,0);assert.equal(readSessionEndpoint(db,'legacy-b').endpoint!.privacyClass,'public');
 });
+
+
+test('session endpoint settings reject coerced values without storing disclosure or unconfigured audio',t=>{
+ const db=new Database({path:':memory:'});db.migrate();t.after(()=>db.close());
+ const original=reviseSessionEndpoint(db,'existing',{expectedRevision:0,mode:'text',audienceScope:'unknown'},false,'owner');
+ for(const fields of [{mode:['audio']},{audienceScope:['authenticatedSession']},{mode:[['text']]},{audienceScope:[['unknown']]},{mode:{toString:()=> 'text'}},{expectedRevision:-1},{expectedRevision:Number.MAX_SAFE_INTEGER+1}]){
+  for(const sessionId of ['new','existing']){
+   assert.throws(()=>reviseSessionEndpoint(db,sessionId,{expectedRevision:sessionId==='new'?0:1,mode:'text',audienceScope:'unknown',...fields},false,'owner'),/revision|supported|scope/i);
+   assert.deepEqual(readSessionEndpoint(db,'new'),{revision:0,endpoint:null});assert.deepEqual(readSessionEndpoint(db,'existing'),original);
+  }
+ }
+ assert.throws(()=>reviseSessionEndpoint(db,'new',{expectedRevision:0,mode:'audio',audienceScope:'unknown'},false,'owner'),/not configured/);
+ const audio=reviseSessionEndpoint(db,'configured',{expectedRevision:0,mode:'audio',audienceScope:'authenticatedSession'},true,'owner');assert.deepEqual(readSessionEndpoint(db,'configured'),audio);
+});

@@ -865,6 +865,8 @@ export class LifestreamServer {
       if (method === "POST") {
         if (this.localAuth) this.localAuth.csrf(context as LocalContext, String(request.headers["x-lifestream-csrf"] ?? ""));
         const body = asObject(await readBody(request)); if (!body) return json(response, 422, { code: "invalid_request" });
+        // Reading a body yields to sign-out, expiry and account revocation.
+        if (this.localAuth) this.localAuth.assertCurrent(context as LocalContext);
         try { reviseSessionEndpoint(this.database, context.sessionId, body, !!this.providers.stt && !!this.providers.tts, context.principalId); this.invalidateRuntimeInputs("audienceChanged"); }
         catch (error) { return json(response, 409, { code: "session_context_conflict", message: error instanceof Error ? error.message : "Session context changed" }); }
       } else if (method !== "GET") return json(response, 405, { code: "method_not_allowed" });
