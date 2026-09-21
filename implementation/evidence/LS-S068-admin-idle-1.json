@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "continuing-conversation-audience-admin-expiry-component",
+  "recordedAt": "2026-09-21T20:46:43.867488Z",
+  "sourceRevision": "f77f7dedf34fe6cb4d2f19e065d5296b28beb69e",
+  "specificationRevision": "5c74c1a4084fc06d0b66c04276fc8010508213c2",
+  "behavior": "Audience SSE heartbeat and session declarations use continuing-conversation authority while preserving CSRF, current-session revocation, endpoint checks and privacy closure. Declaration mutations revalidate after reading the body. Hidden Saved Voice administration no longer refreshes in response to audience changes while another page is open; opening Saved Voice refreshes it explicitly.",
+  "requirements": [
+    "LS-SEC-093"
+  ],
+  "reproduction": {
+    "sourceRevision": "fcc3cd700e93267af0d2802611eb5fb535d4a939",
+    "elapsedSeconds": 1801.4190995840002,
+    "completedReplies": 19,
+    "interruptions": 6,
+    "scheduledGapMs": 0,
+    "latePcm": 0,
+    "failure": "At administration expiry, audience heartbeat closed despite an unexpired solo declaration. Privacy protection correctly closed capture. Fast HTTP regression reproduced the exact closure. Rendered follow-up also exposed hidden Saved Voice refresh causing logout after audience renewal. Failed soak and both regressions are retained."
+  },
+  "regression": {
+    "before": "HTTP stream ends at administration expiry; initial rendered follow-up loses private conversation during audience renewal.",
+    "after": "24 focused server and 7 rendered browser checks pass. Audience evidence, manual renewal and typed conversation survive administration expiry; expired protected edits and invalid CSRF still reject, admin activity stays unchanged, shared/lock/clear protect output, and explicit logout closes capture and the stream.",
+    "clock": "Trusted authentication clock advanced by 1800 seconds only in isolated tests; no production timeout change.",
+    "physicalInput": false,
+    "provider": "Fixture speech/text; real local authentication, HTTP, SQLite, rendered browser and synthetic silent capture."
+  },
+  "sourceArtifacts": [
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "138e732e0b19e1a9152b2a18c80d75b7ea8f67a373198893d13504a82613c158"
+    },
+    {
+      "path": "apps/server/test/local-auth-http.test.ts",
+      "sha256": "3460b61c5581e71e1c1669cbb74df888e3def0660ad879e4b8b09b327e1cbd42"
+    },
+    {
+      "path": "apps/control-web/saved-voices.js",
+      "sha256": "3397ec708aa5c28d28100b8b814f99b2449c007032ffd5e0caa680e326d06b6d"
+    },
+    {
+      "path": "apps/control-web/test/acknowledgments.test.mjs",
+      "sha256": "f8c327a925a65ad6997a7febfb89588df6c8b5c96db1af41e646af1143d1702b"
+    }
+  ],
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "1027/1027, zero skips."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "80/80, zero skips. Real local authentication and simulated expiry regression included."
+    },
+    {
+      "command": "pnpm typecheck; pnpm build; pnpm lint",
+      "result": "pass",
+      "evidence": "All three commands passed on final source."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "Private specification validation and 60 checks passed; structural claim only."
+    }
+  ],
+  "exclusions": [
+    "The failed 30-minute soak remains failed; current real-provider browser/native successors are pending.",
+    "No provider/model/authority deadline change, physical input or Human acceptance.",
+    "Optional acknowledgment cache repair fcc3cd7 remains preserved; selected alignment and whole v0.1 acceptance remain open."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "audience-idle-before.log",
+      "sha256": "8168341fde7b0b7a9bcc3dbfbb9cc74e5bcab0fc294027875fe6a0057ea7a5ca"
+    },
+    {
+      "name": "audience-idle-focused-server.log",
+      "sha256": "697fde2096406ced501e279b9bdad79b864068abc67db546921974c89bd74063"
+    },
+    {
+      "name": "audience-idle-focused-browser.log",
+      "sha256": "929d1c55bc2e319ba917f80758d19815577ab15a3568b2e2c08ddccf8db501b4"
+    },
+    {
+      "name": "audience-idle-focused-browser-2.log",
+      "sha256": "2b3f453f4bfbc0d3c4ddd625594f61917a1c7e9548702bee43c285812c4e07f1"
+    },
+    {
+      "name": "audience-idle-source.log",
+      "sha256": "77d2a6cfee63849ac75c0bf9fee89a3ecdd7bf73cc98c6c1dcfa1aae9932fc8d"
+    },
+    {
+      "name": "audience-idle-browser.log",
+      "sha256": "6401c52261c7caebaf1145c86036c4cef0e37f1035ec3285503ef3702bbea048"
+    },
+    {
+      "name": "audience-idle-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "audience-idle-build.log",
+      "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446"
+    },
+    {
+      "name": "audience-idle-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "audience-idle-spec.log",
+      "sha256": "04980ddae916214998b8914dd394913b69f3b54668335f88167dea9ce1529152"
+    },
+    {
+      "name": "audience-idle-s052-qualification.json",
+      "sha256": "7e48a3341f9aa0c3a35a0ab3bae344edfb8f576c5dd62f0ab4437bd59d5c8098"
+    },
+    {
+      "name": "current-soak-browser-summary-v3.json",
+      "sha256": "2a583bb1f50bc07f7249e8ff54d269eabe7f44073b16016ee80d9c75a7bfa5ca"
+    },
+    {
+      "name": "current-soak-browser-20260921-v3-latest.json",
+      "sha256": "f09ac7020ad4f42239d6d85c718f9b2ccced02760b82fdfd0adba9742657a06e"
+    },
+    {
+      "name": "current-soak-browser-20260921-v3-failure.png",
+      "sha256": "25e2622f2054bd400bbcb10d293c9ac1afccb0ecdb0146c53e340d6b17861798"
+    }
+  ]
+}

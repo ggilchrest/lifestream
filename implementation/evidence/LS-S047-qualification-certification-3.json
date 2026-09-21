@@ -1,0 +1,159 @@
+{
+  "slice": "LS-S047",
+  "status": "verified",
+  "claimClass": "structural-contract",
+  "caseIds": [
+    "LS-TEST-060",
+    "LS-TEST-061",
+    "LS-TEST-062",
+    "LS-TEST-063",
+    "LS-TEST-064"
+  ],
+  "revision": "f77f7dedf34fe6cb4d2f19e065d5296b28beb69e",
+  "collectedAt": "2026-09-21T20:46:43.867488Z",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "1027/1027, zero skips."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "80/80, zero skips. Real local authentication and simulated expiry regression included."
+    },
+    {
+      "command": "pnpm typecheck; pnpm build; pnpm lint",
+      "result": "pass",
+      "evidence": "All three commands passed on final source."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "Private specification validation and 60 checks passed; structural claim only."
+    }
+  ],
+  "qualification": {
+    "kind": "prospective-qualification",
+    "sourceRepository": "ggilchrest/lifestream",
+    "testedRevision": "f77f7dedf34fe6cb4d2f19e065d5296b28beb69e",
+    "supersedes": "implementation/evidence/LS-S047.json",
+    "supersedesSha256": "23c747fa2aed9eb9b0153d16f0a753af5890ffcd16c3a991af0e4bc379da35d8",
+    "sourceArtifacts": [
+      {
+        "path": "packages/contracts/src/schemas/provider-messages.schema.json",
+        "sha256": "f73a90a63d5e70d3e366516b2628f4bac84a0fa690fb9b4a4ba883fde870cf8b"
+      },
+      {
+        "path": "packages/contracts/src/schemas/interaction-trace-event.schema.json",
+        "sha256": "135c611137e2f69b6d164d0313116de1d67bc7494538491da40103ea30938f3c"
+      },
+      {
+        "path": "packages/contracts/src/provider-messages.ts",
+        "sha256": "d7a67dbc3d53bd51c6a91683040ed662fc913c5f606bffd8adc028a99640222b"
+      },
+      {
+        "path": "packages/contracts/test/provider-types.test.ts",
+        "sha256": "8a81330930fb2cfb3618f54496cde12e862d98d2417f24cd46c96ab6cb4d8186"
+      },
+      {
+        "path": "packages/contracts/test/contract-validation.test.ts",
+        "sha256": "dbeb7f9b4ad2daddf139f89ec0df6ac204e3369c350a74cd6e7826d215697a37"
+      }
+    ],
+    "effectiveSpecification": {
+      "sourceRepository": "ggilchrest/lifestream-specs",
+      "revision": "5c74c1a4084fc06d0b66c04276fc8010508213c2",
+      "artifacts": [
+        {
+          "path": "docs/11-provider-interfaces.md",
+          "sha256": "1e290870a4a5150c3c9a06a9f08e6715bb7f6a703ab757d8fac8b149cb36162d"
+        },
+        {
+          "path": "docs/20-concrete-port-and-transport-contracts.md",
+          "sha256": "6e22ec6f490a13d6fd99203cc207f6047199c57ca4246b3e10feacaef64abc92"
+        },
+        {
+          "path": "docs/23-expressive-speech.md",
+          "sha256": "2e88f825276548c318403b3aa3bd39dafccbe167620b7e296c4837bce0d0f5a1"
+        },
+        {
+          "path": "contracts/provider-messages-2.0.0.schema.json",
+          "sha256": "5590cda5aafdd37a2132922efa2241e077ca850fd4e0662be6c056a950d900e0"
+        },
+        {
+          "path": "fixtures/requirement-traceability.json",
+          "sha256": "8b259bf6d60879758b6a87400183b04a97e7c71ae8964a3d7d23697dd49373cc"
+        }
+      ]
+    }
+  },
+  "exclusions": [
+    "Refreshes the expressive-speech contract amendment, not full scenario execution or perceptual identity acceptance.",
+    "Historical specification-only receipt remains unchanged; no provider/model or live effect is authorized."
+  ],
+  "priorQualification": {
+    "path": "implementation/evidence/LS-S047-qualification-certification-2.json",
+    "sha256": "1e8922ddf7254aa8e2407b988fb286abce14d2c47dc7f23d2846d92a206bf46f"
+  },
+  "operatorLocalEvidence": [
+    {
+      "name": "audience-idle-before.log",
+      "sha256": "8168341fde7b0b7a9bcc3dbfbb9cc74e5bcab0fc294027875fe6a0057ea7a5ca"
+    },
+    {
+      "name": "audience-idle-focused-server.log",
+      "sha256": "697fde2096406ced501e279b9bdad79b864068abc67db546921974c89bd74063"
+    },
+    {
+      "name": "audience-idle-focused-browser.log",
+      "sha256": "929d1c55bc2e319ba917f80758d19815577ab15a3568b2e2c08ddccf8db501b4"
+    },
+    {
+      "name": "audience-idle-focused-browser-2.log",
+      "sha256": "2b3f453f4bfbc0d3c4ddd625594f61917a1c7e9548702bee43c285812c4e07f1"
+    },
+    {
+      "name": "audience-idle-source.log",
+      "sha256": "77d2a6cfee63849ac75c0bf9fee89a3ecdd7bf73cc98c6c1dcfa1aae9932fc8d"
+    },
+    {
+      "name": "audience-idle-browser.log",
+      "sha256": "6401c52261c7caebaf1145c86036c4cef0e37f1035ec3285503ef3702bbea048"
+    },
+    {
+      "name": "audience-idle-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "audience-idle-build.log",
+      "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446"
+    },
+    {
+      "name": "audience-idle-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "audience-idle-spec.log",
+      "sha256": "04980ddae916214998b8914dd394913b69f3b54668335f88167dea9ce1529152"
+    },
+    {
+      "name": "audience-idle-s052-qualification.json",
+      "sha256": "7e48a3341f9aa0c3a35a0ab3bae344edfb8f576c5dd62f0ab4437bd59d5c8098"
+    },
+    {
+      "name": "current-soak-browser-summary-v3.json",
+      "sha256": "2a583bb1f50bc07f7249e8ff54d269eabe7f44073b16016ee80d9c75a7bfa5ca"
+    },
+    {
+      "name": "current-soak-browser-20260921-v3-latest.json",
+      "sha256": "f09ac7020ad4f42239d6d85c718f9b2ccced02760b82fdfd0adba9742657a06e"
+    },
+    {
+      "name": "current-soak-browser-20260921-v3-failure.png",
+      "sha256": "25e2622f2054bd400bbcb10d293c9ac1afccb0ecdb0146c53e340d6b17861798"
+    }
+  ],
+  "evidence": [],
+  "qualificationScope": "Current structural speech contract qualification through unchanged provider schemas, complete source suite and specification validation. No selected alignment/perceptual claim."
+}
