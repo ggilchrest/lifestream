@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S085",
+  "status": "verified",
+  "claimClass": "same-renderer-acknowledgment-preview-component",
+  "recordedAt": "2026-09-21T23:20:20.373655Z",
+  "sourceRevision": "031d4b183d036f2a7df79da4d72c2a50b932db68",
+  "specificationRevision": "ceb872df672b6f0a009b35a9d10e153117f88d85",
+  "behavior": "Saved Voice preview reads the effective endpoint appearance without saving settings and reuses Conversation renderer, validated cue mapping and the same WebAudio sample clock. Stop during preparation, stale loads, navigation, audience/session/account/context changes and hidden displays cancel pending playback and release rendering. Incompatible pairs are skipped; Preview audio only is explicit. No selected appearance retains ordinary audio-only preview.",
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "1028/1028; zero skipped, final source."
+    },
+    {
+      "command": "node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "90/90; zero skipped, final source. Earlier suite failed a strict Conversation canvas selector after preview added a duplicate class. Preview now has its own class; affected original privacy test and full successor pass."
+    },
+    {
+      "command": "pnpm typecheck; pnpm lint; pnpm build",
+      "result": "pass",
+      "evidence": "All passed."
+    }
+  ],
+  "focusedRenderedChecks": 8,
+  "requirements": [
+    "LS-INT-055"
+  ],
+  "cleanPackage": {
+    "sourceRevision": "031d4b183d036f2a7df79da4d72c2a50b932db68",
+    "archiveSha256": "fcd909e66023ca6072800ca9866e69ae4b8fabe49befa1d697a87556e08bfe97",
+    "privateHashMatches": 0,
+    "privateMediaPaths": 0,
+    "offlineInstallBuildAndFixtureUi": "passed",
+    "screenshotVisuallyInspected": true
+  },
+  "sourceArtifacts": [
+    {
+      "path": "apps/control-web/acknowledgment-presentation.js",
+      "sha256": "d91f2df988bf42b90fd460cb810b1767670d4e1201aa50c426ba952d1e64a9c3"
+    },
+    {
+      "path": "apps/control-web/acknowledgments.js",
+      "sha256": "c2331a1cbb2ad43ad6cd0b1890745dc76c86abbfcacfb8861520eb9746339173"
+    },
+    {
+      "path": "apps/control-web/styles.css",
+      "sha256": "0fa7c6200390ead12742b71c2dcd9b5c64d9c63463b3a6d71e54c2d2e80cfb04"
+    },
+    {
+      "path": "apps/control-web/test/acknowledgments.test.mjs",
+      "sha256": "3c8e09cb422741d75fb48ff4303d2fe5c24a668ad3d64f0e1aed1b290393d26e"
+    }
+  ],
+  "exclusions": [
+    "Fixture renderer tests use neutral generated geometry and synthetic audio, not private assets or physical devices.",
+    "Composition owns actual selected-provider/private-package browser and native results. Native preparation failure and passing instrumented successor both remain evidence.",
+    "Whole S085/v0.1, physical/perceptual/Human acceptance and ordinary answer phoneme alignment remain separate.",
+    "Running candidate remains 3b762df until an independently verified deployment promotion; staged source is 031d4b1."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "s085-preview-source-final.log",
+      "sha256": "6dae5dd47bb13a1465af39337145df120162769bf11baae1ab9bbaf915ab7291"
+    },
+    {
+      "name": "s085-preview-browser.log",
+      "sha256": "e507db8325fd1fbca6d56df55a3dd8117caec28743a4c96286ffc8e33b593d81"
+    },
+    {
+      "name": "s085-preview-browser-2.log",
+      "sha256": "2cba636e7f786dea7c609341c558ed937725f8e6b3b9ae0d4e837fdc34b6582b"
+    },
+    {
+      "name": "s085-preview-audience-reproduction.log",
+      "sha256": "db852f65397fe39997a996c67a7eb73f73dc5d2b8445e62121f720b11fc3300a"
+    },
+    {
+      "name": "s085-preview-focused-2.log",
+      "sha256": "aa86056dd601d4295db6ea536209dd5ba05564df962732528eb909706444d04f"
+    },
+    {
+      "name": "s085-preview-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "s085-preview-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "s085-preview-build.log",
+      "sha256": "cfd32b15ebbd63799370ae2e66e080be832ac845bea2d7e43d2d81f6017205a7"
+    },
+    {
+      "name": "generic-clean-package-29.json",
+      "sha256": "a95d9258c14c91ee86f7d1d6a3d1bc5c0b5320794242e9cae140ef116abfd50c"
+    },
+    {
+      "name": "generic-clean-browser-29.png",
+      "sha256": "8cacde0c25e470894879a30c9aecad9eac2799d64971e8002d2b0d9a5371ccd0"
+    }
+  ]
+}
