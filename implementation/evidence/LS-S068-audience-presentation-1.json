@@ -1,0 +1,268 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S068",
+  "status": "verified",
+  "claimClass": "audience-and-session-presentation-restoration-component",
+  "recordedAt": "2026-09-21T17:07:48.373992Z",
+  "sourceRevision": "2e1e8912152582dd24f76912a3c03b7d5a9a8a38",
+  "specificationRevision": "ddafddb1a9ae4970e8366fe4f177a2a42e1a469c",
+  "nativeHostRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+  "behavior": [
+    "Audience and session-context events retain the presentation component as the single owner of its immediate reset and refresh. Conversation state still clears dialogue, pending requests and audio output.",
+    "The saved appearance returns automatically after renewing solo audience or applying session settings; the saved selection is not rewritten.",
+    "Shared and unknown transitions dispose the display and clear conversation immediately. Restoring solo does not reopen microphone capture."
+  ],
+  "checks": [
+    {
+      "name": "source-2",
+      "result": "pass",
+      "tests": 1024,
+      "skipped": 0,
+      "durationMs": 62108.496542
+    },
+    {
+      "name": "browser",
+      "result": "pass",
+      "tests": 79,
+      "skipped": 0,
+      "durationMs": 233930.908292
+    },
+    {
+      "name": "focused",
+      "result": "pass",
+      "tests": 7,
+      "skipped": 0,
+      "durationMs": 26135.559667
+    },
+    {
+      "name": "TypeScript, root build, existing JS lint, workspace structure and scoped diff",
+      "result": "pass"
+    },
+    {
+      "name": "private specification validation",
+      "result": "pass",
+      "scope": "Specification only; runtime checks separately recorded."
+    },
+    {
+      "name": "S068 preflight",
+      "result": "pass",
+      "evidence": "audience-presentation-preflight-4.log; refreshed S062 prerequisite before application edits."
+    }
+  ],
+  "actualHosts": {
+    "browser": {
+      "recordedAt": "2026-09-21T17:05:02.517Z",
+      "status": "passed",
+      "sourceRevision": "2e1e8912152582dd24f76912a3c03b7d5a9a8a38",
+      "host": "Chrome",
+      "errors": [],
+      "isolatedStorage": true,
+      "physicalCapture": false,
+      "providerGeneration": false,
+      "captureCalls": 0,
+      "displayInstances": 6,
+      "liveDisplays": 1,
+      "version": "0.3.0",
+      "renderedAt": 6776.099999964237,
+      "privateAllowed": true
+    },
+    "native": {
+      "recordedAt": "2026-09-21T17:05:31.415Z",
+      "status": "passed",
+      "sourceRevision": "2e1e8912152582dd24f76912a3c03b7d5a9a8a38",
+      "host": "Packaged Electron 44.3.0",
+      "errors": [],
+      "isolatedStorage": true,
+      "physicalCapture": false,
+      "providerGeneration": false,
+      "captureCalls": 0,
+      "displayInstances": 6,
+      "liveDisplays": 1,
+      "version": "0.3.0",
+      "renderedAt": 6733.699999988079,
+      "privateAllowed": true
+    }
+  },
+  "visualReview": "Clean-install, actual private browser and actual packaged Mac screenshots inspected. Appearance, privacy state and controls render correctly. Private images remain outside Git.",
+  "archive": {
+    "recordedAt": "2026-09-21T17:03:02.242370+00:00",
+    "sourceRevision": "2e1e8912152582dd24f76912a3c03b7d5a9a8a38",
+    "archiveSha256": "72a11b0fad12b6ce94170cca2791aa63f606fb895a73ab32ab7bceecfa3f10ca",
+    "archiveBytes": 19322880,
+    "members": 1321,
+    "privatePackageHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "status": "verified",
+    "priorReceipts": [
+      "generic-clean-package.json",
+      "generic-clean-package-2.json",
+      "generic-clean-package-3.json",
+      "generic-clean-package-4.json",
+      "generic-clean-package-5.json",
+      "generic-clean-package-6.json",
+      "generic-clean-package-7.json",
+      "generic-clean-package-22.json"
+    ],
+    "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+    "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+    "build": "pnpm build",
+    "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "effectiveConfiguration": true,
+      "presentationSelfContext": true,
+      "structuredSessionDefinition": true,
+      "authenticatedHandoffAvailable": true,
+      "reducedMotionExplained": true,
+      "profileTopicControls": 6,
+      "pageErrors": []
+    }
+  },
+  "runningCandidate": {
+    "sourceRevision": "2e1e8912152582dd24f76912a3c03b7d5a9a8a38",
+    "manifestSha256": "846ce24597cfb87dbee685c836bd3f7873428f433abe6f600385ca06720aecbe",
+    "files": 6871,
+    "migration": 51,
+    "preservedExistingData": true,
+    "changedExistingTables": [
+      "initiative_clock"
+    ],
+    "providers": {
+      "inference": "healthy",
+      "stt": "healthy",
+      "tts": "healthy"
+    },
+    "acceptingInteractions": true,
+    "servedAssetsMatched": 4
+  },
+  "retainedFailures": [
+    "The new generic rendered regression timed out after the old display was disposed; the same test passes after repair.",
+    "The first whole source run passed 1023/1024 and encountered a migration digest mismatch while root build and tests ran concurrently. All 49 source/dist SQL digests match after build; the subsequent full source suite passes 1024/1024. This scheduling race is retained and no migration was changed."
+  ],
+  "exclusions": [
+    "Only browser orchestration and its regression changed. Speech generation, first-clause segmentation, provider/model/GPU configuration, storage and native binary are unchanged.",
+    "Actual private pack and packaged Mac tests use isolated synthetic accounts and existing selected-provider configuration, with zero capture or generation calls. They are UI/privacy checks, not new speech/acoustic measurements.",
+    "First-clause onset/continuity, sustained delivery, long-form diversity/completion and prior causal failures remain open. Original 24 Human-accepted journeys and all other release criteria remain.",
+    "No physical audience source, camera, world effect, new learning policy, publication, cloud upload or push."
+  ],
+  "humanAcceptance": false,
+  "releaseAcceptance": false,
+  "operatorLocalEvidence": [
+    {
+      "name": "audience-presentation-before.log",
+      "sha256": "3e6546a3fa4d8abf9cf23587c18f00e34e8942df7a2104d2edd6d51b473feb48"
+    },
+    {
+      "name": "audience-presentation-browser-actual.json",
+      "sha256": "b79e58886ab2531337ad7f906b8c1423b74a288a8897c2e0201e2020eb25ac74"
+    },
+    {
+      "name": "audience-presentation-browser-actual.log",
+      "sha256": "5a4ea37b6c590859ab781d278d8020e3f335d17612b93f9203b03a66d64252b5"
+    },
+    {
+      "name": "audience-presentation-browser.log",
+      "sha256": "95060b4fd01b0061f23e00c0065265d67bae9fee7822179f5f28ebc508205213"
+    },
+    {
+      "name": "audience-presentation-build-test-overlap.json",
+      "sha256": "26441deb4b9b2d5ddf8c990d883ec97261570d293f21b1db191b4389d645f26a"
+    },
+    {
+      "name": "audience-presentation-build.log",
+      "sha256": "cfd32b15ebbd63799370ae2e66e080be832ac845bea2d7e43d2d81f6017205a7"
+    },
+    {
+      "name": "audience-presentation-candidate-after.json",
+      "sha256": "3ab0f4cff5ebdef2d5467dc2437c09890ff4386db6b6e4836291841364e00840"
+    },
+    {
+      "name": "audience-presentation-candidate-before.json",
+      "sha256": "c428e14404cdc7f3c1968e3ea9485f5459f8c9a69b519ed7300c511bd88ce259"
+    },
+    {
+      "name": "audience-presentation-candidate-health.json",
+      "sha256": "bd9aec4ab604f44cbfadaab46465809f35d32487f4bbd14748577e67e4ad4c8c"
+    },
+    {
+      "name": "audience-presentation-candidate-pid.json",
+      "sha256": "9848bd345136e5247091f76fa32e81a3111ac7a9072b7022bd7a659406e57dbe"
+    },
+    {
+      "name": "audience-presentation-clean-browser.log",
+      "sha256": "e56af5e8a50a2877d2b3206710c8ee55e9b22bb1f85fbd804099bbc66baa22c2"
+    },
+    {
+      "name": "audience-presentation-clean-build.log",
+      "sha256": "3d66dc14797d043d466fede1fa3b7eb54ed63953c249ba8e8ba6c4ea80cf0375"
+    },
+    {
+      "name": "audience-presentation-clean-install.log",
+      "sha256": "2dbd49b74faa93300e616ef608666ac603385dcef3b96040db7ef561d2a1f889"
+    },
+    {
+      "name": "audience-presentation-focused.log",
+      "sha256": "115e5dcc94d2489029558eaf0ecbb730533185ec91dff76810e03e6c9fc75dd9"
+    },
+    {
+      "name": "audience-presentation-native-actual.json",
+      "sha256": "c6560b73ff9590cadeeb4f6fdd212b042561d87baf4b6b66f38d2918ee1a5d17"
+    },
+    {
+      "name": "audience-presentation-native-actual.log",
+      "sha256": "a87e42b22bd755c1cafd47970815af5d37ea032bb804f5c380da3b29d20021b1"
+    },
+    {
+      "name": "audience-presentation-pin.log",
+      "sha256": "9717e69db91718a9e22e7b883896d43c28fec0a91c69075f52a1516080ef54f3"
+    },
+    {
+      "name": "audience-presentation-preflight-1.log",
+      "sha256": "067045e36a123811ec34c40605b1354abe81a767954738b083a979e3855097fd"
+    },
+    {
+      "name": "audience-presentation-preflight-2.log",
+      "sha256": "c834e75f0391f0959cf4970ed3a6211bcad00241e8137c822cebfe182b6c86e1"
+    },
+    {
+      "name": "audience-presentation-preflight-3.log",
+      "sha256": "8ceaa291faa75de25d2f3cbd7b5e46dc3aee0bd641ba294853a7cf89fe1ca496"
+    },
+    {
+      "name": "audience-presentation-preflight-4.log",
+      "sha256": "b640b00cd3f57a113ccd1d1097d5893c3fe5370e6fca8dbe36407cea184eacff"
+    },
+    {
+      "name": "audience-presentation-runtime-check.json",
+      "sha256": "7d9198722aabe6b652a7fbbc0d45517038d23ff5891bdb30a8bf592599457f8c"
+    },
+    {
+      "name": "audience-presentation-runtime-pin.json",
+      "sha256": "da9550d20cb8b1bbabdbe2c6a1f1c4fe0f34e6bbcaf2962d859f8d68b02cee5d"
+    },
+    {
+      "name": "audience-presentation-source-2.log",
+      "sha256": "a560b0fc73964bd5343f1f571d0cec129424af035d33d333925df145a35876cd"
+    },
+    {
+      "name": "audience-presentation-source.log",
+      "sha256": "1396c8d73ffe9d134c06c1567e0deb963b95f821d10f50cbd086bbf955caf015"
+    },
+    {
+      "name": "audience-presentation-spec.log",
+      "sha256": "84c66a717765a9974ed04991cc4b9cbbcbe170a22199abcf0caca25ef6bbe890"
+    },
+    {
+      "name": "audience-presentation-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "audience-presentation-served-assets.json",
+      "sha256": "481b6248973dfbbbed6e56d42a6f80716a1affb350e892c48e5e4d951a8fbedf"
+    }
+  ]
+}
