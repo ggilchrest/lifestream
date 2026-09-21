@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "7cf7be7f46aa8fb05e4d4ec31300aa11decef047",
-  "currentRevision": "5f93c7a0e9fcf99d3c50d17c43edaa70d9c7cc38",
+  "currentRevision": "ef73038ea2a46eb51a0b37c322e6a9c088229813",
   "activeSlice": "LS-S068",
   "sliceStatus": "inProgress",
   "completedSlices": [
@@ -185,7 +185,6 @@
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
-    "implementation/evidence/LS-S068-integrated-provider-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -850,7 +849,7 @@
     {
       "command": "Current provider recovery: 20 focused source, 8 browser and 5 real provider self-context groups",
       "result": "pass",
-      "evidence": "implementation/evidence/LS-S071-provider-recovery-1.json; prospective S062 certification-12."
+      "evidence": "implementation/evidence/LS-S071-provider-recovery-1.json; current S062 certification-12."
     },
     {
       "command": "Current mapped browser and packaged Mac real-provider 7-turn journeys; 6 automatic-memory checks; 5 real handoff checks; 5 S073 groups; S080 pending-audio forget fence",
@@ -903,8 +902,8 @@
     "2026-09-21: operator authorizes remote ai5090 repair. NeMo restored through existing launcher; Qwen/Vox were already healthy and not restarted. Pinned model, GPU assignment and network exposure preserved. Real functional speech completed but omitted the first word of the known phrase; quality failure retained. Resumed goal routes to dependency-ready integrated verification without inferring new Human acceptance."
   ],
   "blockers": [],
-  "nextAction": "Review the already-approved low-latency recognition/segmentation contracts for a bounded overlap improvement that preserves complete utterances, scope checks, cancellation and safe speech projection. Keep selected model/provider/GPU and acceptance thresholds fixed.",
-  "updatedAt": "2026-09-21T16:01:41.483780Z",
+  "nextAction": "Review remaining measured sentence-projection delay for a bounded approved optimization. The six-sample existing-STT streaming probe showed no repeatable warm gain (short 163.9 ms paced versus 163.3 ms batch); do not change recognition ownership or repeat that probe without new evidence. Keep model/provider/GPU and all acceptance criteria fixed; retain physical/source/Human gates.",
+  "updatedAt": "2026-09-21T16:09:19.257229Z",
   "updatedBy": "Codex, implementing operator-adopted v0.1 directive",
   "notes": "Run disposition continue. Restored selected providers pass current joined browser/Mac conversation, automatic memory, logical handoff and privacy checks. Audio onset remains failed; separate stage instrumentation diagnoses endpointing, recognition, segmentation and synthesis without weakening criteria. Physical audience/recorder/away-route, selected alignment, device/perceptual checks and independent recovery-key custody remain open release gates."
 }
