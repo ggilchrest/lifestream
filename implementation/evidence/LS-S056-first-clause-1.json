@@ -1,0 +1,514 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S056",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "first-clause-functional-component-with-open-performance-and-perceptual-criteria",
+  "recordedAt": "2026-09-21T16:51:50.360357+00:00",
+  "sourceRevision": "942f8008db718edd91cc76c1c3bd433349fcea8d",
+  "specificationRevision": "8b48f3adf3b780c89e8d7944a83f5e581fd3b005",
+  "nativeHostRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+  "functionalResult": "pass",
+  "releaseAcceptance": false,
+  "behavior": [
+    "Ordinary voice can admit a first comma-delimited clause after 64 projected speech-safe characters and whitespace lookahead. Subsequent segments keep sentence grouping.",
+    "Code, structured objects, internal markup, addresses and short openings retain their existing protection. Exhaustive two-piece and character-delta cases preserve complete spoken projection.",
+    "Focused integration proves synthesis begins while the inference continuation is pending; full answer text, cancellation and late-output fences remain intact."
+  ],
+  "checks": [
+    {
+      "name": "source",
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1024,
+      "skipped": 0,
+      "durationMs": 62530.568708
+    },
+    {
+      "name": "browser",
+      "command": "PLAYWRIGHT_MODULE=<local> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "tests": 78,
+      "skipped": 0,
+      "durationMs": 235564.831083
+    },
+    {
+      "name": "workspace",
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "tests": 44,
+      "skipped": 0,
+      "durationMs": 22566.240625
+    },
+    {
+      "name": "focused",
+      "command": "node --experimental-strip-types --test <segmenter/audio/queue/playback suites>",
+      "result": "pass",
+      "tests": 34,
+      "skipped": 0,
+      "durationMs": 119.943
+    },
+    {
+      "name": "build/typecheck/lint",
+      "result": "pass",
+      "scope": "Full root pnpm build, direct TypeScript workspace build/typecheck, existing JS ESLint configuration. TS paths are ignored by ESLint and compile under TypeScript."
+    },
+    {
+      "name": "sidecar",
+      "result": "pass",
+      "tests": 6,
+      "skipped": 0,
+      "command": "Bundled Python scripts/sidecar-http.test.py"
+    },
+    {
+      "name": "private specification",
+      "result": "pass",
+      "scope": "Specification validation only; runtime behavior separately tested."
+    },
+    {
+      "name": "clean install",
+      "result": "pass",
+      "command": "pnpm install --offline --frozen-lockfile --ignore-scripts; pnpm build; actual browser neutral fixture smoke"
+    },
+    {
+      "name": "workspace/preflight/diff",
+      "result": "pass",
+      "scope": "LS-S056 preflight-4 passed before source edit after current S052 qualification; structure and diff checks pass."
+    }
+  ],
+  "controlledComparison": {
+    "summary": {
+      "baseline": {
+        "samples": 3,
+        "medianFirstTextToScheduledPcmMs": 1257.7,
+        "medianFirstTextToTtsAdmissionMs": 721.85,
+        "maxGapMs": 149.33
+      },
+      "candidate": {
+        "samples": 3,
+        "medianFirstTextToScheduledPcmMs": 891.6,
+        "medianFirstTextToTtsAdmissionMs": 404.92,
+        "maxGapMs": 208.0
+      }
+    },
+    "results": [
+      {
+        "sample": 1,
+        "mode": "baseline",
+        "firstTextToScheduledPcmMs": 1146.1,
+        "firstTextToTtsAdmissionMs": 699.09,
+        "maxGapMs": 133.33,
+        "samples": 660480,
+        "segments": 2,
+        "fullTextPreserved": true
+      },
+      {
+        "sample": 2,
+        "mode": "candidate",
+        "firstTextToScheduledPcmMs": 912.6,
+        "firstTextToTtsAdmissionMs": 404.92,
+        "maxGapMs": 133.33,
+        "samples": 775680,
+        "segments": 3,
+        "fullTextPreserved": true
+      },
+      {
+        "sample": 3,
+        "mode": "candidate",
+        "firstTextToScheduledPcmMs": 878.1,
+        "firstTextToTtsAdmissionMs": 391.95,
+        "maxGapMs": 208.0,
+        "samples": 637440,
+        "segments": 3,
+        "fullTextPreserved": true
+      },
+      {
+        "sample": 4,
+        "mode": "baseline",
+        "firstTextToScheduledPcmMs": 1257.7,
+        "firstTextToTtsAdmissionMs": 727.18,
+        "maxGapMs": 133.33,
+        "samples": 637440,
+        "segments": 2,
+        "fullTextPreserved": true
+      },
+      {
+        "sample": 5,
+        "mode": "baseline",
+        "firstTextToScheduledPcmMs": 1262.9,
+        "firstTextToTtsAdmissionMs": 721.85,
+        "maxGapMs": 149.33,
+        "samples": 683520,
+        "segments": 2,
+        "fullTextPreserved": true
+      },
+      {
+        "sample": 6,
+        "mode": "candidate",
+        "firstTextToScheduledPcmMs": 891.6,
+        "firstTextToTtsAdmissionMs": 418.54,
+        "maxGapMs": 144.0,
+        "samples": 652800,
+        "segments": 3,
+        "fullTextPreserved": true
+      }
+    ],
+    "scope": "Scripted fixed inference text at 8 chars/40ms after 160ms; real local VAD/NeMo/Vox, WebAudio, Three; synthetic input and no acoustic claim. Three alternating samples per condition. Not absolute latency or perceptual acceptance. Candidate max gap is larger and retained."
+  },
+  "joinedHosts": {
+    "browser": {
+      "sourceRevision": "942f8008db718edd91cc76c1c3bd433349fcea8d",
+      "turns": 7,
+      "completed": 5,
+      "connections": 2,
+      "pageErrors": 0,
+      "lateScheduledPcm": 0,
+      "mouthSamples": 1060,
+      "scriptedStopToAudioNodeStopMs": 2.8,
+      "scheduledOnsetMs": {
+        "n": 7,
+        "p50": 1722.2,
+        "p95NearestRank": 2242.4,
+        "min": 1636.4,
+        "max": 2242.4
+      },
+      "maximumInterChunkGapMs": 144.0,
+      "physicalInput": false,
+      "acousticMeasurement": false
+    },
+    "native": {
+      "sourceRevision": "942f8008db718edd91cc76c1c3bd433349fcea8d",
+      "turns": 7,
+      "completed": 5,
+      "connections": 2,
+      "pageErrors": 0,
+      "lateScheduledPcm": 0,
+      "mouthSamples": 2141,
+      "scriptedStopToAudioNodeStopMs": 2.4,
+      "scheduledOnsetMs": {
+        "n": 7,
+        "p50": 1850.4,
+        "p95NearestRank": 2342.1,
+        "min": 1597.3,
+        "max": 2342.1
+      },
+      "maximumInterChunkGapMs": 288.0,
+      "physicalInput": false,
+      "acousticMeasurement": false
+    }
+  },
+  "longReplies": {
+    "status": "failed",
+    "turns": [
+      {
+        "state": "completed",
+        "scheduledDurationSeconds": 83.84,
+        "playbackWallSeconds": 129.541,
+        "maxGapMs": 170.67,
+        "onsetMs": 2072.7,
+        "textCharacters": 1153
+      },
+      {
+        "state": "completed",
+        "scheduledDurationSeconds": 84.32,
+        "playbackWallSeconds": 128.931,
+        "maxGapMs": 176.0,
+        "onsetMs": 2049.9,
+        "textCharacters": 1153
+      },
+      {
+        "state": null,
+        "scheduledDurationSeconds": 111.52,
+        "playbackWallSeconds": null,
+        "maxGapMs": 229.33,
+        "onsetMs": 2056.5,
+        "textCharacters": 1908
+      }
+    ],
+    "pageErrors": 0,
+    "lateScheduledPcm": 0,
+    "scope": "Two complete replies and a third still playing at the 180-second harness observation timeout (about 173 seconds after turn admission). No product terminal was observed for that sample; do not relabel the observation timeout as a product deadline. Real model replies to the same synthetic detailed-story request. The first two complete replies have identical text, so distinct-text coverage is not established; generated PCM duration excludes silence added by scheduling. No physical or perceptual voice-identity claim.",
+    "distinctCompleteReplyTexts": 1,
+    "requiredLongRepliesCompleted": false
+  },
+  "performance": {
+    "status": "failed",
+    "targets": {
+      "firstAudibleWordP50Ms": 900,
+      "firstAudibleWordP95Ms": 1500,
+      "maximumNominalStarvationMs": 250
+    },
+    "nativeObservedGapMs": 288,
+    "scope": "Small warm synthetic-input observations; scheduled PCM is not acoustic first-word measurement. Controlled comparison uses scripted inference. Actual browser/native voice uses real selected inference. No full latency, causal, acoustic or perceptual acceptance."
+  },
+  "archive": {
+    "recordedAt": "2026-09-21T16:30:14.227381+00:00",
+    "sourceRevision": "942f8008db718edd91cc76c1c3bd433349fcea8d",
+    "archiveSha256": "6f89edc14f8dcd018c49f5000e12914d6e994f7a7f18acd77ba92b756f7d1a95",
+    "archiveBytes": 19240960,
+    "members": 1319,
+    "privatePackageHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "status": "verified",
+    "priorReceipts": [
+      "generic-clean-package.json",
+      "generic-clean-package-2.json",
+      "generic-clean-package-3.json",
+      "generic-clean-package-4.json",
+      "generic-clean-package-5.json",
+      "generic-clean-package-6.json",
+      "generic-clean-package-7.json",
+      "generic-clean-package-21.json"
+    ],
+    "scope": "Generic clean source install, local startup, protected administration and explicitly fixture conversation. No private package inclusion, signed installer or distribution approval.",
+    "install": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+    "build": "pnpm build",
+    "runtime": "node scripts/start-candidate.mjs --directory <outside-git> --profile test --port 43201",
+    "runtimeChecks": {
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "privatePackageCount": 0,
+      "neutralAvailable": true,
+      "fixtureConversation": true,
+      "effectiveConfiguration": true,
+      "presentationSelfContext": true,
+      "structuredSessionDefinition": true,
+      "authenticatedHandoffAvailable": true,
+      "reducedMotionExplained": true,
+      "profileTopicControls": 6,
+      "pageErrors": []
+    }
+  },
+  "candidate": {
+    "sourceRevision": "942f8008db718edd91cc76c1c3bd433349fcea8d",
+    "manifestSha256": "82b72bbad65c925c49246662101cbac890e98dcf6ce8b271f03fcb49be01b177",
+    "files": 6869,
+    "migration": 51,
+    "preservedExistingData": true,
+    "changedExistingTables": [
+      "initiative_clock"
+    ],
+    "health": {
+      "inference": "healthy",
+      "stt": "healthy",
+      "tts": "healthy"
+    },
+    "acceptingInteractions": true
+  },
+  "retainedFailures": [
+    "Original first-clause test failed before implementation. Initial recursive runtime build did not resolve tsc; the first server test used stale dist and timed out. Correct direct build plus full root build and test successors pass.",
+    "Initial system Python had incompatible NumPy architecture; bundled Python passes all six checks.",
+    "First long-form harness renewed audience while microphone was open; privacy correctly cleared the stream. The second attempt exposed missing automatic saved-appearance restoration. A third attempt uses visible Refresh appearances, completes two long replies, and reaches the observation timeout during the third. All attempts retained; whole long-form completion is not accepted.",
+    "Native second reply has a 288 ms scheduling gap, above the unchanged 250 ms continuity criterion. Both host onset distributions remain above the unchanged absolute objectives."
+  ],
+  "exclusions": [
+    "No model, provider, GPU, network exposure, microphone endpointing, storage format or user learning-policy change.",
+    "Private assets, mappings, detailed transcripts, screenshots and test databases stay operator-local. Generic archive has zero matching private assets/media paths.",
+    "Current Mac binary is unchanged; actual packaged host is tested against the new local core. Native output is muted and all input is synthetic; no physical or Human claim.",
+    "Earlier monolithic long-request failure, exact-phrase speech omission, causal-study and completion failures remain. Original 24 accepted S083/S084 journeys are unchanged.",
+    "Guide v25 retains its existing static validation and v13 visual limit under recorded URL policy. No pushes, publication or cloud uploads."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "first-clause-browser.log",
+      "sha256": "762e7af3946d87e203035bd5065b36de23dcaaada884c687e07afea44a70001b"
+    },
+    {
+      "name": "first-clause-build.log",
+      "sha256": "4979cc1a58813b57e83bcc6af1a45d6f75e9fb531ee02007723c4046eb2a4486"
+    },
+    {
+      "name": "first-clause-candidate-after.json",
+      "sha256": "4d5caa447441222d033f811dbea2a14e66b3dfcdd7237ec01c1e3cd5e83f6c14"
+    },
+    {
+      "name": "first-clause-candidate-before.json",
+      "sha256": "6dd2a9224ac6e922d5a946189a6bdea3277a45bde5059d82c26d13237f3d0202"
+    },
+    {
+      "name": "first-clause-candidate-health.json",
+      "sha256": "a799aa6c6d2689bdf189bd7f6f00ee9963f5f8f1f7909877a92a371f47bdc937"
+    },
+    {
+      "name": "first-clause-candidate-pid.json",
+      "sha256": "c113d3565d948d8576c944f17c97c7faa4bc3e56f9440f0e23b6b7dd6f2efdcc"
+    },
+    {
+      "name": "first-clause-clean-browser.log",
+      "sha256": "83951673245cdcc0793134ba53e5dc3319dcccd4daf5c3e0feb9562436503868"
+    },
+    {
+      "name": "first-clause-clean-build.log",
+      "sha256": "287aa4f52f696955d8cc79ecb07af775dc37937586a7acd4b41f3e817e7a5499"
+    },
+    {
+      "name": "first-clause-clean-install.log",
+      "sha256": "d105d905e25ce27b6e3caaa6bd6b9b08ca0f6a3be214363978bdb3889f26abd8"
+    },
+    {
+      "name": "first-clause-comparison-browser-20260921-latest.json",
+      "sha256": "cef3c8cf5451eda6a963cba3ddb88aa3fb16eea5e40e8c4cc2033374eb7d736f"
+    },
+    {
+      "name": "first-clause-comparison-stages.jsonl",
+      "sha256": "757765b4e42b9e713ed7506c55bf98acdda5514a0f5880ff0bd3e2006bb410a0"
+    },
+    {
+      "name": "first-clause-comparison-summary.json",
+      "sha256": "6e2fde8ecc99825761287de6eabc05dabc773149242683547f294f8a0741b6bb"
+    },
+    {
+      "name": "first-clause-comparison.log",
+      "sha256": "1cfe2be19c6fdb981d9c8a046068845f2a2aafdc12a55228c3a495ca90a82c2e"
+    },
+    {
+      "name": "first-clause-environment-attempts.json",
+      "sha256": "d9468134d90d020725f5a9c8bde7b8f0e298de735de086fa26b35ccee8db5b40"
+    },
+    {
+      "name": "first-clause-focused-2.log",
+      "sha256": "6d7860d382e56f265f5b87576d8fa23f91ccb1125554f7ae8b043dd5f46a391a"
+    },
+    {
+      "name": "first-clause-focused.log",
+      "sha256": "de9e408dc6cc1f63a312ed9946bd5c062fc5f40082afe52901555a795dee03b9"
+    },
+    {
+      "name": "first-clause-lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "first-clause-long-2-browser-20260921-latest.json",
+      "sha256": "f8a1df358b4535746e8e592bc49117ea0fb76f165fe735638478479566ece58c"
+    },
+    {
+      "name": "first-clause-long-2-browser.log",
+      "sha256": "148dc542f53e27a17043ec6b827c9708a0b39ad2be272e23d67b2b9c5a6ffdc3"
+    },
+    {
+      "name": "first-clause-long-3-browser-20260921-latest.json",
+      "sha256": "035885a110b260594ac78ac4d726daf08a8f5d02aa3be4f9647cab1834535e07"
+    },
+    {
+      "name": "first-clause-long-3-browser.log",
+      "sha256": "8cd4d5ec2ab1256e767f2a0150e58103dac6f8c08d5105d649643b28a047e926"
+    },
+    {
+      "name": "first-clause-long-3-stages-20260921.jsonl",
+      "sha256": "75363a5380c5aa507b78fc4ca88c41aee79ddabdca957ed72d50e169456d22c8"
+    },
+    {
+      "name": "first-clause-long-browser-20260921-latest.json",
+      "sha256": "361175d7caad01f63efd70cdd8dbecd06d725fbc5248d1900de8bb333bb35a46"
+    },
+    {
+      "name": "first-clause-long-browser.log",
+      "sha256": "944d51030acbef948567ff2e66ca452802ff305724e1f1d50cf8a8fdae4b37cf"
+    },
+    {
+      "name": "first-clause-pin.log",
+      "sha256": "e303094a6e6cbbb960e29ca86c058b4456082622e6fd8d38d228ac09e6605a71"
+    },
+    {
+      "name": "first-clause-preflight-2.log",
+      "sha256": "4452b1008aa04e9798ac5bc97dff367bc5089cefda65116c165ad04a0f05a6ef"
+    },
+    {
+      "name": "first-clause-preflight-3.log",
+      "sha256": "6c372deb970ea49e5595df33205e9e29526bcc0941314636c246c9d6286a5857"
+    },
+    {
+      "name": "first-clause-preflight-4.log",
+      "sha256": "dcbe48eaf329128628a51706ef5a0a7b693eb46714b85aac41ce53045a2b215b"
+    },
+    {
+      "name": "first-clause-preflight.log",
+      "sha256": "010f08ed1711345b747a5fee93dedc5d1e84b7a589b2657a07ab445a2839637b"
+    },
+    {
+      "name": "first-clause-real-browser-20260921-latest.json",
+      "sha256": "69b702af61ad74a356f67ab32a29285dbca8e40b658dd8f321c1231d0321fefd"
+    },
+    {
+      "name": "first-clause-real-browser.log",
+      "sha256": "492b28d9d7541f21cebf7ff27819d5b3799560ac0e3aa1b3f5a568b0e3ece3e0"
+    },
+    {
+      "name": "first-clause-real-native-20260921-latest.json",
+      "sha256": "8e59567bf1f45023dfe05f905e0d5ffbc65915671629a722b0ff56a2eeeb9189"
+    },
+    {
+      "name": "first-clause-real-native.log",
+      "sha256": "a20561ff3aadca6301204d98cfb2919dc555badbe32010e85ff22ece324fdf20"
+    },
+    {
+      "name": "first-clause-real-summary.json",
+      "sha256": "b425ac5f906df9f96c6f8b0fb0c51db6b69797ba746d7f57cf448367e2a49847"
+    },
+    {
+      "name": "first-clause-runtime-build.log",
+      "sha256": "bec101352ab373408ef76f8b76146bb4e08e3a5abbf0d357891474ede6d88b96"
+    },
+    {
+      "name": "first-clause-runtime-check.json",
+      "sha256": "37cecc129e42c2df5573802acb01d81e5087b643399d7cd993bc84648fcfbe25"
+    },
+    {
+      "name": "first-clause-runtime-pin.json",
+      "sha256": "1c49f5dd16798ead31a5e6ae4872db0dbe591976d237a3eaad14e55873abad25"
+    },
+    {
+      "name": "first-clause-s052-focused.log",
+      "sha256": "f3b84f943796f63bf5684dc7350bc4ecdb4e92b2c08452c82c3a52b8430c65c9"
+    },
+    {
+      "name": "first-clause-s052-qualification.json",
+      "sha256": "684da5d341a08a7ce1fec0616f777431ea98ae61cea9a73bea9350f4d58bffff"
+    },
+    {
+      "name": "first-clause-s052-qualification.stderr.log",
+      "sha256": "f59c400296dc2f8c854b46449580a7f7e9c98e087cc5674163767e7f570ea2ca"
+    },
+    {
+      "name": "first-clause-segmenter-after.log",
+      "sha256": "c6df2c33df360bda46aa0fc18dada0ee34e97d735dc2f583e5ccb2208f958a1a"
+    },
+    {
+      "name": "first-clause-segmenter-before.log",
+      "sha256": "6d2746ec5e2c7a8dcd695f8aa59d5c211db949108249b99f01c76f4a20bb0348"
+    },
+    {
+      "name": "first-clause-sidecar.log",
+      "sha256": "f623f78a271ca81e03020fb50036ebdcbe59da56c0145697b824d0536fdfe810"
+    },
+    {
+      "name": "first-clause-source.log",
+      "sha256": "0a9e713db98b1853d5dd7bed62ca3b7af9d20a55c5d79fe913e3f88fb87c8ee8"
+    },
+    {
+      "name": "first-clause-spec.log",
+      "sha256": "b1dfb852bcfd7e5395e1a252a3daff9b79531e995a29f86cc90155be9d5194cc"
+    },
+    {
+      "name": "first-clause-summary.log",
+      "sha256": "b425ac5f906df9f96c6f8b0fb0c51db6b69797ba746d7f57cf448367e2a49847"
+    },
+    {
+      "name": "first-clause-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "first-clause-voice-evidence.log",
+      "sha256": "eec85cdc85681580663c79d14490eef4f5a6f28c33db232839672171d369a424"
+    },
+    {
+      "name": "first-clause-workspace.log",
+      "sha256": "cafcb5db46907ac61339d559c3bb337fb2a5acaa2825d67e7524837e91a3f306"
+    }
+  ],
+  "followUpObserved": {
+    "owner": "LS-S068",
+    "status": "inProgress",
+    "behavior": "Renewing temporary solo audience disposes the display immediately, but a second conversation reset invalidates the presentation refresh. Explicit Refresh appearances restores it.",
+    "nextAction": "Add a rendered regression and repair saved-appearance restoration while retaining immediate privacy disposal and speech cancellation."
+  }
+}
