@@ -3,8 +3,8 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "6432822d93ff1a1715a27fe58710b5e6e6f183f9",
-  "currentRevision": "6f5dfa74611b2ac9d7c4a34ed88fcef96529bfa6",
-  "activeSlice": "LS-S064",
+  "currentRevision": "fcc3cd700e93267af0d2802611eb5fb535d4a939",
+  "activeSlice": "LS-S085",
   "sliceStatus": "implementationCompleteVerificationPending",
   "completedSlices": [
     "LS-S001",
@@ -77,43 +77,67 @@
   ],
   "allowedFiles": [
     "README.md",
+    "apps/control-web/acknowledgments.js",
     "apps/control-web/app.js",
+    "apps/control-web/conversation-capture.js",
+    "apps/control-web/conversation-output.js",
+    "apps/control-web/conversation-room.js",
+    "apps/control-web/conversation.html",
+    "apps/control-web/index.html",
+    "apps/control-web/presentation-runtime.js",
     "apps/control-web/saved-voices.js",
     "apps/control-web/styles.css",
-    "apps/control-web/test/saved-voices.test.mjs",
-    "apps/control-web/workspace.js",
-    "apps/server/src/admin/saved-voices.ts",
+    "apps/control-web/test/acknowledgments.test.mjs",
+    "apps/server/src/admin/acknowledgments.ts",
+    "apps/server/src/admin/understanding.ts",
     "apps/server/src/index.ts",
+    "apps/server/src/runtime/acknowledgments.ts",
     "apps/server/src/runtime/audio.ts",
-    "apps/server/src/runtime/preview-speech.ts",
     "apps/server/src/runtime/voice-settings.ts",
+    "apps/server/test/acknowledgments.test.ts",
     "apps/server/test/audio.test.ts",
     "apps/server/test/saved-voice-fixture.ts",
-    "apps/server/test/saved-voices.test.ts",
     "apps/server/test/server.test.ts",
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
+    "implementation/evidence/LS-S047-current-qualification.json",
+    "implementation/evidence/LS-S047-qualification-certification-1.json",
+    "implementation/evidence/LS-S047-qualification-certification-2.json",
+    "implementation/evidence/LS-S052-current-qualification.json",
+    "implementation/evidence/LS-S052-development-certification-2.json",
+    "implementation/evidence/LS-S052-qualification-certification-3.json",
+    "implementation/evidence/LS-S052-qualification-certification-6.json",
     "implementation/evidence/LS-S062-current-qualification.json",
-    "implementation/evidence/LS-S062-qualification-certification-15.json",
-    "implementation/evidence/LS-S062-qualification-certification-8.json",
-    "implementation/evidence/LS-S064-component-1.json",
-    "implementation/evidence/LS-S064-reference-controls-1.json",
+    "implementation/evidence/LS-S062-qualification-certification-16.json",
+    "implementation/evidence/LS-S062-qualification-certification-9.json",
+    "implementation/evidence/LS-S085-component-1.json",
+    "implementation/evidence/LS-S085-component-2.json",
+    "implementation/evidence/LS-S085.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json",
+    "packages/runtime/src/embodiment/lip-sync.ts",
+    "packages/runtime/test/lip-sync.test.ts",
+    "packages/storage-sqlite/src/acknowledgments.ts",
     "packages/storage-sqlite/src/index.ts",
-    "packages/storage-sqlite/src/migrations/0045_saved_voices.sql",
+    "packages/storage-sqlite/src/migrations/0046_acknowledgments.sql",
     "packages/storage-sqlite/src/migrations/index.ts",
-    "packages/storage-sqlite/src/saved-voices.ts",
+    "packages/storage-sqlite/test/acknowledgments.test.ts",
     "packages/storage-sqlite/test/initiative-delivery.test.ts",
-    "packages/storage-sqlite/test/initiative-expression.test.ts",
-    "packages/storage-sqlite/test/saved-voices.test.ts"
+    "packages/storage-sqlite/test/initiative-expression.test.ts"
   ],
   "changedFiles": [
     "README.md",
     "docs/s083-s084-acceptance-guide.html",
     "implementation/PRODUCT-REALITY-AUDIT.md",
     "implementation/checkpoint.json",
+    "implementation/evidence/LS-S047-current-qualification.json",
+    "implementation/evidence/LS-S047-qualification-certification-2.json",
+    "implementation/evidence/LS-S052-current-qualification.json",
+    "implementation/evidence/LS-S052-qualification-certification-6.json",
+    "implementation/evidence/LS-S062-current-qualification.json",
+    "implementation/evidence/LS-S062-qualification-certification-16.json",
+    "implementation/evidence/LS-S085-component-2.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
     "implementation/evidence/S083-S084-human-acceptance-1.json"
   ],
@@ -844,6 +868,31 @@
       "command": "Clean offline package install and current-candidate verification",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S064-reference-controls-1.json"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "1026/1026, zero skips."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "80/80, zero skips. Real local authentication and simulated expiry regression included."
+    },
+    {
+      "command": "pnpm typecheck; pnpm build; pnpm lint",
+      "result": "pass",
+      "evidence": "All three commands passed on final source."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "Private specification validation and 60 checks passed; structural claim only."
+    },
+    {
+      "command": "node --experimental-strip-types scripts/qualify-s052-development.mjs",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S052-qualification-certification-6.json"
     }
   ],
   "decisions": [
@@ -894,11 +943,9 @@
     "2026-09-21: Corrected selected CUDA optimization guard and pinned the read-only host patch after three direct synthesis samples and 14 real browser/Mac turns. Original runtime retained for rollback. Current warm recovery preserves services. No provider/model/GPU/sampling or release-acceptance change. Deployment implementation stays operator-local and composition owns host evidence.",
     "2026-09-21: Existing same-provider reference protocol and independent reference capability gates are repaired and verified; clean 6b19ec3 candidate preserves existing data. Three distinct native long replies pass with audience-channel tracing; the earlier uninstrumented interruption remains unexplained. Original latency and Human/physical/source criteria are unchanged."
   ],
-  "blockers": [
-    "Whole LS-S064 voice identity/quality acceptance requires Human audition of the chosen voice. No personal reference import or activation was performed."
-  ],
-  "nextAction": "Use the verified 6b19ec3 candidate for scoped Human microphone/speaker, private voice/appearance and physical audience/lock acceptance. Resume a bounded software repair on concrete failing evidence; retain latency/causal failures and do not infer missing source/route activation.",
-  "updatedAt": "2026-09-21T19:02:54.572337Z",
+  "blockers": [],
+  "nextAction": "Complete clean current-source installation, then browser and packaged Mac 1800/600-second mixed-input observations with a real spoken reply after administration expiry. Keep the earlier failed soak and unchanged authority/performance/Human criteria.",
+  "updatedAt": "2026-09-21T20:03:10.734017Z",
   "updatedBy": "Codex",
-  "notes": "Remote service repair complete. Qwen, NeMo and Vox ready. Reference-only preview/audio support, clean candidate and database preservation verified. Three browser and three packaged Mac distinct long replies complete with zero scheduled gaps, but no physical sound or Human acceptance. Cross-owner assessment found remaining actual-source/route, physical and Human dependencies; repeated performance/causal failures are retained under the bounded-attempt rule. No further concrete independent repair is selected. Goal is not marked complete."
+  "notes": "Run disposition continue. S085 optional-catalog 401 no longer logs out an authorized conversation; before/after regression, 1026 source and 80 browser checks pass. Selected-provider S052 prerequisite passes 10/10. Clean-install/current real-provider soak evidence remains in progress. Whole S064 Human voice quality and selected alignment are not accepted."
 }

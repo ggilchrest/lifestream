@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S085",
+  "status": "verified",
+  "claimClass": "acknowledgment-cache-admin-expiry-component",
+  "recordedAt": "2026-09-21T20:02:17.332009Z",
+  "sourceRevision": "fcc3cd700e93267af0d2802611eb5fb535d4a939",
+  "specificationRevision": "f7d8ce6ff9175cca75c309b0256351345048b82e",
+  "behavior": "Optional acknowledgment catalog failure clears/skips cached cues without signing out an otherwise authorized conversation. Degraded status is explicit. Administration authentication, expiry, mutation and revocation enforcement are unchanged.",
+  "requirements": [
+    "LS-INT-052",
+    "LS-SEC-093"
+  ],
+  "reproduction": {
+    "soakRevision": "6b19ec39bcab84e75970c24cd06a3487f7134492",
+    "elapsedSeconds": 1804.1283215,
+    "completedReplies": 19,
+    "interruptions": 6,
+    "scheduledGapMs": 0,
+    "latePcm": 0,
+    "failure": "Administration expired at 1800 seconds; optional catalog 401 invoked global conversation logout. Screenshot visually inspected. Failed soak remains failed."
+  },
+  "regression": {
+    "before": "Fails: authenticated conversation identity unexpectedly becomes undefined.",
+    "after": "Passed: same conversation/capture persists, expired protected edit returns 401, ordinary typed reply completes, admin_last_activity is unchanged, explicit logout releases capture.",
+    "clock": "Trusted auth clock advanced 1800 seconds in isolated fixture server. No production timeout change.",
+    "physicalInput": false,
+    "provider": "Fixture text; real local authentication, HTTP, rendered browser and synthetic silent capture."
+  },
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "evidence": "1026/1026, zero skips."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "evidence": "80/80, zero skips. Real local authentication and simulated expiry regression included."
+    },
+    {
+      "command": "pnpm typecheck; pnpm build; pnpm lint",
+      "result": "pass",
+      "evidence": "All three commands passed on final source."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "evidence": "Private specification validation and 60 checks passed; structural claim only."
+    }
+  ],
+  "exclusions": [
+    "Does not mark the failed soak passed; clean current-provider browser/native endurance successors remain pending.",
+    "No administration deadline extension, automatic reauthentication, provider/model change, new input device or Human acceptance.",
+    "No selected alignment or acknowledgment perceptual claim."
+  ],
+  "operatorLocalEvidence": [
+    {
+      "name": "ack-idle-before.log",
+      "sha256": "1c4c9e385ea14d701bb42ea779cb46eb724c021337cba5f31fa9c68b01935258"
+    },
+    {
+      "name": "ack-idle-focused.log",
+      "sha256": "03343ff7b8a5c76e790e4198c674625e7f5f6d05a4bda9a70be2b1ce5bc2ecda"
+    },
+    {
+      "name": "ack-idle-source.log",
+      "sha256": "64e2268b92ed1f3953b2e9ee163f53f975f4771d7270698b748bd37186389b75"
+    },
+    {
+      "name": "ack-idle-browser.log",
+      "sha256": "045a2d8ae33d3d89a1a49baf28b431dd35ca713ac9423c73a937a7cd6a59750b"
+    },
+    {
+      "name": "ack-idle-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    {
+      "name": "ack-idle-build-final.log",
+      "sha256": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042"
+    },
+    {
+      "name": "ack-idle-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "name": "ack-idle-spec-final.log",
+      "sha256": "ecd37facee2d643a471f0b8744c6a501c74058bf89ed5938b795b1f486a2b963"
+    },
+    {
+      "name": "ack-idle-s052-qualification.json",
+      "sha256": "33ae9a852fad4e171baa59ffad66245b2778e88be3981070708a130cd585778e"
+    },
+    {
+      "name": "current-soak-summary-v2.json",
+      "sha256": "d068946470964ecc8f6f8eb61ed167d64236d5263d5316bfc5fcdf7d80e40dfb"
+    },
+    {
+      "name": "current-soak-browser-20260921-v2-latest.json",
+      "sha256": "2b668e317a877d764b42e4166bbb1a215a4b97f2b0b4dd1d02811196ca113ba8"
+    },
+    {
+      "name": "current-soak-browser-20260921-v2-failure.png",
+      "sha256": "97d2c90a19f567792fa125353b87b5a73e880f524795297f96f60eff0be25370"
+    }
+  ]
+}
