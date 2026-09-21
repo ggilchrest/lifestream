@@ -824,8 +824,9 @@ export class LifestreamServer {
       const context=this.requestContext(request,false);if(!context)throw new AuthenticationError();
       const identity=this.audienceIdentity(context);
       if(method==='POST'&&path==='/api/runtime/v1/audience'){
-        if(this.localAuth)this.localAuth.csrf(context as LocalContext,String(request.headers['x-lifestream-csrf']??''));
+        if(this.localAuth)this.localAuth.csrf(context as LocalContext,String(request.headers['x-lifestream-csrf']??''),false);
         const body=asObject(await readBody(request));if(!this.audience||!body||Object.keys(body).some(k=>!['mode','seconds'].includes(k)))return json(response,422,{code:'audience_declaration_invalid'});
+        if(this.localAuth)this.localAuth.assertCurrent(context as LocalContext,false);
         try{return json(response,200,{enforced:true,...this.audience.declare(identity,body.mode as 'solo',body.seconds===undefined?300:body.seconds as number)});}catch(error){return json(response,422,{code:'audience_declaration_invalid',message:error instanceof Error?error.message:'Invalid declaration'});}
       }
       if(method!=='GET')return json(response,405,{code:'method_not_allowed'});
@@ -834,7 +835,9 @@ export class LifestreamServer {
         let unsubscribe:()=>void=()=>{};const send=(value:unknown)=>{if(!response.writableEnded)response.write(`data: ${JSON.stringify({enforced:true,...value as object})}\n\n`);};
         try{unsubscribe=this.audience.subscribe(identity,()=>{});}catch{return json(response,429,{code:'audience_subscriber_limit'});}unsubscribe();
         response.writeHead(200,{'content-type':'text/event-stream','cache-control':'no-store','connection':'keep-alive'});unsubscribe=this.audience.subscribe(identity,send);
-        const heartbeat=setInterval(()=>{try{if(this.localAuth)this.localAuth.assertCurrent(context as LocalContext);if(JSON.stringify(identity)!==JSON.stringify(this.audienceIdentity(context)))throw new Error('endpoint changed');send(this.audience!.snapshot(identity));}catch{response.end();}},1000);heartbeat.unref();response.once('close',()=>{clearInterval(heartbeat);unsubscribe();});return;
+        // Audience evidence supports the continuing conversation. Idle-expired
+        // administration must not interrupt it; revocation still closes it.
+        const heartbeat=setInterval(()=>{try{if(this.localAuth)this.localAuth.assertCurrent(context as LocalContext,false);if(JSON.stringify(identity)!==JSON.stringify(this.audienceIdentity(context)))throw new Error('endpoint changed');send(this.audience!.snapshot(identity));}catch{response.end();}},1000);heartbeat.unref();response.once('close',()=>{clearInterval(heartbeat);unsubscribe();});return;
       }
       return json(response,200,this.audience?{enforced:true,...this.audience.snapshot(identity)}:{enforced:false});
     }

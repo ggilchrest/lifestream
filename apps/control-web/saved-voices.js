@@ -33,7 +33,7 @@ export function installSavedVoices({anchor,api,context,onActivated}) {
  stopButton.onclick=()=>{stop();say('Voice preview stopped.');};anchor.querySelector('[data-voice-refresh]').onclick=run(refresh);
  const clear=()=>{epoch++;stop();snapshot=null;reviewed.clear();form.reset();list.replaceChildren();anchor.querySelector('[data-voice-save]').disabled=true;anchor.querySelector('[data-voice-active]').textContent='Select an Assistant and refresh.';say('No preview is playing.');};
  for(const event of ['lifestream-auth','lifestream-assistant'])window.addEventListener(event,()=>{clear();if(window.lifestreamAuth.session)void refresh().catch(()=>{});});
- window.addEventListener('lifestream-audience',event=>{clear();if(event.detail?.privateAllowed)void refresh().catch(()=>{});});window.addEventListener('hashchange',()=>{if(location.hash!=='#voice'){stop();say('Voice preview stopped.');}});document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});window.addEventListener('pagehide',()=>{clear();void audio?.close();});
+ window.addEventListener('lifestream-audience',event=>{clear();if(event.detail?.privateAllowed&&location.hash==='#voice')void refresh().catch(()=>{});});window.addEventListener('hashchange',()=>{if(location.hash==='#voice')void refresh().catch(()=>{});else{stop();say('Voice preview stopped.');}});document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});window.addEventListener('pagehide',()=>{clear();void audio?.close();});
  installAcknowledgmentAdministration({anchor,api,context});
  window.addEventListener('lifestream-preview-start',event=>{if(event.detail!=='saved-voice')stop();});
  return {refresh:run(refresh),get playing(){return previewing!==null;}};

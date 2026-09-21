@@ -7,6 +7,28 @@ import { join } from "node:path";
 import { createLifestreamServer } from "../src/index.ts";
 import { loadProfile } from "../src/config/loader.ts";
 const secret=()=>`synthetic-${randomBytes(24).toString("hex")}`;
+test('audience evidence and declarations survive admin expiry while CSRF, revocation and disclosure fences remain enforced',{timeout:15000},async t=>{
+ const root=await mkdtemp(join(tmpdir(),'ls-audience-idle-'));t.after(()=>rm(root,{recursive:true,force:true}));let now=Date.now();
+ const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};
+ const installerToken=secret(),app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'auth'),installerToken,now:()=>now},audiencePrivacy:{sourceIds:[]}});await app.start();t.after(()=>app.shutdown());
+ const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={origin:base,'content-type':'application/json'};
+ const request=(path:string,body?:unknown,extra:Record<string,string>={})=>fetch(base+path,{method:body===undefined?'GET':'POST',headers:{...headers,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
+ const setup=await request('/api/auth/v1/setup',{username:'synthetic-owner',password:secret(),installerToken});assert.equal(setup.status,201);headers.cookie=setup.headers.get('set-cookie')!.split(';')[0]!;const {session}=await setup.json() as {session:{csrfToken:string;sessionId:string}};headers['x-lifestream-csrf']=session.csrfToken;
+ assert.equal((await request('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession'})).status,200);
+ assert.equal((await request('/api/runtime/v1/audience',{mode:'solo',seconds:300})).status,200);
+ const activity=()=>app.database.connection.prepare('SELECT admin_last_activity FROM local_sessions WHERE session_id=?').get(session.sessionId)!.admin_last_activity,original=activity();
+ const stream=await request('/api/runtime/v1/audience/events');assert.equal(stream.status,200);const reader=stream.body!.getReader();t.after(()=>reader.cancel());assert.equal((await reader.read()).done,false);
+ now+=1_800_000;
+ assert.equal((await request('/api/auth/v1/session')).status,401);assert.equal((await request('/api/admin/v1/assistants',{})).status,401);
+ const next=await reader.read();assert.equal(next.done,false,'Audience heartbeat must use continuing conversation authority');assert.match(Buffer.from(next.value!).toString(),/"privateAllowed":true/);
+ assert.equal((await request('/api/runtime/v1/audience',{mode:'solo',seconds:300},{'x-lifestream-csrf':'wrong'})).status,403);
+ assert.equal((await request('/api/runtime/v1/audience',{mode:'solo',seconds:300})).status,200,'Expiring declarations must remain renewable without extending administration');
+ for(const [mode,allowed] of [['shared',false],['solo',true],['lock',false],['unlock',false],['solo',true],['clear',false]] as const){const response=await request('/api/runtime/v1/audience',{mode,seconds:300});assert.equal(response.status,200);assert.equal((await response.json() as {privateAllowed:boolean}).privateAllowed,allowed);}
+ assert.equal(activity(),original,'Runtime audience activity must not refresh administration');assert.equal((await request('/api/auth/v1/session')).status,401);
+ assert.equal((await request('/api/auth/v1/sign-out',{})).status,200);
+ let ended=false;while(!ended){ended=(await reader.read()).done===true;}
+ assert.equal((await request('/api/runtime/v1/audience')).status,401);assert.equal((await request('/api/runtime/v1/audience',{mode:'solo'})).status,401);
+});
 test("real local sessions protect actual administration, scope and approvals while idle-expired conversation continues",async t=>{
  const root=await mkdtemp(join(tmpdir(),"ls-auth-http-"));t.after(()=>rm(root,{recursive:true,force:true}));let now=1_800_000_000_000;const config=loadProfile("test");config.storage={databasePath:join(root,"db.sqlite"),artifactDirectory:join(root,"artifacts")};config.authority.authentication="local-password";const installerToken=secret();const app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,"safety"),installerToken,now:()=>now}});await app.start();t.after(()=>app.shutdown());const base=`http://127.0.0.1:${app.address().port}`;let cookie="",csrf="";const request=(path:string,body?:unknown,extra:Record<string,string>={})=>fetch(base+path,{method:body===undefined?"GET":"POST",headers:{origin:base,"content-type":"application/json",cookie,"x-lifestream-csrf":csrf,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
  assert.equal((await request('/api/runtime/v1/session-context')).status,401);
