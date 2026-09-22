@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "recordedAt": "2026-09-22T00:15:00.000Z",
+  "status": "implementationCompleteVerificationPending",
+  "sourceRevision": "ad8ff6c7318f764d33902df255138f8b06215fe4",
+  "change": {
+    "summary": "Extend the bounded typed-response deadline from 10 seconds to 30 seconds and give the isolated S086 development qualifier a 45-second client observation window for its ordinary streaming replies.",
+    "files": [
+      "apps/server/src/runtime/inference.ts",
+      "apps/server/test/inference.test.ts",
+      "packages/runtime/src/inference/prompt.ts",
+      "scripts/qualify-s086-development.mjs"
+    ],
+    "reason": "A real selected-provider S086 journey published three automatic reflections and then ended its later ordinary reply with deadline_exceeded at 10016.9 ms."
+  },
+  "validation": {
+    "sourceTests": {
+      "command": "node --test --experimental-strip-types apps/server/test/inference.test.ts packages/runtime/test/inference.test.ts apps/server/test/experience.test.ts packages/runtime/test/experience.test.ts packages/storage-sqlite/test/experience.test.ts",
+      "result": "pass",
+      "tests": 34
+    },
+    "static": [
+      "pnpm typecheck: pass",
+      "pnpm lint: pass",
+      "pnpm build: pass",
+      "node scripts/workspace.mjs check: pass",
+      "git diff --check: pass"
+    ]
+  },
+  "selectedProvider": {
+    "profile": "ai5090",
+    "inference": {
+      "implementation": "@lifestream/providers-sglang",
+      "model": "qwen3.8-27b-local",
+      "revision": "319f741cce68d7914884900c138a1fbb70a42f30",
+      "fixture": false
+    },
+    "scope": "Synthetic ordinary typed conversations in an isolated temporary database. No personal relationship enablement, physical capture, provider replacement, deployment, or Human acceptance."
+  },
+  "operatorLocalEvidence": {
+    "diagnostic": {
+      "reportSha256": "5323c68ef78f7f08584442de1cae15b75f866e567902a7edf7145ac3f7efe74d",
+      "finding": "Three reflection calls published before the later ordinary reply emitted deadline_exceeded at 10016.9 ms."
+    },
+    "changedWorktree": {
+      "reportSha256": "3a289047b5f8c9ee3172fbc9dce929d0a3992c563692e0538588f5c2d5ca535d",
+      "result": "pass",
+      "finding": "Three real reflections, two open items, a 0.05 learned gardening imprint, later selection/output, and restart persistence; later reply completed in 11517.8 ms."
+    },
+    "exactCommit": {
+      "reportSha256": "bade7d38e1789401b2e6c4082cb54d21d5292a17f64ffa4a6b97da7dec7a38b8",
+      "result": "incomplete",
+      "ordinaryRepliesCompleted": 5,
+      "laterReplyMs": 25864.6,
+      "reflectionCallsPublished": 4,
+      "laterSelectionAndOutput": true,
+      "restartPersisted": true,
+      "finding": "The selected model produced no nonzero learned imprint in this exact-commit sample."
+    }
+  },
+  "claimBoundary": {
+    "verified": [
+      "The typed response no longer terminates at the previous 10-second deadline in the exact-revision selected-provider journey.",
+      "The exact-revision journey completed four automatic selected-provider reflections, later selection/output, and restart persistence."
+    ],
+    "notVerified": [
+      "Stable selected-provider learned-imprint publication across samples.",
+      "LS-S086 whole-slice causal, performance, perceptual, Human, physical-device, production, or deployment acceptance."
+    ],
+    "disposition": "Retain the successful changed-worktree learning observation and the exact-commit incomplete observation. Do not substitute either for a current whole-slice qualification or repeat unchanged samples without a pre-registered model-stability or causal diagnosis."
+  }
+}
