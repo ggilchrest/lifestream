@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "6432822d93ff1a1715a27fe58710b5e6e6f183f9",
-  "currentRevision": "371cd8505f5732b1500b620d40df7c63b4111749",
+  "currentRevision": "904c9278792e1e926c02318a7f6d7c93d492a3ef",
   "activeSlice": "LS-S085",
   "sliceStatus": "implementationCompleteVerificationPending",
   "completedSlices": [
@@ -1040,7 +1040,7 @@
   ],
   "blockers": [],
   "nextAction": "On app Resume, reassess remaining scoped performance/causal/source dependencies; do not rerun unchanged failed studies. Human physical voice/avatar/recovery acceptance and actual enrolled source/away-route decisions remain open. Preserve native preparation failures, exact endurance revisions and existing S083/S084 acceptance.",
-  "updatedAt": "2026-09-22T04:20:00.000Z",
+  "updatedAt": "2026-09-22T04:32:00.000Z",
   "updatedBy": "Codex",
-  "notes": "S085 source 031d4b1 is promoted with pinned operator-local Rhubarb alignment; six served assets match, 99 tables and deployment identity preserved. Optional private cue-capable package is available without changing saved appearance or acknowledgment enablement. Source 1028/browser 90 and actual browser/native paired UI pass. Public revision 087dd0e separately records the LS-S086 typed-response deadline repair and its bounded evidence. Public revisions cb89cc1 and 78c7637 preserve adjacent attributable project-continuity statements and expose only two-independent-episode, source-bound positive attention candidates. At exact source 78c7637, 1030 source and 90 rendered-browser tests passed with zero skips; one real selected-provider journey published attentionGardening +0.05, influenced later ordinary output, and persisted through restart. Public revision 371cd85 refreshes LS-S052 and LS-S062 prerequisites at that source. S085 remains implementationCompleteVerificationPending with no new Human claim."
+  "notes": "S085 source 031d4b1 is promoted with pinned operator-local Rhubarb alignment; six served assets match, 99 tables and deployment identity preserved. Optional private cue-capable package is available without changing saved appearance or acknowledgment enablement. Source 1028/browser 90 and actual browser/native paired UI pass. Public revision 087dd0e separately records the LS-S086 typed-response deadline repair and its bounded evidence. Public revisions cb89cc1 and 78c7637 preserve adjacent attributable project-continuity statements and expose only two-independent-episode, source-bound positive attention candidates. At exact source 78c7637, 1030 source and 90 rendered-browser tests passed with zero skips; one real selected-provider journey published attentionGardening +0.05, influenced later ordinary output, and persisted through restart. Public revision 371cd85 refreshes LS-S052 and LS-S062 prerequisites at that source. Public revision 904c927 corrects the immutable candidate-only report digest through LS-S086-development-8 without changing its incomplete result. S085 remains implementationCompleteVerificationPending with no new Human claim."
 }
