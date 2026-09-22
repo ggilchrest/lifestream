@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "recordedAt": "2026-09-22T01:31:00Z",
+  "status": "implementationCompleteVerificationPending",
+  "sourceRevision": "78c76377f0b9c0553ffaecce61d278673ffda453",
+  "supersedes": {
+    "path": "implementation/evidence/LS-S086-development-7.json",
+    "sha256": "3f329f4af2180c02711ce7146a1ab223f6d5ff0b0d1defbd11cb2d6a57287b19",
+    "scope": "Correction of an operator-local candidate-only report digest; all source, validation, exact-provider, and claim-boundary fields in the immutable predecessor remain in force."
+  },
+  "correction": {
+    "field": "operatorLocalEvidence.candidateOnlyAttempt.reportSha256",
+    "incorrectSha256": "c7e0bd6b0b50ab75124e82e8c162440bef8ae66dba639d04a5319723894df1f1",
+    "correctSha256": "bdc153dc28656058599687eacf6cc0e580211ebc82a192d4e32ec5691ad474e3",
+    "incorrectArtifact": "operator-local post-bookkeeping candidate health record",
+    "correctArtifact": "operator-local s086-attention-eligibility-cb89cc1-20260922 candidate-only report",
+    "finding": "The predecessor accidentally recorded the health-record digest for the candidate-only attempt. The corrected report remains incomplete: the candidate hint alone found no candidates because automatic-memory extraction had retained project-fact sentences but omitted the explicit enjoyment and continuation sentence."
+  },
+  "claimBoundary": {
+    "verified": [
+      "This receipt makes the candidate-only report independently identifiable without changing its incomplete result.",
+      "The exact-source selected-provider pass in LS-S086-development-7 remains separately identified by report digest 49591fd3f59678890f6ab8fa0405adc7105c52d94b03ee2f895f55ad67f16c07."
+    ],
+    "notVerified": [
+      "Stable selected-provider learned-imprint publication across a broader registered sample.",
+      "LS-S086 whole-slice causal, performance, perceptual, Human, physical-device, production, or deployment acceptance."
+    ],
+    "disposition": "Append-only evidence correction. Do not repeat the unchanged candidate-only scenario; a future stability claim requires a separately registered multi-sample protocol."
+  }
+}
