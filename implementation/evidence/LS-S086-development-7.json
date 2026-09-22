@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "recordedAt": "2026-09-22T01:12:11Z",
+  "status": "implementationCompleteVerificationPending",
+  "sourceRevision": "78c76377f0b9c0553ffaecce61d278673ffda453",
+  "change": {
+    "summary": "Preserve adjacent attributable project-continuity statements in automatic memory and expose only deterministic, source-bound repeated-interest candidates to reflection.",
+    "files": [
+      "apps/server/src/runtime/automatic-memory.ts",
+      "apps/server/test/automatic-memory.test.ts",
+      "packages/runtime/src/experience/reflection.ts",
+      "packages/runtime/test/experience.test.ts"
+    ],
+    "reason": "The prior exact selected-provider run persisted project facts but omitted the owner enjoyment and voluntary-continuation sentence, leaving no safe attention candidate despite the original typed statement containing that evidence."
+  },
+  "validation": {
+    "focusedTests": {
+      "command": "node --test --experimental-strip-types apps/server/test/automatic-memory.test.ts apps/server/test/experience.test.ts packages/runtime/test/experience.test.ts packages/storage-sqlite/test/experience.test.ts",
+      "result": "pass",
+      "tests": 27
+    },
+    "sourceTests": {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1030,
+      "skipped": 0
+    },
+    "browserTests": {
+      "command": "PLAYWRIGHT_MODULE=/Users/gg/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs node --test --test-concurrency=2 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "tests": 90,
+      "skipped": 0
+    },
+    "static": [
+      "pnpm typecheck: pass",
+      "pnpm lint: pass",
+      "pnpm build: pass",
+      "git diff --check: pass"
+    ],
+    "prerequisiteRefresh": {
+      "command": "node --experimental-strip-types scripts/qualify-s052-development.mjs",
+      "result": "pass",
+      "deadlineMs": 30005
+    }
+  },
+  "selectedProvider": {
+    "profile": "ai5090",
+    "inference": {
+      "implementation": "@lifestream/providers-sglang",
+      "model": "qwen3.8-27b-local",
+      "revision": "319f741cce68d7914884900c138a1fbb70a42f30",
+      "fixture": false
+    },
+    "scope": "Synthetic ordinary typed conversations in an isolated temporary database. No personal relationship enablement, physical capture, provider replacement, deployment, or Human acceptance."
+  },
+  "operatorLocalEvidence": {
+    "candidateOnlyAttempt": {
+      "reportSha256": "c7e0bd6b0b50ab75124e82e8c162440bef8ae66dba639d04a5319723894df1f1",
+      "result": "incomplete",
+      "finding": "The reflection candidate hint alone found no candidates because the automatic-memory extractor retained only project-fact sentences and omitted the explicit enjoyment/continuation sentence."
+    },
+    "exactCommit": {
+      "reportSha256": "49591fd3f59678890f6ab8fa0405adc7105c52d94b03ee2f895f55ad67f16c07",
+      "result": "pass",
+      "ordinaryRepliesCompleted": 5,
+      "reflectionCallsPublished": 3,
+      "learnedImprint": {
+        "dimension": "attentionGardening",
+        "delta": 0.05
+      },
+      "laterSelectionAndOutput": true,
+      "restartPersisted": true,
+      "laterReplyMs": 7331.6,
+      "finding": "The third reflection received one source-bound gardening candidate from two independent retained episodes and published a bounded imprint. The later ordinary reply observed the selected project and state survived restart."
+    },
+    "logs": [
+      {
+        "name": "s086-continuity-source-test.log",
+        "sha256": "408051e5b92018091f2385d1d4028e51c311bb62ef8f09c070dc0993d4af49a1"
+      },
+      {
+        "name": "s086-continuity-browser-test.log",
+        "sha256": "6ecc4d3a136348937aa6ad4fdcd00061b05f1fb91a49c208008f7fa750cb5fa0"
+      },
+      {
+        "name": "s086-continuity-typecheck.log",
+        "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+      },
+      {
+        "name": "s086-continuity-lint.log",
+        "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+      },
+      {
+        "name": "s086-continuity-build.log",
+        "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446"
+      },
+      {
+        "name": "s086-continuity-s052-qualification.log",
+        "sha256": "17db1849df243f44705b2c406c2c4c4783e039000631abb98d44ff1c25f736a6"
+      }
+    ]
+  },
+  "claimBoundary": {
+    "verified": [
+      "Automatic memory preserves an adjacent exact, attributable owner enjoyment/continuation sentence for a project when the extractor quote would otherwise end before it.",
+      "Reflection receives a candidate only after two independent retained topic-matched positive episodes, and excludes negated interest.",
+      "One exact selected-provider journey published attentionGardening +0.05, influenced a later ordinary selection/output, and persisted through restart."
+    ],
+    "notVerified": [
+      "Stable selected-provider learned-imprint publication across a broader registered sample.",
+      "LS-S086 whole-slice causal, performance, perceptual, Human, physical-device, production, or deployment acceptance."
+    ],
+    "disposition": "The earlier candidate-only attempt and earlier variable exact-provider evidence remain immutable. Do not repeat this unchanged scenario; a future stability claim requires a separately registered multi-sample protocol."
+  }
+}
