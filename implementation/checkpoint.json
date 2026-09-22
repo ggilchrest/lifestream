@@ -3,7 +3,7 @@
   "repository": "ggilchrest/lifestream",
   "branch": "main",
   "baseRevision": "6432822d93ff1a1715a27fe58710b5e6e6f183f9",
-  "currentRevision": "087dd0e3e1dd393e6ab2d0f1ad1f4387c52ca1ea",
+  "currentRevision": "42a30c05cc7f14c7aeb908a4728ac40ab4a323bf",
   "activeSlice": "LS-S085",
   "sliceStatus": "implementationCompleteVerificationPending",
   "completedSlices": [
@@ -1040,7 +1040,7 @@
   ],
   "blockers": [],
   "nextAction": "On app Resume, reassess remaining scoped performance/causal/source dependencies; do not rerun unchanged failed studies. Human physical voice/avatar/recovery acceptance and actual enrolled source/away-route decisions remain open. Preserve native preparation failures, exact endurance revisions and existing S083/S084 acceptance.",
-  "updatedAt": "2026-09-22T00:20:00.000Z",
+  "updatedAt": "2026-09-22T04:15:00.000Z",
   "updatedBy": "Codex",
-  "notes": "S085 source 031d4b1 is promoted with pinned operator-local Rhubarb alignment; six served assets match, 99 tables and deployment identity preserved. Optional private cue-capable package is available without changing saved appearance or acknowledgment enablement. Source 1028/browser 90 and actual browser/native paired UI pass. Public revision 087dd0e separately records the LS-S086 typed-response deadline repair and its bounded evidence; S085 remains implementationCompleteVerificationPending with no new Human claim."
+  "notes": "S085 source 031d4b1 is promoted with pinned operator-local Rhubarb alignment; six served assets match, 99 tables and deployment identity preserved. Optional private cue-capable package is available without changing saved appearance or acknowledgment enablement. Source 1028/browser 90 and actual browser/native paired UI pass. Public revision 087dd0e separately records the LS-S086 typed-response deadline repair and its bounded evidence. Public revision 42a30c0 refreshes the stale LS-S052 and LS-S062 prerequisite certificates at source 97eff6d with 1028 source and 90 rendered-browser passes, zero skips, and a measured 30002 ms bounded typed deadline. S085 remains implementationCompleteVerificationPending with no new Human claim."
 }
