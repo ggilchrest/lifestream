@@ -101,7 +101,7 @@ test("real-authenticated ordinary turns use one scoped view, reviewed correction
     const response = { destroyed: false, writeHead() {}, write(value: string) { output += value; }, end() {} } as unknown as import("node:http").ServerResponse;
     const provider: InferenceProvider = { async *generate(_request, context) { await new Promise<void>(resolve => context.signal.addEventListener("abort", () => resolve(), { once: true })); yield { kind: "text", text: "LATE_OUTPUT" }; } };
     const pending = streamMessage(response, provider, { userInput: "synthetic" }, "session", outer.signal);
-    if (mode === "deadline") t.mock.timers.tick(10001); else outer.abort();
+    if (mode === "deadline") t.mock.timers.tick(30001); else outer.abort();
     await pending;
     assert.match(output, mode === "deadline" ? /deadline_exceeded/u : /cancelled/u); assert.doesNotMatch(output, /runtime_input_stale|LATE_OUTPUT|interaction.completed/u);
   }
