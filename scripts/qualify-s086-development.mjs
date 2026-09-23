@@ -28,6 +28,11 @@ const scenarios={
   'My current astronomy project is comparing observations of the Moon through two small telescopes. I enjoyed recording the crater edges in my first session and want to repeat the observation under similar conditions.',
   'I repeated my Moon observation with the same two telescopes. Comparing the crater edges was satisfying, and I want to make one more careful observation before drawing conclusions.',
   'I completed a third independent Moon observation with the same setup. I especially enjoy these patient comparisons and want to check whether a different eyepiece changes what I notice.'
+ ]},
+ gardenLight:{topics:['Gardening'],prompts:[
+  'My current seedling project compares bean plants under a cool desk lamp and beside a sunny window. I enjoyed counting the first new leaves and want to repeat the comparison with equal watering.',
+  'I checked a separate set of bean seedlings after another week. The lamp-grown leaves looked darker, and comparing the growth was rewarding. I want to make one more equal-watering comparison.',
+  'I completed a third independent bean seedling comparison under the same lamp and window conditions. I especially enjoy these careful garden observations and want to measure stem height next.'
  ]}
 };
 const scenario=scenarios[scenarioName];
