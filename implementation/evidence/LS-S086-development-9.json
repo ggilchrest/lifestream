@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "recordedAt": "2026-09-23T16:07:11Z",
+  "status": "implementationCompleteVerificationPending",
+  "sourceRevision": "ff07c308c6bea1d1d42a05c1929637629f87a57c",
+  "claimClass": "fresh-generic-package-boundary-verification-and-evidence-correction",
+  "packageVerification": {
+    "operatorLocalReceipt": "generic-clean-package-31.json",
+    "sha256": "fb0b9c439019d65c955a43d2b65579e466b3143b7768ab6ea8d95a6341115ba8",
+    "archiveSha256": "5eb881a326a184bf175cc0c37a3eb44d61c2f017a2cfcd89959d68f20978fd2e",
+    "archiveBytes": 20469760,
+    "trackedArchiveMembers": 1353,
+    "privateAvatarPackageHashMatches": 0,
+    "privateMediaOrCharacterPaths": [],
+    "offlineInstall": "pass",
+    "build": "pass",
+    "loopbackFixtureRuntime": "pass",
+    "authenticatedBrowserJourney": "pass",
+    "fixtureProviders": true,
+    "humanOrDistributionAcceptance": false
+  },
+  "correction": {
+    "predecessor": "implementation/evidence/LS-S086-component-2.json operatorLocalEvidence entry generic-clean-package-3.json",
+    "predecessorSha256": "60008221ff42057fd0ca43b5be6da2c45f98656fe2ae02da860aaad2d26c42a2",
+    "replacementAtReusedPathSha256": "4998f0598a2a0f06335bd5654f293f3a95760ff5e2a85ed91901d18f619f63f1",
+    "finding": "An operator-local helper wrote a newer HEAD archive receipt to the reused package-3 path. No byte-identical recovery copy of the predecessor was found. The full prior predecessor digest cannot be restored.",
+    "appendOnlyDisposition": "The replacement package-3 bytes are preserved at operator-local evidence/generic-clean-package-31.json. The prior package-3 content remains an integrity exception; its historical code/tests/browser evidence is not discarded or represented as byte-identical. This receipt independently verifies the current source archive at ff07c30."
+  },
+  "limitations": [
+    "Fresh package 31 verifies generic source at ff07c30 and does not repair the missing package-3 bytes from 75b43f9.",
+    "No signed/notarized installer, private-avatar pack inclusion, physical/Human acceptance, selected-provider acceptance, deployment, or publication claim."
+  ]
+}
