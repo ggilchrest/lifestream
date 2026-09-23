@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S086",
+  "recordedAt": "2026-09-23T17:24:00Z",
+  "status": "implementationCompleteVerificationPending",
+  "claimClass": "registered-three-scenario-selected-provider-stability",
+  "sourceRevision": "a48c8fb74c25e0606bc3af4a7053ca93518cbf91",
+  "implementationRevision": "e0eb15814452d939234ee3b467b5051c157ae933",
+  "protocol": {
+    "operatorLocalPath": "/Users/gg/Library/Application Support/Lifestream/operator-local/v0.1/evidence/s086-three-scenario-stability-protocol-5-20260923.json",
+    "registeredAt": "2026-09-23T17:04:47Z",
+    "sha256": "1eae814eddb15d563945c5e409b4429355fabd57459dfba5c3969accda718bcd",
+    "scriptSha256": "e47c8265f1ef52cd1ac1e98ff4381de582635d1a398cee502bbc1c134f0e3747",
+    "scenarioOrder": ["reading", "astronomy", "gardenLight"],
+    "provider": {
+      "inference": "real ai5090 SGLang Qwen3.8-27B; model qwen3.8-27b-local; revision 319f741cce68d7914884900c138a1fbb70a42f30",
+      "stt": "NeMo-Speech.cpp ebe59e5a817142986528bbbee5dba8db7b38ed50; health only",
+      "tts": "VoxCPM2 runtime 19b6bf7590025418821a86dcb817504e0ad7e5df; model 32279effe8c19989596f05d353d1447f51d9e915; mapping voxcpm2-map-2; health only",
+      "memoryWorldCapabilityRenderer": "fixtures"
+    },
+    "boundaries": [
+      "Synthetic typed dialogue only; each scenario used a fresh local server, Assistant, relationship, and SQLite database.",
+      "True 60-second debounce; no personal data, physical capture, training, provider replacement, external exposure, world effects, or Human acceptance.",
+      "Inference and ordinary reply/reflection calls used the existing selected ai5090 model; health probes alone for STT/TTS."
+    ]
+  },
+  "scenarioResults": [
+    {
+      "scenario": "reading",
+      "operatorLocalReport": "s086-stability-20260923-v5/reading/report.json",
+      "sha256": "19e52a981878e6619f43bf238b80594e8f812baff3fd1e445e74db11d1defc41",
+      "rawQualifierResult": "incomplete",
+      "registeredChecks": {
+        "atLeastTwoEligibleEpisodeReferences": true,
+        "learnedDelta": 0.05,
+        "contributingEpisodes": [
+          "5439c05942ebcad0a9052b8deb9a981a1c7ef696cf31555fdf2cd48e6b6f4787",
+          "fbfe320a41374e7dad03f18c6717f376a56b598bb06781d72f30553e408b3a2b"
+        ],
+        "laterOrdinarySelectionAndOutput": true,
+        "restartItemsAndImprintsIdentical": true,
+        "providerOrValidationFailures": 0,
+        "registeredScenarioResult": "pass"
+      },
+      "finding": "Two source-bound episodes supported attentionReading +0.05; the later ordinary reply selected an opportunity and both the item and imprint survived restart."
+    },
+    {
+      "scenario": "astronomy",
+      "operatorLocalReport": "s086-stability-20260923-v5/astronomy/report.json",
+      "sha256": "bbd05790979e0a9b78cd351d13b2c3bda056e5f9e4ad1945438f4418609846c6",
+      "rawQualifierResult": "incomplete",
+      "registeredChecks": {
+        "atLeastTwoEligibleEpisodeReferences": true,
+        "learnedDelta": 0.05,
+        "contributingEpisodes": [
+          "bbc1a8de2a966b9caf12840d5c61aa9278fc6769916976f5aac301187612309e",
+          "c053730e44e4ad7b8bf9e8b554174dc128ef122677db3adcef1c2e6e75c304a1"
+        ],
+        "laterOrdinarySelectionAndOutput": true,
+        "restartItemsAndImprintsIdentical": true,
+        "providerOrValidationFailures": 3,
+        "failedResultsApplied": false,
+        "registeredScenarioResult": "pass-with-failures-retained"
+      },
+      "finding": "The model returned a source-supported attentionAstronomy +0.05 and later selection/output persisted through restart. Three provider/validation failures were retained in the funnel and none changed the published state; these failures remain a reliability signal, not a clean-run claim."
+    },
+    {
+      "scenario": "gardenLight",
+      "operatorLocalReport": "s086-stability-20260923-v5/garden-light/report.json",
+      "sha256": "75b190333e4d0b67b381431b380703d779c89ec42abeb1e138c195dd3c1387ea",
+      "rawQualifierResult": "incomplete",
+      "registeredChecks": {
+        "atLeastTwoEligibleEpisodeReferences": true,
+        "learnedDelta": 0.05,
+        "contributingEpisodes": [
+          "cabd148f85e82be613b0dc419eef8a6e46ba321f14ed2bec782e5a58722c7f97",
+          "259a0a2dcecf1a30b3769786d5d229abe9f96794e3e7053f1ca5ac1570656dfa"
+        ],
+        "laterOrdinarySelectionAndOutput": true,
+        "restartItemsAndImprintsIdentical": true,
+        "providerOrValidationFailures": 0,
+        "registeredScenarioResult": "pass"
+      },
+      "finding": "Two source-bound episodes supported attentionGardening +0.05; the later ordinary reply selected an opportunity and both the project item and imprint survived restart."
+    }
+  ],
+  "harnessDisposition": {
+    "finding": "The raw qualifier labels every report incomplete because its generic result predicate requires at least two open deliberation items. Each registered scenario tracks one continuing project; a single stable item with multiple episode references is the correct LS-MEM-095 behavior. The registered protocol requires two independent eligible episode references, not two distinct projects.",
+    "rawReportsPreserved": true,
+    "independentReevaluation": "All three scenarios meet the registered source-reference, bounded publication, later selection/output, and restart checks. Astronomy retains three failed provider/validation attempts; they are visible and were not applied to state.",
+    "wholeSliceDisposition": "implementationCompleteVerificationPending"
+  },
+  "limitations": [
+    "Three synthetic scenarios are a bounded selected-provider sample, not population reliability or causal proof.",
+    "Astronomy had three provider/validation failures; improve or separately qualify that failure rate before making a clean reliability claim.",
+    "Controlled causal, full performance, perceptual, Human, physical-device, production, and deployment acceptance remain unverified.",
+    "The clean generic package receipt is at source ff07c30; this selected-provider run used current source a48c8fb and does not qualify that package archive."
+  ]
+}
