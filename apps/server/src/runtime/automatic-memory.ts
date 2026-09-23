@@ -43,8 +43,14 @@ export function preserveProjectContinuity(items:Item[],input:string):Item[]{
  const sentences=[...input.matchAll(/[^.!?]+[.!?]?/gu)].map(match=>({text:match[0],start:match.index!,end:match.index!+match[0].length}));
  return items.map(item=>{
   if(!item.key.startsWith('project.'))return item;const start=input.indexOf(item.quote);if(start<0)return item;const end=start+item.quote.length,last=sentences.findLastIndex(sentence=>sentence.start<end&&sentence.end>start);if(last<0)return item;
-  const continuation=sentences.slice(last+1,last+4).find(sentence=>ownerStatement.test(sentence.text)&&positiveInterest.test(sentence.text)&&voluntaryContinuation.test(sentence.text)&&!negativeInterest.test(sentence.text));
-  if(!continuation)return item;const quote=input.slice(start,continuation.end).trim();return quote.length<=1000?{...item,quote}:item;
+  const first=sentences.findIndex(sentence=>sentence.start<end&&sentence.end>start),candidates:{quote:string;length:number}[]=[];
+  for(let from=Math.max(0,first-2);from<=first;from++)for(let through=last;through<Math.min(sentences.length,last+3);through++){
+   const span=sentences.slice(from,through+1).map(sentence=>sentence.text).join(' ');
+   const projectContext=sentences.slice(from,through+1).some(sentence=>ownerStatement.test(sentence.text)&&/\bproject\b/iu.test(sentence.text));
+   if(!projectContext||!positiveInterest.test(span)||!voluntaryContinuation.test(span)||negativeInterest.test(span))continue;
+   const quote=input.slice(sentences[from]!.start,sentences[through]!.end).trim();if(quote.length<=1000)candidates.push({quote,length:quote.length});
+  }
+  candidates.sort((a,b)=>a.length-b.length);return candidates[0]?{...item,quote:candidates[0].quote}:item;
  });
 }
 async function* bounded<T>(source:AsyncIterable<T>,signal:AbortSignal):AsyncGenerator<T>{

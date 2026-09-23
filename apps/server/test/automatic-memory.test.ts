@@ -23,6 +23,11 @@ test('project extraction preserves a following attributable enjoyment and contin
  const reading={key:'project.reading',kind:'conversationSummary' as const,quote:'I do not want to continue the separate reading project.',subject:'owner' as const,epistemic:'userStatement' as const};
  assert.deepEqual(preserveProjectContinuity([project,reading],input),[{...project,quote:'My gardening project compares compost and plain soil. In my first trial compost grew taller. I enjoyed measuring the result and want to plan a second trial.'},reading]);
 });
+test('project extraction restores preceding topic context and joins separate enjoyment and continuation statements exactly',()=>{
+ const input='My current reading project compares two essays about coastal wetlands. In the first essay, I enjoyed how the writer describes migrating birds at dawn. I want to compare another author describing the same marsh. A separate question asks when the marsh formed.';
+ const fragment={key:'project.reading.coastal_wetlands',kind:'preference' as const,quote:'In the first essay, I enjoyed how the writer describes migrating birds at dawn.',subject:'owner' as const,epistemic:'userStatement' as const};
+ assert.deepEqual(preserveProjectContinuity([fragment],input),[{...fragment,quote:'My current reading project compares two essays about coastal wetlands. In the first essay, I enjoyed how the writer describes migrating birds at dawn. I want to compare another author describing the same marsh.'}]);
+});
 test('automatic admission requires one scope approval, persists ordinary project context and excludes unknown speakers and secrets',async t=>{
  const f=setup(t),text='Our project uses Python for its service layer.';f.set(text);
  assert.equal(f.worker.enqueue(f.owner,'turn:1',text,'authenticatedTypedOwner').state,'notAdmitted');f.worker.configure(f.owner,true,0);
