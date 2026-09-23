@@ -21,18 +21,18 @@ const scenarios={
  ]},
  reading:{topics:['Reading'],prompts:[
   'My current reading project compares two essays about coastal wetlands. In the first essay, I enjoyed how the writer describes migrating birds at dawn. I want to compare another author describing the same marsh.',
-  'I read a second essay about that coastal marsh. Comparing how both writers describe the bird migration was rewarding, and I want to read one more account of the same place.',
-  'I finished a third wetlands essay. I especially enjoyed noticing how the same landscape changes between seasons, and I want to compare descriptions of autumn next.'
+  'In my reading project, I compared a second essay about that coastal marsh. I enjoyed comparing how both writers describe the bird migration, and I want to read one more account of the same place.',
+  'In my reading project, I finished a third wetlands essay. I enjoyed noticing how the same landscape changes between seasons, and I want to compare descriptions of autumn next.'
  ]},
  astronomy:{topics:['Astronomy'],prompts:[
   'My current astronomy project is comparing observations of the Moon through two small telescopes. I enjoyed recording the crater edges in my first session and want to repeat the observation under similar conditions.',
-  'I repeated my Moon observation with the same two telescopes. Comparing the crater edges was satisfying, and I want to make one more careful observation before drawing conclusions.',
-  'I completed a third independent Moon observation with the same setup. I especially enjoy these patient comparisons and want to check whether a different eyepiece changes what I notice.'
+  'In my astronomy project, I repeated my Moon observation with the same two telescopes. I enjoyed comparing the crater edges, and I want to make one more careful astronomy observation before drawing conclusions.',
+  'In my astronomy project, I completed a third independent Moon observation with the same setup. I enjoy these patient astronomy comparisons and want to check whether a different eyepiece changes what I notice.'
  ]},
  gardenLight:{topics:['Gardening'],prompts:[
   'My current seedling project compares bean plants under a cool desk lamp and beside a sunny window. I enjoyed counting the first new leaves and want to repeat the comparison with equal watering.',
-  'I checked a separate set of bean seedlings after another week. The lamp-grown leaves looked darker, and comparing the growth was rewarding. I want to make one more equal-watering comparison.',
-  'I completed a third independent bean seedling comparison under the same lamp and window conditions. I especially enjoy these careful garden observations and want to measure stem height next.'
+  'In my gardening project, I checked a separate set of bean seedlings after another week. I enjoyed comparing the darker lamp-grown leaves, and I want to make one more equal-watering gardening comparison.',
+  'In my gardening project, I completed a third independent bean seedling comparison under the same lamp and window conditions. I enjoy these careful gardening observations and want to measure stem height next.'
  ]}
 };
 const scenario=scenarios[scenarioName];
