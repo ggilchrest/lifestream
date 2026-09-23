@@ -11,10 +11,31 @@ import {defaultTopics} from '../packages/contracts/dist/experience.js';
 import {loadWindowsKey} from '../../orchestration/scripts/start-conversation.mjs';
 const directory=process.env.LIFESTREAM_S086_EVIDENCE_DIR;
 if(!directory)throw Error('Set an operator-local evidence directory outside Git roots.');
+const scenarioName=process.env.LIFESTREAM_S086_SCENARIO??'gardening';
+const scenarios={
+ gardening:{topics:['Gardening','Reading'],prompts:[
+  'My current gardening project is comparing basil grown in compost and plain soil. In my first trial today, the compost basil grew taller. I enjoyed measuring the result and want to plan a second trial with equal watering.',
+  'My current reading project is comparing two nature essays about rivers. I enjoyed the first essay and still want to compare how the second author explains the same river landscape.',
+  'I completed a separate second trial in my basil gardening project. With equal watering, the compost basil again grew taller. I found this hands-on comparison rewarding and want to plan a third trial.',
+  'I finished a third independent basil gardening trial. Equal watering and light still gave taller plants in compost. I especially enjoy these repeatable garden experiments and want to investigate whether pot size changes the result.'
+ ]},
+ reading:{topics:['Reading'],prompts:[
+  'My current reading project compares two essays about coastal wetlands. In the first essay, I enjoyed how the writer describes migrating birds at dawn. I want to compare another author describing the same marsh.',
+  'I read a second essay about that coastal marsh. Comparing how both writers describe the bird migration was rewarding, and I want to read one more account of the same place.',
+  'I finished a third wetlands essay. I especially enjoyed noticing how the same landscape changes between seasons, and I want to compare descriptions of autumn next.'
+ ]},
+ astronomy:{topics:['Astronomy'],prompts:[
+  'My current astronomy project is comparing observations of the Moon through two small telescopes. I enjoyed recording the crater edges in my first session and want to repeat the observation under similar conditions.',
+  'I repeated my Moon observation with the same two telescopes. Comparing the crater edges was satisfying, and I want to make one more careful observation before drawing conclusions.',
+  'I completed a third independent Moon observation with the same setup. I especially enjoy these patient comparisons and want to check whether a different eyepiece changes what I notice.'
+ ]}
+};
+const scenario=scenarios[scenarioName];
+if(!scenario)throw Error(`Unsupported synthetic scenario: ${scenarioName}`);
 await mkdir(directory,{recursive:true,mode:0o700});
 const config=loadProfile('ai5090');process.env.LIFESTREAM_INFERENCE_API_KEY=await loadWindowsKey();config.authority.authentication='local-password';config.storage={databasePath:resolve(directory,'state.sqlite'),artifactDirectory:resolve(directory,'artifacts')};
 const installerToken=randomBytes(32).toString('hex'),password=randomBytes(32).toString('hex'),options={config,host:'127.0.0.1',port:0,localAuth:{stateDirectory:resolve(directory,'safety'),installerToken}};let app=createLifestreamServer(options),cookie='',csrf='',base;
-const report={at:new Date().toISOString(),sourceRevision:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),scriptSha256:createHash('sha256').update(await readFile(import.meta.filename)).digest('hex'),configurationDigest:redactedDigest(config),scope:'Synthetic ordinary typed conversations through existing ai5090 inference. Real retained memory, sixty-second debounce, reflection, SQLite and later reply. No personal enablement, physical capture, provider replacement or Human acceptance.',requests:[],turns:[],snapshots:[]};
+const report={at:new Date().toISOString(),sourceRevision:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),scriptSha256:createHash('sha256').update(await readFile(import.meta.filename)).digest('hex'),scenario:scenarioName,configurationDigest:redactedDigest(config),scope:'Synthetic ordinary typed conversations through existing ai5090 inference. Real retained memory, sixty-second debounce, reflection, SQLite and later reply. No personal enablement, physical capture, provider replacement or Human acceptance.',requests:[],turns:[],snapshots:[]};
 const original=SglangInferenceProvider.prototype.generate;
 SglangInferenceProvider.prototype.generate=async function*(input,context){const event={at:new Date().toISOString(),kind:input.scope.sessionId.startsWith('experience:')?'reflection':input.scope.sessionId==='automatic-memory-worker'?'memory':'reply',input,output:'',elapsedMs:0};report.requests.push(event);const start=performance.now();try{for await(const chunk of original.call(this,input,context)){if(chunk.kind==='text')event.output+=chunk.text??'';yield chunk;}}finally{event.elapsedMs=performance.now()-start;await writeFile(resolve(directory,'report.partial.json'),JSON.stringify(report,null,2)+'\n',{mode:0o600});}};
 const request=(path,body,timeoutMs=20_000)=>fetch(base+path,{method:body===undefined?'GET':'POST',headers:{origin:base,cookie,'content-type':'application/json','x-lifestream-csrf':csrf},...(body===undefined?{}:{body:JSON.stringify(body)}),signal:AbortSignal.timeout(timeoutMs)});
@@ -24,15 +45,10 @@ const wait=async fn=>{const start=Date.now();while(Date.now()-start<155000){cons
 try{
  await app.start();base=`http://127.0.0.1:${app.address().port}`;assert.equal(app.health.status,'ready');report.providers=app.health.providers;
  const response=await request('/api/auth/v1/setup',{username:'synthetic-experience-owner',password,installerToken});assert.equal(response.status,201);cookie=response.headers.get('set-cookie').split(';')[0];csrf=(await response.json()).session.csrfToken;
- const a=await json('/api/admin/v1/assistants',{displayName:'Synthetic experiential qualification',adaptivePersonaPolicy:{dimensions:['Gardening','Reading'].map(topic=>({key:'attention'+topic,valueType:'number',minimum:-1,maximum:1,maxDeltaPerDreamingRun:.05,sensitive:false,activation:'automatic'}))}});await json(`/api/admin/v1/assistants/${a.assistantId}/activate`,{profileId:a.profile.profileId,expectedActiveRevision:null});const {relationship}=await json(`/api/admin/v1/assistants/${a.assistantId}/relationships`,{}),scope={assistantId:a.assistantId,relationshipId:relationship.relationshipId},path=`/api/admin/v1/assistants/${a.assistantId}/relationships/${relationship.relationshipId}/experience/v1`;report.scopeIds=scope;
+ const a=await json('/api/admin/v1/assistants',{displayName:'Synthetic experiential qualification',adaptivePersonaPolicy:{dimensions:scenario.topics.map(topic=>({key:'attention'+topic,valueType:'number',minimum:-1,maximum:1,maxDeltaPerDreamingRun:.05,sensitive:false,activation:'automatic'}))}});await json(`/api/admin/v1/assistants/${a.assistantId}/activate`,{profileId:a.profile.profileId,expectedActiveRevision:null});const {relationship}=await json(`/api/admin/v1/assistants/${a.assistantId}/relationships`,{}),scope={assistantId:a.assistantId,relationshipId:relationship.relationshipId},path=`/api/admin/v1/assistants/${a.assistantId}/relationships/${relationship.relationshipId}/experience/v1`;report.scopeIds=scope;
  await json('/api/runtime/v1/memory',{...scope,expectedRevision:0,enabled:true});let view=await snapshot(path);await json(path,{schemaVersion:'1.0.0',operation:'configure',expectedRevision:view.state.revision,enabled:true,frozen:false,retention:'sourceBound',topicPolicies:defaultTopics});await json('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession'});
  const turn=async input=>{const start=performance.now(),response=await request('/api/runtime/v1/messages',{...scope,userInput:input},45_000),events=await response.text();report.turns.push({input,elapsedMs:performance.now()-start,events});assert.ok(response.ok&&events.includes('interaction.completed'),events);return events;};
- const prompts=[
-  'My current gardening project is comparing basil grown in compost and plain soil. In my first trial today, the compost basil grew taller. I enjoyed measuring the result and want to plan a second trial with equal watering.',
-  'My current reading project is comparing two nature essays about rivers. I enjoyed the first essay and still want to compare how the second author explains the same river landscape.',
-  'I completed a separate second trial in my basil gardening project. With equal watering, the compost basil again grew taller. I found this hands-on comparison rewarding and want to plan a third trial.',
-  'I finished a third independent basil gardening trial. Equal watering and light still gave taller plants in compost. I especially enjoy these repeatable garden experiments and want to investigate whether pot size changes the result.'
- ];
+ const prompts=scenario.prompts;
  for(let n=0;n<prompts.length;n++){
   const before=await snapshot(path),priorMemoryJobs=new Set((await json('/api/runtime/v1/memory?'+new URLSearchParams(scope))).jobs.map(j=>j.id));await turn(prompts[n]+' Acknowledge in one short sentence.');console.log(JSON.stringify({phase:'ordinary-turn-completed',number:n+1}));
   view=await wait(async()=>{const v=await json(path),memory=await json('/api/runtime/v1/memory?'+new URLSearchParams(scope));if(memory.jobs.some(j=>j.state==='failed'&&!priorMemoryJobs.has(j.id))&&v.state.funnel.eligible===before.state.funnel.eligible){report.memoryFailure=memory;return v;}return v.state.funnel.calls>before.state.funnel.calls&&v.jobs.every(j=>!['queued','running'].includes(j.state))?v:null;});
