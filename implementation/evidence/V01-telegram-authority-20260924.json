@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-24T14:03:11.761Z",
+  "status": "verified",
+  "sourceRevision": "2ba6e0cd6fdfcd82967d18afd33e530692f77cee",
+  "specificationRevision": "ace8513536bdc7ce9da7367aa78d4064dfae738e",
+  "claim": "Explicit owner review, canonical persistent notice grant, current-authenticated background dispatch, recipient consent and restored selection quarantine; generic launcher composition and rendered owner controls",
+  "checks": {
+    "source": {
+      "passed": 1214,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 73281.589375
+    },
+    "browser": {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 82001.26025
+    },
+    "focusedRuntime": {
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 9456.988917
+    },
+    "focusedBrowser": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 9355.371042
+    },
+    "launcherWithAndWithoutConditions": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 5020.508458
+    },
+    "build": "pass",
+    "lint": "pass",
+    "specifications": "pass",
+    "workspaceStructure": "pass",
+    "visualReview": [
+      "grant-review-desktop.png",
+      "grant-active-mobile.png"
+    ]
+  },
+  "archive": {
+    "sha256": "e71a7194fcc5f9cabb0367ff5efed824e63e7da2c4fe06b22f7770abffcec2a7",
+    "bytes": 22138880,
+    "members": 1441,
+    "files": 1333,
+    "privateAssetHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "offlineInstallation": "pass",
+    "build": "pass",
+    "runtime": {
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 10043.583667
+    },
+    "browser": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 5324.344625
+    }
+  },
+  "real": [
+    "local authentication including external revocation safety state",
+    "canonical grant request, separate approval, cancellation, revocation, eligibility, durable admission and single dispatch claim",
+    "subscriber binding, urgent policy, SQLite and authenticated HTTP",
+    "owner controls rendered in Chrome, actual launcher and extracted archive installation/build"
+  ],
+  "simulated": [
+    "Telegram ingress and delivery",
+    "PWCE conditions and subscriber identities",
+    "inference used in fixture-package tests"
+  ],
+  "externalTelegramCalls": 0,
+  "liveCandidateChanged": false,
+  "installedCandidateRevision": "5731ad04a606c595da7ab8c2ecb17fbdebb9ce89",
+  "exclusions": [
+    "private channel memory/persona disclosure and automatic memory integration",
+    "actual Telegram credentials/connection",
+    "physical sensor enrollment",
+    "Human acceptance",
+    "original S073/S086/onset criteria",
+    "promotion into the running candidate"
+  ],
+  "retainedDiagnostics": [
+    "Initial source run: 1209 passed and five schema-list expectations failed; all five were updated to include migration58, preserving their data-preservation assertions. Final1214 pass.",
+    "Initial unconstrained browser run117/118; acknowledgment administration mutation completion timed out under concurrent load. Unchanged case passed isolated, then all118 passed with browser test concurrency4. Initial log retained."
+  ],
+  "nextOperation": "Integrate audience-safe Telegram channel disclosure and attributable automatic memory, then refresh selected-provider qualification, promote the verified candidate and complete its Human journeys; live activation stays disabled.",
+  "reports": {
+    "telegram-authority-launcher.log": "26e7d2b029694cb02d9bbbd28739271f3d2c30d98ab69855690de26d207d5c3e",
+    "telegram-authority-clean-install.log": "8a573f531a98d12fa55ad979b5bf97f09e1d5036c6fbe908c8e7f3fb470c07eb",
+    "telegram-authority-clean-runtime.log": "ca6a8b08da41ca6fbbcd505f298bc699c952a87aa11bb416d05d246d70a9eca4",
+    "telegram-authority-build.log": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042",
+    "telegram-authority-integration.log": "acb863f2f1602e74b505d269990ac92cc73c837fc138349fdf11651918d0a22a",
+    "telegram-authority-browser.log": "a355428b7d8741558d03e310c5a9ec39bb1b503561666584cb68e0c848cc2595",
+    "telegram-authority-spec.log": "bd6d70ce98a88e6750a115985691d7c0df9a620d767af24af99981bbf68ef5f7",
+    "telegram-authority-focused.log": "d7b5a16bf1434abec008529f3da0ed14761b3067314e39071e846696434b27a8",
+    "telegram-authority-source-final.log": "8d98ad4fed906bff0b21dd5bf66202b8aaa722837228ffb26e9a2a9dbd7fc04d",
+    "telegram-authority-spec-final.log": "1eb2458b47bc156fd84b9b9db4fb827eb5649f4f60ac21757432ed0a782d09ec",
+    "telegram-authority-source.log": "c78301be218b34571d5545180b13882aa2ae3308541adacf8fcacc0c6f9f8b5f",
+    "telegram-authority-lint-final.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "telegram-authority-workspace.log": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+    "telegram-authority-lint.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "telegram-authority-diagnostic.log": "a753ae34594b82fa4eceadeea3815f9fb6cb052e740805d818ba2020a4d541dc",
+    "telegram-authority-clean-browser.log": "f02c96aa9d608f9d1d3d1782ebdf19a015892aa38d4c113300abecfc3ba806ea",
+    "telegram-authority-ack-diagnostic.log": "9a18a80747da93a0fd6dbb7441c2ce247cbc00e080d8edcd01262fda5a0d0e5d",
+    "telegram-authority-browser-final.log": "fcaa846808b532ba3657cdf6e46781313cff69edfe627c1a8a08b270a9a647eb",
+    "telegram-authority-typecheck.log": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+    "telegram-authority-browser-focused.log": "9a7705dfe6cbfc85fa73e00d78acada5bd7e5c636eae430e65bd3a3c7fe96e70",
+    "telegram-authority-clean-build.log": "40674a389799f096064f8156e498e747fdd542eedb664fb00999cfc99ce8e52f"
+  }
+}
