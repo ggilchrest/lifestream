@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-24T16:06:12.010Z",
+  "status": "verified",
+  "claim": "Subscriber-owned personal context permission, independent consent, automatic memory and recoverable record control; local software qualification only",
+  "sourceRevision": "33008b8f6f9f2207ff73a88d7cab90b58424516a",
+  "specificationRevision": "b5c5f2f42419425cc5b34f7743d38a6b5efe9e64",
+  "checks": {
+    "source": {
+      "passed": 1224,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 326338.091333
+    },
+    "browser": {
+      "passed": 122,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 289704.704625
+    },
+    "extractedRuntime": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 51818.052042
+    },
+    "workspaceAndQualificationReport": {
+      "passed": 49,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 21864.761417
+    },
+    "actualAccountUi": {
+      "passed": 7,
+      "failed": 0,
+      "realLocalUiAndApi": true
+    },
+    "build": "pass",
+    "lint": "pass",
+    "specifications": "pass",
+    "offlineInstallation": "pass",
+    "extractedBuild": "pass"
+  },
+  "archive": {
+    "sha256": "935ac9d46ef2b0dfd0ba42c66648e9b17dacdbb7a26db0e04ee7d7124cf7e0d1",
+    "bytes": 22241280,
+    "members": 1451,
+    "files": 1343
+  },
+  "privateAssetHashMatches": 0,
+  "privateOrMediaPaths": [],
+  "real": [
+    "Local authenticated owner and subscriber APIs with CSRF and ownership checks",
+    "Canonical owned relationship, automatic memory storage and restart",
+    "Current audience and permission cancellation",
+    "Canonical correction, forgetting and durable partial-cleanup retry",
+    "Actual served Account UI backed by SQLite",
+    "Exact extracted offline build and runtime"
+  ],
+  "simulated": [
+    "Inference and Telegram ingress/delivery in joined memory tests",
+    "Synthetic accounts, retained statements and intentional interruption fault",
+    "Seeded memory for actual browser/API control proof"
+  ],
+  "boundariesVerified": [
+    "Pairing grants neither context consent nor administrator permission",
+    "One person can use permitted context across eligible destinations",
+    "Unknown/shared audience withholds context and clears private display",
+    "Owner revocation and subscriber withdrawal cancel extraction and pending private reply",
+    "Reapproval requires fresh consent and independent automatic-memory enablement",
+    "Foreign and legacy unattributed records remain excluded",
+    "Correction and forgetting remain available after permission withdrawal",
+    "Interrupted cleanup can be retried by own durable operation ID after payload removal",
+    "Restore clears personal-context permission and consent",
+    "Existing administrator-owned relationship controls remain separate"
+  ],
+  "installedCandidateRevision": "5731ad04a606c595da7ab8c2ecb17fbdebb9ce89",
+  "installedCandidateChanged": false,
+  "selectedProviderQualification": {
+    "status": "blockedEnvironment",
+    "reason": "The existing selected-provider host is unreachable from the current environment. This is not evidence of a remote service failure; operator-local network diagnostics are retained separately."
+  },
+  "externalTelegramCalls": 0,
+  "humanAcceptance": false,
+  "remaining": [
+    "Current selected-provider qualification and candidate promotion",
+    "Live Telegram recipient and physical source checks",
+    "Original S073 callback, S086 causal and onset criteria",
+    "Human/perceptual and offline-key custody acceptance"
+  ],
+  "retainedDiagnostics": [
+    "Initial test used unsupported /login; corrected to existing /sign-in.",
+    "Restart correctly reset browser audience; test now makes fresh explicit declarations before private operations.",
+    "Correction creates a successor; test now targets the correct retained ID and UI permits forgetting superseded records.",
+    "Added explicit retry of durable privacy operation after a synthetic interruption removes its source payload.",
+    "A broad source run passed1223/1224 with absent optional experiential continuation; a broad browser run passed121/122 with a12000ms acknowledgment mutation wait timeout. Full isolated suites preserve original limits; earlier failures remain in retained logs. No original release criterion is waived."
+  ],
+  "guide": {
+    "version": "2026-09-24.v33",
+    "journeys": 25,
+    "actions": 318,
+    "savedFields": 376,
+    "links": 47,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "b6170cd3b2bc75a57ea654ba4389446fe2020fcd3a6d416600bf06cd87cd5e5f",
+    "humanAcceptance": false
+  },
+  "nextOperation": "Review the remaining dependency-ready integration work and prepare the exact migration59 candidate/recovery handoff. Requalify against the existing selected ai5090 services and promote only when their authorized network path is available; do not substitute a fixture for that claim.",
+  "reports": {
+    "personal-context-browser-serial.log": "c4f598ac75271763ed6433caea7056a505836243fa1534d1a4e50ef24764c0bc",
+    "personal-context-build-final-3.log": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446",
+    "personal-context-build-final-2.log": "1b33e8cce60d49bd5c039729354a4c41348c155e1abe6858f7260ee30425092f",
+    "personal-context-workspace.log": "f168e1ba0683e3d82ba1fd7fa574472c0b552da5f7ae2732c766e079cbb49f9b",
+    "personal-context-clean-build.log": "c0337ac89c4eff4eb6f85857d146a97c5dd95ff75c0a6211083d173f6df63675",
+    "personal-context-browser.log": "5df8d6c70e01ac99dc3dcfc17491ba9a8b99f3096798369c406de076b9f2c4f4",
+    "personal-context-build.log": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446",
+    "personal-context-source-complete.log": "0bcdc820b2848782d4caab72543a31cc8e3a5b33c969d239538654fdbc2c18f6",
+    "personal-context-lint-final.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "personal-context-specifications-final.log": "bd3b5f8ee3d1ac6b7709c87729bc2312c48892ad6d914ea101cfa77569a7cce2",
+    "personal-context-source-serial.log": "239c22b69bba98b745b47e6c9c40166df003dc3a6b3a2a868bad8329e61fa60d",
+    "personal-context-recovery.log": "7f327b38a6ef4bb5b784e76243d9c2c60c282fec38745b08cb5e627a1bdee983",
+    "personal-context-lint-complete.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "personal-context-integrated.log": "8b832ded531ff719c0bfa040e4a3385dbce1bb2235ce11af349aaba4f8658895",
+    "personal-context-source-final.log": "dd2af924f32ca27faf8d5c1d0b065f4ff332c37a7fcbe7e54abc7ce6ebe228d6",
+    "personal-context-lint.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "personal-context-focused-3.log": "4673e7b8da75f61357441c1b2d5c0bd99ec7f1089215c4240643ae7cfe67d791",
+    "personal-context-browser-complete.log": "32dc71e5f52cd2434917d3ee27f2b6dc7ddbe07c1354820e44630db397e683ce",
+    "personal-context-clean-install.log": "4c59ceb0f456eff7b2695440765de3699ea719c488f1755786a8486cfa6c995e",
+    "personal-context-focused-2.log": "2e96da1f239ff9b9b917839a99cf1bec9e0bcef7d20504b574e5452b06f4121e",
+    "personal-context-build-final.log": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155",
+    "personal-context-clean-runtime.log": "d2e06c51acc09341dc27a4ffe5b5fc2052fa9a4da8ce891c99fdb85d4fdf362a",
+    "personal-context-focused-4.log": "5f0d78bee4c5f06cc64187f462c0485889fa0d77d193107c8cbab9971a2ceb62",
+    "personal-context-browser-focused.log": "e207cc5c090f5d3ef04cb4c7517b6b4ce0b0b36b331b0dbf663f4bb3e4eaa5a7",
+    "personal-context-specifications.log": "b0addb308e0f43e7b586264525f6eb37353965610c279f054f69bdf8440a963c",
+    "personal-context-focused.log": "945ec5ca00b2b22a07c92f1d0b9e37865066bea6991514bc0dbb59ed801af396",
+    "personal-context-source.log": "9635e24738582bd068cc904b4a6deae96be269c9c049473cec64330398b1f4ea"
+  }
+}
