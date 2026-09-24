@@ -29,3 +29,10 @@ test('a throwing context guard also cancels generation without exposing a late a
  const provider:InferenceProvider={tokenize:async()=>({count:1,identity:'synthetic'}),async *generate(_request,call){started();await new Promise<void>(resolve=>call.signal.addEventListener('abort',()=>resolve(),{once:true}));yield {kind:'done'};}};
  const converse=telegramConversation({provider:()=>provider,prepare:()=>({sessionId:'synthetic',input:prepared})}),controller=new AbortController(),reply=converse(binding,message,controller.signal);await entered;invalid=true;const timeout=setTimeout(()=>controller.abort(),1000);try{assert.equal(await reply,undefined);assert.equal(controller.signal.aborted,false);}finally{clearTimeout(timeout);controller.abort();}
 });
+
+test('prepared experiential continuation reaches canonical prompt and completion requires current accepted delivery',async()=>{
+ let completed=0,inspected=0,current=true;const prepared=input();prepared.isCurrent=()=>current;prepared.experienceSelection={id:'retained-project',topic:'gardening',statement:'Compare the retained garden trial',nextStep:'Compare soil in two beds'};prepared.onInferenceRequest=request=>{inspected++;assert.match(request.sections.find(s=>s.kind==='preparedMemory')!.content,/Selected eligible continuation.*Compare soil in two beds/);};prepared.onCompleted=()=>{completed++;};
+ const provider=new FixtureInferenceProvider(),converse=telegramConversation({provider:()=>provider,prepare:()=>({sessionId:'synthetic',input:prepared})});
+ const reply=await converse(binding,message,new AbortController().signal);assert.ok(reply);assert.equal(inspected,1);assert.equal(completed,0);reply.accepted!();assert.equal(completed,1);
+ const stale=await converse(binding,message,new AbortController().signal);current=false;stale!.accepted!();assert.equal(completed,1);
+});
