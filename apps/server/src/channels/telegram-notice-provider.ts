@@ -9,6 +9,11 @@ export const telegramNoticeCapability:CapabilityDefinition=Object.freeze({id:'no
 type Row={invocation_id:string;scope_digest:string;input_digest:string;binding_digest:string;subscription_id:string;state:'sending'|'accepted'|'rejected'|'unknown'|'cancelled';message_id:number|null;updated_at:number};
 const opaque=(v:unknown):v is string=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(v);
 const scopeOf=(s:CapabilityScope):CapabilityScope=>({assistantId:s.assistantId,endpointId:s.endpointId,sessionId:s.sessionId,environment:s.environment,authorityContextRef:s.authorityContextRef});
+/** Shared argument validation for grant scope derivation and the last transport gate. */
+export function validTelegramNoticeInput(invocation:Pick<AdmittedCapabilityInvocation,'input'|'invocationId'>,binding:TelegramBinding,now=Date.now()):boolean{
+ const input=invocation.input as Record<string,unknown>|null;
+ return !(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).sort().join(',')!=='conditionRef,destinationRef,evidenceRefs,expiresAt,message,notificationRef,schemaVersion'||input.schemaVersion!=='1.0.0'||input.destinationRef!==binding.subscriptionId||input.notificationRef!==invocation.invocationId||!opaque(input.conditionRef)||typeof input.expiresAt!=='string'||!Number.isFinite(Date.parse(input.expiresAt))||Date.parse(input.expiresAt)<=now||Date.parse(input.expiresAt)>now+600_000||![URGENT_AWAY_NOTICE,URGENT_AWAY_SIMULATION_NOTICE].includes(input.message as string)||!Array.isArray(input.evidenceRefs)||input.evidenceRefs.length);
+}
 /** Transport only. The existing capability resolver/authority dispatcher must
  * admit the effect; this adapter cannot create a grant or authorize a condition.
  * Only fixed redacted notices are sent, never incident refs or arbitrary text. */
@@ -31,8 +36,8 @@ export class TelegramNoticeProvider implements CapabilityProvider {
  async invoke(invocation:AdmittedCapabilityInvocation,capability:CapabilityDefinition,context:CapabilityCallContext):Promise<CapabilityInvocationResult>{
   const denied=():CapabilityInvocationResult=>({invocationId:invocation.invocationId,lifecycle:'denied',reason:'telegram_notice_scope_or_authority_unavailable'});
   if(!this.current(invocation,context)||!opaque(invocation.invocationId)||invocation.idempotencyKey!==invocation.invocationId||invocation.capabilityId!==telegramNoticeCapability.id||invocation.capabilityVersion!==telegramNoticeCapability.version||invocation.snapshotId!=='telegram-notice:'+this.binding.subscriptionId||invocation.snapshotRevision!==this.binding.revision||!isDeepStrictEqual(capability,telegramNoticeCapability)||invocation.dispatchReceipt?.status!=='admitted'||invocation.dispatchReceipt.invocationId!==invocation.invocationId||!Number.isSafeInteger(invocation.dispatchReceipt.grantRevision)||invocation.dispatchReceipt.grantRevision<0)return denied();
-  const input=invocation.input as Record<string,unknown>|null;
-  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).sort().join(',')!=='conditionRef,destinationRef,evidenceRefs,expiresAt,message,notificationRef,schemaVersion'||input.schemaVersion!=='1.0.0'||input.destinationRef!==this.binding.subscriptionId||input.notificationRef!==invocation.invocationId||!opaque(input.conditionRef)||typeof input.expiresAt!=='string'||!Number.isFinite(Date.parse(input.expiresAt))||Date.parse(input.expiresAt)<=Date.now()||Date.parse(input.expiresAt)>Date.now()+600_000||![URGENT_AWAY_NOTICE,URGENT_AWAY_SIMULATION_NOTICE].includes(input.message as string)||!Array.isArray(input.evidenceRefs)||input.evidenceRefs.length)return denied();
+  if(!validTelegramNoticeInput(invocation,this.binding))return denied();
+  const input=invocation.input as {expiresAt:string;message:string};
   const inputDigest=capabilityInputDigest(input),previous=this.db.connection.prepare('SELECT * FROM telegram_notice_deliveries WHERE invocation_id=?').get(invocation.invocationId) as Row|undefined;
   if(previous)return previous.scope_digest===this.scopeDigest&&previous.binding_digest===this.bindingDigest&&previous.input_digest===inputDigest?this.result(previous):denied();
   if(Number(this.db.connection.prepare('SELECT count(*) AS n FROM telegram_notice_deliveries').get()!.n)>=4096)return {...denied(),reason:'telegram_notice_journal_capacity'};

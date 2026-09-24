@@ -1,3 +1,4 @@
+import {TelegramNoticeAuthority} from './channels/telegram-notice-authority.ts';
 import {TelegramAlerts,type TelegramAlertComposition,type TelegramAlertSession} from './channels/telegram-alerts.ts';
 import {TelegramBotApi} from './channels/telegram-api.ts';
 import {TelegramChannelRuntime} from './channels/telegram-runtime.ts';
@@ -84,7 +85,7 @@ import { administrationCapabilities } from "./admin/personalization-capabilities
 
 export type HealthState = "starting" | "ready" | "degraded" | "draining" | "stopped";
 export type UrgentAwayHostOptions={destinations:Array<UrgentAwayDestination&{authentication:()=>LocalContext|undefined}>;source?:Pick<PwceConditionClient,'snapshot'|'changes'>;pollIntervalMs?:number};
-export type TelegramHostOptions={alerts?:TelegramAlertComposition;botId:string;token:()=>string|undefined;enabled:()=>boolean;transport?:Pick<TelegramBotApi,'verify'|'updates'|'send'>};
+export type TelegramHostOptions={localAlerts?:Omit<TelegramAlertComposition,'authority'>;alerts?:TelegramAlertComposition;botId:string;token:()=>string|undefined;enabled:()=>boolean;transport?:Pick<TelegramBotApi,'verify'|'updates'|'send'>};
 export type ServerOptions = { telegram?:TelegramHostOptions; urgentAway?:UrgentAwayHostOptions; urgentConditions?:UrgentAttentionOptions; sessionEnvironmentId?:string; experienceTestClock?:()=>number; acknowledgmentAlignment?:()=>AcknowledgmentAlignment|undefined; acknowledgmentRequiresSync?:()=>boolean; incidentReview?:PwceIncidentOptions; audiencePrivacy?: AudienceOptions; presentationPackages?: { directory: string; ownerPrincipalId?: string }; pwceActionJournal?: { create?: boolean }; initiativeSimulation?:InitiativeSimulation; config: RuntimeConfig; host?: string; port?: number; shutdownDeadlineMs?: number; controlUiDirectory?: string; profileLoader?: (profile: Profile) => RuntimeConfig; localAuth?: LocalAuthOptions; capabilityProvider?: CapabilityProvider; capabilitySchemas?:CapabilitySchemaStore; capabilityProviderIdentity?: string; canonicalAuthority?: CanonicalAuthorityHost; canonicalCapabilities?: CanonicalCapabilityComposition | null };
 type Json = Record<string, unknown>;
 type AuthContext = { principalId: string; sessionId: string; expiresAt: string; origin: string };
@@ -637,6 +638,7 @@ export class LifestreamServer {
   private urgentAttention:UrgentAttentionHost;
   private telegram:TelegramChannelRuntime|undefined;
   private telegramAlerts:TelegramAlerts|undefined;
+  private telegramNoticeAuthority:TelegramNoticeAuthority|undefined;
   private telegramBotId:string|undefined;
   private urgentAway:UrgentAwayRuntime|undefined;
   private awayDestinations:UrgentAwayDestination[]=[];
@@ -660,7 +662,7 @@ export class LifestreamServer {
   async start(): Promise<void> { if (this.listening) return; await ensureStorage(this.config); this.migrationRecords = this.database.migrate(); this.storageReady = true; await new Promise<void>((resolveStart, reject) => { const onError = (error: Error) => { this.server.off("listening", onListening); reject(error); }; const onListening = () => { this.server.off("error", onError); resolveStart(); }; this.server.once("error", onError); this.server.once("listening", onListening); this.server.listen(this.port, this.host); }); this.listening = true; await this.providers.probe(); this.state = this.providers.ready ? "ready" : "degraded"; this.urgentAway?.start(); this.telegram?.start();this.telegramAlerts?.start(); if(this.state==="ready"){this.acknowledgments.start();this.experience.start();} }
   async runBoundedWork<T>(work: Promise<T>): Promise<T> { if (this.state !== "ready") throw new Error("server is not accepting work"); const tracked = work.finally(() => this.activeWork.delete(tracked)); this.activeWork.add(tracked); return tracked as Promise<T>; }
   admitRelationalOpportunity(opportunity: Parameters<RelationalInitiativeCoordinator["admit"]>[0], eligibility: Parameters<RelationalInitiativeCoordinator["admit"]>[1]) { if (this.state !== "ready") return { admitted: false as const, reason: "endpointUnavailable" as const }; return this.initiative.admit(opportunity, eligibility); }
-  async shutdown(deadlineMs = this.shutdownDeadlineMs): Promise<void> { if (this.state === "stopped") return; this.state = "draining"; this.telegramAlerts?.close();this.telegramAlerts=undefined;await this.telegram?.close();this.telegram=undefined; this.urgentAway?.close(); this.urgentAttention.close(); this.sessionHandoff?.close(); this.acknowledgmentService?.close();this.acknowledgmentService=undefined; await this.experiential?.close();this.experiential=undefined; await this.automaticMemory.close(); this.audience?.close(); this.providers.world?.close(); this.providers.pwceCapabilities?.close(); this.invalidateRuntimeInputs(); this.listening = false; for (const session of this.audioSessions) session.close(); this.audioSessions.clear(); this.audioServer.close(); const close = new Promise<void>((resolveClose) => this.server.close(() => resolveClose())); const bounded = Promise.allSettled([...this.activeWork]).then(() => undefined); await Promise.race([Promise.all([close, bounded]), new Promise<void>((resolveDeadline) => setTimeout(resolveDeadline, deadlineMs))]); this.server.closeAllConnections(); this.activeWork.clear();this.conversationHistory.clear(); this.initiativeHost.close(); this.admin.close(); this.pwceJournal?.close(); this.database.close(); this.state = "stopped"; }
+  async shutdown(deadlineMs = this.shutdownDeadlineMs): Promise<void> { if (this.state === "stopped") return; this.state = "draining"; this.telegramAlerts?.close();this.telegramAlerts=undefined;this.telegramNoticeAuthority=undefined;await this.telegram?.close();this.telegram=undefined; this.urgentAway?.close(); this.urgentAttention.close(); this.sessionHandoff?.close(); this.acknowledgmentService?.close();this.acknowledgmentService=undefined; await this.experiential?.close();this.experiential=undefined; await this.automaticMemory.close(); this.audience?.close(); this.providers.world?.close(); this.providers.pwceCapabilities?.close(); this.invalidateRuntimeInputs(); this.listening = false; for (const session of this.audioSessions) session.close(); this.audioSessions.clear(); this.audioServer.close(); const close = new Promise<void>((resolveClose) => this.server.close(() => resolveClose())); const bounded = Promise.allSettled([...this.activeWork]).then(() => undefined); await Promise.race([Promise.all([close, bounded]), new Promise<void>((resolveDeadline) => setTimeout(resolveDeadline, deadlineMs))]); this.server.closeAllConnections(); this.activeWork.clear();this.conversationHistory.clear(); this.initiativeHost.close(); this.admin.close(); this.pwceJournal?.close(); this.database.close(); this.state = "stopped"; }
   address(): { host: string; port: number } { const address = this.server.address(); if (!address || typeof address === "string") throw new Error("server is not listening"); return { host: address.address, port: address.port }; }
   private get localOrigin(): string { return `http://${this.host}:${this.address().port}`; }
   private get cookieName(): string { return `lifestream_${this.address().port}`; }
@@ -782,6 +784,7 @@ export class LifestreamServer {
       return json(response, result.status, result.body);
     }
     if(path==='/api/runtime/v1/my-channel-pairings')return this.handleMyChannelPairings(request,response);
+    if(path==='/api/runtime/v1/telegram-notice-authority')return this.handleTelegramNoticeAuthority(request,response);
     if(path==='/api/runtime/v1/channel-subscriptions')return this.handleChannelSubscriptions(request,response);
     if(path==='/api/runtime/v1/urgent/away')return this.handleUrgentAway(request,response);
     if(path==='/api/runtime/v1/urgent'||path==='/api/runtime/v1/urgent/events')return this.handleUrgentAttention(request,response);
@@ -1010,9 +1013,13 @@ export class LifestreamServer {
     if(!this.localAuth||this.restoreQuarantine||options.telegram.transport&&this.config.profile!=='test')throw Error('Telegram requires local authentication and an explicit transport composition');
     this.telegramBotId=options.telegram.botId;const configuration=options.telegram,api=configuration.transport??new TelegramBotApi(configuration);
     this.telegram=new TelegramChannelRuntime({database:this.database,api,botId:configuration.botId,enabled:()=>!this.restoreQuarantine&&configuration.enabled()&&['ready','degraded'].includes(this.state),conversation:telegramConversation({provider:()=>this.providers.providers.inference?.status==='healthy'?this.providers.inference:undefined,prepare:binding=>this.prepareTelegramConversation(binding)})});
-    if(configuration.alerts){
+    if(configuration.alerts&&configuration.localAlerts)throw Error('Choose one Telegram authority composition');
+    if(configuration.localAlerts&&!this.sessionEnvironmentId)throw Error('Telegram notice grants require a stable local deployment identity');
+    if(configuration.localAlerts)this.telegramNoticeAuthority=new TelegramNoticeAuthority({database:this.database,auth:this.localAuth,environmentId:this.sessionEnvironmentId!,session:binding=>this.telegramSession(binding),assistantAvailable:id=>!!this.admin.getActivePersona(id,'',true)});
+    const alerts=configuration.localAlerts?{...configuration.localAlerts,authority:(binding:TelegramBinding,session:TelegramAlertSession)=>this.telegramNoticeAuthority!.authority(binding,session)}:configuration.alerts;
+    if(alerts){
       if(!options.urgentConditions)throw Error('Telegram alerts require configured condition bindings');
-      this.telegramAlerts=new TelegramAlerts({...configuration.alerts,database:this.database,api,botId:configuration.botId,ready:()=>!!this.telegram?.ready,session:binding=>this.telegramSession(binding),assistantAvailable:id=>!!this.admin.getActivePersona(id,'',true),runtime:this.urgentAttention.runtime});
+      this.telegramAlerts=new TelegramAlerts({...alerts,database:this.database,api,botId:configuration.botId,ready:()=>!!this.telegram?.ready,session:binding=>this.telegramSession(binding),assistantAvailable:id=>!!this.admin.getActivePersona(id,'',true),runtime:this.urgentAttention.runtime});
     }
   }
   private telegramSession(binding:TelegramBinding):TelegramAlertSession{
@@ -1060,6 +1067,26 @@ export class LifestreamServer {
       this.telegram?.reconcile();this.telegramAlerts?.reconcile();this.localAuth.touch(context);return json(response,200,{...inspect(),...(issued?{issued}:{} )});
     }catch(error){if(error instanceof TelegramPairingError)throw new AuthenticationError(409,'channel_pairing_changed');throw error;}
   }
+  private async handleTelegramNoticeAuthority(request:IncomingMessage,response:ServerResponse):Promise<void>{
+    if(!this.localAuth||!this.telegramNoticeAuthority||this.restoreQuarantine)throw new AuthenticationError(503,'telegram_notice_authority_unavailable');
+    const method=request.method??'GET',params=new URL(request.url!,'http://localhost').searchParams,assistantId=params.get('assistantId'),subscriptionId=params.get('subscriptionId'),local=this.requestContext(request,true) as LocalContext|undefined;
+    if(!assistantId||!subscriptionId||[...params.keys()].some(k=>!['assistantId','subscriptionId'].includes(k))||params.getAll('assistantId').length!==1||params.getAll('subscriptionId').length!==1||!['GET','POST'].includes(method))throw new AuthenticationError(422,'telegram_notice_authority_invalid_request');
+    const current=()=>{if(!local?.owner||!this.localAuth!.canAdminister(local,assistantId)||!this.audiencePermits(local))throw new AuthenticationError(403,'telegram_notice_authority_owner_required');};current();
+    const binding=()=>{const b=new TelegramPairingRepository(this.database).activeBindings(this.telegramBotId??'').find(b=>b.subscriptionId===subscriptionId&&b.assistantId===assistantId&&b.alertsEnabled);if(!b)throw new AuthenticationError(409,'telegram_notice_subscriber_consent_required');return b;};
+    if(method==='GET')return json(response,200,this.telegramNoticeAuthority.inspect(binding(),local!));
+    this.localAuth.csrf(local!,String(request.headers['x-lifestream-csrf']??''));const body=asObject(await readBody(request));current();
+    if(!body)throw new AuthenticationError(422,'telegram_notice_authority_invalid_request');
+    const keys=Object.keys(body).sort().join(',');
+    try{
+      const b=binding();let pending;
+      if(body.operation==='request'&&keys==='expiresAt,operation,reviewAfter'&&typeof body.expiresAt==='string'&&typeof body.reviewAfter==='string')pending=this.telegramNoticeAuthority.request(b,local!,{expiresAt:body.expiresAt,reviewAfter:body.reviewAfter});
+      else if(body.operation==='approve'&&keys==='confirmationDigest,expectedRevision,operation,requestId'&&typeof body.requestId==='string'&&typeof body.confirmationDigest==='string'&&Number.isSafeInteger(body.expectedRevision))this.telegramNoticeAuthority.approve(b,local!,{requestId:body.requestId,expectedRevision:body.expectedRevision as number,confirmationDigest:body.confirmationDigest});
+      else if(body.operation==='cancel'&&keys==='expectedRevision,operation,requestId'&&typeof body.requestId==='string'&&Number.isSafeInteger(body.expectedRevision))this.telegramNoticeAuthority.cancel(b,local!,body.requestId,body.expectedRevision as number);
+      else if(body.operation==='revoke'&&keys==='expectedRevision,grantId,operation'&&typeof body.grantId==='string'&&Number.isSafeInteger(body.expectedRevision))this.telegramNoticeAuthority.revoke(b,local!,body.grantId,body.expectedRevision as number);
+      else throw new AuthenticationError(422,'telegram_notice_authority_invalid_request');
+      current();this.telegramAlerts?.reconcile();return json(response,200,{...this.telegramNoticeAuthority.inspect(b,local!),...(pending?{request:pending}:{}),humanAcceptance:false});
+    }catch(error){if(error instanceof AuthenticationError)throw error;throw new AuthenticationError(409,'telegram_notice_authority_scope_or_review_changed');}
+  }
   private async handleChannelSubscriptions(request:IncomingMessage,response:ServerResponse):Promise<void>{
     if(!this.localAuth||this.restoreQuarantine)throw new AuthenticationError(503,'channel_configuration_unavailable');
     const method=request.method??'GET',params=new URL(request.url!,'http://localhost').searchParams,assistantId=params.get('assistantId');
@@ -1070,7 +1097,7 @@ export class LifestreamServer {
     const inspect=()=>({schemaVersion:'1.0.0',subscriptions:repository.list(assistantId).map(s=>{
       let connection=null;if(s.channel==='telegram'&&s.status==='unpaired')try{const p=new TelegramPairingRepository(this.database).inspect(s.assistantId,s.id,s.principalId);connection={pairingState:p.state,conversationsEnabled:p.conversationsEnabled,alertsEnabled:p.alertsEnabled,transportReady:!!this.telegram?.ready&&p.botId===this.telegramBotId};}catch{/* An inactive recipient cannot expose or enable a connection. */}
       return {...s,connection};
-    }),accounts:this.localAuth!.accounts(context!).filter(a=>a.disabled===0).map(a=>({principalId:a.principalId,username:a.username})),transportConfigured:!!this.telegramBotId,transportReady:!!this.telegram?.ready,pairingAvailable:true,alertCompositionConfigured:!!this.telegramAlerts,humanAcceptance:false});
+    }),accounts:this.localAuth!.accounts(context!).filter(a=>a.disabled===0).map(a=>({principalId:a.principalId,username:a.username})),transportConfigured:!!this.telegramBotId,transportReady:!!this.telegram?.ready,pairingAvailable:true,alertCompositionConfigured:!!this.telegramAlerts,alertGrantConfigurationAvailable:!!this.telegramNoticeAuthority,humanAcceptance:false});
     if(method==='GET')return json(response,200,inspect());
     this.localAuth.csrf(context!,String(request.headers['x-lifestream-csrf']??''));
     const body=asObject(await readBody(request));current();
@@ -1254,7 +1281,7 @@ export class LifestreamServer {
       if (!candidateProviders.ready) return json(response, 503, { code: "profile_unavailable", message: `${requested} required providers are unavailable; ${this.config.profile} remains active`, activeProfile: this.config.profile, requestedProfile: requested, providers: candidateProviders.providers });
       await ensureStorage(candidateConfig); candidateDatabase = new Database({ path: candidateConfig.storage.databasePath }); const candidateMigrations = candidateDatabase.migrate(); const candidateMemories = new MemoryRepository(candidateDatabase); const candidateInitiative = new RelationalInitiativeCoordinator(8, new InitiativeLedgerRepository(candidateDatabase)); const candidateAdmin = new AssistantAdminApi(new AssistantProfileRepository(candidateDatabase), candidateMemories, candidateDatabase,()=>isolatedLabRuntime(preparedProviders,candidateConfig),candidateConfig.storage.databasePath===":memory:"?undefined:join(candidateConfig.storage.artifactDirectory,"relationship-recovery"));
       for (const session of this.audioSessions) session.close(); this.audioSessions.clear();
-      this.telegramAlerts?.close();this.telegramAlerts=undefined;await this.telegram?.close();this.telegram=undefined; const previousDatabase = this.database; this.acknowledgmentService?.close();this.acknowledgmentService=undefined; await this.experiential?.close();this.experiential=undefined; await this.automaticMemory.close(); this.providers.world?.close(); this.providers.pwceCapabilities?.close(); this.initiativeHost.close(); this.initiativeHost=new InitiativeHost(candidateDatabase); this.urgentAway?.close(); this.urgentAway=undefined; this.awayDestinations=[]; this.urgentAttention.close(); this.urgentAttention=new UrgentAttentionHost(candidateDatabase); this.admin.close(); this.config = candidateConfig; this.providers = candidateProviders; this.database = candidateDatabase; this.presentationSelection=new PresentationSelection(candidateDatabase); this.memories = candidateMemories; this.automaticMemory=this.createAutomaticMemory(); this.initiative = candidateInitiative; this.admin = candidateAdmin; this.migrationRecords = candidateMigrations; candidateDatabase = undefined; previousDatabase.close(); this.state = "ready"; this.profileSwitching = false;this.acknowledgments.start();this.experience.start();
+      this.telegramAlerts?.close();this.telegramAlerts=undefined;this.telegramNoticeAuthority=undefined;await this.telegram?.close();this.telegram=undefined; const previousDatabase = this.database; this.acknowledgmentService?.close();this.acknowledgmentService=undefined; await this.experiential?.close();this.experiential=undefined; await this.automaticMemory.close(); this.providers.world?.close(); this.providers.pwceCapabilities?.close(); this.initiativeHost.close(); this.initiativeHost=new InitiativeHost(candidateDatabase); this.urgentAway?.close(); this.urgentAway=undefined; this.awayDestinations=[]; this.urgentAttention.close(); this.urgentAttention=new UrgentAttentionHost(candidateDatabase); this.admin.close(); this.config = candidateConfig; this.providers = candidateProviders; this.database = candidateDatabase; this.presentationSelection=new PresentationSelection(candidateDatabase); this.memories = candidateMemories; this.automaticMemory=this.createAutomaticMemory(); this.initiative = candidateInitiative; this.admin = candidateAdmin; this.migrationRecords = candidateMigrations; candidateDatabase = undefined; previousDatabase.close(); this.state = "ready"; this.profileSwitching = false;this.acknowledgments.start();this.experience.start();
       return json(response, 200, { ...this.health, switched: true });
     } catch (error) {
       candidateDatabase?.close();
