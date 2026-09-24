@@ -29,3 +29,5 @@ export {PwceGrantQuery} from './grant-query.ts';
 export type {PwceGrantQueryOptions} from './grant-query.ts';
 export {PwceIncidentClient} from './incidents.ts';
 export type {PwceIncident,PwceIncidentOptions,PwceIncidentIdentity} from './incidents.ts';
+export {PwceConditionClient} from './conditions.ts';
+export type {PwceCondition,PwceConditionOptions,PwceConditionIdentity,PwceConditionSelectors,PwceConditionQualification,PwceConditionAcknowledgment,PwceConditionResponse} from './conditions.ts';

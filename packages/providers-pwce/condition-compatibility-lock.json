@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0.0",
+  "producer": "PWCE",
+  "producerRevision": "5e07be606d487be1d1082d4182a544ec7a8b529f",
+  "bundleId": "pwce-urgent-conditions.bundle.v1",
+  "bundleVersion": "1.0.0",
+  "bundleDigest": "f472b81627d2b1dd5e56e50ce8a59ffdb68a04bb46a3a6e361378a88e91c00d5",
+  "generatedBoundary": "src/condition-bundle.ts",
+  "generatedBoundarySha256": "d70608f0b1b98cfdd3393264e889b6a1d39574cd6b95f057ed2d0e2969f287dc",
+  "claim": "Bounded condition contract mapping; no live source, interruption, Human acknowledgment, camera or remote notification acceptance."
+}
