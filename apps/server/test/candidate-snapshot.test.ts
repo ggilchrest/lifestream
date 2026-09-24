@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomBytes,randomUUID,createHash} from 'node:crypto';
 import {DatabaseSync} from 'node:sqlite';
-import {Database,MemoryRepository,ExperienceRepository} from '@lifestream/storage-sqlite';
+import {Database,MemoryRepository,ExperienceRepository,UrgentAttentionRepository,type UrgentAttentionCondition} from '@lifestream/storage-sqlite';
 import {defaultTopics,type ExperienceScope,type ExperiencePolicy,type Source} from '@lifestream/contracts/experience';
 import {snapshotCandidate,restoreCandidate} from '../src/admin/candidate-snapshot.ts';
 import {createLifestreamServer} from '../src/index.ts';
@@ -43,6 +43,22 @@ test('recovery rejects changed bytes, missing current safety, old epochs, unavai
  await writeFile(join(snapshot,'packages/synthetic/model.gltf'),'tampered');await assert.rejects(restoreCandidate({snapshot,currentSafety:join(f.candidate,'safety'),destination:join(f.root,'bad-bytes')}),/differ/);
  const db=new DatabaseSync(join(f.candidate,'data.sqlite'));db.prepare("UPDATE presentation_selections SET package_digest='unavailable'").run();db.close();await snapshotCandidate({candidate:f.candidate,packages:f.packages,destination:join(f.root,'old-selection')});const restored=await restoreCandidate({snapshot:join(f.root,'old-selection'),currentSafety:join(f.candidate,'safety'),destination:join(f.root,'unavailable-selection')});assert.equal(restored.unavailableDefaultPresentations,1);
  await symlink(join(f.root,'stale'),join(f.candidate,'safety/link'));await assert.rejects(snapshotCandidate({candidate:f.candidate,packages:f.packages,destination:join(f.root,'bad-link')}),/symbolic/);
+});
+
+test('isolated restore disables urgent policy, cancels output and suppresses every historical episode without changing the source',async t=>{
+ const f=await fixture(t),scope={principalId:f.identity.session.principalId,assistantId:f.assistant.assistantId,endpointId:'synthetic-restore-endpoint'},now=new Date().toISOString();
+ const source=new Database({path:join(f.candidate,'data.sqlite')}),original=new UrgentAttentionRepository(source);t.after(()=>source.close());
+ const policy={rules:[{sourceRef:'synthetic-source',eventClass:'critical-condition',enabled:true,bypassQuietHours:true}],modality:'speech' as const,quietHours:null,snoozedUntil:null};original.configure(scope,0,policy,now);
+ const condition:UrgentAttentionCondition={conditionRef:'synthetic-restored-episode',revision:1,sourceRef:'synthetic-source',worldRef:'synthetic-world',siteRef:'synthetic-site',zoneRef:'synthetic-zone',eventClass:'critical-condition',sourceRevision:1,status:'open',severity:'critical',freshness:'fresh',basis:'synthetic',qualification:'qualified',confidence:1,evidenceRefs:['synthetic-incident'],freshUntil:new Date(Date.now()+60000).toISOString(),expiresAt:new Date(Date.now()+120000).toISOString(),updatedAt:now};
+ const pending=original.observeCondition(scope,condition,false,now,()=>({reasons:[],delivery:{modality:'speech',text:'Simulation. A qualified synthetic source reports an unresolved condition.',expiresAt:condition.freshUntil,settingsRevision:1,sessionId:'synthetic-session',sessionRevision:1,audienceRevision:1,authorizationRevision:1}})).delivery!;
+ original.observeCondition(scope,{...condition,conditionRef:'synthetic-denied-episode'},false,now,()=>({reasons:['output_unavailable']}));
+ const snapshot=join(f.root,'urgent-snapshot'),destination=join(f.root,'urgent-restored');await snapshotCandidate({candidate:f.candidate,packages:f.packages,destination:snapshot});
+ const receipt=await restoreCandidate({snapshot,currentSafety:join(f.candidate,'safety'),destination});assert.deepEqual(receipt.urgentAttention,{scopes:1,cancelledDeliveries:1,status:'disabledAndCancelled',approval:'freshSourceClassDestinationApprovalRequired'});
+ const restored=new Database({path:join(destination,'data.sqlite')}),repo=new UrgentAttentionRepository(restored);t.after(()=>restored.close());
+ assert.deepEqual(repo.settings(scope).rules,[{...policy.rules[0],enabled:false,bypassQuietHours:false}]);assert.equal(repo.settings(scope).revision,2);assert.equal(repo.get(pending.id)?.stage,'cancelled');assert.equal(repo.get(pending.id)?.reason,'restore_quarantine');
+ assert.ok(repo.inspect(scope).conditions.every(record=>record.baselineSeen));repo.configure(scope,2,policy,now);
+ const retry=repo.observeCondition(scope,{...condition,conditionRef:'synthetic-denied-episode',revision:2},false,now,()=>{assert.fail('fresh permission must not revive an old episode');});assert.deepEqual(retry.reasons,['baseline']);
+ assert.equal(original.settings(scope).rules[0]?.enabled,true);assert.equal(original.get(pending.id)?.stage,'queued');assert.ok(original.inspect(scope).conditions.every(record=>!record.baselineSeen));
 });
 
 // These are synthetic stored results. No real model, voice or personal learning is enabled.

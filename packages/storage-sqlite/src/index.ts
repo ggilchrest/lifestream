@@ -28,3 +28,4 @@ export {SavedVoiceRepository, type SavedVoice} from './saved-voices.ts';
 export * from './acknowledgments.ts';
 
 export * from './experience.ts';
+export * from './urgent-attention.ts';
