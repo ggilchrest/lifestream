@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-24T13:33:10.605Z",
+  "status": "verified",
+  "sourceRevision": "b9d4cdcdd26d3b32b0f6dfdcca319476de6890cd",
+  "specificationRevision": "e7d8de436c3e12f5855998ac8cc2249eef8eef57",
+  "claim": "Operator-local disabled Telegram launcher configuration, accurate owner status and isolated channel restore quarantine; clean generic archive installation",
+  "checks": {
+    "source": {
+      "passed": 1207,
+      "skipped": 0,
+      "durationMs": 80524.689083
+    },
+    "browser": {
+      "passed": 117,
+      "skipped": 0,
+      "durationMs": 86352.544417
+    },
+    "focusedHttpConfigurationLauncher": 9,
+    "focusedRecovery": 10,
+    "focusedBrowser": 6,
+    "build": "pass",
+    "lint": "pass",
+    "privateSpecifications": "pass",
+    "visualReview": [
+      "owner-paired-desktop.png",
+      "owner-paired-mobile.png"
+    ]
+  },
+  "archive": {
+    "sha256": "779639e98870034d1a337f951bd66dc1b9cbcde4dce556545d829b63cbbe8710",
+    "bytes": 22087680,
+    "members": 1437,
+    "files": 1329,
+    "privateAssetHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "offlineInstallation": "pass",
+    "build": "pass",
+    "runtimeChecks": 28,
+    "browserChecks": 6,
+    "skipped": 0
+  },
+  "real": [
+    "candidate launcher process and environment-reference parser",
+    "local authentication, subscriber state and SQLite",
+    "snapshot export, current-safety replay and isolated restore",
+    "offline installation and build of exact committed archive"
+  ],
+  "simulated": [
+    "Telegram ingress/delivery and account identities",
+    "condition observations and authority fixture composition",
+    "inference in extracted-package runtime checks"
+  ],
+  "externalTelegramCalls": 0,
+  "liveCandidateChanged": false,
+  "installedCandidateRevision": "5731ad04a606c595da7ab8c2ecb17fbdebb9ce89",
+  "exclusions": [
+    "legitimate live notification authority composition in the generic launcher",
+    "private channel memory/persona disclosure",
+    "actual Telegram credentials/connection",
+    "physical sensor enrollment",
+    "Human acceptance",
+    "original S073/S086/onset criteria",
+    "promotion into the running candidate"
+  ],
+  "retainedDiagnostic": "Initial archive extraction used an unsupported Python filter argument; archive members were already individually checked. Retried with validated regular-file/directory extraction; no safety check removed. First failed output remains operator-local.",
+  "nextOperation": "Integrate legitimate background notice authority and audience-safe channel memory; then current selected-provider qualification, candidate promotion and complete Human journeys",
+  "reports": {
+    "telegram-deployment-source-final.log": "151755cc2321bd3ab5554d7ffd0c5f14e35b445434b9c21e3c1f255d1cb09c19",
+    "telegram-deployment-browser-final.log": "726d9990bceb86baf1152fda5d37e5aec5601ed4350e41bad48749a488030daf",
+    "telegram-deployment-final-focused.log": "c27dc050ce193d76489914305811309cf0206744616eb6e170932fd8336a0654",
+    "telegram-deployment-recovery.log": "7266b09c9e7524c63588903e11c660a53ee0ff347dc4b1b4e5b015dae1e92ca9",
+    "telegram-deployment-browser.log": "a196d016459da8544a941ec7790588f06ed4a791bc1d16ae72c41f6d3daec0cd",
+    "telegram-deployment-build-final.log": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042",
+    "telegram-deployment-lint-final.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "telegram-deployment-spec-final.log": "44c188a316c63ef06838786d47b61b583249993ade6dbf2c58ab7770b6d8115b",
+    "telegram-clean-install.log": "327effd30bcd44f9f6dec7a360bd8aec8eb7160a4d1546482051fad2eade743e",
+    "telegram-clean-build.log": "c1df05f51ba88057c4bfd743ee2aabbdf7b2ee5c98e73a6bf6c4c74156430765",
+    "telegram-clean-runtime.log": "0c32b3edbdd11b564fd3ffc0fab86e2f1703ec66fda58f259cc14f10822db6cc",
+    "telegram-clean-browser.log": "bcb49f234a0bfb1c7debfa62425a58f650fc828241ef59810c8e7918fce9462f"
+  }
+}
