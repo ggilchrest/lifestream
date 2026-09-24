@@ -4,6 +4,7 @@ import { installAutomaticMemory } from "./automatic-memory.js";
 import { installPresentation } from "./presentation.js";
 import {ConversationOutput} from './conversation-output.js';
 import {ConversationCapture} from './conversation-capture.js';
+import {installUrgentAttention} from './urgent-attention.js';
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dimensions=['initiative','warmth','curiosity','followThrough','persistence'];
 const pretty=value=>String(value??'Unknown').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^./,c=>c.toUpperCase());
@@ -15,7 +16,7 @@ export function installConversationRoom({anchor,api,context}){
  const $=id=>anchor.querySelector('#room-'+id),auth=()=>window.lifestreamAuth;
  const compact=matchMedia('(max-width:1050px)'),setup=anchor.querySelector('.room-setup');setup.open=!compact.matches;compact.addEventListener('change',()=>{setup.open=!compact.matches;});
  let epoch=0,scopeKey='',session=null,configuration=null,readyMode=null,request=null,records=[],expressionNotes=[],history=[],busy=false,catalogEnabled=false,catalog=[];
- let capture,voiceScope=null,voiceEpoch=0;const voiceTurns=new Map();
+ let capture,urgent,voiceScope=null,voiceEpoch=0;const voiceTurns=new Map();
  const deliveries=new Map();
  const automaticMemory=installAutomaticMemory({anchor,api,context});
  installIncidentReview({anchor,api,context});
@@ -39,14 +40,14 @@ export function installConversationRoom({anchor,api,context}){
   const detail=document.createElement('details');detail.innerHTML=`<summary>Simulated opening · references</summary><dl class="record-fields"><dt>Opportunity</dt><dd class="record-id">${escape(entry.opportunityId)}</dd><dt>Conversation</dt><dd class="record-id">${escape(entry.conversationId)}</dd><dt>Interaction</dt><dd class="record-id">${escape(entry.interactionId)}</dd></dl>`;entry.node.append(detail);
   const dismiss=document.createElement('button');dismiss.type='button';dismiss.className='quiet';dismiss.textContent='Dismiss this opening';dismiss.onclick=run(async()=>{await call({operation:'dismiss',idempotencyKey:crypto.randomUUID(),sessionId:entry.scope.sessionId,opportunityId:entry.opportunityId},entry.scope);if(!same(entry.scope,entry.epoch))return;mark(entry,'Dismissed');if(output.turn?.trace===entry.interactionId)output.stop('Opening dismissed.');const inspected=await call({operation:'inspect'},entry.scope);if(same(entry.scope,entry.epoch))renderRecords(inspected);});entry.node.append(dismiss);
  };
- const output=new ConversationOutput({onState:state,onReplyAudio:detail=>window.dispatchEvent(new CustomEvent('lifestream-response-playback',{detail})),onClosed:()=>{capture?.stop(false);renderBusy();},onError:error=>{capture?.stop();status(error.message,true);renderBusy();},
+ const output=new ConversationOutput({onState:state,onReplyAudio:detail=>window.dispatchEvent(new CustomEvent('lifestream-response-playback',{detail})),onClosed:()=>{urgent?.audioClosed();capture?.stop(false);renderBusy();},onError:error=>{capture?.stop();status(error.message,true);renderBusy();},
  onMessage:message=>{
   if(message.type==='turnStarted'){if(!same(voiceScope,voiceEpoch))throw new Error('Voice scope changed.');$('timing').textContent='No pending timing adjustment.';capture.receive(message);output.beginReply(message.interactionTraceId);renderBusy();return true;}
   if(message.type==='transcript'){if(!capture?.traces.has(message.interactionTraceId)||!same(voiceScope,voiceEpoch)||typeof message.text!=='string'||message.text.length>16000)throw new Error('Unexpected voice transcript.');const entry=addTurn('user',message.text);mark(entry,'Recognized voice');return true;}
   if(message.event?.payload.type==='terminal'){capture?.receive(message);renderBusy();}
   return false;
- },onReplyText:(trace,text)=>{if(!same(voiceScope,voiceEpoch))throw new Error('Voice scope changed.');let entry=voiceTurns.get(trace);if(!entry){entry=addTurn('assistant','',{interactionId:trace});voiceTurns.set(trace,entry);if(voiceTurns.size>64)voiceTurns.delete(voiceTurns.keys().next().value);}entry.text=text;entry.node.querySelector('.room-turn-text').textContent=text;mark(entry,'Voice response · playback pending');},onReplyComplete:trace=>{const entry=voiceTurns.get(trace);if(entry)mark(entry,'Voice playback finished locally');state('Openings off');if(capture?.active)capture.onState('Microphone on · speak to reply or interrupt');status('Voice reply completed. Openings remain off until you enable them.');renderBusy();},onStopped:(trace,reason)=>{const entry=deliveries.get(trace)||voiceTurns.get(trace);if(entry){entry.stopped=true;mark(entry,reason);}if(trace)state('Speech stopped');},onComplete:trace=>{
-  const entry=deliveries.get(trace);if(!entry)return;
+ },onReplyText:(trace,text)=>{if(!same(voiceScope,voiceEpoch))throw new Error('Voice scope changed.');let entry=voiceTurns.get(trace);if(!entry){entry=addTurn('assistant','',{interactionId:trace});voiceTurns.set(trace,entry);if(voiceTurns.size>64)voiceTurns.delete(voiceTurns.keys().next().value);}entry.text=text;entry.node.querySelector('.room-turn-text').textContent=text;mark(entry,'Voice response · playback pending');},onReplyComplete:trace=>{const entry=voiceTurns.get(trace);if(entry)mark(entry,'Voice playback finished locally');state('Openings off');if(capture?.active)capture.onState('Microphone on · speak to reply or interrupt');status('Voice reply completed. Openings remain off until you enable them.');renderBusy();},onStopped:(trace,reason)=>{if(urgent?.stopped(trace)){state('Speech stopped');return;}const entry=deliveries.get(trace)||voiceTurns.get(trace);if(entry){entry.stopped=true;mark(entry,reason);}if(trace)state('Speech stopped');},onComplete:trace=>{
+  if(urgent?.completed(trace)){state('Urgent playback finished');return;}const entry=deliveries.get(trace);if(!entry)return;
   void Promise.resolve().then(async()=>{await entry.acceptance;if(entry.stopped||!same(entry.scope,entry.epoch))return;await acknowledge(entry,'playbackCompleted');mark(entry,'Playback finished · receipt confirmed');state('Speech ready');}).catch(error=>{mark(entry,'Playback finished locally · receipt unconfirmed');if(same(entry.scope,entry.epoch))status(error.message,true);});
  }});
  // Optional catalog polling must not sign out a still-authorized conversation
@@ -98,7 +99,7 @@ export function installConversationRoom({anchor,api,context}){
   }catch(error){if(epoch===ticket)output.close();throw error;}finally{if(epoch===ticket){busy=false;renderBusy();}}};
  $('enable').onclick=run(enableOutput);$('case-enable').onclick=run(enableOutput);
  $('disable').onclick=run(()=>suspend({close:true}));$('modality').onchange=run(()=>suspend({close:true}));
- $('stop').onclick=run(async()=>{epoch++;busy=false;renderBusy();request?.abort();capture.stop();await suspend();await refresh();status('Stopped. Output will not resume until you enable it again.');});
+ $('stop').onclick=run(async()=>{urgent?.stop('Stopped by the conversation control. Listening is off.');epoch++;busy=false;renderBusy();request?.abort();capture.stop();await suspend();await refresh();status('Stopped. Output will not resume until you enable it again.');});
  $('quiet').onclick=run(async()=>{await suspend();await call({operation:'temporaryMode',idempotencyKey:crypto.randomUUID(),sessionId:scope().sessionId,mode:'quiet',endsAt:null,dimensions:null});$('timing').textContent='No pending timing adjustment.';status('Quiet applies to this session until cleared or the host restarts.');});
  $('clear-mode').onclick=run(async()=>{await suspend();await call({operation:'temporaryMode',idempotencyKey:crypto.randomUUID(),sessionId:scope().sessionId,mode:'clear',endsAt:null,dimensions:null});$('timing').textContent='No pending timing adjustment.';status('Temporary mode cleared. Enable output separately; no old opening will resume.');});
  $('companionship').onsubmit=run(async()=>{const endsAt=new Date(Date.now()+Number($('minutes').value)*60000).toISOString();await call({operation:'temporaryMode',idempotencyKey:crypto.randomUUID(),sessionId:scope().sessionId,mode:'companionship',endsAt,dimensions:Object.fromEntries(dimensions.map(d=>[d,Number($(d).value)]))});status(`Temporary companionship applies until ${new Date(endsAt).toLocaleTimeString()}. Durable settings are unchanged.`);});
@@ -117,6 +118,15 @@ export function installConversationRoom({anchor,api,context}){
    if(!same(s,ticket))return;if(!completed)throw new Error('Response ended without a successful completion.');mark(entry,'Completed');$('timing').textContent='No pending timing adjustment.';status('Reply completed. Openings remain off until you enable them.');presentation.state('idle');
   }catch(error){if(entry)mark(entry,controller?.signal.aborted?'Stopped':'Failed');if(!controller?.signal.aborted)throw error;}finally{if(request===controller)request=null;if(epoch===ticket){busy=false;renderBusy();}}
  });
+ urgent=installUrgentAttention({anchor,api,scope,output,alertAnchor:$('turns'),stopCurrent:async()=>{epoch++;request?.abort();request=null;capture.stop(false);busy=false;await suspend();renderBusy();},prepareOutput:async mode=>{
+  const s=scope(),ticket=epoch;
+  // Preserve the direct click gesture for the one shared Web Audio owner.
+  const connection=mode==='speech'&&!output.connected?output.connect():Promise.resolve();void connection.catch(()=>{});
+  await connection;if(!same(s,ticket))throw Error('Conversation changed during urgent output setup.');
+  let value=await api('/api/runtime/v1/session-context');if(!value.endpoint||value.ended)throw Error('Apply current session disclosure before starting urgent attention.');
+  if(mode==='speech'&&!value.endpoint.outputModalities.includes('audio'))value=await api('/api/runtime/v1/session-context',{method:'POST',body:JSON.stringify({expectedRevision:value.revision,mode:'audio',audienceScope:value.endpoint.privacyClass==='personal'?'authenticatedSession':'unknown'})});
+  if(!same(s,ticket))throw Error('Conversation changed during urgent output setup.');session=value;renderDisclosure();renderBusy();
+ }});
  const scopeChanged=()=>{let next='';try{next=JSON.stringify(scope());}catch{}if(next===scopeKey)return;clear();scopeKey=next;$('scope').textContent=next?'Refresh to read this Assistant’s session.':'Sign in and select an Assistant.';if(next){presentation.refresh();automaticMemory.refresh();}if(next)void refresh().catch(error=>status(error.message,true));};
  for(const event of ['lifestream-auth','lifestream-assistant','lifestream-relationship'])window.addEventListener(event,scopeChanged);
  // Presentation owns these event resets and refreshes. A second reset here
