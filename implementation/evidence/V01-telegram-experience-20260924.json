@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-24T15:02:42.684Z",
+  "status": "verified",
+  "claim": "Canonical experiential selection and completed/observed learning through current accepted private Telegram conversations; software qualification only",
+  "sourceRevision": "0f54db41ed6f49ff4f6cc2b36e806b9f113e5b06",
+  "specificationRevision": "848a2fd81affa73d721fb76eb4ebd9b0dfb39b89",
+  "checks": {
+    "source": {
+      "passed": 1220,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 85255.095417
+    },
+    "browser": {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 87904.488917
+    },
+    "finalBoundary": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 15792.527708
+    },
+    "focusedMemoryAndLearning": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 19147.591541
+    },
+    "extractedRuntime": {
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 19165.744208
+    },
+    "build": "pass",
+    "lint": "pass",
+    "specifications": "pass",
+    "offlineInstallation": "pass",
+    "extractedBuild": "pass"
+  },
+  "archive": {
+    "sha256": "e94b124d7effc1dea6a61d7880212bd1fc11c84dd1a34417de45303bc7fbac66",
+    "bytes": 22190080,
+    "members": 1445,
+    "files": 1337
+  },
+  "privateAssetHashMatches": 0,
+  "privateOrMediaPaths": [],
+  "real": [
+    "canonical prompt preparation, policy, source-bound learning and bounded adaptation",
+    "local authentication, principal-owned relationships and memory storage",
+    "accepted-delivery bookkeeping and privacy/freeze cancellation",
+    "SQLite restart and offline extracted installation"
+  ],
+  "simulated": [
+    "Telegram ingress and delivery",
+    "inference and reflection in current tests",
+    "synthetic subscriber accounts and project statements"
+  ],
+  "joinedObservations": {
+    "retainedProjectItems": 2,
+    "independentEpisodes": 2,
+    "reflectionCalls": 2,
+    "attentionGardeningDelta": 0.05,
+    "observedSelectedOutputs": 1,
+    "restartPersistence": true,
+    "freezeCancelsPendingReply": true,
+    "frozenInfluenceWithheld": true
+  },
+  "installedCandidateRevision": "5731ad04a606c595da7ab8c2ecb17fbdebb9ce89",
+  "installedCandidateChanged": false,
+  "selectedProviderQualification": {
+    "status": "blockedEnvironment",
+    "reason": "Mac routes configured ai5090 private address via a different gateway; SSH connection times out. This establishes an unavailable network path, not failure of remote services.",
+    "evidenceSha256": "6e6da2dfb8bd644d7a15fab77c4f3f5efbcc4e2b8aa19c440d915f0793d172a2"
+  },
+  "externalTelegramCalls": 0,
+  "humanAcceptance": false,
+  "remaining": [
+    "Non-administrator personal-context permission, relationship and memory controls",
+    "Current real selected-provider qualification and candidate promotion",
+    "Live Telegram and physical sources",
+    "Original S073 callback, S086 causal and onset criteria",
+    "Human/perceptual and offline-key custody acceptance"
+  ],
+  "retainedDiagnostics": [
+    "First new freeze-during-generation check used the prior experience revision; canonical compare-and-swap correctly rejected it with409. The test now refreshes current revision before the intended freeze and verifies cancellation. No product criterion or timeout was relaxed."
+  ],
+  "nextOperation": "Implement explicit owner permission and subscriber consent for non-administrator personal context, with owned relationship/memory controls and revocation/restore fencing. Refresh real-provider qualification and promote only when the existing ai5090 network path is available.",
+  "reports": {
+    "telegram-experience-build.log": "a1466e781747b59d7f4aae19847fa2c9f37e009537086d87baae9a619d8d7064",
+    "telegram-experience-focused.log": "5dc299169720c030385d8a10e4fc78d494a0fcc46afe53bb278a5eb7dcfe97c3",
+    "telegram-experience-specs.log": "65035d7a2dcd1e7587a07311d532348e763ca8e217a76a300e96838fd3ab8e6d",
+    "telegram-experience-http.log": "88b6f2363873f6dda30f9c9ce163a9c8e8e66d210aec50052fb1c51ae556dbfd",
+    "telegram-experience-boundary-final.log": "366eff1825ffc5c4cef9b0ce7430829bded6c73efa4cd57cb5635f4447a2e761",
+    "telegram-experience-source.log": "4fcba68a2bd9466c8fcfc2d4accc620f2039af36d169eec95283aa5c73ca376d",
+    "telegram-experience-clean-build.log": "a82b17881fffd80785fc7f31c3e07ca69a39885d2cd0227aad6ca76a0f45ef86",
+    "telegram-experience-boundary.log": "526322f5970f55097ce705342c2624a7e958d7a05d148e8b2dcd9de7bdaa795a",
+    "telegram-experience-lint.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "telegram-experience-lint-final.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "telegram-experience-clean-runtime.log": "41c5902fbff5347c16045378a8947a4df3e5879722561ae2e1e364c751225dcb",
+    "telegram-experience-specs-final.log": "f04e953be802159e3388d6c92cd2560f7aa5e8b14a0e89b84720b7a4e1bf5eac",
+    "telegram-experience-build-final.log": "a1466e781747b59d7f4aae19847fa2c9f37e009537086d87baae9a619d8d7064",
+    "telegram-experience-clean-install.log": "9086c9d659cac03f27503e45da67971dfba8b72755359fca0f23e29f1d022eaf",
+    "telegram-experience-preflight.log": "db2575ff4b2275ecd80542d0585871adfa2937ffabafcce2a1c9e809fba47ced",
+    "telegram-experience-browser.log": "10dec0b5d28ccce234c6adc950ccced2417c2ce72ffe7fe972bfb11027a7d662"
+  }
+}
