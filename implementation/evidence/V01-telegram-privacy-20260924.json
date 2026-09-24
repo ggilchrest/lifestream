@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-24T14:41:37.107Z",
+  "status": "verified",
+  "claim": "Scoped channel audience declaration, owned automatic memory, restart privacy, subscriber isolation and mid-generation/send cancellation; software verification only",
+  "sourceRevision": "18208d2c0761067d64aefde744c196e1e635604b",
+  "specificationRevision": "c9514db41da636973980dd2bf6ec4f416e6c299c",
+  "checks": {
+    "source": {
+      "passed": 1218,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 84897.444
+    },
+    "browser": {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 90003.285208
+    },
+    "focusedRuntime": {
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 20130.386958
+    },
+    "extractedRuntime": {
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 19342.735917
+    },
+    "workspaceAndQualificationHarness": {
+      "passed": 49,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 53993.531666
+    },
+    "build": "pass",
+    "lint": "pass",
+    "specifications": "pass",
+    "offlineInstallation": "pass",
+    "extractedBuild": "pass",
+    "visualReview": [
+      "alert-consent-desktop.png",
+      "alert-consent-mobile.png"
+    ]
+  },
+  "archive": {
+    "sha256": "d81a28866a80bec4b9ac11897eec8e2eaa4918730b8834d77633f1d87bcb37cc",
+    "bytes": 22169600,
+    "members": 1443,
+    "files": 1335
+  },
+  "privateAssetHashMatches": 0,
+  "privateOrMediaPaths": [],
+  "installedCandidate": {
+    "revision": "5731ad04a606c595da7ab8c2ecb17fbdebb9ce89",
+    "observedAt": "2026-09-24T14:41:37.107Z",
+    "status": "degraded",
+    "acceptingInteractions": false,
+    "providers": {
+      "inference": {
+        "status": "unavailable",
+        "fixture": false
+      },
+      "memory": {
+        "status": "healthy",
+        "fixture": true
+      },
+      "stt": {
+        "status": "unavailable",
+        "fixture": false
+      },
+      "tts": {
+        "status": "unavailable",
+        "fixture": false
+      },
+      "world": {
+        "status": "healthy",
+        "fixture": true
+      },
+      "capability": {
+        "status": "healthy",
+        "fixture": true
+      },
+      "renderer": {
+        "status": "healthy",
+        "fixture": true
+      },
+      "clock": {
+        "status": "healthy",
+        "fixture": false
+      }
+    },
+    "unchanged": true
+  },
+  "real": [
+    "local authentication and endpoint disclosure",
+    "canonical audience coordinator and relationship context",
+    "automatic memory policy, SQLite persistence and restart",
+    "cancellation guards and durable transport outcomes",
+    "rendered browser controls and offline extracted build"
+  ],
+  "simulated": [
+    "Telegram ingress/delivery",
+    "inference in current software and extracted-package tests",
+    "subscriber identities and memory statements"
+  ],
+  "selectedProviderQualification": {
+    "status": "blockedEnvironment",
+    "reason": "Existing Windows SSH key acquisition failed; independent SSH to configured ai5090 timed out on port22. Current installed candidate reports inference/STT/TTS unavailable. No model replacement, service restart or credential value was used.",
+    "log": "telegram-privacy-selected-memory.log"
+  },
+  "externalTelegramCalls": 0,
+  "humanAcceptance": false,
+  "remaining": [
+    "Non-administrator subscriber-specific relationship and memory configuration",
+    "Telegram experiential selection/completion hooks",
+    "current selected-provider qualification, candidate promotion and complete Human guide",
+    "actual Telegram connection and physical source enrollment",
+    "original S073 exact callback, S086 causal and onset performance criteria",
+    "Human/perceptual and offline-key custody acceptance"
+  ],
+  "retainedDiagnostics": [
+    "Initial concurrent source/browser run: 1217/1218 source; Discovery selection exceeded its existing bounded deadline. Final unchanged selection criteria pass1218/1218 when suites run separately.",
+    "Initial concurrent browser run117/118: acknowledgment mutation wait timed out. Final118/118 at concurrency4 when run separately; no timeout or acceptance threshold relaxed."
+  ],
+  "nextOperation": "Continue non-administrator subscriber-owned relationship/memory configuration and complete channel acceptance journeys; refresh selected-provider qualification and candidate promotion when ai5090 is reachable. Keep live Telegram disabled.",
+  "reports": {
+    "telegram-privacy-lint.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "telegram-privacy-lint-final.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "telegram-privacy-focused.log": "d35743665a9fa0afa5eac9f996a3becef6969b92a5bb1fd73549c85a8b7d3231",
+    "telegram-privacy-clean-install.log": "c5108ef5b4dfe75f04d2b0f2bb3948f0c35c416a341fa3dd9090a323dd8db7cc",
+    "telegram-privacy-specs.log": "d7cbd1bb63e336bbdd860dc6580304889ae4694c4aa26460e75ebd46be5fd0c0",
+    "telegram-privacy-focused-final.log": "91efacc25c946f1407d7ee6bcaa6dfb8981bc96ba5ec9d45962cb32114e5998e",
+    "telegram-privacy-build-final.log": "cfd32b15ebbd63799370ae2e66e080be832ac845bea2d7e43d2d81f6017205a7",
+    "telegram-privacy-build.log": "cfd32b15ebbd63799370ae2e66e080be832ac845bea2d7e43d2d81f6017205a7",
+    "telegram-privacy-clean-runtime.log": "0e8a1ac09a968928ed2d5c04614f49dfc7b2abd383f1624e764e410c07be06a3",
+    "telegram-privacy-source.log": "f94494cdd9f5d0a09d606880a19a3881b4052525e96ad442e1c8f33e3eab7e80",
+    "telegram-privacy-memory.log": "8ca4e6d66edeebed42feb1e40da6739637566896595dff5b6638a247d2e71069",
+    "telegram-privacy-workspace-tests.log": "d9436439d370aabfdfb62f3f87f70a1c434deec7c5bf7020f9cdea6c2601daf3",
+    "telegram-privacy-selected-memory.log": "ef907f001fb99de441de86dfde5063577aa0e778929b89b1448fe94e8e62d230",
+    "telegram-privacy-browser-final.log": "2362be0c6d6047195e4355368caf34fdff5cc8beec5b287d91d3e0f5e112cc94",
+    "telegram-privacy-browser.log": "2a21c19a0e8db02c874eace0cacb4e14f5877694049f3468bf357598b8c1adef",
+    "telegram-privacy-clean-build.log": "ec0ab2b9f8ee303662ccccb4a41c3b6c6b04461567fa57a32c27b6864a4916f0",
+    "telegram-privacy-source-final.log": "2a6791d9f26585d09f99cbcebdfeb9c508abecac2661501207775aacad197afd"
+  }
+}
