@@ -27,3 +27,21 @@ test('manual solo remains an expiring fallback when automatic coverage is unknow
  f.advance(10001);assert.equal(f.guard.snapshot(identity).privateAllowed,false);
 });
 test('evidence expiry notifies subscribers and fresh evidence after restart is required',t=>{const f=setup(t),states:string[]=[];f.guard.subscribe(identity,s=>states.push(s.classification));f.guard.observe(identity,f.observation());f.advance(5001);f.guard.tick();assert.deepEqual(states.slice(-2),['solo-supported','unknown']);assert.equal(f.guard.snapshot(identity).automatic,false);});
+
+test('source withdrawal immediately invalidates cached solo and fences an older in-flight reply',async t=>{
+ let invalidate:()=>void=()=>{},release:(value:AudienceObservation|null)=>void=()=>{},unsubscribed=false;
+ const now=Date.parse('2026-09-24T12:00:00Z');
+ const solo:AudienceObservation={sourceId:'enrolled-source',evidenceRef:'evidence.synthetic',endpointId:'endpoint',principalId:'owner',observedAt:new Date(now).toISOString(),expiresAt:new Date(now+4000).toISOString(),coverageKnown:true,ownerPresent:true,occupants:1};
+ const guard=new AudienceCoordinator({sourceIds:['enrolled-source'],now:()=>now,subscribeInvalidation:listener=>{invalidate=listener;return ()=>{unsubscribed=true;};},poll:()=>new Promise(resolve=>{release=resolve;})});t.after(()=>guard.close());
+ guard.observe(identity,solo);assert.equal(guard.snapshot(identity).privateAllowed,true);
+ guard.tick();await new Promise(setImmediate);invalidate();assert.equal(guard.snapshot(identity).privateAllowed,false,'no polling interval required');
+ release(solo);await new Promise(setImmediate);assert.equal(guard.snapshot(identity).privateAllowed,false,'late source reply cannot restore permission');
+ guard.close();assert.equal(unsubscribed,true);
+});
+
+test('new pushed shared evidence cannot be overwritten by a preexisting poll',async t=>{
+ let release:(value:AudienceObservation|null)=>void=()=>{};const now=Date.parse('2026-09-24T12:00:00Z');
+ const observation:AudienceObservation={sourceId:'enrolled-source',evidenceRef:'evidence.synthetic',endpointId:'endpoint',principalId:'owner',observedAt:new Date(now).toISOString(),expiresAt:new Date(now+4000).toISOString(),coverageKnown:true,ownerPresent:true,occupants:1};
+ const guard=new AudienceCoordinator({sourceIds:['enrolled-source'],now:()=>now,poll:()=>new Promise(resolve=>{release=resolve;})});t.after(()=>guard.close());guard.snapshot(identity);guard.tick();await new Promise(setImmediate);
+ guard.observe(identity,{...observation,occupants:2});release(observation);await new Promise(setImmediate);assert.equal(guard.snapshot(identity).classification,'shared');assert.equal(guard.snapshot(identity).privateAllowed,false);
+});
