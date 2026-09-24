@@ -199,12 +199,14 @@ export class UrgentAwayRepository {
       record.acknowledgedAt = now;
     });
   }
-  private retire(reason: 'consumer_restarted' | 'restore_quarantine', now: string): UrgentAwayRecord[] {
+  private retire(reason: 'consumer_restarted' | 'restore_quarantine', now: string, scopes?: UrgentAwayInput['scope'][]): UrgentAwayRecord[] {
     if (!timestamp(now)) return fail('invalid_away_time');
+    const selected=scopes?new Set(scopes.map(urgentAttentionScopeKey)):undefined;
     return this.transaction(tx => {
       const changed: UrgentAwayRecord[] = [];
       for (const row of tx.all<Row>("SELECT record_json FROM urgent_away_dispatches WHERE state IN ('reserved','attempted')")) {
         const record = decode(row)!;
+        if(selected&&!selected.has(urgentAttentionScopeKey(record.scope)))continue;
         record.state = record.attemptedAt === null ? 'cancelled' : 'unknown';
         record.reason = reason;
         record.revision++;
@@ -216,6 +218,6 @@ export class UrgentAwayRepository {
       return changed;
     });
   }
-  recover(now: string): UrgentAwayRecord[] { return this.retire('consumer_restarted', now); }
+  recover(now: string, scopes?: UrgentAwayInput['scope'][]): UrgentAwayRecord[] { return this.retire('consumer_restarted', now, scopes); }
   quarantine(now: string): UrgentAwayRecord[] { return this.retire('restore_quarantine', now); }
 }

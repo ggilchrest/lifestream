@@ -305,3 +305,15 @@ test('migration 53 preserves earlier schema records and unrelated application da
   assert.deepEqual(new UrgentAttentionRepository(db).settings(scope), settings);
   assert.equal(db.connection.prepare('SELECT count(*) AS n FROM urgent_away_dispatches').get()!.n, 0);
 });
+
+test('destination-scoped recovery leaves other running workers pending records unchanged',t=>{
+ const repo=fixture(t),other={...scope,endpointId:'second-phone'};
+ const active=repo.reserve(input(),now).record;
+ const interrupted=repo.reserve(input({scope:other,invocationId:'invocation:other'}),now).record;
+ assert.deepEqual(repo.recover(later,[]),[]);
+ assert.equal(repo.recover(later,[other]).length,1);
+ assert.deepEqual(repo.get(active.id),active);
+ assert.equal(repo.get(interrupted.id)?.state,'cancelled');
+ assert.equal(repo.recover(later,[scope]).length,1);
+ assert.equal(repo.get(active.id)?.state,'cancelled');
+});

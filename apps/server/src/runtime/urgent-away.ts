@@ -61,7 +61,7 @@ export class UrgentAwayRuntime{
    const bindingDigest=capabilityInputDigest({scope:binding.scope,destinationRef:binding.destinationRef,revision:binding.revision,capabilityScope:binding.capabilityScope,capabilityId:binding.capabilityId,capabilityVersion:binding.capabilityVersion,capabilityRoute:binding.capabilityRoute,identity:binding.identity});
    return {binding,bindingDigest,lastDispatchReason:null,cursor:null,boundary:null,settingsRevision:null,connected:false,reason:'disabled',busy:false,controller:new AbortController(),blocked:false};
   });
-  this.repository=new UrgentAwayRepository(database);this.repository.recover(this.time());
+  this.repository=new UrgentAwayRepository(database);this.repository.recover(this.time(),this.destinations.map(d=>d.binding.scope));
   for(const destination of this.destinations){
    const scope=destination.binding.scope;
    if(this.repository.destinationBinding(scope)?.bindingDigest!==destination.bindingDigest){

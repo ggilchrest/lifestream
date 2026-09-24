@@ -60,5 +60,10 @@ export class TelegramPairingRepository {
   const raw=this.database.connection.prepare('SELECT assistant_id FROM channel_subscriptions WHERE id=?').get(r.subscription_id) as {assistant_id:string}|undefined;if(!raw)return;
   try{const s=this.subscription(raw.assistant_id,r.subscription_id);if(!this.valid(r,s))return;return {subscriptionId:s.id,assistantId:s.assistantId,principalId:s.principalId,botId,chatId,userId,revision:r.revision,subscriptionRevision:s.revision,activatedAt:r.updated_at,conversationsEnabled:r.conversations_enabled===1&&s.requestedConversations,alertsEnabled:r.alerts_enabled===1&&s.requestedAlerts};}catch{return;}
  }
+ activeBindings(botId:string):TelegramBinding[]{
+  if(!positiveId(botId))return [];
+  const rows=this.database.connection.prepare("SELECT chat_id,user_id FROM telegram_pairings WHERE bot_id=? AND state='paired' ORDER BY subscription_id").all(botId) as Array<{chat_id:string;user_id:string}>;
+  return rows.flatMap(row=>{const binding=this.binding(botId,row.chat_id,row.user_id);return binding?[binding]:[];});
+ }
  current(binding:TelegramBinding){return JSON.stringify(this.binding(binding.botId,binding.chatId,binding.userId))===JSON.stringify(binding);}
 }
