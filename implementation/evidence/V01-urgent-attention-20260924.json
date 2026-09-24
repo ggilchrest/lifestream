@@ -89,6 +89,10 @@
       "evidence": {
         "name": "receipt.json",
         "sha256": "b76d15f8c85776b373e75439b54941be716185b9a3090ab994527fb315057a3d"
+      },
+      "visualEvidence": {
+        "name": "visual-receipt.json",
+        "sha256": "e811bbc8ffccfdac49c59bbe1f794b24a68d09e0e8d2127753293ee223cbbc71"
       }
     }
   },
@@ -150,7 +154,9 @@
     "evidence": {
       "name": "report.json",
       "sha256": "aa61b326098d982e71d3cb34abe026270dd69b0b7cce3275ea00594ca6c9aa91"
-    }
+    },
+    "executionRevision": "d37addab02a70b9d6b4c206114c276e9bf1aa8b5 plus recorded hashed integration inputs",
+    "producerRevision": "5e07be606d487be1d1082d4182a544ec7a8b529f"
   },
   "genericPackage": {
     "sourceRevision": "f038bfd45144f837c57da9b316149dce2df13110",
