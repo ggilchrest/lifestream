@@ -1,0 +1,368 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-24T01:56:18.910464+00:00",
+  "status": "verified",
+  "claimClass": "audience-owner-absence-component-and-local-candidate-custody",
+  "claimScope": "Bounded audience privacy repairs, source and browser regressions, generic archive isolation, recorded local candidate startup/data preservation, and guide UI QA. This receipt does not close the v0.1 release or any whole-slice Human gate.",
+  "revisions": {
+    "audienceOwnerAbsence": "734a888587ae46b8ae502e34c1d90553dc4f9c70",
+    "diagnosticHarness": "88ba656d1fc7e15683dbcd1f404a693dea1854f5",
+    "effectiveDisclosureAndCandidate": "f211a05e828e8f680fb98e7a2205e44fc52dec72",
+    "rendererObservationHarness": "6c99262a33a8c7befcbd0ee76729de2dff074f9e"
+  },
+  "behavior": [
+    "Fresh authorized and scoped automatic coverage reporting owner absence or inconsistent empty occupancy restricts private output despite a current manual solo declaration. It advances the audience revision and notifies consumers; repeated same-class renewals do not repeatedly invalidate turns.",
+    "Manual solo remains a bounded expiring fallback when automatic coverage is absent, unknown, untrusted, differently scoped or stale. Fresh supported automatic solo evidence can restore eligibility.",
+    "Conversation disclosure now reflects effective authenticated-session scope and audience permission. Audience transitions clear dialogue, speech and presentation state; permitted scope is refreshed before the allowed label returns.",
+    "Renderer verification records the exact WebAudio snapshot consumed by each rendered pose, preserving all cue, amplitude, clock, stop and late-callback assertions."
+  ],
+  "checks": [
+    {
+      "id": "source-regression",
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1033,
+      "pass": 1033,
+      "fail": 0,
+      "skipped": 0,
+      "revisionBasis": {
+        "runtimeImplementationRevision": "734a888587ae46b8ae502e34c1d90553dc4f9c70",
+        "executionHead": "not recorded in retained command log; no execution HEAD inferred"
+      },
+      "operatorLocalEvidence": {
+        "name": "audience-resume-source-20260924.log",
+        "sha256": "0a133ec779f1d5645bd9d08b019fab40ccb01300d8c8a3129ac58978013cbfd8"
+      }
+    },
+    {
+      "id": "initial-browser-regression",
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "fail",
+      "tests": 90,
+      "pass": 89,
+      "fail": 1,
+      "skipped": 0,
+      "revisionBasis": {
+        "runtimeImplementationRevision": "734a888587ae46b8ae502e34c1d90553dc4f9c70",
+        "harnessRevision": "88ba656d1fc7e15683dbcd1f404a693dea1854f5"
+      },
+      "operatorLocalEvidence": {
+        "name": "audience-resume-browser-20260924.log",
+        "sha256": "d42064a7133e41a30e1cd7774ed5c705891dfc92cf0f2ad657f2e86a9a42f8ec"
+      }
+    },
+    {
+      "id": "corrected-browser-regression",
+      "command": "PLAYWRIGHT_MODULE=<bundled> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "tests": 90,
+      "pass": 90,
+      "fail": 0,
+      "skipped": 0,
+      "revisionBasis": {
+        "effectiveSourceRevision": "6c99262a33a8c7befcbd0ee76729de2dff074f9e"
+      },
+      "operatorLocalEvidence": {
+        "name": "audience-resume-browser-corrected-20260924.log",
+        "sha256": "b51f78d60a52c4011ffa7eeaddb94def3b6c313ede9fd58892ecd812344d08bb"
+      }
+    },
+    {
+      "id": "workspace-regression",
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "tests": 44,
+      "pass": 44,
+      "fail": 0,
+      "skipped": 0,
+      "revisionBasis": {
+        "executionHead": "not recorded in retained command log; result retained without inferring execution HEAD"
+      },
+      "operatorLocalEvidence": {
+        "name": "audience-resume-workspace-20260924.log",
+        "sha256": "0576e2d3486f1002449f00ba8d1e479f38b333303383d6a0329d44b98014db9c"
+      }
+    },
+    {
+      "id": "diagnostic-report-unit",
+      "command": "node --test scripts/qualification-report.test.mjs",
+      "result": "pass",
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "skipped": 0,
+      "sourceRevision": "6c99262a33a8c7befcbd0ee76729de2dff074f9e",
+      "observation": "Direct local rerun while preparing this receipt; completed exit 0. No standalone log created."
+    },
+    {
+      "id": "typecheck",
+      "command": "pnpm typecheck",
+      "result": "pass",
+      "sourceRevision": "6c99262a33a8c7befcbd0ee76729de2dff074f9e",
+      "observation": "Direct local rerun while preparing this receipt; completed exit 0. No standalone log created."
+    },
+    {
+      "id": "lint",
+      "command": "pnpm lint",
+      "result": "pass",
+      "operatorLocalEvidence": {
+        "name": "resume-final-lint-20260924.log",
+        "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+      },
+      "revisionBasis": {
+        "executionHead": "not recorded in retained command log; completion reported by originating run"
+      }
+    },
+    {
+      "id": "offline-package-build",
+      "command": "pnpm build",
+      "result": "pass",
+      "sourceRevision": "f211a05e828e8f680fb98e7a2205e44fc52dec72",
+      "exitCode": 0,
+      "operatorLocalEvidence": {
+        "name": "build-result.json",
+        "sha256": "a4a5522fd94e11ca273a19ed28b0857c7de1ee246c4234b62a150afe0c267510"
+      }
+    }
+  ],
+  "retainedFailure": {
+    "browser": {
+      "result": "89/90",
+      "cause": "The test read the audio clock again after pose application. Crossing answer onset paired a correctly rendered rest pose with a later active answer sample. A controlled onset-crossing experiment reproduced this mismatch; the same experiment passed when the original frame sample was recorded. Temporary delay instrumentation was removed.",
+      "repairRevision": "6c99262a33a8c7befcbd0ee76729de2dff074f9e",
+      "productRendererChanged": false,
+      "originalLogPreserved": true
+    },
+    "selectedProvider": {
+      "slice": "LS-S073",
+      "sourceRevision": "88ba656d1fc7e15683dbcd1f404a693dea1854f5",
+      "result": "fail",
+      "failedCriterion": "LS-TEST-094",
+      "enabledExactLabelMentions": 1,
+      "enabledRequiredMentions": 2,
+      "disabledExactLabelMentions": 0,
+      "disabledTrials": 2,
+      "contextSelection": "Relevant context reached both enabled requests and was absent from both disabled requests. The second enabled reply used a differently formatted identifier, which does not satisfy the exact-label criterion.",
+      "criteriaChanged": false,
+      "passingSelectorWritten": false,
+      "publicDiagnosticReceipt": "LS-S073-diagnostics-20260924.json",
+      "operatorLocalEvidence": {
+        "name": "report.json",
+        "sha256": "f2330b6fd367951c6cb3356b469d9c98f4a4d87ef220a7c16a72f64576f552d3"
+      },
+      "provider": {
+        "implementation": "@lifestream/providers-sglang",
+        "revision": "319f741cce68d7914884900c138a1fbb70a42f30",
+        "fixture": false
+      }
+    }
+  },
+  "genericPackage": {
+    "status": "verified",
+    "sourceRevision": "f211a05e828e8f680fb98e7a2205e44fc52dec72",
+    "archive": {
+      "name": "lifestream-source.tar",
+      "sha256": "819e74841fb666a211979dc52238d6bb6094506a9baae57e672cf26d2edb509d",
+      "bytes": 20776960,
+      "members": 1363,
+      "files": 1256
+    },
+    "report": {
+      "name": "report.json",
+      "sha256": "ae52dcaa1e39d4b580ea144ec0a94d897130338dc7f90077ec9874d5d1e7f511"
+    },
+    "archiveAndAllReportArtifactDigestsReverified": true,
+    "privatePaths": 0,
+    "mediaPaths": 0,
+    "privateResourceHashesCompared": 4,
+    "privateResourceHashMatches": 0,
+    "offlineInstallationAndBuild": "pass",
+    "sourceHashMismatchesAfterBuild": 0,
+    "audienceUnitTests": {
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "skipped": 0
+    },
+    "audienceBrowserTests": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0
+    },
+    "browserSmokeChecks": {
+      "signedOutProtected": true,
+      "passwordSetup": true,
+      "initialAudienceProtected": true,
+      "allowedLabelRequiresEffectivePrivateScope": true,
+      "neutralPresentationApplied": true,
+      "privatePackageCount": 0,
+      "authenticatedFixtureConversation": true,
+      "mobileNoHorizontalOverflow": true,
+      "sharedAudienceClearsPrivateHistoryAndPresentation": true,
+      "serverRestrictsSharedContext": true,
+      "sharedDisclosureLabelWithheld": true,
+      "clearDeclarationProtectsUnknown": true,
+      "unknownAudienceDisclosureLabelWithheld": true,
+      "unknownSessionDisclosureWithholdsDespiteSoloAudience": true,
+      "captureAttempts": 0,
+      "pageErrors": [],
+      "externalRequests": []
+    },
+    "visualReview": "Four recorded desktop/mobile screenshots inspected by the originating agent; all stored screenshot digests reverified for this receipt.",
+    "limitations": [
+      "No selected-provider or physical microphone/speaker/perceptual test.",
+      "No real automatic audience source, live recorder, camera or away route.",
+      "No private asset copy or installed-private-avatar integration proof.",
+      "No signing, distribution, promotion, release or Human acceptance."
+    ]
+  },
+  "recordedCandidateStartup": {
+    "sourceRevision": "f211a05e828e8f680fb98e7a2205e44fc52dec72",
+    "observedAt": "2026-09-24T01:45:10.486773+00:00",
+    "status": "ready",
+    "observationOnly": "Recorded startup and asset receipts were inspected; no claim that a process is currently live is made by this receipt.",
+    "tableCountBefore": 99,
+    "tableCountAfter": 99,
+    "unchangedTableDigests": 98,
+    "onlyChangedTable": "initiative_clock",
+    "durableDataPreserved": true,
+    "runtimeClockAdvanced": true,
+    "migrationAndSavedMarkerAndSessionEnvironmentPreserved": true,
+    "servedAssetMatches": 6,
+    "servedAssetDigests": [
+      {
+        "asset": "conversation-room.js",
+        "sha256": "5986843ddfd5b9090767f436cacf39fbcd4d8fa2cd064f498668de2d32877037",
+        "matchesPinnedInstall": true
+      },
+      {
+        "asset": "automatic-memory.js",
+        "sha256": "ece063fab79abf69d70a835889670f1ca951d9c0e50b47bde982649cd45ef97a",
+        "matchesPinnedInstall": true
+      },
+      {
+        "asset": "experience.js",
+        "sha256": "6f6efbb2e0e2d4fc23f71f3b598d7b95865b1975fbe83d9d34b1ed81a0d1de35",
+        "matchesPinnedInstall": true
+      },
+      {
+        "asset": "presentation-speech.js",
+        "sha256": "da44e06c8f9609f346b5e171c2b074a9f4636fde839d653d25b111b721a1b699",
+        "matchesPinnedInstall": true
+      },
+      {
+        "asset": "acknowledgments.js",
+        "sha256": "c2331a1cbb2ad43ad6cd0b1890745dc76c86abbfcacfb8861520eb9746339173",
+        "matchesPinnedInstall": true
+      },
+      {
+        "asset": "styles.css",
+        "sha256": "0fa7c6200390ead12742b71c2dcd9b5c64d9c63463b3a6d71e54c2d2e80cfb04",
+        "matchesPinnedInstall": true
+      }
+    ],
+    "startupIntegrityChecks": {
+      "compositionDigest": "rejected before startup when altered",
+      "runtimeDigest": "rejected before startup when altered",
+      "nodeVersion": "rejected before startup when incompatible",
+      "selectedProviderHealth": "pass"
+    },
+    "operatorLocalEvidence": [
+      {
+        "name": "candidate-resume-launch-20260924.json",
+        "sha256": "e4d92c6e0ec672039cbbb64eeafbb0d44e6e375f476d6cc70c5865edcf08112c"
+      },
+      {
+        "name": "candidate-resume-startup-20260924.log",
+        "sha256": "e7738a39effe7faf3434c9124b4c7837340a5a6daf8bde38ff59e5c453220395"
+      },
+      {
+        "name": "resume-aligned-startup-20260924.json",
+        "sha256": "3c24a3a9607511c31dfde557148746cda88386785e4fd51879085255b3f77c3c"
+      },
+      {
+        "name": "resume-20260924-candidate-before.json",
+        "sha256": "41b015c32f7bcf218fd2a78dabe29211603ec13f6821ed92dfb5bd8463755f05"
+      },
+      {
+        "name": "resume-20260924-candidate-after.json",
+        "sha256": "2e06aaad694ed832f62b85defcfa3390caa40e6d34309d97853925629a2fd110"
+      },
+      {
+        "name": "candidate-resume-served-assets-20260924.json",
+        "sha256": "860420fb1943ea41c0f61f702baaebae6c21767fc3f1cd81f170f3f8f0fab784"
+      }
+    ]
+  },
+  "guide": {
+    "version": "2026-09-23.v28",
+    "coreRevision": "734a888587ae46b8ae502e34c1d90553dc4f9c70",
+    "guide": {
+      "name": "v0.1-acceptance-guide.html",
+      "sha256": "569b9068f4909e082e0b1938a9b0af9cfb6e4130fb536c96af9f9a69665f0628"
+    },
+    "inventory": {
+      "journeys": 18,
+      "actions": 175,
+      "savedFields": 219,
+      "links": 24,
+      "buttons": 24,
+      "navigationButtons": 20,
+      "targetViolations": 0,
+      "duplicateFields": [],
+      "fileImportControls": 0
+    },
+    "automatedChecks": [
+      "all navigation buttons focus their existing section",
+      "two application links reuse the same named page",
+      "v27 review migration resets only A08.4, A08.7 and A08-result; all notes and A16 progress preserved",
+      "v28 edits and reload retain progress",
+      "JSON and Markdown exports retain notes and migrated progress",
+      "pre-v27 A16 reset logic remains; A16/A08 notes preserved",
+      "390px mobile layout has no page overflow"
+    ],
+    "controlChecks": [
+      "Print button invokes print; print note projection appears and is removed after print",
+      "Incomplete signoff is rejected without recording acceptance",
+      "Invalid non-loopback candidate URL disables app links; valid URL restores them"
+    ],
+    "visualReview": "Recorded desktop top, desktop privacy journey and 390px mobile privacy journey passed after long-revision clipping was corrected; screenshot digests were reverified.",
+    "operatorLocalEvidence": [
+      {
+        "name": "qa-receipt.json",
+        "sha256": "bc766b311c1d34d831bafe09b3c3217a74c5a0eec990acc7371d87889add5875"
+      },
+      {
+        "name": "controls-qa-receipt.json",
+        "sha256": "3b2f38bfbd5558d75cdd7bf7d19af5213df35cac0b250c1731535b3f98dcd8f3"
+      },
+      {
+        "name": "visual-review.json",
+        "sha256": "ad000db21bde3750f80a6fff337536cdd1304423b8fcf908d002f0a41d927c1f"
+      }
+    ],
+    "namedTargetReuse": "Two local stub application links were observed reusing the same named tab; all 24 links have the required target.",
+    "progressMigration": "Only revised privacy actions A08.4, A08.7 and their journey result are reset; notes, A16 progress and earlier S083/S084 acceptance are preserved.",
+    "humanAcceptanceRecorded": false,
+    "exclusions": [
+      "Guide UI QA only; no candidate behavior or actual audience source acceptance.",
+      "Named target destinations are local HTTP stubs; no real candidate requests.",
+      "Existing guide has no file-import control. Stored v27/v26 review migration tested in an isolated browser context."
+    ]
+  },
+  "realVersusSimulated": {
+    "sourceAndBrowser": "Real local HTTP, SQLite, authenticated UI, WebAudio clock and Three renderer; synthetic accounts, audio, geometry and injected audience observations. Generic package inference and provider ports are fixtures.",
+    "candidateStartup": "Actual local candidate startup with healthy selected inference/STT/TTS providers was observed. This startup and custody check did not generate a new conversation or speech sample.",
+    "selectedProviderDiagnostic": "Real selected inference on synthetic account/content through local HTTP and SQLite; STT/TTS health only. World, capability and renderer provider ports remain fixtures.",
+    "guide": "Isolated browser guide controls with loopback destination stubs and a mocked system print dialog."
+  },
+  "boundaries": [
+    "Original acceptance criteria remain unchanged. Failed and passing predecessor evidence is retained.",
+    "No new Human, physical audio, perceptual synchronization, full performance, production or whole-slice acceptance is claimed.",
+    "No provider or model replacement, new live camera activation, training, external network exposure, publication, cloud upload or GitHub push.",
+    "Private identities, assets, mappings, deployment paths and raw evidence stay operator-local; this receipt contains generic summaries, artifact basenames and report hashes only.",
+    "Physical automatic audience-source integration and Human acceptance remain open. The selected-provider exact-label criterion remains failed."
+  ],
+  "disposition": "Continue dependency-ready work with the retained selected-provider and Human gates open; do not convert component verification or guide QA into release acceptance."
+}

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S073",
+  "recordedAt": "2026-09-24T01:36:55.424202+00:00",
+  "status": "implementationCompleteVerificationPending",
+  "sourceRevision": "88ba656d1fc7e15683dbcd1f404a693dea1854f5",
+  "claimClass": "selected-provider-diagnostic-with-original-criteria",
+  "harnessRepair": {
+    "revision": "88ba656d1fc7e15683dbcd1f404a693dea1854f5",
+    "tests": 5,
+    "passed": 5,
+    "changes": [
+      "Persistent exclusive operator-local reports retain observations before assertions and survive cleanup failures.",
+      "45-second client observation accommodates the unchanged 30-second product deadline.",
+      "Interruption fences require actual nonempty provider text; terminal errors cannot stand in for generated content.",
+      "Both callback conditions are observed before the unchanged 2-of-2 exact-label criterion is evaluated.",
+      "Saved transport errors and assertion diagnostics omit raw exception payloads."
+    ]
+  },
+  "selectedProvider": {
+    "implementation": "@lifestream/providers-sglang",
+    "revision": "319f741cce68d7914884900c138a1fbb70a42f30",
+    "fixture": false
+  },
+  "report": {
+    "operatorLocalName": "s073-diagnostics-88ba656-20260924/report.json",
+    "sha256": "f2330b6fd367951c6cb3356b469d9c98f4a4d87ef220a7c16a72f64576f552d3"
+  },
+  "checks": [
+    {
+      "id": "LS-TEST-092-baseline-cold-warm-no-recall",
+      "result": "pass"
+    },
+    {
+      "id": "LS-TEST-093-current-request-precedence",
+      "result": "pass"
+    },
+    {
+      "id": "LS-TEST-094-relevance-and-disabled-callbacks",
+      "result": "fail"
+    },
+    {
+      "id": "LS-TEST-096-correction-real-reply-and-pending-fence",
+      "result": "pass"
+    },
+    {
+      "id": "LS-TEST-100-audience-transition-and-safe-ordinary-fallback",
+      "result": "pass"
+    }
+  ],
+  "observations": {
+    "ordinaryTurns": 15,
+    "providerCalls": 17,
+    "enabledExactCallbackMentions": 1,
+    "enabledCallbackDenominator": 2,
+    "disabledExactCallbackMentions": 0,
+    "disabledCallbackDenominator": 2,
+    "preparedContextSelection": "Relevant label was included in both enabled requests and absent in both disabled requests; Python relevance isolation passed.",
+    "nonLiteralInfluence": "Second enabled reply contained the snake_case project identifier but omitted the required exact label. That observation is retained and does not satisfy the original exact-label assertion.",
+    "correctionFenceFirstTextMs": 185.7509999999893,
+    "audienceFenceFirstTextMs": 182.07833299999766,
+    "providerDeadlineFailures": 0
+  },
+  "disposition": "LS-TEST-094 remains failed; no successor passing qualification selector was written. This run localizes the gap to selected-model literal-format compliance, not missing compiled context or an observed timeout. Park unchanged repeated trials; retain original criteria and continue independent audience, packaging and runtime work.",
+  "realVersusSimulated": "Real selected ai5090 inference, synthetic account/content, real local HTTP/SQLite and held actual text chunks. STT/TTS health only; generic world/capability/renderer fixtures; no physical output or Human acceptance.",
+  "exclusions": [
+    "No provider/model/reasoning/sampling change.",
+    "No deterministic reliability, broad performance, Human or production acceptance."
+  ]
+}
