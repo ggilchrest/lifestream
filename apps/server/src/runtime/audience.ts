@@ -25,7 +25,8 @@ export class AudienceCoordinator{
   if(e.restricted){basis='restricted';}
   else if(m?.mode==='shared'){classification='shared';basis='manual';expiresAt=new Date(m.expires).toISOString();}
   else if(o&&o.occupants>1){classification='shared';basis='automatic';expiresAt=o.expiresAt;sourceId=o.sourceId;evidenceRef=o.evidenceRef;}
-  else if(o&&o.coverageKnown&&o.ownerPresent&&o.occupants===1){classification='solo-supported';basis='automatic';expiresAt=o.expiresAt;sourceId=o.sourceId;evidenceRef=o.evidenceRef;}
+  // Known automatic coverage can contradict a still-current manual solo declaration.
+  else if(o&&o.coverageKnown){if(o.ownerPresent&&o.occupants===1)classification='solo-supported';basis='automatic';expiresAt=o.expiresAt;sourceId=o.sourceId;evidenceRef=o.evidenceRef;}
   else if(m?.mode==='solo'){classification='solo-supported';basis='manual';expiresAt=new Date(m.expires).toISOString();}
   const key=JSON.stringify([classification,basis,sourceId]);const changed=key!==e.key;e.key=key;if(changed)e.revision++;
   e.value={classification,basis,revision:e.revision,sourceId,evidenceRef,expiresAt,automatic:basis==='automatic',privateAllowed:classification==='solo-supported'};
