@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {spawn} from 'node:child_process';
+import {createServer} from 'node:net';
+import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
+import {join,resolve} from 'node:path';
+import {tmpdir} from 'node:os';
+import {randomBytes} from 'node:crypto';
+import {pathToFileURL} from 'node:url';
+const root=resolve(import.meta.dirname,'../../..');
+test('actual candidate launcher loads disabled Telegram without network, exposes pairing setup and preserves it across restart',{timeout:20000},async t=>{
+ const dir=await mkdtemp(join(tmpdir(),'ls-telegram-launcher-'));t.after(()=>rm(dir,{recursive:true,force:true}));const state=join(dir,'state'),configuration=join(dir,'telegram.json'),attempts=join(dir,'network-attempts'),preload=join(dir,'network-guard.mjs'),secret='9999:'+'NEVER_PRINT_THIS_CANARY_'.repeat(2);
+ await writeFile(configuration,JSON.stringify({schemaVersion:'1.0.0',botId:'9999',enabled:false,tokenRef:{kind:'env',name:'LIFESTREAM_TELEGRAM_TEST_TOKEN'}}),{mode:0o600});
+ await writeFile(preload,`import {appendFileSync} from 'node:fs';const original=globalThis.fetch;globalThis.fetch=(url,...args)=>{const host=new URL(typeof url==='string'||url instanceof URL?url:url.url).hostname;if(!['127.0.0.1','localhost','[::1]'].includes(host)){appendFileSync(${JSON.stringify(attempts)},'blocked\\n');throw Error('External network forbidden in fixture');}return original(url,...args);};`);
+ const portServer=createServer();await new Promise<void>(r=>portServer.listen(0,'127.0.0.1',r));const port=(portServer.address() as {port:number}).port;await new Promise<void>(r=>portServer.close(()=>r()));const base='http://127.0.0.1:'+port;
+ let child:ReturnType<typeof spawn>|undefined,finished:Promise<void>|undefined,output='';
+ const stop=async()=>{if(child&&child.exitCode===null)child.kill('SIGTERM');await finished;child=undefined;};t.after(stop);
+ const launch=async()=>{output='';child=spawn(process.execPath,['--import',pathToFileURL(preload).href,'scripts/start-candidate.mjs','--directory',state,'--profile','test','--port',String(port),'--telegram',configuration],{cwd:root,env:{...process.env,LIFESTREAM_TELEGRAM_TEST_TOKEN:secret},stdio:['ignore','pipe','pipe']});child.stdout!.on('data',b=>output+=b);child.stderr!.on('data',b=>output+=b);finished=new Promise<void>((r,j)=>{child!.once('error',j);child!.once('exit',()=>r());});for(let i=0;i<150;i++){if(output.includes('"startupMode"'))break;if(child.exitCode!==null)throw Error('Candidate exited: '+output);await new Promise(r=>setTimeout(r,20));}assert.ok(output.includes('"startupMode"'),output);assert.doesNotMatch(output,/NEVER_PRINT_THIS_CANARY/);assert.match(output,/"enabled": false/);assert.match(output,/"alertsConfigured": false/);};
+ await launch();const installerToken=(await readFile(join(state,'installer-token.txt'),'utf8')).trim(),password=randomBytes(24).toString('hex'),headers:Record<string,string>={origin:base,'content-type':'application/json'};
+ const request=async(path:string,body?:unknown)=>{const response=await fetch(base+path,{method:body===undefined?'GET':'POST',headers,...(body===undefined?{}:{body:JSON.stringify(body)})}),data=await response.json();assert.ok(response.ok,JSON.stringify(data));if(response.headers.get('set-cookie'))headers.cookie=response.headers.get('set-cookie')!.split(';')[0]!;if(data.session)headers['x-lifestream-csrf']=data.session.csrfToken;return data;};
+ await request('/api/auth/v1/setup',{username:'synthetic-owner',password,installerToken});const path='/api/runtime/v1/my-channel-pairings';let view=await request(path);assert.equal(view.configuredBotId,'9999');assert.equal(view.transportReady,false);assert.equal(view.alertsAvailable,false);assert.deepEqual(view.subscriptions,[]);
+ await new Promise(r=>setTimeout(r,1100));await stop();await launch();await request('/api/auth/v1/sign-in',{username:'synthetic-owner',password});view=await request(path);assert.equal(view.configuredBotId,'9999');assert.equal(view.transportReady,false);await new Promise(r=>setTimeout(r,1100));await stop();await assert.rejects(readFile(attempts),{code:'ENOENT'});assert.doesNotMatch(output,new RegExp(installerToken));
+});

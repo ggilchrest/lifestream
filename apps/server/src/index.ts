@@ -1067,7 +1067,10 @@ export class LifestreamServer {
     const context=this.requestContext(request,true) as LocalContext|undefined;
     const current=()=>{if(!context?.owner||!this.runtimeAuthorized(request,assistantId)||!this.audiencePermits(context))throw new AuthenticationError(403,'channel_owner_scope_required');this.localAuth!.assertCurrent(context);};
     current();const repository=new ChannelSubscriptionRepository(this.database);
-    const inspect=()=>({schemaVersion:'1.0.0',subscriptions:repository.list(assistantId),accounts:this.localAuth!.accounts(context!).filter(a=>a.disabled===0).map(a=>({principalId:a.principalId,username:a.username})),transportReady:false,pairingAvailable:false,humanAcceptance:false});
+    const inspect=()=>({schemaVersion:'1.0.0',subscriptions:repository.list(assistantId).map(s=>{
+      let connection=null;if(s.channel==='telegram'&&s.status==='unpaired')try{const p=new TelegramPairingRepository(this.database).inspect(s.assistantId,s.id,s.principalId);connection={pairingState:p.state,conversationsEnabled:p.conversationsEnabled,alertsEnabled:p.alertsEnabled,transportReady:!!this.telegram?.ready&&p.botId===this.telegramBotId};}catch{/* An inactive recipient cannot expose or enable a connection. */}
+      return {...s,connection};
+    }),accounts:this.localAuth!.accounts(context!).filter(a=>a.disabled===0).map(a=>({principalId:a.principalId,username:a.username})),transportConfigured:!!this.telegramBotId,transportReady:!!this.telegram?.ready,pairingAvailable:true,alertCompositionConfigured:!!this.telegramAlerts,humanAcceptance:false});
     if(method==='GET')return json(response,200,inspect());
     this.localAuth.csrf(context!,String(request.headers['x-lifestream-csrf']??''));
     const body=asObject(await readBody(request));current();
