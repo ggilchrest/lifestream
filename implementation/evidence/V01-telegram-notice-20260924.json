@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "verified",
+  "claim": "Redacted Telegram notice capability adapter joined to urgent policy, authority and journals; no live Telegram or subscriber route configuration claim",
+  "sourceRevision": "3606da07afa3bcb276bee9273c117bd762eab6fb",
+  "tests": {
+    "source": 1197,
+    "focusedNotice": 5,
+    "skipped": 0,
+    "sourceDurationMs": 69288.8105
+  },
+  "build": "pass",
+  "lint": "pass",
+  "privateSpecificationValidation": "pass",
+  "network": "No Telegram network; synthetic conditions and delivery, real runtime policy/resolver/SQLite",
+  "retainedFailure": "Initial joined fixture included a forbidden label field; fixed fixture, preserved runtime contract. Failure logs retained operator-locally.",
+  "exclusions": [
+    "dynamic subscriber route composition",
+    "owner and recipient alert configuration controls",
+    "live Telegram credentials/activation",
+    "private channel memory/persona disclosure",
+    "Human acceptance",
+    "candidate installation",
+    "retained original release failures"
+  ],
+  "nextOperation": "Implement dynamic subscriber alert routes and separate owner/recipient controls without granting administration or evidence access",
+  "reports": {
+    "telegram-notice-source.log": "edc15fa32cee58c01186d12078e9efd01dac54776337941ebcf553510da4c97c",
+    "telegram-notice-focused.log": "43df03f1387f9493072156e6e1fe7181e2c79699f75a44e26eb66a62b6f9e805",
+    "telegram-notice-diagnostic.log": "75ecbe69e38cd5d7fca0ab19122992e38151ea59a5369dfb9d789c6da31cf98b",
+    "telegram-notice-focused-final.log": "7fd75efe6059792cd17b1b1bccbad78dd5a643ceb57bb8ce262dff2d4230ecc4",
+    "telegram-notice-build.log": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042",
+    "telegram-notice-lint.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "telegram-notice-spec.log": "ceb8054dcdf5585958fff02cf125bec35406367773278c21af905a57952f58e2"
+  }
+}
