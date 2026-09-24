@@ -62,7 +62,8 @@ export function loadMigrations(): Migration[] {
     [52, "urgent_attention", "0052_urgent_attention.sql"],
     [53, "urgent_away", "0053_urgent_away.sql"],
     [54, "channel_subscriptions", "0054_channel_subscriptions.sql"],
-    [55, "telegram_pairings", "0055_telegram_pairings.sql"]
+    [55, "telegram_pairings", "0055_telegram_pairings.sql"],
+    [56, "telegram_delivery", "0056_telegram_delivery.sql"]
   ].map(([id, name, file]) => {
     const sql = readFileSync(join(migrationDirectory, file as string), "utf8");
     return { id: id as number, name: name as string, sql, digest: createHash("sha256").update(sql).digest("hex") };

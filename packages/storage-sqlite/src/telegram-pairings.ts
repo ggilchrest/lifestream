@@ -4,7 +4,7 @@ import {ChannelSubscriptionRepository,type ChannelSubscription} from './channel-
 
 type PairingRow={subscription_id:string;subscription_revision:number;bot_id:string;state:'challenge'|'claimed'|'paired'|'revoked';revision:number;challenge_digest:string|null;issued_at:number;expires_at:number;chat_id:string|null;user_id:string|null;claim_id:string|null;conversations_enabled:number;alerts_enabled:number;updated_at:number};
 export type TelegramPairingView={subscriptionId:string;revision:number;state:PairingRow['state']|'unpaired'|'expired';botId:string|null;expiresAt:number|null;claimId:string|null;chatId:string|null;userId:string|null;conversationsEnabled:boolean;alertsEnabled:boolean};
-export type TelegramBinding={subscriptionId:string;assistantId:string;principalId:string;botId:string;chatId:string;userId:string;revision:number;subscriptionRevision:number;conversationsEnabled:boolean;alertsEnabled:boolean};
+export type TelegramBinding={subscriptionId:string;assistantId:string;principalId:string;botId:string;chatId:string;userId:string;revision:number;subscriptionRevision:number;activatedAt:number;conversationsEnabled:boolean;alertsEnabled:boolean};
 export class TelegramPairingError extends Error{constructor(){super('Telegram pairing unavailable or changed');}}
 const positiveId=(v:unknown):v is string=>typeof v==='string'&&/^[1-9][0-9]{0,15}$/.test(v)&&Number.isSafeInteger(Number(v));
 const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
@@ -58,7 +58,7 @@ export class TelegramPairingRepository {
   if(!positiveId(botId)||!positiveId(chatId)||userId!==chatId)return;
   const r=this.database.connection.prepare("SELECT * FROM telegram_pairings WHERE bot_id=? AND chat_id=? AND user_id=? AND state='paired'").get(botId,chatId,userId) as PairingRow|undefined;if(!r)return;
   const raw=this.database.connection.prepare('SELECT assistant_id FROM channel_subscriptions WHERE id=?').get(r.subscription_id) as {assistant_id:string}|undefined;if(!raw)return;
-  try{const s=this.subscription(raw.assistant_id,r.subscription_id);if(!this.valid(r,s))return;return {subscriptionId:s.id,assistantId:s.assistantId,principalId:s.principalId,botId,chatId,userId,revision:r.revision,subscriptionRevision:s.revision,conversationsEnabled:r.conversations_enabled===1&&s.requestedConversations,alertsEnabled:r.alerts_enabled===1&&s.requestedAlerts};}catch{return;}
+  try{const s=this.subscription(raw.assistant_id,r.subscription_id);if(!this.valid(r,s))return;return {subscriptionId:s.id,assistantId:s.assistantId,principalId:s.principalId,botId,chatId,userId,revision:r.revision,subscriptionRevision:s.revision,activatedAt:r.updated_at,conversationsEnabled:r.conversations_enabled===1&&s.requestedConversations,alertsEnabled:r.alerts_enabled===1&&s.requestedAlerts};}catch{return;}
  }
  current(binding:TelegramBinding){return JSON.stringify(this.binding(binding.botId,binding.chatId,binding.userId))===JSON.stringify(binding);}
 }

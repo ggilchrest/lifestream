@@ -6,12 +6,12 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {randomBytes,randomUUID} from 'node:crypto';
 import {request as httpRequest} from 'node:http';
-import {createLifestreamServer} from '../src/index.ts';
+import {createLifestreamServer,type TelegramHostOptions} from '../src/index.ts';
 import {loadProfile} from '../src/config/loader.ts';
 
-async function fixture(t:TestContext){
+async function fixture(t:TestContext,telegram?:TelegramHostOptions){
  const dir=await mkdtemp(join(tmpdir(),'ls-subscribers-')),password=randomBytes(24).toString('hex'),installerToken=randomBytes(32).toString('hex');t.after(()=>rm(dir,{recursive:true,force:true}));const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(dir,'data.sqlite'),artifactDirectory:join(dir,'artifacts')};
- let app=createLifestreamServer({config,localAuth:{stateDirectory:join(dir,'auth'),installerToken},audiencePrivacy:{sourceIds:[]}});await app.start();const port=app.address().port,base=`http://127.0.0.1:${port}`;t.after(()=>app.shutdown());
+ let app=createLifestreamServer({config,...(telegram?{telegram}:{}),localAuth:{stateDirectory:join(dir,'auth'),installerToken},audiencePrivacy:{sourceIds:[]}});await app.start();const port=app.address().port,base=`http://127.0.0.1:${port}`;t.after(()=>app.shutdown());
  const headers:Record<string,string>={origin:base,'content-type':'application/json'},request=(path:string,body?:unknown,override:Record<string,string>={})=>fetch(base+path,{method:body===undefined?'GET':'POST',headers:{...headers,...override},...(body===undefined?{}:{body:JSON.stringify(body)})});
  const setup=await request('/api/auth/v1/setup',{username:'owner',password,installerToken});assert.equal(setup.status,201);headers.cookie=setup.headers.get('set-cookie')!.split(';')[0]!;const {session}=await setup.json();headers['x-lifestream-csrf']=session.csrfToken;
  const read=async(path:string,body?:unknown,status=200)=>{const r=await request(path,body),d=await r.json();assert.equal(r.status,status,JSON.stringify(d));return d;};
@@ -19,7 +19,7 @@ async function fixture(t:TestContext){
  const assistant=await read('/api/admin/v1/assistants',{displayName:'Synthetic subscriber verification'},201),assistantId=assistant.assistantId;
  await read('/api/auth/v1/accounts',{username:'second',password},201);const {accounts}=await read('/api/auth/v1/accounts'),person=accounts.find((a:{username:string})=>a.username==='second').principalId;
  const path='/api/runtime/v1/channel-subscriptions?assistantId='+assistantId,draft=(principalId=person)=>({operation:'create',principalId,channel:'telegram',label:'Synthetic private chat',requestedConversations:true,requestedAlerts:true});
- return {base,headers,request,read,path,draft,person,session,password,databasePath:config.storage.databasePath,async restart(){await app.shutdown();app=createLifestreamServer({config,port,localAuth:{stateDirectory:join(dir,'auth'),installerToken},audiencePrivacy:{sourceIds:[]}});await app.start();await read('/api/runtime/v1/audience',{mode:'solo',seconds:300});}};
+ return {base,headers,request,read,path,draft,person,session,password,databasePath:config.storage.databasePath,async restart(){await app.shutdown();app=createLifestreamServer({config,port,...(telegram?{telegram}:{}),localAuth:{stateDirectory:join(dir,'auth'),installerToken},audiencePrivacy:{sourceIds:[]}});await app.start();await read('/api/runtime/v1/audience',{mode:'solo',seconds:300});}};
 }
 test('authenticated subscriber configuration supports several people/destinations and survives actual server restart',async t=>{
  const f=await fixture(t);let d=await f.read(f.path);assert.equal(d.accounts.length,2);assert.deepEqual(d.subscriptions,[]);assert.equal(d.transportReady,false);
@@ -47,4 +47,16 @@ test('members pair only their own assigned chats without administration or exter
  pairing=(await f.read(mine,{operation:'confirm',id:s.id,expectedRevision:pairing.revision,claimId:pairing.claimId})).subscriptions[0].pairing;assert.equal(pairing.state,'paired');assert.equal(pairing.conversationsEnabled,false);assert.equal(pairing.alertsEnabled,false);
  assert.equal(db.connection.prepare('SELECT count(*) AS n FROM local_assistant_permissions WHERE principal_id=?').get(f.person)!.n,0);
  await f.read(mine,{operation:'revoke',id:s.id,expectedRevision:pairing.revision});assert.equal((await f.read(mine)).subscriptions[0].pairing.state,'revoked');assert.equal(pairs.binding('9999','1234','1234'),undefined);
+});
+
+test('configured channel performs a two-way canonical inference turn for a non-admin subscriber with no owner context',async t=>{
+ let updates:Array<{updateId:number;messageId:number;chatId:string;userId:string;sentAt:number;text:string}>=[];const sent:Array<{chat:string;text:string}>=[];
+ const telegram:TelegramHostOptions={botId:'9999',token:()=>undefined,enabled:()=>true,transport:{verify:async()=>{},updates:async offset=>{const messages=updates;updates=[];return {messages,nextOffset:Math.max(offset,...messages.map(m=>m.updateId+1))};},send:async(chat,text)=>{sent.push({chat,text});return {status:'accepted',messageId:31};}}};
+ const f=await fixture(t,telegram),s=(await f.read(f.path,f.draft())).subscriptions[0],mine='/api/runtime/v1/my-channel-pairings';const login=await f.request('/api/auth/v1/sign-in',{username:'second',password:f.password}),member=await login.json();f.headers.cookie=login.headers.get('set-cookie')!.split(';')[0]!;f.headers['x-lifestream-csrf']=member.session.csrfToken;
+ const issued=await f.read(mine,{operation:'issue',id:s.id,expectedRevision:1,pairingRevision:0,botId:'9999'});updates=[{updateId:1,messageId:1,chatId:'1234',userId:'1234',sentAt:Date.now(),text:'/start '+issued.issued.challenge}];
+ let pairing;for(let i=0;i<80;i++){pairing=(await f.read(mine)).subscriptions[0].pairing;if(pairing.state==='claimed')break;await new Promise(r=>setTimeout(r,50));}assert.equal(pairing.state,'claimed');assert.deepEqual(sent,[]);
+ pairing=(await f.read(mine,{operation:'confirm',id:s.id,expectedRevision:pairing.revision,claimId:pairing.claimId})).subscriptions[0].pairing;const result=await f.read(mine,{operation:'enable',id:s.id,expectedRevision:pairing.revision,conversations:true});assert.equal(result.subscriptions[0].pairing.conversationsEnabled,true);assert.equal(result.alertsAvailable,false);
+ updates=[{updateId:2,messageId:2,chatId:'1234',userId:'1234',sentAt:Date.now(),text:'Synthetic channel greeting'}];for(let i=0;i<80&&!sent.length;i++)await new Promise(r=>setTimeout(r,50));assert.equal(sent.length,1);assert.equal(sent[0]!.chat,'1234');assert.match(sent[0]!.text,/Fixture response: Synthetic channel greeting/);
+ const db=new Database({path:f.databasePath});t.after(()=>db.close());assert.equal(db.connection.prepare('SELECT COUNT(*) AS n FROM local_assistant_permissions WHERE principal_id=?').get(f.person)!.n,0);assert.equal(db.connection.prepare("SELECT state FROM telegram_deliveries WHERE update_id=2").get()!.state,'accepted');assert.equal(db.connection.prepare('SELECT COUNT(*) AS n FROM telegram_conversation_sessions').get()!.n,1);
+ assert.equal((await f.request(f.path)).status,403);assert.equal((await f.request(mine,{operation:'enable',id:s.id,expectedRevision:result.subscriptions[0].pairing.revision,conversations:true,alerts:true})).status,422);
 });
