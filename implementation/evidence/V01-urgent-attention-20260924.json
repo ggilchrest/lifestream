@@ -1,0 +1,212 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-24T02:43:45.466676+00:00",
+  "status": "verified",
+  "claimClass": "bounded-urgent-condition-consumer-and-joined-software",
+  "claimScope": "Existing S023/S028/S068/S047 owner subchecks, exact final source/browser regression, generic package and local candidate custody; not whole-slice, actual-source, physical, production or Human acceptance.",
+  "revisions": {
+    "consumer": "f038bfd45144f837c57da9b316149dce2df13110",
+    "typedProducer": "5e07be606d487be1d1082d4182a544ec7a8b529f",
+    "selectedSpeechExecution": "d37addab02a70b9d6b4c206114c276e9bf1aa8b5 plus recorded hashed integration inputs"
+  },
+  "contract": {
+    "id": "pwce-urgent-conditions.bundle.v1",
+    "version": "1.0.0",
+    "sha256": "f472b81627d2b1dd5e56e50ce8a59ffdb68a04bb46a3a6e361378a88e91c00d5"
+  },
+  "behavior": [
+    "Explicit owner/Assistant/endpoint/source/class opt-in; deny default; separate quiet-hours bypass and snooze.",
+    "Bounded current-authority producer polling, nonemitting initial baseline, cursor/resync checks, durable per-episode deduplication.",
+    "One shared output owner fences ordinary playback; separate preparation, endpoint acceptance, actual playback settlement and explicit Human acknowledgment.",
+    "Audience, session, account, authority, expiry, resolution and disable cancel affected output; late completion cannot revive it.",
+    "Restore quarantines enablement and unfinished output; opaque evidence does not admit source prose/media into canonical memory.",
+    "Critical text delivery remains available despite unrelated inference degradation.",
+    "Every new browser control has a rendered outcome test; private loopback-only bounded CLI configuration rejects secret-bearing malformed inputs."
+  ],
+  "checks": {
+    "source": {
+      "pass": 1094,
+      "fail": 0,
+      "skip": 0,
+      "seconds": 67.288,
+      "evidence": {
+        "name": "source-final-f038bfd.log",
+        "sha256": "a10f4a5d672a287556d186efc644f3b386c5291c5a57aa216497a67cfd5bc7f4"
+      }
+    },
+    "renderedBrowser": {
+      "pass": 101,
+      "fail": 0,
+      "skip": 0,
+      "seconds": 58.865,
+      "evidence": {
+        "name": "browser-rendered-final-f038bfd.log",
+        "sha256": "85a6143b40d2fd09ce647acb41f7732a6965cf6d55b45328618d08619e5af99f"
+      }
+    },
+    "workspace": {
+      "pass": 44,
+      "fail": 0,
+      "skip": 0,
+      "evidence": {
+        "name": "workspace-final-f038bfd.log",
+        "sha256": "dc197d77a9f58118dfa61957a252be66dbe20bb3c04ac5d2de5d42e4fe3efafc"
+      }
+    },
+    "typecheck": {
+      "result": "pass",
+      "evidence": {
+        "name": "typecheck-final-f038bfd.log",
+        "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+      }
+    },
+    "lint": {
+      "result": "pass",
+      "evidence": {
+        "name": "lint-final-f038bfd.log",
+        "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+      }
+    },
+    "cli": {
+      "pass": 21,
+      "validStartups": 2,
+      "denials": 19,
+      "evidence": {
+        "name": "report.json",
+        "sha256": "3793474f5ea1f5bbc2ee81e112cb40683e6bcdfa457945950c19cf0c24c4350b"
+      }
+    },
+    "ui": {
+      "pass": 31,
+      "new": 11,
+      "adjacent": 20,
+      "viewports": [
+        1440,
+        390
+      ],
+      "visualReview": "desktop and mobile images inspected",
+      "controlCategories": 17,
+      "evidence": {
+        "name": "receipt.json",
+        "sha256": "b76d15f8c85776b373e75439b54941be716185b9a3090ab994527fb315057a3d"
+      }
+    }
+  },
+  "joinedFinalPair": {
+    "result": "pass",
+    "groups": 10,
+    "elapsedMs": 2638,
+    "consumerRevision": "f038bfd45144f837c57da9b316149dce2df13110",
+    "producerRevision": "5e07be606d487be1d1082d4182a544ec7a8b529f",
+    "inputManifestSha256": "aa8769c685192a2ebfacc69ccdba888e106058d5a1f68aeebff763898cf2f4bf",
+    "transport": "Actual authenticated public HTTP/SSE and durable SQLite; no fake fetch",
+    "checks": [
+      "nonemitting baseline",
+      "fresh critical warning",
+      "endpoint and Human acknowledgment kept separate",
+      "duplicates and revisions",
+      "resolution",
+      "reconnect without replay",
+      "authority/audience cancellation",
+      "disabled warnings retain independent incident recording/review"
+    ],
+    "synthetic": [
+      "condition observations",
+      "recorder",
+      "text endpoint",
+      "audience",
+      "invoked acknowledgment"
+    ],
+    "mediaDownloadCovered": false,
+    "permissionDenialCovered": false,
+    "evidence": {
+      "name": "report.json",
+      "sha256": "ec9eef82a3ad139ba0f71e83f36d7e17ac20a791c29c8194185dd7a8a933b5f2"
+    }
+  },
+  "selectedSpeech": {
+    "result": "pass",
+    "groups": 5,
+    "syntheses": 2,
+    "wireUrgency": "critical",
+    "runtimeRevision": "19b6bf7590025418821a86dcb817504e0ad7e5df",
+    "modelRevision": "32279effe8c19989596f05d353d1447f51d9e915",
+    "mappingRevision": "voxcpm2-map-2",
+    "firstSample": {
+      "frames": 132,
+      "samples": 506880,
+      "pcmSeconds": 10.56,
+      "conditionToFirstFrameMs": 1009,
+      "ttsRequestToFirstFrameMs": 747,
+      "pacedTerminalMs": 10006
+    },
+    "interruptSample": {
+      "samplesBeforeStop": 7680,
+      "stopMs": 3,
+      "noFurtherFrameObservationMs": 1000
+    },
+    "scope": "Two real selected TTS syntheses; synthetic endpoint playback settlement. No physical sound, inference generation or speech recognition. Timing is not a distribution or final-revision performance claim.",
+    "inputManifestSha256": "def1a02fad232d42f3cafec467d37b9ab05a7ed1be49e3eb980596de65161a2a",
+    "evidence": {
+      "name": "report.json",
+      "sha256": "aa61b326098d982e71d3cb34abe026270dd69b0b7cce3275ea00594ca6c9aa91"
+    }
+  },
+  "genericPackage": {
+    "sourceRevision": "f038bfd45144f837c57da9b316149dce2df13110",
+    "archiveSha256": "05da607ec284d72bf736773b633b0652e423d5760e405c0cceb38c62414ef2e1",
+    "archiveBytes": 21217280,
+    "members": 1384,
+    "sourceFiles": 1277,
+    "offlineInstall": "pass",
+    "build": "pass",
+    "installedTests": 78,
+    "skipped": 0,
+    "screenshotsInspected": 8,
+    "privatePathOrMediaMatches": 0,
+    "privateResourceHashMatches": 0,
+    "allSourceFilesUnchangedAfterVerification": true,
+    "evidence": {
+      "name": "report.json",
+      "sha256": "1b04dabf8bc987254c80a0b18a43685a52889abe9afe68ddcac24d97b3961481"
+    }
+  },
+  "candidatePromotion": {
+    "sourceRevision": "f038bfd45144f837c57da9b316149dce2df13110",
+    "runtimeManifestSha256": "e1407a31a34092170b67b77c0215a378ee29a5621c6011169b3e1f35d5c07612",
+    "migrationBefore": 51,
+    "migrationAfter": 52,
+    "tablesBefore": 99,
+    "tablesAfter": 102,
+    "unchangedPreexistingTableDigests": 97,
+    "expectedChangedExistingTables": [
+      "initiative_clock",
+      "schema_migrations"
+    ],
+    "newUrgentTablesEmpty": true,
+    "deploymentIdentityPreserved": true,
+    "localDatabaseBackupRetained": true,
+    "servedAssetMatches": 6,
+    "htmlTransform": "existing audience-protection attributes",
+    "sourcesConfigured": false,
+    "startupOnlyProviderReadiness": true,
+    "evidence": {
+      "name": "after.json",
+      "sha256": "f0a98f8c27ca747ee32fe227ffd6cbedd44d7133736b56d9733f1e558d6a1dd2"
+    }
+  },
+  "retainedAttempts": [
+    "Initial source regression found the old server migration-tail assertion stopped at51; updated to52 and reran full suite.",
+    "Default browser invocation skipped64 rendered cases; only the final explicit-Playwright101/101 run supports full rendered claim.",
+    "CLI malformed-URL secret output was corrected before final21/21 checks.",
+    "Initial promotion verifier expected the wrong readiness field and raw HTML; actual API schema and existing audience HTML transformation were inspected and verifier corrected before successful custody receipt."
+  ],
+  "boundaries": [
+    "No new enrolled source, camera, capture, away route, external exposure, provider/model selection, training, publication, push or cloud upload.",
+    "Private identities/assets/mappings/deployment material remain operator-local; this receipt contains only generic facts and evidence basenames/digests.",
+    "S073 exact-label and S086 causal failures, earlier onset targets, physical/perceptual checks and new Human acceptance remain open.",
+    "Original24journey S083/S084 Human acceptance and historical evidence are preserved.",
+    "Separate PWCE incident-access audit repair is not included in this producer pair claim."
+  ],
+  "disposition": "Continue dependency-ready incident-access auditing and guide/evidence reconciliation; real-source and Human acceptance remain separate."
+}
