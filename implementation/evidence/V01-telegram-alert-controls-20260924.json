@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "verified",
+  "recordedAt": "2026-09-24T13:17:00.206551+00:00",
+  "sourceRevision": "e1fde05b9ba883d77585699478d056471a6acbae",
+  "specificationRevision": "50d51c258871dceb895b241922e6198b63153a94",
+  "claim": "Dynamic Telegram subscriber alert routes, separate owner policy and recipient consent, scoped recovery and recipient-only acknowledgment",
+  "checks": {
+    "source": {
+      "passed": 1202,
+      "skipped": 0,
+      "durationMs": 93170.159167
+    },
+    "browser": {
+      "passed": 116,
+      "skipped": 0,
+      "durationMs": 77399.268834
+    },
+    "focused": 33,
+    "focusedBrowser": 7,
+    "workspace": 44,
+    "build": "pass",
+    "lint": "pass",
+    "privateSpecifications": "pass",
+    "visualReview": [
+      "alert-consent-desktop.png",
+      "alert-consent-mobile.png"
+    ]
+  },
+  "selectedInference": {
+    "sourceRevision": "e1fde05b9ba883d77585699478d056471a6acbae",
+    "provider": "existing selected ai5090 Qwen",
+    "observedResponseMs": [
+      1418,
+      766
+    ],
+    "twoWayRecall": "pass",
+    "performanceQualification": false,
+    "telegramTransport": "synthetic no-network"
+  },
+  "real": [
+    "local account authentication and owner permissions",
+    "subscriber pairing/consent and canonical sessions",
+    "urgent condition policy, authority resolver and durable journals",
+    "recipient acknowledgment and restart semantics",
+    "selected inference in separate two-turn proof"
+  ],
+  "simulated": [
+    "condition observations and synthetic identities",
+    "Telegram ingress and delivery",
+    "authority composition fixtures"
+  ],
+  "regressions": {
+    "repaired": "Starting a worker recovers only its destination, preserving another active worker attempt",
+    "initialFailures": [
+      "HTTP fixture attempted enablement before transport verification; test now waits for actual readiness",
+      "Focused UI assertion ran before the final request completed; test now waits for response rendering",
+      "Existing acknowledgment journey overlapped removal, configuration and reload; test now waits for committed mutation events and restored settings"
+    ],
+    "originalLogsRetained": true
+  },
+  "exclusions": [
+    "live Telegram enrollment or delivery",
+    "candidate installation",
+    "private channel persona/memory disclosure",
+    "mobile push endpoints",
+    "physical sensors",
+    "Human acceptance",
+    "original S073/S086/onset release failures"
+  ],
+  "nextOperation": "Complete deployable disabled-by-default channel configuration and audience-safe memory integration, then isolated packaging/recovery, candidate promotion and Human journeys",
+  "reports": {
+    "telegram-alerts-focused-initial.log": "2f73380465c97006495ef3a04bf38a7dd058b4063f09a6b9f2c90bacdc045aa3",
+    "telegram-alerts-focused.log": "67d3e8bd365c8a17fb0cde6aff04f33f29bba3c890ac4454e7916be21679a138",
+    "telegram-alerts-browser.log": "646f6b69da13621106bdbbee7f5fc5afbab3663343f5bdf8e4cd52639b106da0",
+    "telegram-alerts-browser-final.log": "e759f26e1208129bc5f87dd727f4b1f7c81e5c70da7118f35580a4ddc9830b2e",
+    "telegram-alerts-source.log": "d243c5b1cf1060722f8115ef6c808bdd111599944411f9816d1ef7ee37078719",
+    "telegram-alerts-browser-suite.log": "59e6acfe550746a7b17b6de03668de835d079f90e2523a428add8de917a40814",
+    "telegram-alerts-browser-suite-final.log": "670d3328b88c4bae2ded55d7e1a0b9fd72a70524358dc01a057c0d3f506a6164",
+    "telegram-alerts-ack-diagnostic.log": "6c26a837c09fae56aba30161dc91acf16f67acf9679e7576cf0723668add2328",
+    "telegram-alerts-build-final.log": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042",
+    "telegram-alerts-lint-final.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "telegram-alerts-spec-final.log": "4d7fd2e2878f5002cebb1ece6e09945b2a31792d5002c06e6078fa81174c420b",
+    "telegram-alerts-workspace.log": "8cb4334756d06b044fcd8abe8c53537ac342f2bbffb81753fb6cf0f4f7bf0e87",
+    "telegram-alerts-selected.log": "9a766cf5864f0d4c0cf391c0695e2b2c03592004ea67e1902e369f2fb86873b8"
+  }
+}
