@@ -33,3 +33,10 @@ test('replacement host fences previous generation and private pairing claims sen
  }finally{await replacement.close();}
  }finally{await runtime.close();f.db.close();}
 });
+
+test('prepared privacy context withdrawal aborts a pending send and cannot commit dialogue or replay after restart',async()=>{
+ const f=fixture();let valid=true,started=()=>{},signal!:AbortSignal,accepted=0;const entered=new Promise<void>(r=>started=r);
+ const api={...f.api,send:async(_chat:string,_text:string,s:AbortSignal)=>{signal=s;started();await new Promise<void>(resolve=>s.addEventListener('abort',()=>resolve(),{once:true}));return {status:'unknown' as const};}},conversation:TelegramConversation=async()=>({text:'Synthetic restricted reply',current:()=>valid,accepted:()=>{accepted++;}}),runtime=new TelegramChannelRuntime({...f.options(),api,conversation});
+ try{f.setBatch([f.message(1)]);await runtime.pollOnce();await entered;valid=false;runtime.reconcile();assert.equal(signal.aborted,true);await runtime.drain();assert.equal(accepted,0);assert.equal(f.states()[0]!.state,'unknown');await runtime.close();const restarted=new TelegramChannelRuntime(f.options());try{f.setBatch([f.message(1)]);await restarted.pollOnce();await restarted.drain();assert.deepEqual(f.sends,[]);assert.equal(f.states()[0]!.state,'unknown');}finally{await restarted.close();}}
+ finally{await runtime.close();f.db.close();}
+});

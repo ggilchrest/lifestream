@@ -4,7 +4,7 @@ import type {TelegramBotApi,TelegramMessage} from './telegram-api.ts';
 
 export type TelegramReply={text:string;current:()=>boolean;accepted?:()=>void};
 export type TelegramConversation=(binding:TelegramBinding,message:TelegramMessage,signal:AbortSignal)=>Promise<TelegramReply|undefined>;
-type Job={binding:TelegramBinding;message:TelegramMessage;controller:AbortController;work:Promise<void>};
+type Job={replyCurrent?:()=>boolean;binding:TelegramBinding;message:TelegramMessage;controller:AbortController;work:Promise<void>;controlReply?:TelegramReply};
 type State='reserved'|'sending'|'accepted'|'rejected'|'unknown'|'cancelled'|'ignored'|'claimed';
 /** Private chat ingress and delivery accounting. The composition must supply a
  * principal-scoped conversation port; no administrative browser session is minted.
@@ -15,6 +15,7 @@ export class TelegramChannelRuntime {
  private readonly botId:string;
  private readonly enabled:()=>boolean;
  private readonly conversation:TelegramConversation;
+ private readonly control:((binding:TelegramBinding,message:TelegramMessage)=>TelegramReply|undefined)|undefined;
  private readonly pairs:TelegramPairingRepository;
  private readonly jobs=new Map<string,Job>();
  private readonly controller=new AbortController();
@@ -22,13 +23,14 @@ export class TelegramChannelRuntime {
  private verified=false;private polling=false;private closed=false;
  private timer:ReturnType<typeof setInterval>|undefined;
  private guard:ReturnType<typeof setInterval>|undefined;
- constructor(options:{database:Database;api:Pick<TelegramBotApi,'verify'|'updates'|'send'>;botId:string;enabled:()=>boolean;conversation:TelegramConversation}){
+ constructor(options:{database:Database;api:Pick<TelegramBotApi,'verify'|'updates'|'send'>;botId:string;enabled:()=>boolean;conversation:TelegramConversation;control?:(binding:TelegramBinding,message:TelegramMessage)=>TelegramReply|undefined}){
   if(!/^[1-9][0-9]{0,15}$/.test(options.botId)||!Number.isSafeInteger(Number(options.botId)))throw Error('Telegram runtime configuration invalid');
-  this.db=options.database;this.api=options.api;this.botId=options.botId;this.enabled=options.enabled;this.conversation=options.conversation;this.pairs=new TelegramPairingRepository(this.db);
+  this.db=options.database;this.api=options.api;this.botId=options.botId;this.enabled=options.enabled;this.conversation=options.conversation;this.control=options.control;this.pairs=new TelegramPairingRepository(this.db);
   this.db.connection.prepare('INSERT INTO telegram_poll_state VALUES(?,0,?) ON CONFLICT(bot_id) DO UPDATE SET generation=excluded.generation').run(this.botId,this.generation);
   this.db.connection.prepare("UPDATE telegram_deliveries SET state=CASE WHEN state='sending' THEN 'unknown' ELSE 'cancelled' END,updated_at=? WHERE bot_id=? AND state IN ('reserved','sending')").run(Date.now(),this.botId);
  }
  private available(){try{return !this.closed&&!this.controller.signal.aborted&&this.enabled()&&this.db.connection.prepare('SELECT generation FROM telegram_poll_state WHERE bot_id=?').get(this.botId)?.generation===this.generation;}catch{return false;}}
+ get busy(){return this.jobs.size>0;}
  get ready(){return this.verified&&this.available();}
  private current(binding:TelegramBinding){return this.available()&&binding.conversationsEnabled&&this.pairs.current(binding);}
  private settle(message:TelegramMessage,state:State,receipt:number|null=null){this.db.connection.prepare('UPDATE telegram_deliveries SET state=?,receipt_id=?,updated_at=? WHERE bot_id=? AND update_id=?').run(state,receipt,Date.now(),this.botId,message.updateId);}
@@ -41,16 +43,20 @@ export class TelegramChannelRuntime {
   if(start){this.settle(message,this.pairs.claim(this.botId,start[1]!,{...message,privateChat:true,isBot:false})?'claimed':'ignored');return;}
   if(!binding){this.settle(message,'ignored');return;}
   if(message.text.trim()==='/stop'){this.jobs.get(binding.subscriptionId)?.controller.abort();this.settle(message,'cancelled');return;}
-  if(message.sentAt<binding.activatedAt-5000||!this.current(binding)||this.jobs.has(binding.subscriptionId)||this.jobs.size>=4){this.settle(message,'ignored');return;}
-  const controller=new AbortController(),job:Job={binding,message,controller,work:Promise.resolve()};this.jobs.set(binding.subscriptionId,job);
+  if(message.sentAt<binding.activatedAt-5000||!this.current(binding)){this.settle(message,'ignored');return;}
+  let controlReply:TelegramReply|undefined;try{controlReply=this.control?.(binding,message);}catch{this.settle(message,'cancelled');return;}
+  if(controlReply)this.jobs.get(binding.subscriptionId)?.controller.abort();
+  if(!controlReply&&this.jobs.has(binding.subscriptionId)||!this.jobs.has(binding.subscriptionId)&&this.jobs.size>=4){this.settle(message,'ignored');return;}
+  const controller=new AbortController(),job:Job={binding,message,controller,work:Promise.resolve(),...(controlReply?{controlReply}:{})};this.jobs.set(binding.subscriptionId,job);
   job.work=this.respond(job).finally(()=>{if(this.jobs.get(binding.subscriptionId)===job)this.jobs.delete(binding.subscriptionId);if(!this.jobs.size&&this.guard){clearInterval(this.guard);this.guard=undefined;}});
   if(!this.guard){this.guard=setInterval(()=>this.reconcile(),100);this.guard.unref();}
  }
  private async respond(job:Job){
   const signal=AbortSignal.any([job.controller.signal,this.controller.signal,AbortSignal.timeout(30_000)]);let attempted=false;let cancel=()=>{};
   try{
-   const reply=await Promise.race([this.conversation(job.binding,job.message,signal),new Promise<never>((_,reject)=>{cancel=()=>reject(Error('cancelled'));signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel();})]);
+   const reply=await Promise.race([job.controlReply?Promise.resolve(job.controlReply):this.conversation(job.binding,job.message,signal),new Promise<never>((_,reject)=>{cancel=()=>reject(Error('cancelled'));signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel();})]);
    if(signal.aborted||!this.current(job.binding)||!reply||!reply.current()||typeof reply.text!=='string'||!reply.text.trim()||reply.text.length>4096){this.settle(job.message,'cancelled');return;}
+   job.replyCurrent=reply.current;
    this.settle(job.message,'sending');attempted=true;
    const sent=await this.api.send(job.binding.chatId,reply.text,signal);
    if(sent.status==='accepted'){this.settle(job.message,'accepted',sent.messageId);if(!signal.aborted&&this.current(job.binding)&&reply.current())try{reply.accepted?.();}catch{/* Delivery fact remains accepted; memory bookkeeping cannot resend. */}}
@@ -58,7 +64,7 @@ export class TelegramChannelRuntime {
   }catch{this.settle(job.message,attempted?'unknown':'cancelled');}
   finally{signal.removeEventListener('abort',cancel);job.controller.abort();}
  }
- reconcile(){for(const job of this.jobs.values())if(!this.current(job.binding))job.controller.abort();}
+ reconcile(){for(const job of this.jobs.values()){let current=false;try{current=this.current(job.binding)&&(!job.replyCurrent||job.replyCurrent());}catch{/* A failed prepared-context check is unavailable. */}if(!current)job.controller.abort();}}
  async pollOnce():Promise<boolean>{
   if(this.polling||!this.available())return false;this.polling=true;
   try{

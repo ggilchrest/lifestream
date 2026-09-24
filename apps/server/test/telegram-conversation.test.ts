@@ -17,3 +17,15 @@ test('canonical channel inference preserves prepared principal context and only 
 test('context revocation, missing terminal, overflow and tool requests never emit a chat reply',async()=>{
  for(const mode of ['revoke','unterminated','overflow','tool']){let current=true;const prepared=input();prepared.isCurrent=()=>current;const provider:InferenceProvider={tokenize:async()=>({count:1,identity:'synthetic'}),async *generate(){if(mode==='revoke')current=false;if(mode==='tool'){yield {kind:'capabilityRequest' as const,capability:{name:'synthetic',input:{}}};return;}yield {kind:'text' as const,text:mode==='overflow'?'x'.repeat(4097):'synthetic'};if(mode!=='unterminated')yield {kind:'done' as const};}};const converse=telegramConversation({provider:()=>provider,prepare:()=>({sessionId:'synthetic',input:prepared})});assert.equal(await converse(binding,message,new AbortController().signal),undefined,mode);}
 });
+
+test('privacy or relationship invalidation aborts a suspended provider even before its next chunk',async()=>{
+ let allowed=true,observedAbort=false,started=()=>{};const entered=new Promise<void>(r=>started=r),prepared=input();prepared.isCurrent=()=>allowed;
+ const provider:InferenceProvider={tokenize:async()=>({count:1,identity:'synthetic'}),async *generate(_request,call){started();await new Promise<void>(resolve=>call.signal.addEventListener('abort',()=>{observedAbort=true;resolve();},{once:true}));yield {kind:'text',text:'Restricted late reply'};yield {kind:'done'};}};
+ const converse=telegramConversation({provider:()=>provider,prepare:()=>({sessionId:'synthetic',input:prepared})}),controller=new AbortController();const reply=converse(binding,message,controller.signal);await entered;allowed=false;
+ let timer:ReturnType<typeof setTimeout>|undefined;try{assert.equal(await Promise.race([reply,new Promise<string>(resolve=>{timer=setTimeout(()=>resolve('cancellation timed out'),1000);})]),undefined);assert.equal(observedAbort,true);}finally{if(timer)clearTimeout(timer);controller.abort();}
+});
+test('a throwing context guard also cancels generation without exposing a late answer',async()=>{
+ let invalid=false,started=()=>{};const entered=new Promise<void>(r=>started=r),prepared=input();prepared.isCurrent=()=>{if(invalid)throw Error('Synthetic changed boundary');return true;};
+ const provider:InferenceProvider={tokenize:async()=>({count:1,identity:'synthetic'}),async *generate(_request,call){started();await new Promise<void>(resolve=>call.signal.addEventListener('abort',()=>resolve(),{once:true}));yield {kind:'done'};}};
+ const converse=telegramConversation({provider:()=>provider,prepare:()=>({sessionId:'synthetic',input:prepared})}),controller=new AbortController(),reply=converse(binding,message,controller.signal);await entered;invalid=true;const timeout=setTimeout(()=>controller.abort(),1000);try{assert.equal(await reply,undefined);assert.equal(controller.signal.aborted,false);}finally{clearTimeout(timeout);controller.abort();}
+});
