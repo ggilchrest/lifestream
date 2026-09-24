@@ -1,3 +1,4 @@
+import {TelegramPairingRepository,TelegramPairingError} from '@lifestream/storage-sqlite';
 import {AuthenticatedSessionHandoff,HandoffError,type HandoffScope} from './runtime/session-handoff.ts';
 import {experienceRetentionSuspended} from './admin/experience-recovery.ts';
 import {retainedExperienceSources} from './runtime/experience-inputs.ts';
@@ -771,6 +772,7 @@ export class LifestreamServer {
       if (method !== "GET" && result.status < 400) { this.localAuth.touch(context); if (!extensionReadOnly(path, body) && !("replayed" in result && result.replayed === true)) this.invalidateRuntimeInputs(); }
       return json(response, result.status, result.body);
     }
+    if(path==='/api/runtime/v1/my-channel-pairings')return this.handleMyChannelPairings(request,response);
     if(path==='/api/runtime/v1/channel-subscriptions')return this.handleChannelSubscriptions(request,response);
     if(path==='/api/runtime/v1/urgent/away')return this.handleUrgentAway(request,response);
     if(path==='/api/runtime/v1/urgent'||path==='/api/runtime/v1/urgent/events')return this.handleUrgentAttention(request,response);
@@ -993,6 +995,25 @@ export class LifestreamServer {
       }};
     });
     this.urgentAway=new UrgentAwayRuntime(this.database,{runtime:this.urgentAttention.runtime,source:options.urgentAway.source??new PwceConditionClient(options.urgentConditions),destinations:this.awayDestinations,...(options.urgentAway.pollIntervalMs===undefined?{}:{pollIntervalMs:options.urgentAway.pollIntervalMs})});
+  }
+  private async handleMyChannelPairings(request:IncomingMessage,response:ServerResponse):Promise<void>{
+    if(!this.localAuth||this.restoreQuarantine)throw new AuthenticationError(503,'channel_pairing_unavailable');
+    if(request.url?.includes('?')||!['GET','POST'].includes(request.method??'GET'))throw new AuthenticationError(422,'channel_pairing_request_invalid');
+    const context=this.requestContext(request,true) as LocalContext|undefined;if(!context)throw new AuthenticationError();
+    const subscriptions=new ChannelSubscriptionRepository(this.database),pairings=new TelegramPairingRepository(this.database);
+    const inspect=()=>({schemaVersion:'1.0.0',transportReady:false,subscriptions:subscriptions.listForPrincipal(context.principalId).map(s=>({...s,pairing:s.channel==='telegram'&&s.status==='unpaired'?pairings.inspect(s.assistantId,s.id,context.principalId):null}))});
+    if(request.method==='GET')return json(response,200,inspect());
+    this.localAuth.csrf(context,String(request.headers['x-lifestream-csrf']??''));const body=asObject(await readBody(request));this.localAuth.assertCurrent(context);
+    if(!body||typeof body.operation!=='string'||typeof body.id!=='string'||!Number.isSafeInteger(body.expectedRevision))throw new AuthenticationError(422,'channel_pairing_request_invalid');
+    const expected=body.operation==='issue'?['operation','id','expectedRevision','botId','pairingRevision']:body.operation==='confirm'?['operation','id','expectedRevision','claimId']:body.operation==='revoke'?['operation','id','expectedRevision']:[];
+    if(Object.keys(body).sort().join(',')!==expected.sort().join(','))throw new AuthenticationError(422,'channel_pairing_request_invalid');
+    const subscription=subscriptions.listForPrincipal(context.principalId).find(s=>s.id===body.id);if(!subscription)throw new AuthenticationError(404,'channel_pairing_not_found');
+    try{let issued;
+      if(body.operation==='issue'){if(typeof body.botId!=='string')throw new TelegramPairingError();issued=pairings.issue(subscription.assistantId,subscription.id,context.principalId,Number(body.expectedRevision),body.botId,body.pairingRevision as number);}
+      else if(body.operation==='confirm'){if(typeof body.claimId!=='string')throw new TelegramPairingError();pairings.confirm(subscription.assistantId,subscription.id,context.principalId,Number(body.expectedRevision),body.claimId);}
+      else pairings.revoke(subscription.assistantId,subscription.id,context.principalId,Number(body.expectedRevision));
+      this.localAuth.touch(context);return json(response,200,{...inspect(),...(issued?{issued}:{} )});
+    }catch(error){if(error instanceof TelegramPairingError)throw new AuthenticationError(409,'channel_pairing_changed');throw error;}
   }
   private async handleChannelSubscriptions(request:IncomingMessage,response:ServerResponse):Promise<void>{
     if(!this.localAuth||this.restoreQuarantine)throw new AuthenticationError(503,'channel_configuration_unavailable');

@@ -31,3 +31,4 @@ export * from './experience.ts';
 export * from './urgent-attention.ts';
 export * from './urgent-away.ts';
 export * from './channel-subscriptions.ts';
+export * from './telegram-pairings.ts';

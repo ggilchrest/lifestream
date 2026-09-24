@@ -21,6 +21,7 @@ export class ChannelSubscriptionRepository {
  private readonly database:Database;
  constructor(database:Database){this.database=database;}
  list(assistantId:string):ChannelSubscription[]{return (this.database.connection.prepare('SELECT * FROM channel_subscriptions WHERE assistant_id=? ORDER BY created_at,id').all(assistantId) as Row[]).map(map);}
+ listForPrincipal(principalId:string):ChannelSubscription[]{this.account(principalId);return (this.database.connection.prepare('SELECT * FROM channel_subscriptions WHERE principal_id=? ORDER BY created_at,id').all(principalId) as Row[]).map(map);}
  private account(id:string){if(!this.database.connection.prepare('SELECT 1 FROM local_accounts WHERE principal_id=? AND disabled=0').get(id))throw new ChannelSubscriptionError('account_unavailable');}
  apply(assistantId:string,actorId:string,input:Record<string,unknown>):ChannelSubscription{
   if(!uuid(assistantId)||!uuid(actorId)||typeof input.operation!=='string')throw new ChannelSubscriptionError('invalid');
