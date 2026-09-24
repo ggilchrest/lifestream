@@ -91,6 +91,8 @@ export class InitiativeHost {
  invalidate(reason='configurationChanged'):void {
   for(const job of this.jobs.values())if(this.closed||this.foreground>0||!job.current()){job.reason=this.foreground>0?'userTurn':reason;job.controller.abort();}
  }
+ quietForSession(sessionId:string):boolean{return [...this.modes.values()].some(mode=>mode.sessionId===sessionId&&mode.kind==='quiet'&&(mode.expiresAt===null||mode.expiresAt>this.now()));}
+ interruptSession(sessionId:string,reason='cancelled'):void{for(const job of this.jobs.values())if(job.sessionId===sessionId){job.reason=reason;job.controller.abort();}}
  busy(sessionId:string):boolean{return [...this.jobs.values()].some(job=>job.sessionId===sessionId);}
  foregroundStarted(engagement?:{scope:InitiativeScope;sessionId:string}):()=>void {
   this.foreground++;this.invalidate('userTurn');

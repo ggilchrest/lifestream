@@ -36,6 +36,24 @@ test('output-only admission refuses missing policy, closed transport, invalid wa
  }
 });
 
+test('critical host interruption waits for endpoint stop before reusing the existing audio owner',async()=>{
+ const f=fixture({autoSettle:false});let ready!:()=>void;const started=new Promise<void>(resolve=>{ready=resolve;});
+ f.input.synthesized=async signal=>{ready();await new Promise<void>((_,reject)=>signal.addEventListener('abort',()=>reject(Error('Stopped')),{once:true}));};const ordinary=f.session.speakOutputOnly(f.input),rejected=assert.rejects(ordinary);await started;
+ const signal=new AbortController().signal;let settled=false;const interrupted=f.session.interruptOutput(signal,()=>true).then(()=>{settled=true;});
+ await rejected;await new Promise(resolve=>setImmediate(resolve));assert.equal(settled,false);assert.ok(f.service.currentLease(f.sessionId));
+ assert.ok(f.events.some(e=>e.type==='stopPlayback'&&e.reason==='critical_condition'));
+ await f.session.message(JSON.stringify({type:'playbackSettled',interactionTraceId:f.input.interactionId,outcome:'stopped',receivedSamples:10}));await interrupted;
+ assert.equal(f.session.outputAvailable,true);assert.equal(f.service.currentLease(f.sessionId),undefined);
+ const next={...f.input,interactionId:randomUUID(),urgency:'critical' as const,synthesized:async()=>{await f.session.message(JSON.stringify({type:'playbackSettled',interactionTraceId:next.interactionId,outcome:'completed',receivedSamples:10}));}};
+ await f.session.speakOutputOnly(next);assert.equal(f.requests[1].delivery.urgency,'critical');assert.equal(f.counts().sttCalls,0);assert.equal(f.counts().inferenceCalls,0);
+});
+
+test('critical interruption requires current host authority before stopping existing audio',async()=>{
+ const f=fixture();await assert.rejects(f.session.interruptOutput(new AbortController().signal,()=>false));
+ const aborted=new AbortController();aborted.abort();await assert.rejects(f.session.interruptOutput(aborted.signal,()=>true));
+ assert.equal(f.events.length,0);assert.equal(f.requests.length,0);
+});
+
 test('malformed, incomplete and failed synthesis cannot claim complete output',async()=>{
  for(const mode of ['noAudio','badCounts','badFrame','noTerminal','postTerminal']){
   const f=fixture();f.tts.synthesize=async function*(request:any){

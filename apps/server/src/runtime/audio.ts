@@ -27,7 +27,7 @@ export const SPEECH_SEGMENT_DEADLINE_MS = 45_000;
 export type AudioOutputLease={current:()=>boolean;release:()=>void};
 export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; resolveVoice?:(request:{assistantId?:string})=>VoiceBinding; acknowledgment?:(request:AudioRequest)=>{revision:number;binding:string;clipIds:string[]}|null; inputCurrent?: (request: AudioRequest) => boolean; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
 export type SpeechExpressionObservation={speechStage:"providerReported"|"audioEmitted"|"synthesized";mappingRevision:string;disposition:"notObserved"|"fullyApplied"|"partiallyApplied"|"providerFailure"|"cancelled"|"timedOut";degradedDimensions:string[];appliedDelivery:{deliveryMode?:string;pace?:number;energy?:number}};
-export type OutputOnlySpeech={assistantId?:string;expressionObserved?:(observation:SpeechExpressionObservation)=>void;text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
+export type OutputOnlySpeech={assistantId?:string;urgency?:'low'|'critical';expressionObserved?:(observation:SpeechExpressionObservation)=>void;text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
 
 async function waitForPreviousOutput(previous:Promise<void>,signal:AbortSignal):Promise<void>{
   let timer:ReturnType<typeof setTimeout>|undefined,abort=()=>{};
@@ -63,6 +63,17 @@ export class AudioSession {
   belongsTo(sessionId:string):boolean{return this.sessionId===sessionId;}
   get outputConnected():boolean{return !this.closed&&this.socket.readyState===OPEN;}
   get outputAvailable():boolean{return this.outputConnected&&!this.controller&&!this.starting&&!this.pendingTurns;}
+  /** A host-admitted critical condition may stop output, but never bypass its
+   * existing playback settlement or acquire a second owner. Input stays closed
+   * on an output-only connection; pending microphone turns are not promoted. */
+  async interruptOutput(signal:AbortSignal,current:()=>boolean):Promise<void>{
+    if(signal.aborted||!current()||!this.outputConnected)throw new Error('Critical output scope is unavailable');
+    const previous=this.outputSettlement;
+    this.playback?.interrupt();this.controller?.abort();
+    if(this.interactionTraceId)send(this.socket,{type:'stopPlayback',interactionTraceId:this.interactionTraceId,reason:'critical_condition'});
+    if(previous)await waitForPreviousOutput(previous,signal);
+    if(signal.aborted||!current()||!this.outputAvailable)throw new Error('Previous output has not settled for critical delivery');
+  }
   /** Uses the established output transport without a start/input request, STT,
    * fabricated transcript or second inference call. Host policy owns admission. */
   async speakOutputOnly(input:OutputOnlySpeech):Promise<{samples:number;frames:number;mappingRevision:string;warmth:"unsupported";degradedDimensions:string[]}>{
@@ -81,7 +92,7 @@ export class AudioSession {
     const observeExpression=()=>input.expressionObserved?.({speechStage:expressionStage,mappingRevision,disposition,degradedDimensions:[...degraded],appliedDelivery:{...appliedDelivery}});
 
     const current=()=>!this.closed&&this.socket.readyState===OPEN&&!signal.aborted&&Date.now()<deadline&&input.current()===true&&lease.current()&&(voice?.current()??true);
-    const request={contractVersion:"2.0.0" as const,text:input.text,segmentId,format:{encoding:"pcm_s16le" as const,sampleRateHz:48000 as const,channels:1 as const},voiceProfile:voice?.voiceProfile??{voiceRef:"fixture-voice-design",revision:1},decision:{decisionId,revision:1},delivery:{interactionId:input.interactionId,segmentId,decisionId,decisionRevision:1,deliveryMode:settings.deliveryMode,urgency:"low",pace:settings.pace,energy:settings.energy},deadlineAt:new Date(deadline).toISOString()};
+    const request={contractVersion:"2.0.0" as const,text:input.text,segmentId,format:{encoding:"pcm_s16le" as const,sampleRateHz:48000 as const,channels:1 as const},voiceProfile:voice?.voiceProfile??{voiceRef:"fixture-voice-design",revision:1},decision:{decisionId,revision:1},delivery:{interactionId:input.interactionId,segmentId,decisionId,decisionRevision:1,deliveryMode:settings.deliveryMode,urgency:input.urgency??"low",pace:settings.pace,energy:settings.energy},deadlineAt:new Date(deadline).toISOString()};
     try{
       if(!current())throw new Error("Output-only ownership changed");
       let tts=this.deps.tts.withoutAdmissionRetries();if(settings.description||settings.seed!==0||settings.reference)tts=tts.withVoiceDesign({description:settings.description,seed:settings.seed,reference:settings.reference});
