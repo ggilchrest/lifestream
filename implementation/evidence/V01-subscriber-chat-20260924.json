@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "verified",
+  "claim": "Subscriber configuration, subscriber-owned Telegram pairing and principal-scoped two-way text software; no live Telegram or release acceptance",
+  "sourceRevision": "19157b4fc053bacee4c4d459096811e2344afe9b",
+  "componentRevisions": [
+    "110c2ab",
+    "874ec72",
+    "19157b4"
+  ],
+  "migrations": [
+    54,
+    55,
+    56
+  ],
+  "verification": {
+    "sourceBaseline": {
+      "passed": 1192,
+      "skipped": 0,
+      "scope": "Integrated baseline before final stale-message timestamp guard; final focused checks below include that guard"
+    },
+    "browserBaseline": {
+      "passed": 114,
+      "skipped": 0,
+      "scope": "Pairing baseline before conversation enable/disable controls"
+    },
+    "finalFocused": {
+      "passed": 19,
+      "skipped": 0
+    },
+    "finalRendered": {
+      "passed": 6,
+      "skipped": 0,
+      "additionalVisualControlsPassed": 2
+    },
+    "workspaceBaseline": {
+      "passed": 44,
+      "skipped": 0
+    },
+    "build": true,
+    "lint": true,
+    "privateSpecificationValidation": true,
+    "desktopAndMobileVisuallyReviewed": true
+  },
+  "selectedProvider": {
+    "status": "verified",
+    "identity": {
+      "model": "qwen3.8-27b-local",
+      "revision": "319f741cce68d7914884900c138a1fbb70a42f30"
+    },
+    "turns": [
+      {
+        "elapsedMs": 1412,
+        "replySha256": "c2e3ac47f4a325469c1a2d5f117e463ec943c721986d5d9f09ac4540b7d80526",
+        "expectedObserved": true
+      },
+      {
+        "elapsedMs": 780,
+        "replySha256": "0ac9687c705b70761d3343abd89dfd92914a9fecb2d6a7734d16bb705216d578",
+        "expectedObserved": true
+      }
+    ],
+    "receiptSha256": "8a23fb0cdb72df6778b035e44d84090984c0b0be3b4046a9249e7e1cfea49ca7",
+    "transport": "synthetic no-network Telegram adapter",
+    "account": "synthetic non-admin member",
+    "claims": [
+      "selected-provider reply without fixture echo",
+      "second-turn dialogue continuity",
+      "no account administration grant",
+      "no external Telegram delivery"
+    ]
+  },
+  "exclusions": [
+    "new installed candidate",
+    "live Telegram credentials or API connection",
+    "governed Telegram alerts",
+    "private channel persona and stored-memory disclosure",
+    "channel automatic-memory policy",
+    "iOS/Android notification endpoints",
+    "new physical capture",
+    "new Human acceptance",
+    "retained S073/S086 and latency failures"
+  ],
+  "nextOperation": "Continue governed alert transport and channel disclosure/automatic-memory integration; preserve source/human/credential gates",
+  "reports": {
+    "telegram-integrated-source.log": "d2c9478da06944eea17f8712cec0497d38673c634fc2a537ddfbd6a535b0ea17",
+    "telegram-browser.log": "0511f37502dfe901760db3caf84efe6d82c079206806bc52b2ea9676fed0645c",
+    "telegram-final-focused.log": "087f689d4d6060562295dfe3f249965a3acc199c14305763e5aa427c55d97dfa",
+    "telegram-integrated-browser-focused.log": "d93089e4e0d929d39fdb8ec8bdeba4bcaa70d32b375f20316c29d58f002185fa",
+    "telegram-enable-ui.log": "35de7fd33d93dc42f0e3427d2059c5e8425b8225671349c72a57c2e707571bd3",
+    "telegram-final-build.log": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446",
+    "telegram-final-lint.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "telegram-final-spec.log": "fb8766249286f1a4a4ff697369c544b297061b2979b96f6fa9c65f55ab2c3156",
+    "telegram-selected-committed.log": "9656995423cb930611fccc7947a2370bb1f330fc331be0cb96fe4361e207af8b"
+  }
+}
