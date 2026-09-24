@@ -15,7 +15,7 @@ import {acknowledgmentVoice,proposeAcknowledgments,synthesizeAcknowledgment} fro
 import {UrgentAttentionHost,type UrgentAttentionOptions} from './runtime/urgent-attention-host.ts';
 import type {UrgentAttentionFacts} from './runtime/urgent-attention.ts';
 import {UrgentAwayRuntime,type UrgentAwayDestination} from './runtime/urgent-away.ts';
-import {ChannelSubscriptionRepository,ChannelSubscriptionError} from '@lifestream/storage-sqlite';
+import {ChannelPersonalContextRepository,ChannelSubscriptionRepository,ChannelSubscriptionError} from '@lifestream/storage-sqlite';
 import {PwceIncidentClient,PwceConditionClient,type PwceIncidentOptions} from '@lifestream/providers-pwce';
 import { AudienceCoordinator, type AudienceOptions, type AudienceIdentity } from './runtime/audience.ts';
 import { AutomaticMemory } from "./runtime/automatic-memory.ts";
@@ -784,6 +784,7 @@ export class LifestreamServer {
       if (method !== "GET" && result.status < 400) { this.localAuth.touch(context); if (!extensionReadOnly(path, body) && !("replayed" in result && result.replayed === true)) this.invalidateRuntimeInputs(); }
       return json(response, result.status, result.body);
     }
+    if(path==='/api/runtime/v1/my-personal-context')return this.handleMyPersonalContext(request,response);
     if(path==='/api/runtime/v1/my-channel-pairings')return this.handleMyChannelPairings(request,response);
     if(path==='/api/runtime/v1/telegram-notice-authority')return this.handleTelegramNoticeAuthority(request,response);
     if(path==='/api/runtime/v1/channel-subscriptions')return this.handleChannelSubscriptions(request,response);
@@ -1057,9 +1058,9 @@ export class LifestreamServer {
     const {sessionId}=this.telegramSession(binding),endpoint=readSessionEndpoint(this.database,sessionId),session=this.database.connection.prepare("SELECT conversation_id FROM sessions WHERE id=? AND status='active'").get(sessionId) as {conversation_id:string}|undefined;if(!session||!endpoint.endpoint)return;
     const identity={principalId:binding.principalId,sessionId,endpointId:endpoint.endpoint.endpointId},audience=()=>this.telegramAudience!.snapshot(identity),relationshipId=this.admin.conversationRelationshipId(binding.assistantId,undefined,binding.principalId);
     // A paired destination never acquires another subject's data or administrative
-    // privileges. Reuse only independently administered, principal-owned context.
-    const permitted=()=>!!relationshipId&&!!this.database.connection.prepare('SELECT 1 FROM local_assistant_permissions WHERE principal_id=? AND assistant_id=? AND administer=1').get(binding.principalId,binding.assistantId);
-    const boundary=()=>JSON.stringify([readSessionEndpoint(this.database,sessionId),audience().revision,permitted(),this.admin.contextBoundary(binding.assistantId,relationshipId??undefined,binding.principalId),this.admin.getActivePersona(binding.assistantId,binding.principalId,true)?.sourceRevision]);
+    // privileges. Reuse only independently permitted, principal-owned context.
+    const permitted=()=>!!relationshipId&&this.personalContextAllowed(binding.assistantId,binding.principalId);
+    const boundary=()=>JSON.stringify([readSessionEndpoint(this.database,sessionId),audience().revision,permitted(),new ChannelPersonalContextRepository(this.database).inspect(binding.assistantId,binding.principalId).revision,this.admin.contextBoundary(binding.assistantId,relationshipId??undefined,binding.principalId),this.admin.getActivePersona(binding.assistantId,binding.principalId,true)?.sourceRevision]);
     const privateAllowed=endpoint.endpoint.privacyClass==='personal'&&audience().privateAllowed&&permitted();
     const experienceScope:ExperienceScope|undefined=privateAllowed&&relationshipId?{assistantId:binding.assistantId,principalId:binding.principalId,relationshipId}:undefined;
     const learning=experienceScope?this.experience.select(experienceScope,userInput,true):undefined;
@@ -1072,14 +1073,70 @@ export class LifestreamServer {
     return {sessionId,input:{assistantId:binding.assistantId,endpointId:endpoint.endpoint.endpointId,conversation,isCurrent:current,
       ...(learning?.item?{experienceSelection:{id:learning.item.id,topic:learning.item.topic,statement:learning.item.statement,nextStep:learning.item.nextStep}}:{}),
       ...(experienceScope?{onCompleted:(interactionId:string)=>{if(!current())return;this.experience.completed(experienceScope,interactionId);if(learning?.item&&learning.id)this.experience.observe(experienceScope,learning.id);}}:{}),
-      onInferenceRequest:request=>{if(!privateAllowed||!current())return;const memory=request.sections.find(section=>section.kind==='preparedMemory')?.content??'';this.admin.noteDiscoveryRequest(binding.assistantId,relationshipId??undefined,binding.principalId,sessionId,(preparedRelationshipContext?.sourceRevisions??[]).filter(id=>id.startsWith('discovery-candidate:')&&memory.includes(id)));},...(profileProjection?{profileProjection}:{}),...(preparedRelationshipContext?{preparedRelationshipContext}:{}),runtimeSelfContext:{sourceRevision:'telegram:'+binding.revision+':'+audience().revision,asOf:new Date().toISOString(),runtimeStatus:this.state,inputModalities:{text:'active',microphone:'unavailable',visual:'notConfigured'},outputModalities:{text:'active',speechGeneration:'unavailable',speechDelivery:'unavailable',presentation:'notConfigured'},endpointScope:'sessionEndpoint',audienceScope:privateAllowed?'authenticatedSession':'unknown',permissionState:'authenticatedSession',limitations:[audience().privateAllowed?'Remote audience is manually declared, expires after five minutes and is not sensor verified.':'Verified chat identity does not establish physical audience; personal context is withheld.',...(privateAllowed?[]:['An independently administered relationship belonging to this subscriber is required for personal context.']),'This text channel grants no administration, evidence access or tool execution.']}}};
+      onInferenceRequest:request=>{if(!privateAllowed||!current())return;const memory=request.sections.find(section=>section.kind==='preparedMemory')?.content??'';this.admin.noteDiscoveryRequest(binding.assistantId,relationshipId??undefined,binding.principalId,sessionId,(preparedRelationshipContext?.sourceRevisions??[]).filter(id=>id.startsWith('discovery-candidate:')&&memory.includes(id)));},...(profileProjection?{profileProjection}:{}),...(preparedRelationshipContext?{preparedRelationshipContext}:{}),runtimeSelfContext:{sourceRevision:'telegram:'+binding.revision+':'+audience().revision,asOf:new Date().toISOString(),runtimeStatus:this.state,inputModalities:{text:'active',microphone:'unavailable',visual:'notConfigured'},outputModalities:{text:'active',speechGeneration:'unavailable',speechDelivery:'unavailable',presentation:'notConfigured'},endpointScope:'sessionEndpoint',audienceScope:privateAllowed?'authenticatedSession':'unknown',permissionState:'authenticatedSession',limitations:[audience().privateAllowed?'Remote audience is manually declared, expires after five minutes and is not sensor verified.':'Verified chat identity does not establish physical audience; personal context is withheld.',...(privateAllowed?[]:['An independently permitted relationship belonging to this subscriber is required for personal context.']),'This text channel grants no administration, evidence access or tool execution.']}}};
+  }
+  private personalContextAllowed(assistantId:string,principalId:string):boolean{
+    if(!this.database.connection.prepare('SELECT 1 FROM local_accounts WHERE principal_id=? AND disabled=0').get(principalId))return false;
+    return !!this.database.connection.prepare('SELECT 1 FROM local_assistant_permissions WHERE principal_id=? AND assistant_id=? AND administer=1').get(principalId,assistantId)||new ChannelPersonalContextRepository(this.database).allowed(assistantId,principalId);
+  }
+  private stopSubscriberCollection(assistantId:string,principalId:string):void{
+    const relationshipId=this.admin.conversationRelationshipId(assistantId,undefined,principalId);if(!relationshipId)return;
+    const scope={assistantId,principalId,relationshipId},policy=this.automaticMemory.policy(scope);if(policy.enabled)this.automaticMemory.configure(scope,false,policy.revision);
+    this.automaticMemory.preempt();this.experiential?.foreground();
+  }
+  private async handleMyPersonalContext(request:IncomingMessage,response:ServerResponse):Promise<void>{
+    if(!this.localAuth||this.restoreQuarantine)throw new AuthenticationError(503,'personal_context_unavailable');
+    const method=request.method??'GET',params=new URL(request.url!,'http://localhost').searchParams,assistantId=params.get('assistantId');
+    if(!assistantId||!validUuid(assistantId)||params.getAll('assistantId').length!==1||[...params.keys()].some(k=>k!=='assistantId')||!['GET','POST'].includes(method))throw new AuthenticationError(422,'personal_context_invalid');
+    const context=this.requestContext(request,true) as LocalContext|undefined;if(!context)throw new AuthenticationError();
+    const current=()=>{this.localAuth!.assertCurrent(context);if(!this.audiencePermits(context)||readSessionEndpoint(this.database,context.sessionId).endpoint?.privacyClass!=='personal')throw new AuthenticationError(403,'personal_context_private_audience_required');};current();
+    const repository=new ChannelPersonalContextRepository(this.database),principalId=context.principalId;
+    if(this.localAuth.canAdminister(context,assistantId))throw new AuthenticationError(409,'use_existing_owned_relationship_memory_controls');
+    if(!new ChannelSubscriptionRepository(this.database).listForPrincipal(principalId).some(s=>s.assistantId===assistantId))throw new AuthenticationError(404,'personal_context_unavailable');
+    let relationshipId=this.admin.conversationRelationshipId(assistantId,undefined,principalId);
+    const ownMemories=()=>this.memories.list(assistantId).filter(m=>m.provenance.actor===principalId&&m.provenance.relationshipId===relationshipId);
+    const privacy=()=>relationshipId?this.admin.handle('GET',`/api/admin/v1/assistants/${assistantId}/relationships/${relationshipId}/privacy`,principalId,{},true).body:undefined;
+    const inspect=()=>({assistantId,permission:repository.inspect(assistantId,principalId),eligible:repository.eligible(assistantId,principalId),relationshipId:relationshipId??null,relationshipRevision:privacy()?.relationshipRevision??null,privacyReceipts:((privacy()?.receipts??[]) as {operationId:string;action:string;status:string;retryRequired:boolean}[]).map(r=>({operationId:r.operationId,action:r.action,status:r.status,retryRequired:r.retryRequired})),memory:relationshipId?this.automaticMemory.inspect({assistantId,principalId,relationshipId}):null,memories:relationshipId?ownMemories():[],grantsAdministration:false});
+    if(method==='GET')return json(response,200,inspect());
+    this.localAuth.csrf(context,String(request.headers['x-lifestream-csrf']??''));const body=asObject(await readBody(request));current();
+    if(!body)throw new AuthenticationError(422,'personal_context_invalid');
+    const exact=(keys:string[])=>{if(Object.keys(body).sort().join(',')!==keys.sort().join(','))throw new AuthenticationError(422,'personal_context_invalid');};
+    if(body.operation==='consent'){
+      exact(['operation','enabled','expectedRevision']);if(typeof body.enabled!=='boolean'||!Number.isSafeInteger(body.expectedRevision))throw new AuthenticationError(422,'personal_context_invalid');
+      const permission=repository.inspect(assistantId,principalId);if(permission.revision!==body.expectedRevision||body.enabled&&(!permission.ownerAllowed||!repository.eligible(assistantId,principalId)))throw new AuthenticationError(409,'personal_context_permission_changed');
+      if(body.enabled&&!relationshipId){const r=this.admin.handle('POST',`/api/admin/v1/assistants/${assistantId}/relationships`,principalId,{},true);if(r.status>=400)return json(response,r.status,r.body);relationshipId=this.admin.conversationRelationshipId(assistantId,undefined,principalId);}
+      repository.consent(assistantId,principalId,Number(body.expectedRevision),body.enabled);this.stopSubscriberCollection(assistantId,principalId);
+    }else{
+      if(!relationshipId)throw new AuthenticationError(409,'personal_context_relationship_required');
+      const scope={assistantId,principalId,relationshipId};
+      if(body.operation==='collection'){
+        exact(['operation','enabled','expectedRevision']);if(typeof body.enabled!=='boolean'||!Number.isSafeInteger(body.expectedRevision))throw new AuthenticationError(422,'personal_context_invalid');
+        if(body.enabled&&!repository.allowed(assistantId,principalId))throw new AuthenticationError(403,'personal_context_consent_required');
+        try{this.automaticMemory.configure(scope,body.enabled,Number(body.expectedRevision));}catch{throw new AuthenticationError(409,'personal_context_policy_changed');}
+      }else if(body.operation==='correct'||body.operation==='applyCorrection'){
+        exact(body.operation==='correct'?['operation','id','content','expectedRevision']:['operation','id','applyRevision','expectedRevision']);
+        const memory=ownMemories().find(m=>m.id===body.id);if(!memory)throw new AuthenticationError(404,'personal_context_memory_unavailable');
+        if(memory.lifecycle.revision!==body.expectedRevision)throw new AuthenticationError(409,'personal_context_memory_changed');
+        const result=this.admin.handle('POST',`/api/admin/v1/assistants/${assistantId}/memories/${memory.id}/correction`,principalId,body.operation==='correct'?{content:body.content}:{applyRevision:body.applyRevision,expectedRevision:body.expectedRevision},true);
+        this.invalidateRuntimeInputs();return json(response,result.status,result.body);
+      }else if(body.operation==='retryPrivacy'){
+        exact(['operation','operationId']);if(typeof body.operationId!=='string'||!validUuid(body.operationId))throw new AuthenticationError(422,'personal_context_invalid');
+        const result=this.admin.handle('POST',`/api/admin/v1/assistants/${assistantId}/relationships/${relationshipId}/privacy/retry`,principalId,{operationId:body.operationId},true);this.invalidateRuntimeInputs();return json(response,result.status,result.body);
+      }else if(body.operation==='forgetPreview'||body.operation==='forget'){
+        exact(['operation','id','expectedRevision','relationshipRevision','idempotencyKey']);
+        const memory=ownMemories().find(m=>m.id===body.id);if(!memory)throw new AuthenticationError(404,'personal_context_memory_unavailable');
+        const raw={action:'forget-derived-information',expectedRevision:body.relationshipRevision,idempotencyKey:body.idempotencyKey,targets:[{kind:'memory',id:memory.id,revision:body.expectedRevision}]};
+        const result=this.admin.handle('POST',`/api/admin/v1/assistants/${assistantId}/relationships/${relationshipId}/privacy${body.operation==='forgetPreview'?'/preview':''}`,principalId,raw,true);this.invalidateRuntimeInputs();return json(response,result.status,result.body);
+      }else throw new AuthenticationError(422,'personal_context_invalid');
+    }
+    this.invalidateRuntimeInputs();this.telegram?.reconcile();this.localAuth.touch(context);current();return json(response,200,inspect());
   }
   private async handleMyChannelPairings(request:IncomingMessage,response:ServerResponse):Promise<void>{
     if(!this.localAuth||this.restoreQuarantine)throw new AuthenticationError(503,'channel_pairing_unavailable');
     if(request.url?.includes('?')||!['GET','POST'].includes(request.method??'GET'))throw new AuthenticationError(422,'channel_pairing_request_invalid');
     const context=this.requestContext(request,true) as LocalContext|undefined;if(!context)throw new AuthenticationError();
     const subscriptions=new ChannelSubscriptionRepository(this.database),pairings=new TelegramPairingRepository(this.database);
-    const inspect=()=>({schemaVersion:'1.0.0',transportReady:!!this.telegram?.ready,conversationsAvailable:!!this.telegram?.ready,configuredBotId:this.telegramBotId??null,alertsAvailable:!!this.telegramAlerts?.available(),subscriptions:subscriptions.listForPrincipal(context.principalId).map(s=>({...s,alert:s.channel==='telegram'?this.telegramAlerts?.recipient(context.principalId,s.id)??null:null,pairing:s.channel==='telegram'&&s.status==='unpaired'?pairings.inspect(s.assistantId,s.id,context.principalId):null}))});
+    const inspect=()=>({personalContextAvailable:true,schemaVersion:'1.0.0',transportReady:!!this.telegram?.ready,conversationsAvailable:!!this.telegram?.ready,configuredBotId:this.telegramBotId??null,alertsAvailable:!!this.telegramAlerts?.available(),subscriptions:subscriptions.listForPrincipal(context.principalId).map(s=>({...s,independentlyAdministered:this.localAuth!.canAdminister(context,s.assistantId),alert:s.channel==='telegram'?this.telegramAlerts?.recipient(context.principalId,s.id)??null:null,pairing:s.channel==='telegram'&&s.status==='unpaired'?pairings.inspect(s.assistantId,s.id,context.principalId):null}))});
     if(request.method==='GET')return json(response,200,inspect());
     this.localAuth.csrf(context,String(request.headers['x-lifestream-csrf']??''));const body=asObject(await readBody(request));this.localAuth.assertCurrent(context);
     if(!body||typeof body.operation!=='string'||typeof body.id!=='string'||!Number.isSafeInteger(body.expectedRevision))throw new AuthenticationError(422,'channel_pairing_request_invalid');
@@ -1128,13 +1185,18 @@ export class LifestreamServer {
     current();const repository=new ChannelSubscriptionRepository(this.database);
     const inspect=()=>({schemaVersion:'1.0.0',subscriptions:repository.list(assistantId).map(s=>{
       let connection=null;if(s.channel==='telegram'&&s.status==='unpaired')try{const p=new TelegramPairingRepository(this.database).inspect(s.assistantId,s.id,s.principalId);connection={pairingState:p.state,conversationsEnabled:p.conversationsEnabled,alertsEnabled:p.alertsEnabled,transportReady:!!this.telegram?.ready&&p.botId===this.telegramBotId};}catch{/* An inactive recipient cannot expose or enable a connection. */}
-      return {...s,connection};
+      return {...s,connection,independentlyAdministered:!!this.database.connection.prepare('SELECT 1 FROM local_assistant_permissions WHERE principal_id=? AND assistant_id=? AND administer=1').get(s.principalId,assistantId),personalContext:new ChannelPersonalContextRepository(this.database).inspect(assistantId,s.principalId)};
     }),accounts:this.localAuth!.accounts(context!).filter(a=>a.disabled===0).map(a=>({principalId:a.principalId,username:a.username})),transportConfigured:!!this.telegramBotId,transportReady:!!this.telegram?.ready,pairingAvailable:true,alertCompositionConfigured:!!this.telegramAlerts,alertGrantConfigurationAvailable:!!this.telegramNoticeAuthority,humanAcceptance:false});
     if(method==='GET')return json(response,200,inspect());
     this.localAuth.csrf(context!,String(request.headers['x-lifestream-csrf']??''));
     const body=asObject(await readBody(request));current();
     if(!body)throw new AuthenticationError(422,'channel_request_invalid');
-    try{repository.apply(assistantId,context!.principalId,body);this.telegram?.reconcile();this.telegramAlerts?.reconcile();this.localAuth.touch(context!);return json(response,200,inspect());}
+    try{if(body.operation==='personalContext'){
+      if(Object.keys(body).sort().join(',')!=='allowed,expectedRevision,operation,principalId'||typeof body.principalId!=='string'||typeof body.allowed!=='boolean'||!Number.isSafeInteger(body.expectedRevision)||!repository.list(assistantId).some(s=>s.principalId===body.principalId))throw new AuthenticationError(422,'personal_context_invalid');
+      if(this.database.connection.prepare('SELECT 1 FROM local_assistant_permissions WHERE principal_id=? AND assistant_id=? AND administer=1').get(body.principalId,assistantId))throw new AuthenticationError(409,'use_existing_owned_relationship_memory_controls');
+      try{new ChannelPersonalContextRepository(this.database).owner(assistantId,body.principalId,Number(body.expectedRevision),body.allowed);}catch{throw new AuthenticationError(409,'personal_context_permission_changed');}
+      this.stopSubscriberCollection(assistantId,body.principalId);this.invalidateRuntimeInputs();
+    }else repository.apply(assistantId,context!.principalId,body);this.telegram?.reconcile();this.telegramAlerts?.reconcile();this.localAuth.touch(context!);return json(response,200,inspect());}
     catch(error){if(error instanceof ChannelSubscriptionError)throw new AuthenticationError(error.code==='invalid'?422:error.code==='not_found'?404:409,'channel_'+error.code);throw error;}
   }
   private async handleUrgentAway(request:IncomingMessage,response:ServerResponse):Promise<void>{
@@ -1333,15 +1395,15 @@ export class LifestreamServer {
   }
   private experiencePolicy(scope:ExperienceScope,forRetention=false):ExperiencePolicy{
     const memory=this.automaticMemory.policy(scope),profile=new AssistantProfileRepository(this.database).list(scope.assistantId).find(p=>p.status==='active');
-    const allowed=(memory.enabled||forRetention&&!!this.restoreQuarantine&&experienceRetentionSuspended(this.database,scope,memory.revision))&&this.admin.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId)&&!!this.database.connection.prepare('SELECT 1 FROM local_accounts a JOIN local_assistant_permissions p ON a.principal_id=p.principal_id WHERE a.principal_id=? AND a.disabled=0 AND p.assistant_id=? AND p.administer=1').get(scope.principalId,scope.assistantId);
-    const revision=parseInt(createHash('sha256').update(JSON.stringify([memory.revision,profile?.profileId,profile?.revision])).digest('hex').slice(0,7),16)+1;
+    const allowed=(memory.enabled||forRetention&&!!this.restoreQuarantine&&experienceRetentionSuspended(this.database,scope,memory.revision))&&this.admin.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId)&&this.personalContextAllowed(scope.assistantId,scope.principalId);
+    const revision=parseInt(createHash('sha256').update(JSON.stringify([memory.revision,profile?.profileId,profile?.revision,new ChannelPersonalContextRepository(this.database).inspect(scope.assistantId,scope.principalId).revision])).digest('hex').slice(0,7),16)+1;
     const result:ExperiencePolicy={allowed,revision,dimensions:{}};const declared=asObject(profile?.adaptivePersonaPolicy)?.dimensions;
     for(const key of experienceDimensions){const d=Array.isArray(declared)?asObject(declared.find(x=>asObject(x)?.key===key)):undefined;if(d&&d.valueType==='number'&&d.sensitive!==true&&d.activation==='automatic'&&typeof d.minimum==='number'&&typeof d.maximum==='number'&&d.minimum<=0&&d.maximum>=0)result.dimensions[key]={minimum:Math.max(-1,d.minimum),maximum:Math.min(1,d.maximum),delta:Math.min(.05,typeof d.maxDeltaPerDreamingRun==='number'?d.maxDeltaPerDreamingRun:.05),rolling:Math.min(.20,typeof d.maxDeltaPer30Days==='number'?d.maxDeltaPer30Days:.20),minimumEvidence:Math.max(2,typeof d.minimumIndependentEvidence==='number'?d.minimumIndependentEvidence:2),confidence:typeof d.confidenceThreshold==='number'?d.confidenceThreshold:0};}
     return result;
   }
   private experienceSources(scope:ExperienceScope):ExperienceSource[]{return retainedExperienceSources(this.memories,scope,content=>this.admin.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId,content));}
   private get experience():ExperientialLearning{return this.experiential??=new ExperientialLearning(this.database,{...(this.experienceTestClock?{now:this.experienceTestClock}:{}),policy:s=>this.experiencePolicy(s),retentionPolicy:s=>this.experiencePolicy(s,true),sources:s=>this.experienceSources(s),provider:()=>{const runtime=isolatedLabRuntime(this.providers,this.config);return {provider:runtime.provider,revision:JSON.stringify(runtime.identity),...(runtime.preemptionBoundMs===undefined?{}:{preemptionBoundMs:runtime.preemptionBoundMs}),...(runtime.slotReleaseBoundMs===undefined?{}:{slotReleaseBoundMs:runtime.slotReleaseBoundMs})};},run:work=>this.admin.discovery.runBackground(work),idle:()=>this.state==='ready'&&!this.telegram?.busy&&this.automaticMemory.isIdle()&&this.admin.discovery.backgroundIdle(),changed:()=>this.invalidateRuntimeInputs()});}
-  private createAutomaticMemory():AutomaticMemory {return new AutomaticMemory({database:this.database,memories:this.memories,scopeAllowed:scope=>!!this.admin?.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId)&&!!(this.database.connection.prepare('SELECT principal_id FROM local_accounts WHERE principal_id=? AND disabled=0').get(scope.principalId))&&!!this.database.connection.prepare('SELECT 1 FROM local_assistant_permissions WHERE principal_id=? AND assistant_id=? AND administer=1').get(scope.principalId,scope.assistantId),contentAllowed:(scope,content)=>this.admin.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId,content),provider:()=>{const runtime=isolatedLabRuntime(this.providers,this.config);return {provider:runtime.provider,revision:JSON.stringify(runtime.identity)};},idle:()=>this.state==="ready"&&!this.telegram?.busy&&!this.activeWork.size&&!this.runtimeFences.size&&this.admin.discovery.backgroundIdle(),changed:()=>this.invalidateRuntimeInputs()});}
+  private createAutomaticMemory():AutomaticMemory {return new AutomaticMemory({database:this.database,memories:this.memories,scopeAllowed:scope=>!!this.admin?.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId)&&!!(this.database.connection.prepare('SELECT principal_id FROM local_accounts WHERE principal_id=? AND disabled=0').get(scope.principalId))&&this.personalContextAllowed(scope.assistantId,scope.principalId),contentAllowed:(scope,content)=>this.admin.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId,content),provider:()=>{const runtime=isolatedLabRuntime(this.providers,this.config);return {provider:runtime.provider,revision:JSON.stringify(runtime.identity)};},idle:()=>this.state==="ready"&&!this.telegram?.busy&&!this.activeWork.size&&!this.runtimeFences.size&&this.admin.discovery.backgroundIdle(),changed:()=>this.invalidateRuntimeInputs()});}
   private sessionEnded(sessionId:string):boolean{return !!this.database.connection.prepare("SELECT 1 FROM sessions WHERE id=? AND status!='active'").get(sessionId);}
   private handoffScope(context:LocalContext,assistantId:string,requestedRelationship?:string):HandoffScope{
     if(!this.localAuth||!this.localAuth.canAdminister(context,assistantId)||this.sessionEnded(context.sessionId)||!this.audiencePermits(context))throw new HandoffError(403,'Private authenticated handoff scope is unavailable.');

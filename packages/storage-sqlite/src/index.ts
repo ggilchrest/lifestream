@@ -32,3 +32,6 @@ export * from './urgent-attention.ts';
 export * from './urgent-away.ts';
 export * from './channel-subscriptions.ts';
 export * from './telegram-pairings.ts';
+
+export {ChannelPersonalContextRepository} from './channel-personal-context.ts';
+export type {ChannelPersonalContext} from './channel-personal-context.ts';

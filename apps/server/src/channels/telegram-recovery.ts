@@ -10,6 +10,7 @@ export function quarantineRestoredChannels(database:Database){
   tx.run("UPDATE channel_subscriptions SET status='disabled',requested_conversations=0,requested_alerts=0,revision=revision+1,updated_at=? WHERE status!='removed' AND (status!='disabled' OR requested_conversations!=0 OR requested_alerts!=0)",new Date(now).toISOString());
   tx.run("UPDATE telegram_pairings SET state='revoked',revision=revision+1,challenge_digest=NULL,chat_id=NULL,user_id=NULL,claim_id=NULL,conversations_enabled=0,alerts_enabled=0,updated_at=? WHERE state!='revoked'",now);
   tx.run('DELETE FROM telegram_notice_authority');
+  tx.run('UPDATE channel_personal_context SET owner_allowed=0,consented=0,revision=revision+1 WHERE owner_allowed=1 OR consented=1');
   tx.run('UPDATE telegram_poll_state SET generation=?','restore-quarantine:'+randomUUID());
   tx.run("UPDATE telegram_deliveries SET state=CASE WHEN state='sending' THEN 'unknown' ELSE 'cancelled' END,updated_at=? WHERE state IN ('reserved','sending')",now);
   tx.run("UPDATE telegram_notice_deliveries SET state='unknown',updated_at=? WHERE state='sending'",now);
