@@ -1,0 +1,193 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-24T03:41:05.283636Z",
+  "status": "verified",
+  "claimClass": "bounded-unattended-and-shared-presentation-software",
+  "sourceRevision": "5731ad04a606c595da7ab8c2ecb17fbdebb9ce89",
+  "urgentImplementationRevision": "211dd410ab70239c794110d0ffc8d2336dd18bab",
+  "pwceRevision": "1da5d9b089a6021d51430ef630cdb563a263bb72",
+  "claimScope": "Generic unattended capability dispatch, incremental shared presentation mechanics, exact clean offline package and local candidate promotion. Fixtures, selected-provider technical checks, private installed render, physical and Human claims remain separate.",
+  "checks": {
+    "source": {
+      "result": "pass",
+      "command": [
+        "pnpm",
+        "test"
+      ],
+      "seconds": 68.052,
+      "logSha256": "0e03539d09dceca2e67745f1b0421daac25a3d32de2f1b046dc3aa27befc1f7e",
+      "tests": 1169,
+      "pass": 1169,
+      "fail": 0,
+      "skipped": 0
+    },
+    "browser": {
+      "result": "pass",
+      "command": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "apps/control-web/test/acknowledgments.test.mjs",
+        "apps/control-web/test/approval-ui.test.mjs",
+        "apps/control-web/test/assistant-selection.test.mjs",
+        "apps/control-web/test/audience-privacy.test.mjs",
+        "apps/control-web/test/audio-ownership.test.mjs",
+        "apps/control-web/test/automatic-memory.test.mjs",
+        "apps/control-web/test/canonical-permissions.test.mjs",
+        "apps/control-web/test/conversation-capture.test.mjs",
+        "apps/control-web/test/conversation-playback.test.mjs",
+        "apps/control-web/test/conversation-ui.test.mjs",
+        "apps/control-web/test/discovery-lab.test.mjs",
+        "apps/control-web/test/discovery-review.test.mjs",
+        "apps/control-web/test/endpoint-configuration.test.mjs",
+        "apps/control-web/test/experience.test.mjs",
+        "apps/control-web/test/initiative-conversation.test.mjs",
+        "apps/control-web/test/initiative-lab.test.mjs",
+        "apps/control-web/test/initiative-review-host.test.mjs",
+        "apps/control-web/test/local-auth.test.mjs",
+        "apps/control-web/test/personalization.test.mjs",
+        "apps/control-web/test/presentation-core.test.mjs",
+        "apps/control-web/test/presentation-motion.test.mjs",
+        "apps/control-web/test/presentation-playback.test.mjs",
+        "apps/control-web/test/presentation-preview.test.mjs",
+        "apps/control-web/test/presentation-reduced-motion.test.mjs",
+        "apps/control-web/test/presentation-speech.test.mjs",
+        "apps/control-web/test/presentation-state.test.mjs",
+        "apps/control-web/test/profile-builder-downloaded-file.test.mjs",
+        "apps/control-web/test/relationship-acceptance.test.mjs",
+        "apps/control-web/test/relationship-administration.test.mjs",
+        "apps/control-web/test/relationship-extensions.test.mjs",
+        "apps/control-web/test/relationship-insights.test.mjs",
+        "apps/control-web/test/relationship-isolation-continuation.test.mjs",
+        "apps/control-web/test/relationship-joined.test.mjs",
+        "apps/control-web/test/relationship-lab.test.mjs",
+        "apps/control-web/test/relationship-readiness.test.mjs",
+        "apps/control-web/test/relationship-recovery.test.mjs",
+        "apps/control-web/test/relationship-tuning.test.mjs",
+        "apps/control-web/test/saved-voices.test.mjs",
+        "apps/control-web/test/session-definition.test.mjs",
+        "apps/control-web/test/session-handoff.test.mjs",
+        "apps/control-web/test/speech-gate.test.mjs",
+        "apps/control-web/test/understanding.test.mjs",
+        "apps/control-web/test/urgent-attention.test.mjs",
+        "apps/control-web/test/urgent-away.test.mjs",
+        "apps/control-web/test/vad-context.test.mjs",
+        "apps/control-web/test/workspace-design.test.mjs"
+      ],
+      "seconds": 270.471,
+      "logSha256": "f347f6f675672ad50091d6d690df6a2538434724e95523ec0c2dbba0541d18ef",
+      "tests": 110,
+      "pass": 110,
+      "fail": 0,
+      "skipped": 0
+    },
+    "workspace": {
+      "result": "pass",
+      "command": [
+        "node",
+        "--test",
+        "scripts/workspace.test.mjs"
+      ],
+      "seconds": 18.453,
+      "logSha256": "4e6455253bfcc159ef7f05cf9bafbbaf94e1a73cedf7fae9fa693a025422c87f",
+      "tests": 44,
+      "pass": 44,
+      "fail": 0,
+      "skipped": 0
+    },
+    "typecheck": {
+      "result": "pass",
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "seconds": 0.272,
+      "logSha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    "lint": {
+      "result": "pass",
+      "command": [
+        "pnpm",
+        "lint"
+      ],
+      "seconds": 1.228,
+      "logSha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    "build": {
+      "result": "pass",
+      "command": [
+        "pnpm",
+        "build"
+      ],
+      "seconds": 0.649,
+      "logSha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446"
+    }
+  },
+  "runtimeInputs": {
+    "files": 698,
+    "sha256": "333e1a62504b31c7ca41ccb4e2da1be2dae1b6406d2413f7f722e30b34ca4f3a",
+    "unchanged": true
+  },
+  "sharedPresentation": {
+    "coreSha256": "d7e8e744a47fc8b8252a84c1aa0a424b4bf21a92bc5b2f47744052d44ce53a4e",
+    "endpointAndPrivateHostBytesIdentical": true,
+    "focusedEndpointTests": 17,
+    "privateHostTests": 16,
+    "actualLocalModelBrowserGroups": 5,
+    "privateHostReportSha256": "df6d661eea8dd0f612327aeb4edba0691a76b28cb6dedc83ff9f1e48ea5ebbda",
+    "incremental": true
+  },
+  "package": {
+    "archiveSha256": "d7a8ce91662457be4d9184ec112fa497c45c2bea6d466ccb112d4b84ebf6200f",
+    "reportSha256": "4155dcbcaa7054a700a1d19fda9ef1323ea067d11e410c5e43f1580be823d24c",
+    "offlineInstall": "pass",
+    "build": "pass",
+    "privateResourceHashMatches": 0,
+    "privateOrMediaPaths": [],
+    "installedFocusedTests": 114,
+    "installedFocusedSkips": 0,
+    "fourPrivatePacksRenderedSeparately": true,
+    "privateVisualReportSha256": "1c525322860f87783e5bf49c914e3512db74a137c50ced10578f2ce3422257b2",
+    "privateVisualReviewSha256": "f081f6e6e96681ea354639930910d0ab4c4d8088b4c92bcfc3ecc492c59e567e",
+    "syntheticInferenceInInstalledVisualProof": true
+  },
+  "joinedProof": {
+    "checksPassed": 10,
+    "milliseconds": 2988,
+    "reportSha256": "93a6588c67407593b5ed17393c98ab784c077a3b5ba85eba2100619353ab205d",
+    "sourceAndEndpointInputs": "synthetic; real authenticated loopback transports and SQLite"
+  },
+  "promotion": {
+    "sourceRevision": "5731ad04a606c595da7ab8c2ecb17fbdebb9ce89",
+    "migration": 53,
+    "tables": 104,
+    "changedExistingTables": [
+      "initiative_clock",
+      "schema_migrations"
+    ],
+    "newEmptyTables": [
+      "urgent_away_destination_bindings",
+      "urgent_away_dispatches"
+    ],
+    "servedAssetHashesVerified": 9,
+    "preexistingDataPreserved": true,
+    "readiness": "ready",
+    "reportSha256": "97c8fb54afa07145f4b927ebafdcbb90c6d4bb1ca3e10cc8b22dac15cf95d39f"
+  },
+  "rollback": {
+    "schema53ToPriorF038": "verified in isolated synthetic candidate after current quarantine; latest data retained",
+    "reportSha256": "06c6566fab20c29af6d5bef387089beb00b0b47ab0959bafff91ccadcd984ed3"
+  },
+  "retainedFailures": [
+    "Original S073 exact callback1/2 despite correct context.",
+    "Original S086 causal82/84 and79/84 and original onset objectives remain unmet.",
+    "Earlier private installed observation sampled a later recreated runtime rather than shared-transition disposal; original report and correction retained. Successor asserts disposal at the transition."
+  ],
+  "exclusions": [
+    "No actual urgent source or notification provider/destination enrollment.",
+    "No real recipient delivery or external network exposure.",
+    "No physical acoustic/perceptual or new Human acceptance.",
+    "No training, model/provider replacement, GitHub push, publication or cloud upload.",
+    "No whole-slice S073/S086 or full v0.1 acceptance."
+  ]
+}

@@ -1,0 +1,196 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-24T03:23:37.439460+00:00",
+  "status": "verified",
+  "claimClass": "bounded-unattended-urgent-software",
+  "claimScope": "Existing S023/S028/S068 owner subchecks through public HTTP, real SQLite policy and resolver admission; condition source, authority dispatcher and notification transport are explicit no-network fixtures. No actual remote destination or Human acceptance.",
+  "revisions": {
+    "implementation": "211dd410ab70239c794110d0ffc8d2336dd18bab",
+    "pwceUnchanged": "1da5d9b089a6021d51430ef630cdb563a263bb72",
+    "owningRegistration": "9c66dd2"
+  },
+  "checks": {
+    "focused": {
+      "pass": 75,
+      "fail": 0,
+      "skip": 0,
+      "seconds": 5.256
+    },
+    "renderedBrowser": {
+      "pass": 14,
+      "fail": 0,
+      "skip": 0,
+      "seconds": 17.273
+    },
+    "adjacentRecoveryLocalHostHttp": {
+      "pass": 25,
+      "fail": 0,
+      "skip": 0
+    },
+    "baselineBroadRegression": {
+      "pass": 1168,
+      "fail": 0,
+      "skip": 0,
+      "seconds": 69.223,
+      "scope": "Preceded final replay-envelope labeling and eight-job burst cap; those changes are covered by the final focused75 checks. Final combined candidate regression remains pending."
+    },
+    "build": "pass",
+    "typecheck": "pass",
+    "lint": "pass",
+    "visual": "desktop and390px mobile inspected; all new controls exercised"
+  },
+  "behavior": [
+    "Host-controlled polling independent of connected browser, destination-specific per-class deny-default settings and separate quiet bypass.",
+    "Existing owner text-session and provider capability authority, current recipient privacy, permission, account/session revision and condition freshness checks; no fabricated session or grant.",
+    "New/changed durable destination binding resets class opt-in before recording binding; local urgent controls cannot silently enable a remote destination.",
+    "Fixed generic notice; replay is explicitly labeled; source prose/location/media are never notification payloads, evidence reference disclosure separately permitted.",
+    "Attempted journal commits before effectful I/O; uncertain admission does not invent local I/O; transport acceptance, Human acknowledgment and PWCE resolution remain separate.",
+    "Lifetime bounded deduplication, nonemitting restart/resync baseline, maximum eight in-flight effects and inspectable suppression without delayed replay.",
+    "Restore cancels reservations, retains attempted uncertainty, disables class/bypass policy and preserves prior accepted/acknowledged history.",
+    "Held HTTP body rechecks current authorization/privacy before mutation; current scope loss leaves settings disabled and no source/provider call."
+  ],
+  "installedCandidate": {
+    "revision": "f038bfd45144f837c57da9b316149dce2df13110",
+    "unchanged": true,
+    "newSourcePromoted": false
+  },
+  "inputs": [
+    {
+      "path": "apps/control-web/test/urgent-attention.test.mjs",
+      "sha256": "a3f4125434ab1abfa7d5b63b83dbb5dc4a333b2185e9dd6dec1212f960f471b5"
+    },
+    {
+      "path": "apps/control-web/test/urgent-away.test.mjs",
+      "sha256": "d2497db07cc7f1ae230c3c92e90fa6ee3cf37ada9fa29a2b4c7802f377d27d6e"
+    },
+    {
+      "path": "apps/control-web/urgent-attention.js",
+      "sha256": "202a72b0d13869b89538ea785ed5960fa3673a76092957f4f97f899f6afbe25a"
+    },
+    {
+      "path": "apps/control-web/urgent-away.js",
+      "sha256": "5a610839a3474b17475d636c09278bf09f7885cf33463138bba77dbcd5449c1c"
+    },
+    {
+      "path": "apps/server/src/admin/candidate-snapshot.ts",
+      "sha256": "93abccc22bf9873a4d9d76bd578b74c91a5ecf258e181ea154be515e04b66ddb"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "adcf514db9a8c60457848bb89db6e8426cc7a27dcd31ae268110d923c9ec6100"
+    },
+    {
+      "path": "apps/server/src/runtime/urgent-away.ts",
+      "sha256": "e6ba5cd630eb656c208cc42d467c07352faa29fe00ddd204bba7321c6ce2bc93"
+    },
+    {
+      "path": "apps/server/test/candidate-snapshot.test.ts",
+      "sha256": "d1f7ff5fd95d9a3f00b40b082efd14679065fa982f732603dd21fef34c4dd87a"
+    },
+    {
+      "path": "apps/server/test/server.test.ts",
+      "sha256": "c3ccaf3ab43b8886064f36a262d7e41731104b3124be7393da49cb7d05eb2b6b"
+    },
+    {
+      "path": "apps/server/test/urgent-away-http.test.ts",
+      "sha256": "ff42e1b5d9254665c988316cf7e8b8c0b41da101db416f3fd5ca4b45df6339e1"
+    },
+    {
+      "path": "apps/server/test/urgent-away.test.ts",
+      "sha256": "325abb01b30ef1f56f70c9dbe58d11e37f4d34ead9b24115ed8eafef0aa637c4"
+    },
+    {
+      "path": "docs/candidate-recovery.md",
+      "sha256": "d3e3d0885868bd458e53bfb7b02a34bf12a22f3d831681d0dac26b4328b260ce"
+    },
+    {
+      "path": "docs/urgent-attention.md",
+      "sha256": "560dca865717edfe6302f7bce74e5cf4e58df42920b12d75eefc67368d19587d"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "e972ea74112c6ddb4edd153ddf9f7beb41e363ddeeea1afd3f88d082904f5c3d"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0053_urgent_away.sql",
+      "sha256": "fadc18edc9521d333073850dfccd1ab97874229a9d4125c96ff5088512886661"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "946942aae4168874de1f348abd550320e1f0ce57958dc20d7bbf9bd0b910b0c3"
+    },
+    {
+      "path": "packages/storage-sqlite/src/urgent-away.ts",
+      "sha256": "bd2560f95d7336f2da9dd74f0f535110e7026c223079387bd3e17608f48b7848"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-delivery.test.ts",
+      "sha256": "db44ff098fc1e3a36f15e91e50b50c7980949b8f5ffb543eac9b428a4d46b1c4"
+    },
+    {
+      "path": "packages/storage-sqlite/test/initiative-expression.test.ts",
+      "sha256": "53bed47e3cad457de957431002cd623bb122f3d2853813863ef19bb1b6aa713c"
+    },
+    {
+      "path": "packages/storage-sqlite/test/session-handoff.test.ts",
+      "sha256": "c5d496bb0425f4a7e984694d7d697dd41f9d9cf914d1410e743bea4ac83309b0"
+    },
+    {
+      "path": "packages/storage-sqlite/test/urgent-away.test.ts",
+      "sha256": "d66260d66f4267e877b4fe9c38ab0acf0410188e19bffc27bc8c428babf9a525"
+    }
+  ],
+  "evidence": {
+    "focused75": {
+      "name": "focused75.log",
+      "sha256": "4c174270f0c778866b6f6f377ff92a75b95d275146c83956067262f4d2d56d98"
+    },
+    "browser14": {
+      "name": "browser14.log",
+      "sha256": "5685628841d813f8fda06aa3bc5731d62e3c2b7eb9443263164d01fbc65fbff6"
+    },
+    "sourceBaseline1168": {
+      "name": "sourceBaseline1168.log",
+      "sha256": "982aeb17fadde9e8467f38f366c4a2158c6dbc4b7be5ce64ebe80a8a7605f7ae"
+    },
+    "build": {
+      "name": "build.log",
+      "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446"
+    },
+    "typecheck": {
+      "name": "typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf"
+    },
+    "lint": {
+      "name": "lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    "adjacent25": {
+      "name": "adjacent25.log",
+      "sha256": "0cce88dafdf7ddf301f632530c629dfcc3ccf6eed05ddfd9698f76a79d5afae9"
+    },
+    "privateSpecification": {
+      "name": "privateSpecification.log",
+      "sha256": "2e0c39583f87a0ba14f48d01e0228a7988c4f96bb8e0d3a153b0a9fe39ee62a5"
+    },
+    "visualDesktop": {
+      "name": "away-desktop.png",
+      "sha256": "9a341aef18cd45b8ed5f91084cbd6c2eaaeaa44df2e92de7b7c9407ba77aa168",
+      "inspected": true
+    },
+    "visualMobile": {
+      "name": "away-mobile.png",
+      "sha256": "a3d5026ee35522c53fefcd2cab86ec596e0c2ee8d9124d4cd4233077544c6ea2",
+      "inspected": true
+    }
+  },
+  "exclusions": [
+    "Actual condition enrollment",
+    "Configured notification provider/destination or authenticated remote evidence route",
+    "Real recipient delivery",
+    "New Human acceptance",
+    "Physical acoustic/perceptual or production-performance acceptance",
+    "Any publication or external exposure",
+    "S073 original failed exact-label and S086 causal/performance criteria remain unchanged"
+  ]
+}
