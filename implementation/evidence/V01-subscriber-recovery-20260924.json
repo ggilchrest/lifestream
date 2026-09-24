@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-24T16:20:49.690Z",
+  "status": "verified",
+  "claim": "Isolated migration59 recovery and subscriber consent quarantine; no candidate promotion",
+  "runtimeSourceRevision": "33008b8f6f9f2207ff73a88d7cab90b58424516a",
+  "installedCandidateRevision": "5731ad04a606c595da7ab8c2ecb17fbdebb9ce89",
+  "sourceCandidateUnchanged": true,
+  "snapshot": {
+    "originalTables": 104,
+    "restoredTables": 112,
+    "unchangedTables": 98,
+    "changedTables": [
+      "automatic_memory_policies",
+      "local_sessions",
+      "presentation_selections",
+      "schema_migrations",
+      "session_endpoint_settings",
+      "sessions"
+    ],
+    "addedTables": [
+      "channel_personal_context",
+      "channel_subscriptions",
+      "telegram_conversation_sessions",
+      "telegram_deliveries",
+      "telegram_notice_authority",
+      "telegram_notice_deliveries",
+      "telegram_pairings",
+      "telegram_poll_state"
+    ],
+    "privatePackagesPreserved": 4,
+    "preexistingUnavailablePresentation": 1
+  },
+  "checks": {
+    "focusedRegression": {
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 6485.090833
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "actualRestoredUi": {
+      "passed": 6,
+      "authorityHttpStatus": 423,
+      "pairingHttpStatus": 503,
+      "visualQuarantineNotice": "inspected"
+    }
+  },
+  "preserved": [
+    "Original database opened read-only",
+    "Owned memory retained, no administrator permission added",
+    "Source permission and automatic collection unchanged",
+    "Restored consent withdrawn, collection disabled, authority quarantined",
+    "Fresh restored login cannot resume pairing or personal context"
+  ],
+  "profile": "test for isolated recovery UI only",
+  "selectedProvidersExercised": false,
+  "externalTelegramRequests": 0,
+  "liveBindingsActivated": false,
+  "restoredHostStoppedAfterProof": true,
+  "encryptedBackupPerformed": false,
+  "encryptedBackupLimitation": "Separate backup volume not mounted; existing encrypted receipts are preserved.",
+  "humanAcceptance": false,
+  "logDigests": {
+    "migration59-regression.log": "c31cd591fa78b1ac8c8a5fed418d100bbd4b86926a6aa0a2e9f01bb2fe005e2f",
+    "migration59-typecheck.log": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+    "migration59-lint.log": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+    "migration59-restored-ui.log": "6119dbc7edf6b442ecee2c4a7bad209d9776de316e660a7d3dae16380708c791"
+  }
+}
