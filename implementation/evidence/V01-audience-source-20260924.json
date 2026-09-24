@@ -1,0 +1,155 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-24T18:23:19.844488+00:00",
+  "status": "verified",
+  "scope": "Local authorized audience bridge, immediate invalidation and older-poll fencing with synthetic physical observations",
+  "sourceRevisions": {
+    "composition": "960d0cb9b69b20a90339b1bf3384ede1df92c77d",
+    "lifestream": "666e1f2b1ad5ec4a7c85d23ac85e2f0943531c1a",
+    "lifestreamSpecifications": "cd283c180e045069d8b21955422b337cf4f4a00a",
+    "pwce": "5f8514e2245a7f7daa0489446b5677d33ea54acf",
+    "pwceSpecifications": "bfcca1336d09a02f614aabef2541d74ccc43b484"
+  },
+  "checks": {
+    "compositionSource": {
+      "tests": 81,
+      "pass": 81,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 2261.155541
+    },
+    "compositionExtracted": {
+      "tests": 81,
+      "pass": 81,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 2192.484083
+    },
+    "lifestreamExtracted": {
+      "tests": 34,
+      "pass": 34,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 56562.358083
+    },
+    "browserSource": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 17858.265417
+    },
+    "pwceExtracted": {
+      "tests": 382,
+      "pass": 382,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 42410.902708
+    }
+  },
+  "otherChecks": {
+    "typecheck": "pass",
+    "lint": "pass",
+    "sourceAndExtractedBuild": "pass",
+    "offlineInstall": "pass",
+    "specificationValidation": "pass",
+    "specificationValidatorTests": 60,
+    "structuralVectors": 598
+  },
+  "archive": {
+    "pair": {
+      "composition": "960d0cb9b69b20a90339b1bf3384ede1df92c77d",
+      "pwce": "5f8514e2245a7f7daa0489446b5677d33ea54acf",
+      "specifications": "bfcca1336d09a02f614aabef2541d74ccc43b484"
+    },
+    "directory": "/Users/gg/Library/Application Support/Lifestream/operator-local/v0.1/build/audience-source-960d0cb",
+    "archives": {
+      "composition": {
+        "revision": "960d0cb9b69b20a90339b1bf3384ede1df92c77d",
+        "sha256": "2f713e812a43c1b21cbb9ef853affcffdac790f47927c9d3bd30625d53c3b39f",
+        "bytes": 215040,
+        "members": 33
+      },
+      "pwce": {
+        "revision": "5f8514e2245a7f7daa0489446b5677d33ea54acf",
+        "sha256": "b7f2ed47fc35c14bf366ad421eef2009bd710aa4ffedaef3e4492544b7d46f6a",
+        "bytes": 4055040,
+        "members": 503
+      }
+    },
+    "privateIdentifiersScanned": 8,
+    "privateIdentifierMatches": 0,
+    "privateTrees": 0,
+    "symlinks": 0,
+    "lifestream": {
+      "status": "verified",
+      "recordedAt": "2026-09-24T18:14:58.753360+00:00",
+      "sourceRevision": "666e1f2b1ad5ec4a7c85d23ac85e2f0943531c1a",
+      "archive": {
+        "sha256": "324a0b4276770d364bbc9b57324477cd41405e3a15a20842af87f4f992b4c70c",
+        "bytes": 22272000,
+        "members": 1453,
+        "files": 1345
+      },
+      "privatePackageHashMatches": 0,
+      "privateOrMediaPaths": [],
+      "directory": "/Users/gg/Library/Application Support/Lifestream/operator-local/v0.1/build/audience-source-960d0cb/lifestream",
+      "installedInRunningCandidate": false,
+      "externalPublication": false
+    }
+  },
+  "observedInvalidationToProtectedUiMs": {
+    "source": 15,
+    "extracted": 19,
+    "physicalDetection": false,
+    "percentileBenchmark": false
+  },
+  "initialRuntimeRun": {
+    "passed": 30,
+    "skipped": 4,
+    "reason": "Browser module not supplied; subsequent exact extracted run passes all 34 without skips"
+  },
+  "preflight": {
+    "result": "fail",
+    "remaining": [
+      "LS-S073 effective input changed",
+      "LS-S076 effective input changed",
+      "LS-S078 effective input changed",
+      "LS-S080 effective input changed"
+    ],
+    "bookkeepingRepaired": [
+      "packet scope and manifest digest",
+      "checkpoint revision",
+      "unsupported temporary checkpoint field removed"
+    ],
+    "criteriaWaived": false
+  },
+  "real": [
+    "PWCE policy persistence and revocation",
+    "device broker lease/fencing enforcement",
+    "Lifestream audience coordinator and server private-context checks",
+    "actual browser privacy transitions"
+  ],
+  "simulated": [
+    "derived physical observations",
+    "owner-presence evidence",
+    "device permissions and capture lease",
+    "test accounts"
+  ],
+  "notClaimed": [
+    "physical source activation or coverage",
+    "installed successor promotion",
+    "selected-provider qualification",
+    "live Telegram",
+    "Human acceptance"
+  ],
+  "networkObservation": {
+    "ai5090Ssh": "connection timed out from current Mac network",
+    "remoteServiceFailureEstablished": false
+  },
+  "preservedReleaseFailures": [
+    "S073 callback 1/2",
+    "S086 causal 82/84 and 79/84",
+    "900/1500ms onset objectives"
+  ]
+}
