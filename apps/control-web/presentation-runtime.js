@@ -1,16 +1,12 @@
-import {SpeechMotion} from './presentation-speech.js';
-import {FaceMotion,sampleFaceMotion} from './presentation-motion.js';
+import {preparePresentation,applyPresentationFrame,releasePresentation} from './presentation-core.js';
+export {disposePresentation} from './presentation-core.js';
+import {sampleFaceMotion} from './presentation-motion.js';
 import * as THREE from 'three';
 import { GLTFLoader } from './GLTFLoader.js';
 import { RoomEnvironment } from './RoomEnvironment.js';
 import { BehaviorController } from './behavior-controller.js';
-import {animationForState,stateForPresentation,validateAnimationClips,presentationStates} from './presentation-state.js';
+import {animationForState,stateForPresentation,presentationStates} from './presentation-state.js';
 
-export function disposePresentation(root) {
- const geometries=new Set(),materials=new Set(),textures=new Set();
- root?.traverse(node=>{if(node.geometry)geometries.add(node.geometry);for(const material of [node.material].flat().filter(Boolean)){materials.add(material);for(const value of Object.values(material))if(value?.isTexture)textures.add(value);}});
- for(const value of geometries)value.dispose();for(const value of materials)value.dispose();for(const value of textures){value.source?.data?.close?.();value.dispose();}
-}
 export class PresentationRuntime {
  constructor(canvas,{onFailure=()=>{},playback=()=>null,identity=()=>null,onState=()=>{}}={}) {
   this.identity=identity;this.onState=onState;this.interaction='idle';this.motionStartedAt=performance.now();this.reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');this.motionPreference=this.reducedMotion.matches;
@@ -29,25 +25,13 @@ export class PresentationRuntime {
  neutral(){const root=new THREE.Group(),material=new THREE.MeshStandardMaterial({color:0x77d6cc,roughness:.6});const head=new THREE.Mesh(new THREE.SphereGeometry(.32,24,16),material);head.position.y=1.28;root.add(head);const body=new THREE.Mesh(new THREE.CapsuleGeometry(.22,.6,8,16),material);body.position.y=.65;root.add(body);const mouth=new THREE.Mesh(new THREE.BoxGeometry(.13,.025,.025),new THREE.MeshBasicMaterial({color:0x143534}));mouth.position.set(0,1.16,.3);root.add(mouth);return {root,mouth,manifest:{framing:{distance:1.2,targetHeight:.52},animations:{},capabilities:{lipSync:'amplitude',facialAnimation:false}},urls:[],label:'Neutral reference',mixer:null};}
  async prepare(item,signal) {
   if(!item||item.id==='neutral')return this.neutral();
-  const urls=[],byPath=new Map();let parsed;
-  try {
-   // URLs are constructed from the authenticated resource allowlist, never from model-supplied hosts.
-   for(const resource of item.manifest.resources){signal?.throwIfAborted();const route=`/api/runtime/v1/presentation/resources/${encodeURIComponent(item.id)}/${resource.path.split('/').map(encodeURIComponent).join('/')}`;const response=await fetch(route,{signal,credentials:'same-origin',cache:'no-store'});if(!response.ok)throw new Error('A package resource is unavailable.');const bytes=await response.arrayBuffer();if(bytes.byteLength!==resource.bytes)throw new Error('Package resource size changed.');const actual=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');if(actual!==resource.sha256)throw new Error('Package resource digest changed.');const url=URL.createObjectURL(new Blob([bytes],{type:resource.mime}));urls.push(url);byPath.set(resource.path,{url,bytes});}
-   const model=item.manifest.model,manager=new THREE.LoadingManager();let resourceFailed=false;
-   manager.onError=()=>{resourceFailed=true;};
-   manager.setURLModifier(url=>{if(urls.includes(url)||url.startsWith(`blob:${location.origin}/`))return url;const entry=byPath.get(url);if(!entry)throw new Error('The model requested an undeclared resource.');return entry.url;});
-   const loader=new GLTFLoader(manager),data=byPath.get(model).bytes;
-   parsed=await loader.parseAsync(data,model.includes('/')?model.slice(0,model.lastIndexOf('/')+1):'');signal?.throwIfAborted();
-   if(resourceFailed)throw new Error('A model texture could not be loaded. The previous appearance is retained.');
-   const root=parsed.scene,mixer=new THREE.AnimationMixer(root),manifest=item.manifest;
-   validateAnimationClips(manifest,parsed.animations);
-   const actions=new Map(parsed.animations.map(clip=>[clip.name,mixer.clipAction(clip)]));
-   if(manifest.animations.idle&&!actions.has(manifest.animations.idle))throw new Error('The declared idle animation is missing.');
-   let mouth=null;if(manifest.mouth){const node=root.getObjectByName(manifest.mouth.node),index=node?.morphTargetDictionary?.[manifest.mouth.morph];if(index===undefined)throw new Error('The declared mouth mapping is missing.');mouth={node,index,gain:manifest.mouth.gain};}
-   const mouthClip=parsed.animations.find(clip=>clip.name===manifest.animations.mouthAmplitude);if(manifest.animations.mouthAmplitude&&!mouthClip)throw new Error('The declared mouth animation is missing.');const mouthMixer=mouthClip?new THREE.AnimationMixer(root):null,mouthAction=mouthClip?mouthMixer.clipAction(mouthClip):null;if(mouthAction){mouthAction.setLoop(THREE.LoopOnce,1);mouthAction.clampWhenFinished=true;mouthAction.play();mouthAction.paused=true;}const speechMotion=manifest.speech?new SpeechMotion(root,parsed.animations,manifest.speech):null;const faceMotion=manifest.face?new FaceMotion(root,parsed.animations,manifest.face,[...(speechMotion?.tracks??[]),...(mouthClip?.tracks.map(t=>t.name)??[]),...(manifest.mouth?[manifest.mouth.node+'.morphTargetInfluences']:[])]):null;return {root,mouth,mixer,actions,manifest,urls,label:item.label,mouthMixer,mouthAction,faceMotion,speechMotion};
-  } catch(error){if(parsed?.scene)disposePresentation(parsed.scene);for(const url of urls)URL.revokeObjectURL(url);throw error;}
+  return preparePresentation(item,{signal,createLoader:manager=>new GLTFLoader(manager),retrieveResource:async(resource,signal)=>{
+   // Host-owned authenticated routing. The shared core cannot select another source.
+   const route=`/api/runtime/v1/presentation/resources/${encodeURIComponent(item.id)}/${resource.path.split('/').map(encodeURIComponent).join('/')}`;
+   const response=await fetch(route,{signal,credentials:'same-origin',cache:'no-store'});if(!response.ok)throw Error('A package resource is unavailable.');return response.arrayBuffer();
+  }});
  }
- release(value){if(!value)return;value.faceMotion?.reset();value.speechMotion?.reset();value.mouthMixer?.stopAllAction();value.mouthMixer?.uncacheRoot(value.root);value.mixer?.stopAllAction();value.mixer?.uncacheRoot(value.root);disposePresentation(value.root);for(const url of value.urls)URL.revokeObjectURL(url);}
+ release(value){releasePresentation(value);}
  commit(value){this.endPreview();const old=this.current;this.current=value;this.scene.add(value.root);if(old){this.scene.remove(old.root);this.release(old);}this.state='idle';this.renderState('idle');value.mixer?.update(0);this.frame(value);}
  frame(value){value.root.updateMatrixWorld(true);value.root.traverse(n=>{if(n.isSkinnedMesh)n.computeBoundingBox();});const box=new THREE.Box3().setFromObject(value.root);if(box.isEmpty())return;const size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),height=Math.max(size.y,.1);const target=new THREE.Vector3(center.x,box.min.y+height*value.manifest.framing.targetHeight,center.z);const distance=Math.max(height,size.x/this.camera.aspect)/(2*Math.tan(THREE.MathUtils.degToRad(17)))*value.manifest.framing.distance;this.camera.position.copy(target).add(new THREE.Vector3(Math.sin(value.manifest.framing.yaw??0)*distance,0,Math.cos(value.manifest.framing.yaw??0)*distance));this.camera.near=Math.max(.001,distance/1000);this.camera.far=Math.max(100,distance*10);this.camera.lookAt(target);this.camera.updateProjectionMatrix();}
  applyState(state){this.endPreview();this.interaction=['idle','listening','preparing','generating','speaking','working','waiting','error','interrupted'].includes(state)?state:'idle';this.semanticKey=null;}
@@ -64,7 +48,8 @@ export class PresentationRuntime {
   }
   if(this.previewState&&(now>=this.previewState.until||sample?.playing)||this.facePreview&&(now>=this.facePreview.until||sample?.playing))this.endPreview();
   this.renderState(this.previewState?.state??(this.semantic?stateForPresentation(this.semantic):'idle'));this.onState(this.state,this.semantic,{...this.mapping,preview:!!this.previewState,facePreview:this.facePreview?.mode??null,reducedMotion:this.reducedMotion.matches,bodyMotionPaused:this.reducedMotion.matches&&!this.previewState,face:{blink:!!value?.manifest.face?.blink,gaze:!!value?.manifest.face?.gaze}});
-  value?.faceMotion?.beginFrame();value?.speechMotion?.beginFrame();if(!this.reducedMotion.matches||this.previewState)value?.mixer?.update(delta);const level=sample?.playing?Math.min(1,sample.amplitude*5):0;if(value?.mouthAction){value.mouthAction.time=level*value.mouthAction.getClip().duration;value.mouthMixer.update(0);}if(value?.mouth?.node)value.mouth.node.morphTargetInfluences[value.mouth.index]=level*value.mouth.gain;else if(value?.mouth)value.mouth.scale.y=1+level*10;value?.speechMotion?.apply(sample);if(value?.faceMotion){const mode=this.facePreview?.mode,motion=mode?{blink:mode==='blink'?1:0,gazeX:mode==='left'?-1:mode==='right'?1:0,gazeY:mode==='up'?1:mode==='down'?-1:0}:sampleFaceMotion((now-this.motionStartedAt)/1000,{blink:value.manifest.face?.blink,attention:this.interaction==='idle'?'none':'participant',reducedMotion:this.reducedMotion.matches});value.faceMotion.apply(motion);}this.renderer.render(this.scene,this.camera);this.frames.push(Math.max(0,now-(this.renderedAt??now)));this.renderedAt=now;if(this.frames.length>600)this.frames.shift();}
+  const mode=this.facePreview?.mode,face=value?.faceMotion?(mode?{blink:mode==='blink'?1:0,gazeX:mode==='left'?-1:mode==='right'?1:0,gazeY:mode==='up'?1:mode==='down'?-1:0}:sampleFaceMotion((now-this.motionStartedAt)/1000,{blink:value.manifest.face?.blink,attention:this.interaction==='idle'?'none':'participant',reducedMotion:this.reducedMotion.matches})):null;
+  applyPresentationFrame(value,{sample,delta,bodyMotion:!this.reducedMotion.matches||!!this.previewState,face});this.renderer.render(this.scene,this.camera);this.frames.push(Math.max(0,now-(this.renderedAt??now)));this.renderedAt=now;if(this.frames.length>600)this.frames.shift();}
  pause(){this.endPreview();this.current?.faceMotion?.reset();this.current?.speechMotion?.reset();cancelAnimationFrame(this.animation);this.current?.mixer?.stopAllAction();if(this.current?.mouth?.node)this.current.mouth.node.morphTargetInfluences[this.current.mouth.index]=0;this.state='failure';}
  dispose(){this.disposed=true;this.pause();this.resize.disconnect();this.renderer.domElement.removeEventListener('webglcontextlost',this.lost);this.release(this.current);this.environment.dispose();this.renderer.dispose();}
 }
