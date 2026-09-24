@@ -8,6 +8,7 @@ import {acknowledgmentVoice,proposeAcknowledgments,synthesizeAcknowledgment} fro
 import {UrgentAttentionHost,type UrgentAttentionOptions} from './runtime/urgent-attention-host.ts';
 import type {UrgentAttentionFacts} from './runtime/urgent-attention.ts';
 import {UrgentAwayRuntime,type UrgentAwayDestination} from './runtime/urgent-away.ts';
+import {ChannelSubscriptionRepository,ChannelSubscriptionError} from '@lifestream/storage-sqlite';
 import {PwceIncidentClient,PwceConditionClient,type PwceIncidentOptions} from '@lifestream/providers-pwce';
 import { AudienceCoordinator, type AudienceOptions, type AudienceIdentity } from './runtime/audience.ts';
 import { AutomaticMemory } from "./runtime/automatic-memory.ts";
@@ -770,6 +771,7 @@ export class LifestreamServer {
       if (method !== "GET" && result.status < 400) { this.localAuth.touch(context); if (!extensionReadOnly(path, body) && !("replayed" in result && result.replayed === true)) this.invalidateRuntimeInputs(); }
       return json(response, result.status, result.body);
     }
+    if(path==='/api/runtime/v1/channel-subscriptions')return this.handleChannelSubscriptions(request,response);
     if(path==='/api/runtime/v1/urgent/away')return this.handleUrgentAway(request,response);
     if(path==='/api/runtime/v1/urgent'||path==='/api/runtime/v1/urgent/events')return this.handleUrgentAttention(request,response);
     if(path==='/api/runtime/v1/incidents'||path==='/api/runtime/v1/incidents/media'){
@@ -991,6 +993,21 @@ export class LifestreamServer {
       }};
     });
     this.urgentAway=new UrgentAwayRuntime(this.database,{runtime:this.urgentAttention.runtime,source:options.urgentAway.source??new PwceConditionClient(options.urgentConditions),destinations:this.awayDestinations,...(options.urgentAway.pollIntervalMs===undefined?{}:{pollIntervalMs:options.urgentAway.pollIntervalMs})});
+  }
+  private async handleChannelSubscriptions(request:IncomingMessage,response:ServerResponse):Promise<void>{
+    if(!this.localAuth||this.restoreQuarantine)throw new AuthenticationError(503,'channel_configuration_unavailable');
+    const method=request.method??'GET',params=new URL(request.url!,'http://localhost').searchParams,assistantId=params.get('assistantId');
+    if(!assistantId||params.getAll('assistantId').length!==1||[...params.keys()].some(k=>k!=='assistantId')||!['GET','POST'].includes(method))throw new AuthenticationError(422,'channel_request_invalid');
+    const context=this.requestContext(request,true) as LocalContext|undefined;
+    const current=()=>{if(!context?.owner||!this.runtimeAuthorized(request,assistantId)||!this.audiencePermits(context))throw new AuthenticationError(403,'channel_owner_scope_required');this.localAuth!.assertCurrent(context);};
+    current();const repository=new ChannelSubscriptionRepository(this.database);
+    const inspect=()=>({schemaVersion:'1.0.0',subscriptions:repository.list(assistantId),accounts:this.localAuth!.accounts(context!).filter(a=>a.disabled===0).map(a=>({principalId:a.principalId,username:a.username})),transportReady:false,pairingAvailable:false,humanAcceptance:false});
+    if(method==='GET')return json(response,200,inspect());
+    this.localAuth.csrf(context!,String(request.headers['x-lifestream-csrf']??''));
+    const body=asObject(await readBody(request));current();
+    if(!body)throw new AuthenticationError(422,'channel_request_invalid');
+    try{repository.apply(assistantId,context!.principalId,body);this.localAuth.touch(context!);return json(response,200,inspect());}
+    catch(error){if(error instanceof ChannelSubscriptionError)throw new AuthenticationError(error.code==='invalid'?422:error.code==='not_found'?404:409,'channel_'+error.code);throw error;}
   }
   private async handleUrgentAway(request:IncomingMessage,response:ServerResponse):Promise<void>{
     if(!this.localAuth||this.restoreQuarantine)throw new AuthenticationError(503,'urgent_away_unavailable');

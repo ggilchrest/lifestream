@@ -1,4 +1,5 @@
 import {installUrgentAway} from './urgent-away.js';
+import {installChannelSubscriptions} from './channel-subscriptions.js';
 const element=(tag,text)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=String(text);return node;};
 const timeValue=minute=>`${String(Math.floor(minute/60)).padStart(2,'0')}:${String(minute%60).padStart(2,'0')}`;
 const minuteValue=value=>{if(!/^\d{2}:\d{2}$/.test(value))throw Error('Choose both quiet-hour times.');const [h,m]=value.split(':').map(Number);return h*60+m;};
@@ -13,6 +14,7 @@ export function installUrgentAttention({anchor,api,scope,output,prepareOutput,st
  <div class="actions"><button type="button" data-urgent-refresh class="secondary">Refresh urgent status</button><button type="button" data-urgent-listen disabled>Start listening for urgent conditions</button><button type="button" data-urgent-stop class="secondary" disabled>Stop listening</button></div>
  <div class="actions"><label>Snooze duration<select data-urgent-minutes><option value="15">15 minutes</option><option value="60">1 hour</option><option value="480">8 hours</option></select></label><button type="button" data-urgent-snooze class="secondary" disabled>Snooze urgent attention</button><button type="button" data-urgent-disable class="secondary" disabled>Disable all urgent classes</button></div>
  <p data-urgent-summary class="muted">No local settings loaded. Remote delivery has separate settings above.</p><div data-urgent-current aria-live="assertive"></div><details><summary>Recent condition and delivery metadata</summary><p class="muted">Refresh never replays an alert. Endpoint acceptance, playback completion and Human acknowledgment are separate observations. Acknowledgment does not resolve the source condition.</p><div data-urgent-recent></div></details>`;
+ installChannelSubscriptions({anchor,api,scope});
  installUrgentAway({anchor,api,scope});
  anchor.append(section);const $=name=>section.querySelector(`[data-urgent-${name}]`);
  let generation=0,actionRevision=0,readRevision=0,preparing=null,data=null,stream=null,streamScope='',busy=false,dirty=false;const active=new Map(),seen=new Set();
