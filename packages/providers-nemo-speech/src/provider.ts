@@ -21,6 +21,9 @@ export type NemoSpeechOptions = {
 const EXPECTED_RATE = 16000;
 const MAX_FRAME_SAMPLES = 4800;
 const MAX_PENDING_MESSAGES = 64;
+// Keep device-frame granularity from multiplying remote decoder work. At most
+// 100 ms is held; a valid end flushes the remaining samples before commit.
+const TRANSPORT_SAMPLES = 1600;
 
 function validateInput(item: SttInput, expectedId: string | undefined, expectedSequence: number, expectedSamples: number): void {
   if (expectedId !== undefined && item.audioInputId !== expectedId) throw new Error("audio input identity changed");
@@ -50,6 +53,13 @@ export class NemoSpeechProvider implements SpeechToTextProvider {
     let socket: NemoSocket | undefined;
     let socketClosed = false;
     let timedOut = false;
+    const pendingPcm = Buffer.alloc(TRANSPORT_SAMPLES * 2);
+    let pendingBytes = 0;
+    const flushPcm = (): void => {
+      if (!pendingBytes) return;
+      socket!.send(pendingPcm.buffer.slice(pendingPcm.byteOffset, pendingPcm.byteOffset + pendingBytes));
+      pendingPcm.fill(0); pendingBytes = 0;
+    };
     let rejectOpen: ((error: Error) => void) | undefined;
     const stop = (): void => {
       socketClosed=true;
@@ -80,8 +90,17 @@ export class NemoSpeechProvider implements SpeechToTextProvider {
         if (Date.parse(request.now()) >= Date.parse(request.deadlineAt)) { socket.close(); yield { kind: "terminal", sequence: eventSequence, outcome: "timedOut", inputSamples }; return; }
         inputId ??= item.audioInputId;
         validateInput(item, inputId, nextSequence, inputSamples);
-        if (item.type === "frame") { const bytes = Buffer.from(item.frame.dataBase64, "base64"); socket.send(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)); nextSequence += 1; inputSamples += item.frame.sampleCount; }
-        else { socket.send(JSON.stringify({ type: "input_audio_buffer.commit" })); ended = true; break; }
+        if (item.type === "frame") {
+          const bytes = Buffer.from(item.frame.dataBase64, "base64");
+          for (let offset = 0; offset < bytes.length;) {
+            const count = Math.min(bytes.length - offset, pendingPcm.length - pendingBytes);
+            bytes.copy(pendingPcm, pendingBytes, offset, offset + count);
+            pendingBytes += count; offset += count;
+            if (pendingBytes === pendingPcm.length) flushPcm();
+          }
+          nextSequence += 1; inputSamples += item.frame.sampleCount;
+        }
+        else { flushPcm(); socket.send(JSON.stringify({ type: "input_audio_buffer.commit" })); ended = true; break; }
       }
       if (!ended) throw new Error("audio stream missing end");
       while (!committed) {
@@ -105,6 +124,7 @@ export class NemoSpeechProvider implements SpeechToTextProvider {
       clearTimeout(timer);signal?.removeEventListener("abort",stop);rejectOpen=undefined;wake=undefined;
       if(socket){socket.onopen=null;socket.onmessage=null;socket.onerror=null;socket.onclose=null;try{socket.close();}catch{ /* Already closed. */ }}
       queue.length=0;
+      pendingPcm.fill(0); pendingBytes=0;
     }
   }
 }

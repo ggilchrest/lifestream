@@ -45,3 +45,20 @@ test("NeMo adapter fences cancellation and rejects non-16k or non-contiguous PCM
   const invalid = async function* () { yield { type: "frame" as const, audioInputId: "bad", frame: { frameId: "f", sequence: 1, format, sampleOffset: 0, sampleCount: 4, dataBase64: "AAAAAAAAAAA=" } }; };
   const rejected = []; for await (const event of invalidProvider.transcribe({ deadlineAt: "2026-09-08T00:01:00Z", now: () => "2026-09-08T00:00:00Z" }, invalid())) rejected.push(event); assert.equal(rejected.at(-1)?.outcome, "failed"); assert.equal(invalidSocket.sent.length, 1); assert.match(String(invalidSocket.sent[0]), /session\.update/);
 });
+
+test('NeMo coalesces irregular device frames into bounded messages without losing, duplicating or reordering samples',async()=>{
+ const socket=new FakeSocket(),provider=new NemoSpeechProvider({baseUrl:'http://stt.invalid',model:'test',webSocketFactory:()=>{queueMicrotask(()=>socket.onopen?.());return socket;}});
+ const counts=[320,480,320,4800,37],expected=Buffer.alloc(counts.reduce((n,c)=>n+c,0)*2);for(let n=0;n<expected.length/2;n++)expected.writeInt16LE((n%2000)-1000,n*2);
+ async function* stream(){let offset=0;for(const [sequence,count] of counts.entries()){yield {type:'frame' as const,audioInputId:'irregular',frame:{frameId:String(sequence),sequence,format,sampleOffset:offset,sampleCount:count,dataBase64:expected.subarray(offset*2,(offset+count)*2).toString('base64')}};offset+=count;}yield {type:'end' as const,audioInputId:'irregular',nextSequence:counts.length,sampleCount:offset};}
+ const events=[];for await(const event of provider.transcribe({deadlineAt:new Date(Date.now()+1000).toISOString(),now:()=>new Date().toISOString()},stream()))events.push(event);
+ const binary=socket.sent.filter((value):value is ArrayBuffer=>typeof value!=='string').map(value=>Buffer.from(value));assert.deepEqual(binary.map(b=>b.length),[3200,3200,3200,2314]);assert.deepEqual(Buffer.concat(binary),expected);assert.match(String(socket.sent.at(-1)),/input_audio_buffer.commit/);assert.equal(events.at(-1)?.inputSamples,5957);assert.equal(events.at(-1)?.outcome,'succeeded');
+});
+
+test('NeMo drops an unsent short remainder on cancellation, deadline or invalid end',async()=>{
+ for(const mode of ['cancel','deadline','invalid'] as const){const socket=new FakeSocket(),controller=new AbortController();let now=0;
+ const provider=new NemoSpeechProvider({baseUrl:'http://stt.invalid',model:'test',webSocketFactory:()=>{queueMicrotask(()=>socket.onopen?.());return socket;}});
+ async function* stream(){yield {type:'frame' as const,audioInputId:'pending',frame:{frameId:'0',sequence:0,format,sampleOffset:0,sampleCount:4,dataBase64:'AAAAAAAAAAA='}};assert.equal(socket.sent.length,1,'Short tail must remain unsent');if(mode==='cancel')controller.abort();if(mode==='deadline')now=2000;yield {type:'end' as const,audioInputId:'pending',nextSequence:mode==='invalid'?2:1,sampleCount:4};}
+ const events=[];for await(const event of provider.transcribe({deadlineAt:new Date(1000).toISOString(),now:()=>new Date(now).toISOString()},stream(),controller.signal))events.push(event);
+ assert.equal(events.at(-1)?.outcome,mode==='cancel'?'cancelled':mode==='deadline'?'timedOut':'failed');assert.equal(socket.sent.length,1);assert.equal(socket.onmessage,null);
+ }
+});
