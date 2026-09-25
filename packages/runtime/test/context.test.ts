@@ -12,7 +12,7 @@ test("one compiled view preserves mandatory lanes, bounded relevant allocation a
   const view = compileRelationshipContext({...base,records});
   assert.deepEqual(view.approvedBaseline,[records[0]!.content]); assert.deepEqual(view.criticalCorrections,[records[1]!.content]); assert.deepEqual(view.relevantContext.map(item=>item.id),['relevant']); assert.equal(view.preparationCount,1);
   assert.ok(view.omissions.some(item=>item.id==='hobby'&&item.reason==='no current-task relevance')); assert.doesNotMatch(formatPreparedRelationshipContext(view),/UNAPPROVED_PRIVATE_VALUE|rare clocks/);
-  assert.ok(view.budget.usedBytes <= view.budget.maximumBytes); assert.equal(view.compilerRevision,'relationship-context:6'); assert.deepEqual(compileRelationshipContext({...base,records}),view);
+  assert.ok(view.budget.usedBytes <= view.budget.maximumBytes); assert.equal(view.compilerRevision,'relationship-context:7'); assert.deepEqual(compileRelationshipContext({...base,records}),view);
   const disabled=compileRelationshipContext({...base,records,controls:{callbackFrequency:0}}); assert.equal(disabled.relevantContext.length,0); assert.equal(disabled.criticalCorrections.length,1); assert.equal(disabled.approvedBaseline.length,1);
   const unknown=compileRelationshipContext({...base,records,audienceScope:'unknown'}); assert.deepEqual(unknown.selections,[]); assert.doesNotMatch(formatPreparedRelationshipContext(unknown),/project uses Python|rare clocks|introductory/);
   assert.throws(()=>compileRelationshipContext({...base,records:[record('a','x'.repeat(3900),'correction'),record('b','y'.repeat(3900),'correction')]}),/Mandatory relationship boundaries/);
@@ -32,4 +32,27 @@ test('canonical formatting keeps mandatory lanes when grouped conventions and ca
  const grouped={profileRevision:'p:1',relationshipRevision:'r:1',configurationRevision:'c:1',approvedBaseline:['Keep this baseline'],criticalCorrections:['Apply this correction'],compiledConventions:[{lane:'baseline',text:'Keep this baseline',sources:[{id:'baseline:1',revision:1,family:'synthetic'}]}],relevantContext:Array.from({length:8},(_,index)=>({id:`relevant-${index}`,content:`detail ${index}`,rank:index})),discoveryContent:'x'.repeat(2048),limitations:[]};
  const formatted=formatPreparedRelationshipContext(grouped);
  assert.match(formatted,/Approved baseline: Keep this baseline/);assert.match(formatted,/Critical corrections: Apply this correction/);assert.match(formatted,/Compiled conventions with source links/);assert.match(formatted,/Optional discovery context omitted/);assert.match(formatted,/relevant-0=detail 0/);assert.doesNotMatch(formatted,/relevant-4=detail 4/);assert.ok(Buffer.byteLength(formatted)<=8192);
+});
+
+test('requested personal recall retains split facts without increasing ordinary callback frequency',async()=>{
+ const {compileRelationshipContext,relationshipControlDefaults}=await import('../src/context/builder.ts');
+ const record=(id:string,content:string)=>({id,content,revision:2,sourceFamily:'automatic-memory',status:'approved',use:'relevant' as const,personalization:true,mention:true});
+ const split=[record('a','User stated: I prefer to drink it without sugar.'),record('b','User stated: My favorite tea is jasmine green tea.')];
+ const base={records:split,userInput:'What is my favorite tea, and how do I prefer to drink it?',audienceScope:'authenticatedSession' as const,profileRevision:'p',relationshipRevision:'r',configurationRevision:'c',controls:relationshipControlDefaults};
+ for(const records of [split,[...split].reverse(),[record('combined','My favorite tea is jasmine green tea, which I prefer to drink without sugar.')]]){
+  const view=compileRelationshipContext({...base,records});const prompt=formatPreparedRelationshipContext(view);assert.match(prompt,/jasmine green tea/u);assert.match(prompt,/without sugar/u);assert.equal(view.relevantContext.length,records.length);assert.equal(view.preparationCount,1);assert.ok(view.budget.usedBytes<=8192);
+ }
+ for(const userInput of ['Explain jasmine tea without sugar.','How do I make tea without sugar?','Analyze this quote: What is my favorite tea?'])assert.equal(compileRelationshipContext({...base,userInput}).relevantContext.length,1);
+ for(const userInput of ['Please remind me about my favorite tea and sugar preference.','What did I tell you about tea and sugar?','Do you remember my favorite tea and sugar preference?','How do I prefer my tea with sugar?'])assert.equal(compileRelationshipContext({...base,userInput}).relevantContext.length,2);
+});
+
+test('explicit recall cannot bypass zero settings, lifecycle, mention, audience, relevance or context bounds',async()=>{
+ const {compileRelationshipContext,relationshipControlDefaults}=await import('../src/context/builder.ts');
+ const record={id:'allowed',content:'My tea preference is jasmine.',revision:1,sourceFamily:'automatic-memory',status:'approved',use:'relevant' as const,personalization:true,mention:true};
+ const base={records:[record],userInput:'What is my tea preference?',audienceScope:'authenticatedSession' as const,profileRevision:'p',relationshipRevision:'r',configurationRevision:'c',controls:relationshipControlDefaults};
+ for(const controls of [{...relationshipControlDefaults,callbackFrequency:0},{...relationshipControlDefaults,personalizationIntensity:0},{...relationshipControlDefaults,relevanceThreshold:1}])assert.equal(compileRelationshipContext({...base,controls}).relevantContext.length,0);
+ for(const patch of [{status:'rejected'},{personalization:false},{mention:false},{content:'Unrelated synthetic clocks.'}])assert.equal(compileRelationshipContext({...base,records:[{...record,...patch}]}).relevantContext.length,0);
+ assert.deepEqual(compileRelationshipContext({...base,audienceScope:'unknown'}).selections,[]);
+ const many=compileRelationshipContext({...base,records:Array.from({length:9},(_,n)=>({...record,id:'fact-'+n,content:'My tea preference '+n}))});assert.equal(many.relevantContext.length,4);assert.equal(many.omissions.filter(x=>x.reason==='bounded allocation').length,5);
+ const large=compileRelationshipContext({...base,records:Array.from({length:8},(_,n)=>({...record,id:'large-'+n,content:'My tea preference '+('x'.repeat(3900))}))});assert.ok(large.budget.usedBytes<=8192);assert.equal((formatPreparedRelationshipContext(large).match(/x{100}/gu)??[]).length,0,'Existing optional 512-byte formatting bound still applies');
 });

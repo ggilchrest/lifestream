@@ -43,3 +43,11 @@ Trusted embedded hosts may still compose another legitimate destination-scoped a
 The automated launcher test uses isolated synthetic accounts and a network guard. It exercises real startup, local sign-in, disabled readiness and restart without external calls. Other channel tests cover real local authentication, pairing, canonical conversation, source qualification, policy, authority checks, durable delivery and subscriber controls using simulated Telegram. These checks do not establish live Telegram delivery, physical audience correctness or Human acceptance.
 
 Restoring a candidate disables saved destination permissions, revokes pairings and pending codes, invalidates poll-worker ownership, cancels sends that had not started, and marks attempted sends with unknown outcomes. Accepted delivery history and poll offsets are preserved. Saved notification grant selections are cleared as well. Fresh owner intent, subscriber pairing, feature consent and an explicit notification grant are required after restore; historical acceptance never authorizes a resend. The source candidate is unaffected by isolated restore.
+
+## Requested recall and callback frequency
+
+A question such as “What is my favorite tea, and how do I prefer to drink it?” can use up to four relevant saved facts when personal context is permitted. This avoids losing one answer merely because automatic memory saved the two facts as separate records. It uses the same single prepared context and existing byte limits; it adds no model call.
+
+Ordinary callbacks keep their configured frequency. Setting callback frequency or personalization to zero still withholds optional personal facts, including requested recall. Shared or unknown audiences, withdrawn consent, rejected records and mention exclusions still withhold the facts before inference. The controls inspector explains the distinction.
+
+Recognition currently covers bounded English personal-fact questions and explicit reminders, such as “What did I tell you about my tea?” or “Remind me about my tea preference.” Other wording falls back to the ordinary callback limit. Lexical relevance and the four-item/512-byte optional formatting bound still apply; this is not exhaustive archive search.

@@ -44,8 +44,18 @@ export type RelationshipContextRecord = { id: string; content: string; revision:
 export type ContextOmission = { id: string; revision: number; reason: string };
 export type ContextSelection = { id: string; revision: number; sourceFamily: string; lane: RelationshipContextRecord["use"]; byteContribution: number };
 export type CompiledRelationshipContext = PreparedRelationshipContext & { compilerRevision: string; representationRevision: string; builtAt: string; freshUntil: string; sourceRevisions: readonly string[]; selections: readonly ContextSelection[]; omissions: readonly ContextOmission[]; budget: { maximumBytes: number; usedBytes: number; estimator: "utf8-bytes-upper-bound" }; preparationCount: 1 };
-export const RELATIONSHIP_COMPILER_REVISION = "relationship-context:6";
+export const RELATIONSHIP_COMPILER_REVISION = "relationship-context:7";
 const bytes = (value: string) => new TextEncoder().encode(value).length;
+// A bounded cue from the current request only, never from retrieved records.
+// This changes allocation, not eligibility, privacy, consent, or zero controls.
+function requestsPersonalRecall(input: string): boolean {
+  const request = input.slice(0, 8000).trim().toLowerCase().replace(/^please\s+/u, "");
+  return /^(?:what|which|where|when)\b[^.!?\n]{0,160}\bmy\b/u.test(request)
+    || /^how\s+do\s+i\s+(?:prefer|like)\b/u.test(request)
+    || /^(?:what|which|where|when|how)\b[^.!?\n]{0,80}\bdid\s+i\s+(?:tell|say|mention|share)\b/u.test(request)
+    || /^(?:(?:can|could|would)\s+you\s+(?:please\s+)?)?remind\s+me\s+(?:of|about)\b[^.!?\n]{0,120}\b(?:my|i)\b/u.test(request)
+    || /^(?:what\s+do\s+you\s+remember|do\s+you\s+remember)\b[^.!?\n]{0,120}\b(?:me|my|i)\b/u.test(request);
+}
 const terms = (value: string) => new Set((value.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? []).filter(word => !["the", "and", "that", "this", "with", "for", "are", "was", "user", "prefers", "please", "about", "explain"].includes(word)));
 export function compileRelationshipContext(input: { records: readonly RelationshipContextRecord[]; userInput: string; audienceScope: "authenticatedSession" | "unknown"; profileRevision: string; relationshipRevision: string; configurationRevision: string; controls?: Readonly<Record<string, number>>; representation?: "recordOriented"|"conventionOriented"; now?: number }): CompiledRelationshipContext {
   const now = input.now ?? Date.now(), maximumBytes = 8192;
@@ -61,6 +71,10 @@ export function compileRelationshipContext(input: { records: readonly Relationsh
     else if (record.content.length > 4000) reason = "record exceeds bounded projection";
     if (reason) omitted.push({ id: record.id, revision: record.revision, reason }); else eligible.push(record);
   }
+  const callbackLimit = Math.max(0,Math.min(4,Math.ceil(4 * (input.controls?.callbackFrequency ?? 1))));
+  const requestedRecall = callbackLimit > 0 && requestsPersonalRecall(input.userInput);
+  const optionalLimit = requestedRecall ? 4 : callbackLimit;
+  if (requestedRecall) view.limitations = [...view.limitations, "Explicit personal recall uses up to four eligible relevant records within the existing byte budget; ordinary callback frequency and all exclusions still apply elsewhere."];
   const payloadCapacity = maximumBytes - bytes(formatPreparedRelationshipContext(view)) - 128;
   let used = 0;
   const take = (record: RelationshipContextRecord): boolean => {
@@ -74,7 +88,6 @@ export function compileRelationshipContext(input: { records: readonly Relationsh
     if (!take(record)) throw new Error("Mandatory relationship boundaries exceed the context budget; review them before personalized generation");
     (record.use === "correction" ? view.criticalCorrections as string[] : view.approvedBaseline as string[]).push(record.content);
   }
-  const optionalLimit = Math.max(0,Math.min(4,Math.ceil(4 * (input.controls?.callbackFrequency ?? 1))));
   const requestTerms = terms(input.userInput.slice(0, 8000));
   const ranked = eligible.filter(record => record.use === "relevant").map(record => ({ record, score: [...terms(record.content)].filter(term => requestTerms.has(term)).length })).sort((a,b) => b.score-a.score || a.record.id.localeCompare(b.record.id));
   for (const { record, score } of ranked) {
