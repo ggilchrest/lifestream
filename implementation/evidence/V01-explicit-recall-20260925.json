@@ -1,0 +1,209 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-25T17:49:05.237283Z",
+  "status": "verified",
+  "claimClass": "bounded-explicit-recall-and-local-candidate-functional",
+  "sourceRevision": "746b23dceb8e0cc4c4e1891a33c43d1f4b688284",
+  "specificationRevision": "632ff06c5fea05fedd8d3c4cc3873db34a03c159",
+  "behavior": [
+    "Recognized explicit personal recall may allocate up to four eligible relevant records within existing budgets when callback frequency and personalization are nonzero.",
+    "Ordinary callback allocation and defaults are unchanged; zero, audience, consent, lifecycle, mention, ownership and relevance restrictions are preserved.",
+    "Compiler revision7 and the controls inspector describe actual bounded allocation; no extra model request or traversal."
+  ],
+  "checks": {
+    "source": 1231,
+    "sourceSkipped": 0,
+    "context": 10,
+    "extractedContextAndControls": 11,
+    "renderedTuning": 1,
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "offlineInstallBuild": "pass",
+    "privateSpecificationTests": 60,
+    "specificationValidation": "pass",
+    "composedExtracted": 104,
+    "composedSkipped": 0
+  },
+  "archive": {
+    "revision": "746b23dceb8e0cc4c4e1891a33c43d1f4b688284",
+    "sha256": "8f69c1cb5b6fd260b18a416d916f6c1fe53ad1901377762aa588d3ef64f5a42e",
+    "bytes": 22302720,
+    "members": 1456
+  },
+  "selectedSubscriber": {
+    "status": "verified",
+    "sourceRevision": "746b23dceb8e0cc4c4e1891a33c43d1f4b688284",
+    "sourceArchiveSha256": "8f69c1cb5b6fd260b18a416d916f6c1fe53ad1901377762aa588d3ef64f5a42e",
+    "inference": "selected ai5090 SGLang/Qwen",
+    "telegram": "simulated private transport, no Telegram calls",
+    "humanAcceptance": false,
+    "measurements": [
+      {
+        "label": "private declaration",
+        "elapsedMs": 959,
+        "replySha256": "7c38e8e53d2442e04fd4913fce742b3a095c05cbf308fdf43b7761743276be4e"
+      },
+      {
+        "label": "attributable preference",
+        "elapsedMs": 1623,
+        "replySha256": "ad49d1a5366d1125bfd9a017997b7a28a9de6c669288ec46d42eab12351ecc05"
+      },
+      {
+        "label": "restart privacy status",
+        "elapsedMs": 1004,
+        "replySha256": "686adaecf49a19888a74ee27193fdcb9731627285af3f689ce22a5c5d2827b09"
+      },
+      {
+        "label": "fresh private declaration",
+        "elapsedMs": 973,
+        "replySha256": "8129610563edaf225bd6c39a128e577e617c1579fa0ea07d07b53bc2702f0ee5"
+      },
+      {
+        "label": "durable recall after restart",
+        "elapsedMs": 1704,
+        "replySha256": "95401587e9e2c5b4ab22e850c387250e9d7dbf392298b91fee4ed0f74fc4053c"
+      },
+      {
+        "label": "shared withdrawal",
+        "elapsedMs": 287,
+        "replySha256": "686adaecf49a19888a74ee27193fdcb9731627285af3f689ce22a5c5d2827b09"
+      },
+      {
+        "label": "shared withholding",
+        "elapsedMs": 1874,
+        "replySha256": "1ffb720ccd870f9cce87a2f87eefca1b3cb081bbaad52fd9cce6243e622c932c"
+      },
+      {
+        "label": "private before withdrawal",
+        "elapsedMs": 86,
+        "replySha256": "07d579112ed8d3d1658d10bda8151e213c2bc710b22d91c9a8f7581c057153f1"
+      },
+      {
+        "label": "consent withdrawal withholding",
+        "elapsedMs": 1967,
+        "replySha256": "956868852ebf9c0908df886c953be67c43f219819d99965e293d1324a11dda0c"
+      }
+    ],
+    "checks": [
+      "Real model automatically extracts a subscriber-owned preference with separate owner permission and subscriber consent, without administration privileges",
+      "actual selected model recalls both saved details after host restart and fresh private declaration",
+      "shared audience withholds saved detail from selected-model response",
+      "Subscriber consent withdrawal disables collection and personal recall while retaining their own reviewable records"
+    ],
+    "inferenceIdentity": {
+      "model": "qwen3.8-27b-local",
+      "revision": "319f741cce68d7914884900c138a1fbb70a42f30"
+    },
+    "savedMemoryRecords": 1,
+    "preparedMemoryObservations": [
+      {
+        "userInput": "What is my favorite tea, and how do I prefer to drink it?",
+        "containsTea": true,
+        "containsNoSugar": true,
+        "requestedAllocation": true
+      },
+      {
+        "userInput": "What is my favorite tea?",
+        "containsTea": false,
+        "containsNoSugar": false,
+        "requestedAllocation": false
+      },
+      {
+        "userInput": "What is my favorite tea?",
+        "containsTea": false,
+        "containsNoSugar": false,
+        "requestedAllocation": false
+      }
+    ]
+  },
+  "native": {
+    "sourceRevision": "746b23dceb8e0cc4c4e1891a33c43d1f4b688284",
+    "shellRevision": "85a000e1b5f1b03df3821967a282669f86f308cd",
+    "checks": 5,
+    "measurements": {
+      "inputEndToFirstTextMs": 6428.799999952316,
+      "inputEndToFirstAudioMs": 7790.899999976158,
+      "inputEndToPlaybackEndMs": 30770.399999976158,
+      "receivedAudioFrames": 54,
+      "observedRenderedAudioFrames": 518
+    },
+    "lockProtectionMs": 55.75525000000198,
+    "stopBeforeSources": 2,
+    "stopAfterSources": 0,
+    "stopObservationMs": 27.0,
+    "physicalMicrophone": false,
+    "camera": false,
+    "outputMuted": true,
+    "visualReview": "private avatar stage, Stop and protected output inspected; images remain outside Git"
+  },
+  "installedCandidate": {
+    "lifestream": "746b23dceb8e0cc4c4e1891a33c43d1f4b688284",
+    "pwce": "1da5d9b089a6021d51430ef630cdb563a263bb72",
+    "manifestSha256": "d96b124d1b1fce06431d4855ffea02ae613d7a8f0ed94799b673e37940f34a84",
+    "migration": 59,
+    "existingTablesUnchanged": 102,
+    "changedExistingTables": [
+      "initiative_clock",
+      "schema_migrations"
+    ],
+    "newEmptyTables": [
+      "channel_personal_context",
+      "channel_subscriptions",
+      "telegram_conversation_sessions",
+      "telegram_deliveries",
+      "telegram_notice_authority",
+      "telegram_notice_deliveries",
+      "telegram_pairings",
+      "telegram_poll_state"
+    ],
+    "servedAssetsMatched": 8,
+    "providerHealth": "selected inference/STT/TTS ready",
+    "pwceConsumerUnchanged": true,
+    "operatorSignIn": "actual rendered form pass",
+    "privateAudience": "protected",
+    "liveTelegram": "unconfigured"
+  },
+  "localRecovery": {
+    "files": 60,
+    "packages": 4,
+    "authority": "quarantined",
+    "sessions": "revoked",
+    "channels": "disabledAndUnpaired",
+    "encryptedSuccessorRestore": false
+  },
+  "guide": {
+    "recordedAt": "2026-09-25T17:38:00.103247+00:00",
+    "version": "2026-09-25.v36",
+    "journeys": 25,
+    "actions": 324,
+    "savedFields": 382,
+    "links": 51,
+    "navigationButtons": 27,
+    "namedTarget": "lifestreamAcceptanceTarget",
+    "htmlSha256": "3e817f3e7a1f978e878f3930a7a725ddb49464970d7160623c817d479c3cf3d2",
+    "humanAcceptance": false,
+    "browserChecks": 23,
+    "fileOriginNamedTabLinks": 51,
+    "visualReview": "desktop/mobile inspected",
+    "migration": "Only A06.7/A25.8 and their journey results reset fromv35; notes, other answers and prior decisions retained"
+  },
+  "retainedFailures": [
+    "PWCE browser checks initially lacked the bundled browser; installed Chrome passed both existing tests without product changes.",
+    "Specification validation initially found stale packet and requirement digests; acceptance was extended while preserving original assertions, then validation passed.",
+    "Review sign-in401 observed once; later installed diagnostic captured a password mismatch when the harness filled before workspace readiness. Waiting for actual workspace readiness passed. No server authentication repair is claimed.",
+    "Installed UI harness first expected nonexistent configured field, then missed mobile Account navigation; both failed reports are retained; corrected real-flow verification passed.",
+    "Initial guide harness still expected the predecessor review port; corrected expected target passes; historical failure retained."
+  ],
+  "exclusions": [
+    "Explicit recall uses bounded English recognition and lexical relevance; zero controls and all eligibility/privacy gates remain. This does not establish exhaustive archive recall.",
+    "The real subscriber trial saved one combined record; split and combined extraction shapes are deterministically covered by the compiler regression. No multi-sample stability claim.",
+    "Original S073 ordinary-callback and S086 stability failures remain unchanged.",
+    "Native first audio was7790.9ms in this trial;900ms median/1500ms p95 targets remain unmet. Generated input, muted output, synthetic lock and27ms automation Stop observation are not physical/perceptual acceptance.",
+    "Fresh local restore is verified; encrypted successor restore remains unavailable because the configured separate volume is absent.",
+    "No live Telegram, physical camera/microphone, automatic audience/owner-absence, recipient delivery, mobile endpoint or final Human acceptance is claimed."
+  ],
+  "humanAcceptance": false,
+  "runDisposition": "continue",
+  "next": "Continue the integrated development candidate: assess and qualify current PWCE recording-host composition for safe local promotion; preserve original S073 ordinary-callback/S086 stability and latency failures. Removable encrypted restore awaits its configured mount; physical/recipient/Human gates do not block independent software work."
+}
