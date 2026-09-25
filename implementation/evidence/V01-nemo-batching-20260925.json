@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-25T17:09:33.603743Z",
+  "status": "verified",
+  "claimClass": "bounded-adapter-regression-and-selected-provider-native-functional",
+  "sourceRevision": "9f9f79397a4e7e3cae8abf5d31cef232cb31407a",
+  "sourceArchive": {
+    "sourceRevision": "9f9f79397a4e7e3cae8abf5d31cef232cb31407a",
+    "sha256": "fec0ae74c17fb86e41f10e5e7d0f5763eb116ca465ed2f85cf7eabce2c3be399",
+    "members": 1455,
+    "bytes": 22282240,
+    "privateTrees": 0,
+    "symlinks": 0,
+    "manifestSha256": "9a192c58e0750fbbefe36a31ec310ad6512044d67d8accc3b6f4df0e8f88b489",
+    "privateIdentifiersScanned": 8,
+    "privateIdentifierMatches": 0
+  },
+  "change": "Aggregate small NeMo PCM frames into at most100ms per transport message; preserve exact samples and flush only at valid end; cancellation/deadline/invalid end discard unsent remainder. No provider or model replacement.",
+  "checks": {
+    "fullSource": 1229,
+    "sourceSkipped": 0,
+    "focusedProvider": 6,
+    "extractedProvider": 6,
+    "typecheck": "passed",
+    "lint": "passed",
+    "build": "passed",
+    "offlineInstallBuild": "passed",
+    "sampleIntegrity": "byte-exact irregular framing including maximum frame and partial remainder",
+    "cancellation": "pending tail not transmitted after cancellation, deadline or invalid end"
+  },
+  "nativeObservations": [
+    {
+      "sourceRevision": "666e1f2b1ad5ec4a7c85d23ac85e2f0943531c1a",
+      "reportSha256": "9ff001db135b86d15a584b5f4605b310282bf324457ee6770fc8d993d0367678",
+      "harnessSha256": "2ca4b53aeea9537da6a94c4609618d2128d6e1f1792194887a92bc4bcd5cf08d",
+      "checks": 4,
+      "measurements": {
+        "inputEndToFirstTextMs": 29793,
+        "inputEndToFirstAudioMs": 31560.100000023842,
+        "inputEndToPlaybackEndMs": 37574.200000047684,
+        "receivedAudioFrames": 40,
+        "observedRenderedAudioFrames": 384
+      },
+      "inputEndToTranscriptMs": 28592.100000023842,
+      "transcriptToFirstTextMs": 1200.8999999761581,
+      "lockProtectionMs": 55.66870799999742
+    },
+    {
+      "sourceRevision": "9f9f79397a4e7e3cae8abf5d31cef232cb31407a",
+      "reportSha256": "4480b908818052f586117f0dcf5a7026c3d9dbf28dcf142793a61c77627ecfd7",
+      "harnessSha256": "3f6628204e77ee945ff57aeed8f50df0225ac6fd010a40598de5fb9f5588a0e0",
+      "checks": 4,
+      "measurements": {
+        "inputEndToFirstTextMs": 3763.5,
+        "inputEndToFirstAudioMs": 4794,
+        "inputEndToPlaybackEndMs": 12490.199999928474,
+        "receivedAudioFrames": 92,
+        "observedRenderedAudioFrames": 884
+      },
+      "inputEndToTranscriptMs": 2992.5,
+      "transcriptToFirstTextMs": 771.0,
+      "lockProtectionMs": 59.814792000001034
+    },
+    {
+      "sourceRevision": "9f9f79397a4e7e3cae8abf5d31cef232cb31407a",
+      "reportSha256": "61cd2d8828f167eca4828a5f337f33c2bbb283fb83e3dd5917c86614b9def550",
+      "harnessSha256": "213ad0e962b666f4959db5f12b80639aec648063e1c464f19ba5e4b05d5a1e43",
+      "checks": 5,
+      "measurements": {
+        "inputEndToFirstTextMs": 2209.899999976158,
+        "inputEndToFirstAudioMs": 2999.0999999046326,
+        "inputEndToPlaybackEndMs": 6757.5,
+        "receivedAudioFrames": 46,
+        "observedRenderedAudioFrames": 442
+      },
+      "inputEndToTranscriptMs": 1475.2999999523163,
+      "transcriptToFirstTextMs": 734.6000000238419,
+      "lockProtectionMs": 54.94391600000017
+    }
+  ],
+  "nativeShellSource": "85a000e1b5f1b03df3821967a282669f86f308cd",
+  "selectedAdapterComparison": {
+    "recordedAt": "2026-09-25T17:06:21.204Z",
+    "inputSeconds": 6.88,
+    "inputSha256": "f20040c1e77a4a343399aa6ed55016810248c84945609e3e4f2584eeeaa34324",
+    "frameMilliseconds": 20,
+    "observations": [
+      {
+        "label": "previous",
+        "elapsedMs": 2152.3704589999998,
+        "binaryMessages": 344,
+        "totalBytes": 220160,
+        "outcome": "succeeded",
+        "textSha256": "27f7ab9d971025b49df8b5a6f3c3ea39dffb6e83c94fb9dcdc515b60b749f393"
+      },
+      {
+        "label": "batched",
+        "elapsedMs": 1382.3688750000001,
+        "binaryMessages": 69,
+        "totalBytes": 220160,
+        "outcome": "succeeded",
+        "textSha256": "27f7ab9d971025b49df8b5a6f3c3ea39dffb6e83c94fb9dcdc515b60b749f393"
+      }
+    ],
+    "scope": "One serial old/new diagnostic with identical prebuffered generated PCM and unchanged selected provider; not a performance distribution or cold-start control",
+    "physicalCapture": false,
+    "providerChanged": false
+  },
+  "stop": {
+    "observedPlayingBefore": true,
+    "queuedSourcesBefore": 2,
+    "queuedFramesBefore": 2,
+    "queuedSourcesAfter": 0,
+    "queuedFramesAfter": 0,
+    "microphoneAfter": "Microphone off",
+    "interruptAndStoppedSettlementSent": true,
+    "lateFramesRejected": true,
+    "observedBeforeToAfterMs": 32,
+    "physicalInterruptionBenchmark": false
+  },
+  "visualReview": "Updated private avatar stage and protected/Stop output inspected; images and private packages remain operator-local.",
+  "real": [
+    "Selected NeMo/Qwen/VoxCPM2 generation",
+    "Authenticated isolated server and SQLite",
+    "Packaged native AudioContext, normal socket transport and private Three presentation"
+  ],
+  "simulated": [
+    "Generated microphone PCM",
+    "Synthetic identities and manual audience",
+    "Muted output and synthetic Electron lock",
+    "Retired late audio probe"
+  ],
+  "qualificationLimits": [
+    "Single native observations, not a latency distribution or cold-start control",
+    "900ms median/1500ms p95 targets remain unmet",
+    "Prior31.56s observation retained; improvement is not attributed entirely to batching because warm state differed",
+    "Multi-fact subscriber recall limitation remains",
+    "No physical microphone, audibility, camera, live Telegram or new Human acceptance"
+  ],
+  "scopeAid": "LS-S056 packet already lists changed provider, test and voice documentation files. Preflight reported existing active-S086/checkpoint revision/scope mismatch; bounded authorized regression preserves that in-flight slice and substantive acceptance. UTC checkpoint timestamp normalized.",
+  "installedChanged": false,
+  "humanAcceptance": false,
+  "runDisposition": "continue",
+  "next": "Package the composed successor with Lifestream9f9f793 and current PWCE/composition, verify migration/recovery and refreshed affected qualification inputs, then prepare controlled local promotion. Preserve multi-fact recall, original S073/S086/onset failures and Human gates."
+}
