@@ -1,0 +1,168 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-25T16:52:43.338103+00:00",
+  "status": "implementationCompleteVerificationPending",
+  "sourceRevision": "666e1f2b1ad5ec4a7c85d23ac85e2f0943531c1a",
+  "sourceArchiveSha256": "324a0b4276770d364bbc9b57324477cd41405e3a15a20842af87f4f992b4c70c",
+  "inferenceIdentity": {
+    "model": "qwen3.8-27b-local",
+    "revision": "319f741cce68d7914884900c138a1fbb70a42f30"
+  },
+  "ownerJourney": {
+    "status": "verified",
+    "sourceRevision": "666e1f2b1ad5ec4a7c85d23ac85e2f0943531c1a",
+    "sourceArchiveSha256": "324a0b4276770d364bbc9b57324477cd41405e3a15a20842af87f4f992b4c70c",
+    "inference": "selected ai5090 SGLang/Qwen",
+    "telegram": "simulated private transport, no Telegram calls",
+    "humanAcceptance": false,
+    "measurements": [
+      {
+        "label": "private declaration",
+        "elapsedMs": 988,
+        "replySha256": "5dbb58add2960a5385bdd18c67bd75a617acf33e3cdd387f5a0e1304e621a0ff"
+      },
+      {
+        "label": "attributable preference",
+        "elapsedMs": 2066,
+        "replySha256": "47a2830ed01952f4857db370bc219f79a4bcde3eafa913ea30a450eb3f605ebe"
+      },
+      {
+        "label": "restart privacy status",
+        "elapsedMs": 1003,
+        "replySha256": "686adaecf49a19888a74ee27193fdcb9731627285af3f689ce22a5c5d2827b09"
+      },
+      {
+        "label": "fresh private declaration",
+        "elapsedMs": 967,
+        "replySha256": "793bf5ed345f122ed44fb71c90a687daa58fe37137d6bcbf9f7893af93ea9228"
+      },
+      {
+        "label": "durable recall after restart",
+        "elapsedMs": 2124,
+        "replySha256": "95401587e9e2c5b4ab22e850c387250e9d7dbf392298b91fee4ed0f74fc4053c"
+      },
+      {
+        "label": "shared withdrawal",
+        "elapsedMs": 829,
+        "replySha256": "686adaecf49a19888a74ee27193fdcb9731627285af3f689ce22a5c5d2827b09"
+      },
+      {
+        "label": "shared withholding",
+        "elapsedMs": 2300,
+        "replySha256": "4a5a509d0b38cad0eb839074f69c1cab090c1ffb1388d2d10d4061dc9080a5f5"
+      }
+    ],
+    "checks": [
+      "real model automatically extracted and saved an attributable owner preference",
+      "actual selected model recalls both saved details after host restart and fresh private declaration",
+      "shared audience withholds saved detail from selected-model response"
+    ],
+    "inferenceIdentity": {
+      "model": "qwen3.8-27b-local",
+      "revision": "319f741cce68d7914884900c138a1fbb70a42f30"
+    }
+  },
+  "subscriberFollowup": {
+    "status": "verified",
+    "sourceRevision": "666e1f2b1ad5ec4a7c85d23ac85e2f0943531c1a",
+    "sourceArchiveSha256": "324a0b4276770d364bbc9b57324477cd41405e3a15a20842af87f4f992b4c70c",
+    "inference": "selected ai5090 SGLang/Qwen",
+    "telegram": "simulated private transport, no Telegram calls",
+    "humanAcceptance": false,
+    "measurements": [
+      {
+        "label": "private declaration",
+        "elapsedMs": 972,
+        "replySha256": "19ae028c29c0d63a8d9724cbd25bf162d41dc4d25366ecbda5669abb24ec0b48"
+      },
+      {
+        "label": "attributable preference",
+        "elapsedMs": 2669,
+        "replySha256": "e5f5e49b10abb9da674c6d6a9c386237168b96ffc0f83f55d63f525ce6319ffd"
+      },
+      {
+        "label": "restart privacy status",
+        "elapsedMs": 1005,
+        "replySha256": "686adaecf49a19888a74ee27193fdcb9731627285af3f689ce22a5c5d2827b09"
+      },
+      {
+        "label": "fresh private declaration",
+        "elapsedMs": 979,
+        "replySha256": "aa940caa382d22b363b58d25d4fd175cfa45e341593ef7df12a5c293b4fe7f76"
+      },
+      {
+        "label": "durable recall after restart",
+        "elapsedMs": 2102,
+        "replySha256": "95401587e9e2c5b4ab22e850c387250e9d7dbf392298b91fee4ed0f74fc4053c"
+      },
+      {
+        "label": "single fact tea recall",
+        "elapsedMs": 1689,
+        "replySha256": "eee6e28d7b2c8fe162d84d55e6e5388e257d5e67bad8a51e6ce40a8ef48422a4"
+      },
+      {
+        "label": "single fact preparation recall",
+        "elapsedMs": 1470,
+        "replySha256": "9b3ee0ec382305c0a87bcfeb452b76ee63a2710642c4d3edbe0f0c7d691443e5"
+      },
+      {
+        "label": "shared withdrawal",
+        "elapsedMs": 717,
+        "replySha256": "686adaecf49a19888a74ee27193fdcb9731627285af3f689ce22a5c5d2827b09"
+      },
+      {
+        "label": "shared withholding",
+        "elapsedMs": 2097,
+        "replySha256": "b93f2ed5290c1b790b748020e335ee50705799f4746f56a3da6c3b3e7e17bde1"
+      },
+      {
+        "label": "private before withdrawal",
+        "elapsedMs": 877,
+        "replySha256": "aa3744a333a86fd07ad23fb838d910859dbea055eed0b5d380fb68587184eaaa"
+      },
+      {
+        "label": "consent withdrawal withholding",
+        "elapsedMs": 4462,
+        "replySha256": "30d22ebc021ade88486ba6b2b42028b63a950634f83696c18ba665a536e4a945"
+      }
+    ],
+    "checks": [
+      "Real model automatically extracts a subscriber-owned preference with separate owner permission and subscriber consent, without administration privileges",
+      "Selected model recalls both details together after restart",
+      "Selected model recalls each individually requested detail after restart",
+      "shared audience withholds saved detail from selected-model response",
+      "Subscriber consent withdrawal disables collection and personal recall while retaining their own reviewable records"
+    ],
+    "inferenceIdentity": {
+      "model": "qwen3.8-27b-local",
+      "revision": "319f741cce68d7914884900c138a1fbb70a42f30"
+    },
+    "multiFactRecallPassed": true
+  },
+  "priorSubscriberFailure": {
+    "status": "failed",
+    "measurement": {
+      "label": "durable recall after restart",
+      "elapsedMs": 5527,
+      "replySha256": "bc3e0f4fc070928cd7292698fa5d2e1776d204d79b096f16b59e57c41579cb76"
+    },
+    "criterion": "Both stated details recalled together after restart",
+    "diagnosis": "Both exact attributed facts persisted. Default callbackFrequency .2 admits one relevant record; lexical tie and stable ID ordering selected only preparation. A later extraction shape passed; failure is not waived."
+  },
+  "releaseQualification": "Incomplete: multi-fact recall is sensitive to extraction shape and the existing configured record cap. Two observed subscriber trials: one incomplete, one complete. No unchanged retry is indicated.",
+  "simulated": [
+    "Telegram delivery",
+    "synthetic account and statements"
+  ],
+  "actual": [
+    "selected Qwen inference",
+    "automatic extraction",
+    "SQLite ownership/persistence",
+    "restart privacy",
+    "shared withholding",
+    "subscriber consent withdrawal"
+  ],
+  "humanAcceptance": false,
+  "installedChanged": false,
+  "next": "Qualify the newer joined candidate native speech/avatar path against unchanged selected providers using generated PCM, then assess isolated promotion; retain multi-fact recall and all original release gates."
+}
