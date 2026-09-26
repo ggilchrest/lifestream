@@ -1,5 +1,10 @@
-# CapApp-SPM
+# Native companion package
 
-This package is used to host SPM dependencies for your Capacitor project
+`Sources/CapApp-SPM` contains reviewed application code: the Capacitor bridge,
+Foundation transport and native voice lifecycle. Edit those sources normally.
+The pure protocol/privacy core and its tests live in `apps/ios/native`.
 
-Do not modify the contents of it or there may be unintended consequences.
+Capacitor regenerates `Package.swift`. Use `npm run sync` from `apps/ios` so
+`scripts/sync-native.mjs` restores the local `AssistantCore` dependency afterward.
+Keep plugin registration in `AssistantViewController`; never load remote script
+code into this native bridge. See `docs/ios-v0.1.md` for build and physical tests.
