@@ -9,6 +9,7 @@ import {createLifestreamServer} from '../../server/src/index.ts';
 import {loadProfile} from '../../server/src/config/loader.ts';
 import {PresentationPackages} from '../../server/src/admin/presentation-packages.ts';
 import {nativeTransportProbe} from '../scripts/test-transport.mjs';
+import {bundleAppearances} from '../scripts/bundle-appearances.mjs';
 import {bundleWeb} from '../scripts/build-web.mjs';
 
 async function fixture(t){
@@ -35,7 +36,7 @@ async function fixture(t){
   const proposal=await request('/api/auth/v1/proposals',{operation});await request(`/api/auth/v1/proposals/${proposal.proposalId}/approve`,{reviewedDigest:proposal.digest,humanConfirmed:true});
   await request(`/api/admin/v1/assistants/${a.assistantId}/relationships`,{});assistants.push(a.assistantId);
  }
- return {root,endpoint,password,assistants};
+ return {root,endpoint,password,assistants,packs};
 }
 
 test('actual Foundation transport signs in, binds mobile scope and completes fixture speech protocol',{timeout:90000},async t=>{
@@ -48,13 +49,14 @@ test('mobile interface uses real isolated account/audience/appearance APIs; audi
  const entry=join(f.root,'entry.js');await writeFile(entry,`import {installApp} from ${JSON.stringify(new URL('../web/controller.js',import.meta.url).pathname)};
  let listener,active=false;window.calls=[];window.failStart=false;window.emit=e=>listener(e);
  window.app=installApp({configure:async()=>{window.calls.push('configure')},request:window.nativeRequest,addListener:async(_,fn)=>{listener=fn},start:async(input)=>{window.calls.push(input);if(window.failStart)throw Error('Synthetic microphone denial');active=true;const state={active,phase:'Listening',route:'Simulated headphones'};listener({type:'state',state});return state},stop:async()=>{active=false;window.calls.push('stop');const state={active,phase:'Stopped'};listener({type:'state',state});return state},snapshot:async()=>({active,phase:'Stopped'}),routePicker:async()=>window.calls.push('routePicker')});`);
- await bundleWeb({entryPoints:[entry],outfile:join(web,'app.js')});for(const file of ['index.html','app.css'])await copyFile(new URL('../web/'+file,import.meta.url),join(web,file));
- const server=createServer(async(req,res)=>{try{const path=req.url==='/'?'index.html':req.url.slice(1);if(!['index.html','app.css','app.js'].includes(path)){res.writeHead(404).end();return}res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':'text/html');res.end(await readFile(join(web,path)));}catch{res.writeHead(500).end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
+ await bundleWeb({entryPoints:[entry],outfile:join(web,'app.js')});await bundleAppearances(web,{directory:f.packs,ids:['synthetic-model']});for(const file of ['index.html','app.css'])await copyFile(new URL('../web/'+file,import.meta.url),join(web,file));
+ const server=createServer(async(req,res)=>{try{const path=req.url==='/'?'index.html':req.url.slice(1);if(!['index.html','app.css','app.js','bundled-appearances.json','appearances/synthetic-model/model.gltf'].includes(path)){res.writeHead(404).end();return}res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':'text/html');res.end(await readFile(join(web,path)));}catch{res.writeHead(500).end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
  const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');const browser=await chromium.launch({channel:'chrome',headless:true});t.after(()=>browser.close());
  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});let cookie='',csrf='',holdContext=false,releaseContext;const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.exposeFunction('holdNextContext',()=>{holdContext=true;});
  await page.exposeFunction('nativeRequest',async({path,method,body})=>{
   if(holdContext&&path==='/api/runtime/v1/session-context'){holdContext=false;await new Promise(resolve=>{releaseContext=resolve;});}
+  assert.ok(!path.includes('/presentation'),'Appearance loading must not use the server');
   const r=await fetch(f.endpoint+path,{method,headers:{origin:f.endpoint,'content-type':'application/json',cookie,'x-lifestream-csrf':csrf},...(body?{body}:{})});
   if(r.headers.has('set-cookie'))cookie=r.headers.get('set-cookie').split(';')[0];if(path.includes('/presentation/resources/'))return {status:r.status,body:Buffer.from(await r.arrayBuffer()).toString('base64'),encoding:'base64'};const text=await r.text();try{const value=JSON.parse(text);csrf=value.session?.csrfToken??value.csrfToken??csrf;}catch{}
   return {status:r.status,body:text,encoding:'utf8'};

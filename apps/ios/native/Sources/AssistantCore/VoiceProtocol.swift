@@ -13,11 +13,11 @@ public enum EndpointPolicy {
     public static func permits(_ path: String, method: String) -> Bool {
         guard !path.contains(".."), !path.contains("%"), !path.contains("?"), !path.contains("#"), !path.contains("\\"), !path.contains("//") else { return false }
         if method == "GET" {
-            if ["/api/auth/v1/status", "/api/auth/v1/session", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/runtime/v1/presentation", "/api/admin/v1/assistants"].contains(path) { return true }
+            if ["/api/auth/v1/status", "/api/auth/v1/session", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/admin/v1/assistants"].contains(path) { return true }
             if path.range(of: "^/api/admin/v1/assistants/[a-fA-F0-9-]{36}/relationships$", options: .regularExpression) != nil { return true }
-            return path.range(of: "^/api/runtime/v1/presentation/resources/[a-zA-Z0-9._-]+/[a-zA-Z0-9/._-]+$", options: .regularExpression) != nil
+            return false
         }
-        return method == "POST" && ["/api/auth/v1/sign-in", "/api/auth/v1/sign-out", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/runtime/v1/presentation", "/api/runtime/v1/messages"].contains(path)
+        return method == "POST" && ["/api/auth/v1/sign-in", "/api/auth/v1/sign-out", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/runtime/v1/messages"].contains(path)
     }
 }
 

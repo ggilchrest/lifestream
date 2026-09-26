@@ -1,9 +1,11 @@
+import {bundledAppearances,bundledResource} from './bundled-appearances.js';
 import {PresentationRuntime} from '../../control-web/presentation-runtime.js';
 
 // The view owns no microphone, PCM queue, credential storage or background worker.
 export function installApp(native) {
  const $=id=>document.getElementById(id);
  let session=null,context=null,catalog=null,renderer=null,nativeState={},epoch=0,privateAllowed=false,starting=false,refreshing=false,expires=0,startGeneration=0,appearanceLoad=null;
+ const selections=new Map();
  const status=text=>{$('status').textContent=text;};
  const api=async(path,body)=>{
   const result=await native.request({path,method:body===undefined?'GET':'POST',...(body===undefined?{}:{body:JSON.stringify(body)})});
@@ -29,15 +31,15 @@ export function installApp(native) {
  }
  async function render(item){
   if(!privateAllowed||document.hidden)return;if(item.manifest?.resources?.some(resource=>resource.bytes>64*1024*1024))throw Error('This iOS build supports appearance resources up to 64 MiB each.');const ticket=epoch;
-  renderer??=new PresentationRuntime($('avatar'),{playback:()=>nativeState,identity:()=>({assistantId:$('assistant').value,endpointId:context?.endpoint?.endpointId}),onFailure:status,retrieveResource:async(path,signal)=>{signal?.throwIfAborted();const r=await native.request({path,method:'GET'});signal?.throwIfAborted();if(r.status!==200||r.encoding!=='base64')throw Error('Appearance resource unavailable.');return Uint8Array.from(atob(r.body),x=>x.charCodeAt(0)).buffer;}});
+  renderer??=new PresentationRuntime($('avatar'),{playback:()=>nativeState,identity:()=>({assistantId:$('assistant').value,endpointId:context?.endpoint?.endpointId}),onFailure:status,retrieveResource:bundledResource});
   const target=renderer,controller=appearanceLoad=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);let value;try{value=await target.prepare(item,controller.signal);}finally{clearTimeout(timer);if(appearanceLoad===controller)appearanceLoad=null;}
   if(ticket!==epoch||!privateAllowed||document.hidden){target.release(value);return}target.commit(value);$('intro').hidden=true;
  }
  async function appearances(){
-  const ticket=epoch,value=await api('/api/runtime/v1/presentation');if(ticket!==epoch||!privateAllowed)return;
+  const ticket=epoch,value=await bundledAppearances();if(ticket!==epoch||!privateAllowed)return;
   catalog=value;$('appearance').replaceChildren();for(const item of [catalog.neutral,...catalog.packages])$('appearance').add(new Option(item.label,item.id));
-  const saved=catalog.selection?.override??catalog.selection?.default;
-  const item=saved?[catalog.neutral,...catalog.packages].find(x=>x.id===saved.id&&x.digest===saved.digest):catalog.neutral;
+  const saved=selections.get($('assistant').value);
+  const item=saved?[catalog.neutral,...catalog.packages].find(x=>x.id===saved.id&&x.digest===saved.digest):[catalog.neutral,...catalog.packages].find(x=>x.id===catalog.defaultId)??catalog.neutral;
   if(!item){status('Saved appearance is unavailable. Choose an available appearance.');return}
   $('appearance').value=item.id;await render(item);
  }
@@ -64,7 +66,7 @@ export function installApp(native) {
   }finally{refreshing=false;controls();}
  }
  $('connection').onsubmit=run(async()=>{
-  startGeneration++;protect();session=null;context=null;$('assistant').replaceChildren(new Option('Choose an Assistant',''));controls();
+  startGeneration++;protect();selections.clear();session=null;context=null;$('assistant').replaceChildren(new Option('Choose an Assistant',''));controls();
   await native.configure({endpoint:$('server').value.trim()});
   let account;try{account=await api('/api/auth/v1/sign-in',{username:$('username').value,password:$('password').value,...($('totp').value?{totp:$('totp').value}:{})});}finally{$('password').value='';$('totp').value='';}
   session=account.session;if(!session?.sessionId)throw Error("Server did not return a session.");const initial=await api('/api/runtime/v1/session-context');
@@ -98,14 +100,12 @@ export function installApp(native) {
   try{
    candidate=await target.prepare(item,controller.signal);controller.signal.throwIfAborted();
    if(ticket!==epoch||!privateAllowed||nativeState.active||starting)throw Error('The conversation changed while loading.');
-   const next=await api('/api/runtime/v1/presentation',{scope:'session',id:item.id,digest:item.digest,expectedRevision:catalog.selection?.override?.revision??catalog.selection?.overrideRevision??0});
-   if(ticket!==epoch||!privateAllowed||document.hidden)throw Error('The audience changed while saving.');
-   if(next.selection?.override?.id!==item.id||next.selection?.override?.digest!==item.digest)throw Error('The saved appearance changed. Refresh to review.');
-   catalog=next;target.commit(candidate);candidate=null;$('intro').hidden=true;status('Appearance applied for this session.');
+   if(ticket!==epoch||!privateAllowed||document.hidden)throw Error('The audience changed while loading.');
+   selections.set($('assistant').value,{id:item.id,digest:item.digest});target.commit(candidate);candidate=null;$('intro').hidden=true;status('Appearance applied on this phone for this session.');
   }finally{if(candidate)target.release(candidate);clearTimeout(timer);if(appearanceLoad===controller)appearanceLoad=null;}
  });
  $('sign-out').onclick=run(async()=>{
-  startGeneration++;protect();await native.stop();try{await api('/api/auth/v1/sign-out',{});}finally{session=null;nativeState={};$('connection').closest('details').open=true;status('Signed out.');}
+  startGeneration++;protect();await native.stop();try{await api('/api/auth/v1/sign-out',{});}finally{session=null;selections.clear();nativeState={};$('connection').closest('details').open=true;status('Signed out.');}
  });
  void native.addListener('event',event=>{
   if(event.type==='state'){

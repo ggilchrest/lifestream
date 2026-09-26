@@ -1,6 +1,6 @@
 # iOS Assistant v0.1
 
-An operator-local Capacitor 8 application reuses the existing Three.js presentation runtime and packages generic interface code. Swift owns microphone capture, Apple voice processing, speech WebSocket transport, playback and background lifecycle. The app connects to an existing authenticated Lifestream runtime; it contains no Assistant persona, model, private avatar, provider credential or backend.
+An operator-local Capacitor 8 application reuses the existing Three.js presentation runtime and packages generic interface code. Swift owns microphone capture, Apple voice processing, speech WebSocket transport, playback and background lifecycle. The app connects to an authenticated Lifestream runtime for conversations, memory and AI services. Renderer code, selected models, textures and animation resources are bundled on the phone; no presentation assets are fetched from that server. The generic build contains only the neutral reference. A separate operator-local build can bundle private presentation packages without placing them in Git. No inference model, persona, provider credential or backend is bundled.
 
 ## Build and run
 
@@ -28,10 +28,25 @@ Release accepts HTTPS server origins only; Debug additionally accepts loopback H
 
 **Physical connection prerequisite:** the current local-password server deliberately accepts only loopback traffic and checks Host/Origin. A physical iPhone cannot reach `127.0.0.1` on the Mac. This change opens no listeners, installs no tunnel, weakens no server guard and deploys nothing. A separately approved private TLS connection that preserves the authenticated backend boundary is required before real phone testing. Do not enter credentials into an untrusted proxy. The server source must include this change's additive `personalCompanion` binding support; the previously installed beta is not silently replaced.
 
+## Build with local appearance packages
+
+Use the following from `apps/ios`, substituting an existing validated package catalog, selected package ID and a **new output directory outside all Git checkouts**:
+
+```sh
+node scripts/package-private.mjs /absolute/private/mobile-build /absolute/private/packages selected-package-id
+open /absolute/private/mobile-build/ios/App/App.xcodeproj
+```
+
+This creates the complete Xcode project, preserves current local signing settings, bundles the shared renderer and copies only declared, digest-checked resources. Package validation rejects missing, changed and undeclared external dependencies. The first selected package is the local default. Neutral reference remains available. No model conversion or animation substitution occurs. Each resource is limited to 64 MiB. Do not run Capacitor sync in the generated project: regenerate a new project using this command to update source or assets. Ordinary `npm run sync` in the source tree produces the neutral generic build.
+
+Appearance choice is local to this phone and Assistant for the current signed-in session. Refresh preserves it; sign-out resets it. Desktop/server appearance selections are not changed. The UI still requires a valid private-audience decision before displaying private packages and clears them when locked, shared or expired. Bundling makes bytes available to someone who can extract the app; these display controls are not encryption or asset revocation. Keep the private project and app operator-local.
+
+The intended deployment has Lifestream and AI services on the private server and renderer/native audio on the phone. A reachable, authenticated HTTPS/WSS endpoint is still required for conversation. Moving the runtime to another host requires a compatible build, explicit data/identity continuity and a private ingress configuration; changing the hostname alone does not remove the loopback/Host/Origin checks. No public listener or data migration is enabled by packaging.
+
 ## Included behavior
 
 - Account sign-in with optional TOTP; existing Assistants and session appearance selection.
-- Shared neutral renderer/core and digest-checked, authenticated appearance resources; private packs remain server-side, fetched only for a permitted foreground display.
+- Shared renderer/core with digest-checked bundled appearance resources. All model, texture and animation loads are local; the native API bridge rejects remote presentation requests. Private packs render only for a permitted foreground display.
 - This initial mobile build limits each appearance resource to 64 MiB; larger existing desktop packages produce an explicit error and retain the current display. Smaller mobile assets must be authored separately; the app does not rewrite private packs.
 - Native AVAudioSession play-and-record/voice-chat, AVAudioEngine voice processing, conversion to 16 kHz mono PCM input, native 48 kHz PCM output. No browser microphone or WebAudio lifetime dependency.
 - Native bounded energy gate: 160 ms qualification, 300 ms pre-roll, 600 ms silence commit and roughly 20 second utterance cap. This is provisional energy gating after Apple processing, not Silero/speaker recognition and not noise/echo acceptance.
@@ -48,7 +63,7 @@ Automatic memory remains a server policy and is not newly enabled by this app. E
 Record iPhone/iOS version, source revisions, selected runtime/provider identities, network route, headset model and result for each journey. Software/fixture results do not sign off the native audio route. Use a neutral Assistant and non-sensitive prompts first.
 
 1. **Install and connection:** launch; open/close Connection & account; try invalid address, bad password and bad TOTP; confirm useful failure and cleared secret fields. Connect successfully; select an existing Assistant. No microphone starts before Start listening. Sign out and confirm controls/display clear. Relaunch and verify sign-in is required.
-2. **Disclosure controls:** sign in; verify shared/unknown generic labels, no private avatar/text and no recalled private memory. Tap Only me; confirm five-minute notice. Change Assistant and Appearance; Apply appearance and Refresh; verify persisted session selection, package failure handling and continued usable conversation controls. Private content must not appear after an overlapping Shared / unknown click.
+2. **Disclosure controls:** sign in; verify shared/unknown generic labels, no private avatar/text and no recalled private memory. Tap Only me; confirm five-minute notice. Change Assistant and Appearance; Apply appearance and Refresh; verify phone-session selection survives Refresh without changing the desktop selection, package failure handling and continued usable conversation controls. Private content must not appear after an overlapping Shared / unknown click.
 3. **Microphone permission:** deny the first prompt; Start must recover without a stuck spinner. Enable permission in Settings; tap Start again. Verify the OS microphone indicator and native route label. Tap Stop during setup, recognition, text generation and speech; no late audio or new turn may play.
 4. **Speakerphone conversation:** speak several turns at normal and quiet volume; check recognition, output, echo, clipped beginnings, silence commits and noise rejection. Interrupt a reply with speech. Inspect actual provider evidence; an echo fixture response is not real-provider acceptance. Record latency separately against the existing objectives.
 5. **Lock without opt-in:** leave Continue this conversation when locked unchecked; Start, then lock/app-switch. Microphone and output must stop. Reopen; tap Start to resume explicitly.
@@ -58,8 +73,10 @@ Record iPhone/iOS version, source revisions, selected runtime/provider identitie
 9. **Privacy while locked:** Only me + background opt-in; lock and wait past five minutes. The conversation must stop at expiry. Separately revoke sign-in, switch audience or permission on the server during speech. No old reply may resume on reconnect. Reopening must not flash prior transcript/avatar in the app or app switcher.
 10. **Network transitions:** switch Wi-Fi/cellular, lose the private tunnel, disable networking and restore it. Expect bounded fail-closed stop rather than a fabricated successful turn. Tap Start after connectivity returns. Verify no duplicate transcript, PCM replay, stale voice ownership or automatic private fallback.
 11. **Long session and resource bounds:** run at least 30 minutes with repeated Start/Stop, foreground/background and route transitions. Renew disclosure explicitly between conversations. Inspect battery, thermal behavior, native memory, queue bounds, turn deadlines and quality. OS termination must leave no claim of continued listening; relaunch must not auto-record.
-12. **Presentation and accessibility:** portrait/landscape and small screen, VoiceOver, Dynamic Type/reduced motion, appearance failure, wrong resource digest and GPU context loss. All account, disclosure, Assistant, appearance, background, Start/Stop and Audio devices controls remain usable. Native speech must not depend on avatar loading or WebView animation. Check native route-sheet dismissal as well as opening it.
+12. **Presentation and accessibility:** portrait/landscape and small screen, VoiceOver, Dynamic Type/reduced motion, appearance failure, wrong resource digest and GPU context loss. All account, disclosure, Assistant, appearance, background, Start/Stop and Audio devices controls remain usable. Confirm the chosen bundled package loads with server presentation routes unavailable; no render dependency may contact a remote origin. Native speech must not depend on avatar loading or WebView animation. Check native route-sheet dismissal as well as opening it.
 
 ## Evidence and release limits
 
 See `implementation/evidence/IOS-V01-20260925.json` for exact measured software results and source binding. No iOS runtime is installed on the development Mac at the start of this task; unsigned SDK compilation is not simulator execution. Physical audio, lock survival, echo/noise behavior, Bluetooth transitions, latency/battery and Human acceptance remain release gates. Existing Mac/provider failures and prior accepted journeys are preserved.
+
+Bundled-asset continuation evidence: `implementation/evidence/IOS-BUNDLED-ASSETS-20260926.json`. The existing low-poly package can animate only features declared by its manifest; packaging does not create missing mouth/face mappings.

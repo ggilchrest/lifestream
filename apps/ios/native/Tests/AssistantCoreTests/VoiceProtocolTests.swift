@@ -8,6 +8,8 @@ final class VoiceProtocolTests: XCTestCase {
         XCTAssertNoThrow(try EndpointPolicy.validate("http://127.0.0.1:43182", allowLoopback: true))
         XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/presentation/resources/a/../secret", method: "GET"))
         XCTAssertFalse(EndpointPolicy.permits("/api/admin/v1/assistants", method: "POST"))
+        XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/presentation/resources/sample/model.glb", method: "GET"))
+        XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/presentation", method: "POST"))
     }
     func testPlaybackAccountingAndLateFrameFence() throws {
         let trace = UUID().uuidString; var stream = ReplyStream(); try stream.begin(trace)

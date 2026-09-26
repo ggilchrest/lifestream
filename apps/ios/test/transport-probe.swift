@@ -17,8 +17,8 @@ Task { @MainActor in
   guard let session=signed["session"] as? [String:Any],let sessionId=session["sessionId"] as? String,!transport.csrf.isEmpty else{throw VoiceError.invalidMessage}
   let context=try await request("/api/runtime/v1/session-context",["expectedRevision":0,"bindingKey":UUID().uuidString.lowercased(),"endpointClass":"personalCompanion","mode":"audio","audienceScope":"authenticatedSession"])
   let audience=try await request("/api/runtime/v1/audience",["mode":"solo","seconds":300]);_ = try AudienceLease(audience,now:Date())
-  let catalog=try await request("/api/runtime/v1/presentation");guard catalog["neutral"] != nil else{throw VoiceError.invalidMessage}
-  let model=try await request("/api/runtime/v1/presentation/resources/synthetic-model/model.gltf");guard model["asset"] != nil else{throw VoiceError.invalidMessage}
+  do { _ = try await request("/api/runtime/v1/presentation/resources/synthetic-model/model.gltf"); throw VoiceError.invalidMessage }
+  catch VoiceError.invalidEndpoint { /* Assets are bundled, never fetched by native transport. */ }
   let ws=try transport.webSocket(),inputId=UUID().uuidString.lowercased()
   let start:[String:Any]=["type":"start","request":["schemaVersion":"1.0.0","requestId":UUID().uuidString.lowercased(),"correlationId":UUID().uuidString.lowercased(),"sessionId":sessionId,"endpointId":(context["endpoint"] as! [String:Any])["endpointId"]!,"expectedSessionRevision":context["revision"]!,"audioInputId":inputId,"assistantId":configuration["assistantId"]!,"format":["encoding":"pcm_s16le","sampleRateHz":16000,"channels":1]]]
   func send(_ message:[String:Any]) async throws {try await ws.send(.string(String(data:try JSONSerialization.data(withJSONObject:message),encoding:.utf8)!))}
