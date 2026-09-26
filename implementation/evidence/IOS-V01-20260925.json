@@ -1,0 +1,206 @@
+{
+  "schemaVersion": "1.0.0",
+  "component": "iOS companion v0.1",
+  "status": "implementationCompleteVerificationPending",
+  "collectedAt": "2026-09-26T02:52:17Z",
+  "sourceRevision": "0ca3bfd80a1e21c9df8b2a60f41b51a6ddba3621",
+  "documentationRevision": "f4531e19a2500df82a5d0e01eecbbd5e9b26ce98",
+  "specificationRevision": "0510c4fd45dce37b6d5e90ebc4af6a76b3f531a4",
+  "owners": [
+    "LS-S066",
+    "LS-S067",
+    "LS-S068"
+  ],
+  "decision": "LS-DEC-046",
+  "claim": "Implemented native companion candidate; software and SDK compilation verified. Physical iOS, provider voice and Human acceptance pending.",
+  "sourceBinding": "Tests ran against worktree source bytes committed as sourceRevision; later native README clarification has no executable effect.",
+  "candidate": {
+    "bundle": "operator-local ios-v0.1/20260925/Lifestream-iOS-0.1-unsigned.app",
+    "bytes": 2486209,
+    "manifestSha256": "9bae8792aab304cd54741e23431d75c0a1b42ddf73cb73234be8cf67be6ef863",
+    "signed": false,
+    "bundleIdentifier": "org.lifestream.assistant",
+    "version": "0.1.0",
+    "capacitor": "8.5.2",
+    "three": "0.186.0",
+    "swiftPackageRevision": "0b6882e9a3288342aacf36348e5a94e4f1dd7b13",
+    "xcode": "27.0 (27A266a)",
+    "privateAssetsIncluded": false,
+    "installedCandidateUpdated": false
+  },
+  "checks": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "passed": 1232,
+      "skipped": 0,
+      "durationMs": 88174.476625
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<installed Playwright> node --test --test-concurrency=1 apps/control-web/test/*.test.mjs",
+      "result": "pass",
+      "passed": 122,
+      "skipped": 0,
+      "durationMs": 292625.922625
+    },
+    {
+      "command": "npm --prefix apps/ios test",
+      "result": "pass",
+      "passed": 2,
+      "skipped": 0,
+      "durationMs": 8015.831375,
+      "scope": "Actual macOS Foundation transport with isolated authenticated server and fixture speech; Chromium phone-layout renderer with simulated audio controls. All nine buttons and remaining input/disclosure controls. No iOS execution."
+    },
+    {
+      "command": "npm --prefix apps/ios run test:native",
+      "result": "pass",
+      "passed": 6,
+      "skipped": 0,
+      "scope": "Swift protocol, privacy, PCM accounting, cancellation fence and bounded gate; macOS execution."
+    },
+    {
+      "command": "node --experimental-strip-types --test apps/server/test/endpoint-bindings.test.ts",
+      "result": "pass",
+      "passed": 5,
+      "scope": "Included in full source suite; mobile class and session isolation."
+    },
+    {
+      "command": "pnpm typecheck; pnpm build; pnpm lint",
+      "result": "pass"
+    },
+    {
+      "command": "xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphoneos -configuration Release -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build",
+      "result": "pass",
+      "scope": "Unsigned ARM64 iPhone SDK compile, not physical execution."
+    },
+    {
+      "command": "xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -configuration Debug -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build",
+      "result": "pass",
+      "scope": "arm64/x86_64 simulator SDK compile; no installed runtime."
+    },
+    {
+      "command": "node --experimental-strip-types scripts/qualify-s052-development.mjs",
+      "result": "pass",
+      "passed": 10,
+      "scope": "Real pinned inference identity/typed stream/cancellation plus fixture and fault checks. No provider change or native phone voice proof.",
+      "evidenceSha256": "afdd45596671b144cb7d4e2c75d36cf53293f59959e5fdd49bc6c63c2f111309"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "passed": 44
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "passedTests": 60,
+      "scope": "Working specification validation includes preserved unrelated local S084 edits; not runtime acceptance."
+    },
+    {
+      "command": "Visual inspection of generated mobile screenshots",
+      "result": "pass",
+      "scope": "390-pixel portrait conversation/sign-out; scripted overflow checks at 320/390/844 pixels; corrected retained private canvas pixels."
+    }
+  ],
+  "realVersusSimulated": {
+    "real": [
+      "bundled shared Three.js renderer in Chromium",
+      "Foundation URLSession HTTP/WebSocket on macOS",
+      "actual isolated local-password server, CSRF, mobile session and appearance APIs",
+      "pinned ai5090 inference qualification",
+      "iPhone and Simulator SDK compilation"
+    ],
+    "simulated": [
+      "native AVAudioEngine controls in browser UI test",
+      "input/recognition/synthesis and playback settlement in native protocol probe",
+      "all phone route, interruption and lock transitions remain physical tests"
+    ],
+    "fixtureVoiceProbe": {
+      "chunks": 3,
+      "samples": 14400,
+      "sampleRateHz": 48000,
+      "physicalPlayback": false
+    }
+  },
+  "releaseBlockers": [
+    "Unsigned app: select an Apple signing team and provision a physical iPhone.",
+    "The installed authenticated backend is loopback-only and has not been replaced; phone use needs the matching server revision and separately approved private TLS connectivity. No network exposure was added.",
+    "No iOS simulator runtime or physical device was available. Lock survival, AirPods/HFP routes, speaker privacy, call interruption, echo/noise, latency, battery and Human journeys remain unverified.",
+    "Native energy VAD is provisional; it does not satisfy prior neural speech/noise/barge-in acceptance.",
+    "Existing broader S073/S086/performance/physical evidence gaps remain unchanged."
+  ],
+  "deferred": [
+    "APNs/mobile push and subscriber-only mobile account plane",
+    "Android",
+    "automatic conversation migration from Mac to phone",
+    "precise playback-clock/phoneme alignment",
+    "offline inference and wake word"
+  ],
+  "humanGuide": "docs/ios-v0.1.md",
+  "humanJourneys": 12,
+  "preservedFindings": [
+    "Initial CAPBridgedPlugin optional method-array compilation failure fixed.",
+    "Integration caught auth session envelope and fixture-provider setup errors; native transport and UI successor passed.",
+    "Visual inspection found retained WebGL canvas pixels after disposal; replacement canvas and native app-switcher shield now protect display.",
+    "Generated build artifacts initially entered lint; narrow generated-output ignores fixed it.",
+    "S066 scope manifest updated; prior S062 qualification inputs changed and require the append-only successor, not a rewritten historical receipt."
+  ],
+  "artifactDigests": [
+    {
+      "path": "lifestream-ios-source-suite.log",
+      "sha256": "0a2d8d6c766eb02278822397545f34f4c97d34c2d9abaf1c73a492c95477cc8c"
+    },
+    {
+      "path": "lifestream-ios-browser-full.log",
+      "sha256": "6beb8ed50af2a57459703add7fee1867355e437328fd4ab466f94d036d778bc1"
+    },
+    {
+      "path": "lifestream-ios-swift-tests.log",
+      "sha256": "9e03a9a7973280b4981b0c8363cc588adaf31f207a3a4b3814899373eb0a615d"
+    },
+    {
+      "path": "lifestream-ios-integration.log",
+      "sha256": "00fd02070b0fe17c56bcd017903ffca503978a2bb5faafb0337e39a957f8cc03"
+    },
+    {
+      "path": "lifestream-ios-server-tests.log",
+      "sha256": "e865b9a3b636ba1c400a416c9a35e42a195570c0d6ac4aa0987bf47349eb9d25"
+    },
+    {
+      "path": "lifestream-ios-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65"
+    },
+    {
+      "path": "lifestream-ios-specs.log",
+      "sha256": "2a961c53903e9fc3ba4e2651900a33dbc79c4da6ff814e3324ca87530a7fdec6"
+    },
+    {
+      "path": "lifestream-ios-device-build-final.log",
+      "sha256": "5226d50163323d5d19e9d02f19878b46f96f58aed5575cd7763f24d0c5ffd95c"
+    },
+    {
+      "path": "lifestream-ios-simulator-build-final.log",
+      "sha256": "3f10cf99df588a77dc7a30ec80692af19adab078f308ec2e52d344642599b2f7"
+    },
+    {
+      "path": "lifestream-ios-workspace-tests.log",
+      "sha256": "5daf2bc7e6e58440a65805d0c7deb1e4f8ea0527808ff23e95ef9fed6d770a57"
+    },
+    {
+      "path": "lifestream-ios-workspace-check.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215"
+    },
+    {
+      "path": "ios-mobile-conversation.png",
+      "sha256": "f9ff86dcc0d53c22a32d3117292afc04df8996acf7709d0a02c48d2ee0801df5"
+    },
+    {
+      "path": "ios-mobile-sign-in.png",
+      "sha256": "8b6e6d234fba51375192825bdf4e10011f222ad6f11e0f5455d201c0f0e065d0"
+    }
+  ]
+}
