@@ -8,8 +8,8 @@ import { BehaviorController } from './behavior-controller.js';
 import {animationForState,stateForPresentation,presentationStates} from './presentation-state.js';
 
 export class PresentationRuntime {
- constructor(canvas,{onFailure=()=>{},playback=()=>null,identity=()=>null,onState=()=>{}}={}) {
-  this.identity=identity;this.onState=onState;this.interaction='idle';this.motionStartedAt=performance.now();this.reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');this.motionPreference=this.reducedMotion.matches;
+ constructor(canvas,{onFailure=()=>{},playback=()=>null,identity=()=>null,onState=()=>{},retrieveResource}={}) {
+  this.identity=identity;this.onState=onState;this.retrieveResource=retrieveResource;this.interaction='idle';this.motionStartedAt=performance.now();this.reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');this.motionPreference=this.reducedMotion.matches;
   this.onFailure=onFailure;this.playback=playback;this.generation=0;this.state='idle';this.disposed=false;this.pending=null;this.frames=[];
   this.renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'low-power'});
   this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;
@@ -28,6 +28,7 @@ export class PresentationRuntime {
   return preparePresentation(item,{signal,createLoader:manager=>new GLTFLoader(manager),retrieveResource:async(resource,signal)=>{
    // Host-owned authenticated routing. The shared core cannot select another source.
    const route=`/api/runtime/v1/presentation/resources/${encodeURIComponent(item.id)}/${resource.path.split('/').map(encodeURIComponent).join('/')}`;
+   if(this.retrieveResource)return this.retrieveResource(route,signal);
    const response=await fetch(route,{signal,credentials:'same-origin',cache:'no-store'});if(!response.ok)throw Error('A package resource is unavailable.');return response.arrayBuffer();
   }});
  }

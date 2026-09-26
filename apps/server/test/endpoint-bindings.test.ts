@@ -54,3 +54,14 @@ test('session endpoint settings reject coerced values without storing disclosure
  assert.throws(()=>reviseSessionEndpoint(db,'new',{expectedRevision:0,mode:'audio',audienceScope:'unknown'},false,'owner'),/not configured/);
  const audio=reviseSessionEndpoint(db,'configured',{expectedRevision:0,mode:'audio',audienceScope:'authenticatedSession'},true,'owner');assert.deepEqual(readSessionEndpoint(db,'configured'),audio);
 });
+
+test('mobile endpoint class is explicit and immutable across sign-ins and disclosure changes',t=>{
+ const db=new Database({path:':memory:'});db.migrate();t.after(()=>db.close());const bindingKey=randomUUID();
+ const input={expectedRevision:0,mode:'audio',audienceScope:'unknown',bindingKey,endpointClass:'personalCompanion'};
+ const first=reviseSessionEndpoint(db,'phone-a',input,true,'owner');assert.equal(first.endpoint!.endpointClass,'personalCompanion');
+ const revised=reviseSessionEndpoint(db,'phone-a',{expectedRevision:1,mode:'audio',audienceScope:'authenticatedSession'},true,'owner');assert.equal(revised.endpoint!.endpointClass,'personalCompanion');
+ const next=reviseSessionEndpoint(db,'phone-b',input,true,'owner');assert.equal(next.endpoint!.endpointId,first.endpoint!.endpointId);assert.equal(next.endpoint!.privacyClass,'public');
+ for(const endpointClass of ['desktopCompanion','sharedRoom','phone',['personalCompanion']])assert.throws(()=>reviseSessionEndpoint(db,'phone-b',{...input,expectedRevision:1,endpointClass},true,'owner'));
+ assert.equal(readSessionEndpoint(db,'phone-b').revision,1);assert.equal(readSessionEndpoint(db,'phone-a').endpoint!.privacyClass,'personal');
+ assert.equal(reviseSessionEndpoint(db,'desktop',{expectedRevision:0,mode:'text',audienceScope:'unknown'},false,'owner').endpoint!.endpointClass,'desktopCompanion');
+});

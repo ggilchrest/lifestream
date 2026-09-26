@@ -143,3 +143,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Capacitor iOS companion
+
+The optional `apps/ios` application pins Capacitor Core/iOS/CLI 8.5.2 (MIT, Ionic),
+Three.js 0.186.0 (MIT, Three.js authors), esbuild 0.25.12 (MIT, Evan Wallace),
+and Playwright 1.62.1 (Apache-2.0, Microsoft; tests only). Dependency distributions
+retain their notices. The app bundle additionally includes `THIRD_PARTY_NOTICES.txt`
+with Capacitor, Three.js and the native Cordova dependency's complete license text.
+The generic waveform icon is project-authored SVG, not a private Assistant asset.

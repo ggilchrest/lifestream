@@ -1,0 +1,8 @@
+node_modules/
+dist/
+native/.build/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/CapApp-SPM/.build/
+ios/App/App.xcodeproj/xcuserdata/
+DerivedData/
