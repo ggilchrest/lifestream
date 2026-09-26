@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "1.0.0",
+  "component": "iOS bundled renderer resources",
+  "status": "implementationCompleteVerificationPending",
+  "collectedAt": "2026-09-26T16:40:21.055499+00:00",
+  "sourceRevision": "0eeed4ed10b29a914714dd990f3ef0c492ba4820",
+  "specificationRevision": "3518b932348ac92e765676cd4798d1a5f47ba56a",
+  "decision": "LS-DEC-046",
+  "claim": "Bundled presentation loading, private-safe packaging, automated software checks and unsigned iPhone SDK build verified; server deployment and physical device acceptance pending.",
+  "checks": [
+    {
+      "command": "npm --prefix apps/ios run sync",
+      "result": "pass",
+      "scope": "generic neutral-only bundle"
+    },
+    {
+      "command": "npm --prefix apps/ios test",
+      "result": "pass",
+      "passed": 4,
+      "scope": "package boundaries and actual isolated account/native Foundation transport; fixture speech and simulated device controls"
+    },
+    {
+      "command": "npm --prefix apps/ios run test:native",
+      "result": "pass",
+      "passed": 6
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass"
+    },
+    {
+      "command": "operator-local bundled renderer visual probe",
+      "result": "pass",
+      "scope": "actual local model, local-only fetches, corruption retention, shared clearing, portrait/landscape; synthetic backend and no physical audio"
+    },
+    {
+      "command": "xcodebuild -scheme App -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO build",
+      "result": "pass",
+      "scope": "operator-local project with selected bundled appearance"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "passed": 44
+    }
+  ],
+  "privateBuild": {
+    "operatorLocal": true,
+    "privateAssetsInGit": false,
+    "signed": false,
+    "bytes": 6092495,
+    "files": 27,
+    "sourceOverrides": [
+      "Preserved operator-local Xcode signing setting and equivalent Info.plist ordering."
+    ],
+    "visualProbeAndCompiledWebBytesIdentical": true
+  },
+  "initialFailures": [
+    "Transport probe still requested server assets; updated to assert rejection.",
+    "First private project lacked generated config.xml; fixed in packager and compiled successor.",
+    "Private packet manifest digest required refresh."
+  ],
+  "remaining": [
+    "ai5090 SSH connection timeout prevents remote inspection/deployment.",
+    "Private HTTPS/WSS ingress, compatible service deployment and explicit identity/data continuity remain.",
+    "Physical iPhone signing/install, locked audio, AirPods and Human acceptance remain.",
+    "Existing low-poly asset lacks mouth/face mapping; no new lip-sync claim.",
+    "Original selected-provider/performance and earlier release failures remain unchanged."
+  ]
+}
