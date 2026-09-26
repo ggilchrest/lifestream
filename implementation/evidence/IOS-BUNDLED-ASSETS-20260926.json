@@ -46,6 +46,11 @@
       "command": "node --test scripts/workspace.test.mjs",
       "result": "pass",
       "passed": 44
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S066",
+      "result": "fail",
+      "scope": "LS-S062 prerequisite enforces clean pinned source. Existing operator edits to apps/ios/ios/App/App.xcodeproj/project.pbxproj and apps/ios/ios/App/App/Info.plist remain uncommitted and are preserved. This does not negate the separate private-project build or focused software results; no fresh whole-slice qualification is claimed."
     }
   ],
   "privateBuild": {
