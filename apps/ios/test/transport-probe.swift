@@ -2,7 +2,8 @@
 import Foundation
 import AssistantCore
 let configuration=(try! JSONSerialization.jsonObject(with:Data(readLine()!.utf8))) as! [String:String]
-let transport=NativeTransport()
+final class TestConnectionStore:ConnectionStore {var value:SavedConnection?;func load() throws -> SavedConnection?{value};func save(_ value:SavedConnection) throws{self.value=value}}
+let transport=NativeTransport(store:TestConnectionStore())
 func request(_ path:String,_ body:[String:Any]?=nil) async throws -> [String:Any] {
  let encoded=try body.map{String(data:try JSONSerialization.data(withJSONObject:$0),encoding:.utf8)!}
  let (bytes,response)=try await withCheckedThrowingContinuation { (c:CheckedContinuation<(Data,HTTPURLResponse),Error>) in

@@ -6,14 +6,25 @@ import AVKit
 @objc(AssistantPlugin)
 public final class AssistantPlugin: CAPPlugin,CAPBridgedPlugin {
     public let identifier="AssistantPlugin",jsName="Assistant"
-    public let pluginMethods=["configure","request","start","stop","snapshot","routePicker"].compactMap{CAPPluginMethod(name:$0,returnType:CAPPluginReturnPromise)}
+    public let pluginMethods=["configure","restoreConnection","forgetSession","saveSettings","request","start","stop","snapshot","routePicker"].compactMap{CAPPluginMethod(name:$0,returnType:CAPPluginReturnPromise)}
     private let transport=NativeTransport()
     private lazy var voice:NativeVoice={let value=NativeVoice(transport:transport);value.emit={[weak self] message in guard UIApplication.shared.applicationState == .active else{return};self?.notifyListeners("event",data:message)};return value}()
     private func perform(_ call:CAPPluginCall,_ work:@escaping()->Void){DispatchQueue.main.async{[weak self] in guard let self,let url=self.bridge?.webView?.url,url.scheme=="capacitor",url.host=="localhost" else{call.reject("Only the bundled app may use native audio.");return};work()}}
     @objc public func configure(_ call:CAPPluginCall){perform(call){[self] in
         guard let endpoint=call.getString("endpoint") else{call.reject("Enter an HTTPS server address.");return}
         voice.stop("Server changed")
-        do{try transport.configure(endpoint);call.resolve(["configured":true])}catch{call.reject("Use an HTTPS server origin without a path, credentials or query.")}
+        do{try transport.configure(endpoint,username:call.getString("username") ?? "");call.resolve(["configured":true])}catch{call.reject("Use an HTTPS server origin without a path, credentials or query.")}
+    }}
+    @objc public func restoreConnection(_ call:CAPPluginCall){perform(call){[self] in
+        voice.stop("Restoring connection")
+        do{guard let saved=try transport.restoreConnection() else{call.resolve(["hasSession":false]);return};call.resolve(["endpoint":saved.endpoint,"username":saved.username,"hasSession":saved.hasSession,"settings":saved.settings ?? "{}"])}catch{call.reject("Saved connection is unavailable. Unlock this device and try again.")}
+    }}
+    @objc public func forgetSession(_ call:CAPPluginCall){perform(call){[self] in
+        voice.stop("Signed out")
+        do{try transport.forgetSession();call.resolve()}catch{call.reject("Could not clear the saved session. Unlock the device and try signing out again.")}
+    }}
+    @objc public func saveSettings(_ call:CAPPluginCall){perform(call){[self] in
+        do{try transport.saveSettings(call.getString("settings") ?? "{}");call.resolve()}catch{call.reject("Could not save settings on this device.")}
     }}
     @objc public func request(_ call:CAPPluginCall){perform(call){[self] in
         guard let path=call.getString("path") else{call.reject("Missing request path.");return}
