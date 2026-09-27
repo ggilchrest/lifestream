@@ -43,7 +43,7 @@ public enum EndpointPolicy {
             if path.range(of: "^/api/admin/v1/assistants/[a-fA-F0-9-]{36}/relationships$", options: .regularExpression) != nil { return true }
             return false
         }
-        return method == "POST" && ["/api/auth/v1/sign-in", "/api/auth/v1/sign-out", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/runtime/v1/messages"].contains(path)
+        return method == "POST" && ["/api/auth/v1/sign-in", "/api/auth/v1/sign-out", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/runtime/v1/audience/lease", "/api/runtime/v1/messages"].contains(path)
     }
 }
 

@@ -1,4 +1,5 @@
 import {bundledAppearances,bundledResource} from './bundled-appearances.js';
+import {animationKey,animationChoices,resolveAppearance} from './animation-preferences.js';
 import {renderActivity} from './activity.js';
 import {PresentationRuntime} from '../../control-web/presentation-runtime.js';
 
@@ -6,15 +7,14 @@ import {PresentationRuntime} from '../../control-web/presentation-runtime.js';
 export function installApp(native) {
  const $=id=>document.getElementById(id);
  let session=null,context=null,catalog=null,renderer=null,nativeState={},epoch=0,privateAllowed=false,starting=false,refreshing=false,expires=0,startGeneration=0,appearanceLoad=null;
- const selections=new Map();let disabledAnimations={},rememberedAssistant='',connectionGeneration=0,restoring=false,savedIdentity='',textGeneration=0,textState={},audienceGeneration=0,declaringAudience=0;
+ const selections=new Map();let disabledAnimations={},rememberedAssistant='',connectionGeneration=0,restoring=false,savedIdentity='',textGeneration=0,textState={},audienceGeneration=0,declaringAudience=0,audienceLeaseId=null;
  const pane=settings=>{$('settings-pane').hidden=!settings;$('main-pane').hidden=settings;$('open-settings').hidden=settings;$('open-settings').setAttribute('aria-expanded',String(settings));if(settings)$('settings-title').focus();window.scrollTo({top:0,behavior:'instant'});};
  const saveSettings=()=>native.saveSettings({settings:JSON.stringify({assistantId:$('assistant').value,selections:Object.fromEntries(selections),disabledAnimations})});
  const loadSettings=raw=>{selections.clear();disabledAnimations={};rememberedAssistant='';try{const value=JSON.parse(raw??'{}');if(typeof value.assistantId==='string')rememberedAssistant=value.assistantId;for(const [id,item] of Object.entries(value.selections??{}).slice(0,100))if(typeof item?.id==='string'&&typeof item?.digest==='string')selections.set(id,{id:item.id,digest:item.digest});for(const [id,off] of Object.entries(value.disabledAnimations??{}).slice(0,200))if(off===true)disabledAnimations[id]=true;}catch{/* Invalid old preferences use safe defaults. */}};
- const animationKey=(item,clip)=>JSON.stringify([item.id,item.digest,clip]);
  const animations=item=>{
-  $('animation-options').replaceChildren();const clips=new Map();for(const [state,clip] of Object.entries(item.manifest?.animations??{}))if(state!=='mouthAmplitude')clips.set(clip,[...(clips.get(clip)??[]),state]);
-  $('animation-status').textContent=clips.size?'Available for use with this bundled appearance:':'This appearance has no bundled body animations.';
-  for(const [clip,states] of clips){const label=document.createElement('label');label.className='check';const input=document.createElement('input');input.type='checkbox';input.checked=!disabledAnimations[animationKey(item,clip)];input.onchange=run(async()=>{const key=animationKey(item,clip),before=disabledAnimations[key];if(input.checked)delete disabledAnimations[key];else disabledAnimations[key]=true;try{await saveSettings();status('Animation preference saved on this phone.');}catch(error){if(before)disabledAnimations[key]=true;else delete disabledAnimations[key];input.checked=!before;throw error;}});label.append(input,document.createTextNode(states.map(x=>x[0].toUpperCase()+x.slice(1)).join(' / ')));$('animation-options').append(label);}
+  $('animation-options').replaceChildren();const clips=animationChoices(item);
+  const summary=()=>{$('animation-status').textContent=clips.length?`${clips.filter(x=>!disabledAnimations[animationKey(item,x.clip)]).length} of ${clips.length} animations enabled. Enabled animations play in a shuffled cycle.`:'This appearance has no bundled animations.';};summary();
+  for(const {clip,label:name,group} of clips){const label=document.createElement('label');label.className='check';const input=document.createElement('input');input.type='checkbox';input.checked=!disabledAnimations[animationKey(item,clip)];input.onchange=run(async()=>{const key=animationKey(item,clip),before=disabledAnimations[key];if(input.checked)delete disabledAnimations[key];else disabledAnimations[key]=true;summary();try{await saveSettings();status('Animation preference saved on this phone.');}catch(error){if(before)disabledAnimations[key]=true;else delete disabledAnimations[key];input.checked=!before;summary();throw error;}});label.append(input,document.createTextNode(group?`${group} · ${name}`:name));$('animation-options').append(label);}
  };
  const status=text=>{$('status').textContent=text;};
  const api=async(path,body)=>{
@@ -45,7 +45,7 @@ export function installApp(native) {
  }
  async function render(item){
   if(!privateAllowed||document.hidden)return;if(item.manifest?.resources?.some(resource=>resource.bytes>64*1024*1024))throw Error('This iOS build supports appearance resources up to 64 MiB each.');const ticket=epoch;
-  renderer??=new PresentationRuntime($('avatar'),{playback:()=>nativeState,identity:()=>({assistantId:$('assistant').value,endpointId:context?.endpoint?.endpointId}),onFailure:status,retrieveResource:bundledResource,animationEnabled:clip=>!disabledAnimations[animationKey(renderer?.currentItem??{id:'neutral',digest:'neutral-v1'},clip)]});
+  renderer??=new PresentationRuntime($('avatar'),{playback:()=>nativeState,identity:()=>({assistantId:$('assistant').value,endpointId:context?.endpoint?.endpointId}),onFailure:status,retrieveResource:bundledResource,randomAnimations:true,animationEnabled:clip=>!disabledAnimations[animationKey(renderer?.currentItem??{id:'neutral',digest:'neutral-v1'},clip)]});
   const target=renderer,controller=appearanceLoad=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);let value;try{value=await target.prepare(item,controller.signal);}finally{clearTimeout(timer);if(appearanceLoad===controller)appearanceLoad=null;}
   if(ticket!==epoch||!privateAllowed||document.hidden){target.release(value);return}target.currentItem=item;target.commit(value);animations(item);$('intro').hidden=true;
  }
@@ -53,7 +53,8 @@ export function installApp(native) {
   const ticket=epoch,value=await bundledAppearances();if(ticket!==epoch||!privateAllowed)return;
   catalog=value;$('appearance').replaceChildren();for(const item of [catalog.neutral,...catalog.packages])$('appearance').add(new Option(item.label,item.id));
   const saved=selections.get($('assistant').value);
-  const item=saved?[catalog.neutral,...catalog.packages].find(x=>x.id===saved.id&&x.digest===saved.digest):[catalog.neutral,...catalog.packages].find(x=>x.id===catalog.defaultId)??catalog.neutral;
+  const {item,migrated}=resolveAppearance(catalog,saved,disabledAnimations);
+  if(migrated){selections.set($('assistant').value,{id:item.id,digest:item.digest});await saveSettings();if(ticket!==epoch||!privateAllowed)return;}
   if(!item){status('Saved appearance is unavailable. Choose an available appearance.');return}
   $('appearance').value=item.id;await render(item);
  }
@@ -62,12 +63,12 @@ export function installApp(native) {
   try{
    const audience=await api('/api/runtime/v1/audience');if(ticket!==epoch||audienceTicket!==audienceGeneration)return;
    const expiry=audience.expiresAt?Date.parse(audience.expiresAt):0;
-   if(audience.privateAllowed!==true||(audience.expiresAt&&(!Number.isFinite(expiry)||expiry<=Date.now()))){const wasPrivate=privateAllowed;protect();if(wasPrivate)status('Personal disclosure ended. Start listening or Send activates Only me again, subject to current server permission.');return false}
+   if(!audienceLeaseId||audience.leaseId!==audienceLeaseId||audience.privateAllowed!==true||!expiry||!Number.isFinite(expiry)||expiry<=Date.now()){const wasPrivate=privateAllowed,owned=audienceLeaseId;audienceLeaseId=null;if(owned)void native.endAudience({leaseId:owned}).catch(()=>{});if(wasPrivate||textState.busy)protect();if(wasPrivate)status('The app audience session ended. Start listening or Send reconnects it, subject to current server permission.');return false}
    privateAllowed=true;expires=expiry;$('privacy').textContent='Only me · personal disclosure active';return true;
   }catch(error){if(ticket===epoch&&audienceTicket===audienceGeneration){protect();status('Personal disclosure could not be checked. '+error.message);}throw error;}
  }
- // The operator-selected phone default creates a fresh bounded declaration only at
- // an authenticated open or explicit Start/Send, never during an active turn.
+ // Native code owns a process-local, renewable connection lease. The server's
+ // short failure-detection window is not a user-facing conversation time limit.
  async function activateOnlyMe(isCurrent){
   audienceGeneration++;declaringAudience++;
   try{let current=await api('/api/runtime/v1/session-context');if(!isCurrent())return null;
@@ -75,8 +76,9 @@ export function installApp(native) {
    current=await api('/api/runtime/v1/session-context',{expectedRevision:current.revision,...(current.endpoint?.endpointClass==='personalCompanion'?{}:{bindingKey:crypto.randomUUID(),endpointClass:'personalCompanion'}),mode:'audio',audienceScope:'authenticatedSession'});
    if(!isCurrent())return null;
   }
-  await api('/api/runtime/v1/audience',{mode:'solo',seconds:300});if(!isCurrent())return null;
-  context=current;const allowed=await checkAudience();
+  const lease=await native.beginAudience();if(!isCurrent())return null;
+  if(typeof lease.leaseId!=='string')throw Error('The private server did not establish this app audience session. Update the server and reconnect.');
+  audienceLeaseId=lease.leaseId;context=current;const allowed=await checkAudience();
   if(allowed===false){status('The server is withholding personal disclosure. Check the current audience or account permission before retrying.');return null;}
   if(!isCurrent()||!privateAllowed)return null;
   return current;
@@ -104,7 +106,7 @@ export function installApp(native) {
  }
  async function restore(){
   if(restoring)return;
-  const ticket=++connectionGeneration;startGeneration++;starting=false;restoring=true;protect();session=null;controls();
+  const ticket=++connectionGeneration;startGeneration++;starting=false;restoring=true;audienceLeaseId=null;protect();session=null;controls();
   try{
    const saved=await native.restoreConnection();if(ticket!==connectionGeneration)return;
    if(saved.endpoint){$('server').value=saved.endpoint;$('username').value=saved.username??'';savedIdentity=JSON.stringify([saved.endpoint,saved.username??'']);loadSettings(saved.settings);}
@@ -119,7 +121,7 @@ export function installApp(native) {
  $('open-settings').onclick=()=>pane(true);$('close-settings').onclick=()=>pane(false);
  $('retry-connection').onclick=run(restore);
  $('connection').onsubmit=run(async()=>{
-  const ticket=++connectionGeneration;restoring=true;startGeneration++;protect();session=null;context=null;controls();
+  const ticket=++connectionGeneration;restoring=true;startGeneration++;audienceLeaseId=null;protect();session=null;context=null;controls();
   try{
    const endpoint=$('server').value.trim().replace(/\/$/,''),username=$('username').value.trim().toLowerCase(),identity=JSON.stringify([endpoint,username]);
    if(identity!==savedIdentity)loadSettings('{}');savedIdentity=identity;$('assistant').replaceChildren(new Option('Choose an Assistant',''));
@@ -150,6 +152,7 @@ export function installApp(native) {
   }catch(error){if(ticket!==textGeneration)return;textState={error:true};throw error;}
   finally{if(ticket===textGeneration){textState.busy=false;controls();}}
  });
+ $('background').onchange=run(()=>native.setBackgroundPolicy({enabled:$('background').checked}));
  $('routes').onclick=run(()=>native.routePicker());
  $('refresh').onclick=run(refresh);
  $('assistant').onchange=run(async()=>{rememberedAssistant=$('assistant').value;await saveSettings();clearDisplay();if(privateAllowed)await appearances();});
@@ -166,10 +169,11 @@ export function installApp(native) {
   }finally{if(candidate)target.release(candidate);clearTimeout(timer);if(appearanceLoad===controller)appearanceLoad=null;}
  });
  $('sign-out').onclick=run(async()=>{
-  connectionGeneration++;startGeneration++;starting=false;protect();await native.stop();let remoteFailed=false;try{await api('/api/auth/v1/sign-out',{});}catch{remoteFailed=true;}finally{session=null;nativeState={};$('retry-connection').hidden=true;await native.forgetSession();pane(true);status(remoteFailed?'Signed out on this phone. The server was unavailable; its session could not be revoked.':'Signed out. Server and account details are remembered.');}
+  connectionGeneration++;startGeneration++;starting=false;audienceLeaseId=null;protect();await native.stop();let remoteFailed=false;try{await api('/api/auth/v1/sign-out',{});}catch{remoteFailed=true;}finally{session=null;nativeState={};$('retry-connection').hidden=true;await native.forgetSession();pane(true);status(remoteFailed?'Signed out on this phone. The server was unavailable; its session could not be revoked.':'Signed out. Server and account details are remembered.');}
  });
  void native.addListener('event',event=>{
-  if(event.type==='state'){
+  if(event.type==='audience'&&!event.active){audienceLeaseId=null;startGeneration++;starting=false;protect();status(event.reason??'The app audience session ended.');controls();}
+  else if(event.type==='state'){
    nativeState=event.state;$('route').textContent=event.state.route||'System route';if(!textState.busy)status(event.state.phase);
    renderer?.applyState(event.state.playing?'speaking':event.state.active?'listening':'idle');
    if(/audience|authorization|sign-in/i.test(event.state.phase)){protect();if(/audience/i.test(event.state.phase))status(event.state.phase+' Start listening or Send activates Only me again, subject to current server permission.');}controls();
@@ -177,7 +181,7 @@ export function installApp(native) {
  });
  const privacyTimer=setInterval(()=>{
   if(document.hidden||!session||starting||restoring||declaringAudience)return;
-  if(expires&&expires<=Date.now()){protect();status('Only me expired. Start listening or Send activates it again.');controls();}
+  if(expires&&expires<=Date.now()){protect();status('The app audience connection ended. Start listening or Send reconnects it.');controls();}
   if(!refreshing)void checkAudience().then(controls).catch(()=>controls());
  },1000);
  const resume=async()=>{protect();nativeState=await native.snapshot();controls();if(nativeState.active){if(session)await refresh();}else await restore();};

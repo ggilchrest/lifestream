@@ -8,6 +8,7 @@ import AssistantCore
 final class NativeVoice {
     let transport:NativeTransport
     var emit:([String:Any])->Void = {_ in}
+    var expectedAudienceLease:()->String? = {nil}
     private let audio=AVAudioSession.sharedInstance()
     private struct Graph {let engine:AVAudioEngine,player:AVAudioPlayerNode}
     private let graphOwner=CaptureGraphOwner<Graph>()
@@ -30,7 +31,6 @@ final class NativeVoice {
         observe(AVAudioSession.routeChangeNotification){[weak self] n in self?.routeChanged(n)}
         observe(.AVAudioEngineConfigurationChange){[weak self] n in self?.engineChanged(n)}
         observe(AVAudioSession.mediaServicesWereResetNotification){[weak self] _ in self?.stop("Audio services reset. Start listening again.")}
-        observe(UIApplication.didEnterBackgroundNotification){[weak self] _ in guard let self else{return};if !self.background{self.stop("Background conversation is off.")}else{self.publish()}}
         observe(UIApplication.willEnterForegroundNotification){[weak self] _ in self?.publish()}
         let center=MPRemoteCommandCenter.shared()
         for command in [center.stopCommand,center.pauseCommand,center.togglePlayPauseCommand] { let target=command.addTarget{[weak self] _ in DispatchQueue.main.async{self?.stop("Stopped from lock screen or headset.")};return .success};remoteTargets.append((command,target));command.isEnabled=false }
@@ -63,7 +63,7 @@ final class NativeVoice {
                     self.transport.socketClosed={[weak self,weak ws] closed in guard let self,closed===ws,self.socket===ws else{return};self.fail("Speech connection closed. Check the private server and VPN, then start again.",stage:"backend")}
                     ws.resume();self.receive(ws,ticket:ticket)
                     self.deadline=Timer.scheduledTimer(withTimeInterval:10,repeats:false){[weak self] _ in guard let self,self.generation==ticket,!self.accepted else{return};self.fail("The speech connection did not become ready within 10 seconds. Check the private server and VPN.",stage:"backend")}
-                    self.poll=Timer.scheduledTimer(withTimeInterval:0.5,repeats:true){[weak self] _ in self?.privacyTick()}
+                    let privacy=Timer(timeInterval:0.5,repeats:true){[weak self] _ in self?.privacyTick()};self.poll=privacy;RunLoop.main.add(privacy,forMode:.common)
                     self.meter=Timer.scheduledTimer(withTimeInterval:0.1,repeats:true){[weak self] _ in self?.meterTick()}
                     self.publish();done(nil)
                 }catch{self.fail("Audio setup failed. Check the microphone permission and selected audio device.",stage:"input");done(error)}
@@ -240,6 +240,7 @@ final class NativeVoice {
         transport.request("/api/runtime/v1/audience",timeout:1.2){[weak self] result in
             guard let self,self.generation==ticket else{done(false);return};self.privacyPending=false
             guard case .success(let (bytes,response))=result,response.statusCode==200,let value=(try? JSONSerialization.jsonObject(with:bytes)) as? [String:Any],let allowed=value["privateAllowed"] as? Bool,let classification=value["classification"] as? String else{done(false);return}
+            guard let expected=self.expectedAudienceLease(),value["leaseId"] as? String==expected else{done(false);return}
             let key="\(classification):\(allowed)";if let old=self.privacyKey,old != key{done(false);return};self.privacyKey=key
             do {let policy=try AudienceLease(value,now:Date());self.privacyExpires=policy.expiresAt;done(true)} catch {done(false)}
         }

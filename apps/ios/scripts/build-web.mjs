@@ -9,7 +9,7 @@ export async function buildWeb(output=new URL('dist/',root),appearances={}) {
 output=output instanceof URL?output:pathToFileURL(output.replace(/\/$/,'')+'/');
 await mkdir(output,{recursive:true});await bundleWeb({outfile:fileURLToPath(new URL('app.js',output))});
 for(const f of ['index.html','app.css'])await copyFile(new URL(`web/${f}`,root),new URL(f,output));
-const files=['presentation-runtime.js','presentation-core.js','presentation-motion.js','presentation-speech.js','presentation-state.js'];
+const files=['animation-playlist.js','presentation-runtime.js','presentation-core.js','presentation-motion.js','presentation-speech.js','presentation-state.js'];
 const shared=[];for(const path of files){const bytes=await readFile(new URL(`../control-web/${path}`,root));shared.push({path,sha256:createHash('sha256').update(bytes).digest('hex')});}
 const behavior=await readFile(new URL('../../packages/runtime/src/embodiment/controller.ts',root));shared.push({path:'packages/runtime/src/embodiment/controller.ts',sha256:createHash('sha256').update(behavior).digest('hex')});
 await writeFile(new URL('shared-renderer-manifest.json',output),JSON.stringify({schemaVersion:'1.0.0',shared,privateAssetsIncluded:!!appearances.ids?.length},null,2)+'\n');
