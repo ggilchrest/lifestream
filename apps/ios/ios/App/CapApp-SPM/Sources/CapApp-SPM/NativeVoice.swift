@@ -9,11 +9,17 @@ final class NativeVoice {
     let transport:NativeTransport
     var emit:([String:Any])->Void = {_ in}
     private let audio=AVAudioSession.sharedInstance()
-    private var engine:AVAudioEngine?,player:AVAudioPlayerNode?,socket:URLSessionWebSocketTask?
+    private struct Graph {let engine:AVAudioEngine,player:AVAudioPlayerNode}
+    private let graphOwner=CaptureGraphOwner<Graph>()
+    private var engine:AVAudioEngine?{graphOwner.current?.engine}
+    private var player:AVAudioPlayerNode?{graphOwner.current?.player}
+    private var socket:URLSessionWebSocketTask?
+    private var diagnostics=CaptureDiagnostics()
+    private(set) var selectedInput="system"
     private var observers=[NSObjectProtocol](),remoteTargets=[(MPRemoteCommand,Any)]()
     private var gate=SpeechGate(),reply=ReplyStream(),activity=VoiceActivity(),request=[String:Any]()
     private var generation=0,outputGeneration=0,queued=0,sequence=0,samples=0,sentMessages=0
-    private var poll:Timer?,meter:Timer?,deadline:Timer?,privacyPending=false,privacyKey:String?,privacyExpires:Date?
+    private var poll:Timer?,meter:Timer?,deadline:Timer?,inputRouteTimer:Timer?,privacyPending=false,privacyKey:String?,privacyExpires:Date?
     private var resumeRead:(()->Void)?
     private var capture:NativeCapture?,captureLifecycle=CaptureLifecycle(),tapInstalled=false
     private var lastCaptureStats:NativeCapture.Stats?
@@ -34,13 +40,15 @@ final class NativeVoice {
     private func observe(_ name:Notification.Name,_ handler:@escaping(Notification)->Void){observers.append(NotificationCenter.default.addObserver(forName:name,object:nil,queue:.main,using:handler))}
     func snapshot()->[String:Any]{
         let stats=capture?.snapshot() ?? lastCaptureStats
-        return activity.snapshot.merging(["active":active,"phase":phase,"backgroundEnabled":background,"route":audio.currentRoute.outputs.map{$0.portName}.joined(separator:", ")+" · Mic: "+audio.currentRoute.inputs.map{$0.portName}.joined(separator:", "),"playing":queued>0,"amplitude":amplitude,"sampleOffset":played,"trace":reply.trace ?? "","clock":"dataPlayedBack callbacks","queuedSamples":queued,"rawInputBuffers":stats?.rawBuffers ?? 0,"convertedInputBuffers":stats?.convertedBuffers ?? 0,"captureSampleRate":stats?.sampleRate ?? 0,"captureChannels":stats?.channels ?? 0,"captureEngineRunning":engine?.isRunning == true]){_,new in new}
+        return activity.snapshot.merging(["active":active,"phase":phase,"backgroundEnabled":background,"route":routeSummary(),"selectedInputLabel":inputSelectionSummary(),"captureDiagnostics":diagnostics.lines,"playing":queued>0,"amplitude":amplitude,"sampleOffset":played,"trace":reply.trace ?? "","clock":"dataPlayedBack callbacks","queuedSamples":queued,"rawInputBuffers":stats?.rawBuffers ?? 0,"convertedInputBuffers":stats?.convertedBuffers ?? 0,"captureSampleRate":stats?.sampleRate ?? 0,"captureChannels":stats?.channels ?? 0,"captureEngineRunning":engine?.isRunning == true]){_,new in new}
     }
     private func publish(){emit(["type":"state","state":snapshot()])}
     func start(_ input:[String:Any],background:Bool,resumingRoute:Bool=false,done:@escaping(Error?)->Void){
         guard UIApplication.shared.applicationState == .active || (resumingRoute && active && self.background) else{done(VoiceError.staleTurn);return}
         let previousPrivacy=resumingRoute ? privacyKey:nil
-        stop("Preparing audio");captureLifecycle.begin(generation:generation,recovering:resumingRoute);lastCaptureStats=nil;activity.start();phase="Starting microphone connection";privacyKey=previousPrivacy;publish()
+        stop("Preparing audio",preservingGraph:resumingRoute)
+        if !resumingRoute{diagnostics.clear();lastCaptureStats=nil};diagnose(resumingRoute ? "recover-transport":"user-start")
+        captureLifecycle.begin(generation:generation,recovering:resumingRoute);lastCaptureStats=nil;activity.start();phase="Starting microphone connection";privacyKey=previousPrivacy;publish()
         for key in ["sessionId","endpointId","assistantId"]{guard let s=input[key] as? String,UUID(uuidString:s) != nil else{fail("Select a current Assistant and reconnect before listening.",stage:"backend");done(VoiceError.invalidMessage);return}}
         guard let revision=input["expectedSessionRevision"] as? Int,revision>=0 else{fail("The conversation session is out of date. Reconnect before listening.",stage:"backend");done(VoiceError.invalidMessage);return}
         request=input;request["schemaVersion"]="1.0.0";request["requestId"]=UUID().uuidString.lowercased();request["correlationId"]=UUID().uuidString.lowercased();request["audioInputId"]=UUID().uuidString.lowercased();request["format"]=["encoding":"pcm_s16le","sampleRateHz":16000,"channels":1]
@@ -62,17 +70,62 @@ final class NativeVoice {
             }
         }}
     }
-    private func startEngine() throws {
+    private func prepareEngine() throws {
+        let ticket=generation
         captureLifecycle.starting(generation:generation)
-        var options:AVAudioSession.CategoryOptions=[.defaultToSpeaker]
-        if #available(iOS 26.0,*){options.insert(.allowBluetoothHFP)}else{options.insert(.allowBluetooth)}
-        try audio.setCategory(.playAndRecord,mode:.voiceChat,options:options)
-        try audio.setPreferredIOBufferDuration(0.02);try audio.setActive(true)
-        let engine=AVAudioEngine(),player=AVAudioPlayerNode();self.engine=engine;self.player=player
-        try engine.inputNode.setVoiceProcessingEnabled(true)
+        let recovering=graphOwner.current != nil
+        if !recovering {
+            var options:AVAudioSession.CategoryOptions=[.defaultToSpeaker]
+            if #available(iOS 26.0,*){options.insert(.allowBluetoothHFP)}else{options.insert(.allowBluetooth)}
+            try audio.setCategory(.playAndRecord,mode:.voiceChat,options:options)
+            try audio.setPreferredIOBufferDuration(0.02);try audio.setActive(true)
+            diagnose("session-active")
+        }
+        guard generation==ticket,active,accepted else{return}
+        let until=ProcessInfo.processInfo.systemUptime+4
+        var preferenceApplied=recovering
+        phase="Waiting for the selected microphone";diagnose("wait-input-route");publish()
+        // setPreferredInput initiates routing. Wait for the actual route, without
+        // installing a tap on a temporary fallback or assuming an arbitrary delay.
+        func check(){
+            guard generation==ticket,active,accepted else{return}
+            do {
+                if !preferenceApplied {
+                    do{try applySelectedInput();preferenceApplied=true}
+                    catch is AudioInputSelectionError{} // Discovery may still be updating.
+                }
+                guard generation==ticket,active,accepted else{return}
+                if preferenceApplied,currentInputMatchesSelection(){
+                    inputRouteTimer?.invalidate();inputRouteTimer=nil;diagnose("input-route-ready")
+                    try startEngine();return
+                }
+                if ProcessInfo.processInfo.systemUptime>=until {
+                    diagnose("input-route-timeout");fail("iOS did not route the selected microphone within 4 seconds. Open Microphone, choose an available input or System default, then tap Start.",stage:"input")
+                }
+            }catch{if generation==ticket,active,accepted{engineFailure(error)}}
+        }
+        inputRouteTimer=Timer.scheduledTimer(withTimeInterval:0.1,repeats:true){_ in check()}
+        check()
+    }
+    private func engineFailure(_ error:Error){
+        diagnose("engine-start-failed")
+        let message=error is AudioInputSelectionError ? error.localizedDescription:"The microphone or audio device could not start. Open Microphone, choose an available input, then tap Start."
+        fail(message,stage:"input")
+    }
+    private func startEngine() throws {
+        let ticket=generation
+        let recovering=graphOwner.current != nil
+        let graph=try graphOwner.acquire{
+            let engine=AVAudioEngine(),player=AVAudioPlayerNode()
+            try engine.inputNode.setVoiceProcessingEnabled(true)
+            engine.attach(player)
+            return Graph(engine:engine,player:player)
+        }
+        guard generation==ticket,active,accepted else{return}
+        let engine=graph.engine,player=graph.player
+        diagnose(recovering ? "reuse-voice-graph":"create-voice-graph")
         let inputFormat=engine.inputNode.outputFormat(forBus:0)
         let capture=try NativeCapture(inputFormat:inputFormat);self.capture=capture
-        let ticket=generation
         // Each graph owns its converter and bounded queue. A late old tap cannot
         // consume the replacement graph's budget or update its observations.
         engine.inputNode.installTap(onBus:0,bufferSize:capture.bufferSize,format:inputFormat){[weak self] buffer,_ in
@@ -85,17 +138,24 @@ final class NativeVoice {
             })
         }
         tapInstalled=true
-        engine.attach(player);engine.connect(player,to:engine.mainMixerNode,format:AVAudioFormat(standardFormatWithSampleRate:48000,channels:1)!)
-        engine.prepare();try engine.start();player.play()
+        engine.connect(player,to:engine.mainMixerNode,format:AVAudioFormat(standardFormatWithSampleRate:48000,channels:1)!)
+        // VPIO requires the capture output and playback input CLIENT formats to
+        // match. The mixer converts server PCM; output hardware may differ.
+        engine.connect(engine.mainMixerNode,to:engine.outputNode,format:inputFormat)
+        guard generation==ticket,active,accepted else{engine.stop();return}
+        engine.prepare();try engine.start()
+        guard generation==ticket,active,accepted else{engine.stop();return}
+        player.play()
         captureLifecycle.ready(generation:generation,route:routeFingerprint(),at:ProcessInfo.processInfo.systemUptime)
-        activity.captureReady();phase="Microphone started · waiting for audio"
+        diagnose("engine-started");activity.captureReady();phase="Microphone started · waiting for audio"
         MPNowPlayingInfoCenter.default().nowPlayingInfo=[MPMediaItemPropertyTitle:"Lifestream conversation",MPNowPlayingInfoPropertyIsLiveStream:true,MPNowPlayingInfoPropertyPlaybackRate:1]
         remoteTargets.forEach{$0.0.isEnabled=true};publish()
     }
     private func input(_ values:[Float]){
+        guard selectedInput=="system" || currentInputMatchesSelection() else{diagnose("input-route-mismatch");engineFailure(AudioInputSelectionError.unavailable);return}
         guard !values.isEmpty,values.allSatisfy({$0.isFinite}) else{fail("Microphone produced invalid audio. Start listening again.",stage:"input");return}
         captureLifecycle.captured(generation:generation)
-        if activity.inputFrames==0{phase="Listening · speak, then pause to send"}
+        if activity.inputFrames==0{diagnose("first-converted");phase="Listening · speak, then pause to send"}
         activity.captured(values,speaking:gate.speaking,waiting:turnPending && reply.trace == nil)
         guard !turnPending || reply.trace != nil else{return}
         for event in gate.push(values){switch event{
@@ -118,7 +178,7 @@ final class NativeVoice {
     }}}
     private func message(_ m:[String:Any]) throws {
         guard let type=m["type"] as? String else{throw VoiceError.invalidMessage}
-        if type=="accepted"{guard !accepted,m["audioInputId"] as? String == request["audioInputId"] as? String else{throw VoiceError.invalidMessage};accepted=true;deadline?.invalidate();do{try startEngine()}catch{fail("The microphone or audio device could not start. Check microphone permission and the selected device.",stage:"input")};return}
+        if type=="accepted"{guard !accepted,m["audioInputId"] as? String == request["audioInputId"] as? String else{throw VoiceError.invalidMessage};accepted=true;deadline?.invalidate();let ticket=generation;do{try prepareEngine()}catch{if generation==ticket,active,accepted{engineFailure(error)}};return}
         if type=="error"{let problem=m["problem"] as? [String:Any],message=problem?["message"] as? String;fail("Server: "+(message.map{String($0.filter{!$0.isNewline && !$0.unicodeScalars.contains(where:{$0.value<32})}.prefix(350))} ?? "Speech processing was rejected."),stage:"backend");return}
         let event=m["event"] as? [String:Any],trace=(m["interactionTraceId"] as? String) ?? (event?["interactionTraceId"] as? String)
         guard let trace else{return};if reply.retired.contains(trace){return}
@@ -142,18 +202,22 @@ final class NativeVoice {
         }
     }
     private func completeIfReady(){if reply.terminal && queued==0{send(["type":"playbackSettled","interactionTraceId":reply.trace!,"outcome":"completed","receivedSamples":reply.totalSamples]);reply.retire();turnPending=false;activity.completed();phase="Listening · speak, then pause to send";deadline?.invalidate();publish()}}
-    private func interruptReply(_ reason:String){
-        outputGeneration += 1;player?.stop();player?.play();queued=0;amplitude=0;played=0;activity.completed()
+    private func interruptReply(_ reason:String,resumePlayer:Bool=true){
+        outputGeneration += 1;player?.stop();if resumePlayer,engine?.isRunning==true{player?.play()};queued=0;amplitude=0;played=0;activity.completed()
         if let trace=reply.trace{send(["type":"interrupt","interactionTraceId":trace,"reason":reason]);send(["type":"playbackSettled","interactionTraceId":trace,"outcome":"stopped","receivedSamples":reply.totalSamples]);reply.retire()};turnPending=false;deadline?.invalidate();if let resume=resumeRead{resumeRead=nil;resume()}
     }
-    func stop(_ reason:String="Stopped"){
-        if socket != nil{interruptReply(reason)}
+    func stop(_ reason:String="Stopped",preservingGraph:Bool=false){
+        if active || engine != nil{diagnose(preservingGraph ? "pause-graph":"stop")}
+        if socket != nil{interruptReply(reason,resumePlayer:false)}
         generation += 1;captureLifecycle.stop(generation:generation);active=false;accepted=false;background=false;gate.reset();activity.stop();sentMessages=0;turnPending=false
         socket?.cancel(with:.normalClosure,reason:nil);socket=nil;transport.socketOpened=nil;transport.socketClosed=nil
-        if tapInstalled{engine?.inputNode.removeTap(onBus:0);tapInstalled=false};engine?.stop()
-        lastCaptureStats=capture?.snapshot() ?? lastCaptureStats;capture=nil;engine=nil;player=nil
-        poll?.invalidate();meter?.invalidate();deadline?.invalidate();poll=nil;meter=nil;deadline=nil;privacyPending=false;privacyKey=nil;privacyExpires=nil
-        try? audio.setActive(false,options:.notifyOthersOnDeactivation);remoteTargets.forEach{$0.0.isEnabled=false};MPNowPlayingInfoCenter.default().nowPlayingInfo=nil
+        graphOwner.stop(recovering:preservingGraph,stop:{graph in
+            if tapInstalled{graph.engine.inputNode.removeTap(onBus:0);tapInstalled=false}
+            graph.player.stop();graph.engine.stop()
+        },deactivate:{try? audio.setActive(false,options:.notifyOthersOnDeactivation)})
+        lastCaptureStats=capture?.snapshot() ?? lastCaptureStats;capture=nil
+        poll?.invalidate();meter?.invalidate();deadline?.invalidate();inputRouteTimer?.invalidate();poll=nil;meter=nil;deadline=nil;inputRouteTimer=nil;privacyPending=false;privacyKey=nil;privacyExpires=nil
+        remoteTargets.forEach{$0.0.isEnabled=false};MPNowPlayingInfoCenter.default().nowPlayingInfo=nil
         resumeRead=nil;phase=reason;publish()
     }
     private func fail(_ message:String,stage:String){stop(message);activity.fail(message,stage:stage);publish()}
@@ -167,7 +231,7 @@ final class NativeVoice {
             case .noConversion:message="Microphone buffers arrived, but audio conversion produced no samples. Tap Start to retry."
             case .stalled:message="Microphone audio stopped arriving for 3 seconds. Check the input device, then tap Start to retry."
             }
-            fail(message,stage:"input");return
+            diagnose("watchdog");fail(message,stage:"input");return
         }
         publish()
     }
@@ -186,11 +250,40 @@ final class NativeVoice {
         checkPrivacy{[weak self] current in guard let self,self.generation==ticket,self.active else{return};if !current{self.stop("Audience or authorization changed. Review before restarting.")}}
     }
     private func interruption(_ notification:Notification){
-        guard active,let raw=notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,AVAudioSession.InterruptionType(rawValue:raw) == .began else{return}
+        guard (active || engine != nil),let raw=notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,AVAudioSession.InterruptionType(rawValue:raw) == .began else{return}
         stop("Interrupted by another app or call. Tap Start listening to resume.")
     }
+    private func availableInputPorts()->[AudioInputPort]{
+        (audio.availableInputs ?? []).map{AudioInputPort(id:$0.uid,label:$0.portName,builtIn:$0.portType == .builtInMic)}
+    }
+    func inputChoices()->[AudioInputOption]{AudioInputSelection.options(availableInputPorts())}
+    func inputSelectionSummary()->String{
+        inputChoices().first{$0.id==selectedInput}?.label ?? "Selected microphone (not currently available)"
+    }
+    func selectInput(_ id:String){
+        guard inputChoices().contains(where:{$0.id==id}) else{phase="That microphone is no longer available. Reopen Microphone to choose another input.";publish();return}
+        stop("Microphone selection changed. Tap Start to use it.");selectedInput=id;publish()
+    }
+    private func currentInputMatchesSelection()->Bool{
+        AudioInputSelection.isRouted(selectedInput,ports:availableInputPorts(),currentIds:audio.currentRoute.inputs.map{$0.uid})
+    }
+    private func applySelectedInput() throws {
+        let uid=try AudioInputSelection.resolve(selectedInput,ports:availableInputPorts())
+        let port=uid.flatMap{id in audio.availableInputs?.first{$0.uid==id}}
+        if uid != nil && port == nil{throw AudioInputSelectionError.unavailable}
+        try audio.setPreferredInput(port);diagnose("input-preference")
+    }
+    private func routeSummary()->String{
+        let output=audio.currentRoute.outputs.map{$0.portName}.joined(separator:", ")
+        let input=audio.currentRoute.inputs.map{$0.portName}.joined(separator:", ")
+        return (output.isEmpty ? "System output":output)+" · "+(active ? "Mic: "+(input.isEmpty ? "not yet routed":input):"Mic off")+" · Selected: "+inputSelectionSummary()
+    }
+    private func diagnose(_ event:String){
+        let stats=capture?.snapshot() ?? lastCaptureStats
+        diagnostics.record(event,generation:generation,at:ProcessInfo.processInfo.systemUptime,engineRunning:engine?.isRunning == true,inputPorts:audio.currentRoute.inputs.map{$0.portType.rawValue},outputPorts:audio.currentRoute.outputs.map{$0.portType.rawValue},inputRate:engine?.inputNode.outputFormat(forBus:0).sampleRate ?? 0,outputRate:engine?.outputNode.inputFormat(forBus:0).sampleRate ?? 0,inputChannels:Int(engine?.inputNode.outputFormat(forBus:0).channelCount ?? 0),outputChannels:Int(engine?.outputNode.inputFormat(forBus:0).channelCount ?? 0),raw:stats?.rawBuffers ?? 0,converted:stats?.convertedBuffers ?? 0)
+    }
     private func routeFingerprint()->String {
-        let input=engine?.inputNode.outputFormat(forBus:0),output=engine?.outputNode.inputFormat(forBus:0)
+        let input=engine?.inputNode.inputFormat(forBus:0),output=engine?.outputNode.outputFormat(forBus:0)
         return (audio.currentRoute.inputs+audio.currentRoute.outputs).map{$0.uid}.joined(separator:"|")+"/\(input?.sampleRate ?? 0)/\(input?.channelCount ?? 0)/\(output?.sampleRate ?? 0)/\(output?.channelCount ?? 0)"
     }
     private func engineChanged(_ notification:Notification){
@@ -199,16 +292,17 @@ final class NativeVoice {
         // Apple requires releasing/rebuilding the graph outside its notification callback.
         DispatchQueue.main.async{[weak self,weak changed] in
             guard let self,let changed,self.generation==ticket,changed===self.engine else{return}
-            self.reconcileRoute()
+            self.diagnose("engine-config");self.reconcileRoute()
         }
     }
     private func reconcileRoute(){
         guard active,accepted else{return}
         switch captureLifecycle.routeChange(generation:generation,route:routeFingerprint(),engineRunning:engine?.isRunning == true){
         case .ignore:return
-        case .fail:fail("The audio route could not stabilize. Automatic retry stopped. Select an input device, then tap Start to retry.",stage:"input")
+        case .fail:diagnose("recovery-limit");fail("The audio route could not stabilize. Open Audio diagnostics to inspect the attempt. Choose a microphone, then tap Start to retry.",stage:"input")
         case .recover:
-            let ticket=generation;phase="Audio device changed · reconnecting once";publish()
+            if selectedInput != "system",!currentInputMatchesSelection(){diagnose("input-route-mismatch");engineFailure(AudioInputSelectionError.unavailable);return}
+            diagnose("recover-graph");let ticket=generation;phase="Audio device changed · reconnecting once";publish()
             DispatchQueue.main.asyncAfter(deadline:.now()+0.25){[weak self] in
                 guard let self,self.generation==ticket,self.active else{return}
                 let input=self.request,keepBackground=self.background
@@ -220,8 +314,9 @@ final class NativeVoice {
     }
     private func routeChanged(_ notification:Notification){
         guard active,accepted,let raw=notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,let reason=AVAudioSession.RouteChangeReason(rawValue:raw) else{publish();return}
+        diagnose("route-\(raw)")
         if reason == .oldDeviceUnavailable {stop("Headphones disconnected. Review the output route before restarting.");return}
-        if reason == .newDeviceAvailable || reason == .routeConfigurationChange {reconcileRoute()}
+        reconcileRoute()
         publish()
     }
 }

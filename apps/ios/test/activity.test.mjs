@@ -51,3 +51,21 @@ test('absent or invalid diagnostics are not invented as observed buffers',t=>{
  renderActivity({active:true,inputStage:'capturing',inputFrames:3,inputLevel:0.04});
  assert.equal($('input-status').textContent,'Speech detected');assert.match($('audio-detail').textContent,/3 delivered/);assert.doesNotMatch($('audio-detail').textContent,/0 raw|0 converted/);
 });
+
+test('diagnostic history is empty until native setup events arrive and clears for a new start',t=>{
+ const $=view(t);renderActivity();
+ assert.equal($('audio-diagnostics-log').textContent,'');assert.equal($('audio-diagnostics-log').hidden,true);assert.equal($('audio-diagnostics-empty').hidden,false);
+ renderActivity({captureDiagnostics:['+0ms g1 start engine=off','+40ms g1 engine-ready engine=on']});
+ assert.equal($('audio-diagnostics-log').textContent,'+0ms g1 start engine=off\n+40ms g1 engine-ready engine=on');assert.equal($('audio-diagnostics-log').hidden,false);assert.equal($('audio-diagnostics-empty').hidden,true);
+ renderActivity({captureDiagnostics:[]});assert.equal($('audio-diagnostics-log').textContent,'');assert.equal($('audio-diagnostics-empty').hidden,false);
+});
+
+test('diagnostic history is rendered as text and bounded to recent single-line events',t=>{
+ const $=view(t),events=Array.from({length:30},(_,index)=>`event-${index} `+'x'.repeat(300));
+ events[28]='<img src=x onerror="unexpected()">';events[29]='tap\nerror\r\nnext\u2028line\u0000';
+ renderActivity({captureDiagnostics:events});
+ const lines=$('audio-diagnostics-log').textContent.split('\n');assert.equal(lines.length,24);assert.ok(lines[0].startsWith('event-6 '));assert.ok(lines.every(line=>line.length<=256));
+ assert.equal(lines[22],events[28]);assert.equal($('audio-diagnostics-log').innerHTML,undefined);assert.equal(lines[23],'tap error  next line');
+ renderActivity({captureDiagnostics:[null,1,{},'','valid']});assert.equal($('audio-diagnostics-log').textContent,'valid');
+ renderActivity({captureDiagnostics:'not a native event array'});assert.equal($('audio-diagnostics-log').textContent,'');assert.equal($('audio-diagnostics-empty').hidden,false);
+});

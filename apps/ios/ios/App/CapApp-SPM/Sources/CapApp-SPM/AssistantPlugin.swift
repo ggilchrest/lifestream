@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import Capacitor
 import UIKit
-import AVKit
+import AssistantCore
 
 @objc(AssistantPlugin)
 public final class AssistantPlugin: CAPPlugin,CAPBridgedPlugin {
@@ -62,12 +62,19 @@ public final class AssistantPlugin: CAPPlugin,CAPBridgedPlugin {
     @objc public func stop(_ call:CAPPluginCall){perform(call){[self] in text.stop();voice.stop();call.resolve(voice.snapshot())}}
     @objc public func snapshot(_ call:CAPPluginCall){perform(call){[self] in call.resolve(voice.snapshot())}}
     @objc public func routePicker(_ call:CAPPluginCall){perform(call){[self] in
-        guard let controller=bridge?.viewController else{call.reject("Audio route picker unavailable.");return}
-        let panel=UIViewController();panel.view.backgroundColor = .systemBackground
-        let picker=AVRoutePickerView(frame:CGRect(x:0,y:40,width:300,height:80));picker.activeTintColor = .systemTeal;panel.view.addSubview(picker)
-        let label=UILabel(frame:CGRect(x:20,y:120,width:300,height:100));label.numberOfLines=0;label.text="Choose a connected audio device. Bluetooth microphones use the system call-audio route.";panel.view.addSubview(label)
-        panel.modalPresentationStyle = .pageSheet;if let sheet=panel.sheetPresentationController{sheet.detents=[.medium()];sheet.prefersGrabberVisible=true}
-        controller.present(panel,animated:true);call.resolve()
+        guard UIApplication.shared.applicationState == .active,let controller=bridge?.viewController,
+              controller.viewIfLoaded?.window != nil else{call.reject("Open the app to choose a microphone.");return}
+        guard controller.presentedViewController==nil,!controller.isBeingDismissed else{call.reject("Close the current panel, then open Microphone again.");return}
+        let choices=voice.inputChoices()
+        let discovery=choices.count>2 ? "Connected inputs listed below are checked again at Start.":"iOS currently exposes no external microphone choices. System default follows the iOS input route, including a connected headset. Inputs are checked again at Start."
+        let panel=UIAlertController(title:"Microphone",message:"Selected: \(voice.inputSelectionSummary()).\n\nChoosing stops the current conversation and applies on your next Start. It does not begin recording.\n\n"+discovery+"\n\nBluetooth microphone selection may also move playback to that headset. Use iOS Control Center for playback destinations.",preferredStyle:.actionSheet)
+        for choice in choices {
+            let title=choice.label+(choice.id==voice.selectedInput ? " (selected)":"")
+            panel.addAction(UIAlertAction(title:title,style:.default){[weak self] _ in self?.voice.selectInput(choice.id)})
+        }
+        panel.addAction(UIAlertAction(title:"Cancel",style:.cancel))
+        if let popover=panel.popoverPresentationController{popover.sourceView=controller.view;popover.sourceRect=CGRect(x:controller.view.bounds.midX,y:controller.view.bounds.midY,width:1,height:1);popover.permittedArrowDirections=[]}
+        controller.present(panel,animated:true){if panel.presentingViewController != nil{call.resolve()}else{call.reject("The microphone panel could not open. Close other panels and try again.")}}
     }}
 }
 public final class AssistantViewController:CAPBridgeViewController {
