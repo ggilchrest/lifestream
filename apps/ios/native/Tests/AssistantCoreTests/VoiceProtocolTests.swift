@@ -33,6 +33,42 @@ final class VoiceProtocolTests: XCTestCase {
         XCTAssertEqual(began,1);XCTAssertEqual(committed,frames.reduce(0){$0+$1.count/2});XCTAssertFalse(gate.speaking)
         XCTAssertTrue(gate.push(Array(repeating:0,count:1600)).isEmpty)
     }
+    func testSpeechGateAcceptsLargeVariableTapBuffersWithoutLosingSpeech() {
+        // AVAudioEngine's requested tap size is advisory. A valid callback can
+        // contain more than the transport's 4,800-sample per-frame limit.
+        let samples=Array(repeating:Float(0.1),count:16000)+Array(repeating:Float(0),count:16000)
+        func collect(_ size:Int)->(Int,[Data],Int?) {
+            var gate=SpeechGate(),began=0,frames=[Data](),committed:Int?
+            for offset in stride(from:0,to:samples.count,by:size) {
+                for event in gate.push(Array(samples[offset..<min(offset+size,samples.count)])) {
+                    switch event {case .began:began += 1;case .frame(let bytes):frames.append(bytes);case .commit(let sequence,let count):XCTAssertEqual(sequence,frames.count);committed=count}
+                }
+            }
+            return (began,frames,committed)
+        }
+        let small=collect(320),large=collect(8192),uneven=collect(1379)
+        XCTAssertEqual(large.0,1);XCTAssertEqual(large.1,small.1);XCTAssertEqual(large.2,small.2)
+        XCTAssertEqual(uneven.1,small.1);XCTAssertEqual(uneven.2,small.2)
+        XCTAssertEqual(large.2,large.1.reduce(0){$0+$1.count/2})
+        XCTAssertTrue(large.1.allSatisfy{!$0.isEmpty&&$0.count<=9600})
+    }
+    func testVoiceActivitySeparatesCaptureTranscriptionGenerationAndPlayback() {
+        var activity=VoiceActivity();activity.start();XCTAssertEqual(activity.backendStage,"connecting")
+        activity.captureReady();XCTAssertEqual(activity.inputStage,"listening");XCTAssertEqual(activity.inputFrames,0)
+        activity.captured([0.1,-0.1],speaking:true,waiting:false)
+        XCTAssertEqual(activity.inputFrames,1);XCTAssertEqual(activity.inputStage,"capturing");XCTAssertEqual(activity.inputLevel,0.1,accuracy:0.001)
+        activity.sentFrame();activity.committed();XCTAssertEqual(activity.backendStage,"transcribing");XCTAssertEqual(activity.sentFrames,1)
+        activity.transcribed();XCTAssertEqual(activity.backendStage,"generating");XCTAssertEqual(activity.outputStage,"idle")
+        activity.receivedText();XCTAssertEqual(activity.outputStage,"buffering")
+        activity.playing();XCTAssertEqual(activity.outputStage,"playing")
+        activity.receivedText();XCTAssertEqual(activity.outputStage,"playing")
+        activity.playbackDrained();XCTAssertEqual(activity.outputStage,"buffering")
+        activity.playing();activity.generationFinished();XCTAssertEqual(activity.backendStage,"idle");XCTAssertEqual(activity.outputStage,"playing")
+        activity.playbackDrained();XCTAssertEqual(activity.outputStage,"idle")
+        activity.completed();XCTAssertEqual(activity.backendStage,"idle");XCTAssertEqual(activity.outputStage,"idle")
+        activity.fail("No microphone buffers arrived.",stage:"input");XCTAssertEqual(activity.inputStage,"error");XCTAssertEqual(activity.lastError,"No microphone buffers arrived.")
+        activity.stop();XCTAssertEqual(activity.inputStage,"off");XCTAssertEqual(activity.lastError,"")
+    }
 }
 
 extension VoiceProtocolTests {

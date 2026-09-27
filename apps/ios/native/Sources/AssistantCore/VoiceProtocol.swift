@@ -2,6 +2,32 @@
 import Foundation
 
 public enum VoiceError: Error { case invalidEndpoint, invalidFrame, staleTurn, overflow, invalidMessage }
+
+/// Volatile stage evidence only: no PCM, credentials or transcript is retained.
+public struct VoiceActivity {
+    public private(set) var inputStage="off",backendStage="idle",outputStage="idle",lastError=""
+    public private(set) var inputLevel:Float=0
+    public private(set) var inputFrames=0,sentFrames=0
+    public init() {}
+    public mutating func start(){self=Self();inputStage="starting";backendStage="connecting"}
+    public mutating func captureReady(){inputStage="listening";backendStage="idle"}
+    public mutating func captured(_ values:[Float],speaking:Bool,waiting:Bool){
+        guard !values.isEmpty,values.allSatisfy({$0.isFinite}) else{return}
+        inputFrames += 1;inputLevel=min(1,sqrt(values.reduce(Float(0)){$0+$1*$1}/Float(values.count)))
+        inputStage=waiting ? "waiting":speaking ? "capturing":"listening"
+    }
+    public mutating func sentFrame(){sentFrames += 1;inputStage="capturing"}
+    public mutating func committed(){inputStage="waiting";backendStage="transcribing"}
+    public mutating func transcribed(){backendStage="generating"}
+    public mutating func receivedText(){if outputStage != "playing"{outputStage="buffering"}}
+    public mutating func playing(){outputStage="playing"}
+    public mutating func generationFinished(){backendStage="idle"}
+    public mutating func playbackDrained(){outputStage=backendStage=="idle" ? "idle":"buffering"}
+    public mutating func completed(){inputStage="listening";backendStage="idle";outputStage="idle"}
+    public mutating func stop(){inputStage="off";backendStage="idle";outputStage="idle";inputLevel=0;lastError=""}
+    public mutating func fail(_ message:String,stage:String){stop();lastError=String(message.prefix(400));if stage=="input"{inputStage="error"}else if stage=="output"{outputStage="error"}else{backendStage="error"}}
+    public var snapshot:[String:Any]{["inputStage":inputStage,"backendStage":backendStage,"outputStage":outputStage,"inputLevel":inputLevel,"inputFrames":inputFrames,"sentFrames":sentFrames,"lastError":lastError]}
+}
 public enum EndpointPolicy {
     public static func validate(_ input: String, allowLoopback: Bool = false) throws -> URL {
         guard let url = URL(string: input), let host = url.host, !host.isEmpty,
@@ -60,14 +86,27 @@ public struct ReplyStream {
 /// Bounded local speech gate after Apple's voice processing, not a speaker-identity detector.
 public struct SpeechGate {
     public enum Event { case began, frame(Data), commit(Int, Int) }
-    private var pre = [Float](), pending = [Float]()
+    private var pre = [Float](), pending = [Float](), analysis = [Float]()
     private var voiced = 0, silence = 0, sequence = 0, sent = 0
     public private(set) var speaking = false
     public var threshold: Float = 0.018
     public init() {}
-    public mutating func reset() { pre.removeAll(); pending.removeAll(); voiced = 0; silence = 0; sequence = 0; sent = 0; speaking = false }
+    public mutating func reset() { resetUtterance(); analysis.removeAll() }
+    private mutating func resetUtterance() { pre.removeAll(); pending.removeAll(); voiced = 0; silence = 0; sequence = 0; sent = 0; speaking = false }
     public mutating func push(_ samples: [Float]) -> [Event] {
-        guard !samples.isEmpty, samples.count <= 4800, samples.allSatisfy({ $0.isFinite }) else { reset(); return [] }
+        guard !samples.isEmpty, samples.allSatisfy({ $0.isFinite }) else { reset(); return [] }
+        // Tap bufferSize is a request, not a guarantee. Analyze fixed 20 ms
+        // windows so route-dependent callbacks cannot drop valid speech or
+        // change the voice/silence timing. Retain at most 319 input samples.
+        var events=[Event](),offset=0
+        while offset<samples.count {
+            let count=min(320-analysis.count,samples.count-offset)
+            analysis.append(contentsOf:samples[offset..<offset+count]);offset += count
+            if analysis.count==320 {events.append(contentsOf:pushWindow(analysis));analysis.removeAll(keepingCapacity:true)}
+        }
+        return events
+    }
+    private mutating func pushWindow(_ samples:[Float])->[Event] {
         let rms = sqrt(samples.reduce(Float(0)) { $0 + $1 * $1 } / Float(samples.count))
         var events = [Event]()
         if !speaking {
@@ -80,7 +119,7 @@ public struct SpeechGate {
         while pending.count >= 1600 { events.append(.frame(Self.pcm(Array(pending.prefix(1600))))); pending.removeFirst(1600); sequence += 1; sent += 1600 }
         if silence >= 9600 || sent + pending.count >= 320000 {
             if !pending.isEmpty { events.append(.frame(Self.pcm(pending))); sequence += 1; sent += pending.count }
-            events.append(.commit(sequence, sent)); reset()
+            events.append(.commit(sequence, sent)); resetUtterance()
         }
         return events
     }

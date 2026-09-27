@@ -8,14 +8,17 @@ struct SavedConnection: Codable {
     let username:String
     var cookies:[SavedCookie]=[]
     var settings:String?
+    var password:String?
+    var requiresOneTimeCode:Bool?
     var hasSession:Bool { !cookies.isEmpty }
+    var hasSavedCredentials:Bool { !(password ?? "").isEmpty }
 }
 protocol ConnectionStore {
     func load() throws -> SavedConnection?
     func save(_ value:SavedConnection) throws
 }
 enum ConnectionStorageError: Error { case unavailable(OSStatus), invalidRecord }
-/// Device-only session custody. No password, OTP, CSRF token or cloud synchronization.
+/// Device-only credential custody. No OTP, CSRF token or cloud synchronization.
 final class KeychainConnectionStore: ConnectionStore {
     private let identity:[String:Any]=[kSecClass as String:kSecClassGenericPassword,kSecAttrService as String:"org.lifestream.assistant.connection",kSecAttrAccount as String:"current",kSecAttrSynchronizable as String:false]
     func load() throws -> SavedConnection? {

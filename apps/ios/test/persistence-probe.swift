@@ -16,13 +16,13 @@ func request(_ path:String,_ body:[String:Any]?=nil) async throws -> Int {
 }
 Task { @MainActor in
  do {
-  var status=0
-  if input["mode"]=="signin" {try transport.configure(input["endpoint"]!,username:"ios-fixture");status=try await request("/api/auth/v1/sign-in",["username":"ios-fixture","password":input["password"]!])}
-  else {let saved=try transport.restoreConnection();if saved?.hasSession==true{status=try await request("/api/auth/v1/session")}}
+  var status=0,restored:[String:Any]=[:]
+  if input["mode"]=="signin" {try transport.configure(input["endpoint"]!,username:"ios-fixture");var body:[String:Any]=["username":"ios-fixture","password":input["password"]!];if let totp=input["totp"]{body["totp"]=totp};status=try await request("/api/auth/v1/sign-in",body)}
+  else {let result=try await withCheckedThrowingContinuation{(c:CheckedContinuation<NativeTransport.RestoredConnection,Error>) in transport.restoreSession{c.resume(with:$0)}};restored=result.payload;status=result.authState=="authenticated" ? 200:0}
   if input["mode"]=="signout"{_ = try await request("/api/auth/v1/sign-out",[:]);try transport.forgetSession()}
   if input["mode"]=="change"{try transport.configure(input["endpoint"]!,username:"other")}
   let saved=try FileConnectionStore(input["storePath"]!).load()
-  let result:[String:Any]=["status":status,"saved":saved != nil,"endpoint":saved?.endpoint ?? "","username":saved?.username ?? "","hasSession":saved?.hasSession ?? false,"csrfAvailable": !transport.csrf.isEmpty]
+  let result:[String:Any]=["status":status,"saved":saved != nil,"endpoint":saved?.endpoint ?? "","username":saved?.username ?? "","hasSession":saved?.hasSession ?? false,"hasSavedCredentials":saved?.hasSavedCredentials ?? false,"csrfAvailable": !transport.csrf.isEmpty,"restored":restored]
   print(String(data:try JSONSerialization.data(withJSONObject:result),encoding:.utf8)!);exit(0)
  }catch{fputs("Persistence probe failed: \(error)\n",stderr);exit(1)}
 }
