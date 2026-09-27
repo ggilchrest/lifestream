@@ -22,6 +22,7 @@ test('rendered reduced motion pauses automatic body animation while preserving e
  await page.waitForFunction(()=>window.motionRuntime.current.mixer.time>.15);
  const frames=async n=>{const before=await page.evaluate(()=>window.motionFrames);await page.waitForFunction(target=>window.motionFrames>=target,before+n);};
  await page.evaluate(()=>{window.motionRuntime.animationEnabled=()=>false;});await frames(3);assert.equal(await page.evaluate(()=>!!window.motionRuntime.current.action),false,'disabled bundled clips must not remain active');await page.evaluate(()=>{window.motionRuntime.animationEnabled=()=>true;});await frames(3);assert.ok(await page.evaluate(()=>!!window.motionRuntime.current.action));
+ const transitionStopped=await page.evaluate(()=>{const r=window.motionRuntime,v=r.current;r.renderState('listening');r.animationEnabled=clip=>clip!=='sway';r.renderState('listening');const stopped=!v.actions.get('sway').isRunning();r.animationEnabled=()=>true;r.renderState('idle');return stopped;});assert.equal(transitionStopped,true,'disabling a fading previous clip must stop it immediately');
  await page.emulateMedia({reducedMotion:'reduce'});await frames(3);
  const frozen=await page.evaluate(()=>({time:window.motionRuntime.current.mixer.time,angle:window.motionRuntime.current.root.rotation.z}));await frames(12);
  assert.deepEqual(await page.evaluate(()=>({time:window.motionRuntime.current.mixer.time,angle:window.motionRuntime.current.root.rotation.z})),frozen,'ambient body must stop at the current pose');
