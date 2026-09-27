@@ -63,8 +63,8 @@ export function validatePresentation(value: unknown): PresentationManifest {
 export class PresentationPackages {
   private packages = new Map<string, { manifest: PresentationManifest; digest: string; directory: string }>();
   readonly failures: string[] = [];
-  private readonly options: { directory: string; ownerPrincipalId: string | (()=>string | undefined) } | undefined;
-  constructor(options?: { directory: string; ownerPrincipalId: string | (()=>string | undefined) }) {
+  private readonly options: { directory: string; ownerPrincipalId: string | (()=>string | undefined); catalogOnly?: boolean } | undefined;
+  constructor(options?: { directory: string; ownerPrincipalId: string | (()=>string | undefined); catalogOnly?: boolean }) {
     this.options=options;
     if (!options) return;
     const root = realpathSync(options.directory), indexBytes = readFileSync(join(root,'index.json'));
@@ -77,6 +77,8 @@ export class PresentationPackages {
         const manifest = validatePresentation(JSON.parse(bytes.toString()));
         if (manifest.id !== id) throw new Error('Presentation identity mismatch');
         const entry = { manifest, digest: digest(bytes), directory }; this.packages.set(id,entry);
+        // A remote catalog validates metadata only; endpoint hosts validate and serve bytes.
+        if (options.catalogOnly === true) continue;
         for (const resource of manifest.resources) {
           const content = this.readBounded(this.contained(directory,resource.path),resource.bytes);
           if(content.length!==resource.bytes||digest(content)!==resource.sha256)throw new Error('Presentation resource changed');
@@ -113,6 +115,7 @@ export class PresentationPackages {
   }
   matches(principalId: string, id: string, digest: string): boolean { return principalId===this.owner() && this.packages.get(id)?.digest===digest; }
   resource(principalId: string, id: string, path: string): { bytes: Buffer; mime: string } {
+    if(this.options?.catalogOnly === true)throw new Error('Presentation resource unavailable');
     const entry=principalId===this.owner()?this.packages.get(id):undefined, resource=entry?.manifest.resources.find(r=>r.path===path);
     if(!entry||!resource)throw new Error('Presentation resource unavailable');
     const bytes=this.readBounded(this.contained(entry.directory,path),resource.bytes);

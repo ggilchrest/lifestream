@@ -21,6 +21,23 @@ test('presentation resources are owner-only, digest pinned, path bounded, and co
  assert.throws(()=>packages.resource('other','neutral-test','model.gltf'));assert.throws(()=>packages.resource('owner','neutral-test','../index.json'));assert.equal(packages.resource('owner','neutral-test','model.gltf').bytes.length,f.manifest.resources[0]!.bytes);
  writeFileSync(join(f.directory,'model.gltf'),'changed');assert.throws(()=>packages.resource('owner','neutral-test','model.gltf'),/changed/);
 });
+test('catalog-only hosts retain owner selections without reading or serving resource bytes',t=>{
+ const f=fixture();t.after(f.close);
+ const open=()=>new PresentationPackages({directory:f.root,ownerPrincipalId:'owner',catalogOnly:true});
+ const withBytes=open();assert.equal(withBytes.list('owner').length,1);
+ assert.throws(()=>withBytes.resource('owner','neutral-test','model.gltf'),/unavailable/);
+ rmSync(join(f.directory,'model.gltf'));
+ const catalog=open(),item=catalog.list('owner')[0]!;
+ assert.equal(item.id,'neutral-test');assert.deepEqual(catalog.failures,[]);assert.deepEqual(catalog.list('other'),[]);
+ assert.equal(catalog.matches('owner',item.id,item.digest),true);assert.equal(catalog.matches('other',item.id,item.digest),false);
+ assert.throws(()=>catalog.resource('owner',item.id,'model.gltf'),/unavailable/);
+ assert.deepEqual(f.open().failures,['neutral-test']);
+ const db=new Database({path:join(f.root,'catalog.sqlite')});db.migrate();t.after(()=>db.close());const selections=new PresentationSelection(db);
+ selections.select('owner','endpoint','session',{scope:'default',id:item.id,digest:item.digest,expectedRevision:0},catalog);
+ assert.equal(selections.runtimeState('owner','endpoint','session',catalog,true).state,'configuredNotObserved');
+ assert.equal(selections.runtimeState('owner','endpoint','session',catalog,false).state,'unavailable');
+ f.manifest.resources[0]!.path='../outside.glb';f.save();assert.deepEqual(open().failures,['neutral-test']);
+});
 test('presentation rejects script fields, undeclared network references, symlink escapes and oversized resources',t=>{
  const f=fixture();t.after(f.close);
  assert.throws(()=>validatePresentation({...f.manifest,script:'run.js'}));assert.throws(()=>validatePresentation({...f.manifest,resources:[{...f.manifest.resources[0],path:'../outside.glb'}]}));assert.throws(()=>validatePresentation({...f.manifest,resources:[{...f.manifest.resources[0],bytes:193*1024*1024}]}));
@@ -43,18 +60,19 @@ test('endpoint defaults and session overrides survive restart, conflict atomical
  assert.throws(()=>selections.select('owner','endpoint','session-a',{scope:'default',id:'neutral',digest:'neutral-v1',expectedRevision:0},packages),/conflict/);db.close();db=new Database({path});t.after(()=>db.close());selections=new PresentationSelection(db);
  assert.equal(selections.read('owner','endpoint','session-a').override?.id,'neutral');assert.equal(selections.read('owner','endpoint','session-b').default?.id,'neutral-test');assert.equal(selections.read('owner','endpoint','session-b').override,null);assert.deepEqual(selections.read('other','endpoint','session-a'),{default:null,override:null,overrideRevision:0});
 });
-test('actual HTTP authentication and CSRF protect private catalog, resources and selection',async t=>{
+for(const catalogOnly of [false,true])test(`actual HTTP authentication and CSRF protect private catalog, resources and selection (catalogOnly=${catalogOnly})`,async t=>{
  const f=fixture();t.after(f.close);const config=loadProfile('test');config.storage={databasePath:join(f.root,'runtime.sqlite'),artifactDirectory:join(f.root,'artifacts')};config.authority.authentication='local-password';const installerToken=randomBytes(32).toString('hex'),password=randomBytes(32).toString('hex');const localAuth={stateDirectory:join(f.root,'safety'),installerToken};let app=createLifestreamServer({config,localAuth});await app.start();let base=`http://127.0.0.1:${app.address().port}`,cookie='',csrf='';
  const request=(path:string,body?:unknown,headers:Record<string,string>={})=>fetch(base+path,{method:body===undefined?'GET':'POST',headers:{origin:base,cookie,'content-type':'application/json','x-lifestream-csrf':csrf,...headers},...(body===undefined?{}:{body:JSON.stringify(body)})});
  assert.equal((await request('/api/runtime/v1/presentation')).status,401);const setup=await request('/api/auth/v1/setup',{username:'owner',password,installerToken});cookie=setup.headers.get('set-cookie')!.split(';')[0]!;const identity=await setup.json() as {session:{principalId:string;csrfToken:string}};csrf=identity.session.csrfToken;await app.shutdown();
- app=createLifestreamServer({config,localAuth,presentationPackages:{directory:f.root,ownerPrincipalId:identity.session.principalId}});await app.start();t.after(()=>app.shutdown());base=`http://127.0.0.1:${app.address().port}`;
+ if(catalogOnly)rmSync(join(f.directory,'model.gltf'));
+ app=createLifestreamServer({config,localAuth,presentationPackages:{directory:f.root,ownerPrincipalId:identity.session.principalId,catalogOnly}});await app.start();t.after(()=>app.shutdown());base=`http://127.0.0.1:${app.address().port}`;
  const signedIn=await request('/api/auth/v1/sign-in',{username:'owner',password});cookie=signedIn.headers.get('set-cookie')!.split(';')[0]!;csrf=(await signedIn.json() as {session:{csrfToken:string}}).session.csrfToken;
- const catalog=await (await request('/api/runtime/v1/presentation')).json() as {packages:{id:string;digest:string}[]};assert.equal(catalog.packages.length,1);assert.equal((await request('/api/runtime/v1/presentation/resources/neutral-test/model.gltf')).status,200);
+ const catalog=await (await request('/api/runtime/v1/presentation')).json() as {packages:{id:string;digest:string}[]};assert.equal(catalog.packages.length,1);assert.equal((await request('/api/runtime/v1/presentation/resources/neutral-test/model.gltf')).status,catalogOnly?404:200);
  assert.equal((await request('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'unknown'})).status,200);
  const selection={scope:'default',id:catalog.packages[0]!.id,digest:catalog.packages[0]!.digest,expectedRevision:0};assert.equal((await request('/api/runtime/v1/presentation',selection,{'x-lifestream-csrf':'wrong'})).status,403);assert.equal((await request('/api/runtime/v1/presentation',selection)).status,200);assert.equal((await request('/api/runtime/v1/presentation',selection)).status,409);
  const override={scope:'session',id:'neutral',digest:'neutral-v1',expectedRevision:0};assert.equal((await request('/api/runtime/v1/presentation',override)).status,200);const clear={operation:'clearSessionOverride',expectedRevision:1};assert.equal((await request('/api/runtime/v1/presentation',clear,{'x-lifestream-csrf':'wrong'})).status,403);const cleared=await request('/api/runtime/v1/presentation',clear);assert.equal(cleared.status,200);assert.equal((await cleared.json() as {selection:{override:unknown}}).selection.override,null);assert.equal((await request('/api/runtime/v1/presentation',override)).status,409);
  assert.equal((await request('/api/auth/v1/sign-out',{})).status,200);assert.equal((await request('/api/runtime/v1/presentation/resources/neutral-test/model.gltf')).status,401);
- assert.equal(readFileSync(join(f.directory,'model.gltf')).length,f.manifest.resources[0]!.bytes);
+ if(!catalogOnly)assert.equal(readFileSync(join(f.directory,'model.gltf')).length,f.manifest.resources[0]!.bytes);
 });
 
 test('versioned facial mappings are data-only and bound gaze axes, ownership targets and blink timing',t=>{
