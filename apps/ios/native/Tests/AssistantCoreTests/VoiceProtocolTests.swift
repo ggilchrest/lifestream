@@ -54,7 +54,7 @@ final class VoiceProtocolTests: XCTestCase {
     }
     func testVoiceActivitySeparatesCaptureTranscriptionGenerationAndPlayback() {
         var activity=VoiceActivity();activity.start();XCTAssertEqual(activity.backendStage,"connecting")
-        activity.captureReady();XCTAssertEqual(activity.inputStage,"listening");XCTAssertEqual(activity.inputFrames,0)
+        activity.captureReady();XCTAssertEqual(activity.inputStage,"starting");XCTAssertEqual(activity.inputFrames,0)
         activity.captured([0.1,-0.1],speaking:true,waiting:false)
         XCTAssertEqual(activity.inputFrames,1);XCTAssertEqual(activity.inputStage,"capturing");XCTAssertEqual(activity.inputLevel,0.1,accuracy:0.001)
         activity.sentFrame();activity.committed();XCTAssertEqual(activity.backendStage,"transcribing");XCTAssertEqual(activity.sentFrames,1)
@@ -68,6 +68,17 @@ final class VoiceProtocolTests: XCTestCase {
         activity.completed();XCTAssertEqual(activity.backendStage,"idle");XCTAssertEqual(activity.outputStage,"idle")
         activity.fail("No microphone buffers arrived.",stage:"input");XCTAssertEqual(activity.inputStage,"error");XCTAssertEqual(activity.lastError,"No microphone buffers arrived.")
         activity.stop();XCTAssertEqual(activity.inputStage,"off");XCTAssertEqual(activity.lastError,"")
+    }
+    func testCaptureReadyWaitsForValidConvertedAudioAndSilenceIsNotSpeech() {
+        var activity=VoiceActivity();activity.start();activity.captureReady()
+        XCTAssertEqual(activity.inputStage,"starting");XCTAssertEqual(activity.backendStage,"idle")
+        activity.captured([],speaking:false,waiting:false)
+        activity.captured([.nan],speaking:false,waiting:false)
+        XCTAssertEqual(activity.inputStage,"starting");XCTAssertEqual(activity.inputFrames,0)
+        activity.captured([0,0,0],speaking:false,waiting:false)
+        XCTAssertEqual(activity.inputStage,"listening");XCTAssertEqual(activity.inputFrames,1);XCTAssertEqual(activity.inputLevel,0)
+        activity.stop();XCTAssertEqual(activity.inputStage,"off");XCTAssertEqual(activity.inputFrames,1)
+        activity.start();XCTAssertEqual(activity.inputStage,"starting");XCTAssertEqual(activity.inputFrames,0)
     }
 }
 

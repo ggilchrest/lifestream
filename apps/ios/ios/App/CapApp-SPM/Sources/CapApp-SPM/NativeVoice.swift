@@ -15,14 +15,14 @@ final class NativeVoice {
     private var generation=0,outputGeneration=0,queued=0,sequence=0,samples=0,sentMessages=0
     private var poll:Timer?,meter:Timer?,deadline:Timer?,privacyPending=false,privacyKey:String?,privacyExpires:Date?
     private var resumeRead:(()->Void)?
-    private var tapRate:Double=0,routeRestart=false
-    private var lastCapture=Date.distantPast
-    private var captureChunks=0;private let captureLock=NSLock()
+    private var capture:NativeCapture?,captureLifecycle=CaptureLifecycle(),tapInstalled=false
+    private var lastCaptureStats:NativeCapture.Stats?
     private var background=false,active=false,accepted=false,turnPending=false,phase="Stopped",amplitude:Float=0,played=0
     init(transport:NativeTransport){
         self.transport=transport
         observe(AVAudioSession.interruptionNotification){[weak self] n in self?.interruption(n)}
         observe(AVAudioSession.routeChangeNotification){[weak self] n in self?.routeChanged(n)}
+        observe(.AVAudioEngineConfigurationChange){[weak self] n in self?.engineChanged(n)}
         observe(AVAudioSession.mediaServicesWereResetNotification){[weak self] _ in self?.stop("Audio services reset. Start listening again.")}
         observe(UIApplication.didEnterBackgroundNotification){[weak self] _ in guard let self else{return};if !self.background{self.stop("Background conversation is off.")}else{self.publish()}}
         observe(UIApplication.willEnterForegroundNotification){[weak self] _ in self?.publish()}
@@ -32,12 +32,15 @@ final class NativeVoice {
     }
     deinit{observers.forEach{NotificationCenter.default.removeObserver($0)};remoteTargets.forEach{$0.0.removeTarget($0.1)}}
     private func observe(_ name:Notification.Name,_ handler:@escaping(Notification)->Void){observers.append(NotificationCenter.default.addObserver(forName:name,object:nil,queue:.main,using:handler))}
-    func snapshot()->[String:Any]{activity.snapshot.merging(["active":active,"phase":phase,"backgroundEnabled":background,"route":audio.currentRoute.outputs.map{$0.portName}.joined(separator:", ")+" · Mic: "+audio.currentRoute.inputs.map{$0.portName}.joined(separator:", "),"playing":queued>0,"amplitude":amplitude,"sampleOffset":played,"trace":reply.trace ?? "","clock":"dataPlayedBack callbacks","queuedSamples":queued]){_,new in new}}
+    func snapshot()->[String:Any]{
+        let stats=capture?.snapshot() ?? lastCaptureStats
+        return activity.snapshot.merging(["active":active,"phase":phase,"backgroundEnabled":background,"route":audio.currentRoute.outputs.map{$0.portName}.joined(separator:", ")+" · Mic: "+audio.currentRoute.inputs.map{$0.portName}.joined(separator:", "),"playing":queued>0,"amplitude":amplitude,"sampleOffset":played,"trace":reply.trace ?? "","clock":"dataPlayedBack callbacks","queuedSamples":queued,"rawInputBuffers":stats?.rawBuffers ?? 0,"convertedInputBuffers":stats?.convertedBuffers ?? 0,"captureSampleRate":stats?.sampleRate ?? 0,"captureChannels":stats?.channels ?? 0,"captureEngineRunning":engine?.isRunning == true]){_,new in new}
+    }
     private func publish(){emit(["type":"state","state":snapshot()])}
     func start(_ input:[String:Any],background:Bool,resumingRoute:Bool=false,done:@escaping(Error?)->Void){
         guard UIApplication.shared.applicationState == .active || (resumingRoute && active && self.background) else{done(VoiceError.staleTurn);return}
         let previousPrivacy=resumingRoute ? privacyKey:nil
-        stop("Preparing audio");activity.start();privacyKey=previousPrivacy;publish()
+        stop("Preparing audio");captureLifecycle.begin(generation:generation,recovering:resumingRoute);lastCaptureStats=nil;activity.start();phase="Starting microphone connection";privacyKey=previousPrivacy;publish()
         for key in ["sessionId","endpointId","assistantId"]{guard let s=input[key] as? String,UUID(uuidString:s) != nil else{fail("Select a current Assistant and reconnect before listening.",stage:"backend");done(VoiceError.invalidMessage);return}}
         guard let revision=input["expectedSessionRevision"] as? Int,revision>=0 else{fail("The conversation session is out of date. Reconnect before listening.",stage:"backend");done(VoiceError.invalidMessage);return}
         request=input;request["schemaVersion"]="1.0.0";request["requestId"]=UUID().uuidString.lowercased();request["correlationId"]=UUID().uuidString.lowercased();request["audioInputId"]=UUID().uuidString.lowercased();request["format"]=["encoding":"pcm_s16le","sampleRateHz":16000,"channels":1]
@@ -51,7 +54,7 @@ final class NativeVoice {
                     self.transport.socketOpened={[weak self,weak ws] opened in guard let self,self.generation==ticket,opened===ws,self.socket===ws else{return};self.send(["type":"start","request":self.request])}
                     self.transport.socketClosed={[weak self,weak ws] closed in guard let self,closed===ws,self.socket===ws else{return};self.fail("Speech connection closed. Check the private server and VPN, then start again.",stage:"backend")}
                     ws.resume();self.receive(ws,ticket:ticket)
-                    self.deadline=Timer.scheduledTimer(withTimeInterval:10,repeats:false){[weak self] _ in if self?.accepted != true{self?.fail("The speech connection did not become ready within 10 seconds. Check the private server and VPN.",stage:"backend")}}
+                    self.deadline=Timer.scheduledTimer(withTimeInterval:10,repeats:false){[weak self] _ in guard let self,self.generation==ticket,!self.accepted else{return};self.fail("The speech connection did not become ready within 10 seconds. Check the private server and VPN.",stage:"backend")}
                     self.poll=Timer.scheduledTimer(withTimeInterval:0.5,repeats:true){[weak self] _ in self?.privacyTick()}
                     self.meter=Timer.scheduledTimer(withTimeInterval:0.1,repeats:true){[weak self] _ in self?.meterTick()}
                     self.publish();done(nil)
@@ -60,38 +63,40 @@ final class NativeVoice {
         }}
     }
     private func startEngine() throws {
+        captureLifecycle.starting(generation:generation)
         var options:AVAudioSession.CategoryOptions=[.defaultToSpeaker]
         if #available(iOS 26.0,*){options.insert(.allowBluetoothHFP)}else{options.insert(.allowBluetooth)}
         try audio.setCategory(.playAndRecord,mode:.voiceChat,options:options)
         try audio.setPreferredIOBufferDuration(0.02);try audio.setActive(true)
         let engine=AVAudioEngine(),player=AVAudioPlayerNode();self.engine=engine;self.player=player
         try engine.inputNode.setVoiceProcessingEnabled(true)
-        let inputFormat=engine.inputNode.outputFormat(forBus:0),target=AVAudioFormat(commonFormat:.pcmFormatFloat32,sampleRate:16000,channels:1,interleaved:false)!
-        guard inputFormat.sampleRate>0,let converter=AVAudioConverter(from:inputFormat,to:target) else{throw VoiceError.invalidFrame}
-        tapRate=inputFormat.sampleRate
+        let inputFormat=engine.inputNode.outputFormat(forBus:0)
+        let capture=try NativeCapture(inputFormat:inputFormat);self.capture=capture
         let ticket=generation
-        engine.inputNode.installTap(onBus:0,bufferSize:1024,format:inputFormat){[weak self] buffer,_ in
-            guard let self else{return}
-            self.captureLock.lock();let admitted=self.captureChunks<8;if admitted{self.captureChunks += 1};self.captureLock.unlock()
-            guard admitted else{DispatchQueue.main.async{if self.generation==ticket{self.fail("Microphone processing could not keep up. Start listening again.",stage:"input")}};return}
-            let capacity=AVAudioFrameCount(ceil(Double(buffer.frameLength)*16000/inputFormat.sampleRate)+32)
-            guard let converted=AVAudioPCMBuffer(pcmFormat:target,frameCapacity:capacity) else{self.releaseCapture();DispatchQueue.main.async{if self.generation==ticket{self.fail("Microphone buffer allocation failed.",stage:"input")}};return}
-            var supplied=false,error:NSError?
-            converter.convert(to:converted,error:&error){_,status in if supplied{status.pointee = .noDataNow;return nil};supplied=true;status.pointee = .haveData;return buffer}
-            guard error==nil else{self.releaseCapture();DispatchQueue.main.async{if self.generation==ticket{self.fail("Microphone audio conversion failed. Select an audio device and start again.",stage:"input")}};return}
-            guard let channel=converted.floatChannelData?[0],converted.frameLength>0 else{self.releaseCapture();return}
-            let values=Array(UnsafeBufferPointer(start:channel,count:Int(converted.frameLength)))
-            DispatchQueue.main.async{self.releaseCapture();guard self.generation==ticket,self.active,self.accepted else{return};self.input(values)}
+        // Each graph owns its converter and bounded queue. A late old tap cannot
+        // consume the replacement graph's budget or update its observations.
+        engine.inputNode.installTap(onBus:0,bufferSize:capture.bufferSize,format:inputFormat){[weak self] buffer,_ in
+            capture.consume(buffer,deliver:{[weak self] values in
+                guard let self,self.generation==ticket,self.active,self.accepted else{return}
+                self.input(values)
+            },failed:{[weak self] message in
+                guard let self,self.generation==ticket else{return}
+                self.fail(message,stage:"input")
+            })
         }
+        tapInstalled=true
         engine.attach(player);engine.connect(player,to:engine.mainMixerNode,format:AVAudioFormat(standardFormatWithSampleRate:48000,channels:1)!)
-        engine.prepare();try engine.start();player.play();activity.captureReady();lastCapture=Date();phase="Listening · speak, then pause to send"
+        engine.prepare();try engine.start();player.play()
+        captureLifecycle.ready(generation:generation,route:routeFingerprint(),at:ProcessInfo.processInfo.systemUptime)
+        activity.captureReady();phase="Microphone started · waiting for audio"
         MPNowPlayingInfoCenter.default().nowPlayingInfo=[MPMediaItemPropertyTitle:"Lifestream conversation",MPNowPlayingInfoPropertyIsLiveStream:true,MPNowPlayingInfoPropertyPlaybackRate:1]
         remoteTargets.forEach{$0.0.isEnabled=true};publish()
     }
-    private func releaseCapture(){captureLock.lock();captureChunks -= 1;captureLock.unlock()}
     private func input(_ values:[Float]){
         guard !values.isEmpty,values.allSatisfy({$0.isFinite}) else{fail("Microphone produced invalid audio. Start listening again.",stage:"input");return}
-        lastCapture=Date();activity.captured(values,speaking:gate.speaking,waiting:turnPending && reply.trace == nil)
+        captureLifecycle.captured(generation:generation)
+        if activity.inputFrames==0{phase="Listening · speak, then pause to send"}
+        activity.captured(values,speaking:gate.speaking,waiting:turnPending && reply.trace == nil)
         guard !turnPending || reply.trace != nil else{return}
         for event in gate.push(values){switch event{
         case .began:interruptReply("New speech");sequence=0;samples=0;phase="Hearing speech · pause to send"
@@ -143,17 +148,27 @@ final class NativeVoice {
     }
     func stop(_ reason:String="Stopped"){
         if socket != nil{interruptReply(reason)}
-        generation += 1;active=false;accepted=false;background=false;gate.reset();activity.stop();sentMessages=0;turnPending=false
+        generation += 1;captureLifecycle.stop(generation:generation);active=false;accepted=false;background=false;gate.reset();activity.stop();sentMessages=0;turnPending=false
         socket?.cancel(with:.normalClosure,reason:nil);socket=nil;transport.socketOpened=nil;transport.socketClosed=nil
-        engine?.inputNode.removeTap(onBus:0);engine?.stop();engine=nil;player=nil
+        if tapInstalled{engine?.inputNode.removeTap(onBus:0);tapInstalled=false};engine?.stop()
+        lastCaptureStats=capture?.snapshot() ?? lastCaptureStats;capture=nil;engine=nil;player=nil
         poll?.invalidate();meter?.invalidate();deadline?.invalidate();poll=nil;meter=nil;deadline=nil;privacyPending=false;privacyKey=nil;privacyExpires=nil
         try? audio.setActive(false,options:.notifyOthersOnDeactivation);remoteTargets.forEach{$0.0.isEnabled=false};MPNowPlayingInfoCenter.default().nowPlayingInfo=nil
         resumeRead=nil;phase=reason;publish()
     }
     private func fail(_ message:String,stage:String){stop(message);activity.fail(message,stage:stage);publish()}
-    private func armResponseDeadline(){deadline?.invalidate();deadline=Timer.scheduledTimer(withTimeInterval:180,repeats:false){[weak self] _ in self?.fail("The backend did not complete the response within 3 minutes. Please retry.",stage:"backend")}}
+    private func armResponseDeadline(){deadline?.invalidate();let ticket=generation;deadline=Timer.scheduledTimer(withTimeInterval:180,repeats:false){[weak self] _ in guard let self,self.generation==ticket else{return};self.fail("The backend did not complete the response within 3 minutes. Please retry.",stage:"backend")}}
     private func meterTick(){
-        if active,accepted,Date().timeIntervalSince(lastCapture)>3{fail("No microphone audio is arriving. Check the input device and microphone permission, then start again.",stage:"input");return}
+        let stats=capture?.snapshot()
+        if let failure=captureLifecycle.failure(generation:generation,now:ProcessInfo.processInfo.systemUptime,lastRaw:stats?.lastRaw,lastConverted:stats?.lastConverted){
+            let message:String
+            switch failure {
+            case .noRaw:message="The audio engine started, but iOS delivered no microphone buffers within 8 seconds. Check the input device, then tap Start to retry."
+            case .noConversion:message="Microphone buffers arrived, but audio conversion produced no samples. Tap Start to retry."
+            case .stalled:message="Microphone audio stopped arriving for 3 seconds. Check the input device, then tap Start to retry."
+            }
+            fail(message,stage:"input");return
+        }
         publish()
     }
     private func checkPrivacy(_ done:@escaping(Bool)->Void){
@@ -167,31 +182,46 @@ final class NativeVoice {
     }
     private func privacyTick(){
         if let expires=privacyExpires,expires<=Date(){stop("Audience declaration expired.");return}
-        guard !privacyPending else{return};checkPrivacy{[weak self] current in if !current{self?.stop("Audience or authorization changed. Review before restarting.")}}
+        guard active,!privacyPending else{return};let ticket=generation
+        checkPrivacy{[weak self] current in guard let self,self.generation==ticket,self.active else{return};if !current{self.stop("Audience or authorization changed. Review before restarting.")}}
     }
     private func interruption(_ notification:Notification){
         guard active,let raw=notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,AVAudioSession.InterruptionType(rawValue:raw) == .began else{return}
         stop("Interrupted by another app or call. Tap Start listening to resume.")
     }
+    private func routeFingerprint()->String {
+        let input=engine?.inputNode.outputFormat(forBus:0),output=engine?.outputNode.inputFormat(forBus:0)
+        return (audio.currentRoute.inputs+audio.currentRoute.outputs).map{$0.uid}.joined(separator:"|")+"/\(input?.sampleRate ?? 0)/\(input?.channelCount ?? 0)/\(output?.sampleRate ?? 0)/\(output?.channelCount ?? 0)"
+    }
+    private func engineChanged(_ notification:Notification){
+        guard let changed=notification.object as? AVAudioEngine,changed===engine else{return}
+        let ticket=generation
+        // Apple requires releasing/rebuilding the graph outside its notification callback.
+        DispatchQueue.main.async{[weak self,weak changed] in
+            guard let self,let changed,self.generation==ticket,changed===self.engine else{return}
+            self.reconcileRoute()
+        }
+    }
+    private func reconcileRoute(){
+        guard active,accepted else{return}
+        switch captureLifecycle.routeChange(generation:generation,route:routeFingerprint(),engineRunning:engine?.isRunning == true){
+        case .ignore:return
+        case .fail:fail("The audio route could not stabilize. Automatic retry stopped. Select an input device, then tap Start to retry.",stage:"input")
+        case .recover:
+            let ticket=generation;phase="Audio device changed · reconnecting once";publish()
+            DispatchQueue.main.asyncAfter(deadline:.now()+0.25){[weak self] in
+                guard let self,self.generation==ticket,self.active else{return}
+                let input=self.request,keepBackground=self.background
+                // start already reports current failures. An old completion must never
+                // stop a newer manually started conversation.
+                self.start(input,background:keepBackground,resumingRoute:true){_ in}
+            }
+        }
+    }
     private func routeChanged(_ notification:Notification){
         guard active,accepted,let raw=notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,let reason=AVAudioSession.RouteChangeReason(rawValue:raw) else{publish();return}
         if reason == .oldDeviceUnavailable {stop("Headphones disconnected. Review the output route before restarting.");return}
-        if reason == .newDeviceAvailable || reason == .routeConfigurationChange {
-            // Replace the transport as well as the graph: partial PCM on the old route cannot
-            // become a truncated utterance on the new route. Recheck the same audience policy.
-            guard !routeRestart else{return}
-            let changed = engine?.inputNode.outputFormat(forBus:0).sampleRate != tapRate
-            if reason == .newDeviceAvailable || changed || engine?.isRunning != true {
-                routeRestart=true;let ticket=generation
-                DispatchQueue.main.asyncAfter(deadline:.now()+0.25){[weak self] in
-                    guard let self else{return};self.routeRestart=false
-                    guard self.generation==ticket,self.active else{return}
-                    let input=self.request,keepBackground=self.background
-                    self.start(input,background:keepBackground,resumingRoute:true){[weak self] error in
-                        if error != nil {self?.stop("Audio route unavailable. Start again.")}
-                    }
-                }
-            }
-        };publish()
+        if reason == .newDeviceAvailable || reason == .routeConfigurationChange {reconcileRoute()}
+        publish()
     }
 }

@@ -10,7 +10,7 @@ public struct VoiceActivity {
     public private(set) var inputFrames=0,sentFrames=0
     public init() {}
     public mutating func start(){self=Self();inputStage="starting";backendStage="connecting"}
-    public mutating func captureReady(){inputStage="listening";backendStage="idle"}
+    public mutating func captureReady(){if inputFrames==0{inputStage="starting"};backendStage="idle"}
     public mutating func captured(_ values:[Float],speaking:Bool,waiting:Bool){
         guard !values.isEmpty,values.allSatisfy({$0.isFinite}) else{return}
         inputFrames += 1;inputLevel=min(1,sqrt(values.reduce(Float(0)){$0+$1*$1}/Float(values.count)))
