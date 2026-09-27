@@ -6,7 +6,7 @@ import {PresentationRuntime} from '../../control-web/presentation-runtime.js';
 export function installApp(native) {
  const $=id=>document.getElementById(id);
  let session=null,context=null,catalog=null,renderer=null,nativeState={},epoch=0,privateAllowed=false,starting=false,refreshing=false,expires=0,startGeneration=0,appearanceLoad=null;
- const selections=new Map();let disabledAnimations={},rememberedAssistant='',connectionGeneration=0,restoring=false,savedIdentity='',textGeneration=0,textState={};
+ const selections=new Map();let disabledAnimations={},rememberedAssistant='',connectionGeneration=0,restoring=false,savedIdentity='',textGeneration=0,textState={},audienceGeneration=0,declaringAudience=0;
  const pane=settings=>{$('settings-pane').hidden=!settings;$('main-pane').hidden=settings;$('open-settings').hidden=settings;$('open-settings').setAttribute('aria-expanded',String(settings));if(settings)$('settings-title').focus();window.scrollTo({top:0,behavior:'instant'});};
  const saveSettings=()=>native.saveSettings({settings:JSON.stringify({assistantId:$('assistant').value,selections:Object.fromEntries(selections),disabledAnimations})});
  const loadSettings=raw=>{selections.clear();disabledAnimations={};rememberedAssistant='';try{const value=JSON.parse(raw??'{}');if(typeof value.assistantId==='string')rememberedAssistant=value.assistantId;for(const [id,item] of Object.entries(value.selections??{}).slice(0,100))if(typeof item?.id==='string'&&typeof item?.digest==='string')selections.set(id,{id:item.id,digest:item.digest});for(const [id,off] of Object.entries(value.disabledAnimations??{}).slice(0,200))if(off===true)disabledAnimations[id]=true;}catch{/* Invalid old preferences use safe defaults. */}};
@@ -23,18 +23,18 @@ export function installApp(native) {
   if(result.status>=400){const error=Error(value.error?.message??value.message??value.code??'Request unavailable.');error.status=result.status;throw error;}return value;
  };
  const clearDisplay=()=>{epoch++;appearanceLoad?.abort();appearanceLoad=null;renderer?.dispose();renderer=null;const canvas=$('avatar');canvas.replaceWith(canvas.cloneNode(false));$('transcript').replaceChildren();$('intro').hidden=false;};
- const protect=()=>{if(textState.busy)void native.cancelText().catch(()=>{});textGeneration++;textState={};$('text-input').value='';privateAllowed=false;expires=0;clearDisplay();catalog=null;$('animation-options').replaceChildren();$('animation-status').textContent='Choose Only me on the Assistant pane to review available animations.';$('appearance').replaceChildren(new Option('Neutral reference','neutral'));for(let i=1;i<$('assistant').options.length;i++)$('assistant').options[i].textContent=`Assistant ${i}`;$('privacy').textContent='Unknown/shared · private context withheld';};
+ const protect=()=>{if(textState.busy)void native.cancelText().catch(()=>{});textGeneration++;textState={};$('text-input').value='';privateAllowed=false;expires=0;clearDisplay();catalog=null;$('animation-options').replaceChildren();$('animation-status').textContent='Only me activates when you open the app, start listening or send a message.';$('appearance').replaceChildren(new Option('Neutral reference','neutral'));for(let i=1;i<$('assistant').options.length;i++)$('assistant').options[i].textContent=`Assistant ${i}`;$('privacy').textContent='Unknown/shared · private context withheld';};
  const controls=()=>{
   const active=!!nativeState.active,busy=!!textState.busy;renderActivity(nativeState,textState);
-  $('transcript-hint').textContent=privateAllowed?'Your transcribed speech and Assistant replies appear here.':'Choose Only me to display transcribed speech and replies.';
-  $('text-input').disabled=!session||!privateAllowed||active||starting||restoring||busy;
+  $('transcript-hint').textContent=privateAllowed?'Your transcribed speech and Assistant replies appear here.':'Only me activates when you start listening or send a message.';
+  $('text-input').disabled=!session||active||starting||restoring||busy;
   $('send-text').disabled=$('text-input').disabled||!$('assistant').value||!$('text-input').value.trim();
   $('connection').querySelector('button').disabled=restoring;
   $('start').disabled=restoring||!session||!$('assistant').value||active||starting||busy;
   $('stop').disabled=!active&&!starting&&!busy;
-  for(const id of ['assistant','background','private'])$(id).disabled=active||starting||busy||!session;
+  for(const id of ['assistant','background'])$(id).disabled=active||starting||busy||!session;
   for(const id of ['appearance','apply-appearance'])$(id).disabled=active||starting||busy||!session||!privateAllowed;
-  $('shared').disabled=!session;$('sign-out').hidden=!session;$('session-panel').hidden=!session;
+  $('sign-out').hidden=!session;$('session-panel').hidden=!session;
  };
  const run=fn=>async event=>{event?.preventDefault();try{await fn();}catch(error){status(error.message);}finally{controls();}};
  function message(role,text,trace,append=false){
@@ -58,13 +58,29 @@ export function installApp(native) {
   $('appearance').value=item.id;await render(item);
  }
  async function checkAudience(){
-  const ticket=epoch;
+  const ticket=epoch,audienceTicket=audienceGeneration;
   try{
-   const audience=await api('/api/runtime/v1/audience');if(ticket!==epoch)return;
+   const audience=await api('/api/runtime/v1/audience');if(ticket!==epoch||audienceTicket!==audienceGeneration)return;
    const expiry=audience.expiresAt?Date.parse(audience.expiresAt):0;
-   if(audience.privateAllowed!==true||(audience.expiresAt&&(!Number.isFinite(expiry)||expiry<=Date.now()))){protect();return}
-   privateAllowed=true;expires=expiry;$('privacy').textContent='Personal disclosure allowed temporarily';
-  }catch(error){if(ticket===epoch)protect();throw error;}
+   if(audience.privateAllowed!==true||(audience.expiresAt&&(!Number.isFinite(expiry)||expiry<=Date.now()))){const wasPrivate=privateAllowed;protect();if(wasPrivate)status('Personal disclosure ended. Start listening or Send activates Only me again, subject to current server permission.');return false}
+   privateAllowed=true;expires=expiry;$('privacy').textContent='Only me · personal disclosure active';return true;
+  }catch(error){if(ticket===epoch&&audienceTicket===audienceGeneration){protect();status('Personal disclosure could not be checked. '+error.message);}throw error;}
+ }
+ // The operator-selected phone default creates a fresh bounded declaration only at
+ // an authenticated open or explicit Start/Send, never during an active turn.
+ async function activateOnlyMe(isCurrent){
+  audienceGeneration++;declaringAudience++;
+  try{let current=await api('/api/runtime/v1/session-context');if(!isCurrent())return null;
+  if(current.endpoint?.endpointClass!=='personalCompanion'||current.endpoint?.privacyClass!=='personal'||!current.endpoint?.inputModalities?.includes('audio')){
+   current=await api('/api/runtime/v1/session-context',{expectedRevision:current.revision,...(current.endpoint?.endpointClass==='personalCompanion'?{}:{bindingKey:crypto.randomUUID(),endpointClass:'personalCompanion'}),mode:'audio',audienceScope:'authenticatedSession'});
+   if(!isCurrent())return null;
+  }
+  await api('/api/runtime/v1/audience',{mode:'solo',seconds:300});if(!isCurrent())return null;
+  context=current;const allowed=await checkAudience();
+  if(allowed===false){status('The server is withholding personal disclosure. Check the current audience or account permission before retrying.');return null;}
+  if(!isCurrent()||!privateAllowed)return null;
+  return current;
+  }finally{declaringAudience--;}
  }
  async function refresh(){
   if(!session||refreshing)return;refreshing=true;
@@ -76,17 +92,15 @@ export function installApp(native) {
     const profile=item.profiles?.at(-1);$('assistant').add(new Option(privateAllowed?(profile?.corePersona?.canonicalName??profile?.displayName??profile?.name??`Assistant ${i+1}`):`Assistant ${i+1}`,item.assistantId));
    }
    $('assistant').value=old;if(!$('assistant').value&&$('assistant').options.length===2)$('assistant').selectedIndex=1;
-   if(privateAllowed)await appearances();
+   if(privateAllowed)try{await appearances();}catch(error){$('animation-status').textContent='Appearance unavailable. '+error.message;}
   }finally{refreshing=false;controls();}
  }
+ const refreshDisplay=()=>{if(!renderer)void refresh().catch(error=>{$('animation-status').textContent='Appearance unavailable. '+error.message;});};
  async function bindSession(account,ticket){
   if(ticket!==connectionGeneration)return;
   if(!account?.sessionId)throw Error('Server did not return a session.');
-  session=account;const initial=await api('/api/runtime/v1/session-context');if(ticket!==connectionGeneration)return;
-  context=await api('/api/runtime/v1/session-context',{expectedRevision:initial.revision,...(initial.endpoint?.endpointClass==='personalCompanion'?{}:{bindingKey:crypto.randomUUID(),endpointClass:'personalCompanion'}),mode:'audio',audienceScope:'unknown'});
-  // A saved session must never revive yesterday's temporary Only-me declaration.
-  await api('/api/runtime/v1/audience',{mode:'clear'});
-  if(ticket!==connectionGeneration)return;await refresh();pane(false);status('Connected. Choose Only me when appropriate; tap Start to listen.');
+  session=account;const audience=await activateOnlyMe(()=>ticket===connectionGeneration);
+  if(ticket!==connectionGeneration)return;await refresh();pane(false);if(!audience)return;status('Connected. Only me is active; tap Start to listen or send a message.');
  }
  async function restore(){
   if(restoring)return;
@@ -114,19 +128,9 @@ export function installApp(native) {
    $('retry-connection').hidden=false;await bindSession(account.session,ticket);$('retry-connection').hidden=true;
   }catch(error){if(ticket===connectionGeneration){session=null;protect();}throw error;}finally{if(ticket===connectionGeneration)restoring=false;}
  });
- $('private').onclick=run(async()=>{
-  protect();const current=await api('/api/runtime/v1/session-context');
-  context=await api('/api/runtime/v1/session-context',{expectedRevision:current.revision,mode:'audio',audienceScope:'authenticatedSession'});
-  await api('/api/runtime/v1/audience',{mode:'solo',seconds:300});await refresh();status('Only-me declaration lasts five minutes. It does not verify nearby people.');
- });
- $('shared').onclick=run(async()=>{
-  startGeneration++;starting=false;protect();await native.stop();const current=await api('/api/runtime/v1/session-context');
-  await api('/api/runtime/v1/session-context',{expectedRevision:current.revision,mode:'audio',audienceScope:'unknown'});
-  await api('/api/runtime/v1/audience',{mode:'shared',seconds:300});await refresh();status('Private context and display cleared.');
- });
  $('start').onclick=run(async()=>{
-  const ticket=++startGeneration;starting=true;textState={};controls();try{const current=await api('/api/runtime/v1/session-context');if(ticket!==startGeneration)return;
-   nativeState=await native.start({request:{sessionId:session.sessionId,expectedSessionRevision:current.revision,endpointId:current.endpoint.endpointId,assistantId:$('assistant').value},background:$('background').checked});status(nativeState.phase??'Connecting native audio…');
+  const ticket=++startGeneration;starting=true;textState={};controls();try{const current=await activateOnlyMe(()=>ticket===startGeneration&&!!session&&!document.hidden);if(!current||ticket!==startGeneration||!privateAllowed||document.hidden)return;
+   nativeState=await native.start({request:{sessionId:session.sessionId,expectedSessionRevision:current.revision,endpointId:current.endpoint.endpointId,assistantId:$('assistant').value},background:$('background').checked});status(nativeState.phase??'Connecting native audio…');refreshDisplay();
   }finally{if(ticket===startGeneration)starting=false;}
  });
  $('stop').onclick=run(async()=>{startGeneration++;textGeneration++;textState={};starting=false;nativeState=await native.stop();status('Conversation stopped. Microphone and playback are off.');});
@@ -135,11 +139,10 @@ export function installApp(native) {
  $('text-chat').onsubmit=run(async()=>{
   const prompt=$('text-input').value.trim();if(!prompt||textState.busy)return;
   if(!session||!$('assistant').value||nativeState.active||starting||restoring)throw Error('Stop listening and select an Assistant before sending text.');
-  if(!privateAllowed)throw Error('Choose Only me before displaying a text conversation.');
   const ticket=++textGeneration,trace=crypto.randomUUID(),assistantId=$('assistant').value;
   textState={busy:true};controls();status('Checking the current conversation…');
-  try{await checkAudience();if(ticket!==textGeneration||!privateAllowed||document.hidden)return;
-   message('user',prompt,trace);$('text-input').value='';status('Sending text to your Assistant…');
+  try{const current=await activateOnlyMe(()=>ticket===textGeneration&&!!session&&!document.hidden);if(!current||ticket!==textGeneration||!privateAllowed||document.hidden)return;
+   message('user',prompt,trace);$('text-input').value='';status('Sending text to your Assistant…');refreshDisplay();
    const result=await native.sendText({assistantId,userInput:prompt,trace});
    if(ticket!==textGeneration||!privateAllowed||document.hidden)return;
    if(result.trace!==trace||typeof result.text!=='string')throw Error('The text response did not match this message.');
@@ -169,12 +172,12 @@ export function installApp(native) {
   if(event.type==='state'){
    nativeState=event.state;$('route').textContent=event.state.route||'System route';if(!textState.busy)status(event.state.phase);
    renderer?.applyState(event.state.playing?'speaking':event.state.active?'listening':'idle');
-   if(/audience|authorization|sign-in/i.test(event.state.phase))protect();controls();
+   if(/audience|authorization|sign-in/i.test(event.state.phase)){protect();if(/audience/i.test(event.state.phase))status(event.state.phase+' Start listening or Send activates Only me again, subject to current server permission.');}controls();
   }else if(event.type==='transcript')message('user',event.text,event.trace);else if(event.type==='textDelta')message('assistant',event.text,event.trace,true);
  });
  const privacyTimer=setInterval(()=>{
-  if(document.hidden||!session)return;
-  if(expires&&expires<=Date.now()){protect();controls();}
+  if(document.hidden||!session||starting||restoring||declaringAudience)return;
+  if(expires&&expires<=Date.now()){protect();status('Only me expired. Start listening or Send activates it again.');controls();}
   if(!refreshing)void checkAudience().then(controls).catch(()=>controls());
  },1000);
  const resume=async()=>{protect();nativeState=await native.snapshot();controls();if(nativeState.active){if(session)await refresh();}else await restore();};
