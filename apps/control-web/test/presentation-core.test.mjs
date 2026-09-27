@@ -47,3 +47,16 @@ test('shared disposal releases unique geometry, materials, bitmap and texture on
  texture.source.data={close(){bitmaps++;}};material.map=texture;root.add(new THREE.Mesh(geometry,material),new THREE.Mesh(geometry,material));geometry.addEventListener('dispose',()=>geometries++);material.addEventListener('dispose',()=>materials++);texture.addEventListener('dispose',()=>textures++);
  const value={root};releasePresentation(value);releasePresentation(value);assert.deepEqual([geometries,materials,textures,bitmaps],[1,1,1,1]);disposePresentation(null);
 });
+test('opted-in library playback honors enabled clips, reduced motion and release without changing desktop defaults',()=>{
+ const make=()=>{const f=fixture();f.manifest.animationLibrary=[{clip:'body',label:'Body'}];return f;};
+ const desktop=make(),normal=createPresentation({scene:desktop.root,animations:desktop.animations},desktop.manifest);assert.equal(normal.playlist,undefined);releasePresentation(normal);
+ const f=make();let enabled=true;const value=createPresentation({scene:f.root,animations:f.animations},f.manifest,{randomAnimations:true,animationEnabled:()=>enabled});assert.ok(value.playlist);
+ applyPresentationFrame(value,{delta:.25});assert.equal(value.playlist.current,'body');assert.equal(f.body.position.x,.25);
+ const remaining=value.playlist.remaining;applyPresentationFrame(value,{delta:8,bodyMotion:false});assert.equal(f.body.position.x,.25);assert.equal(value.playlist.remaining,remaining);
+ enabled=false;applyPresentationFrame(value,{delta:0,bodyMotion:false});assert.equal(value.playlist.current,null);assert.equal(f.body.position.x,0);
+ enabled=true;applyPresentationFrame(value,{delta:.1});assert.equal(value.playlist.current,'body');releasePresentation(value);assert.equal(value.mixer.stats.actions.inUse,0);assert.equal(value.playlist.current,null);
+});
+test('motion anchor requires exactly one scene node and retains authored translations',()=>{
+ const f=fixture();f.manifest.framing={motionAnchor:'Body'};const value=createPresentation({scene:f.root,animations:f.animations},f.manifest);assert.equal(value.motionAnchor,f.body);value.actions.get('body').play();applyPresentationFrame(value,{delta:.5});assert.equal(value.motionAnchor.position.x,.5);releasePresentation(value);
+ for(const ambiguous of [false,true]){const f=fixture();f.manifest.framing={motionAnchor:'Anchor'};if(ambiguous)for(let i=0;i<2;i++){const node=new THREE.Group();node.name='Anchor';f.root.add(node);}assert.throws(()=>createPresentation({scene:f.root,animations:f.animations},f.manifest),/motion anchor.*missing or ambiguous/i);}
+});

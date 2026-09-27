@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import {SpeechMotion} from './presentation-speech.js';
 import {FaceMotion} from './presentation-motion.js';
 import {validateAnimationClips} from './presentation-state.js';
+import {AnimationPlaylist} from './animation-playlist.js';
 
 export function disposePresentation(root) {
  const geometries=new Set(),materials=new Set(),textures=new Set();
@@ -21,7 +22,7 @@ export async function loadPresentationAsset({retrieve,parse,signal}) {
  } catch(error) { if(parsed?.scene)disposePresentation(parsed.scene);throw error; }
 }
 
-export async function preparePresentation(item,{retrieveResource,createLoader,signal}) {
+export async function preparePresentation(item,{retrieveResource,createLoader,signal,randomAnimations=false,animationEnabled=()=>true}) {
  const urls=[],byPath=new Map();let parsed;
  try {
   for(const resource of item.manifest.resources){
@@ -37,13 +38,18 @@ export async function preparePresentation(item,{retrieveResource,createLoader,si
   const loader=createLoader(manager),data=byPath.get(model)?.bytes;if(!data)throw Error('The declared model resource is missing.');
   parsed=await loadPresentationAsset({retrieve:()=>data,parse:bytes=>loader.parseAsync(bytes,model.includes('/')?model.slice(0,model.lastIndexOf('/')+1):''),signal});
   if(resourceFailed)throw Error('A model texture could not be loaded. The previous appearance is retained.');
-  return createPresentation(parsed,item.manifest,{urls,label:item.label});
+  return createPresentation(parsed,item.manifest,{urls,label:item.label,randomAnimations,animationEnabled});
  } catch(error){if(parsed?.scene)disposePresentation(parsed.scene);for(const url of urls)URL.revokeObjectURL(url);throw error;}
 }
 
-export function createPresentation(parsed,manifest,{urls=[],label}={}) {
+export function createPresentation(parsed,manifest,{urls=[],label,randomAnimations=false,animationEnabled=()=>true}={}) {
  const root=parsed.scene,mixer=new THREE.AnimationMixer(root);
  validateAnimationClips(manifest,parsed.animations);
+ const anchors=[];if(manifest.framing?.motionAnchor)root.traverse(node=>{if(node.name===manifest.framing.motionAnchor)anchors.push(node);});
+ if(manifest.framing?.motionAnchor&&anchors.length!==1)throw Error('The declared motion anchor is missing or ambiguous.');
+ // A bone can move beyond the bind-pose sphere while its mesh node stays still.
+ // Anchored presentations keep authored motion without stale-sphere culling.
+ if(anchors.length)root.traverse(node=>{if(node.isSkinnedMesh)node.frustumCulled=false;});
  const actions=new Map(parsed.animations.map(clip=>[clip.name,mixer.clipAction(clip)]));
  if(manifest.animations.idle&&!actions.has(manifest.animations.idle))throw Error('The declared idle animation is missing.');
  let mouth=null;if(manifest.mouth){const node=root.getObjectByName(manifest.mouth.node),index=node?.morphTargetDictionary?.[manifest.mouth.morph];if(index===undefined)throw Error('The declared mouth mapping is missing.');mouth={node,index,gain:manifest.mouth.gain};}
@@ -52,7 +58,9 @@ export function createPresentation(parsed,manifest,{urls=[],label}={}) {
  if(mouthAction){mouthAction.setLoop(THREE.LoopOnce,1);mouthAction.clampWhenFinished=true;mouthAction.play();mouthAction.paused=true;}
  const speechMotion=manifest.speech?new SpeechMotion(root,parsed.animations,manifest.speech):null;
  const faceMotion=manifest.face?new FaceMotion(root,parsed.animations,manifest.face,[...(speechMotion?.tracks??[]),...(mouthClip?.tracks.map(t=>t.name)??[]),...(manifest.mouth?[manifest.mouth.node+'.morphTargetInfluences']:[])]):null;
- return {root,mouth,mixer,actions,manifest,urls,label,mouthMixer,mouthAction,faceMotion,speechMotion};
+ const value={root,mouth,mixer,actions,manifest,urls,label,mouthMixer,mouthAction,faceMotion,speechMotion,motionAnchor:anchors[0]};
+ if(randomAnimations&&manifest.animationLibrary?.length)value.playlist=new AnimationPlaylist(value,{enabled:animationEnabled});
+ return value;
 }
 
 // Restore overlays before body evaluation; speech owns the mouth, then face owns
@@ -60,7 +68,7 @@ export function createPresentation(parsed,manifest,{urls=[],label}={}) {
 export function applyPresentationFrame(value,{sample,delta=0,bodyMotion=true,face,applyBody,applySpeech}={}) {
  if(!value)return;
  value.faceMotion?.beginFrame();value.speechMotion?.beginFrame();
- if(applyBody)applyBody(sample);else if(bodyMotion)value.mixer?.update(delta);
+ if(applyBody)applyBody(sample);else{value.playlist?.update(delta,{paused:!bodyMotion});if(bodyMotion)value.mixer?.update(delta);}
  const level=sample?.playing?Math.min(1,sample.amplitude*5):0;
  if(value.mouthAction){value.mouthAction.time=level*value.mouthAction.getClip().duration;value.mouthMixer.update(0);}
  if(value.mouth?.node)value.mouth.node.morphTargetInfluences[value.mouth.index]=level*value.mouth.gain;else if(value.mouth)value.mouth.scale.y=1+level*10;
@@ -71,6 +79,7 @@ export function applyPresentationFrame(value,{sample,delta=0,bodyMotion=true,fac
 export function releasePresentation(value) {
  if(!value||value.released)return;value.released=true;
  value.faceMotion?.reset();value.speechMotion?.reset();
+ value.playlist?.dispose();
  value.mouthMixer?.stopAllAction();value.mouthMixer?.uncacheRoot(value.root);
  value.mixer?.stopAllAction();value.mixer?.uncacheRoot(value.root);
  disposePresentation(value.root);for(const url of value.urls??[])URL.revokeObjectURL(url);

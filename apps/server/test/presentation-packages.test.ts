@@ -16,6 +16,13 @@ function fixture() {
  writeFileSync(join(root,'index.json'),JSON.stringify(['neutral-test']));const save=()=>writeFileSync(join(directory,'manifest.json'),JSON.stringify(manifest));save();
  return {root,directory,manifest,save,open:()=>new PresentationPackages({directory:root,ownerPrincipalId:'owner'}),close:()=>rmSync(root,{recursive:true,force:true})};
 }
+test('animation libraries are versioned bounded data and replacement digests are explicit',t=>{
+ const f=fixture();t.after(f.close);
+ const value={...f.manifest,schemaVersion:'1.4.0',animationLibrary:[{clip:'wave',label:'Wave',group:'Movement',blendMode:'additive'}],replaces:['a'.repeat(64)],framing:{...f.manifest.framing,motionAnchor:'Root'}};
+ assert.equal(validatePresentation(value).animationLibrary?.[0]?.clip,'wave');
+ assert.equal(validatePresentation(value).framing.motionAnchor,'Root');
+ for(const bad of [{...value,schemaVersion:'1.3.0'},{...value,animationLibrary:[{clip:'wave',label:'Wave',script:'run'}]},{...value,animationLibrary:[value.animationLibrary[0],value.animationLibrary[0]]},{...value,animationLibrary:Array.from({length:129},(_,i)=>({clip:'clip'+i,label:'Clip'}))},{...value,replaces:['not-a-digest']},{...value,framing:{...value.framing,motionAnchor:''}}])assert.throws(()=>validatePresentation(bad));
+});
 test('presentation resources are owner-only, digest pinned, path bounded, and contain no browser filesystem paths',t=>{
  const f=fixture();t.after(f.close);const packages=f.open();assert.equal(packages.list('owner').length,1);assert.deepEqual(packages.list('other'),[]);assert.doesNotMatch(JSON.stringify(packages.list('owner')),new RegExp(f.root));
  assert.throws(()=>packages.resource('other','neutral-test','model.gltf'));assert.throws(()=>packages.resource('owner','neutral-test','../index.json'));assert.equal(packages.resource('owner','neutral-test','model.gltf').bytes.length,f.manifest.resources[0]!.bytes);

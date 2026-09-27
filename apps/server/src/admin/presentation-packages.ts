@@ -4,9 +4,11 @@ import { isAbsolute, join, relative, sep } from 'node:path';
 import type { Database } from '@lifestream/storage-sqlite';
 
 export type PresentationManifest = {
-  schemaVersion: '1.0.0' | '1.1.0' | '1.2.0' | '1.3.0'; id: string; version: string; label: string; renderer: 'three-glb.v1';
+  schemaVersion: '1.0.0' | '1.1.0' | '1.2.0' | '1.3.0' | '1.4.0'; id: string; version: string; label: string; renderer: 'three-glb.v1';
   model: string; resources: { path: string; sha256: string; bytes: number; mime: string }[];
-  framing: { distance: number; targetHeight: number; yaw?: number }; animations: { idle?: string; listening?: string; preparing?: string; speaking?: string; interrupted?: string; working?: string; waiting?: string; failure?: string; mouthAmplitude?: string };
+  framing: { distance: number; targetHeight: number; yaw?: number; motionAnchor?: string }; animations: { idle?: string; listening?: string; preparing?: string; speaking?: string; interrupted?: string; working?: string; waiting?: string; failure?: string; mouthAmplitude?: string };
+  animationLibrary?: {clip: string; label: string; group?: string; blendMode?: 'normal' | 'additive'}[];
+  replaces?: string[];
   transitionSeconds?: number;
   face?: { gaze?: { nodes: {node:string;yawAxis:number[];pitchAxis:number[]}[];yawLimit:number;pitchLimit:number };blink?: {clip:string;periodSeconds:number;durationSeconds:number} };
   mouth?: { node: string; morph: string; gain: number };
@@ -27,8 +29,8 @@ function keys(value: Record<string, unknown>, allowed: string[]): void {
 }
 function short(value: unknown, max = 128): value is string { return typeof value === 'string' && value.length > 0 && value.length <= max && !/[\u0000-\u001f<>]/u.test(value); }
 export function validatePresentation(value: unknown): PresentationManifest {
-  const m = object(value); keys(m, ['schemaVersion','id','version','label','renderer','model','resources','framing','animations','mouth','capabilities','fallback',...(['1.1.0','1.2.0','1.3.0'].includes(String(m.schemaVersion))?['transitionSeconds']:[]),...(['1.2.0','1.3.0'].includes(String(m.schemaVersion))?['face']:[]),...(m.schemaVersion==='1.3.0'?['speech']:[])]);
-  if (!['1.0.0','1.1.0','1.2.0','1.3.0'].includes(String(m.schemaVersion)) || !identifier.test(String(m.id)) || !short(m.version,32) || !short(m.label,80) || m.renderer !== 'three-glb.v1' || m.fallback !== 'neutral') throw new Error('Unsupported presentation manifest');
+  const m = object(value); keys(m, ['schemaVersion','id','version','label','renderer','model','resources','framing','animations','mouth','capabilities','fallback',...(['1.1.0','1.2.0','1.3.0','1.4.0'].includes(String(m.schemaVersion))?['transitionSeconds']:[]),...(['1.2.0','1.3.0','1.4.0'].includes(String(m.schemaVersion))?['face']:[]),...(['1.3.0','1.4.0'].includes(String(m.schemaVersion))?['speech']:[]),...(m.schemaVersion==='1.4.0'?['animationLibrary','replaces']:[])]);
+  if (!['1.0.0','1.1.0','1.2.0','1.3.0','1.4.0'].includes(String(m.schemaVersion)) || !identifier.test(String(m.id)) || !short(m.version,32) || !short(m.label,80) || m.renderer !== 'three-glb.v1' || m.fallback !== 'neutral') throw new Error('Unsupported presentation manifest');
   if (!Array.isArray(m.resources) || !m.resources.length || m.resources.length > 256) throw new Error('Presentation resource bound exceeded');
   const paths = new Set<string>(); let total = 0;
   for (const resource of m.resources) {
@@ -37,12 +39,18 @@ export function validatePresentation(value: unknown): PresentationManifest {
     paths.add(r.path); total += Number(r.bytes);
   }
   if (total > 384 * 1024 * 1024 || typeof m.model !== 'string' || !paths.has(m.model) || !/\.(glb|gltf)$/u.test(m.model)) throw new Error('Presentation model or size is invalid');
-  const frame = object(m.framing); keys(frame,['distance','targetHeight','yaw']);
+  const frame = object(m.framing); keys(frame,['distance','targetHeight','yaw',...(m.schemaVersion==='1.4.0'?['motionAnchor']:[])]);
+  if(frame.motionAnchor!==undefined&&!short(frame.motionAnchor))throw new Error('Invalid motion anchor');
   if(frame.yaw!==undefined&&(typeof frame.yaw!=='number'||!Number.isFinite(frame.yaw)||Math.abs(frame.yaw)>Math.PI))throw new Error('Invalid presentation orientation');
   if (typeof frame.distance !== 'number' || !Number.isFinite(frame.distance) || frame.distance < 0.5 || frame.distance > 4 || typeof frame.targetHeight !== 'number' || !Number.isFinite(frame.targetHeight) || frame.targetHeight < 0 || frame.targetHeight > 1) throw new Error('Invalid presentation framing');
-  const animations = object(m.animations); keys(animations,['idle','listening','speaking','mouthAmplitude',...(['1.1.0','1.2.0','1.3.0'].includes(String(m.schemaVersion))?['preparing','interrupted','working','waiting','failure']:[])]);
+  const animations = object(m.animations); keys(animations,['idle','listening','speaking','mouthAmplitude',...(['1.1.0','1.2.0','1.3.0','1.4.0'].includes(String(m.schemaVersion))?['preparing','interrupted','working','waiting','failure']:[])]);
   if (Object.values(animations).some(value => !short(value))) throw new Error('Invalid semantic animation mapping');
   if(m.transitionSeconds!==undefined&&(typeof m.transitionSeconds!=='number'||!Number.isFinite(m.transitionSeconds)||m.transitionSeconds<0||m.transitionSeconds>1))throw new Error('Invalid animation transition duration');
+  if(m.animationLibrary!==undefined){
+    if(!Array.isArray(m.animationLibrary)||m.animationLibrary.length>128)throw new Error('Invalid animation library bound');
+    const names=new Set();for(const entry of m.animationLibrary){const clip=object(entry);keys(clip,['clip','label','group','blendMode']);if(!short(clip.clip)||!short(clip.label,80)||clip.group!==undefined&&!short(clip.group,40)||clip.blendMode!==undefined&&!['normal','additive'].includes(String(clip.blendMode))||names.has(clip.clip))throw new Error('Invalid animation library entry');names.add(clip.clip);}
+  }
+  if(m.replaces!==undefined&&(!Array.isArray(m.replaces)||m.replaces.length>16||m.replaces.some(hash=>typeof hash!=='string'||!/^[a-f0-9]{64}$/u.test(hash))||new Set(m.replaces).size!==m.replaces.length))throw new Error('Invalid presentation replacement digest');
   const capabilities = object(m.capabilities); keys(capabilities,['lipSync','facialAnimation']);
   if (!['none','amplitude'].includes(String(capabilities.lipSync)) || typeof capabilities.facialAnimation !== 'boolean') throw new Error('Invalid presentation capabilities');
   if (m.mouth !== undefined) { const mouth = object(m.mouth); keys(mouth,['node','morph','gain']); if (!short(mouth.node) || !short(mouth.morph) || typeof mouth.gain !== 'number' || !Number.isFinite(mouth.gain) || mouth.gain < 0 || mouth.gain > 4 || capabilities.lipSync !== 'amplitude') throw new Error('Invalid mouth mapping'); }

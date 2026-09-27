@@ -23,3 +23,10 @@ test('explicit mapping, idle fallback and no mapping remain distinguishable with
  assert.equal(animationForState({animations:{}},'listening').effective,null);
  assert.throws(()=>animationForState(manifest,'unrecognized'));
 });
+test('library clips must resolve exactly once and cannot repeat a declaration',()=>{
+ const manifest={animations:{idle:'rest'},animationLibrary:[{clip:'pose',label:'Pose'}]};
+ validateAnimationClips(manifest,[{name:'rest'},{name:'pose'}]);
+ assert.throws(()=>validateAnimationClips(manifest,[{name:'rest'}]),/missing/);
+ assert.throws(()=>validateAnimationClips(manifest,[{name:'rest'},{name:'pose'},{name:'pose'}]),/ambiguous/);
+ assert.throws(()=>validateAnimationClips({...manifest,animationLibrary:[{clip:'pose'},{clip:'pose'}]},[{name:'rest'},{name:'pose'}]),/duplicate/i);
+});

@@ -17,7 +17,7 @@ import type {UrgentAttentionFacts} from './runtime/urgent-attention.ts';
 import {UrgentAwayRuntime,type UrgentAwayDestination} from './runtime/urgent-away.ts';
 import {ChannelPersonalContextRepository,ChannelSubscriptionRepository,ChannelSubscriptionError} from '@lifestream/storage-sqlite';
 import {PwceIncidentClient,PwceConditionClient,type PwceIncidentOptions} from '@lifestream/providers-pwce';
-import { AudienceCoordinator, type AudienceOptions, type AudienceIdentity } from './runtime/audience.ts';
+import { AudienceCoordinator, AudienceLeaseError, type AudienceOptions, type AudienceIdentity, type AudienceLeaseRequest } from './runtime/audience.ts';
 import { AutomaticMemory } from "./runtime/automatic-memory.ts";
 import { PresentationPackages, PresentationSelection } from "./admin/presentation-packages.ts";
 import { presentationVendor } from "./runtime/presentation-vendor.ts";
@@ -846,6 +846,25 @@ export class LifestreamServer {
         catch{return json(response,409,{code:"presentation_conflict",message:"The package or selection revision changed. Refresh and try again."});}
       } else if(method!=="GET")return json(response,405,{code:"method_not_allowed"});
       return json(response,200,{packages:this.audiencePermits(context)?this.presentationPackages.list(context.principalId):[],selection:endpoint&&this.audiencePermits(context)?this.presentationSelection.read(context.principalId,endpoint.endpointId,context.sessionId):null,endpointId:endpoint?.endpointId??null,neutral:{id:"neutral",label:"Neutral reference",digest:"neutral-v1"},limitations:["Appearance selection does not change Assistant identity, memory or voice."]});
+    }
+    if(path==='/api/runtime/v1/audience/lease'){
+      // Native liveness is an authenticated personal-phone capability. It does
+      // not replace the bounded manual declaration API used by other clients.
+      const context=this.localAuth?this.requestContext(request,false) as LocalContext|undefined:undefined;
+      if(!context)throw new AuthenticationError();
+      if(method!=='POST')return json(response,405,{code:'method_not_allowed'});
+      this.localAuth!.csrf(context,String(request.headers['x-lifestream-csrf']??''),false);
+      const session=readSessionEndpoint(this.database,context.sessionId),identity=this.audienceIdentity(context);
+      const body=asObject(await readBody(request));this.localAuth!.assertCurrent(context,false);
+      const current=()=>{
+        this.localAuth!.assertCurrent(context,false);
+        const selected=readSessionEndpoint(this.database,context.sessionId);
+        return selected.revision===session.revision&&selected.endpoint?.endpointId===identity.endpointId&&selected.endpoint?.endpointClass==='personalCompanion'&&selected.endpoint.privacyClass==='personal'&&!this.sessionEnded(context.sessionId);
+      };
+      if(!current())throw new AuthenticationError(403,'audience_lease_personal_endpoint_required');
+      if(!this.audience)return json(response,503,{code:'audience_lease_unavailable'});
+      try{return json(response,200,{enforced:true,...this.audience.lease(identity,body as AudienceLeaseRequest,current)});}
+      catch(error){if(error instanceof AudienceLeaseError)return json(response,error.status,{code:error.code,message:error.message});throw error;}
     }
     if (path === "/api/runtime/v1/audience" || path === "/api/runtime/v1/audience/events") {
       const context=this.requestContext(request,false);if(!context)throw new AuthenticationError();

@@ -13,7 +13,9 @@ export function animationForState(manifest,state){
 }
 
 export function validateAnimationClips(manifest,clips){
- for(const name of Object.values(manifest.animations)){
+ const library=(manifest.animationLibrary??[]).map(item=>item.clip);
+ if(new Set(library).size!==library.length)throw new Error('The animation library has duplicate clip declarations.');
+ for(const name of [...Object.values(manifest.animations),...library]){
   if(clips.filter(clip=>clip.name===name).length!==1)throw new Error('A declared animation is missing or ambiguous. The previous appearance is retained.');
  }
 }

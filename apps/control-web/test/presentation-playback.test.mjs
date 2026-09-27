@@ -16,7 +16,7 @@ test('a failed GLTF texture rejects the replacement and releases its package URL
  await page.route('http://127.0.0.1:9/**',async route=>{
   const name=new URL(route.request().url()).pathname.slice(1);
   if(!name)return route.fulfill({contentType:'text/html',body:'<script type="importmap">{"imports":{"three":"/three.module.js"}}</script>'});
-  const body=['presentation-runtime.js','presentation-core.js','presentation-state.js','presentation-motion.js','presentation-speech.js'].includes(name)?await readFile(new URL('../'+name,import.meta.url)):await presentationVendor(name);
+  const body=['animation-playlist.js','presentation-runtime.js','presentation-core.js','presentation-state.js','presentation-motion.js','presentation-speech.js'].includes(name)?await readFile(new URL('../'+name,import.meta.url)):await presentationVendor(name);
   if(!body)return route.abort();return route.fulfill({contentType:'text/javascript',body});
  });await page.goto('http://127.0.0.1:9/');
  const result=await page.evaluate(async()=>{
