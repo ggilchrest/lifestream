@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {test} from 'node:test';
+import {randomBytes} from 'node:crypto';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createLifestreamServer} from '../../server/src/index.ts';
+import {loadProfile} from '../../server/src/config/loader.ts';
+
+for(const width of [390,1280])test(`sign-in and recovery feedback stays visible at ${width}px, including rejected input`, {skip:!process.env.PLAYWRIGHT_MODULE}, async t=>{
+ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE);
+ const root=await mkdtemp(join(tmpdir(),'ls-auth-feedback-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const config=loadProfile('test');config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};config.authority.authentication='local-password';
+ const installerToken=randomBytes(32).toString('hex'),password=randomBytes(24).toString('hex');
+ const app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'safety'),installerToken}});await app.start();t.after(()=>app.shutdown());
+ const origin=`http://127.0.0.1:${app.address().port}`;
+ const setup=await fetch(origin+'/api/auth/v1/setup',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify({username:'owner',password,installerToken})});assert.equal(setup.status,201);const {recoveryCodes}=await setup.json();
+ const browser=await chromium.launch({channel:'chrome',headless:true});t.after(()=>browser.close());
+ const page=await browser.newPage({viewport:{width,height:844}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(origin+'/control/#account');await page.waitForFunction(()=>window.lifestreamAuth?.mode==='local-password'&&document.querySelector('#auth-status').textContent.includes('Sign in'));
+ const feedback=async text=>{try{await page.waitForFunction(text=>document.querySelector('#auth-status').textContent.includes(text),text,{timeout:3000});}catch(error){error.message+=' status='+await page.locator('#auth-status').textContent()+' pageErrors='+JSON.stringify(errors);throw error;}const bounds=await page.locator('#auth-status').evaluate(el=>{const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:innerHeight};});assert.ok(bounds.top>=-1&&bounds.bottom<=bounds.height+1,JSON.stringify({text,bounds}));assert.equal(await page.locator('#auth-status').evaluate(el=>el===document.activeElement),true);};
+ await page.locator('[data-view=account]:not([hidden])').waitFor();await page.locator('#auth-username').fill('owner');await page.locator('#auth-password').fill('wrong');await page.locator('#auth-sign-in').click();await feedback('Sign-in failed');
+ await page.locator('#auth-password').fill(password);await page.locator('#auth-totp').fill(recoveryCodes[0]);await page.locator('#auth-sign-in').click();await feedback('six-digit');
+ await page.locator('#auth-totp').fill('');await page.locator('#auth-password').fill('incorrect-password');await page.locator('#auth-sign-in').click();await feedback('Sign-in failed');
+ await page.locator('#auth-recover').click();await feedback('new password');await page.locator('#auth-recovery-cancel').click();await feedback('Sign in with your account');assert.equal(await page.locator('#auth-recovery-code').isVisible(),false);await page.locator('#auth-recover').click();await feedback('new password');assert.equal(await page.locator('#auth-totp').isVisible(),false);
+ await page.locator('#auth-password').fill('short');await page.locator('#auth-recovery-code').fill(recoveryCodes[0]);await page.locator('#auth-recover').click();await feedback('at least 12');
+ const replacementPassword=randomBytes(24).toString('hex');await page.locator('#auth-password').fill(replacementPassword);await page.locator('#auth-recovery-code').fill('not-a-valid-recovery-code');await page.locator('#auth-recover').click();await feedback('Recovery failed');
+ await page.locator('#auth-recovery-code').fill(recoveryCodes[0]);await page.locator('#auth-password').press('Enter');await feedback('Recovery complete');assert.equal(await page.locator('#auth-recovery-code').inputValue(),'');assert.equal(await page.locator('#auth-password').inputValue(),'');
+ await page.locator('#auth-password').fill(replacementPassword);await page.locator('#auth-sign-in').click();await page.waitForFunction(()=>!!window.lifestreamAuth.session);assert.deepEqual(errors,[]);
+});
