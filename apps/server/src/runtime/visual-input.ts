@@ -1,10 +1,11 @@
 import {isDeepStrictEqual} from 'node:util';
+import {createHash} from 'node:crypto';
 import {VisualObservationStore,unavailableVisualSelection,type PreparedVisualContext,type VisualContextSelection} from '@lifestream/runtime/perception/observation';
 import {VisualAdmission, VisualAdmissionError, type CaptureAuthority, type VisualAdmissionProvenance} from '@lifestream/runtime/perception/admission';
 import type {AudienceCoordinator,AudienceIdentity,CameraAudienceBinding} from './audience.ts';
 import {validateVisualInput,type VisualCapabilitiesRequest,type VisualCameraRequest,type VisualBatchRequest} from '@lifestream/contracts/visual-input';
 import {MAX_VISUAL_METADATA_BYTES,VISUAL_FRAMING_BYTES} from './visual-multipart.ts';
-import type {VisualBounds, VisualFrame, VisualMediaType, VisualPerceptionProvider, VisualScope} from '@lifestream/runtime/perception/port';
+import type {VisualBounds, VisualFrame, VisualMediaType, VisualPerceptionProvider, VisualPerceptionResult, VisualScope} from '@lifestream/runtime/perception/port';
 
 export type VisualActor = Readonly<{principalId: string; sessionId: string; assistantId: string}>;
 export type VisualSource = Readonly<{bindingRef: string; connected: boolean; configurationRevision: number; audienceSourceId?:string}>;
@@ -72,6 +73,23 @@ export function parseVisualBatch(value: unknown): VisualBatchRequest {
 const same = isDeepStrictEqual;
 type CameraLane={actor:VisualActor;scope:VisualScope;binding:CameraAudienceBinding;scene?:VisualAdmissionProvenance|undefined;incoming?:VisualAdmissionProvenance|undefined};
 
+export type VisualPublicationReceipt = Readonly<{
+  /** Diagnostic projection, not a reusable admission proof. Long identifiers are labeled digests. */
+  admission: VisualAdmissionProvenance;
+  publication: Readonly<{audienceRevision:number;leaseRevision:number}> | null;
+  perceptionStatus: VisualPerceptionResult['status'];
+  disposition: 'published' | 'withdrawn' | 'deferred' | 'discarded';
+  reason: 'published' | 'no_observations' | 'scheduler_deferral' | 'scope_changed' | 'provider_unavailable' | 'audience_rebind_failed' | 'observation_expired' | 'observation_not_admitted' | 'perception_unsuccessful' | 'host_processing_failed';
+  observationIds: readonly string[];
+  completedAtMs: number;
+  /** Candidate capture bound, even when no context was published. */
+  captureFreshUntilMs: number;
+}>;
+const publicationReceiptLimit=128,publicationReceiptLifetimeMs=60_000;
+const diagnosticId=(value:string)=>Buffer.byteLength(value)<=256?value:`sha256:${createHash('sha256').update(value).digest('hex')}`;
+const diagnosticActor=(actor:VisualActor)=>createHash('sha256').update(JSON.stringify([actor.principalId,actor.sessionId,actor.assistantId])).digest('hex');
+type PublicationEntry={actor:string;receipt:VisualPublicationReceipt;expiresAtMs:number;expiresMono:number};
+
 /** Binds an authenticated session to a host-owned physical source and policy. */
 export class VisualInputHost {
   private readonly runtime: VisualAdmission;
@@ -84,6 +102,10 @@ export class VisualInputHost {
   private readonly cameras=new Map<string,CameraLane>();
   private readonly unavailableLeases=new Set<string>();
   private readonly audience:()=>AudienceCoordinator|undefined;
+  private readonly publications:PublicationEntry[]=[];
+  private publicationClock=-Infinity;
+  private publicationMono=-Infinity;
+  private closed=false;
 
   constructor(options: VisualInputOptions,onContextChanged:()=>void=()=>{},audience:()=>AudienceCoordinator|undefined=()=>undefined) {
     this.audience=audience;
@@ -144,6 +166,36 @@ export class VisualInputHost {
 
   private cancelUpload(sessionId:string) { this.uploads.get(sessionId)?.abort(); }
   resourceUsage() { return this.runtime.resourceUsage(); }
+  /** Host-only diagnostics: at most 128 records, lazily expired after 60s on
+   * reads/writes and cleared on close. No idle-erasure, delivery or memory claim. */
+  publicationReceipts(actor:VisualActor):readonly VisualPublicationReceipt[] {
+    try {
+      this.prunePublications();
+      const key=diagnosticActor(actor);
+      return Object.freeze(this.publications.filter(entry=>entry.actor===key).map(entry=>entry.receipt));
+    } catch { return Object.freeze([]); }
+  }
+  private prunePublications():{utc:number;mono:number}|null {
+    const utc=(this.options.utcMs??Date.now)(),mono=(this.options.monotonicMs??(()=>performance.now()))();
+    if(!Number.isFinite(utc)||!Number.isFinite(mono)||utc<this.publicationClock||mono<this.publicationMono){this.publications.length=0;return null;}
+    this.publicationClock=utc;this.publicationMono=mono;
+    for(let index=this.publications.length-1;index>=0;index--){const entry=this.publications[index]!;if(utc>=entry.expiresAtMs||mono>=entry.expiresMono)this.publications.splice(index,1);}
+    return {utc,mono};
+  }
+  private recordPublication(source:VisualAdmissionProvenance,result:VisualPerceptionResult,publication:VisualAdmissionProvenance|null,disposition:VisualPublicationReceipt['disposition'],reason:VisualPublicationReceipt['reason']):void {
+    // Diagnostics cannot fail a reply or change admission. Only this method's
+    // private batch call site supplies minted provenance and validated results.
+    try {
+      if(this.closed)return;
+      const time=this.prunePublications();if(!time)return;
+      const s=source.scope;
+      const scope:VisualScope=Object.freeze({assistantId:diagnosticId(s.assistantId),principalId:diagnosticId(s.principalId),relationshipId:s.relationshipId===null?null:diagnosticId(s.relationshipId),environmentId:diagnosticId(s.environmentId),conversationId:diagnosticId(s.conversationId),sessionId:diagnosticId(s.sessionId),endpointId:diagnosticId(s.endpointId),sessionRevision:s.sessionRevision,audienceRevision:s.audienceRevision,scopeGeneration:s.scopeGeneration,sourceBindingRef:diagnosticId(s.sourceBindingRef),captureConfigurationRevision:s.captureConfigurationRevision});
+      const admission:VisualAdmissionProvenance=Object.freeze({requestId:diagnosticId(source.requestId),correlationId:diagnosticId(source.correlationId),leaseId:diagnosticId(source.leaseId),scope,frameIds:Object.freeze(source.frameIds.map(diagnosticId)),hostSequence:source.hostSequence,provider:Object.freeze({id:diagnosticId(source.provider.id),version:diagnosticId(source.provider.version)}),capturedAtEarliestMs:source.capturedAtEarliestMs,capturedAtLatestMs:source.capturedAtLatestMs,receivedAtMs:source.receivedAtMs,deadlineAtMs:source.deadlineAtMs,clockMappingId:diagnosticId(source.clockMappingId),leaseRevision:source.leaseRevision});
+      const receipt:VisualPublicationReceipt=Object.freeze({admission,publication:publication?Object.freeze({audienceRevision:publication.scope.audienceRevision,leaseRevision:publication.leaseRevision}):null,perceptionStatus:result.status,disposition,reason,observationIds:Object.freeze(disposition==='published'?result.observations.map(item=>diagnosticId(item.observationId)):[]),completedAtMs:time.utc,captureFreshUntilMs:source.capturedAtEarliestMs+this.runtime.bounds.freshnessMs});
+      this.publications.push({actor:diagnosticActor(s),receipt,expiresAtMs:time.utc+publicationReceiptLifetimeMs,expiresMono:time.mono+publicationReceiptLifetimeMs});
+      if(this.publications.length>publicationReceiptLimit)this.publications.shift();
+    } catch { /* Diagnostic failure cannot affect the public batch outcome. */ }
+  }
   private identity(lane:CameraLane):AudienceIdentity{return {principalId:lane.actor.principalId,sessionId:lane.actor.sessionId,endpointId:lane.scope.endpointId};}
 
   /** Capture eligibility is separate from private-history disclosure permission. */
@@ -242,9 +294,13 @@ export class VisualInputHost {
     copied?.();
     const result = await admitted.completion;
     const deferred=this.runtime.isAdmissionDeferral(result);
+    let disposition:VisualPublicationReceipt['disposition']='discarded',reason:VisualPublicationReceipt['reason']='scope_changed';
+    let publication:VisualAdmissionProvenance|null=null;
+    try {
     // Only host provenance and snapshotted provider evidence enter this volatile
     // text cache. An old completion cannot publish or erase a successor view.
-    if (this.runtime.provenanceCurrent(admitted.provenance)&&this.state(actor).reason!=='provider_unavailable') {
+    if (this.runtime.provenanceCurrent(admitted.provenance)) {
+      if(this.state(actor).reason==='provider_unavailable'){reason='provider_unavailable';return this.receipt(admitted,result);}
       let source=admitted.provenance;
       const lane=this.cameras.get(actor.sessionId);
       if(lane&&lane.binding.leaseId===source.leaseId&&!deferred){
@@ -259,21 +315,28 @@ export class VisualInputHost {
         });
         if(!accepted)this.audience()?.withdrawCameraEvidence(this.identity(lane),lane.binding);
         const current=lane.incoming;lane.incoming=undefined;
-        if(!current||!this.runtime.provenanceCurrent(current))return this.receipt(admitted,result);
+        if(!current||!this.runtime.provenanceCurrent(current)){reason='audience_rebind_failed';return this.receipt(admitted,result);}
         source=current;
       }
       if (result.status==='complete' && result.observations.length) {
+        const interpretedAtMs=(this.options.utcMs ?? Date.now)();
         const published=this.observations.publish({scope:source.scope,leaseId:source.leaseId,sequence:source.hostSequence,
           requestId:source.requestId,provider:source.provider,capturedAtEarliestMs:source.capturedAtEarliestMs,
           capturedAtLatestMs:source.capturedAtLatestMs,receivedAtMs:source.receivedAtMs,
-          interpretedAtMs:(this.options.utcMs ?? Date.now)(),observations:result.observations});
-        if(published&&lane)lane.scene=source;
-        if (!published) { if(lane)lane.scene=undefined;this.observations.invalidate(actor.sessionId); this.onContextChanged(); }
+          interpretedAtMs,observations:result.observations});
+        if(published){if(lane)lane.scene=source;publication=source;disposition='published';reason='published';}
+        else {
+          reason=interpretedAtMs>=source.capturedAtEarliestMs+this.runtime.bounds.freshnessMs?'observation_expired':'observation_not_admitted';
+          if(lane)lane.scene=undefined;this.observations.invalidate(actor.sessionId); this.onContextChanged();
+        }
       } else if (result.status==='empty' || result.status==='complete' || deferred) {
         this.observations.withdrawCurrent(actor.sessionId);
-      } else { if(lane)lane.scene=undefined;this.observations.invalidate(actor.sessionId); this.onContextChanged(); }
+        disposition=deferred?'deferred':'withdrawn';reason=deferred?'scheduler_deferral':'no_observations';
+      } else { reason='perception_unsuccessful';if(lane)lane.scene=undefined;this.observations.invalidate(actor.sessionId); this.onContextChanged(); }
     }
     return this.receipt(admitted,result);
+    } catch(error) {reason='host_processing_failed';throw error;}
+    finally {this.recordPublication(admitted.provenance,result,publication,disposition,reason);}
   }
   private receipt(admitted:{requestId:string;queued:boolean},result:Awaited<ReturnType<VisualAdmission['submit']>['completion']>){
     // Internal count evidence is not an extension of the closed HTTP v1 shape.
@@ -327,5 +390,5 @@ export class VisualInputHost {
     return state;
   }
   invalidate(sessionId: string) { this.observations.invalidate(sessionId); this.cancelUpload(sessionId); this.runtime.invalidate(sessionId); this.onContextChanged(); }
-  close() { for (const timer of this.viewExpiries.values()) clearTimeout(timer); this.viewExpiries.clear(); this.observations.clear(); this.onContextChanged(); for (const upload of this.uploads.values()) upload.abort(); this.runtime.close(); }
+  close() { this.closed=true;this.publications.length=0;for (const timer of this.viewExpiries.values()) clearTimeout(timer); this.viewExpiries.clear(); this.observations.clear(); this.onContextChanged(); for (const upload of this.uploads.values()) upload.abort(); this.runtime.close(); }
 }

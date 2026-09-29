@@ -12,7 +12,7 @@ import {createLifestreamServer} from '../src/index.ts';
 import {loadProfile} from '../src/config/loader.ts';
 import {readSessionEndpoint} from '../src/runtime/session-context.ts';
 import {AudienceCoordinator,type AudienceIdentity,type CameraAudienceReason} from '../src/runtime/audience.ts';
-import type {VisualHumanCount,VisualPerceptionRequest} from '@lifestream/runtime/perception/port';
+import type {VisualHumanCount,VisualPerceptionRequest,VisualPerceptionResult} from '@lifestream/runtime/perception/port';
 
 const actor = {principalId:'owner',sessionId:'session-a',assistantId:'assistant-a'};
 const authority = {sourceConnected:true,devicePermission:true,hostCaptureLease:true,interpretationAllowed:true,remoteEgressAllowed:false,foregroundVisible:true};
@@ -408,4 +408,105 @@ test('provider health loss is fenced both during pending completion and before a
     else {f.providerHealth(false);await assert.rejects(()=>f.batch('one',1000,0,false,true),(error:unknown)=>error instanceof VisualAdmissionError&&error.reason==='provider_unavailable');}
     assert.equal(f.audience.snapshot(f.identity).privateAllowed,false,'no subsequent camera-state read is needed');assert.equal(f.audience.cameraEvidence(f.identity),null);
   }
+});
+
+function publicationFixture(t:import('node:test').TestContext){
+  const epoch=Date.parse('2026-09-29T12:00:00Z');let mono=10_000,generation=1;
+  let status:VisualPerceptionResult['status']='complete',providerReason:string|null=null,clockFailure=false;
+  let afterProviderClock:(()=>void)|undefined,nextClock:(()=>void)|undefined;
+  let last:VisualPerceptionRequest|undefined,raw:VisualPerceptionResult|undefined;
+  const visual=new VisualInputHost({
+    provider:fixtureVisualProvider(request=>{
+      last=request;nextClock=afterProviderClock;afterProviderClock=undefined;
+      return raw={requestId:request.requestId,status,reason:providerReason,observations:status==='complete'?[{observationId:'synthetic-observation',frameIds:[request.frames[0]!.frameId],appearance:'PRIVATE_SCENE_SENTINEL',inference:'PRIVATE_INFERENCE_SENTINEL',confidence:null,limitations:['PRIVATE_LIMITATION_SENTINEL']}]:[]};
+    }),
+    scopeFor:request=>({...request,relationshipId:null,environmentId:'test',conversationId:'conversation',endpointId:'endpoint',sessionRevision:1,audienceRevision:generation,scopeGeneration:1}),
+    sourceFor:()=>({bindingRef:'synthetic-source',connected:true,configurationRevision:1}),captureAuthority:()=>authority,
+    monotonicMs:()=>mono,utcMs:()=>{const change=nextClock;nextClock=undefined;change?.();if(clockFailure)throw Error('synthetic diagnostic clock failure');return epoch+mono;}
+  });
+  t.after(()=>visual.close());
+  const begin=(owner=actor)=>{
+    const offer=visual.capabilities(owner,['1.0.0']);mono+=20;const mappingMono=mono;
+    const lease=visual.camera(owner,{action:'enable',expectedRevision:offer.camera.revision,idempotencyKey:randomUUID(),challengeId:offer.negotiation!.challenge!.id,endpointClockId:'clock',endpointReceivedMonotonicMs:5000});
+    let sequence=0;
+    return {owner,lease,batch:(correlationId=randomUUID())=>{
+      const frameId=randomUUID();return visual.batch(owner,{leaseId:lease.leaseId!,endpointClockId:'clock',correlationId,frames:[{frameId,sequence:sequence++,capturedMonotonicMs:5000+mono-mappingMono,clockMappingId:lease.clockMappingId!,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]},new Map([[frameId,png]]));
+    }};
+  };
+  const prepare=()=>visual.prepareContext(actor,{expectedConversationId:'conversation',expectedRelationshipId:null,viewId:randomUUID(),revision:1,invalidationKey:randomUUID(),conversation:'[]',explicitQuestion:true,allowAside:false});
+  return {visual,begin,prepare,last:()=>last!,raw:()=>raw!,advance:(ms:number)=>{mono+=ms;},outcome:(value:VisualPerceptionResult['status'],reason:string|null=null)=>{status=value;providerReason=reason;},beforePublication:(action:'scope'|'expiry')=>{afterProviderClock=()=>{if(action==='scope')generation++;else mono+=6001;};},failDiagnosticClock:()=>{afterProviderClock=()=>{clockFailure=true;};},restoreClock:()=>{clockFailure=false;}};
+}
+
+test('publication receipts separate successful interpretation from authority and freshness loss before publication',async t=>{
+  for(const race of ['scope','expiry'] as const){
+    const f=publicationFixture(t),session=f.begin();f.advance(20);f.beforePublication(race);
+    const wire=await session.batch();assert.equal(wire.result.status,'complete','runtime interpretation settled successfully before the host race');
+    assert.equal(f.prepare(),null,'neither loss may publish a usable scene');
+    const receipts=f.visual.publicationReceipts(actor);assert.equal(receipts.length,1);
+    const receipt=receipts[0]!;assert.equal(receipt.perceptionStatus,'complete');assert.equal(receipt.disposition,'discarded');
+    assert.equal(receipt.reason,race==='scope'?'observation_not_admitted':'observation_expired');assert.equal(receipt.publication,null);assert.deepEqual(receipt.observationIds,[]);
+    assert.equal(receipt.admission.requestId,wire.requestId);assert.equal(receipt.admission.capturedAtEarliestMs,f.last().capturedAtEarliestMs);
+    assert.deepEqual(Object.keys(wire).sort(),['queued','requestId','result']);assert.deepEqual(Object.keys(wire.result).sort(),['observations','reason','requestId','status'],'closed HTTP response is unchanged');
+  }
+});
+
+test('publication receipts distinguish empty withdrawal, unsuccessful perception and authentic foreground deferral',async t=>{
+  const f=publicationFixture(t),session=f.begin();f.advance(20);
+  f.outcome('empty');await session.batch();let receipt=f.visual.publicationReceipts(actor).at(-1)!;
+  assert.equal(receipt.disposition,'withdrawn');assert.equal(receipt.reason,'no_observations');assert.equal(receipt.perceptionStatus,'empty');
+  f.advance(1000);f.outcome('failed','foreground_priority');await session.batch();receipt=f.visual.publicationReceipts(actor).at(-1)!;
+  assert.equal(receipt.disposition,'discarded');assert.equal(receipt.reason,'perception_unsuccessful','provider text cannot manufacture a scheduler receipt');assert.equal(receipt.perceptionStatus,'failed');
+  const camera=cameraAudienceFixture(t);await camera.batch('one',20);camera.qualify();
+  const occupied=await camera.occupyOtherSession(),pending=camera.batch('one',1000);camera.optionalWork(false);occupied.release();await occupied.pending;await pending;
+  const deferred=camera.visual.publicationReceipts(actor).at(-1)!;assert.equal(deferred.disposition,'deferred');assert.equal(deferred.reason,'scheduler_deferral');assert.equal(camera.audience.snapshot(camera.identity).privateAllowed,true);
+});
+
+test('publication receipt retains admitted and rebound audience revisions without renewing capture freshness',async t=>{
+  const f=cameraAudienceFixture(t);await f.batch('multiple',20);
+  const receipt=f.visual.publicationReceipts(actor)[0]!,view=f.prepare();assert.ok(view);
+  assert.equal(receipt.disposition,'published');assert.equal(receipt.admission.scope.audienceRevision,f.last().scope.audienceRevision);
+  assert.ok(receipt.publication!.audienceRevision>receipt.admission.scope.audienceRevision);
+  assert.ok(receipt.publication!.leaseRevision>receipt.admission.leaseRevision);
+  assert.equal(receipt.publication!.audienceRevision,view.scope.audienceRevision);
+  assert.equal(receipt.admission.capturedAtEarliestMs,f.last().capturedAtEarliestMs);assert.equal(receipt.captureFreshUntilMs,view.expiresAtMs);
+  assert.deepEqual(receipt.observationIds,['synthetic-scene']);assert.deepEqual(receipt.admission.frameIds,view.observations[0]!.frameIds);
+  f.at(Date.parse(f.audience.cameraEvidence(f.identity)!.expiresAt));f.audience.tick();
+  assert.deepEqual(f.visual.publicationReceipts(actor)[0],receipt,'later count expiry cannot rewrite historical publication metadata');
+});
+
+test('publication journal is immutable, actor isolated and contains no scene, raw media or arbitrary provider reason',async t=>{
+  const f=publicationFixture(t),session=f.begin();f.advance(20);
+  await session.batch('PRIVATE_CORRELATION_SENTINEL'.repeat(1000));
+  const receipts=f.visual.publicationReceipts(actor),receipt=receipts[0]!;
+  assert.match(receipt.admission.correlationId,/^sha256:[a-f0-9]{64}$/u);
+  assert.throws(()=>{(receipt.admission.scope as any).audienceRevision=999;},TypeError);
+  assert.throws(()=>{(receipt.admission.frameIds as string[]).push('forged');},TypeError);
+  assert.throws(()=>{(receipt.observationIds as string[]).push('forged');},TypeError);
+  assert.throws(()=>{(receipts as unknown[]).length=0;},TypeError);
+  (f.raw().observations[0] as any).appearance='LATE_PRIVATE_MUTATION';
+  for(const key of ['principalId','sessionId','assistantId'] as const)assert.deepEqual(f.visual.publicationReceipts({...actor,[key]:'foreign'}),[]);
+  f.advance(1000);f.outcome('failed','PRIVATE_PROVIDER_REASON');await session.batch();
+  const json=JSON.stringify(f.visual.publicationReceipts(actor));
+  for(const prohibited of ['PRIVATE_','LATE_PRIVATE_MUTATION',png.toString('base64'),'appearance','inference','limitations','humanCount','bytes'])assert.equal(json.includes(prohibited),false,prohibited);
+  assert.ok(Buffer.byteLength(json)<10_000,'long metadata is represented by bounded labeled digests');
+  assert.equal(f.visual.publicationReceipts(actor)[0],receipt);
+});
+
+test('publication journal has a host-wide capacity and expires on elapsed time or clock regression',async t=>{
+  const f=publicationFixture(t),sessions=Array.from({length:4},(_,index)=>f.begin({...actor,sessionId:`bounded-${index}`}));
+  f.outcome('empty');
+  const ids:string[]=[];
+  for(let round=0;round<34;round++){f.advance(1000);for(const session of sessions)ids.push((await session.batch()).requestId);}
+  const retained=sessions.flatMap(session=>f.visual.publicationReceipts(session.owner));assert.equal(retained.length,128);
+  assert.ok(retained.every(receipt=>!ids.slice(0,8).includes(receipt.admission.requestId)));assert.ok(retained.some(receipt=>receipt.admission.requestId===ids.at(-1)));
+  f.advance(60_000);assert.ok(sessions.every(session=>f.visual.publicationReceipts(session.owner).length===0));
+  const next=publicationFixture(t),session=next.begin();next.advance(20);next.outcome('empty');await session.batch();assert.equal(next.visual.publicationReceipts(actor).length,1);
+  next.advance(-1);assert.deepEqual(next.visual.publicationReceipts(actor),[]);next.advance(1);assert.deepEqual(next.visual.publicationReceipts(actor),[],'clock recovery cannot restore cleared receipts');
+});
+
+test('diagnostic clock failure and shutdown do not change or retain the public batch outcome',async t=>{
+  const f=publicationFixture(t),session=f.begin();f.advance(20);f.outcome('empty');f.failDiagnosticClock();
+  const wire=await session.batch();assert.equal(wire.result.status,'empty');assert.deepEqual(f.visual.publicationReceipts(actor),[]);
+  f.restoreClock();f.advance(1000);await session.batch();assert.equal(f.visual.publicationReceipts(actor).length,1);
+  f.visual.close();assert.deepEqual(f.visual.publicationReceipts(actor),[]);
 });
