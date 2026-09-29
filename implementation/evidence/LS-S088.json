@@ -153,7 +153,7 @@
     }
   ],
   "remaining": [
-    "Canonical private perception envelopes and complete lifecycle evidence; published PreparedContextView materialization and section-limit reconciliation are verified in follow-up evidence.",
+    "Canonical private perception envelopes remain subject to exact schema export approval. Bounded host publication dispositions are verified; complete lifecycle tracing/replay belongs to S090.",
     "Semantic/perceptual relevance and actual mention qualification beyond the verified conservative lexical selection and exposure suppression.",
     "Real selected vision adapter, physical broker/capture, full decode/allocation qualification, blind perception, latency and Human acceptance.",
     "Selective visual memory and later S089-S094 work."
@@ -200,6 +200,11 @@
       "path": "implementation/evidence/LS-S088-prepared-view-1.json",
       "testedRevision": "0535bbf60879cf7b09c04491618d92b01f91463c",
       "scope": "Published canonical prepared-context projection, lossless fragments, actual world freshness and scope-independent admission expiry; whole slice remains inProgress."
+    },
+    {
+      "path": "implementation/evidence/LS-S088-publication-1.json",
+      "testedRevision": "03a3ccf3d307a4395c4bd24693dff78828c9ea17",
+      "scope": "Bounded host publication disposition, distinct from perception result; no whole-slice acceptance."
     }
   ]
 }
