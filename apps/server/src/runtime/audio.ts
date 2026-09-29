@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { WebSocket } from "ws";
 import type { InferenceProvider } from "@lifestream/runtime/inference";
 import { SpeechSafeSegmenter } from "@lifestream/runtime/voice/segmenter";
-import { buildCanonicalPrompt } from "@lifestream/runtime/inference/prompt";
+import { finalizePreparedTurn, requestForFinalizedTurn } from "@lifestream/runtime/inference/prompt";
 import type { AudioFrame, SpeechToTextProvider } from "@lifestream/runtime/voice";
 import type { VoxCpmProvider } from "@lifestream/providers-voxcpm";
 import { defaultVoiceSettings, parseVoiceSettings, type VoiceSettings } from "./voice-settings.ts";
@@ -227,10 +227,15 @@ export class AudioSession {
       if (controller.signal.aborted) throw new Error("audio turn interrupted");
         this.currentInput = this.deps.prepare?.({ ...(request.assistantId ? { assistantId: request.assistantId } : {}), ...(request.relationshipId ? { relationshipId: request.relationshipId } : {}), endpointId: request.endpointId, userInput: transcript });
         if (this.currentInput?.prepareWorld) await prepareHostWorld(this.currentInput, controller.signal);
-        outputLease=this.deps.outputLease?.(this.currentInput?.endpointId??request.endpointId,deadlineAt);
+        const turnInput=this.currentInput;
+        const admissionCurrent=()=>{
+          if(Date.now()>=Date.parse(deadlineAt)){timedOut=true;controller.abort();playback?.interrupt();return false;}
+          return !controller.signal.aborted&&current()&&this.currentInput===turnInput&&(!turnInput||turnInput.isCurrent())&&(!turnInput?.admitWorld||turnInput.admitWorld())&&(!outputLease||outputLease.current());
+        };
+        const finalized = finalizePreparedTurn({ ...(this.currentInput?.preparedTurnBinding?{preparedTurnBinding:this.currentInput.preparedTurnBinding}:{}), ...(this.currentInput?.preparedVisualContext?{preparedVisualContext:this.currentInput.preparedVisualContext}:{}), ...(this.currentInput?.preparedWorldContext ? { preparedWorldContext: this.currentInput.preparedWorldContext } : {}), ...(this.currentInput?.capabilityContext ? { capabilities: this.currentInput.capabilityContext } : {}), assistantId: this.currentInput?.assistantId ?? this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: this.currentInput?.endpointId ?? request.endpointId, userInput: transcript, ...(this.currentInput?.conversation?{conversation:this.currentInput.conversation.read()}:{}), deadlineAt, executionMode: "live", voiceMode: true, ...(this.currentInput ? { runtimeSelfContext: this.currentInput.runtimeSelfContext, ...(this.currentInput.profileProjection ? { profileProjection: this.currentInput.profileProjection } : {}), ...(this.currentInput.preparedRelationshipContext ? { preparedRelationshipContext: this.currentInput.preparedRelationshipContext } : {}) } : {}), ...(this.currentInput?.experienceSelection?{experienceSelection:this.currentInput.experienceSelection}:{}) },admissionCurrent);
+        const prompt=requestForFinalizedTurn(finalized,turnInput?.preparedTurnBinding,admissionCurrent);
+        outputLease=this.deps.outputLease?.(turnInput?.endpointId??request.endpointId,deadlineAt);
         if(outputLease){playback=this.playback=new AudioPlayback(traceId,deadlineAt,()=>{controller.abort();send(this.socket,{type:"stopPlayback",interactionTraceId:traceId,reason:"endpoint_playback_stopped_or_expired"});});this.outputSettlement=playback.settled;}
-
-        const prompt = buildCanonicalPrompt({ ...(this.currentInput?.preparedTurnBinding?{preparedTurnBinding:this.currentInput.preparedTurnBinding}:{}), ...(this.currentInput?.preparedVisualContext?{preparedVisualContext:this.currentInput.preparedVisualContext}:{}), ...(this.currentInput?.preparedWorldContext ? { preparedWorldContext: this.currentInput.preparedWorldContext } : {}), ...(this.currentInput?.capabilityContext ? { capabilities: this.currentInput.capabilityContext } : {}), assistantId: this.currentInput?.assistantId ?? this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: this.currentInput?.endpointId ?? request.endpointId, userInput: transcript, ...(this.currentInput?.conversation?{conversation:this.currentInput.conversation.read()}:{}), deadlineAt, executionMode: "live", voiceMode: true, ...(this.currentInput ? { runtimeSelfContext: this.currentInput.runtimeSelfContext, ...(this.currentInput.profileProjection ? { profileProjection: this.currentInput.profileProjection } : {}), ...(this.currentInput.preparedRelationshipContext ? { preparedRelationshipContext: this.currentInput.preparedRelationshipContext } : {}) } : {}) });
         const conversation=this.currentInput?.conversation;conversation?.remember({interactionId:traceId,role:"user",text:transcript});
         let answer = "";
         const segmenter = new SpeechSafeSegmenter(360,{firstClauseMinChars:64});
@@ -262,7 +267,9 @@ export class AudioSession {
         if (this.currentInput?.admitWorld && !this.currentInput.admitWorld()) throw new Error("World context expired before speech inference admission");
         if(!controller.signal.aborted&&current()&&(!outputLease||outputLease.current())){try{const catalog=this.deps.acknowledgment?.(request);if(catalog?.clipIds.length){playback?.emittedOutput();send(this.socket,{type:'acknowledgment',interactionTraceId:traceId,catalog});}}catch{/* Optional cached presentation cannot fail an ordinary reply. */}}
         try{this.currentInput?.onInferenceRequest?.(prompt);}catch{/* Optional inclusion bookkeeping is not speech authority. */}
-        for await (const chunk of this.deps.inference.generate(prompt, { signal: controller.signal })) {
+        this.invalidateIfStale();
+        const admittedPrompt=requestForFinalizedTurn(finalized,turnInput?.preparedTurnBinding,admissionCurrent);
+        for await (const chunk of this.deps.inference.generate(admittedPrompt, { signal: controller.signal })) {
           this.invalidateIfStale();
           if (controller.signal.aborted) throw new Error("audio turn interrupted");
           if (chunk.kind === "text" && chunk.text) { answer += chunk.text; if (answer.length > 16_384) throw new Error("voice response text limit exceeded"); response(this.socket, traceId, this.sequence++, { type: "textDelta", text: chunk.text });conversation?.remember({interactionId:traceId,role:"assistant",text:answer,observation:"emitted"}); for (const segment of segmenter.push(chunk.text)) await queue.put(segment.text); }
@@ -285,6 +292,7 @@ export class AudioSession {
         if (!playback) { try { this.currentInput?.onCompleted?.(traceId); } catch { /* Software emission only; no physical playback claim. */ } }
         response(this.socket, traceId, this.sequence++, { type: "terminal", state: "completed", finalResponse: null, error: null });
     } catch (error) {
+      if(Date.now()>=Date.parse(deadlineAt)){timedOut=true;controller.abort();playback?.interrupt();}
       const interrupted = this.controller.signal.aborted && !timedOut && !internalFailure;
       response(this.socket, traceId, this.sequence++, { type: "terminal", state: interrupted ? "interrupted" : "failed", finalResponse: null, error: problem(interrupted ? "audio_interrupted" : timedOut ? "audio_deadline_exceeded" : "audio_turn_failed", timedOut ? "Voice turn exceeded its 180 second limit; you can try another turn." : error instanceof Error ? error.message : "audio turn failed", traceId, !interrupted) });
     } finally {

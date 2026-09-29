@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {VisualObservationStore,visualContextLimits,type VisualObservationBatch} from '../src/perception/observation.ts';
-import {buildCanonicalPrompt,createPreparedTurnBinding,type PreparedTurnBinding} from '../src/inference/prompt.ts';
+import {buildCanonicalPrompt,createPreparedTurnBinding,finalizePreparedTurn,requestForFinalizedTurn,type PreparedTurnBinding,type PromptInput} from '../src/inference/prompt.ts';
 import type {VisualScope} from '../src/perception/port.ts';
 
 const scope:VisualScope={assistantId:'assistant',principalId:'owner',relationshipId:null,environmentId:'test',conversationId:'conversation',sessionId:'session',endpointId:'endpoint',sessionRevision:1,audienceRevision:1,scopeGeneration:1,sourceBindingRef:'camera:fixture',captureConfigurationRevision:1};
@@ -156,4 +156,115 @@ test('turn bindings copy bounded base dialogue, exact scope and source inventory
   assert.throws(()=>make({sourceRevisions:hostile}),/Invalid prepared turn/);assert.equal(reads,0);
   const copied={...binding} as PreparedTurnBinding;
   assert.throws(()=>buildCanonicalPrompt({assistantId:scope.assistantId,sessionId:scope.sessionId,endpointId:scope.endpointId,interactionId:'turn',conversation:'[]',preparedTurnBinding:copied}),/does not match/);h.store.clear();
+});
+
+function completeTurnFixture(){
+  const h=harness();h.store.publish(h.batch());const visual=h.prepare()!;
+  const runtime:NonNullable<PromptInput['runtimeSelfContext']>={sourceRevision:'runtime:one',runtimeStatus:'ready',inputModalities:{text:'active',microphone:'inactive',visual:'activeForSession'},outputModalities:{text:'active',speechGeneration:'healthy',speechDelivery:'notObserved',presentation:'notConfigured'},endpointScope:'sessionEndpoint',audienceScope:'authenticatedSession',permissionState:'authenticatedSession',limitations:['Synthetic turn; not physical perception.']};
+  const persona={sourceRef:'profile:fixture',sourceRevision:'persona:one',corePersona:'Use a neutral identity.',adaptivePersona:'Be concise.'};
+  const relationship={profileRevision:'profile:one',relationshipRevision:'relationship:one',configurationRevision:'configuration:one',approvedBaseline:['An eligible neutral preference.'],criticalCorrections:[],relevantContext:[],limitations:['Synthetic retained context.']};
+  const world={content:'A synthetic room is available.',sourceRef:'fixture:world',sourceRevision:'world:after-await'};
+  const experience={id:'experience-one',topic:'planning',statement:'A short plan was useful.',nextStep:'Offer two options.'};
+  const binding=createPreparedTurnBinding({viewId:h.binding.viewId,revision:1,invalidationKey:h.binding.invalidationKey,scope:h.binding.scope,conversation:'[]',sourceRevisions:{runtime:runtime.sourceRevision,persona:persona.sourceRevision,relationship:relationship.relationshipRevision,configuration:relationship.configurationRevision,visual:String(visual.sourceRevision),customFixture:'preserved'}});
+  const input:PromptInput={assistantId:scope.assistantId,sessionId:scope.sessionId,endpointId:scope.endpointId,interactionId:'turn',conversation:'[]',userInput:'Explain the next task.',deadlineAt:'2099-01-01T00:00:00.000Z',preparedTurnBinding:binding,preparedVisualContext:visual,runtimeSelfContext:runtime,profileProjection:persona,preparedRelationshipContext:relationship,preparedWorldContext:world,capabilities:'No effects are available.',experienceSelection:experience};
+  return {...h,input,binding,visual,runtime,persona,relationship,world,experience};
+}
+
+test('finalization inventories the exact nine sections after world and experience materialization without expanding the manifest',()=>{
+  const f=completeTurnFixture(),turn=finalizePreparedTurn(f.input,()=>true),request=requestForFinalizedTurn(turn,f.binding,()=>true);
+  assert.equal(turn.binding,f.binding);assert.equal(turn.sections,request.manifest.sections);
+  assert.deepEqual(turn.sections.map(section=>section.kind),['policy','corePersona','adaptivePersona','interactionState','preparedMemory','worldContext','capabilityState','conversation','userInput']);
+  assert.ok(turn.sections.every(section=>Object.keys(section).sort().join(',')==='contentDigest,kind,redaction,sourceRef,sourceRevision,tokenCount'));
+  assert.deepEqual(request.manifest,buildCanonicalPrompt(f.input).manifest,'sealing preserves the existing closed manifest');
+  assert.equal(request.sections[5]!.content,'A synthetic room is available.');assert.equal(request.manifest.sections[5]!.sourceRef,'fixture:world');assert.equal(turn.sourceRevisions.world,'world:after-await');
+  assert.match(request.sections[4]!.content,/Offer two options/);assert.match(request.sections[0]!.content,/develop the selected eligible next step/);
+  assert.equal(request.sections[7]!.content,f.visual.conversationContent);assert.equal(turn.sourceRevisions['seed:customFixture'],'preserved');
+  assert.equal(turn.sourceRevisions['section:worldContext'],'world:after-await');assert.equal(turn.sourceRevisions['section:conversation'],request.manifest.sections[7]!.sourceRevision);
+  assert.match(turn.sourceRevisions.capability!,/^content-sha256:[a-f0-9]{64}$/u);assert.match(turn.sourceRevisions.experience!,/^content-sha256:[a-f0-9]{64}$/u);
+  assert.equal(requestForFinalizedTurn(turn,f.binding,()=>true),request,'inspection and provider admission share one request');
+  assert.ok(Object.isFrozen(turn)&&Object.isFrozen(turn.sourceRevisions)&&Object.isFrozen(turn.sections)&&Object.isFrozen(turn.sections[0])&&Object.isFrozen(request)&&Object.isFrozen(request.scope)&&Object.isFrozen(request.sections)&&Object.isFrozen(request.sections[0])&&Object.isFrozen(request.manifest));
+  f.store.clear();
+});
+
+test('inspection callbacks and source mutation cannot rewrite the request that reaches inference',()=>{
+  const f=completeTurnFixture(),turn=finalizePreparedTurn(f.input,()=>true),inspected=requestForFinalizedTurn(turn,f.binding,()=>true),before=JSON.stringify(inspected);
+  const bookkeeping=(request:typeof inspected)=>{
+    assert.throws(()=>{request.sections[5]!.content='Invent a different world.';},TypeError);
+    assert.throws(()=>{request.sections[7]!.content='Invent a different visible scene.';},TypeError);
+    assert.throws(()=>{request.manifest.sections[7]!.contentDigest='forged';},TypeError);
+    assert.throws(()=>{request.manifest.sections=[];},TypeError);
+    assert.throws(()=>{request.scope.sessionId='another-session';},TypeError);
+  };
+  bookkeeping(inspected);
+  f.world.content='Changed provider object after finalization.';f.world.sourceRevision='later-world';f.persona.corePersona='Changed persona object.';f.relationship.approvedBaseline[0]='Changed private context.';f.runtime.limitations=['Changed modality claim.'];f.experience.nextStep='Take an unapproved effect.';f.input.capabilities='All effects enabled.';f.input.userInput='Substituted user message.';
+  const actualProviderInput=requestForFinalizedTurn(turn,f.binding,()=>true);
+  assert.equal(actualProviderInput,inspected);assert.equal(JSON.stringify(actualProviderInput),before);
+  assert.equal(actualProviderInput.sections[5]!.content,'A synthetic room is available.');assert.equal(actualProviderInput.sections[6]!.content,'No effects are available.');assert.match(actualProviderInput.sections[4]!.content,/Offer two options/);assert.doesNotMatch(JSON.stringify(turn),/later-world|unapproved effect/);
+  f.store.clear();
+});
+
+test('finalized turns reject copied and cross-view ownership and cannot revive a retired authority guard',()=>{
+  const f=completeTurnFixture();let current=true;
+  const turn=finalizePreparedTurn(f.input,()=>current);
+  const identicalBinding=createPreparedTurnBinding({viewId:f.binding.viewId,revision:f.binding.revision,invalidationKey:f.binding.invalidationKey,scope:f.binding.scope,conversation:f.binding.conversation,sourceRevisions:f.binding.sourceRevisions});
+  for(const candidate of [{...turn},new Proxy(turn,{})])assert.throws(()=>requestForFinalizedTurn(candidate,f.binding,()=>true),/Finalized turn/);
+  for(const expected of [undefined,identicalBinding,{...f.binding}])assert.throws(()=>requestForFinalizedTurn(turn,expected,()=>true),/Finalized turn/);
+  assert.ok(requestForFinalizedTurn(turn,f.binding,()=>true),'a foreign lookup does not revoke the legitimate view');
+  current=false;assert.throws(()=>requestForFinalizedTurn(turn,f.binding,()=>true),/Finalized turn/);
+  current=true;assert.throws(()=>requestForFinalizedTurn(turn,f.binding,()=>true),/Finalized turn/,'a later true callback does not revive a withdrawn finalization');
+  const fresh=finalizePreparedTurn(f.input,()=>true);assert.throws(()=>requestForFinalizedTurn(fresh,f.binding,()=>{throw Error('authority unavailable');}),/Finalized turn/);assert.throws(()=>requestForFinalizedTurn(fresh,f.binding,()=>true),/Finalized turn/);
+  f.store.clear();
+});
+
+test('known preparation source revisions cannot be substituted and custom fixture sources stay namespaced',()=>{
+  for(const key of ['runtime','persona','relationship','configuration','visual']){
+    const f=completeTurnFixture();
+    const wrong=createPreparedTurnBinding({viewId:f.binding.viewId,revision:f.binding.revision,invalidationKey:f.binding.invalidationKey,scope:f.binding.scope,conversation:f.binding.conversation,sourceRevisions:{...f.binding.sourceRevisions,[key]:'different-revision'}});
+    assert.throws(()=>finalizePreparedTurn({...f.input,preparedTurnBinding:wrong},()=>true),/Finalized turn/);f.store.clear();
+  }
+  const f=completeTurnFixture();const {preparedVisualContext:omitted,...withoutScene}=f.input;
+  const suppressed=finalizePreparedTurn(withoutScene,()=>true);
+  assert.equal(suppressed.sourceRevisions['seed:visual'],'1','availability may remain when an optional scene is omitted');assert.equal(requestForFinalizedTurn(suppressed,f.binding,()=>true).sections[7]!.content,'[]');
+  assert.throws(()=>finalizePreparedTurn(f.input,()=>false),/Finalized turn/);assert.throws(()=>finalizePreparedTurn(f.input,()=>{throw Error('authority unavailable');}),/Finalized turn/);f.store.clear();
+});
+
+test('world await cannot refresh expired or withdrawn visual selection or substitute newer scene data',async()=>{
+  for(const change of ['expiry','withdrawal','newerScene'] as const){
+    const f=completeTurnFixture();let release!:()=>void,providerCalls=0;
+    const worldReady=new Promise<void>(resolve=>{release=resolve;});
+    const consume=async()=>{await worldReady;const turn=finalizePreparedTurn(f.input,()=>true);const request=requestForFinalizedTurn(turn,f.binding,()=>true);providerCalls++;return request;};
+    const pending=consume();
+    if(change==='expiry')f.advance(5900);
+    else if(change==='withdrawal')f.withdraw();
+    else{f.advance(1000);assert.equal(f.store.publish(f.batch(2,'A blue book is visible.')),true);}
+    release();
+    if(change==='newerScene'){const request=await pending;assert.match(request.sections[7]!.content,/small striped animal/);assert.doesNotMatch(request.sections[7]!.content,/blue book/);assert.equal(providerCalls,1);}
+    else{await assert.rejects(pending,/does not match|Finalized turn/);assert.equal(providerCalls,0);}
+    f.store.clear();
+  }
+  const f=completeTurnFixture(),turn=finalizePreparedTurn(f.input,()=>true);f.advance(5900);
+  assert.throws(()=>requestForFinalizedTurn(turn,f.binding,()=>true),/Finalized turn/,'a caller cannot bypass visual expiry with a fresh true callback');f.store.clear();
+  const delayed=completeTurnFixture(),delayedTurn=finalizePreparedTurn(delayed.input,()=>true);
+  assert.throws(()=>requestForFinalizedTurn(delayedTurn,delayed.binding,()=>{delayed.advance(5900);return true;}),/Finalized turn/,'expiry during a later admission guard still fences the sealed request');delayed.store.clear();
+});
+
+test('finalization snapshots plain host data without executing accessors and leaves the old builder mutable',()=>{
+  const f=completeTurnFixture();let reads=0;
+  const world=Object.defineProperty({...f.world},'content',{get(){reads++;return 'Executable replacement';}});
+  assert.throws(()=>finalizePreparedTurn({...f.input,preparedWorldContext:world},()=>true),/Finalized turn/);
+  assert.throws(()=>finalizePreparedTurn({...f.input,preparedWorldContext:new Proxy(f.world,{})},()=>true),/Finalized turn/);
+  const nested={...f.relationship,approvedBaseline:[Object.defineProperty({},'text',{get(){reads++;return 'hidden';}})]};
+  assert.throws(()=>finalizePreparedTurn({...f.input,preparedRelationshipContext:nested} as unknown as PromptInput,()=>true),/Finalized turn/);assert.equal(reads,0);
+  const ordinary={assistantId:'assistant',sessionId:'session',endpointId:null,interactionId:'ordinary',userInput:'Hello'};
+  const turn=finalizePreparedTurn(ordinary,()=>true),request=requestForFinalizedTurn(turn,undefined,()=>true);
+  assert.equal(turn.binding,null);assert.match(turn.sourceRevisions.world!,/^content-sha256:/u);assert.equal(Object.hasOwn(turn.sourceRevisions,'experience'),false);
+  const mutable=buildCanonicalPrompt(ordinary);mutable.sections[0]!.content='Host extraction policy.';mutable.manifest.sections=[];assert.equal(mutable.sections[0]!.content,'Host extraction policy.');assert.equal(request.manifest.sections.length,9);f.store.clear();
+});
+
+test('a sealed turn independently expires at its request deadline and cannot revive after clock rollback',t=>{
+  const now=Date.now();t.mock.timers.enable({apis:['Date'],now});const f=completeTurnFixture();
+  f.input.deadlineAt=new Date(now+1000).toISOString();const turn=finalizePreparedTurn(f.input,()=>true);
+  t.mock.timers.setTime(now+1000);assert.throws(()=>requestForFinalizedTurn(turn,f.binding,()=>true),/Finalized turn/);
+  t.mock.timers.setTime(now);assert.throws(()=>requestForFinalizedTurn(turn,f.binding,()=>true),/Finalized turn/);
+  assert.throws(()=>finalizePreparedTurn({...f.input,deadlineAt:'invalid'},()=>true),/Finalized turn/);f.store.clear();
 });

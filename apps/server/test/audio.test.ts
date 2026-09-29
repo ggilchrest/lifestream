@@ -10,7 +10,7 @@ import type {HostRuntimeInput} from '../src/runtime/inference.ts';
 
 const frame = (value: number) => { const bytes = Buffer.alloc(4800 * 2); for (let offset = 0; offset < bytes.length; offset += 2) bytes.writeInt16LE(value, offset); return { frameId: randomUUID(), sequence: 0, format: { encoding: "pcm_s16le" as const, sampleRateHz: 16000 as const, channels: 1 as const }, sampleOffset: 0, sampleCount: 4800, dataBase64: bytes.toString("base64") }; };
 
-function visualAudioHarness(beforeSynthesisTerminal:()=>Promise<void>=async()=>{}) {
+function visualAudioHarness(beforeSynthesisTerminal:()=>Promise<void>=async()=>{},options:Pick<HostRuntimeInput,'onInferenceRequest'|'prepareWorld'>={}) {
   let now=100_000,authority=true,releases=0;
   const events:any[]=[],prompts:any[]=[],completed:string[]=[];
   const sessionId=randomUUID(),endpointId=randomUUID(),assistantId=randomUUID(),audioInputId=randomUUID(),leaseId=randomUUID();
@@ -20,7 +20,7 @@ function visualAudioHarness(beforeSynthesisTerminal:()=>Promise<void>=async()=>{
   const preparedTurnBinding=createPreparedTurnBinding({viewId:randomUUID(),revision:1,invalidationKey:randomUUID(),scope:{assistantId:scope.assistantId,principalId:scope.principalId,relationshipId:scope.relationshipId,conversationId:scope.conversationId,sessionId:scope.sessionId,endpointId:scope.endpointId},conversation:'[]',sourceRevisions:{runtime:'synthetic-visual-audio',conversation:'synthetic-dialogue-1'}});
   const view=store.prepare({scope,leaseId,viewId:preparedTurnBinding.viewId,revision:preparedTurnBinding.revision,invalidationKey:preparedTurnBinding.invalidationKey,conversation:preparedTurnBinding.conversation,explicitQuestion:false,allowAside:true});
   assert.ok(view);
-  const prepare=():HostRuntimeInput=>({assistantId,endpointId,preparedTurnBinding,preparedVisualContext:view,conversation:{read:()=>preparedTurnBinding.conversation,remember(){}},runtimeSelfContext:{sourceRevision:'synthetic-visual-audio',runtimeStatus:'ready',inputModalities:{text:'active',microphone:'activeForSession',visual:'activeForSession'},outputModalities:{text:'active',speechGeneration:'healthy',speechDelivery:'notObserved',presentation:'notConfigured'},endpointScope:'sessionEndpoint',audienceScope:'authenticatedSession',permissionState:'authenticatedSession',limitations:['Synthetic route verification; no physical audibility proof.']},isCurrent:()=>store.isCurrent(view),onCompleted:trace=>{completed.push(trace);store.markUsed(view);}});
+  const prepare=():HostRuntimeInput=>({assistantId,endpointId,preparedTurnBinding,preparedVisualContext:view,conversation:{read:()=>preparedTurnBinding.conversation,remember(){}},runtimeSelfContext:{sourceRevision:'synthetic-visual-audio',runtimeStatus:'ready',inputModalities:{text:'active',microphone:'activeForSession',visual:'activeForSession'},outputModalities:{text:'active',speechGeneration:'healthy',speechDelivery:'notObserved',presentation:'notConfigured'},endpointScope:'sessionEndpoint',audienceScope:'authenticatedSession',permissionState:'authenticatedSession',limitations:['Synthetic route verification; no physical audibility proof.']},isCurrent:()=>store.isCurrent(view),onCompleted:trace=>{completed.push(trace);store.markUsed(view);},...options});
   const stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Explain the next task.'}};yield {kind:'terminal',outcome:'succeeded'};}};
   const inference={async *generate(request:unknown){prompts.push(request);yield {kind:'text',text:'Continue with the next task.'};}};
   const tts={async *synthesize(request:any){yield {kind:'data',segmentId:request.segmentId,frame:{...frame(100),format:request.format}};await beforeSynthesisTerminal();yield {kind:'terminal',outcome:'succeeded'};}};
@@ -29,6 +29,7 @@ function visualAudioHarness(beforeSynthesisTerminal:()=>Promise<void>=async()=>{
   const acknowledge=async(outcome='completed',receivedSamples=receipt().samples,interactionTraceId=receipt().trace)=>session.message(JSON.stringify({type:'playbackSettled',interactionTraceId,outcome,receivedSamples}));
   return {session,store,view,events,prompts,completed,receipt,acknowledge,releases:()=>releases,
     withdraw(){authority=false;store.invalidate(sessionId);},expire(){now=view.expiresAtMs;},
+    newScene(){now+=100;assert.equal(store.publish({scope,leaseId,sequence:2,requestId:randomUUID(),capturedAtEarliestMs:now-100,capturedAtLatestMs:now-50,receivedAtMs:now-30,interpretedAtMs:now,provider:{id:'synthetic-visual',version:'1'},observations:[{observationId:'new-scene',frameIds:[randomUUID()],appearance:'NEWER_SYNTHETIC_AUDIO_SCENE',inference:null,confidence:null,limitations:['Synthetic newer observation.']}]}),true);},
     async start(){await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,assistantId,expectedSessionRevision:1,endpointId,audioInputId,format:frame(0).format}}));},
     async turn(){await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(100)}));await session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));},
     async close(){if(receipt().trace)await acknowledge('stopped',0);session.close();store.clear();}
@@ -351,4 +352,47 @@ test('queued voice input cannot start recognition after the captured session is 
  await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(0)}));const first=session.message(commit);await started;
  await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(0)}));const second=session.message(commit);current=false;session.invalidateIfStale();release();await Promise.all([first,second]);
  assert.equal(recognition,1);assert.doesNotMatch(JSON.stringify(events),/QUEUED_STALE_CAPTURE/);assert.equal(events.filter(e=>e.type==='turnStarted').length,1);
+});
+
+test('audio inference callback cannot mutate the sealed provider request even when it throws',async()=>{
+  let seen:import('@lifestream/runtime/inference').InferenceRequest|undefined,before='';const mutations:boolean[]=[];
+  const f=visualAudioHarness(undefined,{onInferenceRequest:request=>{seen=request;before=JSON.stringify(request);mutations.push(Reflect.set(request.sections[7]!,'content','FORGED_AUDIO_SCENE'),Reflect.set(request.manifest.sections[7]!,'contentDigest','forged'),Reflect.set(request,'sections',[]),Reflect.set(request.scope,'endpointId','forged'));throw Error('Synthetic bookkeeping failure');}});
+  try{await f.start();await f.turn();assert.equal(f.prompts.length,1);assert.equal(f.prompts[0],seen);assert.equal(JSON.stringify(f.prompts[0]),before);assert.deepEqual(mutations,[false,false,false,false]);assert.ok(Object.isFrozen(seen)&&Object.isFrozen(seen.sections)&&Object.isFrozen(seen.manifest.sections));assert.ok(f.receipt().samples>0);await f.acknowledge();}
+  finally{await f.close();}
+});
+
+test('audio authority revocation inside onInferenceRequest blocks inference and synthesized output',async()=>{
+  const f=visualAudioHarness(undefined,{onInferenceRequest:()=>f.withdraw()});
+  try{await f.start();await f.turn();assert.equal(f.prompts.length,0);assert.equal(f.receipt().samples,0);assert.equal(f.events.some(event=>event.type==='audio'||event.event?.payload.type==='textDelta'),false);assert.deepEqual(f.completed,[]);}
+  finally{await f.close();}
+});
+
+test('audio delayed world preparation rejects revoked or expired selected context before provider admission',async()=>{
+  for(const loss of ['authority','visualExpiry','world'] as const){
+    let release!:()=>void,entered!:()=>void,worldCurrent=true;
+    const gate=new Promise<void>(resolve=>{release=resolve;}),started=new Promise<void>(resolve=>{entered=resolve;});
+    const f=visualAudioHarness(undefined,{prepareWorld:async()=>{entered();await gate;return {context:{content:'SYNTHETIC_AUDIO_WORLD',sourceRef:'pwce:synthetic',sourceRevision:'world-1'},isCurrent:()=>worldCurrent,isSnapshotCurrent:()=>worldCurrent};}});
+    let pending:Promise<void>|undefined;
+    try{await f.start();pending=f.turn();await started;if(loss==='authority')f.withdraw();else if(loss==='visualExpiry')f.expire();else worldCurrent=false;release();await pending;assert.equal(f.prompts.length,0,loss);assert.equal(f.events.some(event=>event.type==='audio'||event.event?.payload.type==='textDelta'),false,loss);assert.deepEqual(f.completed,[]);}
+    finally{release();await pending;await f.close();}
+  }
+});
+
+test('audio finalization combines awaited world with the original visual view when a newer scene arrives',async()=>{
+  let release!:()=>void,entered!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;}),started=new Promise<void>(resolve=>{entered=resolve;});
+  const f=visualAudioHarness(undefined,{prepareWorld:async()=>{entered();await gate;return {context:{content:'SYNTHETIC_AUDIO_WORLD_AFTER_WAIT',sourceRef:'pwce:synthetic',sourceRevision:'world-2'},isCurrent:()=>true,isSnapshotCurrent:()=>true};}});let pending:Promise<void>|undefined;
+  try{
+    await f.start();pending=f.turn();await started;f.newScene();release();await pending;assert.equal(f.prompts.length,1);
+    const request=f.prompts[0],conversation=request.sections.find((section:any)=>section.kind==='conversation'),world=request.sections.find((section:any)=>section.kind==='worldContext');
+    assert.equal(conversation.content,f.view.conversationContent);assert.match(conversation.content,/striped synthetic object/);assert.doesNotMatch(conversation.content,/NEWER_SYNTHETIC_AUDIO_SCENE/);assert.equal(world.content,'SYNTHETIC_AUDIO_WORLD_AFTER_WAIT');assert.equal(world.sourceRevision,'world-2');
+    for(const section of [conversation,world])assert.deepEqual(request.manifest.sections.find((item:any)=>item.kind===section.kind),{kind:section.kind,sourceRevision:section.sourceRevision,sourceRef:section.sourceRef,contentDigest:section.contentDigest,redaction:section.redaction,tokenCount:section.tokenCount});
+    assert.ok(Object.isFrozen(request));await f.acknowledge();
+  }finally{release();await pending;await f.close();}
+});
+
+test('audio bookkeeping cannot cross the turn deadline and still start inference or retain an unused output lease',async t=>{
+  const start=Date.now();t.mock.timers.enable({apis:['Date'],now:start});
+  const f=visualAudioHarness(undefined,{onInferenceRequest:()=>t.mock.timers.setTime(start+VOICE_TURN_DEADLINE_MS+1)});
+  try{await f.start();await f.turn();await Promise.resolve();assert.equal(f.prompts.length,0);assert.equal(f.receipt().samples,0);assert.equal(f.releases(),1);assert.match(JSON.stringify(f.events),/audio_deadline_exceeded/);assert.equal(f.events.some(event=>event.type==='audio'||event.event?.payload.type==='textDelta'),false);}
+  finally{await f.close();}
 });

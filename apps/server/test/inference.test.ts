@@ -10,6 +10,11 @@ import { FixtureInferenceProvider } from "@lifestream/runtime/inference/fixture"
 import { createLifestreamServer } from "../src/index.ts";
 import { loadProfile } from "../src/config/loader.ts";
 import type { InferenceRequest } from "@lifestream/runtime/inference";
+import {randomUUID} from 'node:crypto';
+import {VisualObservationStore} from '@lifestream/runtime/perception/observation';
+import {createPreparedTurnBinding} from '@lifestream/runtime/inference/prompt';
+import type {VisualScope} from '@lifestream/runtime/perception/port';
+import type {HostRuntimeInput} from '../src/runtime/inference.ts';
 
 test("a new typed turn refreshes nearly expired prepared context without weakening active-turn fences", async t => {
   const {randomBytes}=await import('node:crypto');
@@ -106,3 +111,60 @@ test("real-authenticated ordinary turns use one scoped view, reviewed correction
     assert.match(output, mode === "deadline" ? /deadline_exceeded/u : /cancelled/u); assert.doesNotMatch(output, /runtime_input_stale|LATE_OUTPUT|interaction.completed/u);
   }
  });
+
+function finalizedTextHarness(t:import('node:test').TestContext){
+  let now=100_000,current=true,output='',status=0;const requests:InferenceRequest[]=[];
+  const scope:VisualScope={assistantId:randomUUID(),principalId:randomUUID(),relationshipId:null,environmentId:'synthetic-finalization',conversationId:randomUUID(),sessionId:randomUUID(),endpointId:randomUUID(),sessionRevision:1,audienceRevision:1,scopeGeneration:1,sourceBindingRef:'synthetic:no-camera',captureConfigurationRevision:1},leaseId=randomUUID();
+  const store=new VisualObservationStore({now:()=>now,current:()=>current});t.after(()=>store.clear());
+  const publish=(sequence:number,appearance:string)=>assert.equal(store.publish({scope,leaseId,sequence,requestId:randomUUID(),capturedAtEarliestMs:now-100,capturedAtLatestMs:now-50,receivedAtMs:now-30,interpretedAtMs:now,provider:{id:'synthetic-visual',version:'1'},observations:[{observationId:'scene-'+sequence,frameIds:[randomUUID()],appearance,inference:null,confidence:null,limitations:['Synthetic fixture only.']}]}),true);
+  publish(1,'ORIGINAL_SYNTHETIC_SCENE');
+  const binding=createPreparedTurnBinding({viewId:randomUUID(),revision:1,invalidationKey:randomUUID(),scope:{assistantId:scope.assistantId,principalId:scope.principalId,relationshipId:null,conversationId:scope.conversationId,sessionId:scope.sessionId,endpointId:scope.endpointId},conversation:'[]',sourceRevisions:{runtime:'runtime-1',conversation:'conversation-1'}});
+  const view=store.prepare({scope,leaseId,viewId:binding.viewId,revision:binding.revision,invalidationKey:binding.invalidationKey,conversation:binding.conversation,explicitQuestion:true,allowAside:false});assert.ok(view);
+  const input:HostRuntimeInput={assistantId:scope.assistantId,endpointId:scope.endpointId,preparedTurnBinding:binding,preparedVisualContext:view,conversation:{read:()=>binding.conversation,remember(){}},runtimeSelfContext:{sourceRevision:'runtime-1',runtimeStatus:'ready',inputModalities:{text:'active',microphone:'inactive',visual:'activeForSession'},outputModalities:{text:'active',speechGeneration:'unavailable',speechDelivery:'notObserved',presentation:'notConfigured'},endpointScope:'sessionEndpoint',audienceScope:'authenticatedSession',permissionState:'authenticatedSession',limitations:['No live input.']},isCurrent:()=>current&&store.isCurrent(view)};
+  const response={destroyed:false,writeHead(code:number){status=code;},write(value:string){output+=value;return true;},end(value?:string){if(value)output+=value;}} as unknown as import('node:http').ServerResponse;
+  const provider:InferenceProvider={async *generate(request){requests.push(request);yield {kind:'text',text:'SAFE_SYNTHETIC_REPLY'};yield {kind:'done'};}};
+  return {input,view,requests,run:()=>streamMessage(response,provider,{assistantId:scope.assistantId,endpointId:scope.endpointId,userInput:'What is visible?'},scope.sessionId,new AbortController().signal,undefined,input.runtimeSelfContext,input),output:()=>output,status:()=>status,withdraw:()=>{current=false;},expire:()=>{now=view.expiresAtMs;},newScene:()=>{now+=100;publish(2,'NEWER_SYNTHETIC_SCENE');}};
+}
+
+test('typed inference callback cannot change the sealed sections or manifest delivered to the provider',async t=>{
+  const f=finalizedTextHarness(t);let seen:InferenceRequest|undefined,before='';const mutations:boolean[]=[];
+  f.input.onInferenceRequest=request=>{
+    seen=request;before=JSON.stringify(request);
+    mutations.push(Reflect.set(request.sections[7]!,'content','FORGED_CALLBACK_SCENE'),Reflect.set(request.manifest.sections[7]!,'contentDigest','forged'),Reflect.set(request,'sections',[]),Reflect.set(request.scope,'endpointId','forged'));
+    throw Error('Synthetic bookkeeping failure');
+  };
+  await f.run();assert.equal(f.requests.length,1);assert.equal(f.requests[0],seen);assert.deepEqual(mutations,[false,false,false,false]);assert.equal(JSON.stringify(f.requests[0]),before);
+  assert.ok(Object.isFrozen(seen)&&Object.isFrozen(seen.sections)&&Object.isFrozen(seen.manifest.sections));assert.match(f.output(),/interaction.completed/);assert.doesNotMatch(f.output(),/FORGED_CALLBACK_SCENE|Synthetic bookkeeping failure/);
+});
+
+test('typed authority revocation inside onInferenceRequest prevents provider admission and output',async t=>{
+  const f=finalizedTextHarness(t);f.input.onInferenceRequest=()=>{f.withdraw();};await f.run();
+  assert.equal(f.requests.length,0);assert.doesNotMatch(f.output(),/SAFE_SYNTHETIC_REPLY|message.delta|interaction.completed/);assert.match(f.output(),/runtime_context_changed|runtime_input_stale/);
+});
+
+test('typed delayed world preparation cannot admit a revoked or expired visual and audience scope',async t=>{
+  for(const loss of ['authority','visualExpiry','world'] as const){
+    const f=finalizedTextHarness(t);let release!:()=>void,entered!:()=>void,worldCurrent=true;
+    const gate=new Promise<void>(resolve=>{release=resolve;}),started=new Promise<void>(resolve=>{entered=resolve;});
+    f.input.prepareWorld=async()=>{entered();await gate;return {context:{content:'SYNTHETIC_WORLD',sourceRef:'pwce:synthetic',sourceRevision:'world-1'},isCurrent:()=>worldCurrent,isSnapshotCurrent:()=>worldCurrent};};
+    const pending=f.run();await started;if(loss==='authority')f.withdraw();else if(loss==='visualExpiry')f.expire();else worldCurrent=false;release();await pending;
+    assert.equal(f.requests.length,0,loss);assert.equal(f.status(),409);assert.doesNotMatch(f.output(),/SAFE_SYNTHETIC_REPLY|message.delta|interaction.completed/);
+  }
+});
+
+test('typed finalization joins awaited world context to the originally selected still-current visual view',async t=>{
+  const f=finalizedTextHarness(t);let release!:()=>void,entered!:()=>void;
+  const gate=new Promise<void>(resolve=>{release=resolve;}),started=new Promise<void>(resolve=>{entered=resolve;});
+  f.input.prepareWorld=async()=>{entered();await gate;return {context:{content:'SYNTHETIC_WORLD_AFTER_WAIT',sourceRef:'pwce:synthetic',sourceRevision:'world-2'},isCurrent:()=>true,isSnapshotCurrent:()=>true};};
+  const pending=f.run();await started;f.newScene();release();await pending;assert.equal(f.requests.length,1);
+  const request=f.requests[0]!,conversation=request.sections.find(section=>section.kind==='conversation')!,world=request.sections.find(section=>section.kind==='worldContext')!;
+  assert.equal(conversation.content,f.view.conversationContent);assert.match(conversation.content,/ORIGINAL_SYNTHETIC_SCENE/);assert.doesNotMatch(conversation.content,/NEWER_SYNTHETIC_SCENE/);assert.equal(world.content,'SYNTHETIC_WORLD_AFTER_WAIT');assert.equal(world.sourceRevision,'world-2');
+  for(const section of [conversation,world])assert.deepEqual(request.manifest.sections.find(item=>item.kind===section.kind),{kind:section.kind,sourceRevision:section.sourceRevision,sourceRef:section.sourceRef,contentDigest:section.contentDigest,redaction:section.redaction,tokenCount:section.tokenCount});
+  assert.ok(Object.isFrozen(request));
+});
+
+test('typed bookkeeping cannot admit a request after its deadline before the timer runs',async t=>{
+  const start=Date.now();t.mock.timers.enable({apis:['Date'],now:start});
+  const f=finalizedTextHarness(t);f.input.onInferenceRequest=()=>t.mock.timers.setTime(start+30001);
+  await f.run();assert.equal(f.requests.length,0);assert.match(f.output(),/deadline_exceeded/);assert.doesNotMatch(f.output(),/SAFE_SYNTHETIC_REPLY|message.delta|interaction.completed/);
+});

@@ -106,3 +106,81 @@ export function buildCanonicalPrompt(input: PromptInput): InferenceRequest {
   const manifest: InputManifest = { schemaVersion: "1.0.0", sections: sections.map(({ kind, sourceRevision, sourceRef, contentDigest, redaction, tokenCount }) => ({ kind, sourceRevision, sourceRef, contentDigest, redaction, tokenCount })), tokenizer: "estimate:utf8-bytes-upper-bound-v1" };
   return { ...(input.maximumOutputTokens===undefined?{}:{maximumOutputTokens:input.maximumOutputTokens}), sections, manifest, deadlineAt: input.deadlineAt ?? new Date(Date.now() + 30_000).toISOString(), executionMode: input.executionMode ?? "live", scope: { assistantId: input.assistantId, sessionId: input.sessionId, interactionId: input.interactionId, endpointId: input.endpointId } };
 }
+
+/** Internal materialization, not a public PreparedContextView schema or new manifest. */
+export type FinalizedTurn = Readonly<{
+  binding:PreparedTurnBinding|null;
+  sourceRevisions:Readonly<Record<string,string>>;
+  sections:readonly Readonly<InputManifest['sections'][number]>[];
+}>;
+type FinalizedTurnEntry={request:InferenceRequest;current:()=>boolean;retired:boolean};
+const finalizedTurns=new WeakMap<FinalizedTurn,FinalizedTurnEntry>();
+const currentTurn=(current:()=>boolean):boolean=>{try{return current()===true;}catch{return false;}};
+const unavailableTurn=()=>new Error('Finalized turn is unavailable or does not match its prepared binding');
+
+// Snapshot only plain host data. The two minted bindings retain object identity;
+// everything else is detached before assembly, without executing accessors.
+function snapshotPromptInput(input:PromptInput):PromptInput {
+  let remaining=16_384;
+  const copy=(value:unknown,depth:number):unknown=>{
+    if(--remaining<0||depth>32)throw unavailableTurn();
+    if(value===null||value===undefined||typeof value==='string'||typeof value==='boolean')return value;
+    if(typeof value==='number'&&Number.isFinite(value))return value;
+    if(!value||typeof value!=='object'||types.isProxy(value))throw unavailableTurn();
+    if(Array.isArray(value)){
+      if(Object.getPrototypeOf(value)!==Array.prototype)throw unavailableTurn();
+      const length=Object.getOwnPropertyDescriptor(value,'length')?.value as unknown;
+      if(!Number.isSafeInteger(length)||(length as number)<0||(length as number)>remaining||Reflect.ownKeys(value).length!==(length as number)+1)throw unavailableTurn();
+      return Array.from({length:length as number},(_,index)=>{const descriptor=Object.getOwnPropertyDescriptor(value,String(index));if(!descriptor||!Object.hasOwn(descriptor,'value'))throw unavailableTurn();return copy(descriptor.value,depth+1);});
+    }
+    const record=turnRecord(value);if(!record||Object.keys(record).length>remaining)throw unavailableTurn();
+    const result:Record<string,unknown>=Object.create(null) as Record<string,unknown>;
+    for(const [key,item]of Object.entries(record))result[key]=copy(item,depth+1);
+    return result;
+  };
+  const record=turnRecord(input);if(!record)throw unavailableTurn();
+  const snapshot:Record<string,unknown>=Object.create(null) as Record<string,unknown>;
+  for(const [key,value]of Object.entries(record))snapshot[key]=key==='preparedTurnBinding'||key==='preparedVisualContext'?value:copy(value,0);
+  return snapshot as PromptInput;
+}
+function freezeTurn<T>(value:T):T {
+  if(value&&typeof value==='object'){for(const item of Object.values(value))freezeTurn(item);Object.freeze(value);}
+  return value;
+}
+
+/** Call once after world preparation; this never waits for or refreshes visual input. */
+export function finalizePreparedTurn(input:PromptInput,current:()=>boolean):FinalizedTurn {
+  if(!currentTurn(current))throw unavailableTurn();
+  const snapshot=snapshotPromptInput(input),request=buildCanonicalPrompt(snapshot),binding=snapshot.preparedTurnBinding??null,visual=snapshot.preparedVisualContext;
+  const expected:Record<string,string|undefined>={runtime:snapshot.runtimeSelfContext?.sourceRevision,persona:snapshot.profileProjection?.sourceRevision,relationship:snapshot.preparedRelationshipContext?.relationshipRevision,configuration:snapshot.preparedRelationshipContext?.configurationRevision};
+  if(binding){
+    for(const [key,revision]of Object.entries(expected))if(Object.hasOwn(binding.sourceRevisions,key)&&binding.sourceRevisions[key]!==revision)throw unavailableTurn();
+    // Availability can be pinned even when restraint/budget omits scene text.
+    if(visual&&Object.hasOwn(binding.sourceRevisions,'visual')&&binding.sourceRevisions.visual!==String(visual.sourceRevision))throw unavailableTurn();
+  }
+  const inventory:Record<string,string>=Object.create(null) as Record<string,string>;
+  for(const [key,revision]of Object.entries(binding?.sourceRevisions??{}))inventory[`seed:${key}`]=revision;
+  for(const section of request.manifest.sections)inventory[`section:${section.kind}`]=section.sourceRevision;
+  const world=request.sections[5]!,capability=request.sections[6]!;
+  inventory.world=snapshot.preparedWorldContext?world.sourceRevision:`content-sha256:${world.contentDigest}`;
+  // Content identities describe included text, never provider revision or authority.
+  inventory.capability=`content-sha256:${capability.contentDigest}`;
+  if(snapshot.experienceSelection){const {id,topic,statement,nextStep}=snapshot.experienceSelection;inventory.experience=`content-sha256:${digest(JSON.stringify({id,topic,statement,nextStep}))}`;}
+  const visualCurrent=()=>{if(visual)visualConversationContent(visual,request.scope,binding!.conversation);return true;};
+  const deadline=Date.parse(request.deadlineAt),remaining=deadline-Date.now(),monotonicDeadline=performance.now()+remaining;
+  const beforeDeadline=()=>Number.isFinite(deadline)&&Date.now()<deadline&&performance.now()<monotonicDeadline;
+  const stillCurrent=()=>beforeDeadline()&&currentTurn(current)&&currentTurn(visualCurrent)&&beforeDeadline();
+  if(!stillCurrent())throw unavailableTurn();
+  freezeTurn(request);
+  const turn:FinalizedTurn=Object.freeze({binding,sourceRevisions:Object.freeze(inventory),sections:request.manifest.sections});
+  finalizedTurns.set(turn,{request,current:stillCurrent,retired:false});
+  return turn;
+}
+
+/** Use the same request for inspection and immediately before provider admission. */
+export function requestForFinalizedTurn(turn:FinalizedTurn,expectedBinding:PreparedTurnBinding|undefined,current:()=>boolean):InferenceRequest {
+  const entry=finalizedTurns.get(turn);
+  if(!entry||turn.binding!==(expectedBinding??null))throw unavailableTurn();
+  if(entry.retired||!currentTurn(entry.current)||!currentTurn(current)||!currentTurn(entry.current)){entry.retired=true;throw unavailableTurn();}
+  return entry.request;
+}
