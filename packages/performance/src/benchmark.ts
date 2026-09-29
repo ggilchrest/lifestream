@@ -169,3 +169,105 @@ export function benchmarkDiscoveryLookup(environment: DiscoveryLookupEnvironment
     unmeasured:['model output','first useful token','first audible sample','barge-in stop','audio continuity','GPU/provider pressure','Human quality'],
     claimBoundary:'Synthetic local SQLite and prepared-input measurements only. Connection-cold is not OS-cache-cold or model-cold. No provider, physical or Human qualification.',raw:structuredClone(runs)};
 }
+
+export const visualPerformanceConditions = ['disabled','warm','sceneChanging','saturated','hung','optionalMemory'] as const;
+export type VisualPerformanceCondition = typeof visualPerformanceConditions[number];
+export type VisualPerformanceEnvironment = {
+  hardware:string;os:string;powerMode:string;network:string;sourceRevision:string;
+  speechProviderRevision:string;perceptionProviderRevision:string;configurationDigest:string;clockMappingRevision:string;
+  evidence:'fixture'|'developmentEndpoint'|'physical';seed:number;
+};
+export type VisualPerformanceTrial = {
+  pairId:string;temperature:'warm'|'cold';status:'completed'|'failed'|'timedOut'|'cancelled';
+  turnCommittedAt:number;preparedStartedAt:number|null;preparedCompletedAt:number|null;
+  firstAudioAt:number|null;firstAudioKind:'requestedSpeech'|'acknowledgment'|'none';
+  bargeInDetectedAt:number|null;audibleStoppedAt:number|null;
+  underruns:number;duplicateAudioOwners:number;
+  visualBatches:readonly {batchId:string;admitted:boolean;capturedAt:number;usableAt:number|null;
+    outcome:'usable'|'deferred'|'dropped'|'failed'|'timedOut'|'expired'}[];
+};
+type VisualMetric='preparedRead'|'firstSpokenWord'|'audibleStop';
+type VisualBatchSummary={attempts:number;admitted:number;outcomes:Record<VisualPerformanceTrial['visualBatches'][number]['outcome'],number>;captureToUsable:Distribution|null;lateUsable:number};
+const visualTime=(value:unknown):value is number=>typeof value==='number'&&Number.isFinite(value)&&value>=0;
+const visualId=(value:unknown):value is string=>typeof value==='string'&&value.length>0&&value.length<=256&&value.trim()===value;
+const visualKeys=(value:unknown,keys:readonly string[])=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).sort().join('|')===[...keys].sort().join('|');
+const visualMetric=(trial:VisualPerformanceTrial,metric:VisualMetric):number|null=>{
+  if(trial.status!=='completed')return null;
+  if(metric==='preparedRead')return trial.preparedStartedAt===null||trial.preparedCompletedAt===null?null:trial.preparedCompletedAt-trial.preparedStartedAt;
+  if(metric==='firstSpokenWord')return trial.firstAudioKind!=='requestedSpeech'||trial.firstAudioAt===null?null:trial.firstAudioAt-trial.turnCommittedAt;
+  return trial.bargeInDetectedAt===null||trial.audibleStoppedAt===null?null:trial.audibleStoppedAt-trial.bargeInDetectedAt;
+};
+
+/** Offline evaluator of supplied observations, not a measurement collector.
+ * All attempted turns remain in denominators; cold trials never fill warm pairs.
+ * Caller evidence labels do not authenticate hardware, playback or providers. */
+export function benchmarkVisualConversation(environment:VisualPerformanceEnvironment,runs:Record<VisualPerformanceCondition,readonly VisualPerformanceTrial[]>) {
+  if(!visualKeys(environment,['hardware','os','powerMode','network','sourceRevision','speechProviderRevision','perceptionProviderRevision','configurationDigest','clockMappingRevision','evidence','seed'])||!visualKeys(runs,visualPerformanceConditions))throw new Error('closed visual measurement envelope required');
+  for(const key of ['hardware','os','powerMode','network','sourceRevision','speechProviderRevision','perceptionProviderRevision','configurationDigest','clockMappingRevision'] as const)
+    if(!visualId(environment[key]))throw new Error('complete pinned visual experiment required');
+  if(!/^[a-f0-9]{64}$/u.test(environment.configurationDigest)||!Number.isSafeInteger(environment.seed)||environment.seed<0||environment.seed>0xffffffff||!['fixture','developmentEndpoint','physical'].includes(environment.evidence))throw new Error('invalid visual experiment identity');
+  const gates:{condition:VisualPerformanceCondition;metric:string;status:'pass'|'fail'|'unverified';detail:string}[]=[];
+  const warm={} as Record<VisualPerformanceCondition,VisualPerformanceTrial[]>;
+  const reports={} as Record<VisualPerformanceCondition,{
+    attempts:number;completed:number;failed:number;timedOut:number;cancelled:number;
+    cold:{attempts:number;completed:number;failed:number;timedOut:number;cancelled:number;metrics:Record<VisualMetric,Distribution|null>;visual:VisualBatchSummary};
+    metrics:Record<VisualMetric,Distribution|null>;
+    visual:VisualBatchSummary;
+  }>;
+  const metrics=['preparedRead','firstSpokenWord','audibleStop'] as const;
+  const limits:Record<VisualMetric,readonly [number,number]>={preparedRead:[15,40],firstSpokenWord:[900,1500],audibleStop:[150,250]};
+  const counts=(trials:readonly VisualPerformanceTrial[])=>({attempts:trials.length,completed:trials.filter(t=>t.status==='completed').length,failed:trials.filter(t=>t.status==='failed').length,timedOut:trials.filter(t=>t.status==='timedOut').length,cancelled:trials.filter(t=>t.status==='cancelled').length});
+  const summarize=(trials:readonly VisualPerformanceTrial[])=>Object.fromEntries(metrics.map(metric=>[metric,distribution(trials.map(t=>visualMetric(t,metric)).filter((v):v is number=>v!==null))])) as Record<VisualMetric,Distribution|null>;
+  const visualSummary=(trials:readonly VisualPerformanceTrial[]):VisualBatchSummary=>{
+    const batches=trials.flatMap(t=>t.visualBatches),usable=batches.filter(b=>b.outcome==='usable');
+    const outcomes={usable:0,deferred:0,dropped:0,failed:0,timedOut:0,expired:0};for(const b of batches)outcomes[b.outcome]++;
+    return {attempts:batches.length,admitted:batches.filter(b=>b.admitted).length,outcomes,captureToUsable:distribution(usable.map(b=>b.usableAt!-b.capturedAt)),lateUsable:usable.filter(b=>b.usableAt!-b.capturedAt>6000).length};
+  };
+  for(const condition of visualPerformanceConditions){
+    const trials=runs[condition];if(!Array.isArray(trials)||trials.length>5000)throw new Error('bounded trials required for every visual condition');
+    const ids=new Set<string>(),batchIds=new Set<string>();
+    for(const trial of trials){
+      if(!visualKeys(trial,['pairId','temperature','status','turnCommittedAt','preparedStartedAt','preparedCompletedAt','firstAudioAt','firstAudioKind','bargeInDetectedAt','audibleStoppedAt','underruns','duplicateAudioOwners','visualBatches']))throw new Error('closed visual trial required');
+      if(!trial||!visualId(trial.pairId)||!['warm','cold'].includes(trial.temperature)||!['completed','failed','timedOut','cancelled'].includes(trial.status)||ids.has(trial.temperature+':'+trial.pairId))throw new Error('unique explicit visual trial identities required');
+      ids.add(trial.temperature+':'+trial.pairId);
+      if(!visualTime(trial.turnCommittedAt)||![trial.preparedStartedAt,trial.preparedCompletedAt,trial.firstAudioAt,trial.bargeInDetectedAt,trial.audibleStoppedAt].every(v=>v===null||visualTime(v)))throw new Error('finite visual performance times required');
+      if((trial.preparedStartedAt===null)!==(trial.preparedCompletedAt===null)||trial.preparedStartedAt!==null&&(trial.preparedStartedAt<trial.turnCommittedAt||trial.preparedCompletedAt!<trial.preparedStartedAt))throw new Error('invalid prepared-read milestones');
+      if(!['requestedSpeech','acknowledgment','none'].includes(trial.firstAudioKind)||(trial.firstAudioAt===null)!==(trial.firstAudioKind==='none')||trial.firstAudioAt!==null&&trial.firstAudioAt<trial.turnCommittedAt)throw new Error('invalid audio evidence');
+      if(trial.firstAudioKind==='requestedSpeech'&&trial.firstAudioAt!==null&&trial.preparedCompletedAt!==null&&trial.firstAudioAt<trial.preparedCompletedAt)throw new Error('speech precedes prepared context');
+      if((trial.bargeInDetectedAt===null)!==(trial.audibleStoppedAt===null)||trial.bargeInDetectedAt!==null&&(trial.firstAudioKind!=='requestedSpeech'||trial.firstAudioAt===null||trial.bargeInDetectedAt<trial.firstAudioAt||trial.audibleStoppedAt!<trial.bargeInDetectedAt))throw new Error('invalid audible-stop milestones');
+      if(![trial.underruns,trial.duplicateAudioOwners].every(v=>Number.isSafeInteger(v)&&v>=0)||!Array.isArray(trial.visualBatches)||trial.visualBatches.length>16)throw new Error('invalid visual resource observations');
+      for(const batch of trial.visualBatches){
+        if(!visualKeys(batch,['batchId','admitted','capturedAt','usableAt','outcome']))throw new Error('closed visual batch required');
+        if(!batch||!visualId(batch.batchId)||batchIds.has(batch.batchId)||typeof batch.admitted!=='boolean'||!visualTime(batch.capturedAt)||!(batch.usableAt===null||visualTime(batch.usableAt))||!['usable','deferred','dropped','failed','timedOut','expired'].includes(batch.outcome))throw new Error('invalid or duplicate visual batch');
+        batchIds.add(batch.batchId);
+        if((batch.outcome==='usable')!==(batch.usableAt!==null)||batch.usableAt!==null&&(!batch.admitted||batch.usableAt<batch.capturedAt))throw new Error('invalid usable-context milestone');
+      }
+      if(condition==='disabled'&&trial.visualBatches.length)throw new Error('disabled baseline cannot perform visual work');
+    }
+    warm[condition]=trials.filter(t=>t.temperature==='warm');const cold=trials.filter(t=>t.temperature==='cold'),sample=warm[condition],summary=summarize(sample);
+    const visual=visualSummary(sample),coldVisual=visualSummary(cold),capture=visual.captureToUsable;
+    reports[condition]={...counts(sample),cold:{...counts(cold),metrics:summarize(cold),visual:coldVisual},metrics:summary,visual};
+    for(const metric of metrics){const report=summary[metric],complete=report!==null&&report.count===sample.length&&report.count>=200;
+      gates.push({condition,metric,status:report&&(report.p50>limits[metric][0]||report.p95>limits[metric][1])?'fail':complete?'pass':'unverified',detail:`${report?.count??0}/${sample.length} warm attempts measured; require 200 completed observations and p50/p95 <= ${limits[metric].join('/')} ms`});}
+    gates.push({condition,metric:'foregroundCompletion',status:sample.some(t=>t.status==='failed'||t.status==='timedOut')?'fail':sample.length<200||sample.some(t=>t.status!=='completed')?'unverified':'pass',detail:'All warm foreground attempts retained; cancellation does not become successful completion.'});
+    gates.push({condition,metric:'audioContinuity',status:sample.some(t=>t.underruns>0||t.duplicateAudioOwners>0)?'fail':summary.firstSpokenWord?.count===sample.length&&sample.length>=200?'pass':'unverified',detail:'Requested speech required; no underruns or duplicate audio owners.'});
+    if(condition!=='disabled'){
+      gates.push({condition,metric:'captureToUsable',status:capture&&capture.p95>3000?'fail':capture?'pass':'unverified',detail:`${visual.outcomes.usable}/${visual.attempts} warm batches usable; admitted ${visual.admitted}. Deferred/dropped/failed/timeout/expired counts are separate; p95 <= 3000 ms.`});
+      gates.push({condition,metric:'captureFreshness',status:visual.lateUsable+coldVisual.lateUsable?'fail':visual.attempts+coldVisual.attempts?'pass':'unverified',detail:'No warm or cold context declared usable beyond its 6000 ms capture bound, regardless of percentile.'});
+    }
+  }
+  const baseline=new Map(warm.disabled.map(t=>[t.pairId,t]));
+  const comparisons=[] as {condition:VisualPerformanceCondition;matchedAttempts:number;completedSpeechPairs:number;p95Delta:number|null;pairedDelta:Distribution|null;uncertainty:ReturnType<typeof pairedP95Interval>|null}[];
+  for(const condition of visualPerformanceConditions.filter(c=>c!=='disabled')){
+    const trials=warm[condition],ids=new Set(trials.map(t=>t.pairId));
+    const completeIds=baseline.size===ids.size&&[...baseline.keys()].every(id=>ids.has(id));
+    const pairs:([number,number])[]=[];let matchedAttempts=0;
+    for(const trial of trials){const base=baseline.get(trial.pairId);if(!base)continue;matchedAttempts++;const a=visualMetric(base,'firstSpokenWord'),b=visualMetric(trial,'firstSpokenWord');if(a!==null&&b!==null)pairs.push([a,b]);}
+    const p95Delta=pairs.length?percentile(pairs.map(p=>p[1]),95)-percentile(pairs.map(p=>p[0]),95):null;
+    const complete=completeIds&&pairs.length>=200&&pairs.length===baseline.size;
+    const uncertainty=complete?pairedP95Interval(pairs,environment.seed):null;
+    comparisons.push({condition,matchedAttempts,completedSpeechPairs:pairs.length,p95Delta,pairedDelta:distribution(pairs.map(p=>p[1]-p[0])),uncertainty});
+    gates.push({condition,metric:'pairedSpeechOverhead',status:p95Delta!==null&&p95Delta>50?'fail':!complete||!uncertainty||uncertainty.upper>50?'unverified':'pass',detail:`${pairs.length}/${baseline.size} complete paired warm speech turns; same pair set required, added p95 <= 50 ms. Missing and failed attempts cannot be pooled out.`});
+  }
+  return {environment:structuredClone(environment),percentileMethod:'nearest-rank',reports,comparisons,gates,status:gates.some(g=>g.status==='fail')?'failedObjectives':gates.some(g=>g.status==='unverified')?'incompleteEvidence':'passedMeasuredObjectives',qualification:environment.evidence==='fixture'?'fixtureOnly':'suppliedMeasurementsOnly',claimBoundary:'Offline scoring only. No provider, endpoint, physical or Human acceptance is established by a supplied evidence label. Cold starts and all failed/timeout/cancelled attempts remain separate and retained.',raw:structuredClone(runs)};
+}

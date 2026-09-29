@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,readFile,writeFile,stat,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {evaluateVisualPerformanceFile} from './qualify-visual-performance.mjs';
+
+const conditions=['disabled','warm','sceneChanging','saturated','hung','optionalMemory'];
+const input=()=>({environment:{hardware:'fixture',os:'fixture',powerMode:'fixture',network:'fixture',sourceRevision:'fixture-source',speechProviderRevision:'fixture-speech',perceptionProviderRevision:'fixture-visual',configurationDigest:'a'.repeat(64),clockMappingRevision:'fixture-clock',evidence:'fixture',seed:90},runs:Object.fromEntries(conditions.map(c=>[c,[]]))});
+test('offline file evaluator preserves missing evidence, private permissions and source/input hashes',async t=>{const dir=await mkdtemp(join(tmpdir(),'visual-score-test-'));t.after(()=>rm(dir,{recursive:true,force:true}));const path=join(dir,'input.json'),output=join(dir,'result.json');await writeFile(path,JSON.stringify(input()));const result=await evaluateVisualPerformanceFile(path,output),report=JSON.parse(await readFile(output,'utf8'));assert.equal(result.status,'incompleteEvidence');assert.equal(result.qualification,'fixtureOnly');assert.equal(result.claimsRuntimeAcceptance,false);assert.match(report.inputSha256,/^[a-f0-9]{64}$/);assert.equal(report.evaluatorSources.length,2);assert.equal((await stat(output)).mode&0o777,0o600);await assert.rejects(evaluateVisualPerformanceFile(path,output));assert.equal(JSON.parse(await readFile(output,'utf8')).inputSha256,report.inputSha256);});
+test('reports cannot be written into a connected repository',async t=>{const dir=await mkdtemp(join(tmpdir(),'visual-score-boundary-'));t.after(()=>rm(dir,{recursive:true,force:true}));const path=join(dir,'input.json');await writeFile(path,JSON.stringify(input()));await assert.rejects(evaluateVisualPerformanceFile(path,fileURLToPath(new URL('../visual-performance-test-output.json',import.meta.url))),/outside/);});
+test('malformed and oversized inputs do not produce a result',async t=>{const dir=await mkdtemp(join(tmpdir(),'visual-score-invalid-'));t.after(()=>rm(dir,{recursive:true,force:true}));const path=join(dir,'input.json'),output=join(dir,'result.json');for(const value of ['not json',JSON.stringify({...input(),unrestrictedText:'do not retain'})]){await writeFile(path,value);await assert.rejects(evaluateVisualPerformanceFile(path,output));await assert.rejects(stat(output));}await writeFile(path,Buffer.alloc(32*1024*1024+1));await assert.rejects(evaluateVisualPerformanceFile(path,output),/exceeds/);await assert.rejects(stat(output));});
