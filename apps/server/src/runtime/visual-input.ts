@@ -1,5 +1,5 @@
 import {isDeepStrictEqual} from 'node:util';
-import {VisualObservationStore,type PreparedVisualContext} from '@lifestream/runtime/perception/observation';
+import {VisualObservationStore,unavailableVisualSelection,type PreparedVisualContext,type VisualContextSelection} from '@lifestream/runtime/perception/observation';
 import {VisualAdmission, VisualAdmissionError, type CaptureAuthority, type VisualAdmissionProvenance} from '@lifestream/runtime/perception/admission';
 import type {AudienceCoordinator,AudienceIdentity,CameraAudienceBinding} from './audience.ts';
 import {validateVisualInput,type VisualCapabilitiesRequest,type VisualCameraRequest,type VisualBatchRequest} from '@lifestream/contracts/visual-input';
@@ -288,18 +288,24 @@ export class VisualInputHost {
   }
 
   prepareContext(actor:VisualActor,input:Omit<Parameters<VisualObservationStore['prepare']>[0],'scope'|'leaseId'>&{expectedConversationId:string;expectedRelationshipId:string|null}):PreparedVisualContext|null {
+    return this.selectContext(actor,input).view;
+  }
+  selectContext(actor:VisualActor,input:Omit<Parameters<VisualObservationStore['prepare']>[0],'scope'|'leaseId'>&{expectedConversationId:string;expectedRelationshipId:string|null}):VisualContextSelection {
     const scope=this.scope(actor),state=this.state(actor);
-    if (!scope || scope.conversationId!==input.expectedConversationId || scope.relationshipId!==input.expectedRelationshipId || !state.captureActive || !state.currentObservationUsable || !state.leaseId) return null;
-    const view=this.observations.prepare({...input,scope,leaseId:state.leaseId});
+    if (!scope || scope.conversationId!==input.expectedConversationId || scope.relationshipId!==input.expectedRelationshipId) return unavailableVisualSelection('scope_unavailable');
+    if (state.reason==='provider_unavailable'||state.reason==='unconfigured') return unavailableVisualSelection('provider_unavailable');
+    if (!state.captureActive || !state.leaseId) return unavailableVisualSelection('capture_unavailable');
+    const selection=this.observations.select({...input,scope,leaseId:state.leaseId}),view=selection.view;
+    if(view&&!state.currentObservationUsable)return unavailableVisualSelection('withdrawn');
     if (view && !this.viewExpiries.has(view.expiresAtMs)) {
       // One deadline per capture time, not per request. This also fences queued
       // endpoint playback after synthesis has ended, with bounded timer state.
-      if (this.viewExpiries.size>=32) return null;
+      if (this.viewExpiries.size>=32) return unavailableVisualSelection('expiry_capacity');
       const timer=setTimeout(()=>{this.viewExpiries.delete(view.expiresAtMs);this.onContextChanged();},
         Math.max(1,Math.ceil(view.expiresAtMs-(this.options.utcMs ?? Date.now)())));
       timer.unref();this.viewExpiries.set(view.expiresAtMs,timer);
     }
-    return view;
+    return selection;
   }
   contextCurrent(view:PreparedVisualContext) { return this.observations.isCurrent(view); }
   markContextUsed(view:PreparedVisualContext) { this.observations.markUsed(view); }

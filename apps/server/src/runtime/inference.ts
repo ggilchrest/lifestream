@@ -1,5 +1,5 @@
 import type {ConversationPort} from './conversation.ts';
-import type {PreparedVisualContext} from '@lifestream/runtime/perception/observation';
+import type {PreparedVisualContext,VisualContextSelection} from '@lifestream/runtime/perception/observation';
 import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import { buildCanonicalPrompt, finalizePreparedTurn, requestForFinalizedTurn, type FinalizedTurn, type PreparedTurnBinding, type RuntimeSelfContext, type AssistantPersonaProjection } from "@lifestream/runtime/inference/prompt";
@@ -8,7 +8,7 @@ import type { PreparedWorldContext, WorldContextPreparation } from "@lifestream/
 
 type Body = Record<string, unknown>;
 export type InferenceRuntimeIdentity = { profile: string; implementation: string; model: string; revision: string; fixture: boolean };
-export type HostRuntimeInput = { preparedTurnBinding?:PreparedTurnBinding; preparedVisualContext?:PreparedVisualContext; onCompleted?:(interactionId:string)=>void; experienceSelection?:{id:string;topic:string;statement:string;nextStep:string}; prepareWorld?: WorldContextPreparation; preparedWorldContext?: PreparedWorldContext; admitWorld?: () => boolean; capabilityContext?: string; conversation?:ConversationPort; onInferenceRequest?: (request:InferenceRequest)=>void; inspection?: { fullPromptPreview: boolean }; endpointId?: string | null; assistantId: string; runtimeSelfContext: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection; preparedRelationshipContext?: NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]>; isCurrent: () => boolean };
+export type HostRuntimeInput = { visualSelection?:VisualContextSelection; preparedTurnBinding?:PreparedTurnBinding; preparedVisualContext?:PreparedVisualContext; onCompleted?:(interactionId:string)=>void; experienceSelection?:{id:string;topic:string;statement:string;nextStep:string}; prepareWorld?: WorldContextPreparation; preparedWorldContext?: PreparedWorldContext; admitWorld?: () => boolean; capabilityContext?: string; conversation?:ConversationPort; onInferenceRequest?: (request:InferenceRequest)=>void; inspection?: { fullPromptPreview: boolean }; endpointId?: string | null; assistantId: string; runtimeSelfContext: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection; preparedRelationshipContext?: NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]>; isCurrent: () => boolean };
 export async function prepareHostWorld(input: HostRuntimeInput | undefined, signal: AbortSignal): Promise<void> {
   if (!input?.prepareWorld) return;
   if (!input.isCurrent() || signal.aborted) throw new Error("Runtime world scope is unavailable");
@@ -24,6 +24,22 @@ export async function prepareHostWorld(input: HostRuntimeInput | undefined, sign
   } finally { clearTimeout(timer); combined.removeEventListener("abort", onAbort); }
 }
 const writeEvent = (response: ServerResponse, event: string, data: unknown) => response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+function visualInspection(input:HostRuntimeInput,request:InferenceRequest) {
+  const selection=input.visualSelection;if(!selection)return null;
+  const view=selection.view,section=request.sections.find(item=>item.kind==='conversation');
+  // Inspection describes the actual finalized prompt, never a newer scene.
+  if(view!==(input.preparedVisualContext??null)||view&&view.conversationSectionDigest!==section?.contentDigest)return null;
+  return {
+    reason:selection.reason,considered:selection.considered,selected:view?.observations.length??0,
+    selectedBytes:view?.selectedTextBytes??0,omissions:selection.omissions,
+    prepared:view?{viewId:view.viewId,revision:view.revision,invalidationKey:view.invalidationKey,sourceRevision:view.sourceRevision,requestId:view.requestId,
+      observationIds:view.observations.map(item=>item.observationId),frameIds:[...new Set(view.observations.flatMap(item=>item.frameIds))],
+      capturedAtEarliestMs:view.capturedAtEarliestMs,capturedAtLatestMs:view.capturedAtLatestMs,selectedAtMs:view.selectedAtMs,expiresAtMs:view.expiresAtMs,
+      sourceBindingRef:view.scope.sourceBindingRef,captureConfigurationRevision:view.scope.captureConfigurationRevision,audienceRevision:view.scope.audienceRevision,provider:view.provider,
+      conversationSectionDigest:section!.contentDigest}:null,
+    limitation:'Selection at preparation time only; not proof of generated mention, delivered output, image accuracy or retained memory. No scene text or raw media is included.'
+  };
+}
 
 export async function streamMessage(response: ServerResponse, provider: InferenceProvider | undefined, body: Body, sessionId: string, aborted: AbortSignal, providerIdentity?: InferenceRuntimeIdentity, runtimeSelfContext?: RuntimeSelfContext, hostInput?: HostRuntimeInput): Promise<void> {
   if (!provider) { response.writeHead(503, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "inference_unavailable", message: "inference provider is unavailable" })); return; }
@@ -42,7 +58,7 @@ export async function streamMessage(response: ServerResponse, provider: Inferenc
   response.writeHead(200, { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", connection: "keep-alive" }); writeEvent(response, "interaction.started", { interactionId, sessionId, assistantId, ...(providerIdentity ? { provider: providerIdentity } : {}) }); writeEvent(response, "input.manifest", request.manifest);
   if (hostInput?.inspection && hostInput.isCurrent()) {
     const view=hostInput.preparedRelationshipContext as import("@lifestream/runtime/context").CompiledRelationshipContext | undefined;
-    writeEvent(response,"input.inspection",{scope:request.scope,compilerRevision:view?.compilerRevision??null,representationRevision:view?.representationRevision??null,configurationRevision:view?.configurationRevision??null,sourceRevisions:view?.sourceRevisions??[],selections:view?.selections??[],omissions:view?.omissions??[],budget:view?.budget??null,limitations:[...(view?.limitations??[]),"Inclusion and observed reply are not causal proof; no hidden reasoning is exposed."],retention:"this response only; no server inspection archive"});
+    writeEvent(response,"input.inspection",{scope:request.scope,compilerRevision:view?.compilerRevision??null,representationRevision:view?.representationRevision??null,configurationRevision:view?.configurationRevision??null,sourceRevisions:view?.sourceRevisions??[],selections:view?.selections??[],omissions:view?.omissions??[],budget:view?.budget??null,visual:visualInspection(hostInput,request),limitations:[...(view?.limitations??[]),"Inclusion and observed reply are not causal proof; no hidden reasoning is exposed."],retention:"this response only; no server inspection archive"});
     if(hostInput.inspection.fullPromptPreview)writeEvent(response,"input.prompt-preview",{sections:request.sections,expiresAt:new Date(Date.now()+30000).toISOString(),retention:"volatile explicit preview; clear on scope change or after 30 seconds"});
   }
   const requestedCapability = body.readOnlyCapability && typeof body.readOnlyCapability === "object" && !Array.isArray(body.readOnlyCapability) ? body.readOnlyCapability as Record<string, unknown> : undefined;

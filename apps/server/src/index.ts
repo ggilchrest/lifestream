@@ -69,6 +69,7 @@ import { readSessionEndpoint, reviseSessionEndpoint } from "./runtime/session-co
 import {VisualInputHost,VisualInputRequestError,VisualUploadError,parseVisualCapabilities,parseVisualCamera,parseVisualBatch,type VisualInputOptions,type VisualActor} from './runtime/visual-input.ts';
 import {readVisualMultipart,VisualMultipartError} from './runtime/visual-multipart.ts';
 import {VisualAdmissionError} from '@lifestream/runtime/perception/admission';
+import {unavailableVisualSelection} from '@lifestream/runtime/perception/observation';
 import {validateVisualInput,visualInputWireProfile,visualInputSchemaVersion} from '@lifestream/contracts/visual-input';
 import { inspectSessionDefinition, reviewSessionDefinition, SessionDefinitionError } from "./runtime/session-definition.ts";
 import {inspectEndpointConfiguration} from "./runtime/endpoint-configuration.ts";
@@ -1609,13 +1610,14 @@ export class LifestreamServer {
           ...(prepared.profileProjection?{persona:prepared.profileProjection.sourceRevision}:{}),
           ...(prepared.preparedRelationshipContext?{relationship:prepared.preparedRelationshipContext.relationshipRevision,configuration:prepared.preparedRelationshipContext.configurationRevision}:{}),
           ...(visualAvailability?{visual:String(visualAvailability.sourceRevision)}:{})}}) : undefined;
-    const preparedVisualContext=preparedTurnBinding && visualAllowed
-      ? this.visualInput.prepareContext(visualActor,{...visualBinding,
+    const visualSelection=preparedTurnBinding && visualAllowed
+      ? this.visualInput.selectContext(visualActor,{...visualBinding,
         viewId:preparedTurnBinding.viewId,revision:preparedTurnBinding.revision,invalidationKey:preparedTurnBinding.invalidationKey,conversation:preparedTurnBinding.conversation,
         explicitQuestion:/\b(?:can you see|do you see|what (?:do you see|am I (?:holding|wearing)|is (?:this|visible))|look at|camera|in (?:the|this) (?:image|picture|frame))\b/iu.test(question),
-        allowAside:question.trim().length>0}) : null;
+        allowAside:question.trim().length>0}) : unavailableVisualSelection('scope_unavailable');
+    const preparedVisualContext=visualSelection.view;
     const conversation=dialogue?{read:()=>conversationText!,remember:dialogue.remember}:undefined;
-    const result: HostRuntimeInput = { ...prepared,...(preparedTurnBinding?{preparedTurnBinding}:{}),...(preparedVisualContext?{preparedVisualContext}:{}),...(learning?.item?{experienceSelection:{id:learning.item.id,topic:learning.item.topic,statement:learning.item.statement,nextStep:learning.item.nextStep}}:{}),...(experienceScope?{onCompleted:(interactionId:string)=>{this.experience.completed(experienceScope,interactionId);if(learning?.item&&learning.id)this.experience.observe(experienceScope,learning.id);}}:{}),...(conversation?{conversation}:{}), onInferenceRequest:request=>{const memory=request.sections.find(section=>section.kind==='preparedMemory')?.content??'';this.admin.noteDiscoveryRequest(assistantId,relationshipId,context.principalId,context.sessionId,(prepared.preparedRelationshipContext?.sourceRevisions??[]).filter(id=>id.startsWith('discovery-candidate:')&&memory.includes(id)));}, isCurrent: () => { try { return (authorizationCurrent ? authorizationCurrent() : Date.parse(context.expiresAt) > Date.now()) && !["draining", "stopped"].includes(this.state) && fingerprint === boundary() && (!experienceScope||learning?.boundary===this.experience.boundary(experienceScope)) && (!prepared.preparedRelationshipContext || Date.parse(prepared.preparedRelationshipContext.freshUntil) > Date.now()); } catch { return false; } } };
+    const result: HostRuntimeInput = { ...prepared,visualSelection,...(preparedTurnBinding?{preparedTurnBinding}:{}),...(preparedVisualContext?{preparedVisualContext}:{}),...(learning?.item?{experienceSelection:{id:learning.item.id,topic:learning.item.topic,statement:learning.item.statement,nextStep:learning.item.nextStep}}:{}),...(experienceScope?{onCompleted:(interactionId:string)=>{this.experience.completed(experienceScope,interactionId);if(learning?.item&&learning.id)this.experience.observe(experienceScope,learning.id);}}:{}),...(conversation?{conversation}:{}), onInferenceRequest:request=>{const memory=request.sections.find(section=>section.kind==='preparedMemory')?.content??'';this.admin.noteDiscoveryRequest(assistantId,relationshipId,context.principalId,context.sessionId,(prepared.preparedRelationshipContext?.sourceRevisions??[]).filter(id=>id.startsWith('discovery-candidate:')&&memory.includes(id)));}, isCurrent: () => { try { return (authorizationCurrent ? authorizationCurrent() : Date.parse(context.expiresAt) > Date.now()) && !["draining", "stopped"].includes(this.state) && fingerprint === boundary() && (!experienceScope||learning?.boundary===this.experience.boundary(experienceScope)) && (!prepared.preparedRelationshipContext || Date.parse(prepared.preparedRelationshipContext.freshUntil) > Date.now()); } catch { return false; } } };
     if (preparedVisualContext) {
       const ownerCurrent=result.isCurrent,completed=result.onCompleted;
       result.isCurrent=()=>ownerCurrent() && this.visualInput.contextCurrent(preparedVisualContext);
@@ -1655,7 +1657,7 @@ export class LifestreamServer {
     if (!this.storageReady || ["draining", "stopped"].includes(this.state) || this.providers.providers.inference?.status !== "healthy") return json(response, 503, { code: "inference_unavailable", message: "runtime inference is unavailable" });
     const context = this.requestContext(request, false); if (!context) return json(response, 401, { code: "authentication_required", message: "authentication required" });
     const body = asObject(await readBody(request)); if (!body) return json(response, 422, { code: "invalid_request", message: "message body must be an object" });
-    delete body.preparedTurnBinding; delete body.preparedVisualContext; delete body.preparedRelationshipContext; delete body.profileProjection; delete body.runtimeSelfContext; delete body.memory; delete body.world; delete body.preparedWorldContext; delete body.capabilities;
+    delete body.preparedTurnBinding; delete body.preparedVisualContext; delete body.visualSelection; delete body.preparedRelationshipContext; delete body.profileProjection; delete body.runtimeSelfContext; delete body.memory; delete body.world; delete body.preparedWorldContext; delete body.capabilities;
     // Typed text does not establish a negotiated physical/logical endpoint.
     body.endpointId = null;
     let prepared: HostRuntimeInput; try { prepared = this.prepareRuntimeInput(body, context, "inactive", "none", () => this.runtimeAuthorized(request, body.assistantId)); } catch { return json(response, 404, { code: "relationship_not_found", message: "relationship context is unavailable for this authenticated subject" }); }

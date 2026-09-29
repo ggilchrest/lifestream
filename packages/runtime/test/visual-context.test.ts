@@ -11,9 +11,47 @@ function harness(){
   const store=new VisualObservationStore({now:()=>now,current:(candidate,id)=>current&&id===lease&&candidate.audienceRevision===1});
   const batch=(sequence=1,appearance='A small striped animal is visible beside a chair.'):VisualObservationBatch=>({scope:{...scope},leaseId:lease,sequence,requestId:`request-${sequence}`,capturedAtEarliestMs:now-100,capturedAtLatestMs:now-50,receivedAtMs:now-30,interpretedAtMs:now,provider:{id:'synthetic-perception',version:'1'},observations:[{observationId:`observation-${sequence}`,frameIds:[`frame-${sequence}`],appearance,inference:'It may be a cat.',confidence:null,limitations:['Synthetic wiring fixture; not interpreted pixels.']}]});
   const binding=createPreparedTurnBinding({viewId:'view',revision:1,invalidationKey:'boundary',scope:{assistantId:scope.assistantId,principalId:scope.principalId,relationshipId:scope.relationshipId,conversationId:scope.conversationId,sessionId:scope.sessionId,endpointId:scope.endpointId},conversation:'[]',sourceRevisions:{runtimeSelfContext:'fixture:1',profile:'fixture:1'}});
-  const prepare=(options={})=>store.prepare({scope:{...scope},leaseId:lease,viewId:'view',revision:1,invalidationKey:'boundary',conversation:'[]',explicitQuestion:false,allowAside:true,...options});
-  return {store,batch,binding,prepare,advance:(ms:number)=>{now+=ms;},withdraw:()=>{current=false;},replaceLease:()=>{lease='successor';}};
+  const select=(options={})=>store.select({scope:{...scope},leaseId:lease,viewId:'view',revision:1,invalidationKey:'boundary',conversation:'[]',explicitQuestion:false,allowAside:true,...options});
+  const prepare=(options={})=>select(options).view;
+  return {store,batch,binding,prepare,select,advance:(ms:number)=>{now+=ms;},withdraw:()=>{current=false;},replaceLease:()=>{lease='successor';}};
 }
+
+test('visual selection explains omission without re-reading a scene or exposing withheld content',()=>{
+  const h=harness();assert.equal(h.select().reason,'no_observations');h.store.publish(h.batch());
+  assert.equal(h.select({conversation:'x'.repeat(visualContextLimits.conversationBytes)}).reason,'budget');
+  const unengaged=h.select({allowAside:false});assert.equal(unengaged.reason,'unengaged');assert.equal(unengaged.omissions[0]?.observationId,'observation-1');assert.doesNotMatch(JSON.stringify(unengaged),/striped animal/);
+  const selected=h.select();assert.equal(selected.reason,'selected');assert.ok(selected.view);assert.equal(selected.considered,1);assert.ok(Object.isFrozen(selected)&&Object.isFrozen(selected.omissions));
+  h.store.markUsed(selected.view);const limited=h.select();assert.equal(limited.reason,'aside_interval');assert.equal(limited.view,null);assert.equal(h.select({explicitQuestion:true}).reason,'selected');
+  h.advance(30_001);h.store.publish(h.batch(2));assert.equal(h.select().reason,'unchanged_scene');
+  h.advance(5_900);assert.equal(h.select({explicitQuestion:true}).reason,'expired');
+  h.store.clear();
+});
+
+test('selection identifies every budget or item-count omission within the bounded observation inventory',()=>{
+  const h=harness(),batch=h.batch(),observations=Array.from({length:12},(_,i)=>({...batch.observations[0]!,observationId:`item-${i}`,appearance:i===0?'large '.repeat(600):`Item ${i}`,inference:null,limitations:[]}));
+  assert.equal(h.store.publish({...batch,observations}),true);
+  const result=h.select({explicitQuestion:true});assert.equal(result.reason,'selected');assert.ok(result.view);assert.equal(result.considered,12);assert.equal(result.view.observations.length,8);assert.equal(result.omissions.length,4);
+  assert.deepEqual(result.omissions[0],{observationId:'item-0',reason:'budget'});assert.ok(result.omissions.slice(1).every(item=>item.reason==='item_limit'));
+  assert.equal(new Set([...result.view.observations.map(item=>item.observationId),...result.omissions.map(item=>item.observationId)]).size,12);
+  assert.throws(()=>{(result.omissions as Array<unknown>).push({});},TypeError);h.store.clear();
+});
+
+test('scope and authority failure diagnostics disclose no observation identifiers or scene data',()=>{
+  const h=harness();h.store.publish(h.batch());
+  const mismatch=h.select({scope:{...scope,assistantId:'foreign'}});assert.equal(mismatch.reason,'scope_unavailable');assert.deepEqual(mismatch.omissions,[]);assert.equal(mismatch.considered,0);
+  h.store.withdrawCurrent(scope.sessionId);assert.equal(h.select().reason,'withdrawn');h.withdraw();assert.equal(h.select().reason,'scope_unavailable');
+  h.advance(-1);assert.equal(h.select().reason,'clock_unavailable');h.store.clear();
+});
+
+test('missing current visual selection gives the same honest unavailable policy in text and spoken prompts',()=>{
+  const h=harness();h.store.publish(h.batch());const view=h.prepare()!;
+  for(const voiceMode of [false,true]){
+    const input={assistantId:scope.assistantId,sessionId:scope.sessionId,endpointId:scope.endpointId,interactionId:'turn',userInput:'What am I holding?',conversation:'Earlier the user described a blue book.',voiceMode};
+    const absent=buildCanonicalPrompt(input);assert.match(absent.sections[0]!.content,/current visual information is unavailable/);assert.match(absent.sections[0]!.content,/Descriptions in dialogue remain historical or user-provided/);assert.match(absent.sections[0]!.content,/Do not announce missing visual information when it is irrelevant/);
+    assert.equal(absent.sections[7]!.content,input.conversation);assert.equal(absent.sections.length,9);
+    const present=buildCanonicalPrompt({...input,conversation:'[]',preparedTurnBinding:h.binding,preparedVisualContext:view});assert.doesNotMatch(present.sections[0]!.content,/No current sampled visual observations/);assert.match(present.sections[0]!.content,/untrusted scene data/);
+  }h.store.clear();
+});
 
 test('fresh host observations enter only the same immutable untrusted conversation section',()=>{
   const h=harness();assert.equal(h.store.publish(h.batch()),true);const view=h.prepare()!;assert.ok(view);

@@ -66,6 +66,23 @@ test('synthetic visual HTTP admission supplies only scoped ordinary conversation
   const turns=JSON.parse(after.sections.find(section=>section.kind==='conversation')!.content) as {role:string;text:string}[];assert.ok(turns.every(turn=>turn.text!==marker));assert.ok(turns.some(turn=>turn.text==='What can you see?'));
 });
 
+test('authenticated inspection reports exact visual selection, omissions and expiry without scene text',{timeout:15000},async t=>{
+  const f=await fixture(t),state=await f.begin();await f.batch(state);
+  const inspect=async(userInput:string)=>{
+    const response=await f.request('/api/runtime/v1/messages',{assistantId:f.assistantId,userInput,inspect:true,visualSelection:{reason:'FORGED_CLIENT',view:{appearance:'CLIENT_SCENE'}}});
+    assert.equal(response.status,200);const stream=await response.text();assert.match(stream,/interaction.completed/);assert.doesNotMatch(stream,/FORGED_CLIENT|CLIENT_SCENE/);
+    return JSON.parse(stream.split('\n\n').find(block=>block.startsWith('event: input.inspection'))!.split('\ndata: ')[1]!).visual;
+  };
+  const selected=await inspect('What can you see?'),request=f.requests.at(-1)!;
+  assert.equal(selected.reason,'selected');assert.equal(selected.selected,1);assert.equal(selected.considered,1);assert.equal(selected.prepared.observationIds.length,1);
+  assert.equal(selected.prepared.conversationSectionDigest,request.sections.find(item=>item.kind==='conversation')!.contentDigest);
+  assert.ok(selected.prepared.expiresAtMs>selected.prepared.selectedAtMs);assert.doesNotMatch(JSON.stringify(selected),new RegExp(marker));assert.doesNotMatch(JSON.stringify(selected),new RegExp(png.toString('base64')));
+  const suppressed=await inspect('Explain an ordinary task.');assert.equal(suppressed.reason,'unchanged_scene');assert.equal(suppressed.selected,0);assert.equal(suppressed.omissions.length,1);assert.equal(suppressed.prepared,null);
+  const suppressedRequest=f.requests.at(-1)!;assert.match(suppressedRequest.sections[3]!.content,/input.visual=activeForSession/);assert.match(suppressedRequest.sections[0]!.content,/current visual information is unavailable/);
+  f.advance(6001);const expired=await inspect('What am I holding?');assert.equal(expired.reason,'expired');assert.equal(expired.selected,0);assert.equal(expired.prepared,null);
+  assert.match(f.requests.at(-1)!.sections[0]!.content,/do not guess from earlier dialogue/);assert.doesNotMatch(f.requests.at(-1)!.sections[7]!.content,new RegExp(marker));
+});
+
 test('renewal requires a fresh visual result, expiry cannot revive, and a foreign session path is denied',{timeout:15000},async t=>{
   const f=await fixture(t),state=await f.begin();await f.batch(state);assert.match(JSON.stringify(await f.turn()),new RegExp(marker));
   const freshRenewed=await f.camera('renew',state.leaseId);assert.equal(freshRenewed.status,200,await freshRenewed.clone().text());const renewedState=(await freshRenewed.json()).camera;assert.doesNotMatch(JSON.stringify(await f.turn()),new RegExp(marker),'renewal requires a fresh result for its new clock mapping');
