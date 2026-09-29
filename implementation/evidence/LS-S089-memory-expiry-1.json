@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S089",
+  "status": "inProgress",
+  "claimClass": "existing-automatic-memory-retention-prerequisite-repair",
+  "collectedAt": "2026-09-29T21:42:10.450555Z",
+  "testedRevision": "2dc1a584fea3d4d0bd78ec23fb1d2c0649061562",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/runtime/automatic-memory.ts",
+      "sha256": "a36e8a402b24dff1a596b1697050de2e122b81f91836a9db21b2408399bac367"
+    },
+    {
+      "path": "apps/server/test/automatic-memory.test.ts",
+      "sha256": "5af50634d7895851687bdf7d99425f024dc75583e20251fc1a1152e9140f990e"
+    }
+  ],
+  "specification": {
+    "revision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "workingTreeModified": true,
+    "packetSha256": "19a2b134901e7cad13fbdc04107bab076bc48e99b34f322e017b38fceebc1558"
+  },
+  "reproducedFailure": "A synthetic extraction begun before source expiry completed after expiry and still reached saved with one retained memory. Source retention had only been checked at tick entry; busy/foreground admission gates skipped cleanup.",
+  "implemented": [
+    "Source expiry is swept before busy/foreground gates, on restart/retry, and at prepared-write/admission boundaries. Active expired extraction is cancelled without waiting for provider cooperation.",
+    "Durable current state, policy revision and expiry are checked before provider generation and after content/scope callbacks immediately before synchronous memory admission. Prepared writes have their own current-state/expiry SQL predicate.",
+    "Expired and cancelled work remains terminal across late results, foreground preemption, retry, restart and clock rollback. An initial remaining-retention timer bounds stalled wall-clock cases.",
+    "Unexpired prepared work survives foreground preemption; admitted memory is not deleted by source-work expiry. A throwing post-admission observer cannot resurrect saved work."
+  ],
+  "verification": [
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/automatic-memory.test.ts",
+      "result": "pass",
+      "tests": 23,
+      "pass": 23,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 852.531875
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1475,
+      "pass": 1474,
+      "fail": 0,
+      "skipped": 1,
+      "duration_ms": 93237.542084,
+      "limitation": "One optional generated Chrome test skipped; preceding visual revision has its separate rendered proof."
+    },
+    {
+      "command": "pnpm build; pnpm typecheck; pnpm lint; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass",
+      "limitation": "Build completed before full suite. Existing ESLint configuration omits TypeScript files."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "tests": 365,
+      "pass": 365,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 326.560666,
+      "structuralVectors": 772,
+      "limitation": "Structural specification validation only."
+    }
+  ],
+  "notClaimed": [
+    "This repairs the existing attributable conversation-memory lane; no typed visual episodes, historical storage integration, reflection ingestion or full S089 acceptance.",
+    "Synthetic providers and an isolated loopback SGLang protocol fixture only; no selected-provider recall or new physical/Human acceptance.",
+    "Cleanup is periodic/boundary-triggered while the worker and storage operate. It does not guarantee erasure inside an uncooperative provider or a suspended process.",
+    "No private schema export, camera activation, provider replacement, deployment, outbound message, push or publication. Primary S066/full LS-TEST-084 and accepted iPhone/original24 journeys are unchanged."
+  ]
+}
