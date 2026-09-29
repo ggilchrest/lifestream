@@ -179,6 +179,25 @@ test('renewal targets current lease with a new clock challenge; a failed renewal
   assert.match(f.camera.snapshot.message, /Connection lost/);
 });
 
+test('frame adapter receives only a granted lease and its usable-state callback is scoped and cleared before renewal', async() => {
+  const f = fixture(); let context;
+  f.prepared.start = async value => { context=value; return f.running; };
+  f.running.suspend = () => f.operations.push('capture-suspend');
+  await f.camera.enable();
+  assert.equal(context.localExpiresMonotonicMs,f.camera.lease.expires);
+  assert.equal(context.api,f.camera.api); assert.equal(context.isCurrent(),true);
+  context.onObservation({currentObservationUsable:true});
+  assert.equal(f.camera.snapshot.currentObservationUsable,true);
+  assert.match(f.camera.snapshot.message,/current visual observation is available/);
+  f.setNow(20100); f.camera.tick(); await flush();
+  assert.ok(f.operations.indexOf('capture-suspend') < f.operations.indexOf('renew'));
+  assert.equal(f.camera.snapshot.currentObservationUsable,false);
+  await f.camera.stop();
+  context.onObservation({currentObservationUsable:true});
+  assert.equal(context.isCurrent(),false);
+  assert.equal(f.camera.snapshot.currentObservationUsable,false);
+});
+
 test('watchdog stops even when renewal response never arrives', async() => {
   const f = fixture(); await f.camera.enable();
   const pending = deferred(); f.camera.api = () => pending.promise;

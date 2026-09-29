@@ -22,7 +22,22 @@ export type CaptureAuthority = Readonly<{
 type ClockChallenge = {id: string; sentMono: number; sentUtc: number; expiresMono: number};
 type ClockMapping = {id: string; endpointClockId: string; endpointReceivedMono: number; hostSentMono: number; hostReceivedMono: number; anchorUtc: number; expiresMono: number};
 type Lease = {id: string; scope: VisualScope; revision: number; expiresMono: number; mapping: ClockMapping; lastAdmissionMono: number; lastSequence: number; lastCaptureMono: number; lastUsableCaptureMono: number | null; expiryTimer: ReturnType<typeof setTimeout> | undefined};
-type JobIdentity = Readonly<{requestId: string; leaseId: string; scope: VisualScope; frameIds: readonly string[]}>;
+export type VisualAdmissionProvenance = Readonly<{
+  requestId: string;
+  correlationId: string;
+  leaseId: string;
+  scope: VisualScope;
+  frameIds: readonly string[];
+  hostSequence: number;
+  provider: Readonly<{id: string; version: string}>;
+  capturedAtEarliestMs: number;
+  capturedAtLatestMs: number;
+  receivedAtMs: number;
+  deadlineAtMs: number;
+  clockMappingId: string;
+  leaseRevision: number;
+}>;
+type JobIdentity = VisualAdmissionProvenance;
 type Job = {identity: JobIdentity; request: VisualPerceptionRequest; buffers: Uint8Array[]; bufferByteLengths: readonly number[]; decodedBytes: number; capturedEarliestMono: number; deadlineMono: number; settle: (result: VisualPerceptionResult) => void; controller: AbortController; cancelReason: VisualDropReason | null; deadlineTimer: ReturnType<typeof setTimeout> | undefined};
 type SessionState = {revision: number; challenge: ClockChallenge | undefined; lease: Lease | undefined; pending: Job | undefined; inFlight: Job | undefined};
 
@@ -151,6 +166,9 @@ export class VisualAdmission {
   private readonly utc: () => number;
   private readonly id: () => string;
   private readonly provider: VisualPerceptionProvider | undefined;
+  private readonly providerIdentity: VisualAdmissionProvenance['provider'] | undefined;
+  private readonly provenances = new WeakSet<VisualAdmissionProvenance>();
+  private admissionSequence = 0;
   private readonly optionalWorkReady: () => boolean;
   private readonly currentScope: (scope: VisualScope) => boolean;
   private readonly onLeaseEnded: VisualAdmissionOptions['onLeaseEnded'];
@@ -172,6 +190,7 @@ export class VisualAdmission {
     })) as VisualBounds);
     if (options.provider && !options.provider.supportsCancellation) throw new Error('visual provider requires cancellation or an isolating worker');
     this.provider = options.provider;
+    this.providerIdentity = options.provider ? Object.freeze({id:options.provider.id,version:options.provider.version}) : undefined;
     this.mono = options.monotonicMs ?? (() => performance.now());
     this.utc = options.utcMs ?? (() => Date.now());
     this.id = options.newId ?? randomUUID;
@@ -265,6 +284,8 @@ export class VisualAdmission {
     lease.mapping = this.consumeChallenge(state, input, now);
     lease.expiresMono = now + this.bounds.leaseTtlMs;
     lease.revision = ++state.revision;
+    lease.lastUsableCaptureMono = null;
+    this.cancelWork(state);
     this.armLeaseExpiry(state,lease);
     return this.cameraState(scope.sessionId);
   }
@@ -320,16 +341,31 @@ export class VisualAdmission {
   private endLease(state: SessionState, lease: Lease, reason: 'stop' | 'expired' | 'invalidated'): void {
     clearTimeout(lease.expiryTimer);
     state.lease = undefined; state.challenge = undefined; state.revision++;
+    this.cancelWork(state);
+    this.leaseEnded(lease,reason);
+  }
+
+  private cancelWork(state: SessionState): void {
     if (state.pending) { this.dispose(state.pending); state.pending.settle(failure(state.pending.identity.requestId, 'cancelled')); state.pending = undefined; }
     if (state.inFlight) { state.inFlight.cancelReason = 'cancelled'; state.inFlight.controller.abort(); }
-    this.leaseEnded(lease,reason);
+  }
+
+  private leaseMatches(lease: Lease | undefined, identity: JobIdentity): lease is Lease {
+    return !!lease && lease.id === identity.leaseId && lease.revision === identity.leaseRevision && lease.mapping.id === identity.clockMappingId;
+  }
+
+  /** Authority only; consumers separately apply freshness to admitted evidence. */
+  provenanceCurrent(provenance: VisualAdmissionProvenance): boolean {
+    if (!this.provenances.has(provenance)) return false;
+    const lease = this.stateFor(provenance.scope.sessionId).lease;
+    return this.leaseMatches(lease,provenance) && scopeEqual(lease.scope,provenance.scope) && this.scopeCurrent(provenance.scope);
   }
 
   private leaseEnded(lease: Lease, reason: 'stop' | 'expired' | 'invalidated'): void {
     try { this.onLeaseEnded?.(structuredClone(lease.scope),lease.id,reason); } catch { /* Failure to release a broker lease cannot restore capture authorization. */ }
   }
 
-  submit(scope: VisualScope, leaseId: string, endpointClockId: string, frames: readonly VisualFrame[], correlationId: string): {requestId: string; queued: boolean; completion: Promise<VisualPerceptionResult>} {
+  submit(scope: VisualScope, leaseId: string, endpointClockId: string, frames: readonly VisualFrame[], correlationId: string): {requestId: string; queued: boolean; provenance: VisualAdmissionProvenance; completion: Promise<VisualPerceptionResult>} {
     const state = this.stateFor(scope.sessionId), lease = state.lease, now = this.mono(), requestId = this.id();
     if (!lease || lease.id !== leaseId || lease.expiresMono <= now || lease.mapping.expiresMono <= now) throw new VisualAdmissionError('stale_lease');
     if (!scopeEqual(scope, lease.scope) || !this.scopeCurrent(scope)) throw new VisualAdmissionError('scope_changed');
@@ -370,22 +406,23 @@ export class VisualAdmission {
     const receivedUtc = this.utc();
     // Validation identity is host-owned and never passed to provider code. The
     // provider gets separate frozen metadata over the same bounded byte buffers.
-    const identity: JobIdentity = Object.freeze({requestId, leaseId, scope: Object.freeze(structuredClone(lease.scope)), frameIds: Object.freeze(frames.map(frame => frame.frameId))});
-    const request: VisualPerceptionRequest = Object.freeze({requestId, correlationId, environment: 'live', scope: Object.freeze(structuredClone(identity.scope)), leaseId, capturedAtEarliestMs: lease.mapping.anchorUtc + earliest - lease.mapping.hostSentMono, capturedAtLatestMs: lease.mapping.anchorUtc + latest - lease.mapping.hostSentMono, receivedAtMs: receivedUtc, deadlineAtMs: receivedUtc + this.bounds.deadlineMs, frames: Object.freeze(frames.map((frame, index) => Object.freeze({...frame, bytes: held[index]!})))});
+    const identity: JobIdentity = Object.freeze({requestId,correlationId,leaseId,scope:Object.freeze(structuredClone(lease.scope)),frameIds:Object.freeze(frames.map(frame => frame.frameId)),hostSequence:++this.admissionSequence,provider:this.providerIdentity!,capturedAtEarliestMs:lease.mapping.anchorUtc+earliest-lease.mapping.hostSentMono,capturedAtLatestMs:lease.mapping.anchorUtc+latest-lease.mapping.hostSentMono,receivedAtMs:receivedUtc,deadlineAtMs:receivedUtc+this.bounds.deadlineMs,clockMappingId:lease.mapping.id,leaseRevision:lease.revision});
+    this.provenances.add(identity);
+    const request: VisualPerceptionRequest = Object.freeze({requestId, correlationId, environment: 'live', scope: Object.freeze(structuredClone(identity.scope)), leaseId, capturedAtEarliestMs:identity.capturedAtEarliestMs, capturedAtLatestMs:identity.capturedAtLatestMs, receivedAtMs:receivedUtc, deadlineAtMs:identity.deadlineAtMs, frames:Object.freeze(frames.map((frame,index) => Object.freeze({...frame,bytes:held[index]!})))});
     let settle!: (result: VisualPerceptionResult) => void;
     const completion = new Promise<VisualPerceptionResult>(resolve => { settle = resolve; });
     const job: Job = {identity, request, buffers: held, bufferByteLengths: Object.freeze(held.map(buffer => buffer.byteLength)), decodedBytes: decoded, capturedEarliestMono: earliest, deadlineMono: now + this.bounds.deadlineMs, settle, controller: new AbortController(), cancelReason: null, deadlineTimer: undefined};
     lease.lastAdmissionMono = now; lease.lastSequence = priorSequence; lease.lastCaptureMono = priorCapture;
     job.deadlineTimer = setTimeout(() => {
       job.cancelReason = 'deadline';
-      if (state.pending === job) { state.pending=undefined; if (state.lease?.id===job.identity.leaseId) state.lease.lastUsableCaptureMono=null; this.dispose(job); job.settle(failure(requestId,'deadline')); }
+      if (state.pending === job) { state.pending=undefined; if (this.leaseMatches(state.lease,job.identity)) state.lease.lastUsableCaptureMono=null; this.dispose(job); job.settle(failure(requestId,'deadline')); }
       else job.controller.abort();
     }, this.bounds.deadlineMs);
     const queued = this.modelBusy || !!state.inFlight;
     if (queued) state.pending = job;
     else this.run(state, job);
     this.recordRawUsage(scope.sessionId);
-    return {requestId, queued, completion};
+    return {requestId, queued, provenance:identity, completion};
   }
 
   private run(state: SessionState, job: Job): void {
@@ -399,13 +436,13 @@ export class VisualAdmission {
       let result = (this.buffersIntact(job) ? this.snapshotResult(raw, job.identity) : null) ?? failure(job.identity.requestId, 'provider_invalid');
       if (job.cancelReason) result = failure(job.identity.requestId, job.cancelReason);
       else if (result.status !== 'cancelled' && this.mono() >= job.deadlineMono) result = failure(job.identity.requestId, 'deadline');
-      else if (result.status !== 'cancelled' && (!lease || lease.id !== job.identity.leaseId || !scopeEqual(lease.scope, job.identity.scope) || !this.scopeCurrent(job.identity.scope))) result = failure(job.identity.requestId, 'scope_changed');
-      if (lease && lease.id===job.identity.leaseId) lease.lastUsableCaptureMono = result.status==='complete' && result.observations.length ? job.capturedEarliestMono : null;
+      else if (result.status !== 'cancelled' && !this.provenanceCurrent(job.identity)) result = failure(job.identity.requestId, 'scope_changed');
+      if (this.leaseMatches(lease,job.identity)) lease.lastUsableCaptureMono = result.status==='complete' && result.observations.length ? job.capturedEarliestMono : null;
       return result;
-    }, () => { if (state.lease?.id===job.identity.leaseId) state.lease.lastUsableCaptureMono=null; return failure(job.identity.requestId, 'provider_unavailable'); }).then(result => {
+    }, () => { if (this.leaseMatches(state.lease,job.identity)) state.lease.lastUsableCaptureMono=null; return failure(job.identity.requestId, 'provider_unavailable'); }).then(result => {
       if (result.status==='complete' && !this.buffersIntact(job)) {
         result=failure(job.identity.requestId,'provider_invalid');
-        if (state.lease?.id===job.identity.leaseId) state.lease.lastUsableCaptureMono=null;
+        if (this.leaseMatches(state.lease,job.identity)) state.lease.lastUsableCaptureMono=null;
       }
       this.dispose(job);
       job.settle(result);
@@ -416,9 +453,9 @@ export class VisualAdmission {
           const next = owner.pending;
           if (!next) continue;
           owner.pending = undefined;
-          const validLease = !!owner.lease && owner.lease.id === next.identity.leaseId && scopeEqual(owner.lease.scope,next.identity.scope) && this.scopeCurrent(next.identity.scope);
+          const validLease = this.provenanceCurrent(next.identity);
           const reason: VisualDropReason | null = this.mono() >= next.deadlineMono ? 'deadline' : !validLease ? 'scope_changed' : !this.providerReady() ? 'provider_unavailable' : !this.optionalReady() ? 'foreground_priority' : null;
-          if (reason) { if (owner.lease?.id===next.identity.leaseId) owner.lease.lastUsableCaptureMono=null; this.dispose(next); next.settle(failure(next.identity.requestId, reason)); continue; }
+          if (reason) { if (this.leaseMatches(owner.lease,next.identity)) owner.lease.lastUsableCaptureMono=null; this.dispose(next); next.settle(failure(next.identity.requestId, reason)); continue; }
           this.run(owner, next);
           return;
         }
@@ -441,7 +478,7 @@ export class VisualAdmission {
   private snapshotResult(value: unknown, identity: JobIdentity): VisualPerceptionResult | null {
     try {
       const result = dataRecord(value, ['requestId','status','observations','reason']);
-      if (!result || result.requestId !== identity.requestId || typeof result.status !== 'string' || !['complete','empty','rejected','cancelled','timedOut','failed'].includes(result.status) || result.reason !== null && !boundedString(result.reason)) return null;
+      if (!result || result.requestId !== identity.requestId || typeof result.status !== 'string' || !['complete','empty','rejected','cancelled','timedOut','failed'].includes(result.status) || result.reason !== null && (!boundedString(result.reason) || result.reason.length > 128)) return null;
       const candidates = dataArray(result.observations, 32);
       if (!candidates || result.status !== 'complete' && candidates.length !== 0) return null;
       const observations: VisualObservation[] = [];

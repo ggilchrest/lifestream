@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S087",
+  "status": "inProgress",
+  "claimClass": "local-generated-browser-http-and-renewal-regression",
+  "collectedAt": "2026-09-29T19:43:48.236450+00:00",
+  "baseHead": "655d9d2542a0d458e462d423f7506806bcfe1ddf",
+  "sourceFiles": [
+    {
+      "path": "packages/runtime/src/perception/admission.ts",
+      "sha256": "c22b9fe1cf45de8039677dabd878270e27c50a9a3057b02f787f6b961b5b386c"
+    },
+    {
+      "path": "packages/runtime/test/perception.test.ts",
+      "sha256": "7c5d33605f90805d198c378c59abf69c5896a966c8987ee93fa85186ca38d58f"
+    },
+    {
+      "path": "apps/control-web/conversation-camera.js",
+      "sha256": "886481c4c4c4fef5970cc7860f677fea5b463091f06d7772da6e48da8225911a"
+    },
+    {
+      "path": "apps/control-web/conversation-camera-frames.js",
+      "sha256": "5e89b98f404bc801f585669f9e5ab8be691294ba1b3a29caa9590d0a4bb53187"
+    },
+    {
+      "path": "apps/control-web/test/conversation-camera.test.mjs",
+      "sha256": "ff8c5d8aff62c9021473d289b7c34c02a05ffa70711dfd387166ad1be76d3e22"
+    },
+    {
+      "path": "apps/control-web/test/conversation-camera-frames.test.mjs",
+      "sha256": "915eeae9a1afac4bc5006c673c3040d5d155e48624cdc2b5285ba2e752de13ab"
+    },
+    {
+      "path": "apps/server/test/visual-browser-frames.test.ts",
+      "sha256": "6284afc3d208e8bc6c79b04b8f847d68490099ab15b94a0489e893057eaa1136"
+    }
+  ],
+  "changes": [
+    "Explicit trusted-broker browser frame adapter; one encoder, one HTTP request and one newest pending frame; no default device acquisition.",
+    "One frame per request at most once per second, paced from previous response; bounded JPEG/PNG encoder, SHA-256, filename-free multipart and owned-buffer cleanup.",
+    "Default browser timer receiver repaired after real generated-image transport test found Illegal invocation.",
+    "Renewal invalidates prior clock mapping/revision jobs and current sight without revoking same lease identity; stale results cannot restore sight.",
+    "Frozen host-only result provenance, guarded by identity; public HTTP response does not expose internal provenance.",
+    "Provider reason length matches public wire limit of 128 characters."
+  ],
+  "verification": {
+    "browserControllerAndTransport": {
+      "pass": 30,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 6933.936209,
+      "environment": "Installed Chrome via Playwright; generated canvas and synthetic broker/provider only."
+    },
+    "runtimeHostMultipartAndBrowserHttp": {
+      "pass": 37,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 4295.130333,
+      "command": "PLAYWRIGHT_MODULE=<operator-local installed Playwright> node --test --experimental-strip-types packages/runtime/test/perception.test.ts apps/server/test/visual-input.test.ts apps/server/test/visual-http.test.ts apps/server/test/visual-multipart.test.ts apps/server/test/visual-browser-frames.test.ts"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "diffCheck": "pass"
+  },
+  "limits": {
+    "maximumCaptureAndSendHz": 1,
+    "maximumFrameBytes": 1048576,
+    "maximumLongEdgePixels": 1280,
+    "maximumPendingFrames": 1,
+    "maximumConcurrentEncodes": 1,
+    "maximumConcurrentRequests": 1,
+    "httpWatchdogMs": 5000
+  },
+  "exclusions": [
+    "Default physical camera/source broker remains absent and disabled.",
+    "Scripted perception response is plumbing evidence, not real image understanding.",
+    "Browser-owned codec/network copies cannot be wiped by JavaScript; cleanup proof covers owned buffers and scratch canvas.",
+    "Full pixel decode validation, total memory, native/browser capture qualification and real-provider/Human/performance acceptance remain open.",
+    "No deployment or change to accepted iPhone or live Telegram service."
+  ]
+}

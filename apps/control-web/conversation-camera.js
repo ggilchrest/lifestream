@@ -114,8 +114,14 @@ export class ConversationCamera {
       if (!this.current(scope, generation)) return;
       this.acceptLease(scope, granted, ready, generation);
       const running = await prepared.start({scope, lease:granted, negotiation:ready.value.negotiation,
-        endpointClockId:this.clockId, signal:this.abort.signal,
-        onEnded:() => { if (this.current(scope, generation)) void this.stop('Camera source disconnected. Enable it again to retry.'); }});
+        endpointClockId:this.clockId, signal:this.abort.signal,api:this.api,localExpiresMonotonicMs:this.lease.expires,
+        isCurrent:() => this.current(scope,generation),
+        onObservation:value => {
+          if (!this.current(scope,generation) || !this.lease) return;
+          const usable = value.currentObservationUsable === true;
+          this.emit({currentObservationUsable:usable,message:usable ? 'Camera capturing. A current visual observation is available.' : 'Camera capturing. No current visual observation has been confirmed.'});
+        },
+        onEnded:message => { if (this.current(scope, generation)) void this.stop(message || 'Camera source disconnected. Enable it again to retry.'); }});
       if (!this.current(scope, generation) || !this.lease) { stopHandle(running); return; }
       if (!running || typeof running.stop !== 'function') throw Error('Camera source did not start.');
       this.running = running;
@@ -170,15 +176,18 @@ export class ConversationCamera {
   async renew(lease) {
     this.renewing = lease;
     try {
+      // Pause ingress and invalidate observations before the host changes its
+      // clock mapping. The adapter must let existing HTTP responses settle.
+      this.running?.suspend?.();
+      this.emit({currentObservationUsable:false,message:'Camera capturing. Refreshing session authorization…'});
       const ready = await this.negotiate(lease.scope);
       if (this.lease !== lease || !this.current(lease.scope, lease.generation)) return;
       if (!ready.valid || ready.value.camera.leaseId !== lease.camera.leaseId) throw Error('Camera authorization is no longer current.');
       const camera = (await this.command(lease.scope, 'renew', ready, lease.camera)).camera;
       if (this.lease !== lease || !this.current(lease.scope, lease.generation)) { void this.withdraw(lease.scope, camera); return; }
       this.acceptLease(lease.scope, camera, ready, lease.generation);
-      await this.running?.renew?.({lease:camera, negotiation:ready.value.negotiation});
-      // Transport grant is not proof of a usable observation. Frame/result UI
-      // awaits the configured bounded ingress adapter's separately tested path.
+      await this.running?.renew?.({lease:camera, negotiation:ready.value.negotiation,localExpiresMonotonicMs:this.lease.expires});
+      this.emit({currentObservationUsable:false,message:'Camera capturing. No current visual observation has been confirmed.'});
     } catch (error) { if (this.lease === lease || this.current(lease.scope, lease.generation)) await this.stop(error.message); }
     finally { if (this.renewing === lease) this.renewing = false; }
   }

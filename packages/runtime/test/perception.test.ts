@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 import {crc32} from 'node:zlib';
 import {VisualAdmission, VisualAdmissionError, type CaptureAuthority} from '../src/perception/admission.ts';
 import {fixtureVisualProvider} from '../src/perception/fixture.ts';
-import type {VisualFrame, VisualPerceptionProvider, VisualPerceptionResult, VisualScope} from '../src/perception/port.ts';
+import type {VisualFrame, VisualPerceptionProvider, VisualPerceptionRequest, VisualPerceptionResult, VisualScope} from '../src/perception/port.ts';
 
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+5gz/qwAAAABJRU5ErkJggg==', 'base64');
 const digest = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
@@ -65,6 +65,85 @@ test('clock challenge is one use, maps full round trip, expires, and rejects unc
   const third = h.visual.negotiate(first.target,['1.0.0'],true);
   h.advance(5_001);
   assert.throws(() => h.visual.enable(first.target,{expectedRevision:h.visual.cameraState(first.target.sessionId).revision,challengeId:third.challenge!.id,endpointClockId:'endpoint-clock',endpointReceivedMonotonicMs:5_000},authority),(error: unknown)=>error instanceof VisualAdmissionError&&error.reason==='clock_challenge_invalid');
+});
+
+test('renewal clears prior sight and cancels old running and pending clock epochs', async () => {
+  let calls=0, finish!:()=>void, aborted=false;
+  const slow:VisualPerceptionProvider={...provider,interpret:async(request,signal)=>{
+    calls++;
+    if(calls===2){
+      signal.addEventListener('abort',()=>{aborted=true;},{once:true});
+      await new Promise<void>(resolve=>{finish=resolve;});
+    }
+    return provider.interpret(request,signal);
+  }};
+  const h=harness(slow), active=h.begin(); h.advance(20);
+  const original=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'original');
+  assert.equal((await original.completion).status,'complete');
+  assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,true);
+  h.advance(1_000);
+  const running=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,1,6_010)],'running');
+  await Promise.resolve(); h.advance(1_000);
+  const pending=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,2,7_010)],'pending');
+  const negotiated=h.visual.negotiate(active.target,['1.0.0'],true); h.advance(20);
+  const renewed=h.visual.renew(active.target,active.leaseId,{expectedRevision:h.visual.cameraState(active.target.sessionId).revision,challengeId:negotiated.challenge!.id,endpointClockId:'endpoint-clock',endpointReceivedMonotonicMs:7_060},authority);
+  assert.equal(renewed.captureActive,true);
+  assert.equal(renewed.currentObservationUsable,false);
+  assert.notEqual(renewed.clockMappingId,active.mappingId);
+  assert.equal(renewed.leaseId,active.leaseId);
+  assert.equal(h.visual.provenanceCurrent(original.provenance),false);
+  assert.equal(h.visual.provenanceCurrent(running.provenance),false);
+  assert.equal((await pending.completion).reason,'cancelled');
+  assert.equal((await running.completion).reason,'cancelled');
+  assert.equal(aborted,true);
+  finish(); await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(calls,2,'renewal cannot dispatch the old pending epoch');
+  assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,false,'late old provider success cannot restore sight');
+  assert.equal(h.visual.resourceUsage().rawBytes,0);
+  assert.throws(()=>h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(renewed.clockMappingId!,3,7_060)],'too-fast'),(error:unknown)=>error instanceof VisualAdmissionError&&error.reason==='rate_limited');
+  h.advance(1_000);
+  assert.throws(()=>h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,3,8_010)],'old-mapping'),(error:unknown)=>error instanceof VisualAdmissionError&&error.reason==='frame_invalid');
+  assert.throws(()=>h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(renewed.clockMappingId!,0,8_010)],'old-sequence'),(error:unknown)=>error instanceof VisualAdmissionError&&error.reason==='frame_invalid');
+  const current=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(renewed.clockMappingId!,3,8_010)],'new-epoch');
+  assert.equal((await current.completion).status,'complete');
+  assert.equal(current.provenance.leaseRevision,renewed.revision);
+  assert.equal(h.visual.provenanceCurrent(current.provenance),true);
+  assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,true);
+  h.visual.close();
+});
+
+test('admission provenance is authentic immutable metadata without bytes or provider object aliases', async () => {
+  let request:VisualPerceptionRequest|undefined;
+  const configured:VisualPerceptionProvider={...provider,id:'configured-visual',version:'one',interpret:value=>{request=value;return provider.interpret(value,new AbortController().signal);}};
+  const h=harness(configured), active=h.begin(); h.advance(20);
+  Reflect.set(configured,'id','provider-mutated-id'); Reflect.set(configured,'version','provider-mutated-version');
+  const frame=h.frame(active.mappingId,0);
+  const first=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[frame],'first-correlation');
+  Reflect.set(frame,'frameId','caller-mutated-frame');
+  assert.equal((await first.completion).status,'complete');
+  const p=first.provenance;
+  assert.equal(p.requestId,first.requestId); assert.equal(p.correlationId,'first-correlation');
+  assert.equal(p.leaseId,active.leaseId); assert.equal(p.clockMappingId,active.mappingId);
+  assert.deepEqual(p.provider,{id:'configured-visual',version:'one'});
+  assert.deepEqual(p.frameIds,['frame-0']);
+  assert.equal(p.hostSequence,1);
+  assert.notEqual(p.scope,active.target); assert.notEqual(p.scope,request!.scope);
+  assert.equal(p.capturedAtEarliestMs,request!.capturedAtEarliestMs);
+  assert.equal(p.capturedAtLatestMs,request!.capturedAtLatestMs);
+  assert.ok(p.capturedAtEarliestMs<=p.capturedAtLatestMs&&p.capturedAtLatestMs<=p.receivedAtMs);
+  assert.equal(p.deadlineAtMs-p.receivedAtMs,h.visual.bounds.deadlineMs);
+  assert.ok(Object.isFrozen(p)&&Object.isFrozen(p.scope)&&Object.isFrozen(p.frameIds)&&Object.isFrozen(p.provider));
+  assert.doesNotMatch(JSON.stringify(p),/"bytes"|"frames"/);
+  assert.equal(h.visual.provenanceCurrent(p),true);
+  assert.equal(h.visual.provenanceCurrent(structuredClone(p)),false,'copied or fabricated metadata has no host authority');
+  assert.equal(h.visual.provenanceCurrent(new Proxy(p,{})),false,'a provider proxy cannot manufacture provenance identity');
+  h.advance(1_000);
+  const second=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,1,6_010)],'second-correlation');
+  assert.equal(second.provenance.hostSequence,2); await second.completion;
+  h.visual.stop(active.target.sessionId,active.leaseId,active.target.principalId);
+  assert.equal(h.visual.provenanceCurrent(p),false);
+  assert.equal(h.visual.provenanceCurrent(second.provenance),false);
+  h.visual.close();
 });
 
 test('bounded media admission uses bytes, digest, dimensions, sequence, and conservative capture time', async () => {
@@ -236,6 +315,17 @@ test('provider accessors, proxies, sparse arrays and oversized metadata fail clo
     h.visual.close();
   }
   assert.equal(evaluated,0);
+});
+
+test('provider reason matches the wire and browser 128-character limit before becoming usable', async () => {
+  for(const length of [128,129,1024]){
+    const h=harness({...provider,interpret:async(request,signal)=>({...await provider.interpret(request,signal),reason:'x'.repeat(length)})}), active=h.begin(); h.advance(20);
+    const result=await h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'bounded-reason').completion;
+    assert.equal(result.status,length===128?'complete':'rejected');
+    assert.equal(result.reason,length===128?'x'.repeat(length):'provider_invalid');
+    assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,length===128);
+    h.visual.close();
+  }
 });
 
 test('old peer and scope invalidation leave the existing text/audio contract untouched', () => {
