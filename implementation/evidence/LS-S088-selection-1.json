@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S088",
+  "status": "inProgress",
+  "claimClass": "local-visual-selection-diagnostics-and-unavailable-context-policy",
+  "collectedAt": "2026-09-29T20:30:34.946755Z",
+  "testedRevision": "013013c5cfcc9eca2b7a9ecd292060c573230f18",
+  "precedingEvidence": "implementation/evidence/LS-S088-finalized-turn-1.json",
+  "sourceFiles": [
+    {
+      "path": "apps/control-web/relationship-tuning.js",
+      "sha256": "e49a9d83a63927a1edac06c861b40301ab30abf0fcb3acb0705c69dc6c0a2dee"
+    },
+    {
+      "path": "apps/control-web/test/relationship-tuning.test.mjs",
+      "sha256": "c84d354dee5c915f57a1931e5258d38a1650343ee84b14c44c142c19149d9e5f"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "a182cfd7e7f4175d18aa6527c087e0681c7fb54626ac1742de20c229029dc146"
+    },
+    {
+      "path": "apps/server/src/runtime/inference.ts",
+      "sha256": "5537dbcd3fcec9dfff2bab369499a64e7d5cead97e43a05acf304c2ddf21e09b"
+    },
+    {
+      "path": "apps/server/src/runtime/visual-input.ts",
+      "sha256": "5a4b206e6dc61f2da87ddda616eef1b442a67561cce6c9b968a8888c2d6581cc"
+    },
+    {
+      "path": "apps/server/test/visual-context.test.ts",
+      "sha256": "e9e08dfd096023e4f8faa1bb42cd1fe5f560455f3688c2c3d1d37ecb5354f750"
+    },
+    {
+      "path": "packages/runtime/src/inference/prompt.ts",
+      "sha256": "6e4835848b790351e4bcadc80dd906efdea6fdd7e4eff7228498a50ce7d4417b"
+    },
+    {
+      "path": "packages/runtime/src/perception/observation.ts",
+      "sha256": "90b0bb1f2e69dbb84f6ba9ed7a9adf1e3b5637e1414718d2bfcfb8879307a2f0"
+    },
+    {
+      "path": "packages/runtime/test/visual-context.test.ts",
+      "sha256": "e86784fdcb4580e9b826d8bb65be779d8598734c2a5752826ec80c1899bfd9cc"
+    }
+  ],
+  "implemented": [
+    "One scene selection produces a frozen view and bounded per-observation omission reasons for budget, item limit, exposure suppression, rate limit and engagement; expired, unavailable or foreign scope yields no scene identifiers.",
+    "Authenticated opt-in inspection correlates selected observation/frame identifiers, capture bounds, provider/source/audience revisions and exact finalized conversation digest without raw media or scene text. Client-supplied selection metadata is discarded.",
+    "The existing settings inspection shows visual inclusion counts and omission reason. Inclusion is explicitly separate from generated mention, delivered output, image accuracy and retained memory.",
+    "Text and audio prompts distinguish absent current observations from active capability or historical dialogue, with instructions to state unavailable vision when relevant. Existing nine-section order and untrusted scene handling remain."
+  ],
+  "verification": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1390,
+      "pass": 1389,
+      "fail": 0,
+      "skipped": 1,
+      "duration_ms": 93526.40725
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/visual-context.test.ts apps/server/test/visual-context.test.ts apps/server/test/visual-input.test.ts",
+      "result": "pass",
+      "tests": 54,
+      "pass": 54,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 5893.759
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<operator-local playwright> node --test --experimental-strip-types apps/control-web/test/relationship-tuning.test.mjs apps/server/test/visual-browser-frames.test.ts",
+      "result": "pass",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 7696.693291,
+      "limitation": "Real Chrome/authenticated HTTP; generated images, scripted interpretation/replies. Screenshot inspected; transient notification partly overlaid metadata."
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass-with-explicit-skips",
+      "tests": 162,
+      "pass": 77,
+      "fail": 0,
+      "skipped": 85,
+      "duration_ms": 6479.736958
+    },
+    {
+      "command": "pnpm typecheck; pnpm build; pnpm lint; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "tests": 365,
+      "pass": 365,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 327.139459,
+      "structuralVectors": 772,
+      "limitation": "Specification validation, not runtime conformance."
+    }
+  ],
+  "notClaimed": [
+    "Prompt policy verification is not measured live-model truthfulness or actual image understanding.",
+    "Topic relevance ranking, actual mention recognition, complete lifecycle trace and canonical prepared-context integration remain open.",
+    "No live camera, selected vision provider, deployment, publication, physical timing, new Human acceptance or whole-slice completion. Primary S066 and historical release failures preserved."
+  ],
+  "next": "Reconcile canonical prepared-context section limits and freshness with the complete immutable turn; continue bounded topic relevance and lifecycle evidence.",
+  "worktreeExclusions": [
+    "Existing README/product-audit, iOS signing/plist/.swiftpm, acceptance-guide and prior Human/bookkeeping receipts unchanged."
+  ]
+}
