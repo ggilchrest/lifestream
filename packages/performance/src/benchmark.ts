@@ -221,7 +221,7 @@ export function benchmarkVisualConversation(environment:VisualPerformanceEnviron
   const visualSummary=(trials:readonly VisualPerformanceTrial[]):VisualBatchSummary=>{
     const batches=trials.flatMap(t=>t.visualBatches),usable=batches.filter(b=>b.outcome==='usable');
     const outcomes={usable:0,deferred:0,dropped:0,failed:0,timedOut:0,expired:0};for(const b of batches)outcomes[b.outcome]++;
-    return {attempts:batches.length,admitted:batches.filter(b=>b.admitted).length,outcomes,captureToUsable:distribution(usable.map(b=>b.usableAt!-b.capturedAt)),lateUsable:usable.filter(b=>b.usableAt!-b.capturedAt>6000).length};
+    return {attempts:batches.length,admitted:batches.filter(b=>b.admitted).length,outcomes,captureToUsable:distribution(usable.map(b=>b.usableAt!-b.capturedAt)),lateUsable:usable.filter(b=>b.usableAt!-b.capturedAt>=6000).length};
   };
   for(const condition of visualPerformanceConditions){
     const trials=runs[condition];if(!Array.isArray(trials)||trials.length>5000)throw new Error('bounded trials required for every visual condition');
@@ -252,8 +252,8 @@ export function benchmarkVisualConversation(environment:VisualPerformanceEnviron
     gates.push({condition,metric:'foregroundCompletion',status:sample.some(t=>t.status==='failed'||t.status==='timedOut')?'fail':sample.length<200||sample.some(t=>t.status!=='completed')?'unverified':'pass',detail:'All warm foreground attempts retained; cancellation does not become successful completion.'});
     gates.push({condition,metric:'audioContinuity',status:sample.some(t=>t.underruns>0||t.duplicateAudioOwners>0)?'fail':summary.firstSpokenWord?.count===sample.length&&sample.length>=200?'pass':'unverified',detail:'Requested speech required; no underruns or duplicate audio owners.'});
     if(condition!=='disabled'){
-      gates.push({condition,metric:'captureToUsable',status:capture&&capture.p95>3000?'fail':capture?'pass':'unverified',detail:`${visual.outcomes.usable}/${visual.attempts} warm batches usable; admitted ${visual.admitted}. Deferred/dropped/failed/timeout/expired counts are separate; p95 <= 3000 ms.`});
-      gates.push({condition,metric:'captureFreshness',status:visual.lateUsable+coldVisual.lateUsable?'fail':visual.attempts+coldVisual.attempts?'pass':'unverified',detail:'No warm or cold context declared usable beyond its 6000 ms capture bound, regardless of percentile.'});
+      gates.push({condition,metric:'captureToUsable',status:capture&&capture.p95>3000?'fail':capture&&visual.outcomes.usable===visual.admitted?'pass':'unverified',detail:`${visual.outcomes.usable}/${visual.attempts} warm batches usable; admitted ${visual.admitted}. Admitted batches without usable milestones cannot be removed to qualify p95 <= 3000 ms; pre-admission deferrals and other outcomes remain separate.`});
+      gates.push({condition,metric:'captureFreshness',status:visual.lateUsable+coldVisual.lateUsable?'fail':visual.attempts+coldVisual.attempts?'pass':'unverified',detail:'No warm or cold context declared usable at or beyond its 6000 ms expiry, regardless of percentile.'});
     }
   }
   const baseline=new Map(warm.disabled.map(t=>[t.pairId,t]));
