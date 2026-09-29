@@ -32,6 +32,18 @@
       "types": "./dist/voice/ports.d.ts",
       "import": "./dist/voice/ports.js"
     },
+    "./perception/port": {
+      "types": "./dist/perception/port.d.ts",
+      "import": "./dist/perception/port.js"
+    },
+    "./perception/admission": {
+      "types": "./dist/perception/admission.d.ts",
+      "import": "./dist/perception/admission.js"
+    },
+    "./perception/fixture": {
+      "types": "./dist/perception/fixture.d.ts",
+      "import": "./dist/perception/fixture.js"
+    },
     "./capabilities/resolver": {
       "types": "./dist/capabilities/resolver.d.ts",
       "import": "./dist/capabilities/resolver.js"

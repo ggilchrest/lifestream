@@ -1,0 +1,146 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S087",
+  "status": "inProgress",
+  "claimClass": "local-perception-admission-component-and-unwired-host-adapter",
+  "collectedAt": "2026-09-29T17:13:34Z",
+  "publicSource": {
+    "initialBaseHead": "91d6a25939b41bddc024be03da1216d1f3128f92",
+    "integrationHead": "3f5981a49ab63ae084d7ff9ee656f473d8a9d388",
+    "state": "uncommitted scoped files; unrelated pre-existing public changes preserved",
+    "files": [
+      {
+        "path": "packages/runtime/src/perception/port.ts",
+        "sha256": "5fa0ce889ea1a0e315886053c934921e41b4ffc95c8fe5d94ab75c683bad3ffa"
+      },
+      {
+        "path": "packages/runtime/src/perception/admission.ts",
+        "sha256": "c4e8a8a86b824470689d31c24661391dd96baf188daef91d25a517cbb184db8b"
+      },
+      {
+        "path": "packages/runtime/src/perception/fixture.ts",
+        "sha256": "d86693f062d2c1b62d543b73d237934ec01efbeb135f2b05d24cff0a9cd802e1"
+      },
+      {
+        "path": "packages/runtime/test/perception.test.ts",
+        "sha256": "8111739eade04760cff66a750d8c6212358a0b041b15e979654407534ae41587"
+      },
+      {
+        "path": "packages/runtime/package.json",
+        "sha256": "989c8900593b2638880c7a9a3d6e34247cdc9ec9f3447dc049c3351502784faf"
+      },
+      {
+        "path": "apps/server/src/runtime/visual-input.ts",
+        "sha256": "6f9ec2518aafae102034ce0f9a91d21143bb7c57ef843562d066c950e1e1c2f5"
+      },
+      {
+        "path": "apps/server/test/visual-input.test.ts",
+        "sha256": "760357685ec4f5756ed8e82266d9608ac6fb0c51a9476ad80867fdb2ff7e691a"
+      }
+    ]
+  },
+  "privateSource": {
+    "head": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "state": "operator-local specification worktree is dirty; no private artifact was copied into public source",
+    "doc30Sha256": "e5302919fdfb4842d713ce4ed344a44a52dcdb11b38185d2dee293406dedd6e8",
+    "packetSha256": "bf9132e0114bc0cdf68ab0cea52d321d92260d25bde34b2d29da0ed66ca072fb",
+    "packetSha256AtComponentTests": "65a1dc98f7995f52e60221254dee4c1f94076dd09056d86a786bdae76d206b42",
+    "packetScopeAidUpdatedAfterComponentTests": true
+  },
+  "implemented": [
+    "Provider-neutral, additive visual request/result port with explicit image formats, scope epochs, cancellation, deadline and egress metadata. The default runtime is unconfigured and cannot enable a camera.",
+    "Ephemeral explicit session camera lease, one-use clock challenge, conservative capture-time mapping, audience/source revision invalidation, stop/expiry release callback, bounded rate/size/queue/deadline admission and buffer disposal. Cancelled providers retain the one model slot until settlement or a finite retirement grace; non-settling adapters are quarantined and all queued sessions drained.",
+    "Trusted VisualInputHost seam derives scope and source from host callbacks, checks exact binary-part identity, applies scoped idempotent camera commands, and reports unconfigured providers as unavailable. It is not attached to an HTTP route or physical camera broker.",
+    "Deterministic fixture adapter and synthetic component tests; fixture descriptions do not derive from image pixels."
+  ],
+  "profile": {
+    "id": "lifestream.conversational-vision.v1",
+    "version": "1.0.0",
+    "defaults": "at most 3 JPEG/PNG frames per batch, 2 MiB per frame, 1280-pixel long edge, 3 capture frames/s, 1 batch/s, 12 MiB encoded plus 20 MiB decoded working storage per session, 4 host sessions, 1 in-flight and 1 latest pending per session, 1 global model-work slot, 3 s admission-to-result deadline, at most 1 s cancelled-provider retirement grace, 6 s current-context freshness, 250 ms maximum clock uncertainty, 60 s lease",
+    "selectedVisualProvider": null,
+    "fixtureProvider": "fixture-visual 1.0.0, localOnly, scripted output only",
+    "currentSglangProvider": "text-only InferenceRequest; no image payload or pixel interpretation"
+  },
+  "checks": [
+    {
+      "command": "node --test packages/runtime/test/perception.test.ts apps/server/test/visual-input.test.ts",
+      "result": "pass",
+      "tests": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1262,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 88791.0315
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass for runnable checks",
+      "tests": 132,
+      "passed": 50,
+      "failed": 0,
+      "skipped": 82,
+      "detail": "Rendered browser checks were skipped; no visual journey claim."
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "detail": "Structural check only."
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S087",
+      "result": "fails on existing run-control mismatch",
+      "detail": "Checkpoint still selects LS-S066; after the independent S066 local commit, the checkpoint public revision also differs from integration HEAD; actual public changes differ from checkpoint.changedFiles; checkpoint writable files differ from the prepared packet. S066 implementationCompleteVerificationPending and activeSlice were preserved. S087 prerequisites are independently dependency-ready."
+    }
+  ],
+  "caseCoverage": [
+    {
+      "caseId": "LS-TEST-155",
+      "disposition": "partialComponentOnly",
+      "covered": "Explicit default-off lease, unconfigured and permission denial, stale revision, changed audience/source and repeat/stop behavior under synthetic trusted host callbacks.",
+      "remaining": "Authenticated route, actual broker/permission, rendered enable and indicator, reconnect/restart and normal-session reply checks."
+    },
+    {
+      "caseId": "LS-TEST-156",
+      "disposition": "partialComponentOnly",
+      "covered": "Injected-clock challenge, frame header/digest/bounds/freshness checks, queue replacement, deadline, cancellation, finite provider retirement/quarantine and provider-result validation with synthetic bytes.",
+      "remaining": "Actual bounded multipart transport, full decode validation, selected image-provider invocation, resource measurements and context exclusion traces."
+    },
+    {
+      "caseId": "LS-TEST-157",
+      "disposition": "partialComponentOnly",
+      "covered": "Additive package exports and no modifications to existing text/audio wire shapes, with full pre-existing unit suite passing.",
+      "remaining": "Actual legacy boundary/replay/rollback matrix and versioned public transport conformance."
+    }
+  ],
+  "unresolvedDependencies": [
+    "No authenticated /api/runtime/vision/v1 routes or browser capture controls are wired.",
+    "The real authenticated room is now listed in the revised private S087 packet; route and control wiring remain absent.",
+    "No public versioned vision wire contract/validator is authored, and no private schema was exported.",
+    "No physical camera source broker or capture lease callback is composed; trusted host callbacks are only an adapter seam.",
+    "The selected SGLang inference provider is text-only; no image-capable provider is selected or connected.",
+    "Full media decode checks and a bounded multipart parser are absent, so this component cannot assert malformed image rejection at the transport boundary.",
+    "No actual pixels-to-interpretation, physical camera, perceptual quality, ordinary reply, memory or Human acceptance is claimed."
+  ],
+  "runControl": "The existing public checkpoint activeSlice LS-S066 and its pending LS-TEST-084 verification were not changed. Phase 16 approval is recorded separately in the operator-local owner; this record does not promote LS-S087 or authorize activation, deployment or publication."
+}
