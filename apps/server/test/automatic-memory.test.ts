@@ -7,8 +7,8 @@ import {randomUUID} from 'node:crypto';
 import {Database,MemoryRepository} from '@lifestream/storage-sqlite';
 import {AutomaticMemory,preserveProjectContinuity,validateExtractedMemory,validateMemoryBatch} from '../src/runtime/automatic-memory.ts';
 const scope=()=>({principalId:randomUUID(),assistantId:randomUUID(),relationshipId:randomUUID()});
-function setup(t:any){const root=mkdtempSync(join(tmpdir(),'automatic-memory-')),path=join(root,'db.sqlite');const db=new Database({path});db.migrate();const memories=new MemoryRepository(db),owner=scope();let calls=0,items:unknown[]=[];
- const make=()=>new AutomaticMemory({database:db,memories,provider:()=>({revision:'synthetic-extractor-v1',provider:{async *generate(){calls++;yield {kind:'text' as const,text:JSON.stringify({items})};yield {kind:'done' as const};}}}),idle:()=>true,changed:()=>{}});
+function setup(t:any,options:{resolveProvider?:()=>void;extract?:()=>void|Promise<void>;idle?:()=>boolean;contentAllowed?:(owner:ReturnType<typeof scope>,content:string)=>boolean;changed?:()=>void}={}){const root=mkdtempSync(join(tmpdir(),'automatic-memory-')),path=join(root,'db.sqlite');const db=new Database({path});db.migrate();const memories=new MemoryRepository(db),owner=scope();let calls=0,items:unknown[]=[];
+ const make=()=>new AutomaticMemory({database:db,memories,provider:()=>{options.resolveProvider?.();return {revision:'synthetic-extractor-v1',provider:{async *generate(){calls++;await options.extract?.();yield {kind:'text' as const,text:JSON.stringify({items})};yield {kind:'done' as const};}}};},idle:options.idle??(()=>true),contentAllowed:options.contentAllowed,changed:options.changed??(()=>{})});
  let worker=make();t.after(async()=>{await worker.close();db.close();rmSync(root,{recursive:true,force:true});});
  return {db,memories,owner,get worker(){return worker;},setItems:(values:unknown[])=>items=values,set:(quote:string,key='project.language',kind='conversationSummary')=>items=[{key,kind,quote,subject:'owner',epistemic:'userStatement'}],calls:()=>calls,restart:async()=>{await worker.close();worker=make();}};
 }
@@ -60,3 +60,82 @@ test('automatic extraction crosses the real SGLang canonical request validator b
 });
 
 test('a question or a substring of that question cannot contradict an admitted statement',async t=>{const f=setup(t);f.worker.configure(f.owner,true,0);f.set('Our project uses TypeScript.');f.worker.enqueue(f.owner,'turn:statement','Our project uses TypeScript.','authenticatedTypedOwner');await f.worker.tick();f.set('Which language do we use?');f.worker.enqueue(f.owner,'turn:question','Which language do we use?','authenticatedTypedOwner');await f.worker.tick();assert.equal(f.memories.contextRecords(f.owner.assistantId,f.owner.principalId).length,1);assert.equal(f.memories.list(f.owner.assistantId).length,1);assert.deepEqual(validateExtractedMemory({items:[{key:'project.language',kind:'conversationSummary',quote:'language do we use',subject:'owner',epistemic:'userStatement'}]},'Which language do we use?'),[]);});
+
+function deferred(){let resolve!:()=>void;const promise=new Promise<void>(done=>{resolve=done;});return {promise,resolve};}
+function workRow(f:ReturnType<typeof setup>,source:string){return f.db.connection.prepare('SELECT id,state,input_text AS input,prepared_json AS prepared,reason,attempts FROM automatic_memory_work WHERE source_turn=?').get(source) as {id:string;state:string;input:string;prepared:string|null;reason:string|null;attempts:number};}
+function assertExpired(f:ReturnType<typeof setup>,source:string){const row=workRow(f,source);assert.equal(row.state,'expired');assert.equal(row.input,'');assert.equal(row.prepared,null);assert.equal(row.reason,'retention_expired');return row;}
+const expiryQuote='I prefer concise explanations.';
+function enqueueExpiry(f:ReturnType<typeof setup>,source:string){f.set(expiryQuote,'communication.concise','preference');assert.equal(f.worker.enqueue(f.owner,source,expiryQuote,'authenticatedTypedOwner').state,'queued');}
+
+test('provider completion at the source expiry boundary cannot persist preparation or admit memory',async t=>{
+ let now=Date.now();t.mock.method(Date,'now',()=>now);const started=deferred(),release=deferred();
+ const f=setup(t,{extract:async()=>{started.resolve();await release.promise;}});f.worker.configure(f.owner,true,0);enqueueExpiry(f,'turn:late');
+ const expires=now+1000;f.db.connection.prepare('UPDATE automatic_memory_work SET expires_at=?').run(expires);
+ f.db.exec("CREATE TEMP TABLE preparation_writes (n INTEGER); CREATE TEMP TRIGGER count_preparation AFTER UPDATE OF prepared_json ON automatic_memory_work WHEN NEW.prepared_json IS NOT NULL BEGIN INSERT INTO preparation_writes VALUES (1); END");
+ const running=f.worker.tick();await started.promise;now=expires;release.resolve();await running;
+ assertExpired(f,'turn:late');assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM preparation_writes').get()!.n,0);assert.equal(f.memories.list(f.owner.assistantId).length,0);assert.equal(f.worker.isIdle(),true);
+ now=expires-500;assert.throws(()=>f.worker.retry(f.owner,workRow(f,'turn:late').id),/unavailable/);await f.worker.tick();assertExpired(f,'turn:late');assert.equal(f.calls(),1);
+});
+
+test('expiry during provider resolution prevents transmitting the source to generation',async t=>{
+ let now=Date.now();t.mock.method(Date,'now',()=>now);const expires=now+1000,f=setup(t,{resolveProvider:()=>{now=expires;}});f.worker.configure(f.owner,true,0);enqueueExpiry(f,'turn:before-provider');f.db.connection.prepare('UPDATE automatic_memory_work SET expires_at=?').run(expires);
+ await f.worker.tick();assertExpired(f,'turn:before-provider');assert.equal(f.calls(),0);assert.equal(f.memories.list(f.owner.assistantId).length,0);
+});
+
+test('expired durable preparation is scrubbed on restart and cannot be retried after clock rollback',async t=>{
+ let now=Date.now();t.mock.method(Date,'now',()=>now);const f=setup(t);f.worker.configure(f.owner,true,0);enqueueExpiry(f,'turn:prepared-expiry');
+ f.db.exec("CREATE TRIGGER reject_expiry BEFORE INSERT ON memories BEGIN SELECT RAISE(ABORT,'synthetic storage failure'); END");await f.worker.tick();assert.ok(workRow(f,'turn:prepared-expiry').prepared);
+ f.db.connection.prepare('UPDATE automatic_memory_work SET expires_at=?').run(now);await f.restart();assertExpired(f,'turn:prepared-expiry');f.db.exec('DROP TRIGGER reject_expiry');
+ now-=1000;await f.restart();assert.throws(()=>f.worker.retry(f.owner,workRow(f,'turn:prepared-expiry').id),/unavailable/);await f.worker.tick();assertExpired(f,'turn:prepared-expiry');assert.equal(f.calls(),1);assert.equal(f.memories.list(f.owner.assistantId).length,0);
+});
+
+test('prepared admission rechecks durable expiry and policy after content filtering callbacks',async t=>{
+ for(const invalidation of ['expiry','policy','terminal'] as const)await t.test(invalidation,async child=>{
+  let invalidate=false;const f=setup(child,{contentAllowed:()=>{if(invalidate){if(invalidation==='expiry')f.db.connection.prepare('UPDATE automatic_memory_work SET expires_at=?').run(Date.now());else if(invalidation==='policy')f.worker.configure(f.owner,false,1);else f.db.exec("UPDATE automatic_memory_work SET state='expired',input_text='',prepared_json=NULL,reason='retention_expired'");}return true;}});
+  f.worker.configure(f.owner,true,0);enqueueExpiry(f,'turn:filter');f.db.exec("CREATE TRIGGER reject_filter BEFORE INSERT ON memories BEGIN SELECT RAISE(ABORT,'synthetic storage failure'); END");await f.worker.tick();assert.ok(workRow(f,'turn:filter').prepared);f.db.exec('DROP TRIGGER reject_filter');invalidate=true;
+  await f.worker.tick();assert.equal(f.memories.list(f.owner.assistantId).length,0);assert.equal(f.calls(),1);const row=workRow(f,'turn:filter');assert.equal(row.state,invalidation==='policy'?'cancelled':'expired');assert.equal(row.input,'');assert.equal(row.prepared,null);
+ });
+});
+
+test('foreground cancellation cannot requeue expired work or allow late provider output to restore it',async t=>{
+ let now=Date.now();t.mock.method(Date,'now',()=>now);const started=deferred(),release=deferred();const f=setup(t,{extract:async()=>{started.resolve();await release.promise;}});
+ f.worker.configure(f.owner,true,0);enqueueExpiry(f,'turn:foreground-expiry');const expires=now+1000;f.db.connection.prepare('UPDATE automatic_memory_work SET expires_at=?').run(expires);
+ const running=f.worker.tick();await started.promise;f.worker.preempt();now=expires;await f.worker.tick();await running;assertExpired(f,'turn:foreground-expiry');
+ release.resolve();await new Promise<void>(resolve=>setImmediate(resolve));now=expires-500;await f.worker.tick();assertExpired(f,'turn:foreground-expiry');assert.equal(f.calls(),1);assert.equal(f.memories.list(f.owner.assistantId).length,0);
+});
+
+test('foreground preemption preserves an unexpired preparation for admission without repeated extraction',async t=>{
+ let preempt=true;const f=setup(t,{contentAllowed:()=>{if(preempt){preempt=false;f.worker.preempt();}return true;}});f.worker.configure(f.owner,true,0);enqueueExpiry(f,'turn:valid-preemption');
+ await f.worker.tick();assert.equal(workRow(f,'turn:valid-preemption').state,'prepared');assert.equal(workRow(f,'turn:valid-preemption').reason,'foreground_preempted');assert.equal(f.memories.list(f.owner.assistantId).length,0);
+ await f.worker.tick();assert.equal(workRow(f,'turn:valid-preemption').state,'saved');assert.equal(f.memories.list(f.owner.assistantId).length,1);assert.equal(f.calls(),1);
+});
+
+test('a post-admission observer failure does not resurrect completed work',async t=>{
+ const f=setup(t,{changed:()=>{throw new Error('synthetic observer failure');}});f.worker.configure(f.owner,true,0);enqueueExpiry(f,'turn:saved-terminal');await f.worker.tick();
+ assert.equal(workRow(f,'turn:saved-terminal').state,'saved');assert.equal(workRow(f,'turn:saved-terminal').input,'');assert.equal(workRow(f,'turn:saved-terminal').prepared,null);await f.worker.tick();assert.equal(f.calls(),1);assert.equal(f.memories.list(f.owner.assistantId).length,1);
+});
+
+test('foreground pauses still expire queued, prepared and failed payloads without starting extraction',async t=>{
+ const f=setup(t,{idle:()=>false});f.worker.configure(f.owner,true,0);for(const state of ['queued','prepared','failed']){enqueueExpiry(f,`turn:paused-${state}`);f.db.connection.prepare('UPDATE automatic_memory_work SET state=?,prepared_json=?,expires_at=? WHERE source_turn=?').run(state,state==='prepared'?'{}':null,Date.now()-1,`turn:paused-${state}`);}
+ await f.worker.tick();for(const state of ['queued','prepared','failed'])assertExpired(f,`turn:paused-${state}`);assert.equal(f.calls(),0);
+});
+
+test('busy extraction does not postpone other source cleanup and keeps valid completed memory',async t=>{
+ const started=deferred(),release=deferred(),f=setup(t,{extract:async()=>{started.resolve();await release.promise;}});f.worker.configure(f.owner,true,0);enqueueExpiry(f,'turn:active');
+ const running=f.worker.tick();await started.promise;
+ for(const state of ['queued','prepared','failed']){enqueueExpiry(f,`turn:busy-${state}`);f.db.connection.prepare('UPDATE automatic_memory_work SET state=?,prepared_json=?,expires_at=? WHERE source_turn=?').run(state,state==='prepared'?'{}':null,Date.now()-1,`turn:busy-${state}`);}
+ await f.worker.tick();for(const state of ['queued','prepared','failed'])assertExpired(f,`turn:busy-${state}`);assert.equal(workRow(f,'turn:active').state,'running');
+ release.resolve();await running;assert.equal(workRow(f,'turn:active').state,'saved');assert.equal(f.memories.list(f.owner.assistantId).length,1);
+ f.db.connection.prepare("UPDATE automatic_memory_work SET expires_at=? WHERE source_turn='turn:active'").run(Date.now()-1);await f.worker.tick();assert.equal(workRow(f,'turn:active').state,'saved');assert.equal(f.memories.list(f.owner.assistantId).length,1);
+});
+
+test('busy cleanup releases an expired active extraction without waiting for its provider',async t=>{
+ const started=deferred(),release=deferred(),f=setup(t,{extract:async()=>{started.resolve();await release.promise;}});f.worker.configure(f.owner,true,0);enqueueExpiry(f,'turn:busy-active');
+ const running=f.worker.tick();await started.promise;f.db.connection.prepare('UPDATE automatic_memory_work SET expires_at=?').run(Date.now()-1);await f.worker.tick();await running;
+ assertExpired(f,'turn:busy-active');assert.equal(f.worker.isIdle(),true);release.resolve();await new Promise<void>(resolve=>setImmediate(resolve));assert.equal(f.memories.list(f.owner.assistantId).length,0);
+});
+
+test('the initial source retention duration bounds a stalled extraction even when the wall clock stalls',async t=>{
+ const now=Date.now();t.mock.method(Date,'now',()=>now);const started=deferred(),release=deferred(),f=setup(t,{extract:async()=>{started.resolve();await release.promise;}});f.worker.configure(f.owner,true,0);enqueueExpiry(f,'turn:timer-expiry');f.db.connection.prepare('UPDATE automatic_memory_work SET expires_at=?').run(now+25);
+ const running=f.worker.tick();await started.promise;await running;assertExpired(f,'turn:timer-expiry');assert.equal(f.worker.isIdle(),true);release.resolve();await new Promise<void>(resolve=>setImmediate(resolve));assert.equal(f.memories.list(f.owner.assistantId).length,0);
+});
