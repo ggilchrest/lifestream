@@ -129,6 +129,115 @@ test('deadline and invalid provider output cannot become current observations', 
   assert.equal(next.visual.cameraState(enabled.target.sessionId).activeForSession,false);
 });
 
+test('provider cannot replace admitted request and frame identities with invented evidence', async () => {
+  for(const attackFrame of [false,true]){
+    const corrupt:VisualPerceptionProvider={...provider,interpret:async request=>{
+      if(attackFrame) Reflect.set(request.frames[0]!,'frameId','invented-frame');
+      else Reflect.set(request,'requestId','invented-request');
+      return {requestId:attackFrame?request.requestId:'invented-request',status:'complete',observations:[{observationId:'invented',frameIds:[attackFrame?'invented-frame':request.frames[0]!.frameId],appearance:'Invented evidence.',inference:null,confidence:null,limitations:[]}],reason:null};
+    }};
+    const h=harness(corrupt), active=h.begin(); h.advance(20);
+    const admitted=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'identity');
+    const result=await admitted.completion;
+    assert.equal(result.requestId,admitted.requestId);
+    assert.equal(result.reason,'provider_invalid');
+    assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,false);
+    assert.equal(h.visual.resourceUsage().rawBytes,0);
+    h.visual.close();
+  }
+});
+
+test('provider metadata is frozen independently from caller scope and disposable frame bytes', async () => {
+  const attempts:boolean[]=[];
+  let held:Uint8Array|undefined;
+  const guarded:VisualPerceptionProvider={...provider,interpret:async request=>{
+    held=request.frames[0]!.bytes;
+    attempts.push(Reflect.set(request,'leaseId','another-lease'),Reflect.set(request.scope,'audienceRevision',2),Reflect.set(request.scope,'assistantId','another-assistant'),Reflect.set(request.frames[0]!,'clockMappingId','another-clock'),Reflect.set(request.frames,0,{...request.frames[0],frameId:'invented-frame'}));
+    assert.ok(Object.isFrozen(request)&&Object.isFrozen(request.scope)&&Object.isFrozen(request.frames)&&Object.isFrozen(request.frames[0]));
+    return provider.interpret(request,new AbortController().signal);
+  }};
+  const h=harness(guarded,value=>value.audienceRevision===1), active=h.begin(); h.advance(20);
+  const input=h.frame(active.mappingId,0);
+  const admitted=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[input],'scope');
+  Reflect.set(active.target,'audienceRevision',9);
+  const result=await admitted.completion;
+  assert.equal(result.status,'complete');
+  assert.deepEqual(attempts,[false,false,false,false,false]);
+  assert.equal(held?.[0],0,'the original owned bytes are still wiped after use');
+  assert.equal(input.bytes[0],137,'there is no additional provider byte copy to escape disposal');
+  assert.equal(h.visual.resourceUsage().rawBytes,0);
+  h.visual.close();
+});
+
+test('accepted provider evidence is a frozen snapshot unaffected by later provider mutation', async () => {
+  const mutable={requestId:'',status:'complete' as const,observations:[{observationId:'observation',frameIds:['frame-0'],appearance:'Original evidence.',inference:null,confidence:null,limitations:['original limit']}],reason:null};
+  const h=harness({...provider,interpret:async request=>{mutable.requestId=request.requestId;return mutable;}}), active=h.begin(); h.advance(20);
+  const result=await h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'snapshot').completion;
+  mutable.requestId='changed'; mutable.observations[0]!.appearance='Changed after acceptance.';
+  mutable.observations[0]!.frameIds.push('invented-frame'); mutable.observations[0]!.limitations[0]='changed limit'; mutable.observations.push({...mutable.observations[0]!});
+  assert.notEqual(result.requestId,'changed');
+  assert.equal(result.observations.length,1);
+  assert.equal(result.observations[0]?.appearance,'Original evidence.');
+  assert.deepEqual(result.observations[0]?.frameIds,['frame-0']);
+  assert.deepEqual(result.observations[0]?.limitations,['original limit']);
+  assert.ok(Object.isFrozen(result)&&Object.isFrozen(result.observations)&&Object.isFrozen(result.observations[0])&&Object.isFrozen(result.observations[0]?.frameIds)&&Object.isFrozen(result.observations[0]?.limitations));
+  h.visual.close();
+});
+
+test('detached provider buffers reject evidence, settle, release the slot and wipe other buffers', async () => {
+  let calls=0, lengthGetterCalls=0, detached:Uint8Array|undefined, remaining:Uint8Array|undefined;
+  const transfers:VisualPerceptionProvider={...provider,interpret:async request=>{
+    calls++;
+    if(calls===1){
+      detached=request.frames[0]!.bytes;
+      remaining=request.frames[1]!.bytes;
+      const backing=detached.buffer as ArrayBuffer & {transfer?:()=>ArrayBuffer};
+      // Modern ArrayBuffer.transfer and structured-clone transfer both detach
+      // the host view; neither may strand result settlement or other cleanup.
+      if(backing.transfer) backing.transfer();
+      else structuredClone(backing,{transfer:[backing]});
+      Object.defineProperty(detached,'byteLength',{get(){lengthGetterCalls++;return png.byteLength;}});
+    }
+    return provider.interpret(request,new AbortController().signal);
+  }};
+  const h=harness(transfers), active=h.begin(); h.advance(400);
+  const first=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0),h.frame(active.mappingId,1,5_344)],'detached');
+  const result=await first.completion;
+  assert.equal(result.reason,'provider_invalid');
+  assert.equal(detached?.buffer.byteLength,0);
+  assert.equal(lengthGetterCalls,0,'provider accessors cannot conceal detached native storage');
+  assert.equal(remaining?.[0],0,'one failed wipe cannot skip remaining owned buffers');
+  assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,false);
+  assert.equal(h.visual.resourceUsage().rawBytes,0);
+  h.advance(1_000);
+  const successor=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,2,6_344)],'successor');
+  assert.equal(successor.queued,false,'a completed invalid provider result releases the slot');
+  assert.equal((await successor.completion).status,'complete');
+  assert.equal(calls,2);
+  h.visual.close();
+});
+
+test('provider accessors, proxies, sparse arrays and oversized metadata fail closed without evaluating code', async () => {
+  let evaluated=0;
+  const variants:Array<(requestId:string)=>unknown>=[
+    requestId=>({get requestId(){evaluated++;throw new Error('accessor must not execute');},status:'empty',observations:[],reason:requestId}),
+    requestId=>new Proxy({requestId,status:'empty',observations:[],reason:null},{get(_target,key){if(key==='then')return undefined; evaluated++;throw new Error('proxy evidence must not execute');}}),
+    requestId=>({requestId,status:'complete',observations:[{observationId:'observation',frameIds:['frame-0'],get appearance(){evaluated++;return 'getter';},inference:null,confidence:null,limitations:[]}],reason:null}),
+    requestId=>({requestId,status:'complete',observations:new Array(1),reason:null}),
+    requestId=>({requestId,status:'empty',observations:[],reason:'x'.repeat(8_193)}),
+    requestId=>({requestId,status:'complete',observations:[{observationId:'observation',frameIds:['frame-0'],appearance:'plain',inference:null,confidence:null,limitations:new Proxy([],{get(){evaluated++;throw new Error('proxy must not execute');}})}],reason:null})
+  ];
+  for(const make of variants){
+    const h=harness({...provider,interpret:async request=>make(request.requestId) as VisualPerceptionResult}), active=h.begin(); h.advance(20);
+    const result=await h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'untrusted').completion;
+    assert.equal(result.reason,'provider_invalid');
+    assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,false);
+    assert.equal(h.visual.resourceUsage().rawBytes,0);
+    h.visual.close();
+  }
+  assert.equal(evaluated,0);
+});
+
 test('old peer and scope invalidation leave the existing text/audio contract untouched', () => {
   const h = harness(provider,value=>value.audienceRevision === 1), original = h.begin();
   const changed = {...original.target,audienceRevision:2};

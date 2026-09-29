@@ -1,6 +1,7 @@
 import {createHash, randomUUID} from 'node:crypto';
 import {crc32} from 'node:zlib';
-import type {VisualBounds, VisualFrame, VisualMediaType, VisualPerceptionProvider, VisualPerceptionRequest, VisualPerceptionResult, VisualScope} from './port.ts';
+import {types} from 'node:util';
+import type {VisualBounds, VisualFrame, VisualMediaType, VisualObservation, VisualPerceptionProvider, VisualPerceptionRequest, VisualPerceptionResult, VisualScope} from './port.ts';
 import {referenceVisualBounds} from './port.ts';
 
 export type VisualDropReason = 'disabled' | 'unsupported' | 'unconfigured' | 'source_unavailable' | 'permission_denied' | 'lease_conflict' | 'stale_revision' | 'stale_lease' | 'scope_changed' | 'clock_challenge_invalid' | 'clock_uncertain' | 'frame_invalid' | 'frame_oversize' | 'frame_stale' | 'frame_future' | 'rate_limited' | 'foreground_priority' | 'provider_unavailable' | 'provider_invalid' | 'deadline' | 'replaced' | 'cancelled';
@@ -21,7 +22,8 @@ export type CaptureAuthority = Readonly<{
 type ClockChallenge = {id: string; sentMono: number; sentUtc: number; expiresMono: number};
 type ClockMapping = {id: string; endpointClockId: string; endpointReceivedMono: number; hostSentMono: number; hostReceivedMono: number; anchorUtc: number; expiresMono: number};
 type Lease = {id: string; scope: VisualScope; revision: number; expiresMono: number; mapping: ClockMapping; lastAdmissionMono: number; lastSequence: number; lastCaptureMono: number; lastUsableCaptureMono: number | null; expiryTimer: ReturnType<typeof setTimeout> | undefined};
-type Job = {request: VisualPerceptionRequest; buffers: Uint8Array[]; decodedBytes: number; capturedEarliestMono: number; deadlineMono: number; settle: (result: VisualPerceptionResult) => void; controller: AbortController; cancelReason: VisualDropReason | null; deadlineTimer: ReturnType<typeof setTimeout> | undefined};
+type JobIdentity = Readonly<{requestId: string; leaseId: string; scope: VisualScope; frameIds: readonly string[]}>;
+type Job = {identity: JobIdentity; request: VisualPerceptionRequest; buffers: Uint8Array[]; bufferByteLengths: readonly number[]; decodedBytes: number; capturedEarliestMono: number; deadlineMono: number; settle: (result: VisualPerceptionResult) => void; controller: AbortController; cancelReason: VisualDropReason | null; deadlineTimer: ReturnType<typeof setTimeout> | undefined};
 type SessionState = {revision: number; challenge: ClockChallenge | undefined; lease: Lease | undefined; pending: Job | undefined; inFlight: Job | undefined};
 
 export type VisualNegotiation = Readonly<{
@@ -49,6 +51,36 @@ export type CameraState = Readonly<{
 
 const scopeEqual = (a: VisualScope, b: VisualScope) => JSON.stringify(a) === JSON.stringify(b);
 const failure = (requestId: string, reason: VisualDropReason): VisualPerceptionResult => ({requestId, status: reason === 'deadline' ? 'timedOut' : reason === 'cancelled' || reason === 'replaced' ? 'cancelled' : 'rejected', observations: [], reason});
+
+/** Read plain data descriptors only: getters, proxies and custom prototypes are not provider evidence. */
+function dataRecord(value: unknown, keys: readonly string[]): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || types.isProxy(value)) return null;
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null || Reflect.ownKeys(value).length !== keys.length) return null;
+  const copy: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+  for (const key of keys) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (!descriptor || !Object.hasOwn(descriptor, 'value')) return null;
+    copy[key] = descriptor.value;
+  }
+  return copy;
+}
+
+function dataArray(value: unknown, max: number): unknown[] | null {
+  if (!value || typeof value !== 'object' || types.isProxy(value) || !Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) return null;
+  const length = Object.getOwnPropertyDescriptor(value, 'length')?.value as unknown;
+  if (typeof length !== 'number' || !Number.isSafeInteger(length) || length < 0 || length > max || Reflect.ownKeys(value).length !== length + 1) return null;
+  const copy: unknown[] = [];
+  for (let index = 0; index < length; index++) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+    if (!descriptor || !Object.hasOwn(descriptor, 'value')) return null;
+    copy.push(descriptor.value);
+  }
+  return copy;
+}
+
+const boundedString = (value: unknown): value is string => typeof value === 'string' && value.length <= 8_192 && Buffer.byteLength(value) <= 8_192;
+const typedArrayByteLength = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype), 'byteLength')!.get!;
 /** Bounded structural validation, not a pixel decoder or provider workspace proof. */
 const header = (bytes: Uint8Array, mediaType: VisualMediaType): {width: number; height: number} | null => {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -155,7 +187,7 @@ export class VisualAdmission {
   }
 
   private rawBytes(sessionId: string, state = this.sessions.get(sessionId)): number {
-    return (this.ingress.get(sessionId) ?? 0) + [state?.inFlight,state?.pending].reduce((sum,job)=>sum+(job?.buffers.reduce((total,buffer)=>total+buffer.byteLength,0) ?? 0),0);
+    return (this.ingress.get(sessionId) ?? 0) + [state?.inFlight,state?.pending].reduce((sum,job)=>sum+(job?.bufferByteLengths.reduce((total,length)=>total+length,0) ?? 0),0);
   }
 
   private recordRawUsage(sessionId: string): void {
@@ -288,7 +320,7 @@ export class VisualAdmission {
   private endLease(state: SessionState, lease: Lease, reason: 'stop' | 'expired' | 'invalidated'): void {
     clearTimeout(lease.expiryTimer);
     state.lease = undefined; state.challenge = undefined; state.revision++;
-    if (state.pending) { this.dispose(state.pending); state.pending.settle(failure(state.pending.request.requestId, 'cancelled')); state.pending = undefined; }
+    if (state.pending) { this.dispose(state.pending); state.pending.settle(failure(state.pending.identity.requestId, 'cancelled')); state.pending = undefined; }
     if (state.inFlight) { state.inFlight.cancelReason = 'cancelled'; state.inFlight.controller.abort(); }
     this.leaseEnded(lease,reason);
   }
@@ -328,22 +360,25 @@ export class VisualAdmission {
       earliest = Math.min(earliest, low); latest = Math.max(latest, high);
       priorSequence = frame.sequence; priorCapture = frame.capturedMonotonicMs; seen.add(frame.frameId);
     }
-    const inFlightBytes = state.inFlight?.buffers.reduce((sum, buffer) => sum + buffer.length, 0) ?? 0;
+    const inFlightBytes = state.inFlight?.bufferByteLengths.reduce((sum, length) => sum + length, 0) ?? 0;
     const inFlightDecoded = state.inFlight?.decodedBytes ?? 0;
     if (last - first > this.bounds.maxBatchSpanMs || bytes > this.bounds.maxFramesPerBatch * this.bounds.maxFrameBytes || bytes + inFlightBytes + (this.ingress.get(scope.sessionId) ?? 0) > this.bounds.maxRawBytesPerSession || decoded + inFlightDecoded > this.bounds.maxDecodedBytesPerSession) throw new VisualAdmissionError('frame_oversize');
     // All validation precedes replacement; dispose the old pending allocation
     // before making its replacement, so the copy peak is part of the bound.
-    if (state.pending) { state.pending.settle(failure(state.pending.request.requestId, 'replaced')); this.dispose(state.pending); state.pending = undefined; }
+    if (state.pending) { state.pending.settle(failure(state.pending.identity.requestId, 'replaced')); this.dispose(state.pending); state.pending = undefined; }
     const held = frames.map(frame => Uint8Array.from(frame.bytes));
     const receivedUtc = this.utc();
-    const request: VisualPerceptionRequest = {requestId, correlationId, environment: 'live', scope: structuredClone(scope), leaseId, capturedAtEarliestMs: lease.mapping.anchorUtc + earliest - lease.mapping.hostSentMono, capturedAtLatestMs: lease.mapping.anchorUtc + latest - lease.mapping.hostSentMono, receivedAtMs: receivedUtc, deadlineAtMs: receivedUtc + this.bounds.deadlineMs, frames: frames.map((frame, index) => ({...frame, bytes: held[index]!}))};
+    // Validation identity is host-owned and never passed to provider code. The
+    // provider gets separate frozen metadata over the same bounded byte buffers.
+    const identity: JobIdentity = Object.freeze({requestId, leaseId, scope: Object.freeze(structuredClone(lease.scope)), frameIds: Object.freeze(frames.map(frame => frame.frameId))});
+    const request: VisualPerceptionRequest = Object.freeze({requestId, correlationId, environment: 'live', scope: Object.freeze(structuredClone(identity.scope)), leaseId, capturedAtEarliestMs: lease.mapping.anchorUtc + earliest - lease.mapping.hostSentMono, capturedAtLatestMs: lease.mapping.anchorUtc + latest - lease.mapping.hostSentMono, receivedAtMs: receivedUtc, deadlineAtMs: receivedUtc + this.bounds.deadlineMs, frames: Object.freeze(frames.map((frame, index) => Object.freeze({...frame, bytes: held[index]!})))});
     let settle!: (result: VisualPerceptionResult) => void;
     const completion = new Promise<VisualPerceptionResult>(resolve => { settle = resolve; });
-    const job: Job = {request, buffers: held, decodedBytes: decoded, capturedEarliestMono: earliest, deadlineMono: now + this.bounds.deadlineMs, settle, controller: new AbortController(), cancelReason: null, deadlineTimer: undefined};
+    const job: Job = {identity, request, buffers: held, bufferByteLengths: Object.freeze(held.map(buffer => buffer.byteLength)), decodedBytes: decoded, capturedEarliestMono: earliest, deadlineMono: now + this.bounds.deadlineMs, settle, controller: new AbortController(), cancelReason: null, deadlineTimer: undefined};
     lease.lastAdmissionMono = now; lease.lastSequence = priorSequence; lease.lastCaptureMono = priorCapture;
     job.deadlineTimer = setTimeout(() => {
       job.cancelReason = 'deadline';
-      if (state.pending === job) { state.pending=undefined; if (state.lease?.id===job.request.leaseId) state.lease.lastUsableCaptureMono=null; this.dispose(job); job.settle(failure(requestId,'deadline')); }
+      if (state.pending === job) { state.pending=undefined; if (state.lease?.id===job.identity.leaseId) state.lease.lastUsableCaptureMono=null; this.dispose(job); job.settle(failure(requestId,'deadline')); }
       else job.controller.abort();
     }, this.bounds.deadlineMs);
     const queued = this.modelBusy || !!state.inFlight;
@@ -356,18 +391,22 @@ export class VisualAdmission {
   private run(state: SessionState, job: Job): void {
     this.modelBusy = true; state.inFlight = job;
     const provider = this.provider!;
-    const timedOut = new Promise<VisualPerceptionResult>(resolve => job.controller.signal.addEventListener('abort', () => resolve(failure(job.request.requestId, job.cancelReason ?? 'cancelled')), {once: true}));
+    const timedOut = new Promise<VisualPerceptionResult>(resolve => job.controller.signal.addEventListener('abort', () => resolve(failure(job.identity.requestId, job.cancelReason ?? 'cancelled')), {once: true}));
     let providerSettled = false;
     const executed = Promise.resolve().then(() => provider.interpret(job.request, job.controller.signal)).finally(() => { providerSettled = true; });
     void Promise.race([executed, timedOut]).then(raw => {
       const lease = state.lease;
-      let result = this.validResult(raw, job.request) ? raw : failure(job.request.requestId, 'provider_invalid');
-      if (job.cancelReason) result = failure(job.request.requestId, job.cancelReason);
-      else if (result.status !== 'cancelled' && this.mono() >= job.deadlineMono) result = failure(job.request.requestId, 'deadline');
-      else if (result.status !== 'cancelled' && (!lease || lease.id !== job.request.leaseId || !scopeEqual(lease.scope, job.request.scope) || !this.scopeCurrent(job.request.scope))) result = failure(job.request.requestId, 'scope_changed');
-      if (lease && lease.id===job.request.leaseId) lease.lastUsableCaptureMono = result.status==='complete' && result.observations.length ? job.capturedEarliestMono : null;
+      let result = (this.buffersIntact(job) ? this.snapshotResult(raw, job.identity) : null) ?? failure(job.identity.requestId, 'provider_invalid');
+      if (job.cancelReason) result = failure(job.identity.requestId, job.cancelReason);
+      else if (result.status !== 'cancelled' && this.mono() >= job.deadlineMono) result = failure(job.identity.requestId, 'deadline');
+      else if (result.status !== 'cancelled' && (!lease || lease.id !== job.identity.leaseId || !scopeEqual(lease.scope, job.identity.scope) || !this.scopeCurrent(job.identity.scope))) result = failure(job.identity.requestId, 'scope_changed');
+      if (lease && lease.id===job.identity.leaseId) lease.lastUsableCaptureMono = result.status==='complete' && result.observations.length ? job.capturedEarliestMono : null;
       return result;
-    }, () => { if (state.lease?.id===job.request.leaseId) state.lease.lastUsableCaptureMono=null; return failure(job.request.requestId, 'provider_unavailable'); }).then(result => {
+    }, () => { if (state.lease?.id===job.identity.leaseId) state.lease.lastUsableCaptureMono=null; return failure(job.identity.requestId, 'provider_unavailable'); }).then(result => {
+      if (result.status==='complete' && !this.buffersIntact(job)) {
+        result=failure(job.identity.requestId,'provider_invalid');
+        if (state.lease?.id===job.identity.leaseId) state.lease.lastUsableCaptureMono=null;
+      }
       this.dispose(job);
       job.settle(result);
       const retire = () => {
@@ -377,9 +416,9 @@ export class VisualAdmission {
           const next = owner.pending;
           if (!next) continue;
           owner.pending = undefined;
-          const validLease = !!owner.lease && owner.lease.id === next.request.leaseId && scopeEqual(owner.lease.scope,next.request.scope) && this.scopeCurrent(next.request.scope);
+          const validLease = !!owner.lease && owner.lease.id === next.identity.leaseId && scopeEqual(owner.lease.scope,next.identity.scope) && this.scopeCurrent(next.identity.scope);
           const reason: VisualDropReason | null = this.mono() >= next.deadlineMono ? 'deadline' : !validLease ? 'scope_changed' : !this.providerReady() ? 'provider_unavailable' : !this.optionalReady() ? 'foreground_priority' : null;
-          if (reason) { if (owner.lease?.id===next.request.leaseId) owner.lease.lastUsableCaptureMono=null; this.dispose(next); next.settle(failure(next.request.requestId, reason)); continue; }
+          if (reason) { if (owner.lease?.id===next.identity.leaseId) owner.lease.lastUsableCaptureMono=null; this.dispose(next); next.settle(failure(next.identity.requestId, reason)); continue; }
           this.run(owner, next);
           return;
         }
@@ -399,15 +438,38 @@ export class VisualAdmission {
     });
   }
 
-  private validResult(value: unknown, request: VisualPerceptionRequest): value is VisualPerceptionResult {
-    if (!value || typeof value !== 'object') return false;
-    const result = value as Partial<VisualPerceptionResult>;
-    if (result.requestId !== request.requestId || typeof result.status !== 'string' || !['complete','empty','rejected','cancelled','timedOut','failed'].includes(result.status) || !Array.isArray(result.observations) || result.observations.length > 32 || (result.status !== 'complete' && result.observations.length !== 0) || (result.reason !== null && typeof result.reason !== 'string')) return false;
-    const ids = new Set(request.frames.map(frame => frame.frameId));
+  private snapshotResult(value: unknown, identity: JobIdentity): VisualPerceptionResult | null {
     try {
-      return result.observations.every(item => item && typeof item === 'object' && typeof item.observationId === 'string' && item.observationId.length > 0 && Array.isArray(item.frameIds) && item.frameIds.length > 0 && item.frameIds.every((id: string) => ids.has(id)) && typeof item.appearance === 'string' && item.appearance.length > 0 && (item.inference === null || typeof item.inference === 'string') && (item.confidence === null || typeof item.confidence === 'number' && Number.isFinite(item.confidence) && item.confidence >= 0 && item.confidence <= 1) && Array.isArray(item.limitations) && item.limitations.every((limit: string) => typeof limit === 'string') && Buffer.byteLength(JSON.stringify(item)) <= 8_192);
-    } catch { return false; }
+      const result = dataRecord(value, ['requestId','status','observations','reason']);
+      if (!result || result.requestId !== identity.requestId || typeof result.status !== 'string' || !['complete','empty','rejected','cancelled','timedOut','failed'].includes(result.status) || result.reason !== null && !boundedString(result.reason)) return null;
+      const candidates = dataArray(result.observations, 32);
+      if (!candidates || result.status !== 'complete' && candidates.length !== 0) return null;
+      const observations: VisualObservation[] = [];
+      for (const candidate of candidates) {
+        const item = dataRecord(candidate, ['observationId','frameIds','appearance','inference','confidence','limitations']);
+        if (!item || !boundedString(item.observationId) || !item.observationId.length || !boundedString(item.appearance) || !item.appearance.length || item.inference !== null && !boundedString(item.inference) || item.confidence !== null && (typeof item.confidence !== 'number' || !Number.isFinite(item.confidence) || item.confidence < 0 || item.confidence > 1)) return null;
+        const frameIds = dataArray(item.frameIds, identity.frameIds.length), limitations = dataArray(item.limitations, 8_192);
+        if (!frameIds?.length || !frameIds.every((id): id is string => typeof id === 'string' && identity.frameIds.includes(id)) || new Set(frameIds).size !== frameIds.length || !limitations || !limitations.every(boundedString)) return null;
+        const observation: VisualObservation = Object.freeze({observationId:item.observationId,frameIds:Object.freeze(frameIds),appearance:item.appearance,inference:item.inference,confidence:item.confidence,limitations:Object.freeze(limitations)});
+        // Serializing our own plain snapshot cannot run provider toJSON/getters.
+        if (Buffer.byteLength(JSON.stringify(observation)) > 8_192) return null;
+        observations.push(observation);
+      }
+      return Object.freeze({requestId:identity.requestId,status:result.status as VisualPerceptionResult['status'],observations:Object.freeze(observations),reason:result.reason});
+    } catch { return null; }
   }
 
-  private dispose(job: Job): void { clearTimeout(job.deadlineTimer); for (const buffer of job.buffers) buffer.fill(0); }
+  private buffersIntact(job: Job): boolean {
+    try { return job.buffers.every((buffer,index) => Reflect.apply(typedArrayByteLength,buffer,[]) === job.bufferByteLengths[index]); }
+    catch { return false; }
+  }
+
+  private dispose(job: Job): void {
+    clearTimeout(job.deadlineTimer);
+    for (const buffer of job.buffers) {
+      // An in-process provider can detach borrowed storage. That is invalid
+      // evidence, but cannot prevent settlement or wiping the other buffers.
+      try { Uint8Array.prototype.fill.call(buffer,0); } catch { /* Detached storage is no longer owned by this view; retention isolation requires a separate provider boundary. */ }
+    }
+  }
 }

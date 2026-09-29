@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S087",
+  "status": "inProgress",
+  "claimClass": "local-synthetic-provider-boundary-regression",
+  "collectedAt": "2026-09-29T19:37:34.437655+00:00",
+  "baseHead": "7ff895270848be9a4820ed131a324d3a12746cfd",
+  "sourceFiles": [
+    {
+      "path": "packages/runtime/src/perception/admission.ts",
+      "sha256": "1dffef0a0dd7b332f4531226e4359b00c2c78bf1ff43e268bb783fcfdf74b2d6"
+    },
+    {
+      "path": "packages/runtime/test/perception.test.ts",
+      "sha256": "eeb579b43d9c2750bcbb4c6d7b1a5d18856540544a3b2499d3ba21f5d91b87d6"
+    }
+  ],
+  "changes": [
+    "Host-owned request identity and frame IDs remain separate from frozen provider request metadata.",
+    "Bounded plain data validation snapshots and freezes accepted results; provider accessors and proxies are rejected without evaluation.",
+    "Detached frame storage is rejected; cleanup continues, completion settles, remaining buffers are wiped, and the model slot is released."
+  ],
+  "verification": {
+    "focusedRuntimeTests": {
+      "pass": 18,
+      "fail": 0
+    },
+    "runtimeAndHostHttpTests": {
+      "command": "node --test --experimental-strip-types packages/runtime/test/perception.test.ts apps/server/test/visual-input.test.ts apps/server/test/visual-http.test.ts",
+      "pass": 24,
+      "fail": 0,
+      "durationMs": 3144.904042
+    },
+    "typecheck": "pass",
+    "diffCheck": "pass"
+  },
+  "exclusions": [
+    "No real camera or selected vision-model test.",
+    "No malicious in-process provider sandbox or prevention of retained/copied bytes.",
+    "No physical, perceptual, performance, production or Human acceptance.",
+    "Full LS-S087 and primary LS-S066 remain pending their distinct criteria."
+  ]
+}
