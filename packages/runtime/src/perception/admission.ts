@@ -1,4 +1,5 @@
 import {createHash, randomUUID} from 'node:crypto';
+import {crc32} from 'node:zlib';
 import type {VisualBounds, VisualFrame, VisualMediaType, VisualPerceptionProvider, VisualPerceptionRequest, VisualPerceptionResult, VisualScope} from './port.ts';
 import {referenceVisualBounds} from './port.ts';
 
@@ -19,8 +20,8 @@ export type CaptureAuthority = Readonly<{
 
 type ClockChallenge = {id: string; sentMono: number; sentUtc: number; expiresMono: number};
 type ClockMapping = {id: string; endpointClockId: string; endpointReceivedMono: number; hostSentMono: number; hostReceivedMono: number; anchorUtc: number; expiresMono: number};
-type Lease = {id: string; scope: VisualScope; revision: number; expiresMono: number; mapping: ClockMapping; lastAdmissionMono: number; lastSequence: number; lastCaptureMono: number; lastUsableCaptureMono: number | null};
-type Job = {request: VisualPerceptionRequest; buffers: Uint8Array[]; decodedBytes: number; capturedEarliestMono: number; deadlineMono: number; settle: (result: VisualPerceptionResult) => void; controller: AbortController; cancelReason: VisualDropReason | null};
+type Lease = {id: string; scope: VisualScope; revision: number; expiresMono: number; mapping: ClockMapping; lastAdmissionMono: number; lastSequence: number; lastCaptureMono: number; lastUsableCaptureMono: number | null; expiryTimer: ReturnType<typeof setTimeout> | undefined};
+type Job = {request: VisualPerceptionRequest; buffers: Uint8Array[]; decodedBytes: number; capturedEarliestMono: number; deadlineMono: number; settle: (result: VisualPerceptionResult) => void; controller: AbortController; cancelReason: VisualDropReason | null; deadlineTimer: ReturnType<typeof setTimeout> | undefined};
 type SessionState = {revision: number; challenge: ClockChallenge | undefined; lease: Lease | undefined; pending: Job | undefined; inFlight: Job | undefined};
 
 export type VisualNegotiation = Readonly<{
@@ -48,26 +49,53 @@ export type CameraState = Readonly<{
 
 const scopeEqual = (a: VisualScope, b: VisualScope) => JSON.stringify(a) === JSON.stringify(b);
 const failure = (requestId: string, reason: VisualDropReason): VisualPerceptionResult => ({requestId, status: reason === 'deadline' ? 'timedOut' : reason === 'cancelled' || reason === 'replaced' ? 'cancelled' : 'rejected', observations: [], reason});
+/** Bounded structural validation, not a pixel decoder or provider workspace proof. */
 const header = (bytes: Uint8Array, mediaType: VisualMediaType): {width: number; height: number} | null => {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   if (mediaType === 'image/png') {
-    if (bytes.length < 24 || ![137,80,78,71,13,10,26,10].every((value, i) => bytes[i] === value) || String.fromCharCode(...bytes.subarray(12, 16)) !== 'IHDR') return null;
-    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    return {width: view.getUint32(16), height: view.getUint32(20)};
-  }
-  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return null;
-  let offset = 2;
-  while (offset + 3 < bytes.length) {
-    if (bytes[offset] !== 0xff) return null;
-    const marker = bytes[offset + 1]!;
-    if (marker === 0xd9 || marker === 0xda) return null;
-    if (marker === 0xff) { offset++; continue; }
-    const length = (bytes[offset + 2]! << 8) | bytes[offset + 3]!;
-    if (length < 2 || offset + 2 + length > bytes.length) return null;
-    if ([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker)) {
-      if (length < 7) return null;
-      return {height: (bytes[offset + 5]! << 8) | bytes[offset + 6]!, width: (bytes[offset + 7]! << 8) | bytes[offset + 8]!};
+    if (bytes.length < 57 || ![137,80,78,71,13,10,26,10].every((value,i)=>bytes[i]===value)) return null;
+    let offset=8, dimensions:{width:number;height:number}|null=null, hasData=false;
+    while (offset+12<=bytes.length) {
+      const size=view.getUint32(offset), end=offset+12+size;
+      if (end>bytes.length) return null;
+      const type=String.fromCharCode(...bytes.subarray(offset+4,offset+8));
+      if (!/^[A-Za-z]{4}$/u.test(type) || crc32(bytes.subarray(offset+4,end-4))!==view.getUint32(end-4)) return null;
+      if (type==='IHDR') {
+        if (offset!==8 || size!==13) return null;
+        dimensions={width:view.getUint32(offset+8),height:view.getUint32(offset+12)};
+        if (bytes[offset+18]!==0 || bytes[offset+19]!==0 || bytes[offset+20]!>1) return null;
+      } else if (!dimensions) return null;
+      if (type==='IDAT') hasData=true;
+      if (type==='IEND') return size===0 && hasData && end===bytes.length ? dimensions : null;
+      offset=end;
     }
-    offset += 2 + length;
+    return null;
+  }
+  if (bytes.length<4 || bytes[0]!==0xff || bytes[1]!==0xd8) return null;
+  let offset=2, dimensions:{width:number;height:number}|null=null, hasScan=false;
+  while (offset+1<bytes.length) {
+    if (bytes[offset]!==0xff) return null;
+    const marker=bytes[offset+1]!;
+    if (marker===0xff) { offset++; continue; }
+    if (marker===0xd9) return offset+2===bytes.length && hasScan ? dimensions : null;
+    if (marker===0xd8 || marker===0 || offset+4>bytes.length) return null;
+    const length=view.getUint16(offset+2), end=offset+2+length;
+    if (length<2 || end>bytes.length) return null;
+    if ([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker)) {
+      if (dimensions || length<11 || length!==8+3*bytes[offset+9]!) return null;
+      dimensions={height:view.getUint16(offset+5),width:view.getUint16(offset+7)};
+    }
+    offset=end;
+    if (marker===0xda) {
+      if (!dimensions || length<8 || length!==6+2*bytes[end-length+2]!) return null;
+      hasScan=true;
+      while (offset+1<bytes.length) {
+        if (bytes[offset]!==0xff) { offset++; continue; }
+        const next=bytes[offset+1]!;
+        if (next===0 || next>=0xd0 && next<=0xd7) { offset+=2; continue; }
+        break;
+      }
+    }
   }
   return null;
 };
@@ -96,12 +124,18 @@ export class VisualAdmission {
   private readonly onLeaseEnded: VisualAdmissionOptions['onLeaseEnded'];
   private providerPoisoned = false;
   private modelBusy = false;
+  private readonly ingress = new Map<string, number>();
+  private peakRawBytesPerSession = 0;
 
   constructor(options: VisualAdmissionOptions = {}) {
     this.bounds = Object.freeze(Object.fromEntries(Object.entries(referenceVisualBounds).map(([key, max]) => {
       const requested = options.bounds?.[key as keyof VisualBounds];
-      if (requested === undefined) return [key, max];
-      if (!Number.isSafeInteger(requested) || requested <= 0 || requested > max) throw new Error(`invalid visual bound ${key}`);
+      // Leave room for a full transport envelope while one current and one
+      // pending batch are held. The effective frame bound is advertised.
+      const effective = key === 'maxFrameBytes' ? Math.min(max, 1_048_576) : max;
+      if (requested === undefined) return [key, effective];
+      const weakens = key === 'minAdmissionIntervalMs' ? requested < max : requested > effective;
+      if (!Number.isSafeInteger(requested) || requested <= 0 || weakens) throw new Error(`invalid visual bound ${key}`);
       return [key, requested];
     })) as VisualBounds);
     if (options.provider && !options.provider.supportsCancellation) throw new Error('visual provider requires cancellation or an isolating worker');
@@ -114,6 +148,31 @@ export class VisualAdmission {
     this.onLeaseEnded = options.onLeaseEnded;
   }
 
+  /** Accounts owned/reserved encoded buffers only; socket, JSON object, decoder and provider-private allocation require separate qualification. */
+  resourceUsage() {
+    const sessions = [...this.sessions].map(([sessionId,state]) => ({sessionId, rawBytes:this.rawBytes(sessionId,state), ingressBytes:this.ingress.get(sessionId) ?? 0}));
+    return {sessions, rawBytes:sessions.reduce((sum,item)=>sum+item.rawBytes,0), peakRawBytesPerSession:this.peakRawBytesPerSession};
+  }
+
+  private rawBytes(sessionId: string, state = this.sessions.get(sessionId)): number {
+    return (this.ingress.get(sessionId) ?? 0) + [state?.inFlight,state?.pending].reduce((sum,job)=>sum+(job?.buffers.reduce((total,buffer)=>total+buffer.byteLength,0) ?? 0),0);
+  }
+
+  private recordRawUsage(sessionId: string): void {
+    this.peakRawBytesPerSession = Math.max(this.peakRawBytesPerSession,this.rawBytes(sessionId));
+  }
+
+  /** Reservation precedes transport allocation and remains held until its envelope is wiped. */
+  reserveIngress(sessionId: string, bytes: number): () => void {
+    this.stateFor(sessionId);
+    if (this.ingress.has(sessionId) || this.ingress.size >= this.bounds.maxHostSessions) throw new VisualAdmissionError('lease_conflict');
+    if (!Number.isSafeInteger(bytes) || bytes < 1 || this.rawBytes(sessionId)+bytes > this.bounds.maxRawBytesPerSession) throw new VisualAdmissionError('frame_oversize');
+    this.ingress.set(sessionId,bytes);
+    this.recordRawUsage(sessionId);
+    let released = false;
+    return () => { if (!released) { released=true; this.ingress.delete(sessionId); } };
+  }
+
   private scopeCurrent(scope: VisualScope): boolean { try { return this.currentScope(scope) === true; } catch { return false; } }
   private providerReady(): boolean { try { return !!this.provider && !this.providerPoisoned && this.provider.healthy(); } catch { return false; } }
   private optionalReady(): boolean { try { return this.optionalWorkReady() === true; } catch { return false; } }
@@ -122,20 +181,14 @@ export class VisualAdmission {
     let state = this.sessions.get(sessionId);
     if (!state) {
       if (this.sessions.size >= 64) {
-        const retired = [...this.sessions].find(([,candidate]) => !candidate.lease && !candidate.pending && !candidate.inFlight);
+        const retired = [...this.sessions].find(([id,candidate]) => !candidate.lease && !candidate.pending && !candidate.inFlight && !this.ingress.has(id));
         if (!retired) throw new VisualAdmissionError('lease_conflict');
         this.sessions.delete(retired[0]);
       }
       state = {revision: 0, challenge: undefined, lease: undefined, pending: undefined, inFlight: undefined}; this.sessions.set(sessionId, state);
     }
     if (state.challenge && state.challenge.expiresMono < this.mono()) state.challenge = undefined;
-    if (state.lease && state.lease.expiresMono <= this.mono()) {
-      const expired = state.lease;
-      state.lease = undefined; state.challenge = undefined; state.revision++;
-      if (state.pending) { state.pending.settle(failure(state.pending.request.requestId, 'stale_lease')); this.dispose(state.pending); state.pending = undefined; }
-      if (state.inFlight) { state.inFlight.cancelReason = 'cancelled'; state.inFlight.controller.abort(); }
-      this.leaseEnded(expired,'expired');
-    }
+    if (state.lease && state.lease.expiresMono <= this.mono()) this.endLease(state,state.lease,'expired');
     return state;
   }
 
@@ -167,7 +220,8 @@ export class VisualAdmission {
     if (this.provider?.dataEgressClass === 'configuredRemote' && !authority.remoteEgressAllowed) throw new VisualAdmissionError('permission_denied');
     if ([...this.sessions.values()].filter(s => s.lease && s.lease.expiresMono > now).length >= this.bounds.maxHostSessions) throw new VisualAdmissionError('lease_conflict');
     const mapping = this.consumeChallenge(state, input, now);
-    state.lease = {id: this.id(), scope: structuredClone(scope), revision: ++state.revision, expiresMono: now + this.bounds.leaseTtlMs, mapping, lastAdmissionMono: -Infinity, lastSequence: -1, lastCaptureMono: -Infinity, lastUsableCaptureMono: null};
+    state.lease = {id: this.id(), scope: structuredClone(scope), revision: ++state.revision, expiresMono: now + this.bounds.leaseTtlMs, mapping, lastAdmissionMono: -Infinity, lastSequence: -1, lastCaptureMono: -Infinity, lastUsableCaptureMono: null, expiryTimer: undefined};
+    this.armLeaseExpiry(state,state.lease);
     return this.cameraState(scope.sessionId);
   }
 
@@ -179,6 +233,7 @@ export class VisualAdmission {
     lease.mapping = this.consumeChallenge(state, input, now);
     lease.expiresMono = now + this.bounds.leaseTtlMs;
     lease.revision = ++state.revision;
+    this.armLeaseExpiry(state,lease);
     return this.cameraState(scope.sessionId);
   }
 
@@ -195,6 +250,7 @@ export class VisualAdmission {
     if (lease && !this.scopeCurrent(lease.scope)) { this.endLease(state,lease,'invalidated'); return this.cameraState(sessionId); }
     const captureActive = !!lease && lease.expiresMono > now && this.scopeCurrent(lease.scope);
     const providerHealthy = this.providerReady();
+    if (lease && !providerHealthy) lease.lastUsableCaptureMono=null;
     const usable = captureActive && providerHealthy && lease!.lastUsableCaptureMono !== null && now - lease!.lastUsableCaptureMono <= this.bounds.freshnessMs;
     return {revision: state.revision, captureActive, activeForSession: usable, reason: !captureActive ? 'disabled' : !providerHealthy ? 'provider_unavailable' : !usable ? 'frame_stale' : null, leaseId: captureActive ? lease!.id : null, expiresAtMonotonicMs: captureActive ? lease!.expiresMono : null, clockMappingId: captureActive ? lease!.mapping.id : null, currentObservationUsable: usable};
   }
@@ -223,7 +279,14 @@ export class VisualAdmission {
     this.sessions.clear();
   }
 
-  private endLease(state: SessionState, lease: Lease, reason: 'stop' | 'invalidated'): void {
+  private armLeaseExpiry(state: SessionState, lease: Lease): void {
+    clearTimeout(lease.expiryTimer);
+    lease.expiryTimer=setTimeout(()=>{ if (state.lease===lease) this.endLease(state,lease,'expired'); },Math.max(0,lease.expiresMono-this.mono()));
+    lease.expiryTimer.unref();
+  }
+
+  private endLease(state: SessionState, lease: Lease, reason: 'stop' | 'expired' | 'invalidated'): void {
+    clearTimeout(lease.expiryTimer);
     state.lease = undefined; state.challenge = undefined; state.revision++;
     if (state.pending) { this.dispose(state.pending); state.pending.settle(failure(state.pending.request.requestId, 'cancelled')); state.pending = undefined; }
     if (state.inFlight) { state.inFlight.cancelReason = 'cancelled'; state.inFlight.controller.abort(); }
@@ -267,26 +330,32 @@ export class VisualAdmission {
     }
     const inFlightBytes = state.inFlight?.buffers.reduce((sum, buffer) => sum + buffer.length, 0) ?? 0;
     const inFlightDecoded = state.inFlight?.decodedBytes ?? 0;
-    if (last - first > this.bounds.maxBatchSpanMs || bytes > this.bounds.maxFramesPerBatch * this.bounds.maxFrameBytes || bytes + inFlightBytes > this.bounds.maxRawBytesPerSession || decoded + inFlightDecoded > this.bounds.maxDecodedBytesPerSession) throw new VisualAdmissionError('frame_oversize');
+    if (last - first > this.bounds.maxBatchSpanMs || bytes > this.bounds.maxFramesPerBatch * this.bounds.maxFrameBytes || bytes + inFlightBytes + (this.ingress.get(scope.sessionId) ?? 0) > this.bounds.maxRawBytesPerSession || decoded + inFlightDecoded > this.bounds.maxDecodedBytesPerSession) throw new VisualAdmissionError('frame_oversize');
+    // All validation precedes replacement; dispose the old pending allocation
+    // before making its replacement, so the copy peak is part of the bound.
+    if (state.pending) { state.pending.settle(failure(state.pending.request.requestId, 'replaced')); this.dispose(state.pending); state.pending = undefined; }
     const held = frames.map(frame => Uint8Array.from(frame.bytes));
     const receivedUtc = this.utc();
     const request: VisualPerceptionRequest = {requestId, correlationId, environment: 'live', scope: structuredClone(scope), leaseId, capturedAtEarliestMs: lease.mapping.anchorUtc + earliest - lease.mapping.hostSentMono, capturedAtLatestMs: lease.mapping.anchorUtc + latest - lease.mapping.hostSentMono, receivedAtMs: receivedUtc, deadlineAtMs: receivedUtc + this.bounds.deadlineMs, frames: frames.map((frame, index) => ({...frame, bytes: held[index]!}))};
     let settle!: (result: VisualPerceptionResult) => void;
     const completion = new Promise<VisualPerceptionResult>(resolve => { settle = resolve; });
-    const job: Job = {request, buffers: held, decodedBytes: decoded, capturedEarliestMono: earliest, deadlineMono: now + this.bounds.deadlineMs, settle, controller: new AbortController(), cancelReason: null};
+    const job: Job = {request, buffers: held, decodedBytes: decoded, capturedEarliestMono: earliest, deadlineMono: now + this.bounds.deadlineMs, settle, controller: new AbortController(), cancelReason: null, deadlineTimer: undefined};
     lease.lastAdmissionMono = now; lease.lastSequence = priorSequence; lease.lastCaptureMono = priorCapture;
+    job.deadlineTimer = setTimeout(() => {
+      job.cancelReason = 'deadline';
+      if (state.pending === job) { state.pending=undefined; if (state.lease?.id===job.request.leaseId) state.lease.lastUsableCaptureMono=null; this.dispose(job); job.settle(failure(requestId,'deadline')); }
+      else job.controller.abort();
+    }, this.bounds.deadlineMs);
     const queued = this.modelBusy || !!state.inFlight;
-    if (queued) {
-      if (state.pending) { state.pending.settle(failure(state.pending.request.requestId, 'replaced')); this.dispose(state.pending); }
-      state.pending = job;
-    } else this.run(state, job);
+    if (queued) state.pending = job;
+    else this.run(state, job);
+    this.recordRawUsage(scope.sessionId);
     return {requestId, queued, completion};
   }
 
   private run(state: SessionState, job: Job): void {
     this.modelBusy = true; state.inFlight = job;
     const provider = this.provider!;
-    const deadline = setTimeout(() => { job.cancelReason = 'deadline'; job.controller.abort(); }, this.bounds.deadlineMs);
     const timedOut = new Promise<VisualPerceptionResult>(resolve => job.controller.signal.addEventListener('abort', () => resolve(failure(job.request.requestId, job.cancelReason ?? 'cancelled')), {once: true}));
     let providerSettled = false;
     const executed = Promise.resolve().then(() => provider.interpret(job.request, job.controller.signal)).finally(() => { providerSettled = true; });
@@ -296,10 +365,10 @@ export class VisualAdmission {
       if (job.cancelReason) result = failure(job.request.requestId, job.cancelReason);
       else if (result.status !== 'cancelled' && this.mono() >= job.deadlineMono) result = failure(job.request.requestId, 'deadline');
       else if (result.status !== 'cancelled' && (!lease || lease.id !== job.request.leaseId || !scopeEqual(lease.scope, job.request.scope) || !this.scopeCurrent(job.request.scope))) result = failure(job.request.requestId, 'scope_changed');
-      else if (lease && result.status === 'complete' && result.observations.length) lease.lastUsableCaptureMono = job.capturedEarliestMono;
+      if (lease && lease.id===job.request.leaseId) lease.lastUsableCaptureMono = result.status==='complete' && result.observations.length ? job.capturedEarliestMono : null;
       return result;
-    }, () => failure(job.request.requestId, 'provider_unavailable')).then(result => {
-      clearTimeout(deadline); this.dispose(job);
+    }, () => { if (state.lease?.id===job.request.leaseId) state.lease.lastUsableCaptureMono=null; return failure(job.request.requestId, 'provider_unavailable'); }).then(result => {
+      this.dispose(job);
       job.settle(result);
       const retire = () => {
         if (state.inFlight === job) state.inFlight = undefined;
@@ -310,7 +379,7 @@ export class VisualAdmission {
           owner.pending = undefined;
           const validLease = !!owner.lease && owner.lease.id === next.request.leaseId && scopeEqual(owner.lease.scope,next.request.scope) && this.scopeCurrent(next.request.scope);
           const reason: VisualDropReason | null = this.mono() >= next.deadlineMono ? 'deadline' : !validLease ? 'scope_changed' : !this.providerReady() ? 'provider_unavailable' : !this.optionalReady() ? 'foreground_priority' : null;
-          if (reason) { this.dispose(next); next.settle(failure(next.request.requestId, reason)); continue; }
+          if (reason) { if (owner.lease?.id===next.request.leaseId) owner.lease.lastUsableCaptureMono=null; this.dispose(next); next.settle(failure(next.request.requestId, reason)); continue; }
           this.run(owner, next);
           return;
         }
@@ -340,5 +409,5 @@ export class VisualAdmission {
     } catch { return false; }
   }
 
-  private dispose(job: Job): void { for (const buffer of job.buffers) buffer.fill(0); }
+  private dispose(job: Job): void { clearTimeout(job.deadlineTimer); for (const buffer of job.buffers) buffer.fill(0); }
 }

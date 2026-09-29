@@ -6,6 +6,8 @@ type VisualPart = { mediaType: VisualMediaType; bytes: Uint8Array };
 const MAX_METADATA_BYTES = 1_048_576;
 const MAX_FRAME_BYTES = 2_097_152;
 const MAX_FRAMES = 3;
+export const MAX_VISUAL_METADATA_BYTES = MAX_METADATA_BYTES;
+export const VISUAL_FRAMING_BYTES = 32_768;
 const MAX_REQUEST_BYTES = MAX_METADATA_BYTES + MAX_FRAMES * MAX_FRAME_BYTES + 32_768;
 const MAX_PART_HEADERS_BYTES = 2_048;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -14,9 +16,9 @@ const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const HEADER_END = Buffer.from('\r\n\r\n');
 
 export class VisualMultipartError extends Error {
-  readonly status: 400 | 413 | 415;
-  readonly code: 'visual_multipart_invalid' | 'visual_multipart_too_large' | 'visual_multipart_unsupported_media';
-  constructor(status: 400 | 413 | 415, code: 'visual_multipart_invalid' | 'visual_multipart_too_large' | 'visual_multipart_unsupported_media') {
+  readonly status: 400 | 408 | 413 | 415;
+  readonly code: 'visual_multipart_invalid' | 'visual_multipart_too_large' | 'visual_multipart_unsupported_media' | 'visual_multipart_timeout' | 'visual_multipart_cancelled';
+  constructor(status: 400 | 408 | 413 | 415, code: VisualMultipartError['code']) {
     super(code);
     this.name = 'VisualMultipartError';
     this.status = status;
@@ -38,42 +40,64 @@ function boundaryFor(request: IncomingMessage): string {
   return boundary;
 }
 
-function declaredLength(request: IncomingMessage): number | null {
+function declaredLength(request: IncomingMessage, maxRequestBytes: number): number | null {
   const value = request.headers['content-length'];
   if (value === undefined) return null;
   if (typeof value !== 'string' || !/^(?:0|[1-9][0-9]*)$/.test(value)) return invalid();
   const length = Number(value);
   if (!Number.isSafeInteger(length)) return tooLarge();
-  if (length > MAX_REQUEST_BYTES) return tooLarge();
+  if (length > maxRequestBytes) return tooLarge();
   return length;
 }
 
-async function readBounded(request: IncomingMessage): Promise<Buffer> {
-  const length = declaredLength(request);
-  // One owned envelope backs every part. Chunk accumulation plus concat plus
-  // frame copies can multiply a legal 6 MiB batch before admission.
-  const body = Buffer.alloc(length ?? MAX_REQUEST_BYTES);
-  let size = 0;
-  let complete = false;
-  try {
-    for await (const chunk of request.iterator({ destroyOnReturn: false })) {
-      const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Uint8Array);
-      if (bytes.length > MAX_REQUEST_BYTES - size || bytes.length > body.length - size) {
-        request.resume();
-        return tooLarge();
-      }
-      bytes.copy(body,size);
-      size += bytes.length;
-    }
-    if (length !== null && length !== size) return invalid();
-    complete = true;
-    return body.subarray(0,size);
-  } catch (error) {
-    if (error instanceof VisualMultipartError) throw error;
-    return invalid();
-  } finally {
-    if (!complete) body.fill(0);
-  }
+export type VisualMultipartOptions = Readonly<{maxFrameBytes?:number; maxFrames?:number; maxRequestBytes?:number; deadlineMs?:number; signal?:AbortSignal}>;
+type Limits = {maxFrameBytes:number; maxFrames:number; maxRequestBytes:number; deadlineMs:number};
+function effectiveLimits(options: VisualMultipartOptions): Limits {
+  const maxima = {maxFrameBytes:MAX_FRAME_BYTES,maxFrames:MAX_FRAMES,maxRequestBytes:MAX_REQUEST_BYTES,deadlineMs:5_000};
+  return Object.fromEntries(Object.entries(maxima).map(([key,max]) => {
+    const value = options[key as keyof Limits] ?? max;
+    if (!Number.isSafeInteger(value) || value < 1 || value > max) throw new Error('Invalid visual transport limit');
+    return [key,value];
+  })) as Limits;
+}
+
+async function readBounded(request: IncomingMessage, limits: Limits, signal?: AbortSignal): Promise<Buffer> {
+  const length = declaredLength(request,limits.maxRequestBytes);
+  if (signal?.aborted) throw new VisualMultipartError(400,'visual_multipart_cancelled');
+  // One owned envelope backs every part. No accumulation/concat/frame copies.
+  const body = Buffer.alloc(length ?? limits.maxRequestBytes);
+  return await new Promise<Buffer>((resolve,reject) => {
+    let size = 0, finished = false;
+    const cleanup = () => {
+      clearTimeout(deadline);
+      request.off('data',data); request.off('end',end); request.off('error',failed); request.off('aborted',aborted);
+      signal?.removeEventListener('abort',cancelled);
+    };
+    const fail = (error: VisualMultipartError) => {
+      if (finished) return;
+      finished=true; cleanup(); body.fill(0);
+      // Stop delivery; the HTTP owner closes an unread connection after its
+      // error response rather than draining an attacker-controlled stream.
+      request.pause();
+      reject(error);
+    };
+    const data = (chunk: Buffer | Uint8Array) => {
+      const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk.buffer,chunk.byteOffset,chunk.byteLength);
+      if (bytes.length > body.length-size) return fail(new VisualMultipartError(413,'visual_multipart_too_large'));
+      bytes.copy(body,size); size+=bytes.length;
+    };
+    const end = () => {
+      if (finished) return;
+      if (length !== null && length !== size) return fail(new VisualMultipartError(400,'visual_multipart_invalid'));
+      finished=true; cleanup(); resolve(body.subarray(0,size));
+    };
+    const failed = () => fail(new VisualMultipartError(400,'visual_multipart_invalid'));
+    const aborted = () => fail(new VisualMultipartError(400,'visual_multipart_cancelled'));
+    const cancelled = () => fail(new VisualMultipartError(400,'visual_multipart_cancelled'));
+    const deadline = setTimeout(()=>fail(new VisualMultipartError(408,'visual_multipart_timeout')),limits.deadlineMs);
+    request.on('data',data); request.once('end',end); request.once('error',failed); request.once('aborted',aborted);
+    signal?.addEventListener('abort',cancelled,{once:true});
+  });
 }
 
 function headersFor(body: Buffer, start: number): { name: string; mediaType: string | null; bodyStart: number } {
@@ -105,11 +129,11 @@ function nextDelimiter(body: Buffer, start: number, marker: Buffer): { end: numb
   return invalid();
 }
 
-function declaredFrameIds(metadata: unknown): Set<string> {
+function declaredFrameIds(metadata: unknown, maxFrames: number): Set<string> {
   if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return invalid();
   const frames = (metadata as Record<string, unknown>).frames;
   if (!Array.isArray(frames) || frames.length === 0) return invalid();
-  if (frames.length > MAX_FRAMES) return tooLarge();
+  if (frames.length > maxFrames) return tooLarge();
   const ids = new Set<string>();
   for (const frame of frames) {
     if (!frame || typeof frame !== 'object' || Array.isArray(frame)) return invalid();
@@ -120,7 +144,7 @@ function declaredFrameIds(metadata: unknown): Set<string> {
   return ids;
 }
 
-function parse(body: Buffer, boundary: string): { metadata: unknown; parts: ReadonlyMap<string, VisualPart> } {
+function parse(body: Buffer, boundary: string, limits: Limits): { metadata: unknown; parts: ReadonlyMap<string, VisualPart> } {
   const opening = Buffer.from(`--${boundary}\r\n`);
   if (body.length < opening.length || !body.subarray(0, opening.length).equals(opening)) return invalid();
   const marker = Buffer.from(`\r\n--${boundary}`);
@@ -143,7 +167,7 @@ function parse(body: Buffer, boundary: string): { metadata: unknown; parts: Read
         hasMetadata = true;
       } else {
         if (!UUID.test(header.name) || parts.has(header.name)) return invalid();
-        if (parts.size >= MAX_FRAMES || size > MAX_FRAME_BYTES) return tooLarge();
+        if (parts.size >= limits.maxFrames || size > limits.maxFrameBytes) return tooLarge();
         const mediaType = header.mediaType?.toLowerCase();
         if (mediaType !== 'image/jpeg' && mediaType !== 'image/png') return unsupported();
         const bytes = body.subarray(header.bodyStart, delimiter.end);
@@ -156,7 +180,7 @@ function parse(body: Buffer, boundary: string): { metadata: unknown; parts: Read
     }
     if (cursor < body.length && body[cursor] === 13 && body[cursor + 1] === 10) cursor += 2;
     if (cursor !== body.length || !hasMetadata || parts.size === 0) return invalid();
-    const declared = declaredFrameIds(metadata);
+    const declared = declaredFrameIds(metadata,limits.maxFrames);
     if (declared.size !== parts.size || [...declared].some(id => !parts.has(id))) return invalid();
     return { metadata, parts };
   } catch (error) {
@@ -166,11 +190,11 @@ function parse(body: Buffer, boundary: string): { metadata: unknown; parts: Read
 }
 
 /** Only a bounded, unambiguous body reaches visual admission. No media is decoded or persisted here. */
-export async function readVisualMultipart(request: IncomingMessage): Promise<{ metadata: unknown; parts: ReadonlyMap<string, VisualPart>; dispose: () => void }> {
-  const boundary = boundaryFor(request);
-  const body = await readBounded(request);
+export async function readVisualMultipart(request: IncomingMessage, options: VisualMultipartOptions = {}): Promise<{ metadata: unknown; parts: ReadonlyMap<string, VisualPart>; dispose: () => void }> {
+  const boundary = boundaryFor(request), limits = effectiveLimits(options);
+  const body = await readBounded(request,limits,options.signal);
   try {
-    const parsed = parse(body, boundary);
+    const parsed = parse(body, boundary, limits);
     return {...parsed,dispose:()=>body.fill(0)};
   } catch(error) {
     body.fill(0);

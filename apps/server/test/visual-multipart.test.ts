@@ -7,7 +7,7 @@ import { readVisualMultipart, VisualMultipartError } from '../src/runtime/visual
 const boundary = 'visual-boundary-1';
 const frameA = '11111111-1111-4111-8111-111111111111';
 const frameB = '22222222-2222-4222-8222-222222222222';
-const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+X8ANywAAAABJRU5ErkJggg==', 'base64');
+const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+5gz/qwAAAABJRU5ErkJggg==', 'base64');
 
 type Part = { name: string; bytes: Buffer; mediaType?: string; headers?: string[] };
 function multipart(parts: Part[], closing = `--${boundary}--\r\n`): Buffer {
@@ -97,4 +97,25 @@ test('rejects unsupported media and ambiguous or unsafe part headers', async () 
   await failure(multipart([metadata(), frame()]), 415, 'visual_multipart_unsupported_media', { 'content-type': `multipart/form-data; boundary=${boundary}; charset=utf-8` });
   const filename = multipart([metadata(), frame()]).toString('latin1').replace(`name="${frameA}"`, `name="${frameA}"; filename="image.png"`);
   await failure(Buffer.from(filename, 'latin1'), 400, 'visual_multipart_invalid');
+});
+
+test('tightened transport limits reject a reference-size frame before runtime copy', async () => {
+  const bytes=Buffer.alloc(1_048_577);png.copy(bytes);
+  await assert.rejects(readVisualMultipart(request(multipart([metadata(),frame(frameA,bytes)])),{maxFrameBytes:1_048_576}),error=>error instanceof VisualMultipartError&&error.status===413);
+});
+
+test('stalled or revoked uploads have finite disposal and detach listeners', async () => {
+  for (const cancelled of [false,true]) {
+    const stream=new Readable({read(){}});
+    const req=Object.assign(stream,{headers:{'content-type':`multipart/form-data; boundary=${boundary}`}}) as unknown as IncomingMessage;
+    const controller=new AbortController();
+    const pending=readVisualMultipart(req,{deadlineMs:25,signal:controller.signal});
+    stream.push(Buffer.from('partial'));
+    if (cancelled) controller.abort();
+    await assert.rejects(pending,error=>error instanceof VisualMultipartError&&error.code===(cancelled?'visual_multipart_cancelled':'visual_multipart_timeout'));
+    assert.equal(stream.listenerCount('data'),0);
+    assert.equal(stream.listenerCount('end'),0);
+    assert.equal(stream.listenerCount('error'),0);
+    stream.destroy();
+  }
 });

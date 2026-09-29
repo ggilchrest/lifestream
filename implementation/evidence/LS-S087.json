@@ -2,12 +2,12 @@
   "schemaVersion": "1.0.0",
   "slice": "LS-S087",
   "status": "inProgress",
-  "claimClass": "local-perception-admission-and-authenticated-synthetic-http-route",
-  "collectedAt": "2026-09-29T17:37:04Z",
+  "claimClass": "local-synthetic-http-browser-lifecycle-and-owned-encoded-resource-regression",
+  "collectedAt": "2026-09-29T19:09:26.968664Z",
   "publicSource": {
     "initialBaseHead": "91d6a25939b41bddc024be03da1216d1f3128f92",
-    "integrationHead": "a114abc8917f1895118f7ba56750e75dc42963f2",
-    "state": "scoped authenticated-route source snapshot atop the committed foundation; exact resulting local commit is recorded in operator-local candidate state, and unrelated public changes are preserved",
+    "integrationHead": "fb6214f9d863e4eed989ab26bc1d007c15cbe229",
+    "state": "Scoped browser lifecycle and resource-hardening source snapshot atop the prior authenticated routes; resulting local commit recorded in operator-local candidate state. Unrelated dirty changes preserved.",
     "files": [
       {
         "path": "packages/runtime/src/perception/port.ts",
@@ -15,7 +15,7 @@
       },
       {
         "path": "packages/runtime/src/perception/admission.ts",
-        "sha256": "4388c16b8abca448b8ca265a50b11d2637335109ae1bbc18724d4454864b4f9e"
+        "sha256": "5b4a433e590df251eade68de08ddcd237f516a2f4a4213175de6ea6e37ec9d0d"
       },
       {
         "path": "packages/runtime/src/perception/fixture.ts",
@@ -23,7 +23,7 @@
       },
       {
         "path": "packages/runtime/test/perception.test.ts",
-        "sha256": "8111739eade04760cff66a750d8c6212358a0b041b15e979654407534ae41587"
+        "sha256": "f734c8f4e7a4118604d7e82311c1feb1f19cb529621dc99ab43c7204fdaa3dec"
       },
       {
         "path": "packages/runtime/package.json",
@@ -31,23 +31,43 @@
       },
       {
         "path": "apps/server/src/index.ts",
-        "sha256": "bcfe5e0dfc1650a8c05b7035bbc0dd21860e6d873ba1a6455e7ab400f3debcd3"
+        "sha256": "ba4d250e604acfd6d11fab4a36e17c8dca0bf900edfea2a2070c7ea4e25c27d3"
       },
       {
         "path": "apps/server/src/runtime/visual-input.ts",
-        "sha256": "b4dc27785ffb697068a1f08242422f1731f43afa9dc54804443cbf149b02c8d9"
+        "sha256": "11e42077b853e8081db62b6ffd0e9f171006f84ae271a9641c1d61b0c9525e1d"
       },
       {
         "path": "apps/server/src/runtime/visual-multipart.ts",
-        "sha256": "2e11c0fe6fdfd6dd9136eb75d5a0237fd2815c32c83907529af5c7b866318043"
+        "sha256": "188479baf35fca75db241068e7a6ee9d37f76b2fdbf44b03afe5c0a029a4fb4c"
       },
       {
         "path": "apps/server/test/visual-input.test.ts",
-        "sha256": "b330b3fbe511eb16626c259b1c65e69624b4bb78f0cd2aa5dd6314da62e2ecaa"
+        "sha256": "5fac980fa023030c5ab807e9d9086ccb06eef2b6d2f022f12a8ecc8f0ca832ea"
       },
       {
         "path": "apps/server/test/visual-multipart.test.ts",
-        "sha256": "16ef7138fb76c7136849b607feb6a1abc64ba592302540a4afe76e1ed5987120"
+        "sha256": "74c22849e689e4872524e2cea89ff3af62fe7cec6d8fd77553112b87bed6a8b6"
+      },
+      {
+        "path": "apps/control-web/conversation-camera.js",
+        "sha256": "bb21903524bcb192ab8c3822187c2372b0f4fa8e571183bbd7cf6930394c5e7d"
+      },
+      {
+        "path": "apps/control-web/conversation-room.js",
+        "sha256": "7b5ffc54747e94bd9f76b6a4a735e2c53945a42de6870e7889ec4fa3ea8b7f39"
+      },
+      {
+        "path": "apps/control-web/test/conversation-camera.test.mjs",
+        "sha256": "9d43c96a6b69d82b98c8c266fe45c97a092ac3cb241cd023fdbddc3a382f2ffb"
+      },
+      {
+        "path": "apps/control-web/test/urgent-attention.test.mjs",
+        "sha256": "de3513c3b7ecf9fb8ce473ca0a6296fc273b29e4184ab00539096eda23f9ff35"
+      },
+      {
+        "path": "apps/server/test/visual-route-lifecycle.test.ts",
+        "sha256": "c4ebee602646eb52da556eda31f2610649e1c841aca6555d46114ecd0c17b310"
       }
     ],
     "foundationHead": "a114abc8917f1895118f7ba56750e75dc42963f2"
@@ -56,7 +76,7 @@
     "head": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
     "state": "operator-local specification worktree is dirty; no private artifact was copied into public source",
     "doc30Sha256": "e5302919fdfb4842d713ce4ed344a44a52dcdb11b38185d2dee293406dedd6e8",
-    "packetSha256": "bf9132e0114bc0cdf68ab0cea52d321d92260d25bde34b2d29da0ed66ca072fb",
+    "packetSha256": "96de2593a8ed00adc9afafd619f10fc33c0d9eb5e1f49073a9ea67fdb16c7e6e",
     "packetSha256AtComponentTests": "65a1dc98f7995f52e60221254dee4c1f94076dd09056d86a786bdae76d206b42",
     "packetScopeAidUpdatedAfterComponentTests": true
   },
@@ -64,49 +84,79 @@
     "Provider-neutral additive visual request/result port with image formats, scope epochs, cancellation, deadline and egress metadata. Default runtime remains unconfigured and cannot enable a camera.",
     "Ephemeral explicit session camera lease, one-use clock challenge, conservative capture-time mapping, source/scope invalidation, stop/expiry callback, finite rate/size/queue/deadline admission and buffer disposal. A cancelled non-settling provider retains the one model slot until bounded retirement, then becomes unavailable.",
     "Authenticated local-password and CSRF-protected capability, camera and multipart batch routes enforce exact session/Assistant/private endpoint scope. Synthetic provider/source injection is restricted to loopback test profile; without it the route reports unavailable and cannot activate capture.",
-    "One owned bounded multipart envelope has exact declared UUID-named JPEG/PNG parts, 1 MiB metadata, 2 MiB per frame, no filename/transfer encoding, framing/media-signature checks, zero-copy part views, explicit disposal and one upload per session/four per host. Full image decode and simultaneous transport plus queue memory measurement are pending.",
-    "Synthetic HTTP/component tests cover unconfigured fallback, authenticated negotiation, idempotent camera command, binary digest, upload contention, audience/security retirement and Assistant lease isolation. Fixture observations are scripted and do not derive from image pixels."
+    "One reserved bounded multipart envelope, exact UUID-named JPEG/PNG parts, 1 MiB metadata and an advertised tighter 1 MiB/frame profile, zero-copy part views and explicit wiping. One upload/session and four/host; five-second absolute upload deadline and disconnect cleanup. PNG chunk/CRC/end and JPEG scan/end validation is structural, not pixel decoding.",
+    "Synthetic HTTP/component tests cover unconfigured fallback, authenticated negotiation, idempotent camera command, binary digest, upload contention, audience/security retirement and Assistant lease isolation. Fixture observations are scripted and do not derive from image pixels.",
+    "Browser conversation camera availability, explicit Enable and persistent state/source/Stop controls. Negotiation precedes source preparation, challenge refreshed after preparation, foreground scope watchdog, immediate local stop, delayed grant disposal and no reconnect/background auto-resume. No default capture adapter or physical camera is selected.",
+    "Idle lease expiry releases capture without further polling; batches recheck current capture/interpretation/egress authority; stale requests cannot revoke successor leases. Disconnected HTTP clients cancel exact-lease processing. Runtime camera controls survive administration idle expiry while still requiring current conversation authentication and Assistant permission.",
+    "Interpretation deadlines include queue time; failed, rejected or timed-out observations clear current visual usability. Pending buffers are wiped before replacement copies. Owned/reserved encoded allocation measured at 10,518,528 bytes/session; socket, parsed metadata, decoder and provider-private allocation excluded."
   ],
   "profile": {
     "id": "lifestream.conversational-vision.v1",
     "version": "1.0.0",
-    "defaults": "at most 3 JPEG/PNG frames per batch, 2 MiB per frame, 1280-pixel long edge, 3 capture frames/s, 1 batch/s, 12 MiB encoded plus 20 MiB decoded working storage per session, 4 host sessions, 1 in-flight and 1 latest pending per session, 1 global model-work slot, 3 s admission-to-result deadline, at most 1 s cancelled-provider retirement grace, 6 s current-context freshness, 250 ms maximum clock uncertainty, 60 s lease",
+    "defaults": "at most 3 JPEG/PNG frames per batch, 1 MiB effective per frame (2 MiB reference ceiling), 1280-pixel long edge, 3 capture frames/s, 1 batch/s, 12 MiB encoded plus 20 MiB decoded working storage per session, 4 host sessions, 1 in-flight and 1 latest pending per session, 1 global model-work slot, 3 s admission-to-result deadline, at most 1 s cancelled-provider retirement grace, 6 s current-context freshness, 250 ms maximum clock uncertainty, 60 s lease",
     "selectedVisualProvider": null,
     "fixtureProvider": "fixture-visual 1.0.0, localOnly, scripted output only",
-    "currentSglangProvider": "text-only InferenceRequest; no image payload or pixel interpretation"
+    "currentSglangProvider": "text-only InferenceRequest; no image payload or pixel interpretation",
+    "effectiveFrameBytes": 1048576,
+    "uploadDeadlineMs": 5000
   },
   "checks": [
-    {
-      "command": "node --test apps/server/test/visual-input.test.ts apps/server/test/visual-multipart.test.ts packages/runtime/test/perception.test.ts",
-      "result": "pass",
-      "tests": 19,
-      "failed": 0,
-      "skipped": 0
-    },
     {
       "command": "pnpm typecheck",
       "result": "pass"
     },
     {
-      "command": "pnpm test",
+      "command": "node --test --experimental-strip-types packages/runtime/test/perception.test.ts apps/server/test/visual-multipart.test.ts apps/server/test/visual-input.test.ts apps/server/test/visual-route-lifecycle.test.ts",
       "result": "pass",
-      "tests": 1270,
+      "tests": 30,
       "failed": 0,
       "skipped": 0,
-      "durationMs": 89123.296834
+      "durationMs": 3832.884834
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1281,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 105024.266334,
+      "detail": "Full regression plus final focused rerun on the frozen resource-hardening sources."
     },
     {
       "command": "pnpm test:browser-surface",
       "result": "pass for runnable checks",
-      "tests": 132,
-      "passed": 50,
+      "tests": 142,
+      "passed": 59,
       "failed": 0,
-      "skipped": 82,
-      "detail": "Rendered browser checks were skipped; no visual browser journey claim."
+      "skipped": 83
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<operator-local-installed-module> node --test apps/control-web/test/conversation-camera.test.mjs",
+      "result": "pass",
+      "tests": 10,
+      "failed": 0,
+      "skipped": 0,
+      "detail": "Installed Chrome headless, synthetic source; device API throws if invoked. All camera controls exercised. 390px screenshot inspected; source/status and Stop visible, no overflow."
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<operator-local-installed-module> node --test --test-name-pattern='room Stop response|real room capture' apps/control-web/test/urgent-attention.test.mjs",
+      "result": "pass",
+      "tests": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test apps/server/test/presentation-self-context.test.ts apps/server/test/session-definition.test.ts apps/server/test/audience.test.ts packages/runtime/test/session.test.ts packages/runtime/test/context.test.ts",
+      "result": "pass",
+      "tests": 23,
+      "failed": 0,
+      "skipped": 0,
+      "detail": "Current reused prerequisite behavior; not renewed full S071 selected-provider qualification."
     },
     {
       "command": "pnpm lint",
-      "result": "pass"
+      "result": "pass",
+      "detail": "Repository lint configuration excludes TypeScript."
     },
     {
       "command": "pnpm build",
@@ -115,7 +165,7 @@
     {
       "command": "node scripts/workspace.mjs check",
       "result": "pass",
-      "detail": "Structural check only."
+      "detail": "Structural only."
     },
     {
       "command": "git diff --check",
@@ -123,22 +173,22 @@
     },
     {
       "command": "node scripts/workspace.mjs preflight LS-S087",
-      "result": "fails on existing run-control mismatch",
-      "detail": "Checkpoint still selects LS-S066; public revision and actual dirty changes differ from its snapshot; checkpoint writable files differ from expanded private S087 packet. S066 status and checkpoint were preserved. Parent orchestrator owns reconciliation."
+      "result": "fails on preserved run-control mismatch",
+      "detail": "S066 checkpoint retained; its selected slice, revision, dirty-file snapshot and writable paths differ. Independent prerequisite audit accepts S024/S056 receipts; S071 historical qualification has changed effective inputs. Current reused software regressions pass, without renewing full qualification."
     }
   ],
   "caseCoverage": [
     {
       "caseId": "LS-TEST-155",
-      "disposition": "partialSyntheticRouteOnly",
-      "covered": "Authenticated and CSRF-protected capability/camera HTTP behavior, default unconfigured failure, synthetic trusted source/provider lease, idempotency, private audience/security revocation, session/Assistant isolation and legacy endpoint checks.",
-      "remaining": "Rendered user enable/stop indicator, actual trusted device broker and permission, reconnect/restart and ordinary text/audio reply behavior; physical camera and Human evidence require separate authority."
+      "disposition": "partialSyntheticHttpAndRenderedBrowser",
+      "covered": "Authenticated default-off and lease controls; synthetic Chrome availability/Enable/Stop/source/status, scope/navigation/background/expiry cleanup, reconnect-off, late grant disposal; exact-owner disconnect, permission withdrawal and admin-idle runtime regression.",
+      "remaining": "Actual trusted browser source/broker, OS/device permission and bounded frame transport adapter; physical camera and Human evidence require their separately authorized environment."
     },
     {
       "caseId": "LS-TEST-156",
-      "disposition": "partialSyntheticRouteOnly",
-      "covered": "Injected clock challenge, multipart exact binary part framing and size limits, digest/header/dimension/freshness checks, one upload per session/four per host, queue replacement, deadline, cancellation and scripted provider-result validation.",
-      "remaining": "Full media decode, aggregate simultaneous HTTP transport plus runtime queue and provider-copy 12 MiB/20 MiB working-storage enforcement/measurement, selected pixel-consuming image provider, context exclusion traces and actual perception."
+      "disposition": "partialSyntheticResourceAndRoute",
+      "covered": "Clock mapping; exact bounded multipart, digest and structural media validation; 1/session and 4/host upload limit; absolute upload and admission-to-result deadlines; owned/reserved encoded peak 10,518,528 bytes/session; disposal, stale withdrawal fencing and failure usability clearing.",
+      "remaining": "Full pixel decoding; total encoded/decoded/parsed-metadata/native/provider working-storage qualification; selected pixel-consuming provider and actual perception/context exclusion traces."
     },
     {
       "caseId": "LS-TEST-157",
@@ -148,19 +198,82 @@
     }
   ],
   "unresolvedDependencies": [
-    "No browser capture controls or visible camera indicator are wired in the authenticated conversation room.",
-    "No public versioned vision wire schema/validator has been authored; no private schema or machine artifact was exported.",
-    "No physical camera source broker or capture lease callback is composed; the only configured provider/source path is isolated synthetic test injection.",
+    "No configured physical source/broker or browser bounded frame adapter; default room remains unavailable and synthetic source injection is test-only.",
+    "No independently authored versioned public vision HTTP wire schema/validator or complete canonical envelope/legacy replay/rollback conformance matrix.",
     "Current SGLang inference provider is text-only; no image-capable provider is selected or connected.",
-    "Full JPEG/PNG decode, cross-layer concurrent working-storage enforcement and measured provider copies are pending.",
-    "No pixels-to-interpretation, physical camera, perceptual quality, ordinary reply, memory or Human acceptance is claimed."
+    "Full JPEG/PNG decoding and total cross-layer decoded/native/provider allocation enforcement remain unverified.",
+    "No pixels-to-interpretation, physical-camera, perceptual-quality, visual ordinary reply, visual memory or Human acceptance is claimed."
   ],
-  "runControl": "The existing public checkpoint activeSlice LS-S066 and pending LS-TEST-084 verification were not changed. Phase 16 approval is recorded separately in the operator-local owner; this record does not promote LS-S087 or authorize activation, deployment or publication.",
+  "runControl": "Goal active / continue after explicit operator resumption. Preserve primary LS-S066 and full LS-TEST-084 pending verification. LS-DEC-049 permits independent Phase 16 software work. This record does not promote full S087 acceptance or authorize activation, deployment or publication.",
   "resourceAccounting": {
-    "multipartMaxEnvelopeBytes": 7372800,
-    "multipartAllocation": "One owned envelope is preallocated to declared length or the capped maximum for chunked transfer; frame parts are views, not extra parser copies, and the envelope is wiped on failure or completion.",
-    "concurrentUploads": "At most one batch upload per authenticated session and four across a server; excess requests fail before body allocation.",
-    "remainingLimit": "Runtime admission may retain 12 MiB across in-flight and pending frames while an additional multipart envelope and a submitted-frame copy coexist; therefore the doc30 12 MiB simultaneous encoded working-storage target is not yet enforced end-to-end. Provider copies and decoded workspace are unmeasured.",
-    "claim": "Transport request size and concurrency are bounded; end-to-end simultaneous working-storage acceptance remains pending."
-  }
+    "multipartMaxEnvelopeBytes": 4227072,
+    "effectiveMaxFrameBytes": 1048576,
+    "uploadDeadlineMs": 5000,
+    "ownedEncodedPeakBytesPerSession": 10518528,
+    "referenceEncodedLimitBytesPerSession": 12582912,
+    "multipartAllocation": "Reserve full bounded envelope before reading. Runtime queued and in-flight copies share accounting. Wipe replaced pending before copying its replacement; wipe and release envelope immediately after synchronous admission copy.",
+    "concurrentUploads": "One per authenticated session and four per host.",
+    "measurement": "Synthetic three full-size PNG frames per batch, in-flight plus pending and replacement while another full envelope is reserved.",
+    "excluded": "Node/socket buffers, parsed metadata strings/objects, process RSS, actual decoder allocation and provider-private workspace.",
+    "claim": "Owned/reserved encoded buffer bound tested. Total end-to-end working-storage and decoding acceptance remains pending."
+  },
+  "priorVerifiedIncrements": [
+    {
+      "integrationHead": "fb6214f9d863e4eed989ab26bc1d007c15cbe229",
+      "claimClass": "local-perception-admission-and-authenticated-synthetic-http-route",
+      "collectedAt": "2026-09-29T17:37:04Z",
+      "checks": [
+        {
+          "command": "node --test apps/server/test/visual-input.test.ts apps/server/test/visual-multipart.test.ts packages/runtime/test/perception.test.ts",
+          "result": "pass",
+          "tests": 19,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "command": "pnpm typecheck",
+          "result": "pass"
+        },
+        {
+          "command": "pnpm test",
+          "result": "pass",
+          "tests": 1270,
+          "failed": 0,
+          "skipped": 0,
+          "durationMs": 89123.296834
+        },
+        {
+          "command": "pnpm test:browser-surface",
+          "result": "pass for runnable checks",
+          "tests": 132,
+          "passed": 50,
+          "failed": 0,
+          "skipped": 82,
+          "detail": "Rendered browser checks were skipped; no visual browser journey claim."
+        },
+        {
+          "command": "pnpm lint",
+          "result": "pass"
+        },
+        {
+          "command": "pnpm build",
+          "result": "pass"
+        },
+        {
+          "command": "node scripts/workspace.mjs check",
+          "result": "pass",
+          "detail": "Structural check only."
+        },
+        {
+          "command": "git diff --check",
+          "result": "pass"
+        },
+        {
+          "command": "node scripts/workspace.mjs preflight LS-S087",
+          "result": "fails on existing run-control mismatch",
+          "detail": "Checkpoint still selects LS-S066; public revision and actual dirty changes differ from its snapshot; checkpoint writable files differ from expanded private S087 packet. S066 status and checkpoint were preserved. Parent orchestrator owns reconciliation."
+        }
+      ]
+    }
+  ]
 }

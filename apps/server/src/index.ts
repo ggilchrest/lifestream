@@ -66,7 +66,7 @@ import { relationshipControlDefaults, relationshipControlInventory, compileRelat
 import { ContextCache } from "@lifestream/runtime/context/cache";
 import { buildCanonicalPrompt, type RuntimeSelfContext, type AssistantPersonaProjection } from "@lifestream/runtime/inference/prompt";
 import { readSessionEndpoint, reviseSessionEndpoint } from "./runtime/session-context.ts";
-import {VisualInputHost,VisualInputRequestError,parseVisualCapabilities,parseVisualCamera,parseVisualBatch,type VisualInputOptions,type VisualActor} from './runtime/visual-input.ts';
+import {VisualInputHost,VisualInputRequestError,VisualUploadError,parseVisualCapabilities,parseVisualCamera,parseVisualBatch,type VisualInputOptions,type VisualActor} from './runtime/visual-input.ts';
 import {readVisualMultipart,VisualMultipartError} from './runtime/visual-multipart.ts';
 import {VisualAdmissionError} from '@lifestream/runtime/perception/admission';
 import { inspectSessionDefinition, reviewSessionDefinition, SessionDefinitionError } from "./runtime/session-definition.ts";
@@ -630,7 +630,6 @@ class AssistantAdminApi {
 export class LifestreamServer {
   private readonly expectedMigrationIds=loadMigrations().map(m=>m.id);
   private readonly visualInput:VisualInputHost;
-  private readonly visualUploads=new Set<string>();
   private readonly localAuth: LocalAuthentication | undefined;
   private readonly securityAdmin: SecurityAdministration | undefined;
   private readonly canonicalDispatch: CanonicalCapabilityDispatch | undefined;
@@ -1378,10 +1377,10 @@ export class LifestreamServer {
     const actorFor=(assistantId:string,stop=false):VisualActor=>{
       const fresh=this.requestContext(request,false) as LocalContext|undefined;
       if(!fresh||fresh.sessionId!==sessionId||fresh.principalId!==context.principalId)throw new AuthenticationError(401,'authentication_required');
-      this.localAuth!.assertCurrent(fresh);
+      this.localAuth!.assertCurrent(fresh,false);
       if(!stop){
         if(this.sessionEnded(sessionId))throw new AuthenticationError(409,'visual_session_ended');
-        if(!this.localAuth!.canAdminister(fresh,assistantId))throw new AuthenticationError(403,'assistant_scope_denied');
+        if(!this.runtimeAuthorized(request,assistantId))throw new AuthenticationError(403,'assistant_scope_denied');
         const endpoint=readSessionEndpoint(this.database,sessionId).endpoint;
         if(!endpoint||endpoint.privacyClass!=='personal'||!this.audiencePermits(fresh))throw new AuthenticationError(403,'visual_audience_scope_denied');
       }
@@ -1398,24 +1397,40 @@ export class LifestreamServer {
         if(input.action!=='stop'&&this.state!=='ready')throw new AuthenticationError(503,'visual_runtime_unavailable');
         return json(response,200,{schemaVersion:'1.0.0',camera:this.visualInput.camera(actor,input)});
       }
-      if(this.visualUploads.has(sessionId))throw new AuthenticationError(429,'visual_upload_busy');
-      if(this.visualUploads.size>=4)throw new AuthenticationError(503,'visual_upload_capacity');
-      this.visualUploads.add(sessionId);
+      const upload=this.visualInput.openUpload(sessionId);
+      let admittedLease:{actor:VisualActor;leaseId:string}|undefined;
+      const disconnected=()=>{
+        if(response.writableEnded)return;
+        upload.cancel();
+        // A delayed disconnect must never stop a newer lease for this session.
+        if(admittedLease){
+          try{this.visualInput.camera(admittedLease.actor,{action:'stop',leaseId:admittedLease.leaseId,expectedRevision:0,idempotencyKey:randomUUID()});}catch{/* Already withdrawn or replaced. */}
+        }
+      };
+      request.once('aborted',disconnected);
+      response.once('close',disconnected);
       try{
-        const parsed=await readVisualMultipart(request);
+        const parsed=await readVisualMultipart(request,{...upload.limits,signal:upload.signal});
         try{
           const input=parseVisualBatch(parsed.metadata),actor=actorFor(input.assistantId);
           if(this.state!=='ready')throw new AuthenticationError(503,'visual_runtime_unavailable');
           if(parsed.parts.size!==input.frames.length||input.frames.some(frame=>parsed.parts.get(frame.frameId)?.mediaType!==frame.mediaType))throw new VisualInputRequestError();
           const bytes=new Map([...parsed.parts].map(([id,part])=>[id,part.bytes]));
-          const receipt=await this.visualInput.batch(actor,input,bytes);
+          admittedLease={actor,leaseId:input.leaseId};
+          if(response.destroyed||upload.signal.aborted){disconnected();return;}
+          const receipt=await this.visualInput.batch(actor,input,bytes,()=>{parsed.dispose();upload.release();});
           actorFor(input.assistantId);
           if(!response.destroyed)return json(response,200,{schemaVersion:'1.0.0',...receipt});
         }finally{parsed.dispose();}
-      }finally{this.visualUploads.delete(sessionId);}
+      }finally{request.off('aborted',disconnected);response.off('close',disconnected);upload.release();}
     }catch(error){
+      if(response.destroyed)return;
       if(error instanceof VisualInputRequestError)return json(response,error.status,{code:error.code});
-      if(error instanceof VisualMultipartError)return json(response,error.status,{code:error.code});
+      if(error instanceof VisualUploadError)return json(response,error.status,{code:error.code});
+      if(error instanceof VisualMultipartError){
+        if(!request.complete){response.setHeader('connection','close');response.once('finish',()=>request.destroy());}
+        return json(response,error.status,{code:error.code});
+      }
       if(error instanceof VisualAdmissionError)return json(response,visualAdmissionStatus(error.reason),{code:error.reason});
       throw error;
     }

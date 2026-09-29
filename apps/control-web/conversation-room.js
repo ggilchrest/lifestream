@@ -4,6 +4,7 @@ import { installAutomaticMemory } from "./automatic-memory.js";
 import { installPresentation } from "./presentation.js";
 import {ConversationOutput} from './conversation-output.js';
 import {ConversationCapture} from './conversation-capture.js';
+import {installConversationCamera} from './conversation-camera.js';
 import {installUrgentAttention} from './urgent-attention.js';
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dimensions=['initiative','warmth','curiosity','followThrough','persistence'];
@@ -22,6 +23,7 @@ export function installConversationRoom({anchor,api,context}){
  installIncidentReview({anchor,api,context});
  const presentation=installPresentation({anchor,api,identity:()=>({assistantId:context()?.assistantId,relationshipId:context()?.relationship?.relationshipId??null}),busy:()=>busy||!!output?.turn||!!capture?.pending||!!capture?.speaking,playback:()=>output?.playbackSample()});
  const scope=()=>{const c=context(),s=auth().session;if(auth().mode!=='local-password'||!s||!c?.assistantId)throw new Error('Sign in and select an Assistant first.');return {assistantId:c.assistantId,relationshipId:c.relationship?.relationshipId??null,sessionId:s.sessionId,principalId:s.principalId};};
+ const camera=installConversationCamera({anchor:anchor.querySelector('.room-dialogue'),api,scope:()=>{if(session?.ended||Date.parse(auth().session?.expiresAt??'')<=Date.now())throw Error('This conversation has ended.');return {...scope(),endpointId:session?.endpoint?.endpointId??null,sessionRevision:session?.revision??null};}});
  const route=s=>{if(!s.relationshipId)throw new Error('Select a relationship before enabling Initiative. Ordinary typed messages remain available.');return `/api/admin/v1/assistants/${s.assistantId}/relationships/${s.relationshipId}/initiative/v1`;};
  const same=(s,ticket)=>{try{return epoch===ticket&&JSON.stringify(scope())===JSON.stringify(s);}catch{return false;}};
  const status=(text,error=false)=>{$('status').textContent=text;$('status').classList.toggle('error',error);};
@@ -99,7 +101,7 @@ export function installConversationRoom({anchor,api,context}){
   }catch(error){if(epoch===ticket)output.close();throw error;}finally{if(epoch===ticket){busy=false;renderBusy();}}};
  $('enable').onclick=run(enableOutput);$('case-enable').onclick=run(enableOutput);
  $('disable').onclick=run(()=>suspend({close:true}));$('modality').onchange=run(()=>suspend({close:true}));
- $('stop').onclick=run(async()=>{urgent?.stop('Stopped by the conversation control. Listening is off.');epoch++;busy=false;renderBusy();request?.abort();capture.stop();await suspend();await refresh();status('Stopped. Output will not resume until you enable it again.');});
+ $('stop').onclick=run(async()=>{urgent?.stop('Stopped by the conversation control. Listening is off.');void camera.stop('Camera stopped by the conversation control.');epoch++;busy=false;renderBusy();request?.abort();capture.stop();await suspend();await refresh();status('Stopped. Output will not resume until you enable it again.');});
  $('quiet').onclick=run(async()=>{await suspend();await call({operation:'temporaryMode',idempotencyKey:crypto.randomUUID(),sessionId:scope().sessionId,mode:'quiet',endsAt:null,dimensions:null});$('timing').textContent='No pending timing adjustment.';status('Quiet applies to this session until cleared or the host restarts.');});
  $('clear-mode').onclick=run(async()=>{await suspend();await call({operation:'temporaryMode',idempotencyKey:crypto.randomUUID(),sessionId:scope().sessionId,mode:'clear',endsAt:null,dimensions:null});$('timing').textContent='No pending timing adjustment.';status('Temporary mode cleared. Enable output separately; no old opening will resume.');});
  $('companionship').onsubmit=run(async()=>{const endsAt=new Date(Date.now()+Number($('minutes').value)*60000).toISOString();await call({operation:'temporaryMode',idempotencyKey:crypto.randomUUID(),sessionId:scope().sessionId,mode:'companionship',endsAt,dimensions:Object.fromEntries(dimensions.map(d=>[d,Number($(d).value)]))});status(`Temporary companionship applies until ${new Date(endsAt).toLocaleTimeString()}. Durable settings are unchanged.`);});

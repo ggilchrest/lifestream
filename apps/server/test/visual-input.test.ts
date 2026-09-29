@@ -14,7 +14,7 @@ import {readSessionEndpoint} from '../src/runtime/session-context.ts';
 
 const actor = {principalId:'owner',sessionId:'session-a',assistantId:'assistant-a'};
 const authority = {sourceConnected:true,devicePermission:true,hostCaptureLease:true,interpretationAllowed:true,remoteEgressAllowed:false,foregroundVisible:true};
-const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+X8ANywAAAABJRU5ErkJggg==','base64');
+const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+5gz/qwAAAABJRU5ErkJggg==','base64');
 
 test('host without a selected visual provider reports unavailable and never enables capture', () => {
   const visual=new VisualInputHost({
@@ -199,4 +199,43 @@ test('host rederives source and scope, fences changed session, and admits exact 
   assert.equal(stopped.captureActive,false,'current owner can stop despite the changed audience/source');
   assert.equal(visual.camera(actor,enable).captureActive,false,'replayed enable cannot report a retired lease as active');
   assert.deepEqual(releases,['invalidated'],'late stop does not release a successor');
+});
+
+test('host bounds concurrent upload reservations and aborts them on invalidation or shutdown', () => {
+  const host=new VisualInputHost({scopeFor:()=>null,sourceFor:()=>null,captureAuthority:()=>authority});
+  const uploads=Array.from({length:4},(_,index)=>host.openUpload(`upload-${index}`));
+  assert.throws(()=>host.openUpload('upload-0'),/visual_upload_busy/);
+  assert.throws(()=>host.openUpload('upload-4'),/visual_upload_capacity/);
+  assert.equal(host.resourceUsage().rawBytes,4*4_227_072);
+  assert.ok(uploads.every(upload=>upload.limits.maxFrameBytes===1_048_576&&upload.limits.deadlineMs===5_000));
+  host.invalidate('upload-0');
+  assert.equal(uploads[0]!.signal.aborted,true);
+  uploads[0]!.release();
+  const replacement=host.openUpload('upload-4');
+  host.close();
+  assert.ok([...uploads,replacement].every(upload=>upload.signal.aborted));
+  for (const upload of [...uploads,replacement]) upload.release();
+  assert.equal(host.resourceUsage().rawBytes,0);
+});
+
+test('revoked interpretation cannot invoke provider and a denied stale actor cannot stop a successor', async () => {
+  let mono=10_000, allowed=true, invocations=0, selected='assistant-a';
+  const host=new VisualInputHost({provider:fixtureVisualProvider(request=>{invocations++;return {requestId:request.requestId,status:'empty',observations:[],reason:null};}),
+    scopeFor:request=>request.assistantId===selected?{...request,relationshipId:null,environmentId:'test',conversationId:'conversation',endpointId:'endpoint',sessionRevision:1,audienceRevision:1,scopeGeneration:1}:null,
+    sourceFor:()=>({bindingRef:'test-source',connected:true,configurationRevision:1}),captureAuthority:()=>({...authority,interpretationAllowed:allowed}),monotonicMs:()=>mono});
+  const begin=(request=actor)=>{
+    const offer=host.capabilities(request,['1.0.0']);mono+=20;
+    return host.camera(request,{action:'enable',expectedRevision:offer.camera.revision,idempotencyKey:randomUUID(),challengeId:offer.negotiation!.challenge!.id,endpointClockId:'clock',endpointReceivedMonotonicMs:5_000});
+  };
+  const first=begin();mono+=20;
+  const meta={leaseId:first.leaseId!,endpointClockId:'clock',correlationId:'test',frames:[{frameId:'frame',sequence:0,capturedMonotonicMs:5_010,clockMappingId:first.clockMappingId!,mediaType:'image/png' as const,sha256:createHash('sha256').update(png).digest('hex')}]};
+  allowed=false;
+  await assert.rejects(()=>host.batch(actor,meta,new Map([['frame',png]])),(error:unknown)=>error instanceof VisualAdmissionError&&error.reason==='permission_denied');
+  assert.equal(invocations,0);assert.equal(host.state(actor).captureActive,false);
+  allowed=true;selected='assistant-b';
+  const successor={...actor,assistantId:selected}, current=begin(successor);
+  await assert.rejects(()=>host.batch(actor,meta,new Map([['frame',png]])),(error:unknown)=>error instanceof VisualAdmissionError&&error.reason==='scope_changed');
+  assert.equal(host.state(successor).leaseId,current.leaseId);
+  assert.equal(host.state(successor).captureActive,true);
+  host.close();
 });
