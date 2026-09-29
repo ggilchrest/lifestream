@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S066",
+  "acceptanceCase": "LS-TEST-084",
+  "status": "implementationCompleteVerificationPending",
+  "observedAt": "2026-09-29T17:06:13Z",
+  "baseSourceRevision": "91d6a25939b41bddc024be03da1216d1f3128f92",
+  "specificationRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+  "specificationPacketSha256": "c99b64fcaf592fe0e5a180c7fbc9cc339cbe2ff34314daf270e711974ce7e26d",
+  "testSource": {
+    "path": "apps/server/test/presentation-packages.test.ts",
+    "sha256": "0677781bf693cc419b9d8a0adcd4397c87045261399f86d3e74213d4b33f7948",
+    "state": "Uncommitted test addition relative to baseSourceRevision; bind a final source revision after the scoped local commit."
+  },
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/presentation-packages.test.ts",
+      "result": "12 passed, 0 failed, 0 skipped"
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=\"$PWD/apps/ios/node_modules/playwright/index.mjs\" node --test apps/control-web/test/presentation-preview.test.mjs apps/control-web/test/presentation-playback.test.mjs",
+      "result": "5 passed, 0 failed, 0 skipped; actual Chrome renderer exercised"
+    },
+    {
+      "command": "node --test apps/control-web/test/presentation-core.test.mjs apps/control-web/test/presentation-state.test.mjs apps/control-web/test/presentation-motion.test.mjs",
+      "result": "15 passed, 0 failed, 0 skipped"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "positiveEvidence": [
+    "One local authenticated server created and activated two distinct synthetic Assistant definitions. Each completed a fixture-inference text message through /api/runtime/v1/messages.",
+    "The same authenticated package catalog and resource route served two separately supplied synthetic model byte sets and distinct pinned package digests.",
+    "Explicit endpoint default then session override selected first and second packages; clearing the override restored the first package, and a server restart retained the endpoint default while the session override stayed cleared.",
+    "A stale or incorrect package digest was rejected without changing the selection. Existing rendered browser tests exercised temporary animation and face previews, fallback disclosure, selection precedence, changed-digest refusal, failure retention and audience cleanup."
+  ],
+  "limits": [
+    "The two-Assistant run is fixture integration and authenticated HTTP evidence. It does not demonstrate two personal packages rendered in one real browser session or automatic appearance binding to Assistant identity; appearance selection is explicit and endpoint/session scoped.",
+    "Rendered browser checks use synthetic mappings and neutral stand-ins. They do not establish selected personal package appearance, animation quality, gaze/blink quality, voice coherence or perceptual synchronization.",
+    "No personal package, mapping, screenshot, credential, microphone, camera or live device was imported, activated or committed by this check.",
+    "The iPhone Human acceptance record is separate; it does not make full LS-TEST-084 verified. Whole-slice Human and selected personal package quality evidence remain open."
+  ]
+}
