@@ -4,6 +4,7 @@ import {createHash} from 'node:crypto';
 import {crc32} from 'node:zlib';
 import {VisualAdmission, VisualAdmissionError, type CaptureAuthority} from '../src/perception/admission.ts';
 import {fixtureVisualProvider} from '../src/perception/fixture.ts';
+import {VisualObservationStore} from '../src/perception/observation.ts';
 import type {VisualFrame, VisualPerceptionProvider, VisualPerceptionRequest, VisualPerceptionResult, VisualScope} from '../src/perception/port.ts';
 
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+5gz/qwAAAABJRU5ErkJggg==', 'base64');
@@ -144,6 +145,27 @@ test('admission provenance is authentic immutable metadata without bytes or prov
   assert.equal(h.visual.provenanceCurrent(p),false);
   assert.equal(h.visual.provenanceCurrent(second.provenance),false);
   h.visual.close();
+});
+
+test('fractional monotonic capture uses a conservative UTC lower bound compatible with integer receipts', async () => {
+  const base=1_760_000_000_000,target=scope();let mono=10_000.1;
+  const utc=()=>base+Math.floor(mono),visual=new VisualAdmission({provider,monotonicMs:()=>mono,utcMs:utc,bounds:{freshnessMs:250}});
+  const store=new VisualObservationStore({now:utc,freshnessMs:250,current:()=>true});
+  try{
+    const offer=visual.negotiate(target,['1.0.0'],true);mono=10_000.2;
+    const lease=visual.enable(target,{expectedRevision:0,challengeId:offer.challenge!.id,endpointClockId:'fractional-clock',endpointReceivedMonotonicMs:5_000.2},authority);
+    mono=10_000.7;
+    const frame:VisualFrame={frameId:'fractional-frame',sequence:0,capturedMonotonicMs:5_000.6,clockMappingId:lease.clockMappingId!,mediaType:'image/png',sha256:digest(png),bytes:png};
+    const admitted=visual.submit(target,lease.leaseId!,'fractional-clock',[frame],'fractional-time'),result=await admitted.completion,p=admitted.provenance;
+    const fractionalLower=base+10_000+(5_000.6-5_000.2)*(1-0.0001);
+    assert.equal(result.status,'complete');assert.ok(fractionalLower>p.receivedAtMs,'the unrounded projection would be rejected as newer than its integer receipt');
+    assert.equal(p.capturedAtEarliestMs,Math.floor(fractionalLower));
+    assert.ok(p.capturedAtEarliestMs<=p.receivedAtMs&&p.receivedAtMs<=utc());
+    assert.equal(store.publish({scope:p.scope,leaseId:p.leaseId,sequence:p.hostSequence,requestId:p.requestId,provider:p.provider,capturedAtEarliestMs:p.capturedAtEarliestMs,capturedAtLatestMs:p.capturedAtLatestMs,receivedAtMs:p.receivedAtMs,interpretedAtMs:utc(),observations:result.observations}),true);
+    const view=store.prepare({scope:p.scope,leaseId:p.leaseId,viewId:'fractional-view',revision:1,invalidationKey:'fractional-epoch',conversation:'[]',explicitQuestion:true,allowAside:false});
+    assert.ok(view);assert.ok(view.expiresAtMs<=fractionalLower+250,'rounding never extends current-context freshness');
+    mono=10_250;assert.equal(store.isCurrent(view),false);
+  }finally{visual.close();store.clear();}
 });
 
 test('bounded media admission uses bytes, digest, dimensions, sequence, and conservative capture time', async () => {

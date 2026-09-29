@@ -404,9 +404,13 @@ export class VisualAdmission {
     if (state.pending) { state.pending.settle(failure(state.pending.identity.requestId, 'replaced')); this.dispose(state.pending); state.pending = undefined; }
     const held = frames.map(frame => Uint8Array.from(frame.bytes));
     const receivedUtc = this.utc();
+    // Date.now receipts are quantized to milliseconds while monotonic capture
+    // bounds are fractional. Round the lower UTC bound toward the past so it
+    // cannot appear newer than a same-millisecond receipt or extend freshness.
+    const capturedAtEarliestMs = Math.floor(lease.mapping.anchorUtc+earliest-lease.mapping.hostSentMono);
     // Validation identity is host-owned and never passed to provider code. The
     // provider gets separate frozen metadata over the same bounded byte buffers.
-    const identity: JobIdentity = Object.freeze({requestId,correlationId,leaseId,scope:Object.freeze(structuredClone(lease.scope)),frameIds:Object.freeze(frames.map(frame => frame.frameId)),hostSequence:++this.admissionSequence,provider:this.providerIdentity!,capturedAtEarliestMs:lease.mapping.anchorUtc+earliest-lease.mapping.hostSentMono,capturedAtLatestMs:lease.mapping.anchorUtc+latest-lease.mapping.hostSentMono,receivedAtMs:receivedUtc,deadlineAtMs:receivedUtc+this.bounds.deadlineMs,clockMappingId:lease.mapping.id,leaseRevision:lease.revision});
+    const identity: JobIdentity = Object.freeze({requestId,correlationId,leaseId,scope:Object.freeze(structuredClone(lease.scope)),frameIds:Object.freeze(frames.map(frame => frame.frameId)),hostSequence:++this.admissionSequence,provider:this.providerIdentity!,capturedAtEarliestMs,capturedAtLatestMs:lease.mapping.anchorUtc+latest-lease.mapping.hostSentMono,receivedAtMs:receivedUtc,deadlineAtMs:receivedUtc+this.bounds.deadlineMs,clockMappingId:lease.mapping.id,leaseRevision:lease.revision});
     this.provenances.add(identity);
     const request: VisualPerceptionRequest = Object.freeze({requestId, correlationId, environment: 'live', scope: Object.freeze(structuredClone(identity.scope)), leaseId, capturedAtEarliestMs:identity.capturedAtEarliestMs, capturedAtLatestMs:identity.capturedAtLatestMs, receivedAtMs:receivedUtc, deadlineAtMs:identity.deadlineAtMs, frames:Object.freeze(frames.map((frame,index) => Object.freeze({...frame,bytes:held[index]!})))});
     let settle!: (result: VisualPerceptionResult) => void;

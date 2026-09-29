@@ -1,0 +1,142 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createHash,randomBytes,randomUUID} from 'node:crypto';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {fixtureVisualProvider} from '@lifestream/runtime/perception/fixture';
+import type {InferenceProvider,InferenceRequest} from '@lifestream/runtime/inference';
+import {createLifestreamServer} from '../src/index.ts';
+import {loadProfile} from '../src/config/loader.ts';
+import {readSessionEndpoint} from '../src/runtime/session-context.ts';
+
+const marker='SYNTHETIC_VISUAL_SCENE_AZURE';
+const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+5gz/qwAAAABJRU5ErkJggg==','base64');
+const authority={sourceConnected:true,devicePermission:true,hostCaptureLease:true,interpretationAllowed:true,remoteEgressAllowed:false,foregroundVisible:true};
+
+async function fixture(t:import('node:test').TestContext){
+  const directory=await mkdtemp(join(tmpdir(),'ls-visual-context-'));t.after(()=>rm(directory,{recursive:true,force:true}));
+  const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(directory,'state.sqlite'),artifactDirectory:join(directory,'artifacts')};
+  let app:ReturnType<typeof createLifestreamServer>,mono=5000,sequence=0,connected=true,visualStatus:'complete'|'empty'|'failed'='complete',visualRelationshipId:string|null=null;
+  const epoch=Date.now()-mono,requests:InferenceRequest[]=[];
+  const installerToken=randomBytes(32).toString('hex');
+  app=createLifestreamServer({config,localAuth:{stateDirectory:join(directory,'auth'),installerToken},audiencePrivacy:{sourceIds:[]},visualInput:{
+    provider:fixtureVisualProvider(request=>visualStatus!=='complete'?{requestId:request.requestId,status:visualStatus,reason:visualStatus==='failed'?'synthetic_provider_failure':null,observations:[]}:({requestId:request.requestId,status:'complete',reason:null,observations:[{observationId:randomUUID(),frameIds:[request.frames[0]!.frameId],appearance:`${marker}: a blue notebook is visible on the table.`,inference:null,confidence:null,limitations:['Scripted observation from a synthetic fixture; no actual image understanding.']}]})),
+    scopeFor:actor=>{const database=(app as any).database,current=readSessionEndpoint(database,actor.sessionId),row=database.connection.prepare("SELECT conversation_id AS conversationId FROM sessions WHERE id=? AND status='active'").get(actor.sessionId) as {conversationId:string}|undefined;if(!current.endpoint||!row)return null;return {...actor,relationshipId:visualRelationshipId,environmentId:'synthetic',conversationId:row.conversationId,endpointId:current.endpoint.endpointId,sessionRevision:current.revision,audienceRevision:1,scopeGeneration:1};},
+    sourceFor:()=>connected?{bindingRef:'synthetic-camera',connected:true,configurationRevision:1}:null,
+    captureAuthority:()=>authority,monotonicMs:()=>mono,utcMs:()=>epoch+mono
+  }});
+  await app.start();t.after(()=>app.shutdown());
+  const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={origin:base,'content-type':'application/json'};
+  const request=(path:string,body:unknown,method='POST')=>fetch(base+path,{method,headers,body:JSON.stringify(body)});
+  const setup=await request('/api/auth/v1/setup',{username:'owner',password:randomBytes(24).toString('hex'),installerToken});assert.equal(setup.status,201);
+  headers.cookie=setup.headers.get('set-cookie')!.split(';')[0]!;const session=(await setup.json()).session;headers['x-lifestream-csrf']=session.csrfToken;
+  const create=async()=>{const created=await(await request('/api/admin/v1/assistants',{displayName:'Synthetic Visual Context'})).json();assert.equal((await request(`/api/admin/v1/assistants/${created.assistantId}/activate`,{profileId:created.profile.profileId,expectedActiveRevision:null})).status,200);return created.assistantId as string;};
+  const assistantId=await create(),otherAssistantId=await create();
+  assert.equal((await request('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession',bindingKey:randomUUID()})).status,200);
+  assert.equal((await request('/api/runtime/v1/audience',{mode:'solo',seconds:300})).status,200);
+  const setProvider=(provider:InferenceProvider)=>{(app as any).providers.inference=provider;};
+  setProvider({async *generate(input){requests.push(input);yield {kind:'text',text:'Synthetic ordinary reply.'};yield {kind:'done'};}});
+  const route=(operation:string)=>`/api/runtime/vision/v1/sessions/${session.sessionId}/${operation}`;
+  const envelope={schemaVersion:'1.0.0',assistantId};
+  const capability=async()=>{const response=await request(route('capabilities'),{...envelope,supportedVersions:['1.0.0']});assert.equal(response.status,200,await response.clone().text());return response.json();};
+  const camera=async(action:'enable'|'renew',leaseId?:string)=>{const offer=await capability(),endpointReceivedMonotonicMs=mono;mono+=20;const response=await request(route('camera'),{...envelope,action,expectedRevision:offer.camera.revision,idempotencyKey:randomUUID(),challengeId:offer.negotiation.challenge.id,endpointClockId:'synthetic-clock',endpointReceivedMonotonicMs,...(leaseId?{leaseId}:{})},'PUT');return response;};
+  const begin=async()=>{const response=await camera('enable');assert.equal(response.status,200,await response.clone().text());return (await response.json()).camera;};
+  const stop=async(state:any)=>{const response=await request(route('camera'),{...envelope,action:'stop',expectedRevision:state.revision,leaseId:state.leaseId,idempotencyKey:randomUUID()},'PUT');assert.equal(response.status,200);return response.json();};
+  const batch=async(state:any)=>{
+    mono+=20;const frameId=randomUUID(),boundary='synthetic-visual-context',metadata={...envelope,leaseId:state.leaseId,endpointClockId:'synthetic-clock',correlationId:randomUUID(),frames:[{frameId,sequence:sequence++,capturedMonotonicMs:mono-20,clockMappingId:state.clockMappingId,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]};
+    const body=Buffer.concat([Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="metadata"\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Disposition: form-data; name="${frameId}"\r\nContent-Type: image/png\r\n\r\n`),png,Buffer.from(`\r\n--${boundary}--\r\n`)]);
+    const response=await fetch(base+route('batches'),{method:'POST',headers:{...headers,'content-type':`multipart/form-data; boundary=${boundary}`},body});assert.equal(response.status,200,await response.clone().text());const result=await response.json();assert.equal(result.result.status,visualStatus);return result;
+  };
+  const turn=async(userInput='What can you see?',selected=assistantId,relationshipId?:string)=>{const response=await request('/api/runtime/v1/messages',{assistantId:selected,userInput,...(relationshipId?{relationshipId}:{})});assert.equal(response.status,200,await response.clone().text());const output=await response.text();assert.match(output,/interaction.completed/,output);assert.ok(requests.length);return requests.at(-1)!;};
+  return {app,base,headers,session,assistantId,otherAssistantId,requests,request,route,envelope,begin,camera,capability,batch,stop,turn,setProvider,advance:(ms:number)=>{mono+=ms;},disconnect:()=>{connected=false;},emptyNext:()=>{visualStatus='empty';},failNext:()=>{visualStatus='failed';},bindRelationship:(id:string|null)=>{visualRelationshipId=id;}};
+}
+
+test('synthetic visual HTTP admission supplies only scoped ordinary conversation context and truthful host modality',{timeout:15000},async t=>{
+  const f=await fixture(t);const before=await f.turn('Explain an ordinary task.');assert.doesNotMatch(JSON.stringify(before),new RegExp(marker));
+  const state=await f.begin();await f.batch(state);
+  assert.equal((f.app as any).visualInput.observations.diagnostics().observations,1,'HTTP result must publish to the volatile visual store');
+  const visual=await f.turn();assert.equal(visual.sections.length,9);const conversation=visual.sections.find(section=>section.kind==='conversation')!;
+  assert.equal(conversation.trusted,false);assert.match(conversation.content,new RegExp(marker));assert.ok(visual.sections.filter(section=>section.kind!=='conversation').every(section=>!section.content.includes(marker)));
+  assert.match(visual.sections.find(section=>section.kind==='interactionState')!.content,/input.visual=activeForSession/);
+  assert.equal(visual.sections.find(section=>section.kind==='userInput')!.content,'What can you see?');assert.doesNotMatch(JSON.stringify(visual),new RegExp(png.toString('base64')));
+  const foreign=await f.turn('What can you see?',f.otherAssistantId);assert.doesNotMatch(JSON.stringify(foreign),new RegExp(marker));assert.equal(foreign.scope.assistantId,f.otherAssistantId);
+  await f.stop(state);const after=await f.turn();assert.doesNotMatch(JSON.stringify(after),new RegExp(marker),'a visual observation was never inserted as a user or Assistant history turn');
+  const turns=JSON.parse(after.sections.find(section=>section.kind==='conversation')!.content) as {role:string;text:string}[];assert.ok(turns.every(turn=>turn.text!==marker));assert.ok(turns.some(turn=>turn.text==='What can you see?'));
+});
+
+test('renewal requires a fresh visual result, expiry cannot revive, and a foreign session path is denied',{timeout:15000},async t=>{
+  const f=await fixture(t),state=await f.begin();await f.batch(state);assert.match(JSON.stringify(await f.turn()),new RegExp(marker));
+  const freshRenewed=await f.camera('renew',state.leaseId);assert.equal(freshRenewed.status,200,await freshRenewed.clone().text());const renewedState=(await freshRenewed.json()).camera;assert.doesNotMatch(JSON.stringify(await f.turn()),new RegExp(marker),'renewal requires a fresh result for its new clock mapping');
+  f.advance(1001);await f.batch(renewedState);assert.match(JSON.stringify(await f.turn()),new RegExp(marker));f.advance(6001);assert.doesNotMatch(JSON.stringify(await f.turn()),new RegExp(marker));
+  const renewed=await f.camera('renew',state.leaseId);assert.equal(renewed.status,200,await renewed.clone().text());assert.doesNotMatch(JSON.stringify(await f.turn()),new RegExp(marker));
+  const wrong=await fetch(f.base+`/api/runtime/vision/v1/sessions/${randomUUID()}/capabilities`,{method:'POST',headers:f.headers,body:JSON.stringify({...f.envelope,supportedVersions:['1.0.0']})});assert.equal(wrong.status,403);
+  await f.stop((await renewed.json()).camera);const staleRenewal=await f.camera('renew',state.leaseId);assert.equal(staleRenewal.status,409);
+});
+
+test('suppressing repeated scene commentary preserves truthful fresh visual availability',{timeout:15000},async t=>{
+  const f=await fixture(t),state=await f.begin();await f.batch(state);
+  const first=await f.turn('Explain an ordinary task.');assert.match(first.sections.find(section=>section.kind==='conversation')!.content,new RegExp(marker));
+  const second=await f.turn('Continue the ordinary explanation.');
+  assert.doesNotMatch(JSON.stringify(second),new RegExp(marker),'completed prior aside suppresses unchanged scene text');
+  assert.match(second.sections.find(section=>section.kind==='interactionState')!.content,/input.visual=activeForSession/,'mention suppression does not disable a fresh observation source');
+  assert.equal(second.sections.length,9);assert.ok(JSON.parse(second.sections.find(section=>section.kind==='conversation')!.content).length>0);
+  await f.stop(state);const stopped=await f.turn('Continue the ordinary explanation.');
+  assert.doesNotMatch(stopped.sections.find(section=>section.kind==='interactionState')!.content,/input.visual=activeForSession/);
+});
+
+test('stopping capture fences an already prepared ordinary reply before delayed synthetic output',{timeout:15000},async t=>{
+  const f=await fixture(t),state=await f.begin();await f.batch(state);let entered!:()=>void,release!:()=>void;const started=new Promise<void>(resolve=>{entered=resolve;}),gate=new Promise<void>(resolve=>{release=resolve;});t.after(()=>release());
+  f.setProvider({async *generate(input){f.requests.push(input);entered();await gate;yield {kind:'text',text:'LATE_VISUAL_DISCLOSURE'};yield {kind:'done'};}});
+  const pending=f.request('/api/runtime/v1/messages',{assistantId:f.assistantId,userInput:'What can you see?'});await started;assert.match(JSON.stringify(f.requests.at(-1)),new RegExp(marker));
+  try{await f.stop(state);}finally{release();}
+  const output=await(await pending).text();assert.doesNotMatch(output,/LATE_VISUAL_DISCLOSURE|interaction.completed/);assert.match(output,/runtime_input_stale|cancelled/);
+});
+
+test('ordinary text continues with no visual text after source disconnection or audience restriction',{timeout:15000},async t=>{
+  const f=await fixture(t),state=await f.begin();await f.batch(state);f.disconnect();assert.doesNotMatch(JSON.stringify(await f.turn()),new RegExp(marker));
+  assert.equal((await f.request('/api/runtime/v1/audience',{mode:'shared'})).status,200);const fallback=await f.turn('Explain an ordinary task.');assert.doesNotMatch(JSON.stringify(fallback),new RegExp(marker));assert.doesNotMatch(fallback.sections.find(section=>section.kind==='interactionState')!.content,/input.visual=activeForSession/);
+});
+
+test('a newer empty interpretation removes future selection without cancelling an already admitted fresh visual reply',{timeout:15000},async t=>{
+  const f=await fixture(t),state=await f.begin();await f.batch(state);let entered!:()=>void,release!:()=>void;
+  const started=new Promise<void>(resolve=>{entered=resolve;}),gate=new Promise<void>(resolve=>{release=resolve;});t.after(()=>release());
+  f.setProvider({async *generate(input){f.requests.push(input);entered();await gate;yield {kind:'text',text:'ADMITTED_CURRENT_REPLY'};yield {kind:'done'};}});
+  const pending=f.request('/api/runtime/v1/messages',{assistantId:f.assistantId,userInput:'What can you see?'});await started;
+  try{assert.match(JSON.stringify(f.requests.at(-1)),new RegExp(marker));f.advance(1001);f.emptyNext();await f.batch(state);}finally{release();}
+  const output=await(await pending).text();assert.match(output,/ADMITTED_CURRENT_REPLY/);assert.match(output,/interaction.completed/);assert.doesNotMatch(output,/runtime_input_stale/);
+  f.setProvider({async *generate(input){f.requests.push(input);yield {kind:'text',text:'No current scene.'};yield {kind:'done'};}});
+  assert.doesNotMatch(JSON.stringify(await f.turn()),new RegExp(marker));
+});
+
+test('expiry between host preparation check and prompt materialization returns typed conflict without inference',{timeout:15000},async t=>{
+  const f=await fixture(t),state=await f.begin();await f.batch(state);
+  const host=f.app as any,prepare=host.prepareRuntimeInput.bind(host);
+  t.mock.method(host,'prepareRuntimeInput',(...args:any[])=>{
+    const input=prepare(...args),current=input.isCurrent;let first=true;
+    input.isCurrent=()=>{const admitted=current();if(first){first=false;f.advance(6001);}return admitted;};return input;
+  });
+  const response=await f.request('/api/runtime/v1/messages',{assistantId:f.assistantId,userInput:'What can you see?'});
+  assert.equal(response.status,409,await response.clone().text());assert.equal((await response.json()).code,'runtime_context_changed');assert.equal(f.requests.length,0);
+});
+
+test('an actual perception failure fences an already prepared visual reply and withholds future visual context',{timeout:15000},async t=>{
+  const f=await fixture(t),state=await f.begin();await f.batch(state);let entered!:()=>void,release!:()=>void;
+  const started=new Promise<void>(resolve=>{entered=resolve;}),gate=new Promise<void>(resolve=>{release=resolve;});t.after(()=>release());
+  f.setProvider({async *generate(input){f.requests.push(input);entered();await gate;yield {kind:'text',text:'AFTER_PERCEPTION_FAILURE'};yield {kind:'done'};}});
+  const pending=f.request('/api/runtime/v1/messages',{assistantId:f.assistantId,userInput:'What can you see?'});await started;
+  try{assert.match(JSON.stringify(f.requests.at(-1)),new RegExp(marker));f.advance(1001);f.failNext();await f.batch(state);}finally{release();}
+  const output=await(await pending).text();assert.doesNotMatch(output,/AFTER_PERCEPTION_FAILURE|interaction.completed/);assert.match(output,/runtime_input_stale|cancelled/);
+  f.setProvider({async *generate(input){f.requests.push(input);yield {kind:'text',text:'Visual interpretation unavailable.'};yield {kind:'done'};}});
+  assert.doesNotMatch(JSON.stringify(await f.turn()),new RegExp(marker));
+});
+
+test('a visual binding for another relationship is withheld from the same Assistant ordinary conversation',{timeout:15000},async t=>{
+  const f=await fixture(t),created=await f.request(`/api/admin/v1/assistants/${f.assistantId}/relationships`,{});assert.equal(created.status,201);
+  const relationshipId=(await created.json()).relationship.relationshipId as string;
+  f.bindRelationship(relationshipId);const matching=await f.begin();await f.batch(matching);assert.match(JSON.stringify(await f.turn('What can you see?',f.assistantId,relationshipId)),new RegExp(marker));await f.stop(matching);
+  // The trusted synthetic source is deliberately misbound. The ordinary
+  // relationship remains the existing authenticated owner's real selection.
+  f.bindRelationship(randomUUID());const mismatched=await f.begin();await f.batch(mismatched);
+  const reply=await f.turn('What can you see?',f.assistantId,relationshipId);assert.equal(reply.scope.assistantId,f.assistantId);assert.doesNotMatch(JSON.stringify(reply),new RegExp(marker));
+});

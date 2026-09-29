@@ -64,7 +64,7 @@ import { unavailableWorldContext } from "@lifestream/runtime/context/world";
 import { streamMessage, type HostRuntimeInput } from "./runtime/inference.ts";
 import { relationshipControlDefaults, relationshipControlInventory, compileRelationshipContext, type CompiledRelationshipContext, type RelationshipContextRecord } from "@lifestream/runtime/context";
 import { ContextCache } from "@lifestream/runtime/context/cache";
-import { buildCanonicalPrompt, type RuntimeSelfContext, type AssistantPersonaProjection } from "@lifestream/runtime/inference/prompt";
+import { buildCanonicalPrompt, createPreparedTurnBinding, type RuntimeSelfContext, type AssistantPersonaProjection } from "@lifestream/runtime/inference/prompt";
 import { readSessionEndpoint, reviseSessionEndpoint } from "./runtime/session-context.ts";
 import {VisualInputHost,VisualInputRequestError,VisualUploadError,parseVisualCapabilities,parseVisualCamera,parseVisualBatch,type VisualInputOptions,type VisualActor} from './runtime/visual-input.ts';
 import {readVisualMultipart,VisualMultipartError} from './runtime/visual-multipart.ts';
@@ -671,7 +671,7 @@ export class LifestreamServer {
     if(options.sessionEnvironmentId!==undefined&&!validUuid(options.sessionEnvironmentId))throw Error("A valid composition-supplied session environment ID is required");this.sessionEnvironmentId=options.sessionEnvironmentId;
     if(options.experienceTestClock&&options.config.profile!=='test')throw Error('Experience clock injection requires test profile');this.experienceTestClock=options.experienceTestClock;
     if(options.visualInput&&(options.config.profile!=='test'||options.config.authority.authentication!=='local-password'||!options.localAuth||!['127.0.0.1','localhost','::1'].includes(options.host??'127.0.0.1')))throw Error('Visual provider and source injection requires isolated loopback local-auth tests');
-    this.visualInput=new VisualInputHost(options.visualInput??{scopeFor:()=>null,sourceFor:()=>null,captureAuthority:()=>({sourceConnected:false,devicePermission:false,hostCaptureLease:false,interpretationAllowed:false,remoteEgressAllowed:false,foregroundVisible:false})});
+    this.visualInput=new VisualInputHost(options.visualInput??{scopeFor:()=>null,sourceFor:()=>null,captureAuthority:()=>({sourceConnected:false,devicePermission:false,hostCaptureLease:false,interpretationAllowed:false,remoteEgressAllowed:false,foregroundVisible:false})},()=>this.invalidateWorldInputs());
     this.acknowledgmentAlignment=options.acknowledgmentAlignment;this.acknowledgmentRequiresSync=options.acknowledgmentRequiresSync;
     this.restoreQuarantine=options.config.storage.databasePath!==':memory:'&&existsSync(join(dirname(options.config.storage.databasePath),'restore-quarantine.json'));
     if(this.restoreQuarantine && (options.config.authority.authentication!=='local-password'||!['fixture','local-human'].includes(options.config.authority.provider)||options.config.providers.world!=='fixture'||options.config.providers.capability!=='fixture'||options.config.pwceProfile||options.incidentReview||options.urgentConditions||options.urgentAway||options.telegram||options.capabilityProvider||options.canonicalAuthority||options.canonicalCapabilities||options.audiencePrivacy?.poll||!['127.0.0.1','::1','localhost'].includes(options.host??'127.0.0.1')))throw new Error('Restored authority is quarantined; use local authentication, loopback and fixture world/capability bindings');
@@ -1577,8 +1577,40 @@ export class LifestreamServer {
     const resolvedRelationship=this.admin.conversationRelationshipId(assistantId,relationshipId,context.principalId),experienceScope:ExperienceScope|undefined=this.localAuth&&resolvedRelationship&&microphone!=="activeForSession"?{assistantId,principalId:context.principalId,relationshipId:resolvedRelationship}:undefined;
     const learning=experienceScope?this.experience.select(experienceScope,typeof body.userInput==='string'?body.userInput:'',this.runtimeSelfContext(microphone,endpoint,context,asOf).audienceScope==='authenticatedSession'):undefined;
     const prepared = snapshot(); const fingerprint = boundary();
-    const conversation=this.conversationPort(assistantId,relationshipId,context,microphone!=="activeForSession");
-    const result: HostRuntimeInput = { ...prepared,...(learning?.item?{experienceSelection:{id:learning.item.id,topic:learning.item.topic,statement:learning.item.statement,nextStep:learning.item.nextStep}}:{}),...(experienceScope?{onCompleted:(interactionId:string)=>{this.experience.completed(experienceScope,interactionId);if(learning?.item&&learning.id)this.experience.observe(experienceScope,learning.id);}}:{}),...(conversation?{conversation}:{}), onInferenceRequest:request=>{const memory=request.sections.find(section=>section.kind==='preparedMemory')?.content??'';this.admin.noteDiscoveryRequest(assistantId,relationshipId,context.principalId,context.sessionId,(prepared.preparedRelationshipContext?.sourceRevisions??[]).filter(id=>id.startsWith('discovery-candidate:')&&memory.includes(id)));}, isCurrent: () => { try { return (authorizationCurrent ? authorizationCurrent() : Date.parse(context.expiresAt) > Date.now()) && !["draining", "stopped"].includes(this.state) && fingerprint === boundary() && (!experienceScope||learning?.boundary===this.experience.boundary(experienceScope)) && (!prepared.preparedRelationshipContext || Date.parse(prepared.preparedRelationshipContext.freshUntil) > Date.now()); } catch { return false; } } };
+    const dialogue=this.conversationPort(assistantId,relationshipId,context,microphone!=="activeForSession");
+    // One host preparation pins ordinary dialogue and visual text together.
+    // Perception is never awaited here and its text is never remembered as a turn.
+    const conversationText=dialogue?.read();
+    const question=typeof body.userInput==='string'?body.userInput.slice(0,8000):'';
+    const visualActor={principalId:context.principalId,sessionId:context.sessionId,assistantId};
+    const visualBinding={expectedConversationId:(this.database.connection.prepare("SELECT conversation_id AS id FROM sessions WHERE id=? AND status='active'").get(context.sessionId) as {id:string}|undefined)?.id??'',expectedRelationshipId:resolvedRelationship??null};
+    const visualAvailability=this.audiencePermits(context)?this.visualInput.contextAvailability(visualActor,visualBinding):null;
+    if (visualAvailability) {
+      const state=prepared.runtimeSelfContext;
+      prepared.runtimeSelfContext={...state,inputModalities:{...state.inputModalities,visual:'activeForSession'},
+        modalityFacts:{...state.modalityFacts,visual:{implemented:true,configured:true,connected:true,activeForSession:true,authorized:true}},
+        limitations:[...state.limitations.filter(value=>value!=='Visual input is not configured.'),'Visual availability was observed at this preparation time. Describe a scene only when this reply includes eligible visual observations; availability alone supplies no scene content or continuous sight, physical audience or identity.'],
+        sourceRevision:createHash('sha256').update(JSON.stringify([state.sourceRevision,visualAvailability.sourceRevision,visualAvailability.expiresAtMs])).digest('hex')};
+    }
+    const preparedTurnBinding=conversationText!==undefined && visualBinding.expectedConversationId
+      ? createPreparedTurnBinding({viewId:randomUUID(),revision:1,invalidationKey:createHash('sha256').update(fingerprint).digest('hex'),
+        scope:{assistantId,principalId:context.principalId,relationshipId:resolvedRelationship??null,conversationId:visualBinding.expectedConversationId,sessionId:context.sessionId,endpointId:prepared.endpointId},conversation:conversationText,
+        sourceRevisions:{runtime:prepared.runtimeSelfContext.sourceRevision,
+          ...(prepared.profileProjection?{persona:prepared.profileProjection.sourceRevision}:{}),
+          ...(prepared.preparedRelationshipContext?{relationship:prepared.preparedRelationshipContext.relationshipRevision,configuration:prepared.preparedRelationshipContext.configurationRevision}:{}),
+          ...(visualAvailability?{visual:String(visualAvailability.sourceRevision)}:{})}}) : undefined;
+    const preparedVisualContext=preparedTurnBinding && this.audiencePermits(context)
+      ? this.visualInput.prepareContext(visualActor,{...visualBinding,
+        viewId:preparedTurnBinding.viewId,revision:preparedTurnBinding.revision,invalidationKey:preparedTurnBinding.invalidationKey,conversation:preparedTurnBinding.conversation,
+        explicitQuestion:/\b(?:can you see|do you see|what (?:do you see|am I (?:holding|wearing)|is (?:this|visible))|look at|camera|in (?:the|this) (?:image|picture|frame))\b/iu.test(question),
+        allowAside:question.trim().length>0}) : null;
+    const conversation=dialogue?{read:()=>conversationText!,remember:dialogue.remember}:undefined;
+    const result: HostRuntimeInput = { ...prepared,...(preparedTurnBinding?{preparedTurnBinding}:{}),...(preparedVisualContext?{preparedVisualContext}:{}),...(learning?.item?{experienceSelection:{id:learning.item.id,topic:learning.item.topic,statement:learning.item.statement,nextStep:learning.item.nextStep}}:{}),...(experienceScope?{onCompleted:(interactionId:string)=>{this.experience.completed(experienceScope,interactionId);if(learning?.item&&learning.id)this.experience.observe(experienceScope,learning.id);}}:{}),...(conversation?{conversation}:{}), onInferenceRequest:request=>{const memory=request.sections.find(section=>section.kind==='preparedMemory')?.content??'';this.admin.noteDiscoveryRequest(assistantId,relationshipId,context.principalId,context.sessionId,(prepared.preparedRelationshipContext?.sourceRevisions??[]).filter(id=>id.startsWith('discovery-candidate:')&&memory.includes(id)));}, isCurrent: () => { try { return (authorizationCurrent ? authorizationCurrent() : Date.parse(context.expiresAt) > Date.now()) && !["draining", "stopped"].includes(this.state) && fingerprint === boundary() && (!experienceScope||learning?.boundary===this.experience.boundary(experienceScope)) && (!prepared.preparedRelationshipContext || Date.parse(prepared.preparedRelationshipContext.freshUntil) > Date.now()); } catch { return false; } } };
+    if (preparedVisualContext) {
+      const ownerCurrent=result.isCurrent,completed=result.onCompleted;
+      result.isCurrent=()=>ownerCurrent() && this.visualInput.contextCurrent(preparedVisualContext);
+      result.onCompleted=interactionId=>{completed?.(interactionId);this.visualInput.markContextUsed(preparedVisualContext);};
+    }
     if (this.config.providers.world === "pwce") {
       const world = this.providers.world, ownerCurrent = result.isCurrent;
       const owner = {
@@ -1594,13 +1626,26 @@ export class LifestreamServer {
     }
     return result;
   }
-  private invalidateWorldInputs(): void { for (const fence of this.runtimeFences) if (!fence.current()) fence.abort(); for (const session of this.audioSessions) session.invalidateIfStale(); }
+  private invalidateWorldInputs(): void {
+    const stopping=this.state==='draining'||this.state==='stopped';
+    // Visual expiry can notify after shutdown has closed the listener/database.
+    // Unavailable authority fails closed; one broken predicate must not leave
+    // another response or audio endpoint emitting under stale context.
+    for(const fence of this.runtimeFences){
+      let current=false;try{current=!stopping&&fence.current();}catch{/* Unavailable scope is not current. */}
+      if(!current)try{fence.abort();}catch{/* Reconcile every remaining fence. */}
+    }
+    for(const session of this.audioSessions){
+      try{if(stopping)session.close();else session.invalidateIfStale();}
+      catch{try{session.close();}catch{/* Continue closing other audio endpoints. */}}
+    }
+  }
   private invalidateRuntimeInputs(reason="configurationChanged"): void { if(['audienceChanged','sessionHandoff','visualScopeChanged','securityChanged','profileChanged','shutdown'].includes(reason)||(reason==='readinessProbe'&&this.state!=='ready'))this.visualInput.close();this.urgentAttention?.reconcile(); this.urgentAway?.reconcile(); this.experiential?.reconcileAll(); this.providers.world?.prune(); this.conversationHistory.prune(); this.sessionHandoff?.prune(); this.initiativeHost.invalidate(reason); for (const fence of this.runtimeFences) if (!fence.current()) fence.abort(); for (const session of this.audioSessions) session.invalidateIfStale(); }
   private async handleRuntime(request: IncomingMessage, response: ServerResponse): Promise<void> {
     if (!this.storageReady || ["draining", "stopped"].includes(this.state) || this.providers.providers.inference?.status !== "healthy") return json(response, 503, { code: "inference_unavailable", message: "runtime inference is unavailable" });
     const context = this.requestContext(request, false); if (!context) return json(response, 401, { code: "authentication_required", message: "authentication required" });
     const body = asObject(await readBody(request)); if (!body) return json(response, 422, { code: "invalid_request", message: "message body must be an object" });
-    delete body.preparedRelationshipContext; delete body.profileProjection; delete body.runtimeSelfContext; delete body.memory; delete body.world; delete body.preparedWorldContext; delete body.capabilities;
+    delete body.preparedTurnBinding; delete body.preparedVisualContext; delete body.preparedRelationshipContext; delete body.profileProjection; delete body.runtimeSelfContext; delete body.memory; delete body.world; delete body.preparedWorldContext; delete body.capabilities;
     // Typed text does not establish a negotiated physical/logical endpoint.
     body.endpointId = null;
     let prepared: HostRuntimeInput; try { prepared = this.prepareRuntimeInput(body, context, "inactive", "none", () => this.runtimeAuthorized(request, body.assistantId)); } catch { return json(response, 404, { code: "relationship_not_found", message: "relationship context is unavailable for this authenticated subject" }); }

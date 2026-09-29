@@ -3,8 +3,90 @@ import { randomUUID } from "node:crypto";
 import test from "node:test";
 import { AudioSession, hasAudioEnergy, VOICE_TURN_DEADLINE_MS } from "../src/runtime/audio.ts";
 import {defaultVoiceSettings} from '../src/runtime/voice-settings.ts';
+import {VisualObservationStore} from '@lifestream/runtime/perception/observation';
+import {createPreparedTurnBinding} from '@lifestream/runtime/inference/prompt';
+import type {VisualScope} from '@lifestream/runtime/perception/port';
+import type {HostRuntimeInput} from '../src/runtime/inference.ts';
 
 const frame = (value: number) => { const bytes = Buffer.alloc(4800 * 2); for (let offset = 0; offset < bytes.length; offset += 2) bytes.writeInt16LE(value, offset); return { frameId: randomUUID(), sequence: 0, format: { encoding: "pcm_s16le" as const, sampleRateHz: 16000 as const, channels: 1 as const }, sampleOffset: 0, sampleCount: 4800, dataBase64: bytes.toString("base64") }; };
+
+function visualAudioHarness(beforeSynthesisTerminal:()=>Promise<void>=async()=>{}) {
+  let now=100_000,authority=true,releases=0;
+  const events:any[]=[],prompts:any[]=[],completed:string[]=[];
+  const sessionId=randomUUID(),endpointId=randomUUID(),assistantId=randomUUID(),audioInputId=randomUUID(),leaseId=randomUUID();
+  const scope:VisualScope={assistantId,principalId:randomUUID(),relationshipId:null,environmentId:'synthetic-audio',conversationId:randomUUID(),sessionId,endpointId,sessionRevision:1,audienceRevision:1,scopeGeneration:1,sourceBindingRef:'camera:synthetic-no-device',captureConfigurationRevision:1};
+  const store=new VisualObservationStore({now:()=>now,current:()=>authority});
+  assert.equal(store.publish({scope,leaseId,sequence:1,requestId:randomUUID(),capturedAtEarliestMs:now-100,capturedAtLatestMs:now-50,receivedAtMs:now-30,interpretedAtMs:now,provider:{id:'synthetic-visual',version:'1'},observations:[{observationId:'synthetic-scene',frameIds:[randomUUID()],appearance:'A striped synthetic object is beside a chair.',inference:'It may be a toy.',confidence:null,limitations:['Scripted fixture, not interpreted pixels.']}]}),true);
+  const preparedTurnBinding=createPreparedTurnBinding({viewId:randomUUID(),revision:1,invalidationKey:randomUUID(),scope:{assistantId:scope.assistantId,principalId:scope.principalId,relationshipId:scope.relationshipId,conversationId:scope.conversationId,sessionId:scope.sessionId,endpointId:scope.endpointId},conversation:'[]',sourceRevisions:{runtime:'synthetic-visual-audio',conversation:'synthetic-dialogue-1'}});
+  const view=store.prepare({scope,leaseId,viewId:preparedTurnBinding.viewId,revision:preparedTurnBinding.revision,invalidationKey:preparedTurnBinding.invalidationKey,conversation:preparedTurnBinding.conversation,explicitQuestion:false,allowAside:true});
+  assert.ok(view);
+  const prepare=():HostRuntimeInput=>({assistantId,endpointId,preparedTurnBinding,preparedVisualContext:view,conversation:{read:()=>preparedTurnBinding.conversation,remember(){}},runtimeSelfContext:{sourceRevision:'synthetic-visual-audio',runtimeStatus:'ready',inputModalities:{text:'active',microphone:'activeForSession',visual:'activeForSession'},outputModalities:{text:'active',speechGeneration:'healthy',speechDelivery:'notObserved',presentation:'notConfigured'},endpointScope:'sessionEndpoint',audienceScope:'authenticatedSession',permissionState:'authenticatedSession',limitations:['Synthetic route verification; no physical audibility proof.']},isCurrent:()=>store.isCurrent(view),onCompleted:trace=>{completed.push(trace);store.markUsed(view);}});
+  const stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Explain the next task.'}};yield {kind:'terminal',outcome:'succeeded'};}};
+  const inference={async *generate(request:unknown){prompts.push(request);yield {kind:'text',text:'Continue with the next task.'};}};
+  const tts={async *synthesize(request:any){yield {kind:'data',segmentId:request.segmentId,frame:{...frame(100),format:request.format}};await beforeSynthesisTerminal();yield {kind:'terminal',outcome:'succeeded'};}};
+  const session=new AudioSession({readyState:1,send:raw=>events.push(JSON.parse(raw)),close(){}},{stt:stt as never,inference:inference as never,tts:tts as never,prepare,outputLease:()=>({current:()=>true,release(){releases++;}})},sessionId);
+  const receipt=()=>{const trace=events.findLast(event=>event.type==='turnStarted')?.interactionTraceId;return {trace,samples:events.filter(event=>event.type==='audio'&&event.interactionTraceId===trace).reduce((sum,event)=>sum+event.chunk.frame.sampleCount,0)};};
+  const acknowledge=async(outcome='completed',receivedSamples=receipt().samples,interactionTraceId=receipt().trace)=>session.message(JSON.stringify({type:'playbackSettled',interactionTraceId,outcome,receivedSamples}));
+  return {session,store,view,events,prompts,completed,receipt,acknowledge,releases:()=>releases,
+    withdraw(){authority=false;store.invalidate(sessionId);},expire(){now=view.expiresAtMs;},
+    async start(){await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,assistantId,expectedSessionRevision:1,endpointId,audioInputId,format:frame(0).format}}));},
+    async turn(){await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(100)}));await session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));},
+    async close(){if(receipt().trace)await acknowledge('stopped',0);session.close();store.clear();}
+  };
+}
+
+test('ordinary speech uses fresh visual context only in untrusted conversation and completes once after exact endpoint acknowledgment',async()=>{
+  const f=visualAudioHarness();
+  try{
+    await f.start();await f.turn();
+    assert.equal(f.prompts.length,1);
+    const prompt=f.prompts[0],conversation=prompt.sections.find((section:any)=>section.kind==='conversation');
+    assert.equal(prompt.sections.length,9);assert.equal(conversation.trusted,false);assert.equal(conversation.content,f.view.conversationContent);
+    assert.match(conversation.content,/striped synthetic object/);assert.match(conversation.content,/Untrusted sampled visual observations/);
+    assert.ok(prompt.sections.filter((section:any)=>section.kind!=='conversation').every((section:any)=>!section.content.includes('striped synthetic object')));
+    assert.equal(prompt.sections.find((section:any)=>section.kind==='userInput').content,'Explain the next task.');
+    assert.equal(f.events.at(-1).event.payload.state,'completed');assert.ok(f.receipt().samples>0);
+    assert.deepEqual(f.completed,[],'synthesis completion is not endpoint playback settlement');assert.equal(f.releases(),0);
+    await f.acknowledge('completed',f.receipt().samples-1);
+    await f.acknowledge('completed',f.receipt().samples+1);
+    await f.acknowledge('completed',f.receipt().samples,randomUUID());
+    assert.deepEqual(f.completed,[]);assert.equal(f.releases(),0,'invalid receipts do not release the output lease');
+    const trace=f.receipt().trace;await f.acknowledge();await f.acknowledge();
+    assert.deepEqual(f.completed,[trace]);assert.equal(f.releases(),1);
+  }finally{await f.close();}
+});
+
+test('visual withdrawal or capture expiry after synthesis fences unplayed speech and cannot count as completed',async()=>{
+  for(const cause of ['withdrawal','expiry']){
+    const f=visualAudioHarness();
+    try{
+      await f.start();await f.turn();assert.equal(f.events.at(-1).event.payload.state,'completed');assert.equal(f.releases(),0);
+      if(cause==='withdrawal')f.withdraw();else f.expire();
+      f.session.invalidateIfStale();
+      assert.ok(f.events.some(event=>event.type==='stopPlayback'&&event.interactionTraceId===f.receipt().trace),cause);
+      assert.deepEqual(f.completed,[]);await f.acknowledge();assert.deepEqual(f.completed,[],'a stale endpoint completed receipt cannot accept the view');
+      await f.acknowledge('stopped',0);assert.equal(f.releases(),1);assert.deepEqual(f.completed,[]);
+    }finally{await f.close();}
+  }
+});
+
+test('stopped endpoint playback never records a completed visual mention',async()=>{
+  const f=visualAudioHarness();
+  try{await f.start();await f.turn();await f.acknowledge('stopped',0);await f.acknowledge();assert.deepEqual(f.completed,[]);assert.equal(f.releases(),1);}
+  finally{await f.close();}
+});
+
+test('endpoint completed receipt before synthesis terminal is ignored until validated completion',async()=>{
+  let release!:()=>void;const terminal=new Promise<void>(resolve=>{release=resolve;});
+  const f=visualAudioHarness(()=>terminal);let turning:Promise<void>|undefined;
+  try{
+    await f.start();turning=f.turn();
+    for(let attempt=0;attempt<30&&!f.events.some(event=>event.type==='audio');attempt++)await new Promise(resolve=>setImmediate(resolve));
+    assert.ok(f.receipt().samples>0);await f.acknowledge();assert.deepEqual(f.completed,[]);assert.equal(f.releases(),0);
+    release();await turning;assert.deepEqual(f.completed,[]);
+    await f.acknowledge();await f.acknowledge();assert.deepEqual(f.completed,[f.receipt().trace]);assert.equal(f.releases(),1);
+  }finally{release();await turning;await f.close();}
+});
 test('ordinary audio admits reference-only controls while rejecting unsupported description and seed',async()=>{
  const reference={sampleRateHz:16000 as const,dataBase64:Buffer.alloc(64000).toString('base64'),transcript:'Synthetic sample',consent:true as const};
  for(const [extra,referenceSupported,accepted] of [[{},true,true],[{description:'Unsupported'},true,false],[{seed:4},true,false],[{},false,false]] as const){

@@ -1,3 +1,5 @@
+import {isDeepStrictEqual} from 'node:util';
+import {VisualObservationStore,type PreparedVisualContext} from '@lifestream/runtime/perception/observation';
 import {VisualAdmission, VisualAdmissionError, type CaptureAuthority} from '@lifestream/runtime/perception/admission';
 import {validateVisualInput,type VisualCapabilitiesRequest,type VisualCameraRequest,type VisualBatchRequest} from '@lifestream/contracts/visual-input';
 import {MAX_VISUAL_METADATA_BYTES,VISUAL_FRAMING_BYTES} from './visual-multipart.ts';
@@ -66,16 +68,20 @@ export function parseVisualBatch(value: unknown): VisualBatchRequest {
   return batch;
 }
 
-const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
+const same = isDeepStrictEqual;
 
 /** Binds an authenticated session to a host-owned physical source and policy. */
 export class VisualInputHost {
   private readonly runtime: VisualAdmission;
   private readonly options: VisualInputOptions;
+  private readonly observations: VisualObservationStore;
+  private readonly viewExpiries=new Map<number,ReturnType<typeof setTimeout>>();
+  private readonly onContextChanged:()=>void;
   private readonly commands = new Map<string, CameraInput>();
   private readonly uploads = new Map<string,AbortController>();
 
-  constructor(options: VisualInputOptions) {
+  constructor(options: VisualInputOptions,onContextChanged:()=>void=()=>{}) {
+    this.onContextChanged=()=>queueMicrotask(onContextChanged);
     this.options = options;
     this.runtime = new VisualAdmission({
       ...(options.provider ? {provider: options.provider} : {}),
@@ -84,13 +90,22 @@ export class VisualInputHost {
       ...(options.monotonicMs ? {monotonicMs:options.monotonicMs} : {}),
       ...(options.utcMs ? {utcMs:options.utcMs} : {}),
       ...(options.newId ? {newId:options.newId} : {}),
-      onLeaseEnded: (scope,leaseId,reason) => { this.cancelUpload(scope.sessionId); options.releaseCapture?.({principalId:scope.principalId,sessionId:scope.sessionId,assistantId:scope.assistantId},scope,leaseId,reason); },
+      onLeaseEnded: (scope,leaseId,reason) => { this.cancelUpload(scope.sessionId); this.observations?.invalidate(scope.sessionId); this.onContextChanged(); options.releaseCapture?.({principalId:scope.principalId,sessionId:scope.sessionId,assistantId:scope.assistantId},scope,leaseId,reason); },
       currentScope: scope => {
         const actor = {principalId:scope.principalId,sessionId:scope.sessionId,assistantId:scope.assistantId};
         const current = this.scope(actor);
         if (current === null || !same(current,scope)) return false;
         const authority=options.captureAuthority(actor,current);
         return authority.sourceConnected && authority.devicePermission && authority.hostCaptureLease && authority.interpretationAllowed && authority.foregroundVisible && (options.provider?.dataEgressClass!=='configuredRemote'||authority.remoteEgressAllowed);
+      }
+    });
+    this.observations = new VisualObservationStore({
+      now:options.utcMs ?? Date.now,
+      freshnessMs:this.runtime.bounds.freshnessMs,
+      current:(scope,leaseId)=>{
+        const actor={principalId:scope.principalId,sessionId:scope.sessionId,assistantId:scope.assistantId};
+        const state=this.runtime.cameraStateFor(actor.sessionId,actor.principalId,actor.assistantId);
+        return state.captureActive && state.leaseId===leaseId && same(this.scope(actor),scope);
       }
     });
   }
@@ -151,6 +166,7 @@ export class VisualInputHost {
       const clock = {expectedRevision:input.expectedRevision,challengeId:input.challengeId,endpointClockId:input.endpointClockId,endpointReceivedMonotonicMs:input.endpointReceivedMonotonicMs};
       result = input.action === 'enable' ? this.runtime.enable(scope,clock,authority) : this.runtime.renew(scope,input.leaseId ?? '',clock,authority);
     }
+    if (input.action === 'renew') { this.observations.invalidate(actor.sessionId); this.onContextChanged(); }
     this.commands.set(key,structuredClone(input));
     if (this.commands.size > 256) this.commands.delete(this.commands.keys().next().value!);
     return result;
@@ -169,10 +185,47 @@ export class VisualInputHost {
     const admitted = this.runtime.submit(scope,meta.leaseId,meta.endpointClockId,frames,meta.correlationId);
     copied?.();
     const result = await admitted.completion;
+    // Only host provenance and snapshotted provider evidence enter this volatile
+    // text cache. An old completion cannot publish or erase a successor view.
+    if (this.runtime.provenanceCurrent(admitted.provenance)) {
+      const source=admitted.provenance;
+      if (result.status==='complete' && result.observations.length) {
+        const published=this.observations.publish({scope:source.scope,leaseId:source.leaseId,sequence:source.hostSequence,
+          requestId:source.requestId,provider:source.provider,capturedAtEarliestMs:source.capturedAtEarliestMs,
+          capturedAtLatestMs:source.capturedAtLatestMs,receivedAtMs:source.receivedAtMs,
+          interpretedAtMs:(this.options.utcMs ?? Date.now)(),observations:result.observations});
+        if (!published) { this.observations.invalidate(actor.sessionId); this.onContextChanged(); }
+      } else if (result.status==='empty' || result.status==='complete' || result.reason==='replaced' || result.reason==='foreground_priority') {
+        this.observations.withdrawCurrent(actor.sessionId);
+      } else { this.observations.invalidate(actor.sessionId); this.onContextChanged(); }
+    }
     return {requestId:admitted.requestId,queued:admitted.queued,result};
   }
 
+  contextAvailability(actor:VisualActor,binding:{expectedConversationId:string;expectedRelationshipId:string|null}) {
+    const scope=this.scope(actor),state=this.state(actor);
+    if(!scope||scope.conversationId!==binding.expectedConversationId||scope.relationshipId!==binding.expectedRelationshipId||!state.captureActive||!state.currentObservationUsable||!state.leaseId)return null;
+    return this.observations.availability(scope,state.leaseId);
+  }
+
+  prepareContext(actor:VisualActor,input:Omit<Parameters<VisualObservationStore['prepare']>[0],'scope'|'leaseId'>&{expectedConversationId:string;expectedRelationshipId:string|null}):PreparedVisualContext|null {
+    const scope=this.scope(actor),state=this.state(actor);
+    if (!scope || scope.conversationId!==input.expectedConversationId || scope.relationshipId!==input.expectedRelationshipId || !state.captureActive || !state.currentObservationUsable || !state.leaseId) return null;
+    const view=this.observations.prepare({...input,scope,leaseId:state.leaseId});
+    if (view && !this.viewExpiries.has(view.expiresAtMs)) {
+      // One deadline per capture time, not per request. This also fences queued
+      // endpoint playback after synthesis has ended, with bounded timer state.
+      if (this.viewExpiries.size>=32) return null;
+      const timer=setTimeout(()=>{this.viewExpiries.delete(view.expiresAtMs);this.onContextChanged();},
+        Math.max(1,Math.ceil(view.expiresAtMs-(this.options.utcMs ?? Date.now)())));
+      timer.unref();this.viewExpiries.set(view.expiresAtMs,timer);
+    }
+    return view;
+  }
+  contextCurrent(view:PreparedVisualContext) { return this.observations.isCurrent(view); }
+  markContextUsed(view:PreparedVisualContext) { this.observations.markUsed(view); }
+
   state(actor: VisualActor) { return this.runtime.cameraStateFor(actor.sessionId,actor.principalId,actor.assistantId); }
-  invalidate(sessionId: string) { this.cancelUpload(sessionId); this.runtime.invalidate(sessionId); }
-  close() { for (const upload of this.uploads.values()) upload.abort(); this.runtime.close(); }
+  invalidate(sessionId: string) { this.observations.invalidate(sessionId); this.cancelUpload(sessionId); this.runtime.invalidate(sessionId); this.onContextChanged(); }
+  close() { for (const timer of this.viewExpiries.values()) clearTimeout(timer); this.viewExpiries.clear(); this.observations.clear(); this.onContextChanged(); for (const upload of this.uploads.values()) upload.abort(); this.runtime.close(); }
 }

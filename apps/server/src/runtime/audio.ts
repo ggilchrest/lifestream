@@ -143,7 +143,12 @@ export class AudioSession {
     if (this.closed) return;
     let message: AudioClientMessage;
     try { message = JSON.parse(raw) as AudioClientMessage; } catch { this.socket.close(1003, "malformed JSON"); return; }
-    if (message?.type === "playbackSettled") { this.playback?.acknowledge(message); return; }
+    if (message?.type === "playbackSettled") {
+      if (this.playback?.acknowledge(message) && message.outcome==='completed' && this.ensureInputCurrent() && this.currentInput?.isCurrent()) {
+        try { this.currentInput.onCompleted?.(message.interactionTraceId); } catch { /* Optional mention bookkeeping cannot change playback settlement. */ }
+      }
+      return;
+    }
     if (!message || typeof message !== "object") { this.socket.close(1003, "malformed audio message"); return; }
     if (message.type === "start") return this.start(message.request);
     if (message.type === "interrupt") { if (message.interactionTraceId === this.interactionTraceId) { this.playback?.interrupt(); this.controller?.abort(); send(this.socket, { type: "stopPlayback", interactionTraceId: message.interactionTraceId, reason: message.reason }); } return; }
@@ -225,7 +230,7 @@ export class AudioSession {
         outputLease=this.deps.outputLease?.(this.currentInput?.endpointId??request.endpointId,deadlineAt);
         if(outputLease){playback=this.playback=new AudioPlayback(traceId,deadlineAt,()=>{controller.abort();send(this.socket,{type:"stopPlayback",interactionTraceId:traceId,reason:"endpoint_playback_stopped_or_expired"});});this.outputSettlement=playback.settled;}
 
-        const prompt = buildCanonicalPrompt({ ...(this.currentInput?.preparedWorldContext ? { preparedWorldContext: this.currentInput.preparedWorldContext } : {}), ...(this.currentInput?.capabilityContext ? { capabilities: this.currentInput.capabilityContext } : {}), assistantId: this.currentInput?.assistantId ?? this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: this.currentInput?.endpointId ?? request.endpointId, userInput: transcript, ...(this.currentInput?.conversation?{conversation:this.currentInput.conversation.read()}:{}), deadlineAt, executionMode: "live", voiceMode: true, ...(this.currentInput ? { runtimeSelfContext: this.currentInput.runtimeSelfContext, ...(this.currentInput.profileProjection ? { profileProjection: this.currentInput.profileProjection } : {}), ...(this.currentInput.preparedRelationshipContext ? { preparedRelationshipContext: this.currentInput.preparedRelationshipContext } : {}) } : {}) });
+        const prompt = buildCanonicalPrompt({ ...(this.currentInput?.preparedTurnBinding?{preparedTurnBinding:this.currentInput.preparedTurnBinding}:{}), ...(this.currentInput?.preparedVisualContext?{preparedVisualContext:this.currentInput.preparedVisualContext}:{}), ...(this.currentInput?.preparedWorldContext ? { preparedWorldContext: this.currentInput.preparedWorldContext } : {}), ...(this.currentInput?.capabilityContext ? { capabilities: this.currentInput.capabilityContext } : {}), assistantId: this.currentInput?.assistantId ?? this.identity.assistantId, sessionId: request.sessionId, interactionId: traceId, endpointId: this.currentInput?.endpointId ?? request.endpointId, userInput: transcript, ...(this.currentInput?.conversation?{conversation:this.currentInput.conversation.read()}:{}), deadlineAt, executionMode: "live", voiceMode: true, ...(this.currentInput ? { runtimeSelfContext: this.currentInput.runtimeSelfContext, ...(this.currentInput.profileProjection ? { profileProjection: this.currentInput.profileProjection } : {}), ...(this.currentInput.preparedRelationshipContext ? { preparedRelationshipContext: this.currentInput.preparedRelationshipContext } : {}) } : {}) });
         const conversation=this.currentInput?.conversation;conversation?.remember({interactionId:traceId,role:"user",text:transcript});
         let answer = "";
         const segmenter = new SpeechSafeSegmenter(360,{firstClauseMinChars:64});
@@ -277,6 +282,7 @@ export class AudioSession {
         catch (error) { internalFailure ||= !controller.signal.aborted; controller.abort(); queue.close(error); await generation.catch(() => {}); throw error; }
         this.invalidateIfStale();if(controller.signal.aborted)throw new Error("audio input changed before completion");
         playback?.synthesized();
+        if (!playback) { try { this.currentInput?.onCompleted?.(traceId); } catch { /* Software emission only; no physical playback claim. */ } }
         response(this.socket, traceId, this.sequence++, { type: "terminal", state: "completed", finalResponse: null, error: null });
     } catch (error) {
       const interrupted = this.controller.signal.aborted && !timedOut && !internalFailure;

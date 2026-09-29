@@ -239,3 +239,30 @@ test('revoked interpretation cannot invoke provider and a denied stale actor can
   assert.equal(host.state(successor).captureActive,true);
   host.close();
 });
+
+test('selected visual expiry notifies output fences without another camera request',{timeout:3000},async t=>{
+  let expired!:()=>void;
+  const expiry=new Promise<void>(resolve=>{expired=resolve;});
+  let view:ReturnType<VisualInputHost['prepareContext']>=null;
+  let observed:unknown;
+  const visual=new VisualInputHost({
+    provider:fixtureVisualProvider(request=>(observed={capturedAtEarliestMs:request.capturedAtEarliestMs,capturedAtLatestMs:request.capturedAtLatestMs,receivedAtMs:request.receivedAtMs}, {requestId:request.requestId,status:'complete',reason:null,observations:[{observationId:'generated-observation',frameIds:[request.frames[0]!.frameId],appearance:'A synthetic blue square.',inference:null,confidence:null,limitations:['Synthetic fixture.']}]})),
+    scopeFor:request=>({...request,relationshipId:null,environmentId:'test',conversationId:'conversation',endpointId:'endpoint',sessionRevision:1,audienceRevision:1,scopeGeneration:1}),
+    sourceFor:()=>({bindingRef:'synthetic-source',connected:true,configurationRevision:1}),
+    captureAuthority:()=>authority,bounds:{freshnessMs:250}
+  },()=>{if(view&&!visual.contextCurrent(view))expired();});
+  t.after(()=>visual.close());
+  const offer=visual.capabilities(actor,['1.0.0']);
+  const lease=visual.camera(actor,{action:'enable',expectedRevision:offer.camera.revision,idempotencyKey:randomUUID(),challengeId:offer.negotiation!.challenge!.id,endpointClockId:'synthetic-clock',endpointReceivedMonotonicMs:performance.now()});
+  const frameId=randomUUID();
+  await visual.batch(actor,{leaseId:lease.leaseId!,endpointClockId:'synthetic-clock',correlationId:randomUUID(),frames:[{frameId,sequence:0,capturedMonotonicMs:performance.now(),clockMappingId:lease.clockMappingId!,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]},new Map([[frameId,png]]));
+  const prepare={expectedConversationId:'conversation',expectedRelationshipId:null,viewId:randomUUID(),revision:1,invalidationKey:'expiry-test',conversation:'[]',explicitQuestion:true,allowAside:false};
+  view=visual.prepareContext(actor,prepare);assert.ok(view,JSON.stringify({observed,now:Date.now(),state:visual.state(actor),store:(visual as any).observations.diagnostics()}));assert.equal(visual.contextCurrent(view),true);
+  assert.ok(visual.prepareContext(actor,{...prepare,viewId:randomUUID()}));
+  assert.equal((visual as any).viewExpiries.size,1,'same capture expiry shares one deadline across prepared requests');
+  await expiry;
+  assert.equal(visual.contextCurrent(view),false);
+  assert.equal((visual as any).viewExpiries.size,0);
+  assert.equal(visual.state(actor).captureActive,true,'observation expiry does not revoke the capture lease');
+  visual.close();assert.equal((visual as any).viewExpiries.size,0);
+});

@@ -147,6 +147,10 @@
     "./dreaming/run": {
       "types": "./dist/dreaming/run.d.ts",
       "import": "./dist/dreaming/run.js"
+    },
+    "./perception/observation": {
+      "types": "./dist/perception/observation.d.ts",
+      "import": "./dist/perception/observation.js"
     }
   },
   "scripts": {
