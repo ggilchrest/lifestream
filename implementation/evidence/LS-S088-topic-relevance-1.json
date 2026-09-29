@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S088",
+  "status": "inProgress",
+  "claimClass": "local-topic-aware-visual-selection",
+  "collectedAt": "2026-09-29T20:36:19.476276Z",
+  "testedRevision": "272ce10d8cfefc2d140ae32b3ebfd0b1d8dcef07",
+  "precedingEvidence": "implementation/evidence/LS-S088-selection-1.json",
+  "sourceFiles": [
+    {
+      "path": "apps/control-web/test/relationship-tuning.test.mjs",
+      "sha256": "bcfe49196c483a369873a24bbf81580f8af5e89e36098fabb0382fbdf8f45a05"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "6d87867ddbf9ff7b782bb3635ec45cac455751e03219cd53a5dbbc826de889c7"
+    },
+    {
+      "path": "apps/server/test/audio.test.ts",
+      "sha256": "b08e17e85a5b442c582da103fb252b146dc2ef595850c1b124a84777ae9ed594"
+    },
+    {
+      "path": "apps/server/test/visual-context.test.ts",
+      "sha256": "313c9fe8d6b264e251f4a256a02f260475f8a8e70c3410f3ce67e17fa289046e"
+    },
+    {
+      "path": "packages/runtime/src/perception/observation.ts",
+      "sha256": "545dea1777ebb2b61b44b66d62442c6c9ea91044bfbfa9141a8b76fb20dfe638"
+    },
+    {
+      "path": "packages/runtime/test/observation.test.ts",
+      "sha256": "a9e55861652967cf238a656542e2e3e64981d477c8ae155009240c14421592a6"
+    },
+    {
+      "path": "packages/runtime/test/visual-context.test.ts",
+      "sha256": "773d8a9f2cf7b7ad405f753b7297809e4fb5a91faba74bca040e8a0e5d7213e2"
+    }
+  ],
+  "implemented": [
+    "Ordinary asides require bounded keyword overlap with current user input. Related observations rank ahead of unrelated items; no overlap is an explicit omission reason. This is a conservative lexical heuristic, not semantic understanding.",
+    "Explicit visual questions may revisit any eligible fresh observation under existing item, byte, time, privacy and output bounds. Deliberate no-mention consumes neither an aside nor completion exposure.",
+    "Qualifications, tentative inference and unknown confidence remain attached. Historical dialogue and limitation strings do not create relevance or current visual evidence.",
+    "Rendered inspection was checked with its transient notification dismissed; text is readable and no scene data appears."
+  ],
+  "verification": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1393,
+      "pass": 1392,
+      "fail": 0,
+      "skipped": 1,
+      "duration_ms": 94940.834291
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/visual-context.test.ts packages/runtime/test/observation.test.ts apps/server/test/visual-context.test.ts apps/server/test/audio.test.ts",
+      "result": "pass",
+      "tests": 71,
+      "pass": 71,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 5935.813625
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<operator-local playwright> node --test --experimental-strip-types apps/control-web/test/relationship-tuning.test.mjs apps/server/test/visual-browser-frames.test.ts",
+      "result": "pass",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 7564.713375
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass-with-explicit-skips",
+      "tests": 162,
+      "pass": 77,
+      "fail": 0,
+      "skipped": 85,
+      "duration_ms": 6362.789291
+    },
+    {
+      "command": "pnpm typecheck; pnpm build; pnpm lint; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass"
+    }
+  ],
+  "environmentObservation": {
+    "service": "ai5090 lifestream-mobile.service active; loopback readiness HTTP200",
+    "directModelQualification": "Not executed: existing inference endpoint requires authentication, unavailable through inspected service-process environment; no fallback or service change."
+  },
+  "notClaimed": [
+    "Lexical overlap is not real-provider conversational quality or robust multilingual semantic relevance. Actual mention recognition remains open.",
+    "Canonical prepared-view materialization, full lifecycle trace, physical vision/performance and whole S088 acceptance remain open.",
+    "No deployment, new capture, model replacement, external exposure, publication or new Human acceptance. Original S066 and release failures preserved."
+  ],
+  "next": "Implement a lossless canonical prepared-view materialization and carry actual world-cache freshness without changing the frozen schema or accepted conversation budget."
+}
