@@ -153,7 +153,7 @@
     }
   ],
   "remaining": [
-    "Full canonical PreparedContextView schema/cache integration, section-limit reconciliation and canonical perception envelopes; internal post-world finalization verified in follow-up evidence.",
+    "Canonical private perception envelopes and complete lifecycle evidence; published PreparedContextView materialization and section-limit reconciliation are verified in follow-up evidence.",
     "Semantic/perceptual relevance and actual mention qualification beyond the verified conservative lexical selection and exposure suppression.",
     "Real selected vision adapter, physical broker/capture, full decode/allocation qualification, blind perception, latency and Human acceptance.",
     "Selective visual memory and later S089-S094 work."
@@ -195,6 +195,11 @@
       "path": "implementation/evidence/LS-S088-topic-relevance-1.json",
       "testedRevision": "272ce10d8cfefc2d140ae32b3ebfd0b1d8dcef07",
       "scope": "Conservative current-input lexical selection and deliberate no-mention; provider/Human quality unverified."
+    },
+    {
+      "path": "implementation/evidence/LS-S088-prepared-view-1.json",
+      "testedRevision": "0535bbf60879cf7b09c04491618d92b01f91463c",
+      "scope": "Published canonical prepared-context projection, lossless fragments, actual world freshness and scope-independent admission expiry; whole slice remains inProgress."
     }
   ]
 }

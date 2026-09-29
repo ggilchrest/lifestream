@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S088",
+  "status": "inProgress",
+  "claimClass": "local-canonical-prepared-context-integration",
+  "collectedAt": "2026-09-29T20:53:09.786998Z",
+  "testedRevision": "0535bbf60879cf7b09c04491618d92b01f91463c",
+  "implementationRevisions": [
+    "8d3d6a440b4e28541be1a94002c452b7df4d1ad4",
+    "0535bbf60879cf7b09c04491618d92b01f91463c"
+  ],
+  "precedingEvidence": "implementation/evidence/LS-S088-topic-relevance-1.json",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/composition/pwce-world.ts",
+      "sha256": "51470d43f2f0f9e6347de860a554f7b6c9f9002cd2c781efec8e893100b78818"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "dbfa9cfff593683ae6c9cd242c14aaf65fe7de8afb512426d2a0b1da94293f4c"
+    },
+    {
+      "path": "apps/server/src/runtime/inference.ts",
+      "sha256": "6774d3b129853a03855fea8779d0edccf18f3ef43120118e5e7a666e1a00488b"
+    },
+    {
+      "path": "apps/server/test/audio.test.ts",
+      "sha256": "3bfaef11576621b5c70c4485c41c4289ca9502c3fe528d08ce215bee65061e20"
+    },
+    {
+      "path": "apps/server/test/inference.test.ts",
+      "sha256": "07f7c5dfe4051881df3aabca2afb73c739643816ff48f372820bbc51f11d1f57"
+    },
+    {
+      "path": "apps/server/test/pwce-world.test.ts",
+      "sha256": "e25efc98dafdfc119d8779a2ebb12d74eb907a003ff2ad9b82e23a21d2077a16"
+    },
+    {
+      "path": "apps/server/test/visual-context.test.ts",
+      "sha256": "6aed00fe33422564f04b0e8f608007b46ddfb3930159683b7ad8097b8cd8725c"
+    },
+    {
+      "path": "packages/runtime/src/context/prepared-view.ts",
+      "sha256": "7110aae66799668ce032269744ea4ea7728e306bcd786c65481340591bd6708f"
+    },
+    {
+      "path": "packages/runtime/src/context/world.ts",
+      "sha256": "a88302256ba399cc8a5d587e5bf885920e7203c8874e18e2511dd2fa95365c0d"
+    },
+    {
+      "path": "packages/runtime/src/inference/prompt.ts",
+      "sha256": "0793687d9eb2c4ea985d572dd240504cba6de9d1da54a3e325966dc045212c12"
+    },
+    {
+      "path": "packages/runtime/test/prepared-view.test.ts",
+      "sha256": "5bea2bff0db74d17e0003e8e1c4dc81a31960872f372576e46c4d7098e4b3355"
+    },
+    {
+      "path": "packages/runtime/test/visual-context.test.ts",
+      "sha256": "e5e550081438d566e0d66ecfcd5b9b59f4d280709bdf2f0b18c30bddd2a18ba2"
+    }
+  ],
+  "implemented": [
+    "Fully UUID-bound text and audio turns materialize and consume the existing published PreparedContextView/1.0.0 with the same minted view identity as visual selection. Policy, persona, capability and user input retain their existing nine-section lanes.",
+    "Ordered schema-sized fragments preserve the accepted 65536-byte conversation exactly, including Unicode boundaries and full-section digest. Bounds: 131072 aggregate context bytes,16 fragments,64 sources,64 omissions. Long revision identities are explicitly labeled integrity references; the full source inventory remains on the finalized turn.",
+    "The original immutable cached context supplies inspection and provider admission. Copies cannot be substituted. Legacy/non-UUID scopes and absent endpoints retain null canonical views without fabricated identifiers.",
+    "Every finalized turn independently enforces the earliest supplied request/runtime/relationship/world/visual source deadline, regardless of canonical-view eligibility. Expired or malformed source times fail closed; an observed retirement cannot revive after clock rollback.",
+    "PWCE context freshness carries the earliest actual cache-read expiry across sites, without refreshing source age. Existing scope and source authority predicates remain in force.",
+    "Authenticated inspection shows bounded canonical identity/freshness/source metadata and visual lineage without scene text; rendered inspection was visually checked."
+  ],
+  "verification": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1403,
+      "pass": 1402,
+      "fail": 0,
+      "skipped": 1,
+      "duration_ms": 93168.570083,
+      "skipReason": "Optional installed-Chrome frame test passed separately."
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/prepared-view.test.ts packages/runtime/test/visual-context.test.ts packages/runtime/test/world.test.ts apps/server/test/visual-context.test.ts apps/server/test/inference.test.ts apps/server/test/audio.test.ts apps/server/test/pwce-world.test.ts",
+      "result": "pass",
+      "tests": 94,
+      "pass": 94,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 6969.152
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<operator-local playwright> node --test --experimental-strip-types apps/control-web/test/relationship-tuning.test.mjs apps/server/test/visual-browser-frames.test.ts",
+      "result": "pass",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 12785.725792
+    },
+    {
+      "command": "pnpm build; pnpm typecheck; pnpm lint; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass",
+      "note": "Build completed before tests that load generated SQL migrations."
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "testedRevision": "8d3d6a440b4e28541be1a94002c452b7df4d1ad4",
+      "result": "pass-with-explicit-skips",
+      "tests": 162,
+      "pass": 77,
+      "fail": 0,
+      "skipped": 85,
+      "duration_ms": 8055.60775,
+      "note": "Browser source unchanged by subsequent expiry-only fix."
+    },
+    {
+      "command": "npm run validate in independent private specification repository",
+      "result": "pass",
+      "tests": 365,
+      "pass": 365,
+      "fail": 0,
+      "structuralVectors": 772,
+      "note": "Specification structure only; private owning inputs unchanged by expiry-only repair."
+    }
+  ],
+  "independentReview": {
+    "result": "identified-and-repaired",
+    "finding": "8d3d6a4 computed source deadlines only when UUID-based materialization was possible; legacy/null-endpoint finalizer could admit expired supplied world context with otherwise true guards. Existing live PWCE guards reduced exposure; no production disclosure was demonstrated.",
+    "repair": "0535bbf60879cf7b09c04491618d92b01f91463c",
+    "regression": "UUID, legacy session, null endpoint and no binding reject invalid/expired source timestamps and cannot revive after retirement. Canonical fragmented-context/schema/cache review found no other defect."
+  },
+  "supersededFailedAttempts": [
+    {
+      "testedRevision": "8d3d6a440b4e28541be1a94002c452b7df4d1ad4",
+      "scope": "optional Chrome initial attempt",
+      "pass": 1,
+      "fail": 1,
+      "failure": "no such table: main.channel_subscriptions during database setup while build copied migration files concurrently.",
+      "assessment": "Build/test race inferred; stable source/dist migration hashes verified and unchanged-source rerun passed2/2. Final0535bbf build-before-tests also passed2/2."
+    },
+    {
+      "scope": "new expiry regression authoring",
+      "pass": 33,
+      "fail": 1,
+      "failure": "Test fixture spread a closed minted binding including extra derived fields; constructor correctly rejected it.",
+      "repair": "Construct only accepted input keys; focused34/34 passed before full verification."
+    }
+  ],
+  "componentBenchmark": {
+    "schemaVersion": "1.0.0",
+    "testedRevision": "8d3d6a440b4e28541be1a94002c452b7df4d1ad4",
+    "node": "v24.14.1",
+    "architecture": "arm64",
+    "collectedAt": "2026-09-29T20:42:59.052Z",
+    "kind": "local-component-microbenchmark",
+    "limitations": [
+      "Synchronous prompt materialization only; no provider, database, transport, physical device or end-to-end speech measurement.",
+      "No claim against conversation-onset or production latency targets."
+    ],
+    "cases": [
+      {
+        "conversationBytes": 256,
+        "samples": 200,
+        "warmups": 20,
+        "conversationFragments": 1,
+        "medianMs": 0.04808300000000543,
+        "p95Ms": 0.08604099999999448,
+        "maximumMs": 0.4807909999999964
+      },
+      {
+        "conversationBytes": 65536,
+        "samples": 200,
+        "warmups": 20,
+        "conversationFragments": 3,
+        "medianMs": 0.24550000000002115,
+        "p95Ms": 0.3792500000000132,
+        "maximumMs": 8.390540999999999
+      }
+    ]
+  },
+  "notClaimed": [
+    "Full LS-S088 acceptance, selected vision-provider perception, actual model mention quality, lifecycle trace completion, canonical private perception-envelope export and physical performance remain open.",
+    "Synthetic image/observation/reply fixtures establish software behavior only. Component benchmark is at8d3d6a4 and is not end-to-end speech onset or production latency.",
+    "No deployment, new capture, provider replacement, external exposure, publication or new Human acceptance. Existing iPhone acceptance, S066/full LS-TEST-084 and original release failures preserved."
+  ],
+  "next": "Continue bounded visual lifecycle evidence linking capture/result, immutable selection, inference admission and observed delivery; preserve independent S066/full LS-TEST-084 and selected-provider/physical gates."
+}
