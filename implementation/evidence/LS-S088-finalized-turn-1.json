@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S088",
+  "status": "inProgress",
+  "claimClass": "local-finalized-text-audio-prompt-and-admission",
+  "collectedAt": "2026-09-29T20:23:24.897145Z",
+  "testedRevision": "e8991e4996386beda2bd5089a1df98eb45a54b95",
+  "precedingEvidence": "implementation/evidence/LS-S088-camera-audience-1.json",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "5547239689217e3cf2419665ca4973e68d7825ab567a2ef3c9b886b7d95fad8d"
+    },
+    {
+      "path": "apps/server/src/runtime/inference.ts",
+      "sha256": "0314b42692dc6f9077398a646fbd04f2c7b1459bcbacc66f94ffb92d6501ac87"
+    },
+    {
+      "path": "apps/server/test/audio.test.ts",
+      "sha256": "73fc5189ab63de07a28894f79a53a42ae2500388897878aad052c4e803343d03"
+    },
+    {
+      "path": "apps/server/test/inference.test.ts",
+      "sha256": "dd182cb3a7e6a8fe49e5f51625f1205e330f80a6fe30bcb37c366b9d3353d2c1"
+    },
+    {
+      "path": "packages/runtime/src/inference/prompt.ts",
+      "sha256": "459456c2f4f6816f244448a19bf18f73f9ac7a71f9ed26ec15af7d7b936c309a"
+    },
+    {
+      "path": "packages/runtime/test/visual-context.test.ts",
+      "sha256": "e4458cc6e01e64fc69cedd82d7e8dce8be917c321389b353a2945a80c5ccec67"
+    }
+  ],
+  "implemented": [
+    "Text and audio finalize one detached immutable nine-section prompt after world preparation, used unchanged for inspection, bookkeeping and model admission.",
+    "Host-minted prepared binding and visual selection retain exact identity; scope, pinned conversation, available source revisions and section digests remain tied to the admitted request.",
+    "Final inventory records seed and section revisions plus explicit content identities for unversioned world/capability/experience data; no fabricated provider or durable authority.",
+    "Original authority, selected visual proof, output lease and absolute plus monotonic deadline are rechecked immediately before provider admission. Observed invalidation permanently retires that finalized turn.",
+    "The legacy mutable builder remains compatible with automatic-memory extraction. Closed input manifest and public schemas are unchanged.",
+    "Audio deadline crossing inside synchronous bookkeeping is classified correctly before timer delivery, starts no inference or synthesis and releases the unused output lease."
+  ],
+  "verification": [
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1385,
+      "pass": 1384,
+      "fail": 0,
+      "skipped": 1,
+      "duration_ms": 94279.514875,
+      "skipReason": "Optional generated Chrome HTTP test passed separately."
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/visual-context.test.ts apps/server/test/inference.test.ts apps/server/test/audio.test.ts apps/server/test/visual-context.test.ts",
+      "result": "pass",
+      "tests": 70,
+      "pass": 70,
+      "fail": 0,
+      "duration_ms": 5721.27025
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=<operator-local playwright> node --test --experimental-strip-types apps/server/test/visual-browser-frames.test.ts",
+      "result": "pass",
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 6174.620125,
+      "claim": "Generated images, authenticated HTTP, scripted interpretation only."
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass-with-explicit-skips",
+      "tests": 162,
+      "pass": 77,
+      "fail": 0,
+      "skipped": 85,
+      "duration_ms": 6099.617083
+    },
+    {
+      "command": "pnpm typecheck; pnpm build; pnpm lint; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass",
+      "limitation": "Existing lint coverage and structural workspace validation."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "tests": 365,
+      "pass": 365,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 369.409541,
+      "structuralVectors": 772,
+      "limitation": "Specification/oracle validation is not runtime conformance."
+    }
+  ],
+  "reproducedAndFixed": [
+    "Initial audio deadline regression blocked admission but reported audio_turn_failed when bookkeeping crossed the deadline before timer delivery. Final code reports audio_deadline_exceeded and releases its output lease."
+  ],
+  "notClaimed": [
+    "No full canonical PreparedContextView schema/cache integration or section-limit reconciliation yet; this authentic materialization is an internal implementation increment.",
+    "No selected real vision provider, actual image understanding, live camera activation, physical/privacy-stop timing, production performance or new Human acceptance.",
+    "No whole S088 completion, derived visual-memory admission, deployment, push or publication. Primary S066/full LS-TEST-084 and prior S073/S086/onset failures remain separate."
+  ],
+  "next": "Bounded visual omission/selection diagnostics and honest unavailable-vision answers, followed by canonical prepared-view integration and lineage.",
+  "worktreeExclusions": [
+    "Existing README/product-audit edits, iOS signing/plist/.swiftpm material, acceptance guide and prior Human/bookkeeping receipts preserved."
+  ]
+}
