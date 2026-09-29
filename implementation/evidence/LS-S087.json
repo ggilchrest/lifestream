@@ -2,12 +2,12 @@
   "schemaVersion": "1.0.0",
   "slice": "LS-S087",
   "status": "inProgress",
-  "claimClass": "local-perception-admission-component-and-unwired-host-adapter",
-  "collectedAt": "2026-09-29T17:13:34Z",
+  "claimClass": "local-perception-admission-and-authenticated-synthetic-http-route",
+  "collectedAt": "2026-09-29T17:37:04Z",
   "publicSource": {
     "initialBaseHead": "91d6a25939b41bddc024be03da1216d1f3128f92",
-    "integrationHead": "3f5981a49ab63ae084d7ff9ee656f473d8a9d388",
-    "state": "uncommitted scoped files; unrelated pre-existing public changes preserved",
+    "integrationHead": "a114abc8917f1895118f7ba56750e75dc42963f2",
+    "state": "scoped authenticated-route source snapshot atop the committed foundation; exact resulting local commit is recorded in operator-local candidate state, and unrelated public changes are preserved",
     "files": [
       {
         "path": "packages/runtime/src/perception/port.ts",
@@ -15,7 +15,7 @@
       },
       {
         "path": "packages/runtime/src/perception/admission.ts",
-        "sha256": "c4e8a8a86b824470689d31c24661391dd96baf188daef91d25a517cbb184db8b"
+        "sha256": "4388c16b8abca448b8ca265a50b11d2637335109ae1bbc18724d4454864b4f9e"
       },
       {
         "path": "packages/runtime/src/perception/fixture.ts",
@@ -30,14 +30,27 @@
         "sha256": "989c8900593b2638880c7a9a3d6e34247cdc9ec9f3447dc049c3351502784faf"
       },
       {
+        "path": "apps/server/src/index.ts",
+        "sha256": "bcfe5e0dfc1650a8c05b7035bbc0dd21860e6d873ba1a6455e7ab400f3debcd3"
+      },
+      {
         "path": "apps/server/src/runtime/visual-input.ts",
-        "sha256": "6f9ec2518aafae102034ce0f9a91d21143bb7c57ef843562d066c950e1e1c2f5"
+        "sha256": "b4dc27785ffb697068a1f08242422f1731f43afa9dc54804443cbf149b02c8d9"
+      },
+      {
+        "path": "apps/server/src/runtime/visual-multipart.ts",
+        "sha256": "2e11c0fe6fdfd6dd9136eb75d5a0237fd2815c32c83907529af5c7b866318043"
       },
       {
         "path": "apps/server/test/visual-input.test.ts",
-        "sha256": "760357685ec4f5756ed8e82266d9608ac6fb0c51a9476ad80867fdb2ff7e691a"
+        "sha256": "b330b3fbe511eb16626c259b1c65e69624b4bb78f0cd2aa5dd6314da62e2ecaa"
+      },
+      {
+        "path": "apps/server/test/visual-multipart.test.ts",
+        "sha256": "16ef7138fb76c7136849b607feb6a1abc64ba592302540a4afe76e1ed5987120"
       }
-    ]
+    ],
+    "foundationHead": "a114abc8917f1895118f7ba56750e75dc42963f2"
   },
   "privateSource": {
     "head": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
@@ -48,10 +61,11 @@
     "packetScopeAidUpdatedAfterComponentTests": true
   },
   "implemented": [
-    "Provider-neutral, additive visual request/result port with explicit image formats, scope epochs, cancellation, deadline and egress metadata. The default runtime is unconfigured and cannot enable a camera.",
-    "Ephemeral explicit session camera lease, one-use clock challenge, conservative capture-time mapping, audience/source revision invalidation, stop/expiry release callback, bounded rate/size/queue/deadline admission and buffer disposal. Cancelled providers retain the one model slot until settlement or a finite retirement grace; non-settling adapters are quarantined and all queued sessions drained.",
-    "Trusted VisualInputHost seam derives scope and source from host callbacks, checks exact binary-part identity, applies scoped idempotent camera commands, and reports unconfigured providers as unavailable. It is not attached to an HTTP route or physical camera broker.",
-    "Deterministic fixture adapter and synthetic component tests; fixture descriptions do not derive from image pixels."
+    "Provider-neutral additive visual request/result port with image formats, scope epochs, cancellation, deadline and egress metadata. Default runtime remains unconfigured and cannot enable a camera.",
+    "Ephemeral explicit session camera lease, one-use clock challenge, conservative capture-time mapping, source/scope invalidation, stop/expiry callback, finite rate/size/queue/deadline admission and buffer disposal. A cancelled non-settling provider retains the one model slot until bounded retirement, then becomes unavailable.",
+    "Authenticated local-password and CSRF-protected capability, camera and multipart batch routes enforce exact session/Assistant/private endpoint scope. Synthetic provider/source injection is restricted to loopback test profile; without it the route reports unavailable and cannot activate capture.",
+    "One owned bounded multipart envelope has exact declared UUID-named JPEG/PNG parts, 1 MiB metadata, 2 MiB per frame, no filename/transfer encoding, framing/media-signature checks, zero-copy part views, explicit disposal and one upload per session/four per host. Full image decode and simultaneous transport plus queue memory measurement are pending.",
+    "Synthetic HTTP/component tests cover unconfigured fallback, authenticated negotiation, idempotent camera command, binary digest, upload contention, audience/security retirement and Assistant lease isolation. Fixture observations are scripted and do not derive from image pixels."
   ],
   "profile": {
     "id": "lifestream.conversational-vision.v1",
@@ -63,9 +77,9 @@
   },
   "checks": [
     {
-      "command": "node --test packages/runtime/test/perception.test.ts apps/server/test/visual-input.test.ts",
+      "command": "node --test apps/server/test/visual-input.test.ts apps/server/test/visual-multipart.test.ts packages/runtime/test/perception.test.ts",
       "result": "pass",
-      "tests": 11,
+      "tests": 19,
       "failed": 0,
       "skipped": 0
     },
@@ -76,10 +90,10 @@
     {
       "command": "pnpm test",
       "result": "pass",
-      "tests": 1262,
+      "tests": 1270,
       "failed": 0,
       "skipped": 0,
-      "durationMs": 88791.0315
+      "durationMs": 89123.296834
     },
     {
       "command": "pnpm test:browser-surface",
@@ -88,7 +102,7 @@
       "passed": 50,
       "failed": 0,
       "skipped": 82,
-      "detail": "Rendered browser checks were skipped; no visual journey claim."
+      "detail": "Rendered browser checks were skipped; no visual browser journey claim."
     },
     {
       "command": "pnpm lint",
@@ -110,37 +124,43 @@
     {
       "command": "node scripts/workspace.mjs preflight LS-S087",
       "result": "fails on existing run-control mismatch",
-      "detail": "Checkpoint still selects LS-S066; after the independent S066 local commit, the checkpoint public revision also differs from integration HEAD; actual public changes differ from checkpoint.changedFiles; checkpoint writable files differ from the prepared packet. S066 implementationCompleteVerificationPending and activeSlice were preserved. S087 prerequisites are independently dependency-ready."
+      "detail": "Checkpoint still selects LS-S066; public revision and actual dirty changes differ from its snapshot; checkpoint writable files differ from expanded private S087 packet. S066 status and checkpoint were preserved. Parent orchestrator owns reconciliation."
     }
   ],
   "caseCoverage": [
     {
       "caseId": "LS-TEST-155",
-      "disposition": "partialComponentOnly",
-      "covered": "Explicit default-off lease, unconfigured and permission denial, stale revision, changed audience/source and repeat/stop behavior under synthetic trusted host callbacks.",
-      "remaining": "Authenticated route, actual broker/permission, rendered enable and indicator, reconnect/restart and normal-session reply checks."
+      "disposition": "partialSyntheticRouteOnly",
+      "covered": "Authenticated and CSRF-protected capability/camera HTTP behavior, default unconfigured failure, synthetic trusted source/provider lease, idempotency, private audience/security revocation, session/Assistant isolation and legacy endpoint checks.",
+      "remaining": "Rendered user enable/stop indicator, actual trusted device broker and permission, reconnect/restart and ordinary text/audio reply behavior; physical camera and Human evidence require separate authority."
     },
     {
       "caseId": "LS-TEST-156",
-      "disposition": "partialComponentOnly",
-      "covered": "Injected-clock challenge, frame header/digest/bounds/freshness checks, queue replacement, deadline, cancellation, finite provider retirement/quarantine and provider-result validation with synthetic bytes.",
-      "remaining": "Actual bounded multipart transport, full decode validation, selected image-provider invocation, resource measurements and context exclusion traces."
+      "disposition": "partialSyntheticRouteOnly",
+      "covered": "Injected clock challenge, multipart exact binary part framing and size limits, digest/header/dimension/freshness checks, one upload per session/four per host, queue replacement, deadline, cancellation and scripted provider-result validation.",
+      "remaining": "Full media decode, aggregate simultaneous HTTP transport plus runtime queue and provider-copy 12 MiB/20 MiB working-storage enforcement/measurement, selected pixel-consuming image provider, context exclusion traces and actual perception."
     },
     {
       "caseId": "LS-TEST-157",
-      "disposition": "partialComponentOnly",
-      "covered": "Additive package exports and no modifications to existing text/audio wire shapes, with full pre-existing unit suite passing.",
-      "remaining": "Actual legacy boundary/replay/rollback matrix and versioned public transport conformance."
+      "disposition": "partialCompatibilityOnly",
+      "covered": "Additive sidecar paths and package exports leave closed text/audio wire shapes untouched; full existing unit suite and browser surface runnable checks pass.",
+      "remaining": "Versioned public vision wire schema/validator and an independent legacy boundary/replay/rollback matrix."
     }
   ],
   "unresolvedDependencies": [
-    "No authenticated /api/runtime/vision/v1 routes or browser capture controls are wired.",
-    "The real authenticated room is now listed in the revised private S087 packet; route and control wiring remain absent.",
-    "No public versioned vision wire contract/validator is authored, and no private schema was exported.",
-    "No physical camera source broker or capture lease callback is composed; trusted host callbacks are only an adapter seam.",
-    "The selected SGLang inference provider is text-only; no image-capable provider is selected or connected.",
-    "Full media decode checks and a bounded multipart parser are absent, so this component cannot assert malformed image rejection at the transport boundary.",
-    "No actual pixels-to-interpretation, physical camera, perceptual quality, ordinary reply, memory or Human acceptance is claimed."
+    "No browser capture controls or visible camera indicator are wired in the authenticated conversation room.",
+    "No public versioned vision wire schema/validator has been authored; no private schema or machine artifact was exported.",
+    "No physical camera source broker or capture lease callback is composed; the only configured provider/source path is isolated synthetic test injection.",
+    "Current SGLang inference provider is text-only; no image-capable provider is selected or connected.",
+    "Full JPEG/PNG decode, cross-layer concurrent working-storage enforcement and measured provider copies are pending.",
+    "No pixels-to-interpretation, physical camera, perceptual quality, ordinary reply, memory or Human acceptance is claimed."
   ],
-  "runControl": "The existing public checkpoint activeSlice LS-S066 and its pending LS-TEST-084 verification were not changed. Phase 16 approval is recorded separately in the operator-local owner; this record does not promote LS-S087 or authorize activation, deployment or publication."
+  "runControl": "The existing public checkpoint activeSlice LS-S066 and pending LS-TEST-084 verification were not changed. Phase 16 approval is recorded separately in the operator-local owner; this record does not promote LS-S087 or authorize activation, deployment or publication.",
+  "resourceAccounting": {
+    "multipartMaxEnvelopeBytes": 7372800,
+    "multipartAllocation": "One owned envelope is preallocated to declared length or the capped maximum for chunked transfer; frame parts are views, not extra parser copies, and the envelope is wiped on failure or completion.",
+    "concurrentUploads": "At most one batch upload per authenticated session and four across a server; excess requests fail before body allocation.",
+    "remainingLimit": "Runtime admission may retain 12 MiB across in-flight and pending frames while an additional multipart envelope and a submitted-frame copy coexist; therefore the doc30 12 MiB simultaneous encoded working-storage target is not yet enforced end-to-end. Provider copies and decoded workspace are unmeasured.",
+    "claim": "Transport request size and concurrency are bounded; end-to-end simultaneous working-storage acceptance remains pending."
+  }
 }

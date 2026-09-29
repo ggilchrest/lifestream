@@ -199,9 +199,15 @@ export class VisualAdmission {
     return {revision: state.revision, captureActive, activeForSession: usable, reason: !captureActive ? 'disabled' : !providerHealthy ? 'provider_unavailable' : !usable ? 'frame_stale' : null, leaseId: captureActive ? lease!.id : null, expiresAtMonotonicMs: captureActive ? lease!.expiresMono : null, clockMappingId: captureActive ? lease!.mapping.id : null, currentObservationUsable: usable};
   }
 
-  stop(sessionId: string, leaseId: string, principalId: string): CameraState {
+  cameraStateFor(sessionId:string,principalId:string,assistantId:string):CameraState {
+    const current=this.cameraState(sessionId),lease=this.sessions.get(sessionId)?.lease;
+    if(lease?.scope.principalId===principalId&&lease.scope.assistantId===assistantId)return current;
+    return {...current,captureActive:false,activeForSession:false,reason:'disabled',leaseId:null,expiresAtMonotonicMs:null,clockMappingId:null,currentObservationUsable:false};
+  }
+
+  stop(sessionId: string, leaseId: string, principalId: string, assistantId?:string): CameraState {
     const state = this.stateFor(sessionId), lease = state.lease;
-    if (lease && lease.id === leaseId && lease.scope.principalId === principalId) {
+    if (lease && lease.id === leaseId && lease.scope.principalId === principalId && (assistantId===undefined||lease.scope.assistantId===assistantId)) {
       this.endLease(state,lease,'stop');
     }
     return this.cameraState(sessionId);
