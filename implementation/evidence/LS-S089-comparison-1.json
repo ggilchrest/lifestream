@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S089",
+  "status": "inProgress",
+  "claimClass": "internal-historical-appearance-comparison-component",
+  "collectedAt": "2026-09-29T21:15:33.367192Z",
+  "testedRevision": "ae2bad8e6f986d827261d2f5897ff83b3c28eec6",
+  "sourceFiles": [
+    {
+      "path": "packages/runtime/src/visual-memory/comparison.ts",
+      "sha256": "b136920ebb1acc02ef0e5940e2de6a61e3b58368a636f4408d3280260819d1fc"
+    },
+    {
+      "path": "packages/runtime/test/visual-memory.test.ts",
+      "sha256": "eced900c4c2faaa6346fa2ef2aa9543c3ea180dc33485a594cd3c03a77385a1f"
+    }
+  ],
+  "specification": {
+    "revision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "workingTreeModified": true,
+    "inputs": [
+      {
+        "path": "docs/30-conversational-vision.md",
+        "sha256": "e5302919fdfb4842d713ce4ed344a44a52dcdb11b38185d2dee293406dedd6e8"
+      },
+      {
+        "path": "roadmap/packets/LS-S089.json",
+        "sha256": "4296867af2e09cfdab511d3e1d1ece39a5b7d170021e9604e400cf08d708616c"
+      }
+    ]
+  },
+  "implemented": [
+    "Internal host projection compares a positively visible current head with an exhaustive authorized retained 30-day history. Three independent supporting sessions and dates plus at least75percent eligible opportunity support are required; unknown usable-head evidence counts against support and contradictory observations remain visible.",
+    "Original source-family/session correlation, including inactive or unattributed identity bridges, prevents duplicate votes and propagates exclusion of the current observation group. Ineligible content supplies no vote or result dependency. Missing head coverage is unknown, not absence.",
+    "Retention and lifecycle revision govern historical eligibility separately from the six-second current-view deadline. Authentic immutable results require a current permission/source/tombstone boundary; expiry, clock rollback, revocation and reentrant guard callbacks permanently retire them.",
+    "At most128 episodes and256KiB per input; exact-scope, plain-data validation rejects getters, proxies and coercible enums. Truncated/incomplete coverage suppresses qualification. No text classifier or storage export is introduced."
+  ],
+  "verification": [
+    {
+      "command": "node --test --experimental-strip-types packages/runtime/test/visual-memory.test.ts",
+      "result": "pass",
+      "tests": 17,
+      "pass": 17,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 93.912375
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1426,
+      "pass": 1425,
+      "fail": 0,
+      "skipped": 1,
+      "duration_ms": 93796.735791,
+      "limitation": "The optional generated-Chrome case was not rerun for this unwired pure component; previous publication receipt retains its separate browser evidence."
+    },
+    {
+      "command": "pnpm test:browser-surface",
+      "result": "pass",
+      "tests": 162,
+      "pass": 77,
+      "fail": 0,
+      "skipped": 85,
+      "duration_ms": 6216.15525,
+      "limitation": "Optional browser-dependent cases skipped in this default command."
+    },
+    {
+      "command": "pnpm build; pnpm typecheck; pnpm lint; node scripts/workspace.mjs check; git diff --check",
+      "result": "pass",
+      "limitation": "Build completed before full suite. Current ESLint configuration does not lint the new TypeScript files; typecheck and behavior tests cover them."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "tests": 365,
+      "pass": 365,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 335.995209,
+      "structuralVectors": 772,
+      "limitation": "Specification structure only; no runtime qualification."
+    }
+  ],
+  "review": {
+    "status": "reviewed",
+    "repairedFindings": [
+      "Require primitive enum strings without invoking conversion code.",
+      "Keep excluded identity bridges when checking evidence independence and current-source correlation.",
+      "Retire reentrant validity checks and prevent inner callbacks overwriting monotonic state."
+    ],
+    "authoringFailure": "Initial no-emit typecheck rejected a coverage projection cast; replaced it with explicit fields before final validation."
+  },
+  "preflight": {
+    "command": "node scripts/workspace.mjs preflight LS-S089",
+    "result": "primary-checkpoint-and-full-prerequisite-mismatch",
+    "assessment": "Primary LS-S066 is deliberately preserved. Current scoped software regressions pass, but S088 whole-slice/provider/physical verification remains pending; this isolated comparison does not advance or qualify S089 as a whole."
+  },
+  "notClaimed": [
+    "No durable episode admission/retrieval, restart/correction storage integration, ordinary conversation use, real visual interpretation, Human or performance acceptance. LS-TEST-164\u2013166 remain incomplete as joined cases.",
+    "The host must supply complete bounded history and permission/lifecycle change detection; no production host currently calls this component. Source identity metadata requires its own authorized retention; forgotten content need not be retained.",
+    "No private schema copied, camera activated, provider selected, deployment changed, push or publication. Accepted iPhone journeys and pending S066/full LS-TEST-084 remain unchanged."
+  ],
+  "next": "Continue exact visual-context and reply-stage diagnostics in the existing S088 text/audio path while the two exact private-schema copies await approval."
+}
