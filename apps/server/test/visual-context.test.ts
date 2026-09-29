@@ -77,7 +77,7 @@ test('authenticated inspection reports exact visual selection, omissions and exp
   assert.equal(selected.reason,'selected');assert.equal(selected.selected,1);assert.equal(selected.considered,1);assert.equal(selected.prepared.observationIds.length,1);
   assert.equal(selected.prepared.conversationSectionDigest,request.sections.find(item=>item.kind==='conversation')!.contentDigest);
   assert.ok(selected.prepared.expiresAtMs>selected.prepared.selectedAtMs);assert.doesNotMatch(JSON.stringify(selected),new RegExp(marker));assert.doesNotMatch(JSON.stringify(selected),new RegExp(png.toString('base64')));
-  const suppressed=await inspect('Explain an ordinary task.');assert.equal(suppressed.reason,'unchanged_scene');assert.equal(suppressed.selected,0);assert.equal(suppressed.omissions.length,1);assert.equal(suppressed.prepared,null);
+  const suppressed=await inspect('Help organize the table.');assert.equal(suppressed.reason,'unchanged_scene');assert.equal(suppressed.selected,0);assert.equal(suppressed.omissions.length,1);assert.equal(suppressed.prepared,null);
   const suppressedRequest=f.requests.at(-1)!;assert.match(suppressedRequest.sections[3]!.content,/input.visual=activeForSession/);assert.match(suppressedRequest.sections[0]!.content,/current visual information is unavailable/);
   f.advance(6001);const expired=await inspect('What am I holding?');assert.equal(expired.reason,'expired');assert.equal(expired.selected,0);assert.equal(expired.prepared,null);
   assert.match(f.requests.at(-1)!.sections[0]!.content,/do not guess from earlier dialogue/);assert.doesNotMatch(f.requests.at(-1)!.sections[7]!.content,new RegExp(marker));
@@ -94,13 +94,21 @@ test('renewal requires a fresh visual result, expiry cannot revive, and a foreig
 
 test('suppressing repeated scene commentary preserves truthful fresh visual availability',{timeout:15000},async t=>{
   const f=await fixture(t),state=await f.begin();await f.batch(state);
-  const first=await f.turn('Explain an ordinary task.');assert.match(first.sections.find(section=>section.kind==='conversation')!.content,new RegExp(marker));
+  const first=await f.turn('Help organize the table.');assert.match(first.sections.find(section=>section.kind==='conversation')!.content,new RegExp(marker));
   const second=await f.turn('Continue the ordinary explanation.');
   assert.doesNotMatch(JSON.stringify(second),new RegExp(marker),'completed prior aside suppresses unchanged scene text');
   assert.match(second.sections.find(section=>section.kind==='interactionState')!.content,/input.visual=activeForSession/,'mention suppression does not disable a fresh observation source');
   assert.equal(second.sections.length,9);assert.ok(JSON.parse(second.sections.find(section=>section.kind==='conversation')!.content).length>0);
   await f.stop(state);const stopped=await f.turn('Continue the ordinary explanation.');
   assert.doesNotMatch(stopped.sections.find(section=>section.kind==='interactionState')!.content,/input.visual=activeForSession/);
+});
+
+test('ordinary current-topic selection omits unrelated scenes without consuming the next useful aside',{timeout:15000},async t=>{
+  const f=await fixture(t),state=await f.begin();await f.batch(state);
+  const irrelevant=await f.turn('Explain recursion.');assert.doesNotMatch(irrelevant.sections[7]!.content,new RegExp(marker));assert.match(irrelevant.sections[3]!.content,/input.visual=activeForSession/);
+  const relevant=await f.turn('Help me organize the table.');assert.match(relevant.sections[7]!.content,new RegExp(marker));assert.equal(relevant.sections[8]!.content,'Help me organize the table.');
+  const repeated=await f.turn('Help me organize the table.');assert.doesNotMatch(repeated.sections[7]!.content,new RegExp(marker));
+  const explicit=await f.turn('What is this?');assert.match(explicit.sections[7]!.content,new RegExp(marker),'direct visual question can revisit the same fresh observations');
 });
 
 test('stopping capture fences an already prepared ordinary reply before delayed synthetic output',{timeout:15000},async t=>{

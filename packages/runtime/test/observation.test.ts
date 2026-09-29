@@ -12,7 +12,7 @@ function fixture(){
   const batch:VisualObservationBatch={scope:{...scope},leaseId:'lease',sequence:1,requestId:'request',capturedAtEarliestMs:99_900,capturedAtLatestMs:99_950,receivedAtMs:99_970,interpretedAtMs:100_000,provider:{...previous.provider},observations:[{observationId:'scene-1',frameIds:['frame-1'],appearance:'A blue notebook is on a table.',inference:null,confidence:null,limitations:['Synthetic observation; no pixel interpretation.']}]};
   const store=new VisualObservationStore({now:()=>now,current:(candidate,lease)=>authorized&&candidate.audienceRevision===audience&&lease==='lease'});
   assert.equal(store.publish(batch),true);
-  const prepare=(candidate=scope,explicitQuestion=true)=>store.prepare({scope:{...candidate},leaseId:'lease',viewId:`view-${candidate.audienceRevision}`,revision:candidate.audienceRevision,invalidationKey:`audience-${candidate.audienceRevision}`,conversation:'[]',explicitQuestion,allowAside:true});
+  const prepare=(candidate=scope,explicitQuestion=true)=>store.prepare({scope:{...candidate},leaseId:'lease',viewId:`view-${candidate.audienceRevision}`,revision:candidate.audienceRevision,invalidationKey:`audience-${candidate.audienceRevision}`,conversation:'[]',explicitQuestion,allowAside:true,topic:'table'});
   return {store,previous,next,batch,prepare,advance:(ms:number)=>{now+=ms;},setAudience:(value:number)=>{audience=value;},revoke:()=>{authorized=false;}};
 }
 
