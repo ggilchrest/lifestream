@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {crc32} from 'node:zlib';
-import {VisualAdmission, VisualAdmissionError, type CaptureAuthority} from '../src/perception/admission.ts';
+import {VisualAdmission, VisualAdmissionError, type CaptureAuthority,type VisualAdmissionOptions} from '../src/perception/admission.ts';
 import {fixtureVisualProvider} from '../src/perception/fixture.ts';
 import {VisualObservationStore} from '../src/perception/observation.ts';
 import type {VisualFrame, VisualPerceptionProvider, VisualPerceptionRequest, VisualPerceptionResult, VisualScope} from '../src/perception/port.ts';
@@ -13,9 +13,9 @@ const scope = (sessionId = 'session-a'): VisualScope => ({assistantId:'assistant
 const authority: CaptureAuthority = {sourceConnected:true,devicePermission:true,hostCaptureLease:true,interpretationAllowed:true,remoteEgressAllowed:false,foregroundVisible:true};
 const provider = fixtureVisualProvider(request => ({requestId:request.requestId,status:'complete',observations:[{observationId:'observation',frameIds:[request.frames[0]!.frameId],appearance:'A neutral square is visible.',inference:null,confidence:null,limitations:['fixture description, not image interpretation']}],reason:null}));
 
-function harness(visualProvider: VisualPerceptionProvider | null = provider, currentScope: (value: VisualScope) => boolean = () => true, bounds = {}) {
+function harness(visualProvider: VisualPerceptionProvider | null = provider, currentScope: (value: VisualScope) => boolean = () => true, bounds = {},onLeaseEnded?:VisualAdmissionOptions['onLeaseEnded'],optionalWorkReady:()=>boolean=()=>true) {
   let mono = 10_000, serial = 0;
-  const visual = new VisualAdmission({...(visualProvider ? {provider:visualProvider} : {}),bounds,monotonicMs:()=>mono,utcMs:()=>Date.parse('2026-09-29T12:00:00Z')+mono,newId:()=>`id-${++serial}`,currentScope});
+  const visual = new VisualAdmission({...(visualProvider ? {provider:visualProvider} : {}),...(onLeaseEnded?{onLeaseEnded}:{}),bounds,monotonicMs:()=>mono,utcMs:()=>Date.parse('2026-09-29T12:00:00Z')+mono,newId:()=>`id-${++serial}`,currentScope,optionalWorkReady});
   const advance = (ms: number) => { mono += ms; };
   const begin = (target = scope()) => {
     const negotiated = visual.negotiate(target,['1.0.0'],true);
@@ -111,6 +111,120 @@ test('renewal clears prior sight and cancels old running and pending clock epoch
   assert.equal(h.visual.provenanceCurrent(current.provenance),true);
   assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,true);
   h.visual.close();
+});
+
+test('host audience-only rebind preserves capture continuity and rebases authentic provenance without refreshing time', async () => {
+  let audience=1;
+  const h=harness(provider,value=>value.audienceRevision===audience),active=h.begin();h.advance(20);
+  const admitted=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'restricted-scene');
+  await admitted.completion;
+  const before=h.visual.cameraState(active.target.sessionId),original=admitted.provenance;
+  audience=2;
+  const nextScope={...active.target,audienceRevision:2};
+  const changed=h.visual.rebindAudience(active.target.sessionId,active.leaseId,active.target,nextScope);
+  assert.equal(changed.camera.captureActive,true);assert.equal(changed.camera.currentObservationUsable,true);
+  assert.equal(changed.camera.leaseId,before.leaseId);assert.equal(changed.camera.clockMappingId,before.clockMappingId);assert.equal(changed.camera.expiresAtMonotonicMs,before.expiresAtMonotonicMs);
+  assert.equal(changed.camera.revision,before.revision+1);
+  const rebased=changed.rebase(original);assert.ok(rebased);
+  assert.deepEqual(rebased,{...original,scope:nextScope,leaseRevision:changed.camera.revision});
+  assert.equal(original.scope.audienceRevision,1);assert.equal(rebased.scope.audienceRevision,2);
+  assert.equal(changed.rebase(original),rebased,'rebasing one proof is idempotent');
+  assert.ok(Object.isFrozen(rebased)&&Object.isFrozen(rebased.scope));
+  assert.equal(h.visual.provenanceCurrent(original),false);assert.equal(h.visual.provenanceCurrent(rebased),true);
+  assert.equal(changed.rebase(structuredClone(original)),null);assert.equal(changed.rebase(new Proxy(original,{})),null);
+  assert.throws(()=>h.visual.submit(nextScope,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,1,5_400)],'too-fast'),(error:unknown)=>error instanceof VisualAdmissionError&&error.reason==='rate_limited');
+  h.advance(1_000);
+  assert.throws(()=>h.visual.submit(nextScope,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0,6_010)],'old-sequence'),(error:unknown)=>error instanceof VisualAdmissionError&&error.reason==='frame_invalid');
+  h.advance(6_000);audience=3;
+  const expiryScope={...nextScope,audienceRevision:3},expiry=h.visual.rebindAudience(active.target.sessionId,active.leaseId,nextScope,expiryScope);
+  assert.equal(expiry.camera.captureActive,true);assert.equal(expiry.camera.currentObservationUsable,false,'timer-driven audience rebind without a new result cannot revive stale sight');
+  assert.equal(expiry.camera.expiresAtMonotonicMs,before.expiresAtMonotonicMs);
+  const afterExpiry=expiry.rebase(rebased);assert.ok(afterExpiry);
+  assert.equal(afterExpiry.capturedAtEarliestMs,original.capturedAtEarliestMs);assert.equal(afterExpiry.receivedAtMs,original.receivedAtMs);assert.equal(afterExpiry.deadlineAtMs,original.deadlineAtMs);
+  assert.equal(changed.rebase(original),null,'an old rebase closure cannot mint authority into a later audience epoch');
+  h.visual.close();assert.equal(expiry.rebase(rebased),null);
+});
+
+test('pending completion immediately retires its exact lease when capture authority has disappeared',async()=>{
+  let allowed=true,finish!:()=>void;const ended:string[]=[];
+  const slow:VisualPerceptionProvider={...provider,interpret:async(request,signal)=>{await new Promise<void>(resolve=>{finish=resolve;});return provider.interpret(request,signal);}};
+  const h=harness(slow,()=>allowed,{},(_scope,_lease,reason)=>ended.push(reason)),active=h.begin();h.advance(20);
+  const pending=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'source-lost');await Promise.resolve();
+  allowed=false;finish();assert.equal((await pending.completion).reason,'scope_changed');
+  assert.deepEqual(ended,['invalidated'],'completion itself publishes source loss before a camera-state read');
+  assert.equal(h.visual.provenanceCurrent(pending.provenance),false);assert.equal(h.visual.cameraState(active.target.sessionId).captureActive,false);h.visual.close();
+});
+
+test('failed provenance authority checks cannot retire a synchronously renewed, replaced or rebound successor',async()=>{
+  for(const operation of ['renew','replace','rebind'] as const){
+    let mutate:(()=>void)|undefined;const ended:string[]=[];
+    const h=harness(provider,()=>{if(mutate){const run=mutate;mutate=undefined;run();return false;}return true;},{},(_scope,_lease,reason)=>ended.push(reason)),active=h.begin();h.advance(20);
+    const admitted=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'old-proof');await admitted.completion;
+    const offered=h.visual.negotiate(active.target,['1.0.0'],true),before=h.visual.cameraState(active.target.sessionId);
+    mutate=()=>{
+      if(operation==='renew')h.visual.renew(active.target,active.leaseId,{expectedRevision:before.revision,challengeId:offered.challenge!.id,endpointClockId:'endpoint-clock',endpointReceivedMonotonicMs:6000},authority);
+      else if(operation==='replace'){h.visual.stop(active.target.sessionId,active.leaseId,active.target.principalId);h.begin(active.target);}
+      else h.visual.rebindAudience(active.target.sessionId,active.leaseId,active.target,{...active.target,audienceRevision:2});
+    };
+    assert.equal(h.visual.provenanceCurrent(admitted.provenance),false);const after=h.visual.cameraState(active.target.sessionId);
+    assert.equal(after.captureActive,true,operation);assert.deepEqual(ended,operation==='replace'?['stop']:[],operation);assert.ok(after.revision>before.revision);h.visual.close();
+  }
+});
+
+test('audience rebind cancels obsolete work while retaining the one model slot and continuing valid frame sequences', async () => {
+  let audience=1,calls=0,finish!:()=>void,aborted=false,held:Uint8Array|undefined;
+  const slow:VisualPerceptionProvider={...provider,interpret:async(request,signal)=>{
+    calls++;if(calls===1){held=request.frames[0]!.bytes;signal.addEventListener('abort',()=>{aborted=true;},{once:true});await new Promise<void>(resolve=>{finish=resolve;});}
+    return provider.interpret(request,signal);
+  }};
+  const h=harness(slow,value=>value.audienceRevision===audience),active=h.begin();h.advance(20);
+  const running=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'old-running');await Promise.resolve();h.advance(1_000);
+  const pending=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,1,6_010)],'old-pending');
+  audience=2;const currentScope={...active.target,audienceRevision:2};
+  const changed=h.visual.rebindAudience(active.target.sessionId,active.leaseId,active.target,currentScope);
+  assert.equal(changed.camera.currentObservationUsable,false);
+  assert.equal((await running.completion).reason,'cancelled');assert.equal((await pending.completion).reason,'cancelled');assert.equal(aborted,true);assert.equal(held?.[0],0);
+  h.advance(1_000);
+  const current=h.visual.submit(currentScope,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,2,7_010)],'current');assert.equal(current.queued,true);assert.equal(calls,1);
+  finish();assert.equal((await current.completion).status,'complete');assert.equal(calls,2);
+  assert.equal(h.visual.provenanceCurrent(current.provenance),true);assert.equal(h.visual.provenanceCurrent(running.provenance),false);
+  assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,true);assert.equal(h.visual.resourceUsage().rawBytes,0);
+  h.visual.close();
+});
+
+test('audience rebind rejects foreign fields, non-increasing epochs and unavailable new authority without retaining a lease', () => {
+  for(const patch of [{audienceRevision:1},{audienceRevision:0},{audienceRevision:1.5},{assistantId:'another'},{principalId:'another'},{relationshipId:'another'},{conversationId:'another'},{endpointId:'another'},{sourceBindingRef:'another'},{captureConfigurationRevision:2},{scopeGeneration:2},{sessionRevision:2},{sessionId:'another'},{environmentId:'another'},{extra:'forged'}]){
+    const h=harness(),active=h.begin();
+    assert.throws(()=>h.visual.rebindAudience(active.target.sessionId,active.leaseId,active.target,{...active.target,audienceRevision:2,...patch} as VisualScope),(error:unknown)=>error instanceof VisualAdmissionError&&error.reason==='scope_changed');
+    assert.equal(h.visual.cameraState(active.target.sessionId).captureActive,false);h.visual.close();
+  }
+  for(const authorityCase of ['denied','throws']){
+    const h=harness(provider,value=>{if(value.audienceRevision===1)return true;if(authorityCase==='throws')throw Error('authority lookup failed');return false;}),active=h.begin();
+    assert.throws(()=>h.visual.rebindAudience(active.target.sessionId,active.leaseId,active.target,{...active.target,audienceRevision:2}),VisualAdmissionError);
+    assert.equal(h.visual.cameraState(active.target.sessionId).captureActive,false);h.visual.close();
+  }
+  const h=harness(),active=h.begin();
+  assert.throws(()=>h.visual.rebindAudience(active.target.sessionId,'old-lease',active.target,{...active.target,audienceRevision:2}),(error:unknown)=>error instanceof VisualAdmissionError&&error.reason==='stale_lease');
+  assert.equal(h.visual.cameraState(active.target.sessionId).leaseId,active.leaseId,'a foreign old lease cannot revoke the current capture');h.visual.close();
+});
+
+test('audience rebind and proof rebasing cannot cross capture expiry while checking authority', async () => {
+  for(const duringAuthority of [false,true]){
+    let expire=false;
+    const h=harness(provider,()=>{if(expire){expire=false;h.advance(h.visual.bounds.leaseTtlMs);}return true;}),active=h.begin();
+    if(duringAuthority)expire=true;else h.advance(h.visual.bounds.leaseTtlMs);
+    assert.throws(()=>h.visual.rebindAudience(active.target.sessionId,active.leaseId,active.target,{...active.target,audienceRevision:2}),VisualAdmissionError);
+    assert.equal(h.visual.cameraState(active.target.sessionId).captureActive,false);h.visual.close();
+  }
+  let expire=false;
+  const h=harness(provider,()=>{if(expire){expire=false;h.advance(h.visual.bounds.leaseTtlMs);}return true;}),active=h.begin();h.advance(20);
+  const admitted=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'before-expiry');
+  await admitted.completion;
+  const changed=h.visual.rebindAudience(active.target.sessionId,active.leaseId,active.target,{...active.target,audienceRevision:2});
+  assert.equal(changed.camera.captureActive,true);
+  expire=true;
+  assert.equal(changed.rebase(admitted.provenance),null,'authority evaluation cannot mint a rebased proof after the capture lease expires');
+  assert.equal(h.visual.cameraState(active.target.sessionId).captureActive,false);h.visual.close();
 });
 
 test('admission provenance is authentic immutable metadata without bytes or provider object aliases', async () => {
@@ -506,4 +620,92 @@ test('structural media validation rejects truncated or corrupt image envelopes b
   assert.equal((await h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'valid-png').completion).status,'complete');
   assert.equal(calls,1);
   h.visual.close();
+});
+
+test('typed visible-human counts preserve exact admitted frames without conferring identity or complete coverage',async()=>{
+  for(const classification of ['zero','one','multiple','uncertain'] as const){
+    const counted:VisualPerceptionProvider={...provider,interpret:async request=>({requestId:request.requestId,status:'complete',observations:[],reason:null,humanCount:{frameIds:[request.frames[0]!.frameId],classification,confidence:null,fieldOfView:'Only the supplied camera frame is visible.',coverage:'frameOnly',limitations:['People outside the image are not observed.']}})};
+    const h=harness(counted),active=h.begin();h.advance(20);
+    const admission=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'count-only'),result=await admission.completion;
+    assert.equal(result.status,'complete');assert.equal(result.observations.length,0);assert.equal(result.humanCount?.classification,classification);assert.equal(result.humanCount?.confidence,null);
+    assert.deepEqual(result.humanCount?.frameIds,admission.provenance.frameIds);
+    assert.equal(result.humanCount?.coverage,'frameOnly');assert.equal(h.visual.provenanceCurrent(admission.provenance),true);
+    assert.equal(h.visual.cameraState(active.target.sessionId).captureActive,true);assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,false,'count-only evidence does not invent a usable scene description');
+    assert.doesNotMatch(JSON.stringify(result.humanCount),/ownerPresent|principalId|capturedAt|expiresAt|leaseId|sourceBindingRef/);
+    h.visual.close();
+  }
+  const legacy=harness(),active=legacy.begin();legacy.advance(20);
+  const result=await legacy.visual.submit(active.target,active.leaseId,'endpoint-clock',[legacy.frame(active.mappingId,0)],'legacy-result').completion;
+  assert.equal(result.status,'complete');assert.equal(Object.hasOwn(result,'humanCount'),false,'the closed legacy result remains unchanged when count is absent');legacy.visual.close();
+});
+
+test('accepted count evidence is copied and frozen before provider mutation can widen its scope',async()=>{
+  const mutable={frameIds:['frame-0'],classification:'multiple' as const,confidence:0.5,fieldOfView:'Foreground image only.',coverage:'obstructed' as const,limitations:['A chair obscures part of the frame.']};
+  const h=harness({...provider,interpret:async(request,signal)=>({...await provider.interpret(request,signal),humanCount:mutable})}),active=h.begin();h.advance(20);
+  const result=await h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'frozen-count').completion;
+  mutable.frameIds.push('foreign-frame');mutable.limitations[0]='Later edited';mutable.fieldOfView='Full room';mutable.confidence=1;
+  assert.equal(result.humanCount?.confidence,0.5);assert.equal(result.humanCount?.fieldOfView,'Foreground image only.');assert.deepEqual(result.humanCount?.limitations,['A chair obscures part of the frame.']);assert.deepEqual(result.humanCount?.frameIds,['frame-0']);
+  assert.ok(Object.isFrozen(result)&&Object.isFrozen(result.humanCount)&&Object.isFrozen(result.humanCount?.frameIds)&&Object.isFrozen(result.humanCount?.limitations));h.visual.close();
+});
+
+test('malformed, forged-scope, non-complete and executable count metadata fail closed',async()=>{
+  let evaluated=0;
+  const count=()=>({frameIds:['frame-0'],classification:'one',confidence:null,fieldOfView:'Camera frame only.',coverage:'frameOnly',limitations:['Outside the image is unknown.']});
+  const variants:Array<(requestId:string)=>unknown>=[
+    ...[
+      {frameIds:[]},{frameIds:['foreign-frame']},{frameIds:['frame-0','frame-0']},{classification:'solo-supported'},
+      {confidence:NaN},{confidence:-0.1},{confidence:1.1},{confidence:'certain'},
+      {fieldOfView:''},{fieldOfView:'é'.repeat(257)},{coverage:'complete'},{limitations:[]},
+      {limitations:Array(9).fill('unknown')},{limitations:['x'.repeat(513)]},{limitations:Array(8).fill('x'.repeat(512))},
+      {ownerPresent:true},{capturedAtMs:0},{sourceBindingRef:'invented-camera'},
+      {frameIds:new Array(1)}
+    ].map(patch=>(requestId:string)=>({requestId,status:'complete',observations:[],reason:null,humanCount:{...count(),...patch}})),
+    ...['empty','failed','cancelled','rejected','timedOut'].map(status=>(requestId:string)=>({requestId,status,observations:[],reason:null,humanCount:count()})),
+    requestId=>({requestId,status:'complete',observations:[],reason:null,humanCount:undefined}),
+    requestId=>({requestId,status:'complete',observations:[],reason:null,humanCount:null}),
+    requestId=>({requestId,status:'complete',observations:[],reason:null,get humanCount(){evaluated++;return count();}}),
+    requestId=>({requestId,status:'complete',observations:[],reason:null,humanCount:{...count(),get confidence(){evaluated++;return 1;}}}),
+    requestId=>({requestId,status:'complete',observations:[],reason:null,humanCount:new Proxy(count(),{get(){evaluated++;throw Error('untrusted count');}})}),
+    requestId=>({requestId,status:'complete',observations:[],reason:null,humanCount:{...count(),limitations:new Proxy(['hidden'],{get(){evaluated++;throw Error('untrusted limitations');}})}}),
+    requestId=>({requestId,status:'complete',observations:[],reason:null,humanCount:count(),audienceRevision:99})
+  ];
+  for(const make of variants){
+    const h=harness({...provider,interpret:async request=>make(request.requestId) as VisualPerceptionResult}),active=h.begin();h.advance(20);
+    const result=await h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'invalid-count').completion;
+    assert.equal(result.reason,'provider_invalid');assert.equal(result.humanCount,undefined);assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,false);assert.equal(h.visual.resourceUsage().rawBytes,0);h.visual.close();
+  }
+  assert.equal(evaluated,0);
+});
+
+test('only host-minted replacement and foreground deferrals carry deferral authority',async()=>{
+  for(const status of ['complete','failed'] as const)for(const reason of ['replaced','foreground_priority'] as const){
+    const spoof=fixtureVisualProvider(request=>({requestId:request.requestId,status,observations:[],reason})),h=harness(spoof),active=h.begin();h.advance(20);
+    const result=await h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'spoof').completion;
+    assert.equal(result.reason,reason);assert.equal(h.visual.isAdmissionDeferral(result),false);h.visual.close();
+  }
+  let finish!:()=>void,ready=true;
+  const slow:VisualPerceptionProvider={...provider,interpret:async(request,signal)=>{await new Promise<void>(resolve=>{finish=resolve;});return provider.interpret(request,signal);}};
+  const h=harness(slow,()=>true,{},undefined,()=>ready),active=h.begin();h.advance(20);
+  const running=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'running');await Promise.resolve();h.advance(1000);
+  const old=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,1,6010)],'old-pending');h.advance(1000);
+  const latest=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,2,7010)],'latest');
+  const replaced=await old.completion;assert.equal(replaced.reason,'replaced');assert.equal(h.visual.isAdmissionDeferral(replaced),true);assert.ok(Object.isFrozen(replaced)&&Object.isFrozen(replaced.observations));assert.equal(h.visual.isAdmissionDeferral(structuredClone(replaced)),false);
+  ready=false;finish();await running.completion;
+  const foreground=await latest.completion;assert.equal(foreground.reason,'foreground_priority');assert.equal(h.visual.isAdmissionDeferral(foreground),true);assert.equal(h.visual.isAdmissionDeferral({...foreground}),false);h.visual.close();
+});
+
+test('a provider that becomes unavailable before completion cannot publish fresh observations',async()=>{
+  let healthy=true,finish!:()=>void;
+  const changing:VisualPerceptionProvider={...provider,healthy:()=>healthy,interpret:async(request,signal)=>{await new Promise<void>(resolve=>{finish=resolve;});return provider.interpret(request,signal);}};
+  const h=harness(changing),active=h.begin();h.advance(20);
+  const pending=h.visual.submit(active.target,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'provider-lost');await Promise.resolve();healthy=false;finish();
+  const result=await pending.completion;assert.equal(result.reason,'provider_unavailable');assert.deepEqual(result.observations,[]);assert.equal(h.visual.cameraState(active.target.sessionId).captureActive,true);assert.equal(h.visual.cameraState(active.target.sessionId).currentObservationUsable,false);h.visual.close();
+});
+
+test('equivalent host scopes compare independently of object property insertion order',async()=>{
+  const h=harness(),active=h.begin();h.advance(20);
+  const reordered=Object.fromEntries(Object.entries(active.target).reverse()) as VisualScope;
+  const admitted=h.visual.submit(reordered,active.leaseId,'endpoint-clock',[h.frame(active.mappingId,0)],'reordered');assert.equal((await admitted.completion).status,'complete');
+  const candidate=Object.fromEntries(Object.entries({...active.target,audienceRevision:2}).reverse()) as VisualScope;
+  const next=h.visual.rebindAudience(active.target.sessionId,active.leaseId,reordered,candidate);assert.equal(next.camera.captureActive,true);assert.ok(next.rebase(admitted.provenance));h.visual.close();
 });

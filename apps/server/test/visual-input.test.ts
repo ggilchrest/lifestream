@@ -11,6 +11,8 @@ import {VisualInputHost} from '../src/runtime/visual-input.ts';
 import {createLifestreamServer} from '../src/index.ts';
 import {loadProfile} from '../src/config/loader.ts';
 import {readSessionEndpoint} from '../src/runtime/session-context.ts';
+import {AudienceCoordinator,type AudienceIdentity,type CameraAudienceReason} from '../src/runtime/audience.ts';
+import type {VisualHumanCount,VisualPerceptionRequest} from '@lifestream/runtime/perception/port';
 
 const actor = {principalId:'owner',sessionId:'session-a',assistantId:'assistant-a'};
 const authority = {sourceConnected:true,devicePermission:true,hostCaptureLease:true,interpretationAllowed:true,remoteEgressAllowed:false,foregroundVisible:true};
@@ -265,4 +267,145 @@ test('selected visual expiry notifies output fences without another camera reque
   assert.equal((visual as any).viewExpiries.size,0);
   assert.equal(visual.state(actor).captureActive,true,'observation expiry does not revoke the capture lease');
   visual.close();assert.equal((visual as any).viewExpiries.size,0);
+});
+
+function cameraAudienceFixture(t:import('node:test').TestContext,options:{countLimitation?:string;scene?:boolean}={}){
+  const epoch=Date.parse('2026-09-29T12:00:00Z');let mono=5000.25,mappingMono=0,sequence=0,count:VisualHumanCount['classification']|undefined='one',delay=0,failed=false,connected=true,sourceId='camera-source',optionalReady=true,healthy=true;
+  let hold:{wait:Promise<void>;entered:()=>void}|undefined;
+  const identity:AudienceIdentity={principalId:actor.principalId,sessionId:actor.sessionId,endpointId:'endpoint'};
+  const events:Array<{reason:CameraAudienceReason;captureActive:boolean;revision:number}>=[],releases:string[]=[];
+  let host:VisualInputHost|undefined,last:VisualPerceptionRequest|undefined;
+  const audience=new AudienceCoordinator({sourceIds:['independent-owner'],cameraSourceIds:['camera-source'],now:()=>epoch+mono,monotonicMs:()=>mono,onCameraChanged:(who,snapshot,reason)=>{
+    host?.audienceChanged(who);
+    // Mirrors the server's ordering: only now may output fences query capture.
+    events.push({reason,captureActive:host?.state(actor).captureActive??false,revision:snapshot.revision});
+  }});
+  audience.declare(identity,'solo',900);
+  const synthetic=fixtureVisualProvider(request=>{
+      last=request;mono+=delay;
+      if(failed)return {requestId:request.requestId,status:'failed',observations:[],reason:'provider_unavailable'};
+      return {requestId:request.requestId,status:'complete',reason:null,
+        observations:options.scene===false?[]:[{observationId:'synthetic-scene',frameIds:[request.frames[0]!.frameId],appearance:'A synthetic blue square.',inference:null,confidence:null,limitations:['Synthetic pixels; no real room.']}],
+        ...(count?{humanCount:{frameIds:[request.frames[0]!.frameId],classification:count,confidence:null,fieldOfView:'Synthetic frame only.',coverage:'frameOnly' as const,limitations:[options.countLimitation??'No identity or room coverage evidence.']}}:{})};
+    });
+  host=new VisualInputHost({
+    provider:{...synthetic,healthy:()=>healthy,interpret:async(request,signal)=>{const gate=hold;hold=undefined;if(gate){gate.entered();await gate.wait;}return synthetic.interpret(request,signal);}},optionalWorkReady:()=>optionalReady,
+    scopeFor:request=>({...request,relationshipId:null,environmentId:'test',conversationId:'conversation',endpointId:'endpoint',sessionRevision:1,audienceRevision:audience.snapshot(identity).revision,scopeGeneration:1}),
+    sourceFor:request=>connected?{bindingRef:'synthetic-camera-binding',connected:true,configurationRevision:1,...(request.sessionId===actor.sessionId?{audienceSourceId:sourceId}:{})}:null,
+    captureAuthority:()=>authority,releaseCapture:(_actor,_scope,_lease,reason)=>releases.push(reason),monotonicMs:()=>mono,utcMs:()=>epoch+mono
+  },()=>{},()=>audience);
+  const visual=host;t.after(()=>{visual.close();audience.close();});
+  const command=(action:'enable'|'renew',leaseId?:string)=>{
+    const offer=visual.capabilities(actor,['1.0.0']);mono+=20;mappingMono=mono;
+    return visual.camera(actor,{action,expectedRevision:offer.camera.revision,idempotencyKey:randomUUID(),...(leaseId?{leaseId}:{}),challengeId:offer.negotiation!.challenge!.id,endpointClockId:'camera-clock',endpointReceivedMonotonicMs:4000});
+  };
+  const initial=command('enable');
+  const batch=async(classification:VisualHumanCount['classification']|undefined,advance=1000,providerDelay=0,failure=false,skipStateRead=false)=>{
+    count=classification;delay=providerDelay;failed=failure;mono+=advance;
+    const state=skipStateRead?initial:visual.state(actor),frameId=randomUUID();
+    return visual.batch(actor,{leaseId:state.leaseId!,endpointClockId:'camera-clock',correlationId:randomUUID(),frames:[{frameId,sequence:sequence++,capturedMonotonicMs:4000+mono-mappingMono,clockMappingId:state.clockMappingId!,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]},new Map([[frameId,png]]));
+  };
+  const prepare=()=>visual.prepareContext(actor,{expectedConversationId:'conversation',expectedRelationshipId:null,viewId:randomUUID(),revision:1,invalidationKey:randomUUID(),conversation:'[]',explicitQuestion:true,allowAside:false});
+  const qualify=()=>{
+    mono+=1;const state=visual.state(actor);
+    return audience.requalifyCamera(identity,{binding:{sourceId:'camera-source',sourceBindingRef:'synthetic-camera-binding',configurationRevision:1,leaseId:state.leaseId!,captureEpoch:state.clockMappingId!},expectedAudienceRevision:audience.snapshot(identity).revision,
+      ownerEvidence:{sourceId:'independent-owner',evidenceRef:randomUUID(),endpointId:'endpoint',principalId:actor.principalId,observedAt:new Date(epoch+mono).toISOString(),expiresAt:new Date(epoch+mono+4000).toISOString(),coverageKnown:true,ownerPresent:true,occupants:1}});
+  };
+  const holdNext=()=>{let enter!:()=>void,release!:()=>void;const entered=new Promise<void>(resolve=>{enter=resolve;}),wait=new Promise<void>(resolve=>{release=resolve;});hold={wait,entered:enter};return {entered,release};};
+  const occupyOtherSession=async()=>{
+    const other={...actor,sessionId:'synthetic-other-session'},gate=holdNext(),offer=visual.capabilities(other,['1.0.0']);mono+=20;
+    const lease=visual.camera(other,{action:'enable',expectedRevision:offer.camera.revision,idempotencyKey:randomUUID(),challengeId:offer.negotiation!.challenge!.id,endpointClockId:'other-clock',endpointReceivedMonotonicMs:4000});mono+=20;
+    const frameId=randomUUID(),pending=visual.batch(other,{leaseId:lease.leaseId!,endpointClockId:'other-clock',correlationId:randomUUID(),frames:[{frameId,sequence:0,capturedMonotonicMs:4010,clockMappingId:lease.clockMappingId!,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]},new Map([[frameId,png]]));
+    await gate.entered;return {pending,release:gate.release};
+  };
+  return {visual,audience,identity,initial,events,releases,batch,prepare,qualify,command,holdNext,occupyOtherSession,last:()=>last!,at:(utc:number)=>{mono=utc-epoch;},disconnect:()=>{connected=false;},replaceSourceId:()=>{sourceId='unapproved-source';},optionalWork:(ready:boolean)=>{optionalReady=ready;},providerHealth:(ready:boolean)=>{healthy=ready;}};
+}
+
+test('camera count host keeps the authorized lease and rebases its accepted scene before synchronous fences',async t=>{
+  const f=cameraAudienceFixture(t);
+  assert.equal(f.initial.captureActive,true);assert.equal(f.audience.snapshot(f.identity).privateAllowed,false,'enable retires the prior manual-only clearance');
+  assert.equal(f.events.at(-1)?.reason,'cameraStarted');assert.equal(f.events.at(-1)?.captureActive,true);
+  const receipt=await f.batch('multiple',20);assert.equal(receipt.result.status,'complete');assert.equal(Object.hasOwn(receipt.result,'humanCount'),false,'closed HTTP receipt excludes internal count');
+  const shared=f.audience.snapshot(f.identity),view=f.prepare();assert.equal(shared.classification,'shared');assert.ok(view);assert.equal(view.scope.audienceRevision,shared.revision);assert.equal(view.leaseId,f.initial.leaseId);assert.equal(f.events.at(-1)?.captureActive,true);
+  await f.batch('one');assert.equal(f.audience.snapshot(f.identity).privateAllowed,false,'one visible person is not authenticated owner presence');
+  const revision=f.audience.snapshot(f.identity).revision,events=f.events.length,firstOne=f.audience.cameraEvidence(f.identity)!;
+  await f.batch('one');assert.equal(f.audience.snapshot(f.identity).revision,revision);assert.equal(f.events.length,events);assert.notEqual(f.audience.cameraEvidence(f.identity)?.evidenceRef,firstOne.evidenceRef);
+  assert.equal(f.visual.state(actor).leaseId,f.initial.leaseId);assert.deepEqual(f.releases,[]);
+});
+
+test('count expiry at two seconds fences the old view while the same scene remains usable until its six-second deadline',async t=>{
+  const f=cameraAudienceFixture(t);await f.batch('multiple',20);const before=f.prepare();assert.ok(before);
+  const countExpiry=Date.parse(f.audience.cameraEvidence(f.identity)!.expiresAt);assert.equal(countExpiry,before.capturedAtEarliestMs+2000);
+  f.at(countExpiry);f.audience.tick();
+  assert.equal(f.audience.snapshot(f.identity).classification,'unknown');assert.equal(f.events.at(-1)?.reason,'countExpired');assert.equal(f.events.at(-1)?.captureActive,true,'capture was rebound before fences queried it');
+  assert.equal(f.visual.contextCurrent(before),false);
+  const after=f.prepare();assert.ok(after);assert.equal(after.capturedAtEarliestMs,before.capturedAtEarliestMs);assert.equal(after.expiresAtMs,before.expiresAtMs);assert.equal(after.expiresAtMs,before.capturedAtEarliestMs+6000);assert.ok(after.scope.audienceRevision>before.scope.audienceRevision);
+  f.at(after.expiresAtMs);assert.equal(f.prepare(),null);assert.equal(f.visual.state(actor).captureActive,true);
+});
+
+test('missing and failed counts withdraw prior independent clearance without ending capture',async t=>{
+  for(const failure of [false,true]){
+    const f=cameraAudienceFixture(t);await f.batch('one',20);assert.equal(f.qualify().privateAllowed,true);
+    const receipt=await f.batch(undefined,1000,0,failure);
+    assert.equal(receipt.result.status,failure?'failed':'complete');assert.equal(f.audience.snapshot(f.identity).privateAllowed,false);assert.equal(f.audience.cameraEvidence(f.identity),null);assert.equal(f.visual.state(actor).captureActive,true);
+    assert.equal(!!f.prepare(),!failure,'only a completed scene remains usable');
+  }
+});
+
+test('too-old count cannot clear unknown; renewal replaces its epoch and source end cannot restore prior solo',async t=>{
+  const f=cameraAudienceFixture(t);const result=await f.batch('one',20,2100);assert.equal(result.result.status,'complete');assert.equal(f.audience.cameraEvidence(f.identity),null);assert.equal(f.audience.snapshot(f.identity).privateAllowed,false);assert.ok(f.prepare(),'scene retains its separate six-second lifetime');
+  const renewed=f.command('renew',f.initial.leaseId!);assert.equal(renewed.captureActive,true);assert.equal(renewed.leaseId,f.initial.leaseId);assert.notEqual(renewed.clockMappingId,f.initial.clockMappingId);assert.equal(f.prepare(),null,'renewal retires prior scene');
+  await f.batch('one',1000);assert.equal(f.qualify().privateAllowed,true);
+  f.disconnect();assert.equal(f.visual.state(actor).captureActive,false);assert.equal(f.audience.snapshot(f.identity).classification,'unknown');assert.equal(f.events.at(-1)?.reason,'cameraEnded');assert.equal(f.events.at(-1)?.captureActive,false);assert.deepEqual(f.releases,['invalidated']);
+  assert.equal(f.audience.declare(f.identity,'solo').privateAllowed,false,'source loss cannot revive a manual-only clearance');
+});
+
+test('camera stop releases its broker lease even when an audience subscriber throws',async t=>{
+  const f=cameraAudienceFixture(t);await f.batch('multiple',20);
+  f.audience.subscribe(f.identity,snapshot=>{if(snapshot.classification==='unknown')throw Error('Synthetic failing subscriber');});
+  const stopped=f.visual.camera(actor,{action:'stop',expectedRevision:f.visual.state(actor).revision,idempotencyKey:randomUUID(),leaseId:f.initial.leaseId!});
+  assert.equal(stopped.captureActive,false);assert.deepEqual(f.releases,['stop']);assert.equal(f.audience.snapshot(f.identity).privateAllowed,false);
+});
+
+test('host camera audience preserves an admitted count limitation beyond 256 bytes',async t=>{
+  const limitation='x'.repeat(257),f=cameraAudienceFixture(t,{countLimitation:limitation});
+  const result=await f.batch('multiple',20);assert.equal(result.result.status,'complete');
+  assert.equal(f.audience.snapshot(f.identity).classification,'shared');assert.deepEqual(f.audience.cameraEvidence(f.identity)?.limitations,[limitation]);assert.equal(f.visual.state(actor).captureActive,true);
+});
+
+test('a pending provider completion signals camera loss before any subsequent camera-state read',async t=>{
+  for(const loss of ['disconnect','sourceId'] as const){
+    const f=cameraAudienceFixture(t);await f.batch('one',20);assert.equal(f.qualify().privateAllowed,true);
+    const gate=f.holdNext(),pending=f.batch('one',1000);await gate.entered;
+    if(loss==='disconnect')f.disconnect();else f.replaceSourceId();gate.release();
+    const result=await pending;assert.equal(result.result.reason,'scope_changed');
+    assert.equal(f.audience.snapshot(f.identity).privateAllowed,false,loss+' must withdraw clearance without a visual.state read or count expiry');
+    assert.equal(f.events.at(-1)?.reason,'cameraEnded');assert.deepEqual(f.releases,['invalidated']);
+    assert.equal(f.visual.state(actor).captureActive,false);
+  }
+});
+
+test('a genuine foreground deferral preserves current qualified count at its original expiry',async t=>{
+  const f=cameraAudienceFixture(t);await f.batch('one',20);f.qualify();const before=f.audience.snapshot(f.identity),count=f.audience.cameraEvidence(f.identity)!;
+  const occupied=await f.occupyOtherSession(),pending=f.batch('one',1000);f.optionalWork(false);occupied.release();await occupied.pending;
+  const result=await pending;assert.equal(result.result.reason,'foreground_priority');assert.equal(f.audience.snapshot(f.identity).privateAllowed,true);assert.equal(f.audience.snapshot(f.identity).revision,before.revision);assert.equal(f.audience.cameraEvidence(f.identity)?.expiresAt,count.expiresAt);
+  f.at(Date.parse(count.expiresAt));f.audience.tick();assert.equal(f.audience.snapshot(f.identity).privateAllowed,false,'deferral never extends the old count lifetime');
+});
+
+test('provider health loss withdraws scene and count-only clearance and recovery cannot revive either',async t=>{
+  for(const scene of [true,false]){
+    const f=cameraAudienceFixture(t,{scene});await f.batch('one',20);assert.equal(f.qualify().privateAllowed,true);const view=f.prepare();assert.equal(!!view,scene);
+    f.providerHealth(false);const unavailable=f.visual.state(actor);assert.equal(unavailable.reason,'provider_unavailable');assert.equal(unavailable.captureActive,true);
+    assert.equal(f.audience.snapshot(f.identity).privateAllowed,false);assert.equal(f.audience.cameraEvidence(f.identity),null);if(view)assert.equal(f.visual.contextCurrent(view),false);
+    f.providerHealth(true);assert.equal(f.visual.state(actor).captureActive,true);assert.equal(f.audience.snapshot(f.identity).privateAllowed,false);assert.equal(f.prepare(),null,'health recovery requires a new accepted scene/count');
+  }
+});
+
+test('provider health loss is fenced both during pending completion and before a new submission',async t=>{
+  for(const pendingCompletion of [true,false]){
+    const f=cameraAudienceFixture(t);await f.batch('one',20);f.qualify();
+    if(pendingCompletion){const gate=f.holdNext(),pending=f.batch('one',1000);await gate.entered;f.providerHealth(false);gate.release();assert.equal((await pending).result.reason,'provider_unavailable');}
+    else {f.providerHealth(false);await assert.rejects(()=>f.batch('one',1000,0,false,true),(error:unknown)=>error instanceof VisualAdmissionError&&error.reason==='provider_unavailable');}
+    assert.equal(f.audience.snapshot(f.identity).privateAllowed,false,'no subsequent camera-state read is needed');assert.equal(f.audience.cameraEvidence(f.identity),null);
+  }
 });

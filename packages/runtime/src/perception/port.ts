@@ -82,11 +82,22 @@ export type VisualObservation = Readonly<{
   limitations: readonly string[];
 }>;
 
+/** Model-visible frame evidence only; no owner identity or complete audience coverage is established. */
+export type VisualHumanCount = Readonly<{
+  frameIds: readonly string[];
+  classification: 'zero' | 'one' | 'multiple' | 'uncertain';
+  confidence: number | null;
+  fieldOfView: string;
+  coverage: 'frameOnly' | 'obstructed' | 'unknown';
+  limitations: readonly string[];
+}>;
+
 export type VisualPerceptionResult = Readonly<{
   requestId: string;
   status: 'complete' | 'empty' | 'rejected' | 'cancelled' | 'timedOut' | 'failed';
   observations: readonly VisualObservation[];
   reason: string | null;
+  humanCount?: VisualHumanCount;
 }>;
 
 export type VisualPerceptionProvider = Readonly<{

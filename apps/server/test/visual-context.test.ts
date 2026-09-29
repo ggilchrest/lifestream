@@ -14,16 +14,17 @@ const marker='SYNTHETIC_VISUAL_SCENE_AZURE';
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+5gz/qwAAAABJRU5ErkJggg==','base64');
 const authority={sourceConnected:true,devicePermission:true,hostCaptureLease:true,interpretationAllowed:true,remoteEgressAllowed:false,foregroundVisible:true};
 
-async function fixture(t:import('node:test').TestContext){
+async function fixture(t:import('node:test').TestContext,cameraAudience=false){
   const directory=await mkdtemp(join(tmpdir(),'ls-visual-context-'));t.after(()=>rm(directory,{recursive:true,force:true}));
   const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(directory,'state.sqlite'),artifactDirectory:join(directory,'artifacts')};
   let app:ReturnType<typeof createLifestreamServer>,mono=5000,sequence=0,connected=true,visualStatus:'complete'|'empty'|'failed'='complete',visualRelationshipId:string|null=null;
   const epoch=Date.now()-mono,requests:InferenceRequest[]=[];
+  let count:'zero'|'one'|'multiple'|'uncertain'|undefined='multiple',providerReason:string|null=null;
   const installerToken=randomBytes(32).toString('hex');
-  app=createLifestreamServer({config,localAuth:{stateDirectory:join(directory,'auth'),installerToken},audiencePrivacy:{sourceIds:[]},visualInput:{
-    provider:fixtureVisualProvider(request=>visualStatus!=='complete'?{requestId:request.requestId,status:visualStatus,reason:visualStatus==='failed'?'synthetic_provider_failure':null,observations:[]}:({requestId:request.requestId,status:'complete',reason:null,observations:[{observationId:randomUUID(),frameIds:[request.frames[0]!.frameId],appearance:`${marker}: a blue notebook is visible on the table.`,inference:null,confidence:null,limitations:['Scripted observation from a synthetic fixture; no actual image understanding.']}]})),
-    scopeFor:actor=>{const database=(app as any).database,current=readSessionEndpoint(database,actor.sessionId),row=database.connection.prepare("SELECT conversation_id AS conversationId FROM sessions WHERE id=? AND status='active'").get(actor.sessionId) as {conversationId:string}|undefined;if(!current.endpoint||!row)return null;return {...actor,relationshipId:visualRelationshipId,environmentId:'synthetic',conversationId:row.conversationId,endpointId:current.endpoint.endpointId,sessionRevision:current.revision,audienceRevision:1,scopeGeneration:1};},
-    sourceFor:()=>connected?{bindingRef:'synthetic-camera',connected:true,configurationRevision:1}:null,
+  app=createLifestreamServer({config,localAuth:{stateDirectory:join(directory,'auth'),installerToken},audiencePrivacy:{sourceIds:[],...(cameraAudience?{cameraSourceIds:['synthetic-camera-count'],now:()=>epoch+mono,monotonicMs:()=>mono}:{})},visualInput:{
+    provider:fixtureVisualProvider(request=>visualStatus!=='complete'?{requestId:request.requestId,status:visualStatus,reason:providerReason??(visualStatus==='failed'?'synthetic_provider_failure':null),observations:[]}:({requestId:request.requestId,status:'complete',reason:providerReason,...(cameraAudience&&count?{humanCount:{frameIds:[request.frames[0]!.frameId],classification:count,confidence:null,fieldOfView:'Generated test frame only',coverage:'frameOnly' as const,limitations:['Scripted count; no people observed.']}}:{}),observations:[{observationId:randomUUID(),frameIds:[request.frames[0]!.frameId],appearance:`${marker}: a blue notebook is visible on the table.`,inference:null,confidence:null,limitations:['Scripted observation from a synthetic fixture; no actual image understanding.']}]})),
+    scopeFor:actor=>{const database=(app as any).database,current=readSessionEndpoint(database,actor.sessionId),row=database.connection.prepare("SELECT conversation_id AS conversationId FROM sessions WHERE id=? AND status='active'").get(actor.sessionId) as {conversationId:string}|undefined;if(!current.endpoint||!row)return null;return {...actor,relationshipId:visualRelationshipId,environmentId:'synthetic',conversationId:row.conversationId,endpointId:current.endpoint.endpointId,sessionRevision:current.revision,audienceRevision:cameraAudience?(app as any).audience.snapshot({principalId:actor.principalId,sessionId:actor.sessionId,endpointId:current.endpoint.endpointId}).revision:1,scopeGeneration:1};},
+    sourceFor:()=>connected?{bindingRef:'synthetic-camera',connected:true,configurationRevision:1,...(cameraAudience?{audienceSourceId:'synthetic-camera-count'}:{})}:null,
     captureAuthority:()=>authority,monotonicMs:()=>mono,utcMs:()=>epoch+mono
   }});
   await app.start();t.after(()=>app.shutdown());
@@ -49,7 +50,7 @@ async function fixture(t:import('node:test').TestContext){
     const response=await fetch(base+route('batches'),{method:'POST',headers:{...headers,'content-type':`multipart/form-data; boundary=${boundary}`},body});assert.equal(response.status,200,await response.clone().text());const result=await response.json();assert.equal(result.result.status,visualStatus);return result;
   };
   const turn=async(userInput='What can you see?',selected=assistantId,relationshipId?:string)=>{const response=await request('/api/runtime/v1/messages',{assistantId:selected,userInput,...(relationshipId?{relationshipId}:{})});assert.equal(response.status,200,await response.clone().text());const output=await response.text();assert.match(output,/interaction.completed/,output);assert.ok(requests.length);return requests.at(-1)!;};
-  return {app,base,headers,session,assistantId,otherAssistantId,requests,request,route,envelope,begin,camera,capability,batch,stop,turn,setProvider,advance:(ms:number)=>{mono+=ms;},disconnect:()=>{connected=false;},emptyNext:()=>{visualStatus='empty';},failNext:()=>{visualStatus='failed';},bindRelationship:(id:string|null)=>{visualRelationshipId=id;}};
+  return {app,base,headers,session,assistantId,otherAssistantId,requests,request,route,envelope,begin,camera,capability,batch,stop,turn,setProvider,advance:(ms:number)=>{mono+=ms;},disconnect:()=>{connected=false;},emptyNext:()=>{visualStatus='empty';},failNext:()=>{visualStatus='failed';},bindRelationship:(id:string|null)=>{visualRelationshipId=id;},setCount:(value:typeof count)=>{count=value;},setProviderReason:(value:string|null)=>{providerReason=value;},audience:()=>{const current=readSessionEndpoint((app as any).database,session.sessionId);return (app as any).audience.snapshot({principalId:session.principalId,sessionId:session.sessionId,endpointId:current.endpoint!.endpointId});}};
 }
 
 test('synthetic visual HTTP admission supplies only scoped ordinary conversation context and truthful host modality',{timeout:15000},async t=>{
@@ -139,4 +140,60 @@ test('a visual binding for another relationship is withheld from the same Assist
   // relationship remains the existing authenticated owner's real selection.
   f.bindRelationship(randomUUID());const mismatched=await f.begin();await f.batch(mismatched);
   const reply=await f.turn('What can you see?',f.assistantId,relationshipId);assert.equal(reply.scope.assistantId,f.assistantId);assert.doesNotMatch(JSON.stringify(reply),new RegExp(marker));
+});
+
+
+test('camera count restricts private history while authenticated shared and unknown turns retain fresh nonprivate scene',{timeout:15000},async t=>{
+  const f=await fixture(t,true);
+  await f.turn('PRIVATE_BEFORE_CAMERA_481');
+  assert.equal(f.audience().privateAllowed,true);
+  const state=await f.begin();assert.equal(state.captureActive,true);assert.equal(f.audience().privateAllowed,false);
+  const admitted=await f.batch(state);assert.deepEqual(Object.keys(admitted.result).sort(),['observations','reason','requestId','status']);
+  assert.equal(f.audience().classification,'shared');
+  const shared=await f.turn();assert.match(JSON.stringify(shared),new RegExp(marker));assert.doesNotMatch(JSON.stringify(shared),/PRIVATE_BEFORE_CAMERA_481/);
+  assert.match(shared.sections.find(section=>section.kind==='interactionState')!.content,/audience.*unknown/);
+  const revision=f.audience().revision;f.advance(1001);await f.batch(state);assert.equal(f.audience().revision,revision,'fresh same-class count does not fence every reply');
+  f.advance(2001);assert.equal(f.audience().classification,'unknown');
+  assert.equal((await f.capability()).camera.captureActive,true,'count expiry does not end authorized capture');
+  assert.match(JSON.stringify(await f.turn()),new RegExp(marker),'2s audience expiry preserves the same <=6s scene');
+  f.advance(4000);assert.doesNotMatch(JSON.stringify(await f.turn()),new RegExp(marker),'audience transition never refreshes original scene age');
+  await f.stop(state);assert.equal(f.audience().privateAllowed,false,'old private declaration cannot revive after camera stop');
+});
+
+test('camera count changes synchronously fence an ordinary pending response and one cannot restore private disclosure',{timeout:15000},async t=>{
+  const f=await fixture(t,true),state=await f.begin();f.setCount('one');await f.batch(state);assert.equal(f.audience().privateAllowed,false);
+  let entered!:()=>void,release!:()=>void;
+  const started=new Promise<void>(resolve=>{entered=resolve;}),gate=new Promise<void>(resolve=>{release=resolve;});t.after(()=>release());
+  f.setProvider({async *generate(input){f.requests.push(input);entered();await gate;yield {kind:'text',text:'AFTER_AUDIENCE_CHANGE'};yield {kind:'done'};}});
+  const pending=f.request('/api/runtime/v1/messages',{assistantId:f.assistantId,userInput:'What can you see?'});await started;
+  let audioFenced=false;const oldRevision=f.audience().revision;
+  const audio={invalidateIfStale:()=>{if(f.audience().revision!==oldRevision)audioFenced=true;},close:()=>{},belongsTo:()=>false};
+  (f.app as any).audioSessions.add(audio);
+  try{f.advance(1001);f.setCount('multiple');await f.batch(state);assert.equal(audioFenced,true,'same synchronous camera callback reconciles endpoint output');}
+  finally{(f.app as any).audioSessions.delete(audio);release();}
+  const output=await(await pending).text();assert.doesNotMatch(output,/AFTER_AUDIENCE_CHANGE|interaction.completed/);assert.match(output,/runtime_input_stale|cancelled/);
+  f.setProvider({async *generate(input){f.requests.push(input);yield {kind:'text',text:'Restricted scene reply.'};yield {kind:'done'};}});
+  f.advance(1001);f.setCount(undefined);await f.batch(state);assert.equal(f.audience().classification,'unknown');assert.equal(f.audience().privateAllowed,false);
+  assert.match(JSON.stringify(await f.turn()),new RegExp(marker),'absence of usable count withholds private access, not authorized scene text');
+});
+
+test('starting the camera revokes an in-flight private turn before any delayed text can escape',{timeout:15000},async t=>{
+  const f=await fixture(t,true);assert.equal(f.audience().privateAllowed,true);
+  let entered!:()=>void,release!:()=>void;
+  const started=new Promise<void>(resolve=>{entered=resolve;}),gate=new Promise<void>(resolve=>{release=resolve;});t.after(()=>release());
+  f.setProvider({async *generate(input){f.requests.push(input);entered();await gate;yield {kind:'text',text:'PRIVATE_AFTER_CAMERA_START'};yield {kind:'done'};}});
+  const pending=f.request('/api/runtime/v1/messages',{assistantId:f.assistantId,userInput:'An ordinary private question.'});await started;
+  try{const state=await f.begin();assert.equal(state.captureActive,true);assert.equal(f.audience().privateAllowed,false);}finally{release();}
+  const output=await(await pending).text();assert.doesNotMatch(output,/PRIVATE_AFTER_CAMERA_START|interaction.completed/);assert.match(output,/runtime_input_stale|cancelled/);
+});
+
+
+test('provider reason text cannot impersonate a host deferral or bypass camera privacy reduction',{timeout:15000},async t=>{
+  const f=await fixture(t,true),state=await f.begin();f.setCount('one');await f.batch(state);
+  f.advance(1001);f.setCount('multiple');f.setProviderReason('foreground_priority');await f.batch(state);
+  assert.equal(f.audience().classification,'shared','provider reason cannot suppress admitted multiple-count evidence');
+  assert.match(JSON.stringify(await f.turn()),new RegExp(marker));
+  f.advance(1001);f.failNext();f.setProviderReason('replaced');await f.batch(state);
+  assert.equal(f.audience().classification,'unknown');assert.equal(f.audience().privateAllowed,false);
+  assert.doesNotMatch(JSON.stringify(await f.turn()),new RegExp(marker),'a provider failure cannot be downgraded to a benign admission outcome');
 });

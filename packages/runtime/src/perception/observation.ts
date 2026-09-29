@@ -1,6 +1,7 @@
 import {createHash} from 'node:crypto';
 import {types} from 'node:util';
 import type {VisualObservation, VisualScope} from './port.ts';
+import type {VisualAdmissionProvenance} from './admission.ts';
 
 // Runtime projection only. This is not an exported copy of the private machine contract.
 export const visualContextLimits = Object.freeze({sessions:4,observations:32,cacheBytes:32_768,freshnessMs:6_000,retentionMs:60_000,selectedObservations:8,selectedBytes:2_048,conversationBytes:65_536,asideIntervalMs:30_000,usedScenes:32});
@@ -67,6 +68,13 @@ function freeze<T>(value:T):T {
   if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;
 }
 const scopeKey = (scope:VisualScope) => JSON.stringify(scopeKeys.map(key=>scope[key]));
+const provenanceKeys=['requestId','correlationId','leaseId','scope','frameIds','hostSequence','provider','capturedAtEarliestMs','capturedAtLatestMs','receivedAtMs','deadlineAtMs','clockMappingId','leaseRevision'] as const;
+function copyProvenance(value:unknown):VisualAdmissionProvenance|null {
+  const data=record(value,provenanceKeys);if(!data)return null;
+  const scope=copyScope(data.scope),provider=record(data.provider,['id','version']),frameIds=array(data.frameIds,3);
+  if(!scope||!provider||!identifier(provider.id)||!identifier(provider.version)||!frameIds?.length||frameIds.some(id=>!identifier(id))||new Set(frameIds).size!==frameIds.length||['requestId','correlationId','leaseId','clockMappingId'].some(key=>!identifier(data[key]))||!revision(data.hostSequence)||!revision(data.leaseRevision)||['capturedAtEarliestMs','capturedAtLatestMs','receivedAtMs','deadlineAtMs'].some(key=>!timestamp(data[key])))return null;
+  return {requestId:data.requestId as string,correlationId:data.correlationId as string,leaseId:data.leaseId as string,scope,frameIds:frameIds as string[],hostSequence:data.hostSequence as number,provider:{id:provider.id,version:provider.version},capturedAtEarliestMs:data.capturedAtEarliestMs as number,capturedAtLatestMs:data.capturedAtLatestMs as number,receivedAtMs:data.receivedAtMs as number,deadlineAtMs:data.deadlineAtMs as number,clockMappingId:data.clockMappingId as string,leaseRevision:data.leaseRevision as number};
+}
 const sceneKey = (observations:readonly VisualObservation[]) => hash(JSON.stringify(observations.map(item=>[item.appearance.trim().toLowerCase().replace(/\s+/gu,' '),item.inference?.trim().toLowerCase().replace(/\s+/gu,' ')??null]).sort((left,right)=>JSON.stringify(left).localeCompare(JSON.stringify(right)))));
 
 /** Ephemeral derived text only. Caller supplies admitted host metadata, never a provider-owned scope. */
@@ -115,6 +123,25 @@ export class VisualObservationStore {
     // or cancels a view already admitted to an in-flight response.
     const entry=previous??{batch,scopeKey:key,generation:++this.generation,expiresAt,retainedUntil:now+visualContextLimits.retentionMs,selectable:true,used:new Set<string>(),lastAside:-Infinity};
     entry.batch=batch;entry.expiresAt=expiresAt;entry.retainedUntil=now+visualContextLimits.retentionMs;entry.selectable=true;this.entries.set(scope.sessionId,entry);this.schedule(now);return true;
+  }
+  /**
+   * Caller first authenticates both proofs through the admission rebase. Only
+   * the audience revision may change; this never refreshes capture or retention.
+   * Call synchronously before any cache read can prune the old audience scope.
+   */
+  rebindAudience(previous:VisualAdmissionProvenance,next:VisualAdmissionProvenance):boolean {
+    const now=this.time();if(!Number.isFinite(now))return false;
+    const before=copyProvenance(previous),after=copyProvenance(next);
+    if(!before||!after||after.scope.audienceRevision<=before.scope.audienceRevision||after.leaseRevision!==before.leaseRevision+1||scopeKeys.some(key=>key!=='audienceRevision'&&before.scope[key]!==after.scope[key]))return false;
+    if(provenanceKeys.some(key=>!['scope','leaseRevision','provider','frameIds'].includes(key)&&before[key]!==after[key])||before.provider.id!==after.provider.id||before.provider.version!==after.provider.version||JSON.stringify(before.frameIds)!==JSON.stringify(after.frameIds))return false;
+    const entry=this.entries.get(before.scope.sessionId);if(!entry||entry.scopeKey!==scopeKey(before.scope)||entry.expiresAt<=now||entry.retainedUntil<=now)return false;
+    const batch=entry.batch;
+    if(batch.requestId!==before.requestId||batch.sequence!==before.hostSequence||batch.leaseId!==before.leaseId||batch.capturedAtEarliestMs!==before.capturedAtEarliestMs||batch.capturedAtLatestMs!==before.capturedAtLatestMs||batch.receivedAtMs!==before.receivedAtMs||batch.provider.id!==before.provider.id||batch.provider.version!==before.provider.version||batch.observations.some(item=>item.frameIds.some(id=>!before.frameIds.includes(id)))||!this.allowed(after.scope,after.leaseId))return false;
+    // Old selected views retain their text for inspection but lose eligibility.
+    // A rebuilt view receives the identical scene and original expiry.
+    const generation=++this.generation;entry.generation=generation;
+    const replacement:Entry={...entry,batch:freeze({...batch,scope:after.scope}),scopeKey:scopeKey(after.scope),generation,used:new Set(entry.used)};
+    this.entries.set(after.scope.sessionId,replacement);this.schedule(now);return true;
   }
   availability(scope:VisualScope,leaseId:string):Readonly<{sourceRevision:number;expiresAtMs:number}>|null {
     const now=this.time();if(!Number.isFinite(now))return null;this.prune(now);

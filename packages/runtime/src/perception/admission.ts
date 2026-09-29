@@ -1,7 +1,7 @@
 import {createHash, randomUUID} from 'node:crypto';
 import {crc32} from 'node:zlib';
-import {types} from 'node:util';
-import type {VisualBounds, VisualFrame, VisualMediaType, VisualObservation, VisualPerceptionProvider, VisualPerceptionRequest, VisualPerceptionResult, VisualScope} from './port.ts';
+import {types,isDeepStrictEqual} from 'node:util';
+import type {VisualBounds, VisualFrame, VisualHumanCount, VisualMediaType, VisualObservation, VisualPerceptionProvider, VisualPerceptionRequest, VisualPerceptionResult, VisualScope} from './port.ts';
 import {referenceVisualBounds} from './port.ts';
 
 export type VisualDropReason = 'disabled' | 'unsupported' | 'unconfigured' | 'source_unavailable' | 'permission_denied' | 'lease_conflict' | 'stale_revision' | 'stale_lease' | 'scope_changed' | 'clock_challenge_invalid' | 'clock_uncertain' | 'frame_invalid' | 'frame_oversize' | 'frame_stale' | 'frame_future' | 'rate_limited' | 'foreground_priority' | 'provider_unavailable' | 'provider_invalid' | 'deadline' | 'replaced' | 'cancelled';
@@ -64,8 +64,8 @@ export type CameraState = Readonly<{
   currentObservationUsable: boolean;
 }>;
 
-const scopeEqual = (a: VisualScope, b: VisualScope) => JSON.stringify(a) === JSON.stringify(b);
-const failure = (requestId: string, reason: VisualDropReason): VisualPerceptionResult => ({requestId, status: reason === 'deadline' ? 'timedOut' : reason === 'cancelled' || reason === 'replaced' ? 'cancelled' : 'rejected', observations: [], reason});
+const scopeEqual = isDeepStrictEqual;
+const failure = (requestId: string, reason: VisualDropReason): VisualPerceptionResult => Object.freeze({requestId, status: reason === 'deadline' ? 'timedOut' : reason === 'cancelled' || reason === 'replaced' ? 'cancelled' : 'rejected', observations: Object.freeze([]), reason});
 
 /** Read plain data descriptors only: getters, proxies and custom prototypes are not provider evidence. */
 function dataRecord(value: unknown, keys: readonly string[]): Record<string, unknown> | null {
@@ -168,6 +168,7 @@ export class VisualAdmission {
   private readonly provider: VisualPerceptionProvider | undefined;
   private readonly providerIdentity: VisualAdmissionProvenance['provider'] | undefined;
   private readonly provenances = new WeakSet<VisualAdmissionProvenance>();
+  private readonly deferrals = new WeakSet<VisualPerceptionResult>();
   private admissionSequence = 0;
   private readonly optionalWorkReady: () => boolean;
   private readonly currentScope: (scope: VisualScope) => boolean;
@@ -290,6 +291,45 @@ export class VisualAdmission {
     return this.cameraState(scope.sessionId);
   }
 
+  /** Trusted host reducer callback only: rebind immediately after authoritative audience change. */
+  rebindAudience(sessionId:string,leaseId:string,expectedScope:VisualScope,candidateScope:VisualScope):{camera:CameraState;rebase:(provenance:VisualAdmissionProvenance)=>VisualAdmissionProvenance|null} {
+    const state=this.stateFor(sessionId),lease=state.lease,now=this.mono();
+    if (!lease || lease.id!==leaseId) throw new VisualAdmissionError('stale_lease');
+    if (lease.expiresMono<=now || lease.mapping.expiresMono<=now) { this.endLease(state,lease,'expired'); throw new VisualAdmissionError('stale_lease'); }
+    if (expectedScope.sessionId!==sessionId || !scopeEqual(lease.scope,expectedScope)) { this.endLease(state,lease,'invalidated'); throw new VisualAdmissionError('scope_changed'); }
+    const previousScope=Object.freeze(structuredClone(lease.scope)),previousRevision=lease.revision,mappingId=lease.mapping.id;
+    let nextScope:VisualScope;
+    try {
+      const candidate=dataRecord(candidateScope,Object.keys(previousScope));
+      if (!candidate || !Number.isSafeInteger(candidate.audienceRevision) || (candidate.audienceRevision as number)<=previousScope.audienceRevision || Object.keys(previousScope).some(key=>key!=='audienceRevision'&&candidate[key]!==previousScope[key as keyof VisualScope])) throw new VisualAdmissionError('scope_changed');
+      nextScope=Object.freeze({...previousScope,audienceRevision:candidate.audienceRevision as number});
+      const authorized=this.scopeCurrent(nextScope),checkedAt=this.mono();
+      if (!authorized || state.lease!==lease || lease.expiresMono<=checkedAt || lease.mapping.expiresMono<=checkedAt || lease.revision!==previousRevision || lease.mapping.id!==mappingId || !scopeEqual(lease.scope,previousScope)) throw new VisualAdmissionError('scope_changed');
+      lease.scope=nextScope;
+      lease.revision=++state.revision;
+      state.challenge=undefined;
+      // Keep an already usable scene's original conservative capture timestamp.
+      // The host must rebase its derived scene; this cannot create fresh sight.
+      this.cancelWork(state);
+    } catch {
+      if (state.lease===lease) this.endLease(state,lease,'invalidated');
+      throw new VisualAdmissionError('scope_changed');
+    }
+    const nextRevision=lease.revision,rebased=new WeakMap<VisualAdmissionProvenance,VisualAdmissionProvenance>();
+    const rebase=(provenance:VisualAdmissionProvenance):VisualAdmissionProvenance|null=>{
+      if (!this.provenances.has(provenance) || provenance.leaseId!==leaseId || provenance.leaseRevision!==previousRevision || provenance.clockMappingId!==mappingId || !scopeEqual(provenance.scope,previousScope)) return null;
+      const authorized=this.scopeCurrent(nextScope),current=this.stateFor(sessionId).lease,checkedAt=this.mono();
+      if (!authorized || current!==lease || current.expiresMono<=checkedAt || current.mapping.expiresMono<=checkedAt || current.revision!==nextRevision || current.mapping.id!==mappingId || !scopeEqual(current.scope,nextScope)) return null;
+      let replacement=rebased.get(provenance);
+      if (!replacement) {
+        replacement=Object.freeze({...provenance,scope:nextScope,leaseRevision:nextRevision});
+        this.provenances.add(replacement);rebased.set(provenance,replacement);
+      }
+      return replacement;
+    };
+    return {camera:this.cameraState(sessionId),rebase};
+  }
+
   private consumeChallenge(state: SessionState, input: {challengeId: string; endpointClockId: string; endpointReceivedMonotonicMs: number}, now: number): ClockMapping {
     const challenge = state.challenge;
     state.challenge = undefined;
@@ -338,16 +378,16 @@ export class VisualAdmission {
     lease.expiryTimer.unref();
   }
 
-  private endLease(state: SessionState, lease: Lease, reason: 'stop' | 'expired' | 'invalidated'): void {
+  private endLease(state: SessionState, lease: Lease, reason: 'stop' | 'expired' | 'invalidated',workReason:VisualDropReason='cancelled'): void {
     clearTimeout(lease.expiryTimer);
     state.lease = undefined; state.challenge = undefined; state.revision++;
-    this.cancelWork(state);
+    this.cancelWork(state,workReason);
     this.leaseEnded(lease,reason);
   }
 
-  private cancelWork(state: SessionState): void {
-    if (state.pending) { this.dispose(state.pending); state.pending.settle(failure(state.pending.identity.requestId, 'cancelled')); state.pending = undefined; }
-    if (state.inFlight) { state.inFlight.cancelReason = 'cancelled'; state.inFlight.controller.abort(); }
+  private cancelWork(state: SessionState,reason:VisualDropReason='cancelled'): void {
+    if (state.pending) { this.dispose(state.pending); state.pending.settle(failure(state.pending.identity.requestId, reason)); state.pending = undefined; }
+    if (state.inFlight) { state.inFlight.cancelReason = reason; state.inFlight.controller.abort(); }
   }
 
   private leaseMatches(lease: Lease | undefined, identity: JobIdentity): lease is Lease {
@@ -357,8 +397,22 @@ export class VisualAdmission {
   /** Authority only; consumers separately apply freshness to admitted evidence. */
   provenanceCurrent(provenance: VisualAdmissionProvenance): boolean {
     if (!this.provenances.has(provenance)) return false;
-    const lease = this.stateFor(provenance.scope.sessionId).lease;
-    return this.leaseMatches(lease,provenance) && scopeEqual(lease.scope,provenance.scope) && this.scopeCurrent(provenance.scope);
+    const state = this.stateFor(provenance.scope.sessionId),lease=state.lease;
+    if (!this.leaseMatches(lease,provenance) || !scopeEqual(lease.scope,provenance.scope)) return false;
+    const current=this.scopeCurrent(provenance.scope);
+    // Authority lookup can synchronously rebind or replace a lease. An old
+    // completion must never withdraw that successor, including a renewal that
+    // reused the same lease object and UUID with a different clock mapping.
+    if (state.lease!==lease || !this.leaseMatches(lease,provenance) || !scopeEqual(lease.scope,provenance.scope)) return false;
+    if (!current) { this.endLease(state,lease,'invalidated','scope_changed');return false; }
+    // Predicate execution may also consume the remaining lease lifetime.
+    return this.stateFor(provenance.scope.sessionId).lease===lease;
+  }
+
+  /** Only scheduler-created outcomes may preserve a prior count on deferral. */
+  isAdmissionDeferral(result:VisualPerceptionResult):boolean{return this.deferrals.has(result);}
+  private deferred(requestId:string,reason:'replaced'|'foreground_priority'):VisualPerceptionResult{
+    const result=failure(requestId,reason);this.deferrals.add(result);return result;
   }
 
   private leaseEnded(lease: Lease, reason: 'stop' | 'expired' | 'invalidated'): void {
@@ -401,7 +455,7 @@ export class VisualAdmission {
     if (last - first > this.bounds.maxBatchSpanMs || bytes > this.bounds.maxFramesPerBatch * this.bounds.maxFrameBytes || bytes + inFlightBytes + (this.ingress.get(scope.sessionId) ?? 0) > this.bounds.maxRawBytesPerSession || decoded + inFlightDecoded > this.bounds.maxDecodedBytesPerSession) throw new VisualAdmissionError('frame_oversize');
     // All validation precedes replacement; dispose the old pending allocation
     // before making its replacement, so the copy peak is part of the bound.
-    if (state.pending) { state.pending.settle(failure(state.pending.identity.requestId, 'replaced')); this.dispose(state.pending); state.pending = undefined; }
+    if (state.pending) { state.pending.settle(this.deferred(state.pending.identity.requestId, 'replaced')); this.dispose(state.pending); state.pending = undefined; }
     const held = frames.map(frame => Uint8Array.from(frame.bytes));
     const receivedUtc = this.utc();
     // Date.now receipts are quantized to milliseconds while monotonic capture
@@ -441,6 +495,7 @@ export class VisualAdmission {
       if (job.cancelReason) result = failure(job.identity.requestId, job.cancelReason);
       else if (result.status !== 'cancelled' && this.mono() >= job.deadlineMono) result = failure(job.identity.requestId, 'deadline');
       else if (result.status !== 'cancelled' && !this.provenanceCurrent(job.identity)) result = failure(job.identity.requestId, 'scope_changed');
+      else if (result.status !== 'cancelled' && !this.providerReady()) result = failure(job.identity.requestId, 'provider_unavailable');
       if (this.leaseMatches(lease,job.identity)) lease.lastUsableCaptureMono = result.status==='complete' && result.observations.length ? job.capturedEarliestMono : null;
       return result;
     }, () => { if (this.leaseMatches(state.lease,job.identity)) state.lease.lastUsableCaptureMono=null; return failure(job.identity.requestId, 'provider_unavailable'); }).then(result => {
@@ -459,7 +514,7 @@ export class VisualAdmission {
           owner.pending = undefined;
           const validLease = this.provenanceCurrent(next.identity);
           const reason: VisualDropReason | null = this.mono() >= next.deadlineMono ? 'deadline' : !validLease ? 'scope_changed' : !this.providerReady() ? 'provider_unavailable' : !this.optionalReady() ? 'foreground_priority' : null;
-          if (reason) { if (this.leaseMatches(owner.lease,next.identity)) owner.lease.lastUsableCaptureMono=null; this.dispose(next); next.settle(failure(next.identity.requestId, reason)); continue; }
+          if (reason) { if (this.leaseMatches(owner.lease,next.identity)) owner.lease.lastUsableCaptureMono=null; this.dispose(next); next.settle(reason==='foreground_priority'?this.deferred(next.identity.requestId,reason):failure(next.identity.requestId, reason)); continue; }
           this.run(owner, next);
           return;
         }
@@ -481,8 +536,19 @@ export class VisualAdmission {
 
   private snapshotResult(value: unknown, identity: JobIdentity): VisualPerceptionResult | null {
     try {
-      const result = dataRecord(value, ['requestId','status','observations','reason']);
+      const result = dataRecord(value, ['requestId','status','observations','reason']) ?? dataRecord(value, ['requestId','status','observations','reason','humanCount']);
       if (!result || result.requestId !== identity.requestId || typeof result.status !== 'string' || !['complete','empty','rejected','cancelled','timedOut','failed'].includes(result.status) || result.reason !== null && (!boundedString(result.reason) || result.reason.length > 128)) return null;
+      let humanCount:VisualHumanCount|undefined;
+      if(Object.hasOwn(result,'humanCount')){
+        if(result.status!=='complete')return null;
+        const count=dataRecord(result.humanCount,['frameIds','classification','confidence','fieldOfView','coverage','limitations']);
+        if(!count||typeof count.classification!=='string'||!['zero','one','multiple','uncertain'].includes(count.classification)||count.confidence!==null&&(typeof count.confidence!=='number'||!Number.isFinite(count.confidence)||count.confidence<0||count.confidence>1)||typeof count.coverage!=='string'||!['frameOnly','obstructed','unknown'].includes(count.coverage))return null;
+        const frameIds=dataArray(count.frameIds,identity.frameIds.length),limitations=dataArray(count.limitations,8);
+        const description=(text:unknown):text is string=>typeof text==='string'&&text.trim().length>0&&Buffer.byteLength(text)<=512;
+        if(!frameIds?.length||!frameIds.every((id):id is string=>typeof id==='string'&&identity.frameIds.includes(id))||new Set(frameIds).size!==frameIds.length||!description(count.fieldOfView)||!limitations?.length||!limitations.every(description))return null;
+        humanCount=Object.freeze({frameIds:Object.freeze(frameIds),classification:count.classification as VisualHumanCount['classification'],confidence:count.confidence as number|null,fieldOfView:count.fieldOfView,coverage:count.coverage as VisualHumanCount['coverage'],limitations:Object.freeze(limitations)});
+        if(Buffer.byteLength(JSON.stringify(humanCount))>4096)return null;
+      }
       const candidates = dataArray(result.observations, 32);
       if (!candidates || result.status !== 'complete' && candidates.length !== 0) return null;
       const observations: VisualObservation[] = [];
@@ -496,7 +562,7 @@ export class VisualAdmission {
         if (Buffer.byteLength(JSON.stringify(observation)) > 8_192) return null;
         observations.push(observation);
       }
-      return Object.freeze({requestId:identity.requestId,status:result.status as VisualPerceptionResult['status'],observations:Object.freeze(observations),reason:result.reason});
+      return Object.freeze({requestId:identity.requestId,status:result.status as VisualPerceptionResult['status'],observations:Object.freeze(observations),reason:result.reason,...(humanCount?{humanCount}:{})});
     } catch { return null; }
   }
 
