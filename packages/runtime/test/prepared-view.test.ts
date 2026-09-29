@@ -86,3 +86,22 @@ test('legacy identifiers and unbound endpoints continue without fabricated canon
     const turn=finalizePreparedTurn({...f.input,...patch,preparedTurnBinding:binding},()=>true);assert.equal(turn.preparedContext,null);assert.ok(requestForFinalizedTurn(turn,binding,()=>true));
   }
 });
+
+test('source expiry fences UUID, legacy, null-endpoint and unbound turns identically',t=>{
+  const now=Date.now();t.mock.timers.enable({apis:['Date'],now});
+  for(const mode of ['canonical','legacy','nullEndpoint','unbound'] as const){
+    const f=fixture(),patch=mode==='legacy'?{sessionId:'legacy-session'}:mode==='nullEndpoint'?{endpointId:null}:{};
+    const binding=mode==='unbound'?undefined:createPreparedTurnBinding({viewId:f.binding.viewId,revision:f.binding.revision,invalidationKey:f.binding.invalidationKey,conversation:f.binding.conversation,sourceRevisions:f.binding.sourceRevisions,scope:{...f.scope,...patch}});
+    const input={...f.input,...patch,preparedTurnBinding:binding};
+    const withExpiry=(freshUntil:string):PromptInput=>({...input,preparedWorldContext:{content:'Source data.',sourceRef:'fixture',sourceRevision:'1',freshUntil}});
+    for(const expiry of ['invalid',new Date(now-1).toISOString(),new Date(now).toISOString()]){
+      assert.throws(()=>finalizePreparedTurn(withExpiry(expiry),()=>true),/incompatible|unavailable/,`${mode}: malformed or expired world context`);
+      assert.throws(()=>finalizePreparedTurn({...input,runtimeSelfContext:{...input.runtimeSelfContext!,expiresAt:expiry}},()=>true),/incompatible|unavailable/,`${mode}: runtime source expiry`);
+    }
+    const turn=finalizePreparedTurn(withExpiry(new Date(now+100).toISOString()),()=>true);
+    assert.equal(turn.preparedContext!==null,mode==='canonical');
+    assert.equal(requestForFinalizedTurn(turn,binding,()=>true).sections[5]!.content,'Source data.');
+    t.mock.timers.setTime(now+100);assert.throws(()=>requestForFinalizedTurn(turn,binding,()=>true),/unavailable/,`${mode}: expiry at admission`);
+    t.mock.timers.setTime(now);assert.throws(()=>requestForFinalizedTurn(turn,binding,()=>true),/unavailable/,`${mode}: rollback cannot revive a retired turn`);
+  }
+});

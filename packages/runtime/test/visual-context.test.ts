@@ -7,7 +7,7 @@ import type {VisualScope} from '../src/perception/port.ts';
 
 const scope:VisualScope={assistantId:'assistant',principalId:'owner',relationshipId:null,environmentId:'test',conversationId:'conversation',sessionId:'session',endpointId:'endpoint',sessionRevision:1,audienceRevision:1,scopeGeneration:1,sourceBindingRef:'camera:fixture',captureConfigurationRevision:1};
 function harness(){
-  let now=100_000,current=true,lease='lease';
+  let now=Date.now(),current=true,lease='lease';
   const store=new VisualObservationStore({now:()=>now,current:(candidate,id)=>current&&id===lease&&candidate.audienceRevision===1});
   const batch=(sequence=1,appearance='A small striped animal is visible beside a chair.'):VisualObservationBatch=>({scope:{...scope},leaseId:lease,sequence,requestId:`request-${sequence}`,capturedAtEarliestMs:now-100,capturedAtLatestMs:now-50,receivedAtMs:now-30,interpretedAtMs:now,provider:{id:'synthetic-perception',version:'1'},observations:[{observationId:`observation-${sequence}`,frameIds:[`frame-${sequence}`],appearance,inference:'It may be a cat.',confidence:null,limitations:['Synthetic wiring fixture; not interpreted pixels.']}]});
   const binding=createPreparedTurnBinding({viewId:'view',revision:1,invalidationKey:'boundary',scope:{assistantId:scope.assistantId,principalId:scope.principalId,relationshipId:scope.relationshipId,conversationId:scope.conversationId,sessionId:scope.sessionId,endpointId:scope.endpointId},conversation:'[]',sourceRevisions:{runtimeSelfContext:'fixture:1',profile:'fixture:1'}});
@@ -84,7 +84,7 @@ test('fresh host observations enter only the same immutable untrusted conversati
   assert.deepEqual(prompt.sections.map(item=>item.kind),['policy','corePersona','adaptivePersona','interactionState','preparedMemory','worldContext','capabilityState','conversation','userInput']);
   const conversation=prompt.sections[7]!;assert.equal(conversation.trusted,false);assert.equal(conversation.content,view.conversationContent);assert.equal(conversation.contentDigest,view.conversationSectionDigest);assert.match(conversation.content,/small striped animal/);assert.match(conversation.content,/"confidence":null/);
   assert.ok(prompt.sections.filter(section=>section.kind!=='conversation').every(section=>!section.content.includes('small striped animal')));
-  assert.equal(prompt.sections[8]!.content,'Explain the next task.');assert.equal(view.baseConversationDigest,createHash('sha256').update('[]').digest('hex'));assert.equal(view.sourceRevision,1);assert.equal(view.provider.id,'synthetic-perception');assert.equal(view.expiresAtMs,105_900);assert.ok(Object.isFrozen(view)&&Object.isFrozen(view.observations)&&Object.isFrozen(view.observations[0]));
+  assert.equal(prompt.sections[8]!.content,'Explain the next task.');assert.equal(view.baseConversationDigest,createHash('sha256').update('[]').digest('hex'));assert.equal(view.sourceRevision,1);assert.equal(view.provider.id,'synthetic-perception');assert.equal(view.expiresAtMs,h.batch().capturedAtEarliestMs+6_000);assert.ok(Object.isFrozen(view)&&Object.isFrozen(view.observations)&&Object.isFrozen(view.observations[0]));
   h.store.clear();
 });
 

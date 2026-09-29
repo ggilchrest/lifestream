@@ -170,18 +170,20 @@ export function finalizePreparedTurn(input:PromptInput,current:()=>boolean):Fina
   // Content identities describe included text, never provider revision or authority.
   inventory.capability=`content-sha256:${capability.contentDigest}`;
   if(snapshot.experienceSelection){const {id,topic,statement,nextStep}=snapshot.experienceSelection;inventory.experience=`content-sha256:${digest(JSON.stringify({id,topic,statement,nextStep}))}`;}
+  // Freshness applies to every turn, including scopes that cannot materialize
+  // the UUID-based canonical view. A legacy identifier cannot extend source life.
+  const deadlines=[request.deadlineAt,snapshot.runtimeSelfContext?.expiresAt,snapshot.preparedWorldContext?.freshUntil,
+    snapshot.preparedRelationshipContext&&'freshUntil' in snapshot.preparedRelationshipContext?snapshot.preparedRelationshipContext.freshUntil:undefined];
+  const expiry=Math.min(...deadlines.filter((value):value is string=>value!==undefined).map(value=>typeof value==='string'?Date.parse(value):NaN),visual?.expiresAtMs??Infinity);
   let preparedContext:PreparedContextView|null=null;
   if(binding&&hasCanonicalContextScope(binding)){
-    const deadlines=[request.deadlineAt,snapshot.runtimeSelfContext?.expiresAt,snapshot.preparedWorldContext?.freshUntil,
-      snapshot.preparedRelationshipContext&&'freshUntil' in snapshot.preparedRelationshipContext?snapshot.preparedRelationshipContext.freshUntil:undefined];
-    const expiry=Math.min(...deadlines.filter((value):value is string=>value!==undefined).map(value=>typeof value==='string'?Date.parse(value):NaN),visual?.expiresAtMs??Infinity);
     preparedContext=materializePreparedContext(request,binding,{now:Date.now(),freshUntil:expiry,sourceRevisions:inventory,
       unavailableSources:[...(!snapshot.preparedRelationshipContext&&!snapshot.memory?['section:preparedMemory']:[]),...(!snapshot.preparedWorldContext&&!snapshot.world||snapshot.preparedWorldContext?.sourceRef==='pwce:context-unavailable'||snapshot.preparedWorldContext?.sourceRef==='pwce:context-withheld'?['section:worldContext','world']:[])],
       omissions:(snapshot.visualOmissions??[]).map(item=>`visual:${item.observationId}:${item.reason}`)});
     request=requestFromPreparedContext(preparedContext,request);
   }
   const visualCurrent=()=>{if(visual)visualConversationContent(visual,request.scope,binding!.conversation);return true;};
-  const deadline=Math.min(Date.parse(request.deadlineAt),preparedContext?Date.parse(preparedContext.freshUntil):Infinity),remaining=deadline-Date.now(),monotonicDeadline=performance.now()+remaining;
+  const deadline=expiry,remaining=deadline-Date.now(),monotonicDeadline=performance.now()+remaining;
   const beforeDeadline=()=>Number.isFinite(deadline)&&Date.now()<deadline&&performance.now()<monotonicDeadline;
   const stillCurrent=()=>beforeDeadline()&&currentTurn(current)&&currentTurn(visualCurrent)&&beforeDeadline();
   if(!stillCurrent())throw unavailableTurn();
