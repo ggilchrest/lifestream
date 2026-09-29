@@ -153,7 +153,6 @@
     }
   ],
   "remaining": [
-    "Typed audience count evidence, two-second restriction/requalification latch, and atomic count-to-output/privacy transition.",
     "Full canonical PreparedContextView materialization, complete post-world source inventory and canonical perception envelopes.",
     "Topic relevance, omission diagnostics and actual mention qualification beyond conservative completed-exposure suppression.",
     "Real selected vision adapter, physical broker/capture, full decode/allocation qualification, blind perception, latency and Human acceptance.",
@@ -168,5 +167,17 @@
   "worktreeExclusions": [
     "Pre-existing README, iOS project/configuration, product audit and acceptance-guide/evidence edits preserved outside this source commit.",
     "Private canonical roadmap changes remain in their independent private repository."
-  ]
+  ],
+  "remainingAtTestedRevision": [
+    "Typed audience count evidence, two-second restriction/requalification latch, and atomic count-to-output/privacy transition.",
+    "Full canonical PreparedContextView materialization, complete post-world source inventory and canonical perception envelopes.",
+    "Topic relevance, omission diagnostics and actual mention qualification beyond conservative completed-exposure suppression.",
+    "Real selected vision adapter, physical broker/capture, full decode/allocation qualification, blind perception, latency and Human acceptance.",
+    "Selective visual memory and later S089-S094 work."
+  ],
+  "followUpEvidence": {
+    "path": "implementation/evidence/LS-S088-camera-audience-1.json",
+    "testedRevision": "e02abf59fca274a10e418cecccc48ae056fe5a27",
+    "scope": "Local synthetic count/audience integration; earlier context evidence remains historical and whole slice inProgress."
+  }
 }
