@@ -205,6 +205,11 @@
       "path": "implementation/evidence/LS-S088-publication-1.json",
       "testedRevision": "03a3ccf3d307a4395c4bd24693dff78828c9ea17",
       "scope": "Bounded host publication disposition, distinct from perception result; no whole-slice acceptance."
+    },
+    {
+      "path": "implementation/evidence/LS-S088-turn-evidence-1.json",
+      "testedRevision": "d99409d957d0c6784b203103d5117be34935dc53",
+      "scope": "Joined host visual selection/publication and actual text/audio reply stages, with reusable reset repair; synthetic software evidence only."
     }
   ]
 }

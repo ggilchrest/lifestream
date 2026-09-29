@@ -101,5 +101,33 @@
     "The host must supply complete bounded history and permission/lifecycle change detection; no production host currently calls this component. Source identity metadata requires its own authorized retention; forgotten content need not be retained.",
     "No private schema copied, camera activated, provider selected, deployment changed, push or publication. Accepted iPhone journeys and pending S066/full LS-TEST-084 remain unchanged."
   ],
-  "next": "Continue exact visual-context and reply-stage diagnostics in the existing S088 text/audio path while the two exact private-schema copies await approval."
+  "next": "Continue exact visual-context and reply-stage diagnostics in the existing S088 text/audio path while the two exact private-schema copies await approval.",
+  "componentMeasurement": {
+    "sourceRevision": "ae2bad8e6f986d827261d2f5897ff83b3c28eec6",
+    "node": "v24.14.1",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "claim": "Local pure comparison computation only; no database, model, transport or speech latency measurement.",
+    "results": [
+      {
+        "episodes": 3,
+        "inputBytes": 4828,
+        "warmup": 20,
+        "samples": 200,
+        "medianMs": 0.05754100000000051,
+        "p95Ms": 0.18104200000000503,
+        "maxMs": 1.1742909999999966
+      },
+      {
+        "episodes": 128,
+        "inputBytes": 178268,
+        "warmup": 20,
+        "samples": 200,
+        "medianMs": 0.8256250000000023,
+        "p95Ms": 1.258708999999996,
+        "maxMs": 2.8028750000000002
+      }
+    ],
+    "method": "20 warmups and200 measured invocations for each of3 and128 independent eligible source rows, fixed 30-day coverage and a fresh current observation; each row has two512-byte limitations. Record median, nearest-rank p95 and maximum; every result required qualified. Concurrent local work may affect measurements."
+  }
 }

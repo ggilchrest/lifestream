@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "inProgress",
+  "collectedAt": "2026-09-29T21:34:48.451442Z",
+  "testedRevision": "d99409d957d0c6784b203103d5117be34935dc53",
+  "specification": {
+    "revision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "workingTreeModified": true,
+    "inputs": [
+      {
+        "path": ".private/roadmap/packets/LS-S090.json",
+        "sha256": "2cf5feb5356f51cfcc01513f90b8b16340c41deb8a43605d624dd19c65acdd12"
+      }
+    ]
+  },
+  "slice": "LS-S090",
+  "claimClass": "offline-supplied-visual-performance-scoring",
+  "implementationRevisions": [
+    "f6b4066bc92903e0279f9fb906746057bbff1ba9",
+    "42530f90c39d83c453b9dfbf3dbdf1d58b6c18d5",
+    "d99409d957d0c6784b203103d5117be34935dc53"
+  ],
+  "sourceFiles": [
+    {
+      "path": "packages/performance/src/benchmark.ts",
+      "sha256": "a720f2579fc088281e231e31640a3eedd3e5a3c88a33bfdc7198b55f8758c461"
+    },
+    {
+      "path": "packages/performance/test/visual-input.test.ts",
+      "sha256": "b5c65081b794b68fd2342bcb8ddc00c5954369904fb36f9dd29b18c84355c4ae"
+    },
+    {
+      "path": "scripts/qualify-visual-performance.mjs",
+      "sha256": "83444fda1f9791649c2af8e7690b2f17466dc4c2a43adced8b517b80e9e19cde"
+    },
+    {
+      "path": "scripts/qualify-visual-performance.test.mjs",
+      "sha256": "46add911e0e3e86d57cbe219b84ddde1c5c9549628fc1a8cfb8214a418645b7b"
+    }
+  ],
+  "implemented": [
+    "Closed bounded supplied measurements for disabled, warm, scene-changing, saturated, hung and optional-memory conditions; paired IDs, seed/configuration metadata and raw attempts remain in reports.",
+    "At least200 complete warm requested-speech pairs are required. Failed/cancelled/timed-out attempts remain denominators; cold starts remain separate. Requested speech is distinct from cached acknowledgement. Absolute and added-p95 objectives include existing paired bootstrap uncertainty.",
+    "Incomplete preparation/stop timestamps remain incomplete evidence. Every admitted batch needs usable timing for capture-latency qualification; any usable visual context at or beyond its six-second expiry fails. Warm and cold foreground/audio-ownership failures cannot hide in averages.",
+    "Offline CLI validates a bounded regular input file and exclusively creates a0600 report outside connected Tifa roots, retaining input/evaluator hashes and refusing overwrite. Fixture results remain fixtureOnly; other reports are suppliedMeasurementsOnly and never authenticate hardware/provider/Human truth."
+  ],
+  "verification": [
+    {
+      "command": "node --test --experimental-strip-types packages/performance/test/*.test.ts scripts/qualify-visual-performance.test.mjs",
+      "result": "pass",
+      "tests": 32,
+      "pass": 32,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 531.847875
+    },
+    {
+      "command": "pnpm exec tsc --noEmit --strict --target ES2023 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions --skipLibCheck packages/performance/src/benchmark.ts packages/performance/test/visual-input.test.ts",
+      "result": "pass",
+      "limitation": "Dedicated check because this package is outside the project build graph."
+    },
+    {
+      "command": "pnpm test",
+      "result": "pass",
+      "tests": 1461,
+      "pass": 1460,
+      "fail": 0,
+      "skipped": 1,
+      "duration_ms": 94422.263292,
+      "limitation": "Optional generated Chrome case skipped here; two rendered Chrome tests passed separately."
+    }
+  ],
+  "repairedFindings": [
+    "Exact expiry equality must fail, not pass.",
+    "Admitted timed-out batches cannot disappear from latency qualification.",
+    "Partial timing pairs must be retained as incomplete instead of rejected.",
+    "Cold-start duplicate audio owners and continuity failures require separate totals and failure gates."
+  ],
+  "notClaimed": [
+    "No real200-pair collection, provider/camera invocation, physical audibility, end-to-end latency acceptance or full LS-S090 trace/replay qualification. Existing latency objectives remain unchanged.",
+    "No private schemas copied or private fixtures/prose exported; no deployment or publication."
+  ],
+  "next": "Collect qualified measurements only after the actual configured provider/environment and separate live authority exist; continue independent memory retention repair now."
+}
