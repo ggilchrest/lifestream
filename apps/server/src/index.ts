@@ -1623,6 +1623,8 @@ export class LifestreamServer {
       result.isCurrent=()=>ownerCurrent() && this.visualInput.contextCurrent(preparedVisualContext);
       result.onCompleted=interactionId=>{completed?.(interactionId);this.visualInput.markContextUsed(preparedVisualContext);};
     }
+    const visualTurnEvidence=this.visualInput.turnEvidence(visualActor,visualSelection,preparedTurnBinding);
+    if(visualTurnEvidence)result.visualTurnEvidence=visualTurnEvidence;
     if (this.config.providers.world === "pwce") {
       const world = this.providers.world, ownerCurrent = result.isCurrent;
       const owner = {
@@ -1652,7 +1654,7 @@ export class LifestreamServer {
       catch{try{session.close();}catch{/* Continue closing other audio endpoints. */}}
     }
   }
-  private invalidateRuntimeInputs(reason="configurationChanged"): void { if(['audienceChanged','sessionHandoff','visualScopeChanged','securityChanged','profileChanged','shutdown'].includes(reason)||(reason==='readinessProbe'&&this.state!=='ready'))this.visualInput.close();this.urgentAttention?.reconcile(); this.urgentAway?.reconcile(); this.experiential?.reconcileAll(); this.providers.world?.prune(); this.conversationHistory.prune(); this.sessionHandoff?.prune(); this.initiativeHost.invalidate(reason); this.invalidateWorldInputs(); }
+  private invalidateRuntimeInputs(reason="configurationChanged"): void { if(reason==='shutdown')this.visualInput.close();else if(['audienceChanged','sessionHandoff','visualScopeChanged','securityChanged','profileChanged'].includes(reason)||(reason==='readinessProbe'&&this.state!=='ready'))this.visualInput.reset();this.urgentAttention?.reconcile(); this.urgentAway?.reconcile(); this.experiential?.reconcileAll(); this.providers.world?.prune(); this.conversationHistory.prune(); this.sessionHandoff?.prune(); this.initiativeHost.invalidate(reason); this.invalidateWorldInputs(); }
   private async handleRuntime(request: IncomingMessage, response: ServerResponse): Promise<void> {
     if (!this.storageReady || ["draining", "stopped"].includes(this.state) || this.providers.providers.inference?.status !== "healthy") return json(response, 503, { code: "inference_unavailable", message: "runtime inference is unavailable" });
     const context = this.requestContext(request, false); if (!context) return json(response, 401, { code: "authentication_required", message: "authentication required" });

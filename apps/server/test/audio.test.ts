@@ -1,3 +1,4 @@
+import {VisualTurnEvidence} from '../src/runtime/visual-turn-evidence.ts';
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
@@ -10,7 +11,7 @@ import type {HostRuntimeInput} from '../src/runtime/inference.ts';
 
 const frame = (value: number) => { const bytes = Buffer.alloc(4800 * 2); for (let offset = 0; offset < bytes.length; offset += 2) bytes.writeInt16LE(value, offset); return { frameId: randomUUID(), sequence: 0, format: { encoding: "pcm_s16le" as const, sampleRateHz: 16000 as const, channels: 1 as const }, sampleOffset: 0, sampleCount: 4800, dataBase64: bytes.toString("base64") }; };
 
-function visualAudioHarness(beforeSynthesisTerminal:()=>Promise<void>=async()=>{},options:Pick<HostRuntimeInput,'onInferenceRequest'|'prepareWorld'>={}) {
+function visualAudioHarness(beforeSynthesisTerminal:()=>Promise<void>=async()=>{},options:Pick<HostRuntimeInput,'onInferenceRequest'|'prepareWorld'|'visualTurnEvidence'>={}) {
   let now=Date.now(),authority=true,releases=0;
   const events:any[]=[],prompts:any[]=[],completed:string[]=[];
   const sessionId=randomUUID(),endpointId=randomUUID(),assistantId=randomUUID(),audioInputId=randomUUID(),leaseId=randomUUID();
@@ -20,19 +21,21 @@ function visualAudioHarness(beforeSynthesisTerminal:()=>Promise<void>=async()=>{
   const preparedTurnBinding=createPreparedTurnBinding({viewId:randomUUID(),revision:1,invalidationKey:randomUUID(),scope:{assistantId:scope.assistantId,principalId:scope.principalId,relationshipId:scope.relationshipId,conversationId:scope.conversationId,sessionId:scope.sessionId,endpointId:scope.endpointId},conversation:'[]',sourceRevisions:{runtime:'synthetic-visual-audio',conversation:'synthetic-dialogue-1'}});
   const view=store.prepare({scope,leaseId,viewId:preparedTurnBinding.viewId,revision:preparedTurnBinding.revision,invalidationKey:preparedTurnBinding.invalidationKey,conversation:preparedTurnBinding.conversation,explicitQuestion:false,allowAside:true,topic:'chair'});
   assert.ok(view);
-  const prepare=():HostRuntimeInput=>({assistantId,endpointId,preparedTurnBinding,preparedVisualContext:view,conversation:{read:()=>preparedTurnBinding.conversation,remember(){}},runtimeSelfContext:{sourceRevision:'synthetic-visual-audio',runtimeStatus:'ready',inputModalities:{text:'active',microphone:'activeForSession',visual:'activeForSession'},outputModalities:{text:'active',speechGeneration:'healthy',speechDelivery:'notObserved',presentation:'notConfigured'},endpointScope:'sessionEndpoint',audienceScope:'authenticatedSession',permissionState:'authenticatedSession',limitations:['Synthetic route verification; no physical audibility proof.']},isCurrent:()=>store.isCurrent(view),onCompleted:trace=>{completed.push(trace);store.markUsed(view);},...options});
+  const journal=new VisualTurnEvidence();
+  const prepare=():HostRuntimeInput=>({visualTurnEvidence:journal.observer(scope,{view,reason:'selected',considered:1,omissions:[]},preparedTurnBinding,null),assistantId,endpointId,preparedTurnBinding,preparedVisualContext:view,conversation:{read:()=>preparedTurnBinding.conversation,remember(){}},runtimeSelfContext:{sourceRevision:'synthetic-visual-audio',runtimeStatus:'ready',inputModalities:{text:'active',microphone:'activeForSession',visual:'activeForSession'},outputModalities:{text:'active',speechGeneration:'healthy',speechDelivery:'notObserved',presentation:'notConfigured'},endpointScope:'sessionEndpoint',audienceScope:'authenticatedSession',permissionState:'authenticatedSession',limitations:['Synthetic route verification; no physical audibility proof.']},isCurrent:()=>store.isCurrent(view),onCompleted:trace=>{completed.push(trace);store.markUsed(view);},...options});
   const stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Explain the next task.'}};yield {kind:'terminal',outcome:'succeeded'};}};
   const inference={async *generate(request:unknown){prompts.push(request);yield {kind:'text',text:'Continue with the next task.'};}};
   const tts={async *synthesize(request:any){yield {kind:'data',segmentId:request.segmentId,frame:{...frame(100),format:request.format}};await beforeSynthesisTerminal();yield {kind:'terminal',outcome:'succeeded'};}};
-  const session=new AudioSession({readyState:1,send:raw=>events.push(JSON.parse(raw)),close(){}},{stt:stt as never,inference:inference as never,tts:tts as never,prepare,outputLease:()=>({current:()=>true,release(){releases++;}})},sessionId);
+  const socket={readyState:1,send:(raw:string)=>events.push(JSON.parse(raw)),close(){}};
+  const session=new AudioSession(socket,{stt:stt as never,inference:inference as never,tts:tts as never,prepare,outputLease:()=>({current:()=>true,release(){releases++;}})},sessionId);
   const receipt=()=>{const trace=events.findLast(event=>event.type==='turnStarted')?.interactionTraceId;return {trace,samples:events.filter(event=>event.type==='audio'&&event.interactionTraceId===trace).reduce((sum,event)=>sum+event.chunk.frame.sampleCount,0)};};
   const acknowledge=async(outcome='completed',receivedSamples=receipt().samples,interactionTraceId=receipt().trace)=>session.message(JSON.stringify({type:'playbackSettled',interactionTraceId,outcome,receivedSamples}));
-  return {session,store,view,events,prompts,completed,receipt,acknowledge,releases:()=>releases,
+  return {session,socket,inference,store,view,events,prompts,completed,receipts:()=>journal.receipts(scope),receipt,acknowledge,releases:()=>releases,
     withdraw(){authority=false;store.invalidate(sessionId);},expire(){now=view.expiresAtMs;},
     newScene(){now+=100;assert.equal(store.publish({scope,leaseId,sequence:2,requestId:randomUUID(),capturedAtEarliestMs:now-100,capturedAtLatestMs:now-50,receivedAtMs:now-30,interpretedAtMs:now,provider:{id:'synthetic-visual',version:'1'},observations:[{observationId:'new-scene',frameIds:[randomUUID()],appearance:'NEWER_SYNTHETIC_AUDIO_SCENE',inference:null,confidence:null,limitations:['Synthetic newer observation.']}]}),true);},
     async start(){await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,assistantId,expectedSessionRevision:1,endpointId,audioInputId,format:frame(0).format}}));},
     async turn(){await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(100)}));await session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));},
-    async close(){if(receipt().trace)await acknowledge('stopped',0);session.close();store.clear();}
+    async close(){if(receipt().trace)await acknowledge('stopped',0);session.close();store.clear();journal.close();}
   };
 }
 
@@ -373,7 +376,7 @@ test('audio delayed world preparation rejects revoked or expired selected contex
     const gate=new Promise<void>(resolve=>{release=resolve;}),started=new Promise<void>(resolve=>{entered=resolve;});
     const f=visualAudioHarness(undefined,{prepareWorld:async()=>{entered();await gate;return {context:{content:'SYNTHETIC_AUDIO_WORLD',sourceRef:'pwce:synthetic',sourceRevision:'world-1'},isCurrent:()=>worldCurrent,isSnapshotCurrent:()=>worldCurrent};}});
     let pending:Promise<void>|undefined;
-    try{await f.start();pending=f.turn();await started;if(loss==='authority')f.withdraw();else if(loss==='visualExpiry')f.expire();else worldCurrent=false;release();await pending;assert.equal(f.prompts.length,0,loss);assert.equal(f.events.some(event=>event.type==='audio'||event.event?.payload.type==='textDelta'),false,loss);assert.deepEqual(f.completed,[]);}
+    try{await f.start();pending=f.turn();await started;if(loss==='authority')f.withdraw();else if(loss==='visualExpiry')f.expire();else worldCurrent=false;release();await pending;assert.equal(f.prompts.length,0,loss);assert.ok(f.receipts().some(item=>item.stage==='admissionRejected'));assert.ok(f.receipts().every(item=>item.stage!=='providerInvoked'&&item.finalized===null));assert.equal(f.events.some(event=>event.type==='audio'||event.event?.payload.type==='textDelta'),false,loss);assert.deepEqual(f.completed,[]);}
     finally{release();await pending;await f.close();}
   }
 });
@@ -395,4 +398,55 @@ test('audio bookkeeping cannot cross the turn deadline and still start inference
   const f=visualAudioHarness(undefined,{onInferenceRequest:()=>t.mock.timers.setTime(start+VOICE_TURN_DEADLINE_MS+1)});
   try{await f.start();await f.turn();await Promise.resolve();assert.equal(f.prompts.length,0);assert.equal(f.receipt().samples,0);assert.equal(f.releases(),1);assert.match(JSON.stringify(f.events),/audio_deadline_exceeded/);assert.equal(f.events.some(event=>event.type==='audio'||event.event?.payload.type==='textDelta'),false);}
   finally{await f.close();}
+});
+
+test('audio visual receipts distinguish iterator exhaustion, synthesis and exact endpoint software acknowledgment',async()=>{
+  const f=visualAudioHarness();
+  try{
+    await f.start();await f.turn();
+    assert.equal(f.receipts().find(item=>item.stage==='generationEnded')!.outcome,'exhausted');
+    assert.ok(f.receipts().some(item=>item.stage==='synthesisCompleted'));
+    assert.ok(f.receipts().every(item=>!item.endpointAcknowledged));
+    const included=f.receipts().find(item=>item.stage==='providerInvoked')!;
+    assert.equal(included.finalized!.conversationSectionDigest,f.prompts[0].sections[7].contentDigest);
+    assert.equal(included.lineage.selected!.requestId,f.view.requestId);
+    await f.acknowledge('completed',f.receipt().samples-1);await f.acknowledge('completed',f.receipt().samples+1);await f.acknowledge('completed',f.receipt().samples,randomUUID());
+    assert.ok(f.receipts().every(item=>!item.endpointAcknowledged));
+    await f.acknowledge();await f.acknowledge();
+    const settled=f.receipts().filter(item=>item.stage==='endpointSettled');assert.equal(settled.length,1);assert.equal(settled[0]!.outcome,'completed');assert.equal(settled[0]!.endpointAcknowledged,true);assert.equal(settled[0]!.receivedSamples,f.receipt().samples);
+    assert.doesNotMatch(JSON.stringify(f.receipts()),/striped synthetic object|Continue with the next task|Explain the next task/);
+  }finally{await f.close();}
+});
+
+test('audio visual receipts reject callback revocation and fence stale playback without completed acknowledgment',async()=>{
+  for(const mode of ['callback','expiry','withdrawal'] as const){
+    const f=visualAudioHarness(undefined,mode==='callback'?{onInferenceRequest:()=>f.withdraw()}:{});
+    try{
+      await f.start();await f.turn();
+      if(mode==='callback'){
+        assert.equal(f.prompts.length,0);assert.ok(f.receipts().some(item=>item.stage==='admissionRejected'));
+        assert.ok(f.receipts().every(item=>item.stage!=='providerInvoked'&&item.stage!=='outputEmitted'));
+      }else{
+        if(mode==='expiry')f.expire();else f.withdraw();f.session.invalidateIfStale();
+        await f.acknowledge();assert.ok(f.receipts().every(item=>!(item.stage==='endpointSettled'&&item.outcome==='completed')));
+        assert.ok(f.receipts().some(item=>item.stage==='playbackFenced'&&item.outcome==='invalidated'));
+        await f.acknowledge('stopped',0);assert.equal(f.receipts().filter(item=>item.stage==='endpointSettled'&&item.outcome==='stopped').length,1);
+      }
+    }finally{await f.close();}
+  }
+});
+
+test('audio visual evidence does not report skipped socket writes and observer failures cannot stop speech',async()=>{
+  const skipped=visualAudioHarness();
+  try{await skipped.start();skipped.socket.readyState=3;await skipped.turn();assert.equal(skipped.prompts.length,1);assert.ok(skipped.receipts().every(item=>item.stage!=='outputEmitted'&&!item.endpointAcknowledged));assert.equal(skipped.receipts().find(item=>item.stage==='turnEnded')!.outcome,'disconnected');}finally{await skipped.close();}
+  const broken=visualAudioHarness(undefined,{visualTurnEvidence:()=>new Proxy({} as never,{get:()=>()=>{throw Error('observer');}})});
+  try{await broken.start();await broken.turn();assert.equal(broken.prompts.length,1);assert.ok(broken.events.some(item=>item.type==='audio'));await broken.acknowledge();assert.equal(broken.completed.length,1);}finally{await broken.close();}
+});
+
+test('audio provider lookup failure is distinct from actual invocation',async()=>{
+  const f=visualAudioHarness();try{
+    Object.defineProperty(f.inference,'generate',{get(){throw Error('PRIVATE_AUDIO_LOOKUP');}});await f.start();await f.turn();
+    assert.ok(f.receipts().some(item=>item.stage==='admissionRejected'&&item.outcome==='provider_unavailable'));
+    assert.ok(f.receipts().every(item=>item.stage!=='providerInvoked'&&item.stage!=='generationEnded'&&!item.endpointAcknowledged));assert.doesNotMatch(JSON.stringify(f.receipts()),/PRIVATE_AUDIO_LOOKUP/);
+  }finally{await f.close();}
 });

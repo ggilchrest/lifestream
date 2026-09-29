@@ -1,3 +1,4 @@
+import {VisualTurnEvidence} from '../src/runtime/visual-turn-evidence.ts';
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { test } from "node:test";
@@ -120,10 +121,11 @@ function finalizedTextHarness(t:import('node:test').TestContext){
   publish(1,'ORIGINAL_SYNTHETIC_SCENE');
   const binding=createPreparedTurnBinding({viewId:randomUUID(),revision:1,invalidationKey:randomUUID(),scope:{assistantId:scope.assistantId,principalId:scope.principalId,relationshipId:null,conversationId:scope.conversationId,sessionId:scope.sessionId,endpointId:scope.endpointId},conversation:'[]',sourceRevisions:{runtime:'runtime-1',conversation:'conversation-1'}});
   const view=store.prepare({scope,leaseId,viewId:binding.viewId,revision:binding.revision,invalidationKey:binding.invalidationKey,conversation:binding.conversation,explicitQuestion:true,allowAside:false});assert.ok(view);
-  const input:HostRuntimeInput={assistantId:scope.assistantId,endpointId:scope.endpointId,preparedTurnBinding:binding,preparedVisualContext:view,conversation:{read:()=>binding.conversation,remember(){}},runtimeSelfContext:{sourceRevision:'runtime-1',runtimeStatus:'ready',inputModalities:{text:'active',microphone:'inactive',visual:'activeForSession'},outputModalities:{text:'active',speechGeneration:'unavailable',speechDelivery:'notObserved',presentation:'notConfigured'},endpointScope:'sessionEndpoint',audienceScope:'authenticatedSession',permissionState:'authenticatedSession',limitations:['No live input.']},isCurrent:()=>current&&store.isCurrent(view)};
+  const journal=new VisualTurnEvidence();t.after(()=>journal.close());
+  const input:HostRuntimeInput={visualTurnEvidence:journal.observer(scope,{view,reason:'selected',considered:1,omissions:[]},binding,null),assistantId:scope.assistantId,endpointId:scope.endpointId,preparedTurnBinding:binding,preparedVisualContext:view,conversation:{read:()=>binding.conversation,remember(){}},runtimeSelfContext:{sourceRevision:'runtime-1',runtimeStatus:'ready',inputModalities:{text:'active',microphone:'inactive',visual:'activeForSession'},outputModalities:{text:'active',speechGeneration:'unavailable',speechDelivery:'notObserved',presentation:'notConfigured'},endpointScope:'sessionEndpoint',audienceScope:'authenticatedSession',permissionState:'authenticatedSession',limitations:['No live input.']},isCurrent:()=>current&&store.isCurrent(view)};
   const response={destroyed:false,writeHead(code:number){status=code;},write(value:string){output+=value;return true;},end(value?:string){if(value)output+=value;}} as unknown as import('node:http').ServerResponse;
   const provider:InferenceProvider={async *generate(request){requests.push(request);yield {kind:'text',text:'SAFE_SYNTHETIC_REPLY'};yield {kind:'done'};}};
-  return {input,view,requests,run:()=>streamMessage(response,provider,{assistantId:scope.assistantId,endpointId:scope.endpointId,userInput:'What is visible?'},scope.sessionId,new AbortController().signal,undefined,input.runtimeSelfContext,input),output:()=>output,status:()=>status,withdraw:()=>{current=false;},expire:()=>{now=view.expiresAtMs;},newScene:()=>{now+=100;publish(2,'NEWER_SYNTHETIC_SCENE');}};
+  return {input,view,requests,provider,response,receipts:()=>journal.receipts(scope),run:()=>streamMessage(response,provider,{assistantId:scope.assistantId,endpointId:scope.endpointId,userInput:'What is visible?'},scope.sessionId,new AbortController().signal,undefined,input.runtimeSelfContext,input),output:()=>output,status:()=>status,withdraw:()=>{current=false;},expire:()=>{now=view.expiresAtMs;},newScene:()=>{now+=100;publish(2,'NEWER_SYNTHETIC_SCENE');}};
 }
 
 test('typed inference callback cannot change the sealed sections or manifest delivered to the provider',async t=>{
@@ -148,7 +150,7 @@ test('typed delayed world preparation cannot admit a revoked or expired visual a
     const gate=new Promise<void>(resolve=>{release=resolve;}),started=new Promise<void>(resolve=>{entered=resolve;});
     f.input.prepareWorld=async()=>{entered();await gate;return {context:{content:'SYNTHETIC_WORLD',sourceRef:'pwce:synthetic',sourceRevision:'world-1'},isCurrent:()=>worldCurrent,isSnapshotCurrent:()=>worldCurrent};};
     const pending=f.run();await started;if(loss==='authority')f.withdraw();else if(loss==='visualExpiry')f.expire();else worldCurrent=false;release();await pending;
-    assert.equal(f.requests.length,0,loss);assert.equal(f.status(),409);assert.doesNotMatch(f.output(),/SAFE_SYNTHETIC_REPLY|message.delta|interaction.completed/);
+    assert.equal(f.requests.length,0,loss);assert.ok(f.receipts().some(item=>item.stage==='admissionRejected'));assert.ok(f.receipts().every(item=>item.stage!=='providerInvoked'&&item.finalized===null));assert.equal(f.status(),409);assert.doesNotMatch(f.output(),/SAFE_SYNTHETIC_REPLY|message.delta|interaction.completed/);
   }
 });
 
@@ -167,4 +169,68 @@ test('typed bookkeeping cannot admit a request after its deadline before the tim
   const start=Date.now();t.mock.timers.enable({apis:['Date'],now:start});
   const f=finalizedTextHarness(t);f.input.onInferenceRequest=()=>t.mock.timers.setTime(start+30001);
   await f.run();assert.equal(f.requests.length,0);assert.match(f.output(),/deadline_exceeded/);assert.doesNotMatch(f.output(),/SAFE_SYNTHETIC_REPLY|message.delta|interaction.completed/);
+});
+
+test('visual turn evidence joins exact sealed inclusion and buffered SSE emission without a delivery claim',async t=>{
+  const f=finalizedTextHarness(t),write=f.response.write.bind(f.response);
+  f.response.write=((value:string)=>{write(value);return false;}) as typeof f.response.write;
+  await f.run();
+  const records=f.receipts(),finalized=records.find(item=>item.stage==='finalized')!;
+  assert.ok(finalized);assert.equal(finalized.lineage.selected!.requestId,f.view.requestId);
+  assert.equal(finalized.finalized!.conversationSectionDigest,f.requests[0]!.sections.find(item=>item.kind==='conversation')!.contentDigest);
+  assert.equal(finalized.finalized!.sections.length,9);assert.equal(finalized.finalized!.visualIncluded,true);
+  assert.deepEqual(records.map(item=>item.stage),['finalized','providerInvoked','outputEmitted','generationEnded','turnEnded']);
+  assert.equal(records.find(item=>item.stage==='generationEnded')!.outcome,'completed');
+  assert.ok(records.every(item=>!item.endpointAcknowledged&&item.coverage==='bounded_best_effort'));
+  assert.doesNotMatch(JSON.stringify(records),/ORIGINAL_SYNTHETIC_SCENE|SAFE_SYNTHETIC_REPLY|What is visible/);
+  assert.equal(Reflect.set(finalized.finalized!.sections[0]!,'contentDigest','forged'),false);
+});
+
+test('visual turn receipts preserve preparation but never invent invocation after callback withdrawal or expiry',async t=>{
+  for(const change of ['withdraw','expire'] as const){
+    const f=finalizedTextHarness(t);f.input.onInferenceRequest=()=>f[change]();await f.run();
+    assert.equal(f.requests.length,0);
+    assert.ok(f.receipts().some(item=>item.stage==='finalized'));
+    assert.ok(f.receipts().some(item=>item.stage==='admissionRejected'));
+    assert.ok(f.receipts().every(item=>item.stage!=='providerInvoked'&&item.stage!=='outputEmitted'));
+  }
+});
+
+test('visual receipts retain original selected lineage when a newer scene arrives after finalization',async t=>{
+  const f=finalizedTextHarness(t);f.input.onInferenceRequest=()=>f.newScene();await f.run();
+  assert.equal(f.requests.length,1);
+  assert.ok(f.receipts().every(item=>item.lineage.selected!.requestId===f.view.requestId));
+  assert.equal(f.receipts().find(item=>item.stage==='providerInvoked')!.finalized!.conversationSectionDigest,f.view.conversationSectionDigest);
+  assert.doesNotMatch(f.requests[0]!.sections[7]!.content,/NEWER_SYNTHETIC_SCENE/);
+});
+
+test('visual receipts distinguish actual throwing invocation, provider error, exhaustion and disconnect without error text',async t=>{
+  for(const mode of ['throw','error','exhausted','disconnect'] as const){
+    const f=finalizedTextHarness(t);let calls=0;
+    f.provider.generate=mode==='throw'?()=>{calls++;throw Error('PRIVATE_PROVIDER_ERROR');}:async function*(){calls++;if(mode==='error')yield {kind:'error',error:{code:'private',message:'PRIVATE_PROVIDER_ERROR',retryable:false}};if(mode==='disconnect'){f.response.destroyed=true;yield {kind:'text',text:'UNWRITTEN_PRIVATE_REPLY'};}};
+    await f.run();assert.equal(calls,1);
+    assert.equal(f.receipts().filter(item=>item.stage==='providerInvoked').length,1);
+    assert.equal(f.receipts().find(item=>item.stage==='generationEnded')!.outcome,mode==='exhausted'?'exhausted':mode==='disconnect'?'disconnected':'failed');
+    assert.ok(f.receipts().every(item=>item.stage!=='outputEmitted'&&!item.endpointAcknowledged));
+    assert.doesNotMatch(JSON.stringify(f.receipts()),/PRIVATE_PROVIDER_ERROR|UNWRITTEN_PRIVATE_REPLY/);
+  }
+});
+
+test('throwing visual evidence factory or recorder never changes ordinary text output',async t=>{
+  for(const at of ['factory','record'] as const){
+    const f=finalizedTextHarness(t);f.input.visualTurnEvidence=()=>{if(at==='factory')throw Error('observer');return new Proxy({} as never,{get:()=>()=>{throw Error('observer');}});};
+    await f.run();assert.equal(f.requests.length,1);assert.match(f.output(),/SAFE_SYNTHETIC_REPLY/);assert.match(f.output(),/interaction.completed/);
+  }
+});
+
+test('already ended SSE cannot claim local output emission even without a destroyed flag',async t=>{
+  const f=finalizedTextHarness(t);Object.defineProperty(f.response,'writableEnded',{value:true});await f.run();
+  assert.equal(f.requests.length,1);assert.ok(f.receipts().some(item=>item.stage==='providerInvoked'));
+  assert.ok(f.receipts().every(item=>item.stage!=='outputEmitted'&&!item.endpointAcknowledged));
+});
+
+test('provider method lookup failure is not a claimed provider invocation',async t=>{
+  const f=finalizedTextHarness(t);Object.defineProperty(f.provider,'generate',{get(){throw Error('PRIVATE_LOOKUP_ERROR');}});await f.run();
+  assert.ok(f.receipts().some(item=>item.stage==='admissionRejected'&&item.outcome==='provider_unavailable'));
+  assert.ok(f.receipts().every(item=>item.stage!=='providerInvoked'&&item.stage!=='generationEnded'));assert.doesNotMatch(JSON.stringify(f.receipts()),/PRIVATE_LOOKUP_ERROR/);
 });

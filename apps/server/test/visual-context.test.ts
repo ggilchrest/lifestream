@@ -222,3 +222,22 @@ test('provider reason text cannot impersonate a host deferral or bypass camera p
   assert.equal(f.audience().classification,'unknown');assert.equal(f.audience().privateAllowed,false);
   assert.doesNotMatch(JSON.stringify(await f.turn()),new RegExp(marker),'a provider failure cannot be downgraded to a benign admission outcome');
 });
+
+test('ordinary HTTP text evidence joins published visual lineage to the exact finalized provider request without scene or reply content',{timeout:15000},async t=>{
+  const f=await fixture(t),state=await f.begin(),batch=await f.batch(state);
+  const host=(f.app as any).visualInput as import('../src/runtime/visual-input.ts').VisualInputHost;
+
+  const request=await f.turn();
+  const actor={principalId:f.session.principalId,sessionId:f.session.sessionId,assistantId:f.assistantId};
+  const records=host.turnReceipts(actor),publication=host.publicationReceipts(actor).find(item=>item.admission.requestId===batch.requestId)!;
+  const admitted=records.find(item=>item.stage==='providerInvoked'&&item.interactionId===request.scope.interactionId)!;
+  assert.ok(admitted,JSON.stringify(records));assert.ok(publication);assert.equal(publication.disposition,'published');
+  assert.equal(admitted.lineage.selected!.requestId,batch.requestId);assert.equal(admitted.lineage.publication!.requestId,publication.admission.requestId);
+  assert.equal(admitted.lineage.publication!.hostSequence,publication.admission.hostSequence);assert.equal(admitted.lineage.publication!.audienceRevision,publication.publication!.audienceRevision);
+  assert.equal(admitted.finalized!.conversationSectionDigest,request.sections[7]!.contentDigest);assert.equal(admitted.finalized!.manifestDigest,createHash('sha256').update(JSON.stringify(request.manifest)).digest('hex'));
+  assert.ok(records.some(item=>item.stage==='generationEnded'&&item.outcome==='completed'));assert.ok(records.every(item=>!item.endpointAcknowledged));
+  assert.doesNotMatch(JSON.stringify(records),new RegExp(marker));assert.doesNotMatch(JSON.stringify(records),new RegExp(png.toString('base64')));assert.doesNotMatch(JSON.stringify(records),/What can you see\?/);
+  for(const key of ['principalId','sessionId','assistantId'] as const)assert.deepEqual(host.turnReceipts({...actor,[key]:randomUUID()}),[]);
+  const before=JSON.stringify(records);await f.stop(state);assert.equal(JSON.stringify(host.turnReceipts(actor)),before,'withdrawal does not rewrite historical receipts or imply current permission');
+  const absent=await f.turn();const noScene=host.turnReceipts(actor).find(item=>item.stage==='providerInvoked'&&item.interactionId===absent.scope.interactionId)!;assert.equal(noScene.finalized!.visualIncluded,false);assert.equal(noScene.lineage.selected,null);assert.equal(noScene.lineage.publication,null);
+});

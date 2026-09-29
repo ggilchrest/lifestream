@@ -1,3 +1,4 @@
+import {startVisualTurnEvidence,type VisualTurnEvidenceFactory,type VisualTurnOutcome} from './visual-turn-evidence.ts';
 import type {ConversationPort} from './conversation.ts';
 import type {PreparedVisualContext,VisualContextSelection} from '@lifestream/runtime/perception/observation';
 import { randomUUID } from "node:crypto";
@@ -8,7 +9,7 @@ import type { PreparedWorldContext, WorldContextPreparation } from "@lifestream/
 
 type Body = Record<string, unknown>;
 export type InferenceRuntimeIdentity = { profile: string; implementation: string; model: string; revision: string; fixture: boolean };
-export type HostRuntimeInput = { visualSelection?:VisualContextSelection; preparedTurnBinding?:PreparedTurnBinding; preparedVisualContext?:PreparedVisualContext; onCompleted?:(interactionId:string)=>void; experienceSelection?:{id:string;topic:string;statement:string;nextStep:string}; prepareWorld?: WorldContextPreparation; preparedWorldContext?: PreparedWorldContext; admitWorld?: () => boolean; capabilityContext?: string; conversation?:ConversationPort; onInferenceRequest?: (request:InferenceRequest)=>void; inspection?: { fullPromptPreview: boolean }; endpointId?: string | null; assistantId: string; runtimeSelfContext: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection; preparedRelationshipContext?: NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]>; isCurrent: () => boolean };
+export type HostRuntimeInput = { visualTurnEvidence?:VisualTurnEvidenceFactory; visualSelection?:VisualContextSelection; preparedTurnBinding?:PreparedTurnBinding; preparedVisualContext?:PreparedVisualContext; onCompleted?:(interactionId:string)=>void; experienceSelection?:{id:string;topic:string;statement:string;nextStep:string}; prepareWorld?: WorldContextPreparation; preparedWorldContext?: PreparedWorldContext; admitWorld?: () => boolean; capabilityContext?: string; conversation?:ConversationPort; onInferenceRequest?: (request:InferenceRequest)=>void; inspection?: { fullPromptPreview: boolean }; endpointId?: string | null; assistantId: string; runtimeSelfContext: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection; preparedRelationshipContext?: NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]>; isCurrent: () => boolean };
 export async function prepareHostWorld(input: HostRuntimeInput | undefined, signal: AbortSignal): Promise<void> {
   if (!input?.prepareWorld) return;
   if (!input.isCurrent() || signal.aborted) throw new Error("Runtime world scope is unavailable");
@@ -42,18 +43,20 @@ function visualInspection(input:HostRuntimeInput,request:InferenceRequest) {
 }
 
 export async function streamMessage(response: ServerResponse, provider: InferenceProvider | undefined, body: Body, sessionId: string, aborted: AbortSignal, providerIdentity?: InferenceRuntimeIdentity, runtimeSelfContext?: RuntimeSelfContext, hostInput?: HostRuntimeInput): Promise<void> {
-  if (!provider) { response.writeHead(503, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "inference_unavailable", message: "inference provider is unavailable" })); return; }
+  const interactionId = randomUUID(), evidence=startVisualTurnEvidence(hostInput?.visualTurnEvidence,interactionId,'text');
+  if (!provider) { evidence.rejected('provider_unavailable'); response.writeHead(503, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "inference_unavailable", message: "inference provider is unavailable" })); return; }
   if (typeof body.userInput !== "string" || !body.userInput.trim()) { response.writeHead(422, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "invalid_request", message: "userInput is required" })); return; }
   if(hostInput?.conversation)body.conversation=hostInput.conversation.read();
   const deadlineAt = new Date(Date.now() + 30_000).toISOString();
   try { if (hostInput?.prepareWorld) await prepareHostWorld(hostInput, aborted); }
-  catch { response.writeHead(409, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "runtime_context_changed", message: "Current world context is unavailable." })); return; }
-  if (aborted.aborted || hostInput && !hostInput.isCurrent()) { response.writeHead(409, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "runtime_context_changed", message: "Current interaction context is unavailable." })); return; }
-  const interactionId = randomUUID(); const assistantId = typeof body.assistantId === "string" && body.assistantId ? body.assistantId : "assistant-neutral"; let request:InferenceRequest,finalized:FinalizedTurn;
+  catch { evidence.rejected(aborted.aborted?'cancelled':'context_unavailable');response.writeHead(409, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "runtime_context_changed", message: "Current world context is unavailable." })); return; }
+  if (aborted.aborted || hostInput && !hostInput.isCurrent()) { evidence.rejected(aborted.aborted?'cancelled':'context_unavailable');response.writeHead(409, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "runtime_context_changed", message: "Current interaction context is unavailable." })); return; }
+  const assistantId = typeof body.assistantId === "string" && body.assistantId ? body.assistantId : "assistant-neutral"; let request:InferenceRequest,finalized:FinalizedTurn;
   const admissionCurrent=()=>Date.now()<Date.parse(deadlineAt)&&!aborted.aborted&&(!hostInput||hostInput.isCurrent())&&(!hostInput?.admitWorld||hostInput.admitWorld());
   try { finalized = finalizePreparedTurn({ deadlineAt, ...(hostInput?.visualSelection?{visualOmissions:hostInput.visualSelection.omissions}:{}), ...(hostInput?.preparedTurnBinding?{preparedTurnBinding:hostInput.preparedTurnBinding}:{}), ...(hostInput?.preparedVisualContext?{preparedVisualContext:hostInput.preparedVisualContext}:{}), ...(hostInput?.experienceSelection?{experienceSelection:hostInput.experienceSelection}:{}), ...(hostInput?.preparedWorldContext ? { preparedWorldContext: hostInput.preparedWorldContext } : {}), assistantId, sessionId, interactionId, endpointId: typeof body.endpointId === "string" ? body.endpointId : null, userInput: body.userInput, ...(typeof body.conversation === "string" ? { conversation: body.conversation } : {}), ...(typeof body.memory === "string" ? { memory: body.memory } : {}), ...(typeof body.world === "string" ? { world: body.world } : {}), ...(hostInput?.capabilityContext ? { capabilities: hostInput.capabilityContext } : typeof body.capabilities === "string" ? { capabilities: body.capabilities } : {}), ...(body.preparedRelationshipContext && typeof body.preparedRelationshipContext === "object" ? { preparedRelationshipContext: body.preparedRelationshipContext as NonNullable<Parameters<typeof buildCanonicalPrompt>[0]["preparedRelationshipContext"]> } : {}), executionMode: body.executionMode === "replay" ? "replay" : "live", ...(runtimeSelfContext ? { runtimeSelfContext } : {}), ...(hostInput?.profileProjection ? { profileProjection: hostInput.profileProjection } : {}) },admissionCurrent);request=requestForFinalizedTurn(finalized,hostInput?.preparedTurnBinding,admissionCurrent); }
-  catch { response.writeHead(409, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "runtime_context_changed", message: "Current interaction context is unavailable." })); return; }
+  catch { evidence.rejected('context_unavailable');response.writeHead(409, { "content-type": "application/json" }); response.end(JSON.stringify({ code: "runtime_context_changed", message: "Current interaction context is unavailable." })); return; }
 
+  evidence.finalized(finalized,request);
   const controller = new AbortController(); const onAbort = () => controller.abort(aborted.reason); aborted.addEventListener("abort", onAbort, { once: true }); if (aborted.aborted) controller.abort(aborted.reason); const deadline = setTimeout(() => controller.abort(new Error("deadline")), Math.max(1, Date.parse(request.deadlineAt) - Date.now()));
   response.writeHead(200, { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", connection: "keep-alive" }); writeEvent(response, "interaction.started", { interactionId, sessionId, assistantId, ...(providerIdentity ? { provider: providerIdentity } : {}) }); writeEvent(response, "input.manifest", request.manifest);
   if (hostInput?.inspection && hostInput.isCurrent()) {
@@ -64,26 +67,35 @@ export async function streamMessage(response: ServerResponse, provider: Inferenc
   const requestedCapability = body.readOnlyCapability && typeof body.readOnlyCapability === "object" && !Array.isArray(body.readOnlyCapability) ? body.readOnlyCapability as Record<string, unknown> : undefined;
   if (requestedCapability && typeof requestedCapability.name === "string" && requestedCapability.name && requestedCapability.input && typeof requestedCapability.input === "object" && !Array.isArray(requestedCapability.input)) writeEvent(response, "capability.read-only", { name: requestedCapability.name, input: requestedCapability.input, effect: "read-only" });
   const abortCode = () => controller.signal.reason instanceof Error && controller.signal.reason.message === "deadline" ? "deadline_exceeded" : "cancelled";
-  let terminal = false,answer="";
+  let terminal = false,answer="",invoked=false,readyToInvoke=false;
+  let outcome:VisualTurnOutcome='failed';
   try {
-    if(controller.signal.aborted||hostInput&&!hostInput.isCurrent()){writeEvent(response,'interaction.error',{code:controller.signal.aborted?abortCode():'runtime_context_changed',message:'Current request scope is unavailable.'});terminal=true;return;}
+    if(controller.signal.aborted||hostInput&&!hostInput.isCurrent()){outcome=controller.signal.aborted?(abortCode()==='deadline_exceeded'?'deadline':'cancelled'):'invalidated';evidence.rejected(outcome==='invalidated'?'context_unavailable':outcome);writeEvent(response,'interaction.error',{code:controller.signal.aborted?abortCode():'runtime_context_changed',message:'Current request scope is unavailable.'});terminal=true;return;}
     if (hostInput?.admitWorld && !hostInput.admitWorld()) throw new Error("World context expired before inference admission");
     hostInput?.conversation?.remember({interactionId,role:"user",text:body.userInput});
     try{hostInput?.onInferenceRequest?.(request);}catch{/* Optional repetition bookkeeping cannot block an ordinary reply. */}
-    if(!admissionCurrent()){terminal=true;const expired=Date.now()>=Date.parse(deadlineAt);controller.abort(expired?new Error('deadline'):undefined);writeEvent(response,'interaction.error',{code:expired?'deadline_exceeded':'runtime_input_stale',message:'The interaction context changed or expired before provider admission.'});return;}
+    if(!admissionCurrent()){terminal=true;const expired=Date.now()>=Date.parse(deadlineAt);outcome=expired?'deadline':aborted.aborted?'cancelled':'invalidated';evidence.rejected(expired?'deadline':aborted.aborted?'cancelled':'context_unavailable');controller.abort(expired?new Error('deadline'):undefined);writeEvent(response,'interaction.error',{code:expired?'deadline_exceeded':'runtime_input_stale',message:'The interaction context changed or expired before provider admission.'});return;}
     request=requestForFinalizedTurn(finalized,hostInput?.preparedTurnBinding,()=>!controller.signal.aborted&&admissionCurrent());
-    for await (const chunk of provider.generate(request, { signal: controller.signal })) {
-      if (response.destroyed) break;
-      if (hostInput && !hostInput.isCurrent()) { terminal = true; controller.abort(); writeEvent(response, "interaction.error", { code: "runtime_input_stale", message: "The interaction context changed. Please retry with the current scope." }); break; }
-      if (controller.signal.aborted) { terminal = true; writeEvent(response, "interaction.error", { code: abortCode(), message: "Inference stopped before completion." }); break; }
-      if (chunk.kind === "text") {writeEvent(response, "message.delta", { interactionId, text: chunk.text ?? "" });answer=(answer+(chunk.text??"")).slice(0,16001);hostInput?.conversation?.remember({interactionId,role:"assistant",text:answer,observation:"emitted"});}
+    // This marks the actual method call, not model execution or successful output.
+    readyToInvoke=true;
+    const generate=provider.generate;if(typeof generate!=='function')throw Error('Inference provider method is unavailable');
+    let stream:ReturnType<InferenceProvider['generate']>;
+    try{stream=Reflect.apply(generate,provider,[request,{signal:controller.signal}]);}
+    finally{invoked=true;evidence.providerInvoked();}
+    for await (const chunk of stream) {
+      if (response.destroyed) {outcome='disconnected';break;}
+      if (hostInput && !hostInput.isCurrent()) { outcome='invalidated';terminal = true; controller.abort(); writeEvent(response, "interaction.error", { code: "runtime_input_stale", message: "The interaction context changed. Please retry with the current scope." }); break; }
+      if (controller.signal.aborted) { outcome=abortCode()==='deadline_exceeded'?'deadline':'cancelled';terminal = true; writeEvent(response, "interaction.error", { code: abortCode(), message: "Inference stopped before completion." }); break; }
+      if (chunk.kind === "text") {const writable=!response.destroyed&&!response.writableEnded;writeEvent(response, "message.delta", { interactionId, text: chunk.text ?? "" });if(chunk.text&&writable&&!response.destroyed)evidence.emitted('text');answer=(answer+(chunk.text??"")).slice(0,16001);hostInput?.conversation?.remember({interactionId,role:"assistant",text:answer,observation:"emitted"});}
       else if (chunk.kind === "capabilityRequest") writeEvent(response, "capability.read-only", chunk.capability);
-      else if (chunk.kind === "error") { terminal = true; writeEvent(response, "interaction.error", chunk.error); break; }
-      else if (chunk.kind === "done") { try{hostInput?.onCompleted?.(interactionId);}catch{/* Optional learning receipt must not interrupt an ordinary reply. */} terminal = true; writeEvent(response, "interaction.completed", { interactionId, ...(providerIdentity ? { provider: providerIdentity } : {}) }); break; }
+      else if (chunk.kind === "error") { outcome='failed';terminal = true; writeEvent(response, "interaction.error", chunk.error); break; }
+      else if (chunk.kind === "done") { outcome='completed';try{hostInput?.onCompleted?.(interactionId);}catch{/* Optional learning receipt must not interrupt an ordinary reply. */} terminal = true; writeEvent(response, "interaction.completed", { interactionId, ...(providerIdentity ? { provider: providerIdentity } : {}) }); break; }
     }
+    if (!terminal&&!response.destroyed)outcome=controller.signal.aborted?(abortCode()==='deadline_exceeded'?'deadline':'cancelled'):'exhausted';
     if (!terminal && !response.destroyed) writeEvent(response, "interaction.error", { code: controller.signal.aborted ? abortCode() : "missing_provider_terminal", message: "Inference ended without a successful terminal." });
   } catch {
     if(Date.now()>=Date.parse(request.deadlineAt))controller.abort(new Error('deadline'));
+    outcome=response.destroyed?'disconnected':controller.signal.aborted?(abortCode()==='deadline_exceeded'?'deadline':'cancelled'):'failed';
     if (!terminal && !response.destroyed) writeEvent(response, "interaction.error", { code: controller.signal.aborted ? abortCode() : "inference_unavailable", message: "Inference could not complete." });
-  } finally { clearTimeout(deadline); controller.abort(); aborted.removeEventListener("abort", onAbort); response.end(); }
+  } finally { if(invoked)evidence.generationEnded(outcome);else evidence.rejected(readyToInvoke?'provider_unavailable':outcome==='deadline'?'deadline':outcome==='cancelled'?'cancelled':'context_unavailable');evidence.ended(response.destroyed||response.writableEnded?'disconnected':outcome);clearTimeout(deadline); controller.abort(); aborted.removeEventListener("abort", onAbort); response.end(); }
 }

@@ -6,6 +6,8 @@ import type {AudienceCoordinator,AudienceIdentity,CameraAudienceBinding} from '.
 import {validateVisualInput,type VisualCapabilitiesRequest,type VisualCameraRequest,type VisualBatchRequest} from '@lifestream/contracts/visual-input';
 import {MAX_VISUAL_METADATA_BYTES,VISUAL_FRAMING_BYTES} from './visual-multipart.ts';
 import type {VisualBounds, VisualFrame, VisualMediaType, VisualPerceptionProvider, VisualPerceptionResult, VisualScope} from '@lifestream/runtime/perception/port';
+import type {PreparedTurnBinding} from '@lifestream/runtime/inference/prompt';
+import {VisualTurnEvidence,visualDiagnosticId,type VisualTurnEvidenceFactory} from './visual-turn-evidence.ts';
 
 export type VisualActor = Readonly<{principalId: string; sessionId: string; assistantId: string}>;
 export type VisualSource = Readonly<{bindingRef: string; connected: boolean; configurationRevision: number; audienceSourceId?:string}>;
@@ -103,11 +105,13 @@ export class VisualInputHost {
   private readonly unavailableLeases=new Set<string>();
   private readonly audience:()=>AudienceCoordinator|undefined;
   private readonly publications:PublicationEntry[]=[];
+  private readonly turnJournal:VisualTurnEvidence;
   private publicationClock=-Infinity;
   private publicationMono=-Infinity;
   private closed=false;
 
   constructor(options: VisualInputOptions,onContextChanged:()=>void=()=>{},audience:()=>AudienceCoordinator|undefined=()=>undefined) {
+    this.turnJournal=new VisualTurnEvidence({utcMs:options.utcMs??Date.now,monotonicMs:options.monotonicMs??(()=>performance.now())});
     this.audience=audience;
     this.onContextChanged=()=>queueMicrotask(onContextChanged);
     this.options = options;
@@ -174,6 +178,19 @@ export class VisualInputHost {
       const key=diagnosticActor(actor);
       return Object.freeze(this.publications.filter(entry=>entry.actor===key).map(entry=>entry.receipt));
     } catch { return Object.freeze([]); }
+  }
+  turnReceipts(actor:VisualActor) {return this.turnJournal.receipts(actor);}
+  /** Capture lineage while the store view is authentic. Later expiry may be
+   * diagnosed, but this observer never grants or refreshes context authority. */
+  turnEvidence(actor:VisualActor,selection:VisualContextSelection,binding:PreparedTurnBinding|undefined):VisualTurnEvidenceFactory|undefined {
+    try {
+      if(this.closed||!binding||binding.scope.principalId!==actor.principalId||binding.scope.sessionId!==actor.sessionId||binding.scope.assistantId!==actor.assistantId)return undefined;
+      const view=selection.view;
+      if(view&&(!this.observations.isCurrent(view)||view.scope.principalId!==actor.principalId||view.scope.sessionId!==actor.sessionId||view.scope.assistantId!==actor.assistantId||view.scope.endpointId!==binding.scope.endpointId||view.scope.conversationId!==binding.scope.conversationId||view.scope.relationshipId!==binding.scope.relationshipId||view.viewId!==binding.viewId||view.revision!==binding.revision||view.invalidationKey!==binding.invalidationKey))return undefined;
+      const published=view?this.publicationReceipts(actor).findLast(receipt=>receipt.disposition==='published'&&receipt.admission.requestId===visualDiagnosticId(view.requestId)&&receipt.admission.hostSequence===view.sourceRevision&&receipt.publication?.audienceRevision===view.scope.audienceRevision):undefined;
+      const publication=published?.publication?{requestId:published.admission.requestId,hostSequence:published.admission.hostSequence,audienceRevision:published.publication.audienceRevision,leaseRevision:published.publication.leaseRevision,clockMappingId:published.admission.clockMappingId}:null;
+      return this.turnJournal.observer(actor,selection,binding,publication);
+    }catch{return undefined;}
   }
   private prunePublications():{utc:number;mono:number}|null {
     const utc=(this.options.utcMs??Date.now)(),mono=(this.options.monotonicMs??(()=>performance.now()))();
@@ -390,5 +407,6 @@ export class VisualInputHost {
     return state;
   }
   invalidate(sessionId: string) { this.observations.invalidate(sessionId); this.cancelUpload(sessionId); this.runtime.invalidate(sessionId); this.onContextChanged(); }
-  close() { this.closed=true;this.publications.length=0;for (const timer of this.viewExpiries.values()) clearTimeout(timer); this.viewExpiries.clear(); this.observations.clear(); this.onContextChanged(); for (const upload of this.uploads.values()) upload.abort(); this.runtime.close(); }
+  reset() { this.publications.length=0;this.turnJournal.reset();for (const timer of this.viewExpiries.values()) clearTimeout(timer); this.viewExpiries.clear(); this.observations.clear(); this.onContextChanged(); for (const upload of this.uploads.values()) upload.abort(); this.runtime.close(); }
+  close() { this.closed=true;this.reset();this.turnJournal.close(); }
 }

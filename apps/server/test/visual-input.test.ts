@@ -13,6 +13,7 @@ import {loadProfile} from '../src/config/loader.ts';
 import {readSessionEndpoint} from '../src/runtime/session-context.ts';
 import {AudienceCoordinator,type AudienceIdentity,type CameraAudienceReason} from '../src/runtime/audience.ts';
 import type {VisualHumanCount,VisualPerceptionRequest,VisualPerceptionResult} from '@lifestream/runtime/perception/port';
+import {createPreparedTurnBinding} from '@lifestream/runtime/inference/prompt';
 
 const actor = {principalId:'owner',sessionId:'session-a',assistantId:'assistant-a'};
 const authority = {sourceConnected:true,devicePermission:true,hostCaptureLease:true,interpretationAllowed:true,remoteEgressAllowed:false,foregroundVisible:true};
@@ -509,4 +510,19 @@ test('diagnostic clock failure and shutdown do not change or retain the public b
   const wire=await session.batch();assert.equal(wire.result.status,'empty');assert.deepEqual(f.visual.publicationReceipts(actor),[]);
   f.restoreClock();f.advance(1000);await session.batch();assert.equal(f.visual.publicationReceipts(actor).length,1);
   f.visual.close();assert.deepEqual(f.visual.publicationReceipts(actor),[]);
+});
+
+test('reusable host reset permits fresh diagnostics, fences pending old observers and preserves permanent close',async t=>{
+  const f=publicationFixture(t),first=f.begin();f.advance(20);await first.batch();const view=f.prepare();assert.ok(view);
+  const bindingFor=(source:typeof view)=>createPreparedTurnBinding({viewId:source.viewId,revision:source.revision,invalidationKey:source.invalidationKey,scope:{assistantId:source.scope.assistantId,principalId:source.scope.principalId,relationshipId:source.scope.relationshipId,conversationId:source.scope.conversationId,sessionId:source.scope.sessionId,endpointId:source.scope.endpointId},conversation:'[]',sourceRevisions:{visual:String(source.sourceRevision)}});
+  const selection={view,reason:'selected' as const,considered:1,omissions:[]},binding=bindingFor(view);
+  assert.equal(f.visual.turnEvidence({...actor,principalId:'foreign'},selection,binding),undefined);
+  assert.equal(f.visual.turnEvidence(actor,{...selection,view:{...view}},binding),undefined,'a copied view is not an authentic store selection');
+  const old=f.visual.turnEvidence(actor,selection,binding)!;assert.ok(old);const previousId=randomUUID(),previous=old(previousId,'text');previous.rejected('context_unavailable');
+  f.visual.reset();previous.ended('cancelled');assert.equal(f.visual.publicationReceipts(actor).length,0);
+  const fresh=f.begin();f.advance(20);await fresh.batch();const next=f.prepare();assert.ok(next);assert.equal(f.visual.publicationReceipts(actor).length,1);
+  const factory=f.visual.turnEvidence(actor,{...selection,view:next},bindingFor(next));assert.ok(factory);const nextId=randomUUID();factory(nextId,'text').rejected('context_unavailable');await Promise.resolve();
+  assert.deepEqual(f.visual.turnReceipts(actor).map(item=>item.interactionId),[nextId]);
+  const pending=f.visual.turnEvidence(actor,{...selection,view:next},bindingFor(next))!;pending(randomUUID(),'text').rejected('cancelled');f.visual.close();await Promise.resolve();
+  assert.deepEqual(f.visual.turnReceipts(actor),[]);assert.deepEqual(f.visual.publicationReceipts(actor),[]);assert.equal(f.visual.turnEvidence(actor,{...selection,view:next},bindingFor(next)),undefined);
 });
