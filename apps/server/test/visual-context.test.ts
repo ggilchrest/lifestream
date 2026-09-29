@@ -71,7 +71,7 @@ test('authenticated inspection reports exact visual selection, omissions and exp
   const inspect=async(userInput:string)=>{
     const response=await f.request('/api/runtime/v1/messages',{assistantId:f.assistantId,userInput,inspect:true,visualSelection:{reason:'FORGED_CLIENT',view:{appearance:'CLIENT_SCENE'}}});
     assert.equal(response.status,200);const stream=await response.text();assert.match(stream,/interaction.completed/);assert.doesNotMatch(stream,/FORGED_CLIENT|CLIENT_SCENE/);
-    return JSON.parse(stream.split('\n\n').find(block=>block.startsWith('event: input.inspection'))!.split('\ndata: ')[1]!).visual;
+    const inspection=JSON.parse(stream.split('\n\n').find(block=>block.startsWith('event: input.inspection'))!.split('\ndata: ')[1]!);assert.equal(inspection.preparedContext.schemaVersion,'1.0.0');if(inspection.visual.prepared){assert.equal(inspection.preparedContext.viewId,inspection.visual.prepared.viewId);assert.equal(inspection.preparedContext.invalidationKey,inspection.visual.prepared.invalidationKey);}return inspection.visual;
   };
   const selected=await inspect('What can you see?'),request=f.requests.at(-1)!;
   assert.equal(selected.reason,'selected');assert.equal(selected.selected,1);assert.equal(selected.considered,1);assert.equal(selected.prepared.observationIds.length,1);

@@ -55,7 +55,7 @@ export class PwceWorldContext {
       entry.usedAt = Date.now();
       const reads = await Promise.all(entry.sessions.map(session => session.getPreparedInputs(combined)));
       if (combined.aborted || !this.current(owner) || reads.some(read => !read.isCurrent())) throw new Error("World read changed during preparation");
-      const context = formatWorldContext(reads.map(read => read.value), this.profile.maximumPromptBytes);
+      const context = {...formatWorldContext(reads.map(read => read.value), this.profile.maximumPromptBytes),freshUntil:new Date(Math.min(...reads.map(read=>Date.parse(read.expiresAt)))).toISOString()};
       return { context, isCurrent: () => this.current(owner) && reads.every(read => read.isCurrent()), isSnapshotCurrent: () => this.current(owner) && reads.every(read => read.isSnapshotCurrent()) };
     } catch { this.remove(key); return unavailable("provider_unavailable"); }
     finally { clearTimeout(timer); }

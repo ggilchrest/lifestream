@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import type { PwceQualifiedSlice } from "./pwce-mapping.ts";
 
-export type PreparedWorldContext = { readonly content: string; readonly sourceRef: string; readonly sourceRevision: string };
+export type PreparedWorldContext = { readonly content: string; readonly sourceRef: string; readonly sourceRevision: string; readonly freshUntil?: string };
 export type PreparedWorldLease = { readonly context: PreparedWorldContext; readonly isCurrent: () => boolean; readonly isSnapshotCurrent: () => boolean };
 export type WorldContextPreparation = (signal: AbortSignal) => Promise<PreparedWorldLease>;
 const bytes = (text: string) => new TextEncoder().encode(text).byteLength;

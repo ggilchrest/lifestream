@@ -11,7 +11,7 @@ import type {HostRuntimeInput} from '../src/runtime/inference.ts';
 const frame = (value: number) => { const bytes = Buffer.alloc(4800 * 2); for (let offset = 0; offset < bytes.length; offset += 2) bytes.writeInt16LE(value, offset); return { frameId: randomUUID(), sequence: 0, format: { encoding: "pcm_s16le" as const, sampleRateHz: 16000 as const, channels: 1 as const }, sampleOffset: 0, sampleCount: 4800, dataBase64: bytes.toString("base64") }; };
 
 function visualAudioHarness(beforeSynthesisTerminal:()=>Promise<void>=async()=>{},options:Pick<HostRuntimeInput,'onInferenceRequest'|'prepareWorld'>={}) {
-  let now=100_000,authority=true,releases=0;
+  let now=Date.now(),authority=true,releases=0;
   const events:any[]=[],prompts:any[]=[],completed:string[]=[];
   const sessionId=randomUUID(),endpointId=randomUUID(),assistantId=randomUUID(),audioInputId=randomUUID(),leaseId=randomUUID();
   const scope:VisualScope={assistantId,principalId:randomUUID(),relationshipId:null,environmentId:'synthetic-audio',conversationId:randomUUID(),sessionId,endpointId,sessionRevision:1,audienceRevision:1,scopeGeneration:1,sourceBindingRef:'camera:synthetic-no-device',captureConfigurationRevision:1};

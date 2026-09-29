@@ -3,6 +3,7 @@ import { types } from "node:util";
 import type { InferenceRequest, InferenceSection, InputManifest } from "./port.js";
 import { formatPreparedRelationshipContext, type PreparedRelationshipContext } from "../context/builder.ts";
 import type { PreparedWorldContext } from "../context/world.ts";
+import {hasCanonicalContextScope,materializePreparedContext,requestFromPreparedContext,type PreparedContextView} from '../context/prepared-view.ts';
 import {visualConversationContent, type PreparedVisualContext} from "../perception/observation.ts";
 
 const kinds = ["policy", "corePersona", "adaptivePersona", "interactionState", "preparedMemory", "worldContext", "capabilityState", "conversation", "userInput"] as const;
@@ -69,7 +70,7 @@ export type AssistantPersonaProjection = { sourceRef: string; sourceRevision: st
 
 export type InitiativePrompt = { opportunityId: string; kind: "arrivalReturn" | "availableCheckIn" | "groundedFollowUp"; initiative: number; warmth: number; curiosity: number; followThrough: number; persistence: number };
 
-export type PromptInput = { preparedTurnBinding?:PreparedTurnBinding; preparedVisualContext?:PreparedVisualContext; experienceSelection?:{id:string;topic:string;statement:string;nextStep:string}; preparedWorldContext?: PreparedWorldContext; initiative?: InitiativePrompt; maximumOutputTokens?: number; assistantId: string; sessionId: string; interactionId: string; endpointId: string | null; userInput?: string; origin?: "userTurn" | "relationalOpportunity"; conversation?: string; memory?: string; preparedRelationshipContext?: PreparedRelationshipContext; world?: string; capabilities?: string; deadlineAt?: string; executionMode?: "live" | "replay"; voiceMode?: boolean; runtimeSelfContext?: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection };
+export type PromptInput = { visualOmissions?:readonly {observationId:string;reason:string}[]; preparedTurnBinding?:PreparedTurnBinding; preparedVisualContext?:PreparedVisualContext; experienceSelection?:{id:string;topic:string;statement:string;nextStep:string}; preparedWorldContext?: PreparedWorldContext; initiative?: InitiativePrompt; maximumOutputTokens?: number; assistantId: string; sessionId: string; interactionId: string; endpointId: string | null; userInput?: string; origin?: "userTurn" | "relationalOpportunity"; conversation?: string; memory?: string; preparedRelationshipContext?: PreparedRelationshipContext; world?: string; capabilities?: string; deadlineAt?: string; executionMode?: "live" | "replay"; voiceMode?: boolean; runtimeSelfContext?: RuntimeSelfContext; profileProjection?: AssistantPersonaProjection };
 
 const initiativePolicy = " This is one permitted low-urgency social opening, not a user request. A brief complete greeting is valid; no question or task is required. Express the selected dimensions within Core Persona bounds, using only eligible prepared context. Do not invent observations, offline activities, accomplishments, emotions or needs. Never use guilt, pressure, possessiveness, artificial urgency or an obligation to reply. Follow-up needs eligible unfinished-topic evidence; if no appropriate grounded opening exists, return no text. Do not select tools, announce background work, retry contact or infer dislike from silence. Speaking permission does not enable listening or capture.";
 
@@ -108,9 +109,10 @@ export function buildCanonicalPrompt(input: PromptInput): InferenceRequest {
   return { ...(input.maximumOutputTokens===undefined?{}:{maximumOutputTokens:input.maximumOutputTokens}), sections, manifest, deadlineAt: input.deadlineAt ?? new Date(Date.now() + 30_000).toISOString(), executionMode: input.executionMode ?? "live", scope: { assistantId: input.assistantId, sessionId: input.sessionId, interactionId: input.interactionId, endpointId: input.endpointId } };
 }
 
-/** Internal materialization, not a public PreparedContextView schema or new manifest. */
+/** Authentic cached turn; canonical prepared context is present for fully bound UUID scopes. */
 export type FinalizedTurn = Readonly<{
   binding:PreparedTurnBinding|null;
+  preparedContext:PreparedContextView|null;
   sourceRevisions:Readonly<Record<string,string>>;
   sections:readonly Readonly<InputManifest['sections'][number]>[];
 }>;
@@ -152,7 +154,8 @@ function freezeTurn<T>(value:T):T {
 /** Call once after world preparation; this never waits for or refreshes visual input. */
 export function finalizePreparedTurn(input:PromptInput,current:()=>boolean):FinalizedTurn {
   if(!currentTurn(current))throw unavailableTurn();
-  const snapshot=snapshotPromptInput(input),request=buildCanonicalPrompt(snapshot),binding=snapshot.preparedTurnBinding??null,visual=snapshot.preparedVisualContext;
+  const snapshot=snapshotPromptInput(input),binding=snapshot.preparedTurnBinding??null,visual=snapshot.preparedVisualContext;
+  let request=buildCanonicalPrompt(snapshot);
   const expected:Record<string,string|undefined>={runtime:snapshot.runtimeSelfContext?.sourceRevision,persona:snapshot.profileProjection?.sourceRevision,relationship:snapshot.preparedRelationshipContext?.relationshipRevision,configuration:snapshot.preparedRelationshipContext?.configurationRevision};
   if(binding){
     for(const [key,revision]of Object.entries(expected))if(Object.hasOwn(binding.sourceRevisions,key)&&binding.sourceRevisions[key]!==revision)throw unavailableTurn();
@@ -167,13 +170,23 @@ export function finalizePreparedTurn(input:PromptInput,current:()=>boolean):Fina
   // Content identities describe included text, never provider revision or authority.
   inventory.capability=`content-sha256:${capability.contentDigest}`;
   if(snapshot.experienceSelection){const {id,topic,statement,nextStep}=snapshot.experienceSelection;inventory.experience=`content-sha256:${digest(JSON.stringify({id,topic,statement,nextStep}))}`;}
+  let preparedContext:PreparedContextView|null=null;
+  if(binding&&hasCanonicalContextScope(binding)){
+    const deadlines=[request.deadlineAt,snapshot.runtimeSelfContext?.expiresAt,snapshot.preparedWorldContext?.freshUntil,
+      snapshot.preparedRelationshipContext&&'freshUntil' in snapshot.preparedRelationshipContext?snapshot.preparedRelationshipContext.freshUntil:undefined];
+    const expiry=Math.min(...deadlines.filter((value):value is string=>value!==undefined).map(value=>typeof value==='string'?Date.parse(value):NaN),visual?.expiresAtMs??Infinity);
+    preparedContext=materializePreparedContext(request,binding,{now:Date.now(),freshUntil:expiry,sourceRevisions:inventory,
+      unavailableSources:[...(!snapshot.preparedRelationshipContext&&!snapshot.memory?['section:preparedMemory']:[]),...(!snapshot.preparedWorldContext&&!snapshot.world||snapshot.preparedWorldContext?.sourceRef==='pwce:context-unavailable'||snapshot.preparedWorldContext?.sourceRef==='pwce:context-withheld'?['section:worldContext','world']:[])],
+      omissions:(snapshot.visualOmissions??[]).map(item=>`visual:${item.observationId}:${item.reason}`)});
+    request=requestFromPreparedContext(preparedContext,request);
+  }
   const visualCurrent=()=>{if(visual)visualConversationContent(visual,request.scope,binding!.conversation);return true;};
-  const deadline=Date.parse(request.deadlineAt),remaining=deadline-Date.now(),monotonicDeadline=performance.now()+remaining;
+  const deadline=Math.min(Date.parse(request.deadlineAt),preparedContext?Date.parse(preparedContext.freshUntil):Infinity),remaining=deadline-Date.now(),monotonicDeadline=performance.now()+remaining;
   const beforeDeadline=()=>Number.isFinite(deadline)&&Date.now()<deadline&&performance.now()<monotonicDeadline;
   const stillCurrent=()=>beforeDeadline()&&currentTurn(current)&&currentTurn(visualCurrent)&&beforeDeadline();
   if(!stillCurrent())throw unavailableTurn();
   freezeTurn(request);
-  const turn:FinalizedTurn=Object.freeze({binding,sourceRevisions:Object.freeze(inventory),sections:request.manifest.sections});
+  const turn:FinalizedTurn=Object.freeze({binding,preparedContext,sourceRevisions:Object.freeze(inventory),sections:request.manifest.sections});
   finalizedTurns.set(turn,{request,current:stillCurrent,retired:false});
   return turn;
 }

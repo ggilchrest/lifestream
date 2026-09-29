@@ -113,7 +113,7 @@ test("real-authenticated ordinary turns use one scoped view, reviewed correction
  });
 
 function finalizedTextHarness(t:import('node:test').TestContext){
-  let now=100_000,current=true,output='',status=0;const requests:InferenceRequest[]=[];
+  let now=Date.now(),current=true,output='',status=0;const requests:InferenceRequest[]=[];
   const scope:VisualScope={assistantId:randomUUID(),principalId:randomUUID(),relationshipId:null,environmentId:'synthetic-finalization',conversationId:randomUUID(),sessionId:randomUUID(),endpointId:randomUUID(),sessionRevision:1,audienceRevision:1,scopeGeneration:1,sourceBindingRef:'synthetic:no-camera',captureConfigurationRevision:1},leaseId=randomUUID();
   const store=new VisualObservationStore({now:()=>now,current:()=>current});t.after(()=>store.clear());
   const publish=(sequence:number,appearance:string)=>assert.equal(store.publish({scope,leaseId,sequence,requestId:randomUUID(),capturedAtEarliestMs:now-100,capturedAtLatestMs:now-50,receivedAtMs:now-30,interpretedAtMs:now,provider:{id:'synthetic-visual',version:'1'},observations:[{observationId:'scene-'+sequence,frameIds:[randomUUID()],appearance,inference:null,confidence:null,limitations:['Synthetic fixture only.']}]}),true);
