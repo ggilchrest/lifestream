@@ -69,6 +69,7 @@ import { readSessionEndpoint, reviseSessionEndpoint } from "./runtime/session-co
 import {VisualInputHost,VisualInputRequestError,VisualUploadError,parseVisualCapabilities,parseVisualCamera,parseVisualBatch,type VisualInputOptions,type VisualActor} from './runtime/visual-input.ts';
 import {readVisualMultipart,VisualMultipartError} from './runtime/visual-multipart.ts';
 import {VisualAdmissionError} from '@lifestream/runtime/perception/admission';
+import {validateVisualInput,visualInputWireProfile,visualInputSchemaVersion} from '@lifestream/contracts/visual-input';
 import { inspectSessionDefinition, reviewSessionDefinition, SessionDefinitionError } from "./runtime/session-definition.ts";
 import {inspectEndpointConfiguration} from "./runtime/endpoint-configuration.ts";
 import { AudioSession } from "./runtime/audio.ts";
@@ -1386,16 +1387,26 @@ export class LifestreamServer {
       }
       return {principalId:fresh.principalId,sessionId,assistantId};
     };
+    const sendVisual=(kind:'capabilitiesResponse'|'cameraResponse'|'batchResponse',payload:Json,actor:VisualActor,leaseId?:string|null)=>{
+      const envelope={...payload,schemaVersion:visualInputSchemaVersion,wireProfile:visualInputWireProfile};
+      if(!validateVisualInput(kind,envelope).valid){
+        if(leaseId){try{this.visualInput.camera(actor,{action:'stop',leaseId,expectedRevision:0,idempotencyKey:randomUUID()});}catch{/* Exact lease may already have ended. */}}
+        return json(response,500,{code:'visual_response_invalid'});
+      }
+      return json(response,200,envelope);
+    };
     try {
       if(operation==='capabilities'){
         const input=parseVisualCapabilities(await readVisualJson(request));
-        return json(response,200,{schemaVersion:'1.0.0',...this.visualInput.capabilities(actorFor(input.assistantId),input.supportedVersions)});
+        const actor=actorFor(input.assistantId),capabilities=this.visualInput.capabilities(actor,input.supportedVersions);
+        return sendVisual('capabilitiesResponse',capabilities,actor,capabilities.camera.leaseId);
       }
       if(operation==='camera'){
         const input=parseVisualCamera(await readVisualJson(request));
         const actor=actorFor(input.assistantId,input.action==='stop');
         if(input.action!=='stop'&&this.state!=='ready')throw new AuthenticationError(503,'visual_runtime_unavailable');
-        return json(response,200,{schemaVersion:'1.0.0',camera:this.visualInput.camera(actor,input)});
+        const camera=this.visualInput.camera(actor,input);
+        return sendVisual('cameraResponse',{camera},actor,camera.leaseId);
       }
       const upload=this.visualInput.openUpload(sessionId);
       let admittedLease:{actor:VisualActor;leaseId:string}|undefined;
@@ -1420,7 +1431,7 @@ export class LifestreamServer {
           if(response.destroyed||upload.signal.aborted){disconnected();return;}
           const receipt=await this.visualInput.batch(actor,input,bytes,()=>{parsed.dispose();upload.release();});
           actorFor(input.assistantId);
-          if(!response.destroyed)return json(response,200,{schemaVersion:'1.0.0',...receipt});
+          if(!response.destroyed)return sendVisual('batchResponse',receipt,actor,input.leaseId);
         }finally{parsed.dispose();}
       }finally{request.off('aborted',disconnected);response.off('close',disconnected);upload.release();}
     }catch(error){

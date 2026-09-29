@@ -10,7 +10,7 @@ export const MAX_VISUAL_METADATA_BYTES = MAX_METADATA_BYTES;
 export const VISUAL_FRAMING_BYTES = 32_768;
 const MAX_REQUEST_BYTES = MAX_METADATA_BYTES + MAX_FRAMES * MAX_FRAME_BYTES + 32_768;
 const MAX_PART_HEADERS_BYTES = 2_048;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const BOUNDARY = /^[A-Za-z0-9'()+_,.\/:=?-]{1,70}$/;
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const HEADER_END = Buffer.from('\r\n\r\n');

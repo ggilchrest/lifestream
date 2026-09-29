@@ -1,4 +1,5 @@
 import {VisualAdmission, VisualAdmissionError, type CaptureAuthority} from '@lifestream/runtime/perception/admission';
+import {validateVisualInput,type VisualCapabilitiesRequest,type VisualCameraRequest,type VisualBatchRequest} from '@lifestream/contracts/visual-input';
 import {MAX_VISUAL_METADATA_BYTES,VISUAL_FRAMING_BYTES} from './visual-multipart.ts';
 import type {VisualBounds, VisualFrame, VisualMediaType, VisualPerceptionProvider, VisualScope} from '@lifestream/runtime/perception/port';
 
@@ -46,52 +47,23 @@ export class VisualInputRequestError extends Error {
   constructor() { super('Invalid visual request.'); }
 }
 
-const invalid = (): never => { throw new VisualInputRequestError(); };
-const object = (value: unknown): Record<string,unknown> => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string,unknown> : invalid();
-const exact = (value: Record<string,unknown>, keys: readonly string[]) => { if (Object.keys(value).some(key => !keys.includes(key))) invalid(); };
-const uuid = (value: unknown): string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(value) ? value : invalid();
-const integer = (value: unknown): number => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 ? value : invalid();
-const monotonic = (value: unknown): number => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : invalid();
-const token = (value: unknown): string => typeof value === 'string' && value.length >= 1 && value.length <= 128 && /^[A-Za-z0-9._:-]+$/u.test(value) ? value : invalid();
-const versioned = (value: Record<string,unknown>) => { if (value.schemaVersion !== '1.0.0') invalid(); return uuid(value.assistantId); };
-
-/** Independently authored public HTTP request validation; no private schema is embedded. */
-export function parseVisualCapabilities(value: unknown): {assistantId:string; supportedVersions:string[]} {
-  const raw = object(value); exact(raw,['schemaVersion','assistantId','supportedVersions']);
-  const assistantId = versioned(raw), versions = raw.supportedVersions;
-  if (!Array.isArray(versions) || versions.length < 1 || versions.length > 4 || versions.some(item => typeof item !== 'string' || !/^\d+\.\d+\.\d+$/u.test(item)) || new Set(versions).size !== versions.length) invalid();
-  return {assistantId,supportedVersions:versions as string[]};
+/** Public HTTP adapter validation; canonical provider envelopes remain a separate boundary. */
+export function parseVisualCapabilities(value: unknown): VisualCapabilitiesRequest {
+  if (!validateVisualInput('capabilitiesRequest',value).valid) throw new VisualInputRequestError();
+  return value as VisualCapabilitiesRequest;
 }
 
-export function parseVisualCamera(value: unknown): CameraInput & {assistantId:string} {
-  const raw = object(value); exact(raw,['schemaVersion','assistantId','action','expectedRevision','idempotencyKey','leaseId','challengeId','endpointClockId','endpointReceivedMonotonicMs']);
-  const assistantId = versioned(raw), expectedRevision = integer(raw.expectedRevision), idempotencyKey = uuid(raw.idempotencyKey);
-  if (raw.action === 'stop') {
-    if (raw.challengeId !== undefined || raw.endpointClockId !== undefined || raw.endpointReceivedMonotonicMs !== undefined) invalid();
-    return {assistantId,action:'stop',expectedRevision,idempotencyKey,leaseId:uuid(raw.leaseId)};
-  }
-  const action=raw.action;
-  if (action !== 'enable' && action !== 'renew') invalid();
-  if (action === 'enable' && raw.leaseId !== undefined) invalid();
-  return {assistantId,action:action as 'enable' | 'renew',expectedRevision,idempotencyKey,
-    ...(action === 'renew' ? {leaseId:uuid(raw.leaseId)} : {}),
-    challengeId:uuid(raw.challengeId),endpointClockId:token(raw.endpointClockId),endpointReceivedMonotonicMs:monotonic(raw.endpointReceivedMonotonicMs)};
+export function parseVisualCamera(value: unknown): VisualCameraRequest {
+  if (!validateVisualInput('cameraRequest',value).valid) throw new VisualInputRequestError();
+  return value as VisualCameraRequest;
 }
 
-export function parseVisualBatch(value: unknown): BatchMeta & {assistantId:string} {
-  const raw=object(value); exact(raw,['schemaVersion','assistantId','leaseId','endpointClockId','correlationId','frames']);
-  const assistantId=versioned(raw), leaseId=uuid(raw.leaseId), endpointClockId=token(raw.endpointClockId), correlationId=uuid(raw.correlationId);
-  const entries=raw.frames;
-  if (!Array.isArray(entries) || entries.length < 1 || entries.length > 3) invalid();
-  const frames=(entries as unknown[]).map((value:unknown)=>{
-    const frame=object(value); exact(frame,['frameId','sequence','capturedMonotonicMs','clockMappingId','mediaType','sha256']);
-    const mediaType=frame.mediaType;
-    if (mediaType !== 'image/jpeg' && mediaType !== 'image/png') invalid();
-    if (typeof frame.sha256 !== 'string' || !/^[0-9a-f]{64}$/u.test(frame.sha256)) invalid();
-    return {frameId:uuid(frame.frameId),sequence:integer(frame.sequence),capturedMonotonicMs:monotonic(frame.capturedMonotonicMs),clockMappingId:uuid(frame.clockMappingId),mediaType:mediaType as VisualMediaType,sha256:frame.sha256 as string};
-  });
-  if (new Set(frames.map(frame=>frame.frameId)).size !== frames.length) invalid();
-  return {assistantId,leaseId,endpointClockId,correlationId,frames};
+export function parseVisualBatch(value: unknown): VisualBatchRequest {
+  if (!validateVisualInput('batchRequest',value).valid) throw new VisualInputRequestError();
+  const batch=value as VisualBatchRequest;
+  // JSON Schema uniqueItems cannot express unique frame IDs with different metadata.
+  if (new Set(batch.frames.map(frame=>frame.frameId)).size!==batch.frames.length) throw new VisualInputRequestError();
+  return batch;
 }
 
 const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);

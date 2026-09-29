@@ -1,4 +1,6 @@
 const VERSION = '1.0.0';
+// This HTTP adapter envelope is distinct from the internal perception profile.
+const WIRE_PROFILE = 'lifestream.visual-input-http';
 const PROFILE = 'lifestream.conversational-vision.v1';
 const PURPOSE = 'Visible context for this conversation';
 const reasons = {
@@ -11,6 +13,7 @@ const reasons = {
 const finite = value => Number.isFinite(value) && value >= 0;
 const revision = value => Number.isSafeInteger(value) && value >= 0;
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(value);
+const supportedEnvelope = value => value?.wireProfile === WIRE_PROFILE && value.schemaVersion === VERSION;
 const disposedHandles = new WeakSet();
 const stopHandle = handle => {
   if (!handle || typeof handle !== 'object' || disposedHandles.has(handle)) return;
@@ -53,7 +56,7 @@ export class ConversationCamera {
     const sent = this.now();
     const value = await this.post(scope, 'capabilities', {supportedVersions:[VERSION]});
     const received = this.now(), n = value?.negotiation;
-    if (value?.schemaVersion !== VERSION || !revision(value?.camera?.revision)) throw Error('The service returned an unsupported camera response.');
+    if (!supportedEnvelope(value) || !revision(value?.camera?.revision)) throw Error('The service returned an unsupported camera response. Text and audio remain available.');
     const valid = value.available === true && n?.profile === PROFILE && n.selectedVersion === VERSION &&
       n.implemented === true && n.configured === true && n.providerConnected === true && n.sourceConnected === true &&
       n.mediaTypes?.some(type => ['image/jpeg','image/png'].includes(type)) && uuid(n.challenge?.id) &&
@@ -134,7 +137,7 @@ export class ConversationCamera {
       idempotencyKey:this.newId(), ...(lease ? {leaseId:lease.leaseId} : {}),
       challengeId:negotiated.value.negotiation.challenge.id, endpointClockId:this.clockId,
       endpointReceivedMonotonicMs:negotiated.received});
-    if (result?.schemaVersion !== VERSION) {
+    if (!supportedEnvelope(result)) {
       void this.withdraw(scope, result?.camera);
       throw Error('The service returned an unsupported camera grant.');
     }
@@ -181,8 +184,10 @@ export class ConversationCamera {
   }
   async withdraw(scope, camera) {
     if (!uuid(camera?.leaseId)) return;
-    try { await this.post(scope, 'camera', {action:'stop', expectedRevision:camera.revision, leaseId:camera.leaseId, idempotencyKey:this.newId()}, {keepalive:true}); }
-    catch { /* Local capture is already off; the host lease also has a deadline. */ }
+    try {
+      const result = await this.post(scope, 'camera', {action:'stop', expectedRevision:camera.revision, leaseId:camera.leaseId, idempotencyKey:this.newId()}, {keepalive:true});
+      return supportedEnvelope(result);
+    } catch { /* Local capture is already off; the host lease also has a deadline. */ return false; }
   }
   async stop(message = 'Camera off. Enable camera to start another session capture.') {
     ++this.generation;

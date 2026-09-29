@@ -1,0 +1,1003 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/visual-input-http/1.0.0",
+  "title": "Lifestream visual input HTTP adapter 1.0.0",
+  "description": "Independently authored contract for the implemented compact HTTP adapter. This is not the canonical conversational-vision provider envelope. Binary bytes remain multipart; authorization, timing, identity equality and media admission are runtime checks.",
+  "$defs": {
+    "Uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "Revision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "Monotonic": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "ClockId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "MediaType": {
+      "enum": [
+        "image/jpeg",
+        "image/png"
+      ]
+    },
+    "DropReason": {
+      "enum": [
+        "disabled",
+        "unsupported",
+        "unconfigured",
+        "source_unavailable",
+        "permission_denied",
+        "lease_conflict",
+        "stale_revision",
+        "stale_lease",
+        "scope_changed",
+        "clock_challenge_invalid",
+        "clock_uncertain",
+        "frame_invalid",
+        "frame_oversize",
+        "frame_stale",
+        "frame_future",
+        "rate_limited",
+        "foreground_priority",
+        "provider_unavailable",
+        "provider_invalid",
+        "deadline",
+        "replaced",
+        "cancelled"
+      ]
+    },
+    "CapabilitiesRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "assistantId",
+        "supportedVersions"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "assistantId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "supportedVersions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+            "maxLength": 64
+          },
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true
+        }
+      }
+    },
+    "CameraRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "assistantId",
+            "expectedRevision",
+            "idempotencyKey",
+            "action",
+            "challengeId",
+            "endpointClockId",
+            "endpointReceivedMonotonicMs"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "assistantId": {
+              "$ref": "#/$defs/Uuid"
+            },
+            "expectedRevision": {
+              "$ref": "#/$defs/Revision"
+            },
+            "idempotencyKey": {
+              "$ref": "#/$defs/Uuid"
+            },
+            "action": {
+              "const": "enable"
+            },
+            "challengeId": {
+              "$ref": "#/$defs/Uuid"
+            },
+            "endpointClockId": {
+              "$ref": "#/$defs/ClockId"
+            },
+            "endpointReceivedMonotonicMs": {
+              "$ref": "#/$defs/Monotonic"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "assistantId",
+            "expectedRevision",
+            "idempotencyKey",
+            "action",
+            "leaseId",
+            "challengeId",
+            "endpointClockId",
+            "endpointReceivedMonotonicMs"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "assistantId": {
+              "$ref": "#/$defs/Uuid"
+            },
+            "expectedRevision": {
+              "$ref": "#/$defs/Revision"
+            },
+            "idempotencyKey": {
+              "$ref": "#/$defs/Uuid"
+            },
+            "action": {
+              "const": "renew"
+            },
+            "leaseId": {
+              "$ref": "#/$defs/Uuid"
+            },
+            "challengeId": {
+              "$ref": "#/$defs/Uuid"
+            },
+            "endpointClockId": {
+              "$ref": "#/$defs/ClockId"
+            },
+            "endpointReceivedMonotonicMs": {
+              "$ref": "#/$defs/Monotonic"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "assistantId",
+            "expectedRevision",
+            "idempotencyKey",
+            "action",
+            "leaseId"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "assistantId": {
+              "$ref": "#/$defs/Uuid"
+            },
+            "expectedRevision": {
+              "$ref": "#/$defs/Revision"
+            },
+            "idempotencyKey": {
+              "$ref": "#/$defs/Uuid"
+            },
+            "action": {
+              "const": "stop"
+            },
+            "leaseId": {
+              "$ref": "#/$defs/Uuid"
+            }
+          }
+        }
+      ]
+    },
+    "FrameMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frameId",
+        "sequence",
+        "capturedMonotonicMs",
+        "clockMappingId",
+        "mediaType",
+        "sha256"
+      ],
+      "properties": {
+        "frameId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "sequence": {
+          "$ref": "#/$defs/Revision"
+        },
+        "capturedMonotonicMs": {
+          "$ref": "#/$defs/Monotonic"
+        },
+        "clockMappingId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "mediaType": {
+          "$ref": "#/$defs/MediaType"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "BatchRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "assistantId",
+        "leaseId",
+        "endpointClockId",
+        "correlationId",
+        "frames"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "assistantId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "leaseId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "endpointClockId": {
+          "$ref": "#/$defs/ClockId"
+        },
+        "correlationId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FrameMetadata"
+          },
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true
+        }
+      }
+    },
+    "Bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxFramesPerBatch",
+        "maxCaptureFramesPerSecond",
+        "maxBatchSpanMs",
+        "maxFrameBytes",
+        "maxLongEdgePixels",
+        "maxRawBytesPerSession",
+        "maxDecodedBytesPerSession",
+        "maxHostSessions",
+        "leaseTtlMs",
+        "renewIntervalMs",
+        "deadlineMs",
+        "freshnessMs",
+        "maxClockUncertaintyMs",
+        "minAdmissionIntervalMs"
+      ],
+      "properties": {
+        "maxFramesPerBatch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "maxCaptureFramesPerSecond": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "maxBatchSpanMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2000
+        },
+        "maxFrameBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2097152
+        },
+        "maxLongEdgePixels": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1280
+        },
+        "maxRawBytesPerSession": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12582912
+        },
+        "maxDecodedBytesPerSession": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20971520
+        },
+        "maxHostSessions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "leaseTtlMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        },
+        "renewIntervalMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20000
+        },
+        "deadlineMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "freshnessMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6000
+        },
+        "maxClockUncertaintyMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 250
+        },
+        "minAdmissionIntervalMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ClockChallenge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "hostSentMonotonicMs",
+        "hostSentAt",
+        "expiresAt"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "hostSentMonotonicMs": {
+          "$ref": "#/$defs/Monotonic"
+        },
+        "hostSentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "Negotiation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "selectedVersion",
+        "implemented",
+        "configured",
+        "providerConnected",
+        "sourceConnected",
+        "mediaTypes",
+        "bounds",
+        "challenge"
+      ],
+      "properties": {
+        "profile": {
+          "anyOf": [
+            {
+              "const": "lifestream.conversational-vision.v1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "selectedVersion": {
+          "anyOf": [
+            {
+              "const": "1.0.0"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "implemented": {
+          "const": true
+        },
+        "configured": {
+          "type": "boolean"
+        },
+        "providerConnected": {
+          "type": "boolean"
+        },
+        "sourceConnected": {
+          "type": "boolean"
+        },
+        "mediaTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MediaType"
+          },
+          "minItems": 0,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "bounds": {
+          "$ref": "#/$defs/Bounds"
+        },
+        "challenge": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClockChallenge"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "selectedVersion": {
+                "const": null
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "profile": {
+                "type": "null"
+              },
+              "challenge": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "profile": {
+                "const": "lifestream.conversational-vision.v1"
+              },
+              "configured": {
+                "const": true
+              },
+              "challenge": {
+                "$ref": "#/$defs/ClockChallenge"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CameraState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "captureActive",
+        "activeForSession",
+        "reason",
+        "leaseId",
+        "expiresAtMonotonicMs",
+        "clockMappingId",
+        "currentObservationUsable"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "captureActive": {
+          "type": "boolean"
+        },
+        "activeForSession": {
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DropReason"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "leaseId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expiresAtMonotonicMs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Monotonic"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "clockMappingId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "currentObservationUsable": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "captureActive": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "activeForSession": {
+                "const": false
+              },
+              "currentObservationUsable": {
+                "const": false
+              },
+              "leaseId": {
+                "type": "null"
+              },
+              "expiresAtMonotonicMs": {
+                "type": "null"
+              },
+              "clockMappingId": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "leaseId": {
+                "$ref": "#/$defs/Uuid"
+              },
+              "clockMappingId": {
+                "$ref": "#/$defs/Uuid"
+              },
+              "expiresAtMonotonicMs": {
+                "$ref": "#/$defs/Monotonic"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "activeForSession": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "currentObservationUsable": {
+                "const": true
+              },
+              "captureActive": {
+                "const": true
+              },
+              "reason": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "currentObservationUsable": {
+                "const": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "TransportBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxConcurrentUploadsPerSession",
+        "maxConcurrentUploadsPerHost",
+        "uploadDeadlineMs"
+      ],
+      "properties": {
+        "maxConcurrentUploadsPerSession": {
+          "const": 1
+        },
+        "maxConcurrentUploadsPerHost": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "uploadDeadlineMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000
+        }
+      }
+    },
+    "CapabilitiesResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "wireProfile",
+        "available",
+        "reason",
+        "negotiation",
+        "camera"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "wireProfile": {
+          "const": "lifestream.visual-input-http"
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "source_unavailable",
+                "unconfigured",
+                "unsupported",
+                "provider_unavailable"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "negotiation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Negotiation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transport": {
+          "$ref": "#/$defs/TransportBounds"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraState"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "available": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "transport"
+            ],
+            "properties": {
+              "reason": {
+                "type": "null"
+              },
+              "negotiation": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/Negotiation"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "selectedVersion": {
+                        "const": "1.0.0"
+                      },
+                      "configured": {
+                        "const": true
+                      },
+                      "providerConnected": {
+                        "const": true
+                      },
+                      "sourceConnected": {
+                        "const": true
+                      },
+                      "mediaTypes": {
+                        "minItems": 1,
+                        "type": "array"
+                      }
+                    }
+                  }
+                ]
+              },
+              "transport": {
+                "$ref": "#/$defs/TransportBounds"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CameraResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "wireProfile",
+        "camera"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "wireProfile": {
+          "const": "lifestream.visual-input-http"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraState"
+        }
+      }
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observationId",
+        "frameIds",
+        "appearance",
+        "inference",
+        "confidence",
+        "limitations"
+      ],
+      "properties": {
+        "observationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "frameIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "appearance": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "inference": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 8192
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 8192
+          },
+          "minItems": 0,
+          "maxItems": 8192
+        }
+      }
+    },
+    "PerceptionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "status",
+        "observations",
+        "reason"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "status": {
+          "enum": [
+            "complete",
+            "empty",
+            "rejected",
+            "cancelled",
+            "timedOut",
+            "failed"
+          ]
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Observation"
+          },
+          "minItems": 0,
+          "maxItems": 32
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 128
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "not": {
+                  "const": "complete"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "observations": {
+                "maxItems": 0,
+                "type": "array"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BatchResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "wireProfile",
+        "requestId",
+        "queued",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "wireProfile": {
+          "const": "lifestream.visual-input-http"
+        },
+        "requestId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "queued": {
+          "type": "boolean"
+        },
+        "result": {
+          "$ref": "#/$defs/PerceptionResult"
+        }
+      }
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/CapabilitiesRequest"
+    },
+    {
+      "$ref": "#/$defs/CameraRequest"
+    },
+    {
+      "$ref": "#/$defs/BatchRequest"
+    },
+    {
+      "$ref": "#/$defs/CapabilitiesResponse"
+    },
+    {
+      "$ref": "#/$defs/CameraResponse"
+    },
+    {
+      "$ref": "#/$defs/BatchResponse"
+    },
+    {
+      "$ref": "#/$defs/ErrorResponse"
+    }
+  ]
+}

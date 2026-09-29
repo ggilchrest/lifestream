@@ -2,12 +2,12 @@
   "schemaVersion": "1.0.0",
   "slice": "LS-S087",
   "status": "inProgress",
-  "claimClass": "local-synthetic-http-browser-lifecycle-and-owned-encoded-resource-regression",
-  "collectedAt": "2026-09-29T19:09:26.968664Z",
+  "claimClass": "local-synthetic-http-browser-resource-and-adapter-compatibility-regression",
+  "collectedAt": "2026-09-29T19:15:45.273939Z",
   "publicSource": {
     "initialBaseHead": "91d6a25939b41bddc024be03da1216d1f3128f92",
-    "integrationHead": "fb6214f9d863e4eed989ab26bc1d007c15cbe229",
-    "state": "Scoped browser lifecycle and resource-hardening source snapshot atop the prior authenticated routes; resulting local commit recorded in operator-local candidate state. Unrelated dirty changes preserved.",
+    "integrationHead": "0dde8208c4ef6ff2d9699fd11e29189856f28d75",
+    "state": "Independently authored compact HTTP contract and compatibility increment atop committed lifecycle/resource hardening. Exact source hashes follow; resulting local commit recorded in operator-local state.",
     "files": [
       {
         "path": "packages/runtime/src/perception/port.ts",
@@ -31,15 +31,15 @@
       },
       {
         "path": "apps/server/src/index.ts",
-        "sha256": "ba4d250e604acfd6d11fab4a36e17c8dca0bf900edfea2a2070c7ea4e25c27d3"
+        "sha256": "eddeee8d596b4b6a0c69fabdc28555a75d97c78b790429f78ef283c4ef528887"
       },
       {
         "path": "apps/server/src/runtime/visual-input.ts",
-        "sha256": "11e42077b853e8081db62b6ffd0e9f171006f84ae271a9641c1d61b0c9525e1d"
+        "sha256": "72306dcdbc641cbb01a90ae2643c604758c1a57e3ffbf06baf716ddbcff0a621"
       },
       {
         "path": "apps/server/src/runtime/visual-multipart.ts",
-        "sha256": "188479baf35fca75db241068e7a6ee9d37f76b2fdbf44b03afe5c0a029a4fb4c"
+        "sha256": "989b3daf9db35db043f4151da672607fb0ad19e51362e7424889e05680a4cb1c"
       },
       {
         "path": "apps/server/test/visual-input.test.ts",
@@ -47,11 +47,11 @@
       },
       {
         "path": "apps/server/test/visual-multipart.test.ts",
-        "sha256": "74c22849e689e4872524e2cea89ff3af62fe7cec6d8fd77553112b87bed6a8b6"
+        "sha256": "ed642533a1449d2cbeb223ace747399598bce806e986eb6b29534da1f6425af7"
       },
       {
         "path": "apps/control-web/conversation-camera.js",
-        "sha256": "bb21903524bcb192ab8c3822187c2372b0f4fa8e571183bbd7cf6930394c5e7d"
+        "sha256": "8dc7e6f94065bd3a1c6ebabd36bad0b945963699942a5db53b4efb3174d312da"
       },
       {
         "path": "apps/control-web/conversation-room.js",
@@ -59,7 +59,7 @@
       },
       {
         "path": "apps/control-web/test/conversation-camera.test.mjs",
-        "sha256": "9d43c96a6b69d82b98c8c266fe45c97a092ac3cb241cd023fdbddc3a382f2ffb"
+        "sha256": "fe5749c199dd7947cc356c9aee0c02993d9026fe76590db30a7657acc4ef1139"
       },
       {
         "path": "apps/control-web/test/urgent-attention.test.mjs",
@@ -68,6 +68,30 @@
       {
         "path": "apps/server/test/visual-route-lifecycle.test.ts",
         "sha256": "c4ebee602646eb52da556eda31f2610649e1c841aca6555d46114ecd0c17b310"
+      },
+      {
+        "path": "packages/contracts/src/schemas/visual-input-http.schema.json",
+        "sha256": "16cc97ee6c2b8bfbb420283b5b10dfd650f67521d71f0e8907c0246c22e19362"
+      },
+      {
+        "path": "packages/contracts/src/visual-input.ts",
+        "sha256": "9ec0634da85cc6df7927af9c2d96565b45817cfd32382f2021e5abc10f8be0c5"
+      },
+      {
+        "path": "packages/contracts/package.json",
+        "sha256": "108f1c35166cea3fb5273e407ac481aeaf707c5a57dfaf6cc9d81f5c3cdc2364"
+      },
+      {
+        "path": "packages/contracts/test/visual-input.test.ts",
+        "sha256": "887ea52b309afa3b50e4a8520a43238f62528d57338a9722b412174c3cf81873"
+      },
+      {
+        "path": "packages/contracts/test/contract-validation.test.ts",
+        "sha256": "0f3074f5af0eca2b1a5ec1e22b610e94969dc68e0bdbddfa402cb56d59de8fe0"
+      },
+      {
+        "path": "apps/server/test/visual-compatibility.test.ts",
+        "sha256": "d6e7584b0ad0d59d7b11d8eb683bc1ddb3d9cce5e0584fcd89aa1445d26244e3"
       }
     ],
     "foundationHead": "a114abc8917f1895118f7ba56750e75dc42963f2"
@@ -76,9 +100,9 @@
     "head": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
     "state": "operator-local specification worktree is dirty; no private artifact was copied into public source",
     "doc30Sha256": "e5302919fdfb4842d713ce4ed344a44a52dcdb11b38185d2dee293406dedd6e8",
-    "packetSha256": "96de2593a8ed00adc9afafd619f10fc33c0d9eb5e1f49073a9ea67fdb16c7e6e",
-    "packetSha256AtComponentTests": "65a1dc98f7995f52e60221254dee4c1f94076dd09056d86a786bdae76d206b42",
-    "packetScopeAidUpdatedAfterComponentTests": true
+    "packetSha256": "f2622e9ab6664656df5444ea574f497b2337c06f1c16a01a3645da9246ee6fda",
+    "packetSha256AtComponentTests": "f2622e9ab6664656df5444ea574f497b2337c06f1c16a01a3645da9246ee6fda",
+    "packetScopeAidUpdatedAfterComponentTests": false
   },
   "implemented": [
     "Provider-neutral additive visual request/result port with image formats, scope epochs, cancellation, deadline and egress metadata. Default runtime remains unconfigured and cannot enable a camera.",
@@ -88,7 +112,10 @@
     "Synthetic HTTP/component tests cover unconfigured fallback, authenticated negotiation, idempotent camera command, binary digest, upload contention, audience/security retirement and Assistant lease isolation. Fixture observations are scripted and do not derive from image pixels.",
     "Browser conversation camera availability, explicit Enable and persistent state/source/Stop controls. Negotiation precedes source preparation, challenge refreshed after preparation, foreground scope watchdog, immediate local stop, delayed grant disposal and no reconnect/background auto-resume. No default capture adapter or physical camera is selected.",
     "Idle lease expiry releases capture without further polling; batches recheck current capture/interpretation/egress authority; stale requests cannot revoke successor leases. Disconnected HTTP clients cancel exact-lease processing. Runtime camera controls survive administration idle expiry while still requiring current conversation authentication and Assistant permission.",
-    "Interpretation deadlines include queue time; failed, rejected or timed-out observations clear current visual usability. Pending buffers are wiped before replacement copies. Owned/reserved encoded allocation measured at 10,518,528 bytes/session; socket, parsed metadata, decoder and provider-private allocation excluded."
+    "Interpretation deadlines include queue time; failed, rejected or timed-out observations clear current visual usability. Pending buffers are wiped before replacement copies. Owned/reserved encoded allocation measured at 10,518,528 bytes/session; socket, parsed metadata, decoder and provider-private allocation excluded.",
+    "Public compact HTTP adapter schema, types and shared request validation; validated success responses carry an explicit adapter identity. This independently authored adapter is distinct from the canonical provider envelope. Browser refuses missing/wrong adapter identity and unsupported versions before preparing a source; malformed grants and renewals fail closed.",
+    "Legacy ordinary text requests continue before/after unavailable or unsupported visual input and after restart. Authenticated session identity persists while camera leases and existing volatile dialogue do not. Chrome tests of the real conversation room with synthetic legacy 404/unsupported services keep typed replies and speech controls usable. Repeated text delivery is not replay qualification.",
+    "Multipart UUID format validation accepts uppercase UUID syntax consistently with the HTTP contract while preserving exact metadata/part identifier matching."
   ],
   "profile": {
     "id": "lifestream.conversational-vision.v1",
@@ -106,37 +133,36 @@
       "result": "pass"
     },
     {
-      "command": "node --test --experimental-strip-types packages/runtime/test/perception.test.ts apps/server/test/visual-multipart.test.ts apps/server/test/visual-input.test.ts apps/server/test/visual-route-lifecycle.test.ts",
+      "command": "node --test --experimental-strip-types packages/contracts/test/visual-input.test.ts packages/contracts/test/contract-validation.test.ts apps/server/test/visual-input.test.ts apps/server/test/visual-multipart.test.ts apps/server/test/visual-route-lifecycle.test.ts apps/server/test/visual-compatibility.test.ts packages/runtime/test/perception.test.ts",
       "result": "pass",
-      "tests": 30,
+      "tests": 47,
       "failed": 0,
-      "skipped": 0,
-      "durationMs": 3832.884834
+      "skipped": 0
     },
     {
       "command": "pnpm test",
       "result": "pass",
-      "tests": 1281,
+      "tests": 1293,
       "failed": 0,
       "skipped": 0,
-      "durationMs": 105024.266334,
-      "detail": "Full regression plus final focused rerun on the frozen resource-hardening sources."
+      "durationMs": 107168.33625,
+      "detail": "Full regression; final focused rerun also includes the UUID interoperability fix."
     },
     {
       "command": "pnpm test:browser-surface",
       "result": "pass for runnable checks",
-      "tests": 142,
-      "passed": 59,
+      "tests": 145,
+      "passed": 61,
       "failed": 0,
-      "skipped": 83
+      "skipped": 84
     },
     {
       "command": "PLAYWRIGHT_MODULE=<operator-local-installed-module> node --test apps/control-web/test/conversation-camera.test.mjs",
       "result": "pass",
-      "tests": 10,
+      "tests": 13,
       "failed": 0,
       "skipped": 0,
-      "detail": "Installed Chrome headless, synthetic source; device API throws if invoked. All camera controls exercised. 390px screenshot inspected; source/status and Stop visible, no overflow."
+      "detail": "Installed Chrome synthetic camera controls plus real conversation room with synthetic legacy404/unsupported servers; typed replies and speech controls continue, device APIs forbidden."
     },
     {
       "command": "PLAYWRIGHT_MODULE=<operator-local-installed-module> node --test --test-name-pattern='room Stop response|real room capture' apps/control-web/test/urgent-attention.test.mjs",
@@ -175,6 +201,12 @@
       "command": "node scripts/workspace.mjs preflight LS-S087",
       "result": "fails on preserved run-control mismatch",
       "detail": "S066 checkpoint retained; its selected slice, revision, dirty-file snapshot and writable paths differ. Independent prerequisite audit accepts S024/S056 receipts; S071 historical qualification has changed effective inputs. Current reused software regressions pass, without renewing full qualification."
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "tests": 365,
+      "detail": "Private specification structural validation only; not runtime conformance."
     }
   ],
   "caseCoverage": [
@@ -192,14 +224,14 @@
     },
     {
       "caseId": "LS-TEST-157",
-      "disposition": "partialCompatibilityOnly",
-      "covered": "Additive sidecar paths and package exports leave closed text/audio wire shapes untouched; full existing unit suite and browser surface runnable checks pass.",
-      "remaining": "Versioned public vision wire schema/validator and an independent legacy boundary/replay/rollback matrix."
+      "disposition": "partialHttpAdapterAndLegacyCompatibility",
+      "covered": "Independently authored closed HTTP adapter schema/types, shared requests and validated success responses, explicit adapter identity, malformed/unsupported/default-off behavior; ordinary text and same-authentication restart regression, stale camera lease rejection, Chrome room controls on simulated legacy404 and unsupported servers. Full unit regression passes.",
+      "remaining": "Full canonical provider-envelope conformance and independent complete legacy audio/replay/rollback matrix; no real provider or perceptual acceptance inferred."
     }
   ],
   "unresolvedDependencies": [
     "No configured physical source/broker or browser bounded frame adapter; default room remains unavailable and synthetic source injection is test-only.",
-    "No independently authored versioned public vision HTTP wire schema/validator or complete canonical envelope/legacy replay/rollback conformance matrix.",
+    "Public compact HTTP adapter contract exists; full canonical provider-envelope conformance and complete independent legacy audio/replay/rollback qualification remain open.",
     "Current SGLang inference provider is text-only; no image-capable provider is selected or connected.",
     "Full JPEG/PNG decoding and total cross-layer decoded/native/provider allocation enforcement remain unverified.",
     "No pixels-to-interpretation, physical-camera, perceptual-quality, visual ordinary reply, visual memory or Human acceptance is claimed."
@@ -274,6 +306,102 @@
           "detail": "Checkpoint still selects LS-S066; public revision and actual dirty changes differ from its snapshot; checkpoint writable files differ from expanded private S087 packet. S066 status and checkpoint were preserved. Parent orchestrator owns reconciliation."
         }
       ]
+    },
+    {
+      "integrationHead": "0dde8208c4ef6ff2d9699fd11e29189856f28d75",
+      "claimClass": "local-synthetic-http-browser-lifecycle-and-owned-encoded-resource-regression",
+      "collectedAt": "2026-09-29T19:09:26.968664Z",
+      "checks": [
+        {
+          "command": "pnpm typecheck",
+          "result": "pass"
+        },
+        {
+          "command": "node --test --experimental-strip-types packages/contracts/test/visual-input.test.ts packages/contracts/test/contract-validation.test.ts apps/server/test/visual-input.test.ts apps/server/test/visual-multipart.test.ts apps/server/test/visual-route-lifecycle.test.ts apps/server/test/visual-compatibility.test.ts packages/runtime/test/perception.test.ts",
+          "result": "pass",
+          "tests": 47,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "command": "pnpm test",
+          "result": "pass",
+          "tests": 1293,
+          "failed": 0,
+          "skipped": 0,
+          "durationMs": 107168.33625,
+          "detail": "Full regression; final focused rerun also includes the UUID interoperability fix."
+        },
+        {
+          "command": "pnpm test:browser-surface",
+          "result": "pass for runnable checks",
+          "tests": 145,
+          "passed": 61,
+          "failed": 0,
+          "skipped": 84
+        },
+        {
+          "command": "PLAYWRIGHT_MODULE=<operator-local-installed-module> node --test apps/control-web/test/conversation-camera.test.mjs",
+          "result": "pass",
+          "tests": 13,
+          "failed": 0,
+          "skipped": 0,
+          "detail": "Installed Chrome synthetic camera controls plus real conversation room with synthetic legacy404/unsupported servers; typed replies and speech controls continue, device APIs forbidden."
+        },
+        {
+          "command": "PLAYWRIGHT_MODULE=<operator-local-installed-module> node --test --test-name-pattern='room Stop response|real room capture' apps/control-web/test/urgent-attention.test.mjs",
+          "result": "pass",
+          "tests": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "command": "node --test apps/server/test/presentation-self-context.test.ts apps/server/test/session-definition.test.ts apps/server/test/audience.test.ts packages/runtime/test/session.test.ts packages/runtime/test/context.test.ts",
+          "result": "pass",
+          "tests": 23,
+          "failed": 0,
+          "skipped": 0,
+          "detail": "Current reused prerequisite behavior; not renewed full S071 selected-provider qualification."
+        },
+        {
+          "command": "pnpm lint",
+          "result": "pass",
+          "detail": "Repository lint configuration excludes TypeScript."
+        },
+        {
+          "command": "pnpm build",
+          "result": "pass"
+        },
+        {
+          "command": "node scripts/workspace.mjs check",
+          "result": "pass",
+          "detail": "Structural only."
+        },
+        {
+          "command": "git diff --check",
+          "result": "pass"
+        },
+        {
+          "command": "node scripts/workspace.mjs preflight LS-S087",
+          "result": "fails on preserved run-control mismatch",
+          "detail": "S066 checkpoint retained; its selected slice, revision, dirty-file snapshot and writable paths differ. Independent prerequisite audit accepts S024/S056 receipts; S071 historical qualification has changed effective inputs. Current reused software regressions pass, without renewing full qualification."
+        },
+        {
+          "command": "npm --prefix .private run validate",
+          "result": "pass",
+          "tests": 365,
+          "detail": "Private specification structural validation only; not runtime conformance."
+        }
+      ]
     }
-  ]
+  ],
+  "wireBoundary": {
+    "schemaId": "https://lifestream.dev/contracts/visual-input-http/1.0.0",
+    "wireProfile": "lifestream.visual-input-http",
+    "schemaVersion": "1.0.0",
+    "source": "independently authored from the implemented public HTTP adapter",
+    "canonicalEnvelopeConformance": false,
+    "privateArtifactExport": false,
+    "legacyCatalogChanged": false
+  }
 }

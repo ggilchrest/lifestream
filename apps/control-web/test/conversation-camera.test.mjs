@@ -16,7 +16,7 @@ function fixture({configured = true, adapter = true} = {}) {
   const capture = {sourceLabel:'Synthetic camera', prepare:async() => { operations.push('prepare'); return prepared; }};
   const api = async(path, options) => {
     const body = JSON.parse(options.body); calls.push({path, body, options});
-    if (path.endsWith('/capabilities')) return {schemaVersion:'1.0.0', available:configured, reason:configured ? null : 'unconfigured', camera:serverCamera,
+    if (path.endsWith('/capabilities')) return {wireProfile:'lifestream.visual-input-http', schemaVersion:'1.0.0', available:configured, reason:configured ? null : 'unconfigured', camera:serverCamera,
       negotiation:{profile:configured ? 'lifestream.conversational-vision.v1' : null, selectedVersion:configured ? '1.0.0' : null,
         implemented:true, configured, providerConnected:configured, sourceConnected:true, mediaTypes:['image/jpeg'],
         challenge:{id:randomUUID(), hostSentMonotonicMs:500000}, bounds:{leaseTtlMs:60000}}};
@@ -26,7 +26,7 @@ function fixture({configured = true, adapter = true} = {}) {
     } else serverCamera = {revision:serverCamera.revision + 1, captureActive:true,
       leaseId:body.action === 'renew' ? serverCamera.leaseId : randomUUID(), clockMappingId:randomUUID(), expiresAtMonotonicMs:560000,
       activeForSession:false, currentObservationUsable:false};
-    return {schemaVersion:'1.0.0', camera:serverCamera};
+    return {wireProfile:'lifestream.visual-input-http', schemaVersion:'1.0.0', camera:serverCamera};
   };
   const camera = new ConversationCamera({api, scope:() => scope, visible:() => visible, capture:adapter ? capture : null,
     now:() => now, newId:randomUUID, onState:value => states.push(value),
@@ -46,6 +46,50 @@ test('construction and availability check never enable, acquire or capture; unsu
     assert.equal(f.camera.snapshot.captureActive, false);
     assert.equal(f.calls.every(call => call.path.endsWith('/capabilities')), true);
     assert.deepEqual(f.operations, []);
+  }
+});
+
+test('legacy, unsupported and mismatched adapters never prepare a camera source', async() => {
+  for (const failure of ['legacy404','missingIdentity','wrongIdentity','unsupportedEnvelope','unsupportedNegotiation','unsupportedProfile']) {
+    const f = fixture(), base = f.camera.api;
+    f.camera.api = async(path, options) => {
+      if (failure === 'legacy404') { const error = Error('Camera route unavailable (404).'); error.status = 404; throw error; }
+      const value = await base(path, options);
+      if (failure === 'missingIdentity') delete value.wireProfile;
+      if (failure === 'wrongIdentity') value.wireProfile = 'lifestream.conversational-vision.v1';
+      if (failure === 'unsupportedEnvelope') value.schemaVersion = '2.0.0';
+      if (failure === 'unsupportedNegotiation') value.negotiation.selectedVersion = '2.0.0';
+      if (failure === 'unsupportedProfile') value.negotiation.profile = 'lifestream.visual-input-http';
+      return value;
+    };
+    await f.camera.check(); await f.camera.enable();
+    assert.equal(f.camera.snapshot.available, false, failure);
+    assert.equal(f.camera.snapshot.captureActive, false, failure);
+    assert.deepEqual(f.operations, [], `${failure} must not prepare or grant`);
+    assert.equal(f.timers.size, 0, failure);
+  }
+});
+
+test('missing or wrong camera grant identity cannot start capture or survive renewal', async() => {
+  for (const stage of ['enable','renew']) for (const failure of ['missingIdentity','wrongIdentity','unsupportedVersion']) {
+    const f = fixture(), base = f.camera.api;
+    if (stage === 'renew') await f.camera.enable();
+    f.camera.api = async(path, options) => {
+      const value = await base(path, options);
+      if (JSON.parse(options.body).action === stage) {
+        if (failure === 'missingIdentity') delete value.wireProfile;
+        if (failure === 'wrongIdentity') value.wireProfile = 'lifestream.conversational-vision.v1';
+        if (failure === 'unsupportedVersion') value.schemaVersion = '2.0.0';
+      }
+      return value;
+    };
+    if (stage === 'enable') await f.camera.enable();
+    else { f.setNow(20100); f.camera.tick(); }
+    await flush();
+    assert.equal(f.camera.snapshot.captureActive, false, `${stage} ${failure}`);
+    assert.equal(f.server().captureActive, false, `${stage} ${failure} exact lease withdrawn`);
+    if (stage === 'enable') assert.equal(f.operations.includes('capture-start'), false);
+    else assert.equal(f.track.readyState, 'ended');
   }
 });
 
@@ -178,13 +222,13 @@ test('rendered controls keep a persistent camera state and source, stop on navig
     let lease = {revision:0, captureActive:false, leaseId:null};
     const api = async(path, options) => {
       const body = JSON.parse(options.body); window.cameraRequests.push(body);
-      if (!window.syntheticCameraConfigured) return {schemaVersion:'1.0.0',available:false,reason:'source_unavailable',negotiation:null,camera:lease};
+      if (!window.syntheticCameraConfigured) return {wireProfile:'lifestream.visual-input-http',schemaVersion:'1.0.0',available:false,reason:'source_unavailable',negotiation:null,camera:lease};
       if (path.endsWith('/camera')) {
         lease = body.action === 'stop' ? {revision:lease.revision + 1,captureActive:false,leaseId:null} :
           {revision:lease.revision + 1,captureActive:true,leaseId:crypto.randomUUID(),clockMappingId:crypto.randomUUID(),expiresAtMonotonicMs:1000000};
-        return {schemaVersion:'1.0.0',camera:lease};
+        return {wireProfile:'lifestream.visual-input-http',schemaVersion:'1.0.0',camera:lease};
       }
-      return {schemaVersion:'1.0.0',available:true,reason:null,camera:lease,negotiation:{
+      return {wireProfile:'lifestream.visual-input-http',schemaVersion:'1.0.0',available:true,reason:null,camera:lease,negotiation:{
         profile:'lifestream.conversational-vision.v1',selectedVersion:'1.0.0',implemented:true,configured:true,providerConnected:true,sourceConnected:true,
         mediaTypes:['image/jpeg'],challenge:{id:crypto.randomUUID(),hostSentMonotonicMs:900000},bounds:{leaseTtlMs:60000}}};
     };
@@ -226,4 +270,86 @@ test('rendered controls keep a persistent camera state and source, stop on navig
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
   if (process.env.LIFESTREAM_CAMERA_SCREENSHOT) await page.screenshot({path:process.env.LIFESTREAM_CAMERA_SCREENSHOT,fullPage:true});
   assert.deepEqual(errors, []);
+});
+
+test('actual conversation room preserves typed replies and speech connection when a legacy or rolled-back server rejects vision', {skip:!process.env.PLAYWRIGHT_MODULE}, async t => {
+  const {chromium} = await import(process.env.PLAYWRIGHT_MODULE), browser = await chromium.launch({channel:'chrome',headless:true});
+  t.after(() => browser.close());
+  for (const failure of ['legacy404','unsupportedVersion']) {
+    const page = await browser.newPage({viewport:{width:1280,height:900}}), errors = [], cameraRequests = [], messageRequests = [];
+    page.on('pageerror', error => errors.push(error.message));
+    const session = {sessionId:randomUUID(),principalId:randomUUID(),csrfToken:'synthetic-csrf'}, assistantId = randomUUID(), relationshipId = randomUUID();
+    const endpoint = {endpointId:randomUUID(),privacyClass:'personal',inputModalities:['text','audio'],outputModalities:['text','audio']};
+    const stubs = {
+      'automatic-memory.js':'export const installAutomaticMemory=()=>({refresh(){}});',
+      'incidents.js':'export const installIncidentReview=()=>{};',
+      'presentation.js':'export const installPresentation=()=>({state(){},settle(){},clear(){},refresh(){},acceptsSpeech(){return false;}});',
+      'acknowledgments.js':'export class AcknowledgmentCache {clear(){} stop(){} async refresh(){} }'
+    };
+    await page.route('**/*', async route => {
+      if (!route.request().url().startsWith('http://127.0.0.1:9/')) return route.abort();
+      const name = new URL(route.request().url()).pathname.slice(1), json = (value, status = 200) => route.fulfill({status,contentType:'application/json',body:JSON.stringify(value)});
+      if (name.startsWith('api/runtime/vision/')) {
+        cameraRequests.push(JSON.parse(route.request().postData()));
+        return failure === 'legacy404' ? json({message:'Camera route unavailable (404).'},404) :
+          json({wireProfile:'lifestream.visual-input-http',schemaVersion:'2.0.0',available:false,reason:'unsupported',camera:{revision:0},negotiation:null});
+      }
+      if (name === 'api/runtime/v1/session-context') return json({revision:1,endpoint,runtimeSelfContext:{audienceScope:'authenticatedSession'}});
+      if (name.endsWith('/initiative/v1')) return json({operation:'inspect',records:[],explanations:[]});
+      if (name.endsWith('/acknowledgments')) return json({entries:[]});
+      if (name === 'api/runtime/v1/messages') {
+        messageRequests.push(JSON.parse(route.request().postData()));
+        return route.fulfill({contentType:'text/event-stream',body:'event: message.delta\ndata: {"text":"Synthetic ordinary text reply"}\n\nevent: interaction.completed\ndata: {}\n\n'});
+      }
+      if (!name) return route.fulfill({contentType:'text/html',body:'<!doctype html><html lang="en"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/styles.css"><main class="shell card"></main></html>'});
+      if (!/^[a-z-]+\.(?:js|css)$/u.test(name)) return route.abort();
+      return route.fulfill({contentType:name.endsWith('.css') ? 'text/css' : 'text/javascript',body:stubs[name] ?? await readFile(new URL('../' + name, import.meta.url))});
+    });
+    await page.addInitScript(({session, assistantId, relationshipId}) => {
+      window.lifestreamAuth = {mode:'local-password',session,ready:Promise.resolve()};
+      window.roomIdentity = {assistantId,displayName:'Synthetic Assistant',relationship:{relationshipId}};
+      window.audioResumes = 0; window.deviceCalls = 0; window.sockets = [];
+      navigator.mediaDevices.getUserMedia = () => { window.deviceCalls++; throw Error('Physical IO is forbidden'); };
+      window.AudioContext = class extends EventTarget {
+        constructor() { super(); this.state = 'suspended'; this.currentTime = 0; this.destination = {}; }
+        async resume() { this.state = 'running'; window.audioResumes++; }
+        async close() { this.state = 'closed'; }
+      };
+      window.WebSocket = class extends EventTarget {
+        static OPEN = 1;
+        constructor(url) { super(); this.url = url; this.readyState = 0; window.sockets.push(this); queueMicrotask(() => { this.readyState = 1; this.dispatchEvent(new Event('open')); }); }
+        send() {}
+        close() { this.readyState = 3; this.dispatchEvent(new Event('close')); }
+      };
+    }, {session, assistantId, relationshipId});
+    await page.goto('http://127.0.0.1:9/#conversation');
+    await page.evaluate(async() => {
+      const {installConversationRoom} = await import('/conversation-room.js');
+      const api = async(path, options) => { const response = await fetch(path, options), value = await response.json(); if (!response.ok) throw Error(value.message); return value; };
+      installConversationRoom({anchor:document.querySelector('main'),api,context:() => window.roomIdentity});
+    });
+    await page.waitForFunction(() => document.querySelector('#room-disclosure').textContent.startsWith('Session revision 1'));
+    await page.locator('#room-modality').selectOption('speech');
+    await page.locator('#room-enable').click();
+    await page.waitForFunction(() => document.querySelector('#room-output-state').textContent.startsWith('Speech ready'));
+    await page.getByRole('button',{name:'Check camera availability'}).click();
+    await page.waitForFunction(() => document.querySelector('.room-camera').dataset.cameraPhase === 'unavailable');
+    assert.equal(await page.getByRole('button',{name:'Enable camera',exact:true}).isEnabled(), false);
+    assert.match(await page.locator('#room-output-state').textContent(), /^Speech ready/u, failure);
+    assert.equal(await page.evaluate(() => window.sockets.at(-1).readyState), 1, failure);
+    await page.locator('#room-message').fill('Synthetic ordinary message');
+    await page.locator('#room-send').click();
+    await page.waitForFunction(() => [...document.querySelectorAll('.room-turn-state')].some(node => node.textContent === 'Completed'));
+    assert.equal(messageRequests.length, 1, failure);
+    assert.equal(messageRequests[0].userInput, 'Synthetic ordinary message');
+    assert.match(await page.locator('#room-turns').textContent(), /Synthetic ordinary text reply/u);
+    await page.locator('#room-enable').click();
+    await page.waitForFunction(() => document.querySelector('#room-output-state').textContent.startsWith('Speech ready'));
+    assert.equal(await page.evaluate(() => window.sockets.at(-1).url.endsWith('/api/runtime/v1/audio')), true);
+    assert.equal(await page.evaluate(() => window.audioResumes), 2);
+    assert.equal(await page.evaluate(() => window.deviceCalls), 0);
+    assert.equal(cameraRequests.length, 1, 'camera failure cannot trigger retry or grant');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }
 });

@@ -119,3 +119,14 @@ test('stalled or revoked uploads have finite disposal and detach listeners', asy
     stream.destroy();
   }
 });
+
+
+test('accepts uppercase UUID format while preserving exact declared part identity', async () => {
+  const upper='AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA';
+  const declared=metadata({frames:[{frameId:upper}]});
+  const result=await readVisualMultipart(request(multipart([declared,frame(upper)])));
+  assert.equal(result.parts.get(upper)?.mediaType,'image/png');
+  assert.equal(result.parts.has(upper.toLowerCase()),false,'part identifiers remain opaque exact keys');
+  result.dispose();
+  await failure(multipart([declared,frame(upper.toLowerCase())]),400,'visual_multipart_invalid');
+});

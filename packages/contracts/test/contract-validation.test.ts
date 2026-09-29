@@ -6,7 +6,7 @@ import { createContractValidator } from "../src/validator.ts";
 
 test("compiles every exported schema and rejects unknown schema IDs", () => {
   const validator = createContractValidator();
-  assert.equal(validator.schemaIds().length, 25);
+  assert.equal(validator.schemaIds().length, 26);
   assert.equal(validator.validate("unknown", {}).valid, false);
 });
 
@@ -52,7 +52,7 @@ test("shared compiled schemas keep caller results, schema lists and inputs indep
   assert.equal(failure.valid,false);assert.doesNotMatch(JSON.stringify(failure),/SYNTHETIC_PRIVATE_VALUE/);
   assert.equal(second.validate(id,{schemaVersion:"1.0.0",operation:"inspect"}).valid,true);assert.deepEqual(failure,saved);assert.equal(JSON.stringify(invalid),before);
   failure.errors[0]!.message="caller mutation";assert.notEqual(second.validate(id,invalid).errors[0]!.message,"caller mutation");
-  const ids=first.schemaIds();ids.splice(0);assert.equal(second.schemaIds().length,25);
+  const ids=first.schemaIds();ids.splice(0);assert.equal(second.schemaIds().length,26);
   first.validate=()=>({valid:true,errors:[]});assert.equal(second.validate('unknown',{}).valid,false);
 });
 

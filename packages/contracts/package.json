@@ -18,6 +18,10 @@
     "./experience": {
       "types": "./dist/experience.d.ts",
       "import": "./dist/experience.js"
+    },
+    "./visual-input": {
+      "types": "./dist/visual-input.d.ts",
+      "import": "./dist/visual-input.js"
     }
   }
 }
