@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S088",
+  "status": "inProgress",
+  "claimClass": "local-synthetic-ordinary-visual-context-and-output-fencing",
+  "collectedAt": "2026-09-29T19:53:55.199864Z",
+  "testedRevision": "4f3466d16924f604fb4e7a2892188a1cc4d2471c",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "5615ab617d80419d16bf3fad84ed3f0b00c3a6a70326b90257c2d172f29ce945"
+    },
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "sha256": "ee9df4a7be4330e9f98d8f68630cbe0cbdb2a079d8331d78ab31ebb9ac9eef2d"
+    },
+    {
+      "path": "apps/server/src/runtime/inference.ts",
+      "sha256": "259327a8c57a777fc156259fc32804ed2415df018a91240b049de45fe0e05e1d"
+    },
+    {
+      "path": "apps/server/src/runtime/visual-input.ts",
+      "sha256": "8676f80f00b488c30b09e5c97097e27f3f590a3e6d589166fd5ce89f051f702a"
+    },
+    {
+      "path": "apps/server/test/audio.test.ts",
+      "sha256": "a51efc7e91182f5741ff5e126470cb6e46053ee6a03f94e689529b162aee5621"
+    },
+    {
+      "path": "apps/server/test/visual-input.test.ts",
+      "sha256": "656d24570d67b672f4820e6b39a4851310978c23310d773f95798a71f52a1445"
+    },
+    {
+      "path": "apps/server/test/visual-context.test.ts",
+      "sha256": "1a4609b21af9fe01e5ccc0dae16bd2c1dd1263e6d26e9fb67a99c57586b89aa5"
+    },
+    {
+      "path": "packages/runtime/package.json",
+      "sha256": "6ee11c6bdb10533077815b0f7059a5388e9219dca1c0b1928124f0a6c7b713f7"
+    },
+    {
+      "path": "packages/runtime/src/inference/prompt.ts",
+      "sha256": "11808627879969aa2a9170a2cf15e44928509ccfa85497f4384907ce9c9a3c23"
+    },
+    {
+      "path": "packages/runtime/src/perception/admission.ts",
+      "sha256": "a32885410c0cf151d237f87049846bcdadf1326a8150d5bc840b639b9b05bde6"
+    },
+    {
+      "path": "packages/runtime/src/perception/observation.ts",
+      "sha256": "81f17d48981728337f3fe902714ebcad11f75f44c36753d2c4f0b7cc470314db"
+    },
+    {
+      "path": "packages/runtime/test/perception.test.ts",
+      "sha256": "f0b24347c36ca3aa1008facf89a2ece4e256f270c6dc4f6d11e883d75cc0ee3a"
+    },
+    {
+      "path": "packages/runtime/test/visual-context.test.ts",
+      "sha256": "4c6113eb2887ed5867e8990899c921d83902d28b4a3876fb96df2e95e7e66934"
+    }
+  ],
+  "prerequisiteScope": {
+    "LS-S066": "Primary checkpoint and distinct pending full LS-TEST-084 preserved; this slice does not depend on that acceptance.",
+    "LS-S087": "Reused provider admission, immutable host provenance, HTTP and bounded frame transport behavior currently regression-tested; full canonical/provider/physical slice acceptance remains pending.",
+    "preflight": "Primary checkpoint remains LS-S066, so LS-S088 selection/writable-scope/prerequisite qualification mismatches are retained as bookkeeping/claim limits, not waived acceptance."
+  },
+  "implemented": [
+    "Bounded ephemeral derived visual text with host provenance, capture-time expiry, strict subject/session/Assistant/relationship/source binding and no raw media or locator projection.",
+    "One minted immutable prepared-turn binding owns pinned ordinary conversation and source revision inventory; visual sidecar identity, scope and base text must match in text and audio prompts.",
+    "Nine existing prompt sections and closed manifest remain unchanged; visual content stays untrusted conversation context and is not fabricated dialogue or automatic memory.",
+    "Availability is distinct from optional scene inclusion. Conservative scene-exposure suppression prevents repeated unchanged input after completed replies; it does not prove actual model mention.",
+    "Stop, renewal, authority/source changes, interpretation failure and expiry fence selected context and queued output; benign new scene/empty results preserve an already admitted fresh view until its original expiry.",
+    "Dedicated selected-view expiry callbacks notify output fences without another camera request; bounded deduplicated deadlines do not evict existing protections.",
+    "Visual audio use completes only after a valid software playback receipt where that protocol exists; wrong/early/stopped/duplicate receipts do not complete it.",
+    "Fractional capture lower time rounds toward the past to avoid invalid future-relative-to-integer-receipt rejection; freshness never extends.",
+    "Shutdown output reconciliation rejects unavailable authority and continues across broken predicates instead of querying a closed server."
+  ],
+  "bounds": {
+    "hostSessions": 4,
+    "observationsPerSession": 32,
+    "cacheBytesPerSession": 32768,
+    "freshnessMs": 6000,
+    "metadataRetentionMs": 60000,
+    "selectedObservations": 8,
+    "selectedVisualTextBytes": 2048,
+    "totalConversationBytes": 65536,
+    "asideMinimumIntervalMs": 30000,
+    "selectedExpiryTimers": 32
+  },
+  "verification": {
+    "fullSuite": {
+      "command": "pnpm test",
+      "tests": 1329,
+      "pass": 1328,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 91958.675833,
+      "skipReason": "Optional installed-Chrome generated-frame test requires PLAYWRIGHT_MODULE and passed separately."
+    },
+    "generatedBrowserHttp": {
+      "pass": 1,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 3893.415959
+    },
+    "targetedSharedContext": {
+      "pass": 27,
+      "fail": 0
+    },
+    "audioAndAdmission": {
+      "pass": 44,
+      "fail": 0
+    },
+    "hostExpiryAndAdmission": {
+      "pass": 7,
+      "fail": 0,
+      "durationMs": 3129.882834
+    },
+    "browserSurface": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 85,
+      "reason": "Default browser surface run omits environment-dependent rendered journeys; targeted S087 Chrome checks30/30 passed separately."
+    },
+    "privateSpecifications": {
+      "tests": 365,
+      "pass": 365,
+      "fail": 0,
+      "structuralOnly": true
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass under existing configuration; not every TypeScript source is linted",
+    "workspace": "pass after checkpoint UTC-format repair",
+    "diffCheck": "pass"
+  },
+  "supersededFailedAttempts": [
+    {
+      "claim": "full regression before shutdown fix",
+      "pass": 1324,
+      "fail": 1,
+      "skip": 1,
+      "durationMs": 93759.851125,
+      "failure": "Saved voice tests generated asynchronous server-is-not-listening errors from late visual callback. Reproduced and repaired, targeted4/4 and final full pass."
+    },
+    {
+      "claim": "default-clock host projection",
+      "failure": "A fractional lower capture time exceeded the integer UTC receipt by 0.3999ms; rejected valid context. Controlled regression and conservative floor repair passed."
+    },
+    {
+      "claim": "workspace metadata check",
+      "failure": "Checkpoint update used +00:00 instead of required Z. Corrected; workspace check passed."
+    }
+  ],
+  "remaining": [
+    "Typed audience count evidence, two-second restriction/requalification latch, and atomic count-to-output/privacy transition.",
+    "Full canonical PreparedContextView materialization, complete post-world source inventory and canonical perception envelopes.",
+    "Topic relevance, omission diagnostics and actual mention qualification beyond conservative completed-exposure suppression.",
+    "Real selected vision adapter, physical broker/capture, full decode/allocation qualification, blind perception, latency and Human acceptance.",
+    "Selective visual memory and later S089-S094 work."
+  ],
+  "notClaimed": [
+    "No new camera activation, deployment, provider selection, external exposure or publication.",
+    "No actual image understanding: scripted fixture results qualify software plumbing only.",
+    "No physical audibility or real-provider performance measurement.",
+    "No reopened iPhone or original24 S083/S084 Human acceptance; full S066 remains pending."
+  ],
+  "worktreeExclusions": [
+    "Pre-existing README, iOS project/configuration, product audit and acceptance-guide/evidence edits preserved outside this source commit.",
+    "Private canonical roadmap changes remain in their independent private repository."
+  ]
+}
