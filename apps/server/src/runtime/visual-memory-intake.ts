@@ -27,7 +27,7 @@ export function visualPublicationEpisode(batch:VisualObservationBatch,selection:
    sourceKind:'modelVisualObservation',epistemicKind:'visibleFeature',description:source.appearance,subject:structuredClone(binding.subject),visibility:binding.visibility,
    uncertainty:'Unverified sampled appearance; model confidence is uncalibrated. Tentative inference is not retained by this transformation.',
    confidence:source.confidence===null?null:{value:source.confidence,basis:'Uncalibrated perception-provider score',calibrationRef:null},
-   limitations:[...source.limitations,'Raw media is not retained.'],independenceKey:selection.independenceKey,
+   limitations:[...source.limitations,'Raw media is not retained.','Capture interval includes host clock-mapping uncertainty; its upper bound is not an exact event time.'],independenceKey:selection.independenceKey,
    providerConfigurationRef:JSON.stringify([batch.provider.id,batch.provider.version,scope.sourceBindingRef,scope.captureConfigurationRevision]),transformationVersion:'1.0.0',untrusted:true};
  });
  const subjectRef=observations[0]!.subject.subjectRef;

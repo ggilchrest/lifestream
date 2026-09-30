@@ -19,6 +19,10 @@ const ownerValid=(owner:VisualMemoryOwner)=>[owner.principalId,owner.assistantId
 /** Source identity excludes retention, lifecycle and summary; recall or paraphrase is not new evidence. */
 export const visualEpisodeSourceDigest=(episode:Pick<VisualObservationEpisode,'scope'|'observations'>)=>digest({scope:episode.scope,observations:episode.observations});
 type Row={episode_id:string;revision:number;state:string;expires_at:number;payload_json:string|null};
+export type VisualRetainedWindow=Readonly<{fromMs:number;toMs:number;complete:boolean;reason:'complete'|'scopeUnavailable'|'invalidWindow'|'capacityExceeded'|'missingSource';boundaryRevision:string;episodes:readonly VisualObservationEpisode[]}>;
+type WindowGuard={repository:VisualMemoryRepository;owner:VisualMemoryOwner;fromMs:number;toMs:number;revision:string;lastNow:number;deadline:number;retired:boolean;checking:boolean};
+const windowGuards=new WeakMap<VisualRetainedWindow,WindowGuard>();
+function immutable<T>(value:T):T{if(value&&typeof value==='object'){for(const child of Object.values(value))immutable(child);Object.freeze(value);}return value;}
 
 /** Run inside the source lifecycle transaction. Candidate content and historic
  * event payloads are erased; opaque lifecycle receipts remain. */
@@ -96,7 +100,9 @@ export class VisualMemoryRepository{
   const expires=Date.parse(episode.expiresAt);
   if(Date.parse(episode.occurredAt)!==earliest||expires<=now||expires>earliest+policy.retentionMs!||episode.observations.some(o=>{
    const capture=Date.parse(o.earliestCaptureAt),latest=Date.parse(o.latestCaptureAt),received=Date.parse(o.receivedAt),interpreted=Date.parse(o.interpretedAt);
-   return capture>latest||latest>received||received>interpreted||interpreted>now||Date.parse(o.expiresAt)<=now;
+   // The producer's interval includes clock uncertainty, not a claimed exact
+   // future event. Preserve it; earliest capture must still precede receipt.
+   return capture>latest||capture>received||latest>received+250||latest-capture>2250||received>interpreted||interpreted>now||Date.parse(o.expiresAt)<=now||Date.parse(o.expiresAt)>capture+6000;
   }))return {state:'sourceExpired'};
   const sessionKey=digest([scopeKey,episode.scope.sessionId]),appearanceKey=admission.reason==='appearanceContinuity'?digest([sessionKey,admission.verifiedSubjectRef]):null;
   const sources=[...new Set([...families.map(x=>`family:${x}`),...observationIds.map(x=>`observation:${x}`),...episode.observations.flatMap(o=>o.sourceFrameIds.map(x=>`frame:${x}`))])].map(x=>digest([scopeKey,x]));
@@ -120,6 +126,36 @@ export class VisualMemoryRepository{
   if(!allowed)return {policy:this.policy(owner),episodes:[],complete:false};
   const rows=this.db.connection.prepare('SELECT episode_id,revision,state,expires_at,payload_json FROM visual_observation_episodes WHERE scope_key=? ORDER BY retained_at DESC,episode_id LIMIT ?').all(key(owner),limit+1) as Row[];
   return {policy:this.policy(owner),complete:rows.length<=limit,episodes:rows.slice(0,limit).map(row=>({episodeId:row.episode_id,revision:row.revision,state:row.state,expiresAt:new Date(row.expires_at).toISOString(),episode:row.payload_json?JSON.parse(row.payload_json) as VisualObservationEpisode:null}))};
+ }
+ /** Exhaustive scoped inventory, never a top-k semantic search. Missing erased
+  * metadata suppresses coverage rather than hiding a potential contrary source.
+  * Historical eligibility uses retention, not the old capture's six-second TTL. */
+ retainedWindow(owner:VisualMemoryOwner,allowed:boolean,fromMs:number,toMs:number):VisualRetainedWindow{
+  this.sweep();const now=this.now(),policy=this.policy(owner);
+  const unavailable=(reason:VisualRetainedWindow['reason'])=>immutable({fromMs,toMs,complete:false,reason,boundaryRevision:'unavailable',episodes:[]} as VisualRetainedWindow);
+  if(!ownerValid(owner)||!allowed||!policy.enabled)return unavailable('scopeUnavailable');
+  if(!Number.isSafeInteger(fromMs)||!Number.isSafeInteger(toMs)||fromMs<0||fromMs>=toMs||toMs>now||now-toMs>6000)return unavailable('invalidWindow');
+  // Retention time can be later than capture. Include all late admissions,
+  // including those beyond the pinned end, so they change the boundary.
+  const rows=this.db.connection.prepare('SELECT episode_id,revision,state,expires_at,payload_json FROM visual_observation_episodes WHERE scope_key=? AND retained_at>=? ORDER BY retained_at,episode_id LIMIT 129').all(key(owner),fromMs) as Row[];
+  if(rows.length>128)return unavailable('capacityExceeded');
+  const revision=digest([key(owner),policy,fromMs,toMs,rows]),episodes:VisualObservationEpisode[]=[];let complete=true;
+  for(const row of rows){
+   if(row.state!=='retained'||!row.payload_json){complete=false;continue;}
+   const episode=JSON.parse(row.payload_json) as VisualObservationEpisode,capture=Date.parse(episode.occurredAt);
+   if(!validateVisualEpisode(episode).valid||episode.state!=='retained'||episode.revision!==row.revision||episode.sourceDigest!==visualEpisodeSourceDigest(episode)||episode.processingPolicyRevision!==policy.revision||Date.parse(episode.expiresAt)<=now||!['principalId','assistantId','relationshipId'].every(field=>episode.scope[field as keyof VisualMemoryOwner]===owner[field as keyof VisualMemoryOwner])){complete=false;continue;}
+   if(capture>=fromMs&&capture<toMs)episodes.push(episode);
+  }
+  const result=immutable({fromMs,toMs,complete,reason:complete?'complete':'missingSource',boundaryRevision:revision,episodes} as VisualRetainedWindow);
+  if(complete)windowGuards.set(result,{repository:this,owner:structuredClone(owner),fromMs,toMs,revision,lastNow:now,deadline:performance.now()+6000-(now-toMs),retired:false,checking:false});return result;
+ }
+ /** Authentic local selection only; no JSON clone can revive a stale boundary. */
+ retainedWindowCurrent(window:VisualRetainedWindow,allowed:boolean):boolean{
+  const guard=windowGuards.get(window);if(!guard||guard.retired||guard.repository!==this)return false;if(guard.checking){guard.retired=true;return false;}guard.checking=true;
+  try{const now=this.now();if(!allowed||now<guard.lastNow||performance.now()>=guard.deadline){guard.retired=true;return false;}
+   const current=this.retainedWindow(guard.owner,allowed,guard.fromMs,guard.toMs);
+   if(!current.complete||current.boundaryRevision!==guard.revision||guard.retired){guard.retired=true;return false;}guard.lastNow=now;return true;
+  }catch{guard.retired=true;return false;}finally{guard.checking=false;}
  }
  forget(owner:VisualMemoryOwner,id:string,expectedRevision:number):boolean{
   this.sweep();return this.db.transaction(tx=>{tx.run("UPDATE visual_observation_episodes SET state='forgotten',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND episode_id=? AND revision=? AND state='retained'",key(owner),id,expectedRevision);

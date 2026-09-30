@@ -121,6 +121,12 @@ export class AutomaticMemory {
   if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==policy.revision||this.visual.policy(scope).revision!==visual.policy.revision)return {state:'policyDenied' as const};
   const result=this.visual.project(scope,id,revision,estimate);if(result.state==='projected')this.changed();return result;
  }
+ visualHistory(scope:MemoryScope,fromMs:number,toMs:number){
+  const policy=this.policy(scope),allowed=()=>this.policy(scope).enabled&&this.policy(scope).revision===policy.revision&&this.scopeAllowed(scope),window=this.visual.retainedWindow(scope,allowed(),fromMs,toMs);
+  const content=()=>window.episodes.every(episode=>this.contentAllowed(scope,episode.summary)&&episode.observations.every(o=>this.contentAllowed(scope,o.description)));let retired=!window.complete;
+  const isCurrent=()=>{try{if(retired||!allowed()||!content()||!allowed()||!this.visual.retainedWindowCurrent(window,allowed())){retired=true;return false;}return true;}catch{retired=true;return false;}};
+  if(!isCurrent())return {window:this.visual.retainedWindow(scope,false,fromMs,toMs),isCurrent:()=>false};return {window,isCurrent};
+ }
  configure(scope:MemoryScope,enabled:boolean,expectedRevision:number){
   this.database.transaction(tx=>{const current=this.policy(scope);if(current.revision!==expectedRevision)throw new Error('Memory policy revision conflict');tx.run('INSERT INTO automatic_memory_policies VALUES (?,?,?,?,?,?,?) ON CONFLICT(scope_key) DO UPDATE SET enabled=excluded.enabled,revision=excluded.revision,approved_at=excluded.approved_at',key(scope),scope.principalId,scope.assistantId,scope.relationshipId,enabled?1:0,expectedRevision+1,new Date().toISOString());tx.run("UPDATE automatic_memory_work SET state='cancelled',input_text='',prepared_json=NULL,reason='policy_changed' WHERE scope_key=? AND state IN ('queued','running','prepared')",key(scope));if(!enabled){tx.run('UPDATE visual_memory_policies SET enabled=0,revision=revision+1 WHERE scope_key=? AND enabled=1',key(scope));tx.run("UPDATE visual_observation_episodes SET state='invalidated',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND state='retained'",key(scope));retireVisualProjections(tx,Date.now());}});
   this.controller?.abort();return this.policy(scope);
