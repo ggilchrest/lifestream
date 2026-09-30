@@ -24,7 +24,7 @@ class Peer{
 }
 function pair(t:TestContext){const a=new PassThrough(),b=new PassThrough(),host=Duplex.from({readable:a,writable:b}),client=Duplex.from({readable:b,writable:a});t.after(()=>{host.destroy();client.destroy();});return {host,peer:new Peer(client)};}
 function setup(t:TestContext,changes:any={}){const {host,peer}=pair(t),s=scope(),failures:string[]=[];
- const transport=createAuthenticatedGameTransport(host,{pairingSecret:secret,scope:s,pinsDigest:digest,authenticationTimeoutMs:500,sessionDurationMs:10000,boundary:{providerRef:'scripted-peer',maxDurationMs:5000,sourceAvailable:()=>true,acceptObservation:()=>true,claimEffect:async()=>true,...changes.boundary},onDisconnect:code=>failures.push(code),...changes.options});t.after(()=>transport.close());return {peer,s,failures,transport};}
+ const transport=createAuthenticatedGameTransport(host,{pairingSecret:secret,scope:s,pinsDigest:digest,authenticationTimeoutMs:500,sessionDurationMs:10000,boundary:{providerRef:'scripted-peer',maxDurationMs:5000,sourceAvailable:()=>true,acceptObservation:()=>true,acceptAction:()=>true,claimEffect:async()=>true,...changes.boundary},onDisconnect:code=>failures.push(code),...changes.options});t.after(()=>transport.close());return {peer,s,failures,transport};}
 const boundaryError=(code:string,may=false)=>(e:unknown)=>e instanceof GameAdapterBoundaryError&&e.code===code&&e.effectMayHaveStarted===may;
 test('byte framing handles every split of multibyte text and multiple coalesced control messages',()=>{
  const text='{"text":"é 🐈"}',frame=encodeGameControlFrame(text);assert.equal(Number(frame.subarray(0,frame.indexOf(32)).toString()),Buffer.byteLength(text));assert.notEqual(Buffer.byteLength(text),text.length);
