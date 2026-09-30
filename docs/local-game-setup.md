@@ -190,3 +190,34 @@ Tests use scripted provider/tokenizer/host reservations and do not prove durable
 reservation restart behavior, actual model competence, game outcomes or provider
 priority measurements. Durable run/checkpoint/admission, host lifecycle integration
 and native dispatch qualification remain required.
+
+
+`ActivityCheckpointRepository` now persists canonical host metadata and separate
+planning budget reservations. It requires explicit owner authorization, restore
+quarantine, source/transition grounding, finite retention/quotas and exact configured
+GameBounds; presence of a game/save/checkpoint does not grant any authority. CAS
+checkpoint/ledger revisions, epoch/state floors and same-timeline revision floors
+survive restart. A new older-save branch needs a new epoch and trusted transition,
+retains the original ordinary-save attribution and cannot reduce existing usage.
+The store counts actual cumulative serialized checkpoint bytes under its finite quota.
+
+Once-only planning reservations bind an exact run/scope/view/revision/invalidation
+and provider identity. Held maximum input/output/call capacity is distinct from
+actual used tokens/calls. Unknown, cancelled or failed work never silently clears
+its reservation. Only a trusted source-qualified terminal may settle it once into
+actual usage; the original historical checkpoint remains unchanged while the ledger
+reports current usage. A later checkpoint cannot roll back that ledger. Quotas and
+identity fences remain bounded and are not reset by compaction, expiry or save load.
+Source invalidation erases dependent checkpoint prose and withholds reuse until new
+grounded metadata. Exact policy changes retract it; finite expiry never renews on
+writes. Clock rollback, restore quarantine and owner withdrawal deny use/admission.
+The host wires the bounded sweep into existing cleanup; no new schedule is enrolled.
+Final callback policy/source/expiry changes roll back metadata mutations atomically.
+
+Reads expose recovery-only metadata with `continuationAuthority:false`. An ordinary
+save reference yields requiresReconciliation; no save means no exact recovery point.
+The store never launches/resumes an emulator, reconstructs game state or replays an
+action. Tests use actual SQLite close/open and a separate real Node process to verify
+metadata/usage/reservation persistence and duplicate refusal. Save/source/transition/
+usage predicates are scripted; actual saved game progress, native crash recovery,
+model/controller behavior and restore pipeline/runtime host wiring remain unqualified.
