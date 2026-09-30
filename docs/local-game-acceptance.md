@@ -147,3 +147,13 @@ never substitutes for the existing governed capability admission/I/O claim or
 current native input ownership. The additive controller table leaves prior
 migration bytes and installed database/candidate unchanged until separately
 authorized packaging/recovery work.
+
+Controller results additionally require a captured independent native-result
+qualifier before any capability claim or adapter entry. Exact action identity,
+bounded frames and admission/start/completion/recording chronology are checked
+before strict native qualification. A shaped completed or rejected response
+cannot clear the unresolved-operation fence by itself. Unqualified results stay
+potentially executed; qualified unknown results remain explicit unknown output
+and retain that fence. This callback does not issue capability authority, settle
+resource budgets or demonstrate actual native input ownership. Those existing
+owners and real platform evidence remain separately required.
