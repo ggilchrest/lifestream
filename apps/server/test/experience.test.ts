@@ -15,9 +15,32 @@ test('normal completed typed conversations and retained memory automatically ref
  const turn=async(userInput:string)=>{const response=await request('/api/runtime/v1/messages',{...scope,userInput});const text=await response.text();assert.match(text,/interaction.completed/,text);return text;};
  const waitFor=async(fn:()=>Promise<boolean>)=>{for(let n=0;n<100;n++){if(await fn())return;await delay(50);}assert.fail('bounded wait failed '+JSON.stringify({view,requests:requests.map(r=>r.scope.sessionId)}));};
  await turn('I enjoyed the gardening and reading projects on our first trial day.');await waitFor(async()=>{const v=await (await request('/api/runtime/v1/memory?'+new URLSearchParams(scope))).json();return v.jobs.some((j:any)=>j.state==='saved');});await delay(1100);clock.now+=61000;await waitFor(async()=>{view=await (await request(path)).json();return view.state.items.length===2;});
- await turn('I enjoyed comparing garden soil and reading essays during our second independent trial day.');await waitFor(async()=>{const v=await (await request('/api/runtime/v1/memory?'+new URLSearchParams(scope))).json();return v.jobs.filter((j:any)=>j.state==='saved').length===2;});await delay(1100);clock.now+=61000;await waitFor(async()=>{view=await (await request(path)).json();return view.state.imprints[0].value===.05;});const answer=await turn('What should we work on next?');assert.match(answer,/Compare soil in two beds/);view=await (await request(path)).json();assert.equal(view.state.funnel.eligible,2);assert.equal(view.state.funnel.calls,2);assert.equal(view.state.funnel.outputs,1);assert.ok(view.selections.some((s:any)=>s.selected==='z-garden'&&s.observedOutput));assert.equal(requests.filter(r=>r.scope.sessionId.startsWith('experience:')).length,2);
+ await turn('I enjoyed comparing garden soil and reading essays during our second independent trial day.');await waitFor(async()=>{const v=await (await request('/api/runtime/v1/memory?'+new URLSearchParams(scope))).json();return v.jobs.filter((j:any)=>j.state==='saved').length===2;});await delay(1100);clock.now+=61000;await waitFor(async()=>{view=await (await request(path)).json();return view.state.imprints[0].value===.05;});// Foreground selection has an intentional 10ms fail-closed budget. A busy
+ // source-suite process may correctly withhold the optional continuation.
+ // Account for that exact outcome; do not mistake it for a semantic choice,
+ // extend the runtime budget, or silently discard failed attempts.
+ let answer='';const continuationAttempts:{selected:boolean;reason:string;skips:number}[]=[];
+ for(let attempt=0;attempt<3;attempt++){
+  const before=await (await request(path)).json();answer=await turn('What should we work on next?');view=await (await request(path)).json();
+  const selected=/Compare soil in two beds/.test(answer);continuationAttempts.push({selected,reason:view.state.lastReason,skips:view.state.funnel.skips});
+  if(selected)break;
+  assert.equal(view.state.lastReason,'selection_deadline_exceeded',JSON.stringify(continuationAttempts));
+  assert.ok(view.state.funnel.skips>before.state.funnel.skips,JSON.stringify(continuationAttempts));
+  assert.match(answer,/Understood/,'Only the documented no-continuation response is eligible for a bounded retry.');
+ }
+ assert.match(answer,/Compare soil in two beds/,JSON.stringify(continuationAttempts));view=await (await request(path)).json();assert.equal(view.state.funnel.eligible,2);assert.equal(view.state.funnel.calls,2);assert.equal(view.state.funnel.outputs,1);assert.ok(view.selections.some((s:any)=>s.selected==='z-garden'&&s.observedOutput));assert.equal(requests.filter(r=>r.scope.sessionId.startsWith('experience:')).length,2);
  await app.shutdown();app=createLifestreamServer(options);await app.start();base=`http://127.0.0.1:${app.address().port}`;const login=await request('/api/auth/v1/sign-in',{username:'synthetic',password});assert.equal(login.status,200);cookie=login.headers.get('set-cookie')!.split(';')[0]!;csrf=(await login.json()).session.csrfToken;view=await (await request(path)).json();assert.equal(view.state.imprints[0].value,.05);assert.equal(view.state.items.length,2);
  assert.equal((await request(path,{schemaVersion:'1.0.0',operation:'configure',expectedRevision:view.state.revision,enabled:true,frozen:true,retention:'sourceBound',topicPolicies:defaultTopics})).status,200);const frozen=await turn('What should we work on next?');assert.doesNotMatch(frozen,/Compare soil/);assert.equal((await request(path,{...configure(),authority:true})).status,422);
+});
+
+test('optional experiential selection records the exact 10ms deadline miss and withholds a continuation',async t=>{
+ const {Database}=await import('@lifestream/storage-sqlite'),{ExperientialLearning}=await import('../src/runtime/experience.ts');const db=new Database({path:':memory:'});db.migrate();t.after(()=>db.close());
+ const scope={assistantId:crypto.randomUUID(),principalId:crypto.randomUUID(),relationshipId:crypto.randomUUID()},policy={allowed:true,revision:1,dimensions:{}};
+ const service=new ExperientialLearning(db,{policy:()=>policy,sources:()=>[],provider:()=>{throw Error('No inference is permitted during selection.');},run:async()=>({state:'suppressed',reason:'unused',completedSteps:0}),idle:()=>false,changed:()=>{}});t.after(()=>service.close());
+ service.repository.configure(scope,0,{enabled:true,frozen:false,retention:'sourceBound',topicPolicies:defaultTopics},policy);
+ let calls=0;t.mock.method(performance,'now',()=>calls++===0?0:10);
+ const selected=service.select(scope,'What should we work on next?',true);assert.equal(selected.item,null);assert.equal(selected.id,'');
+ const state=service.repository.read(scope);assert.equal(state.lastReason,'selection_deadline_exceeded');assert.equal(state.funnel.skips,1);assert.equal(state.funnel.outputs,0);assert.deepEqual(service.repository.selections(scope),[]);
 });
 
 test('foreground arrival and source withdrawal fence an uncooperative reflection before publication',async t=>{
