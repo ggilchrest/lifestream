@@ -1,0 +1,204 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "sliceStatus": "inProgress",
+  "component": "actual visual activation asynchronous lifecycle projection and genuine candidate/activation/finalized-memory joined replay",
+  "componentStatus": "verified",
+  "recordedAt": "2026-09-30T23:33:52.433714Z",
+  "sourceRevision": "fea6a3da78b2bf423bf630cb3be8e909b543f156",
+  "sourceFiles": [
+    "packages/storage-sqlite/src/visual-memory.ts",
+    "apps/server/src/runtime/automatic-memory.ts",
+    "apps/server/src/runtime/visual-memory-candidate-evidence.ts",
+    "apps/server/src/runtime/turn-context-trace.ts",
+    "apps/server/test/visual-memory-candidate-evidence.test.ts",
+    "docs/visual-conversation-acceptance.md"
+  ],
+  "ownedOperation": {
+    "operation": "S090 actual visual lifecycle projection and joined replay exact-revision full source suite",
+    "sourceRevision": "fea6a3da78b2bf423bf630cb3be8e909b543f156",
+    "startedAt": "2026-09-30T23:31:11.106425+00:00",
+    "wrapperPid": 68249,
+    "log": "/tmp/tifa-s090-visual-lifecycle-projection-full.log",
+    "status": "completed",
+    "childPid": 68252,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T23:33:12.612915+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "fea6a3da78b2bf423bf630cb3be8e909b543f156",
+      "pass": 2581,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 121298.693166
+    },
+    "focused": {
+      "pass": 48,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 958.628
+    },
+    "integration": {
+      "pass": 183,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 7830.389292
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6513.469084
+    },
+    "packetAndBootstrap": {
+      "pass": 48,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 17895.415375
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types apps/server/test/visual-memory-candidate-evidence.test.ts packages/storage-sqlite/test/visual-activation-evidence.test.ts",
+    "node --test --experimental-strip-types apps/server/test/visual-memory.test.ts apps/server/test/visual-memory-publication.test.ts apps/server/test/visual-memory-candidate-evidence.test.ts apps/server/test/automatic-memory.test.ts apps/server/test/game-advice-memory.test.ts apps/server/test/turn-context-trace.test.ts apps/server/test/visual-turn-evidence.test.ts packages/storage-sqlite/test/visual-activation-evidence.test.ts packages/storage-sqlite/test/visual-memory.test.ts",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "pnpm lint",
+    "npm --prefix .private run validate",
+    "node --test scripts/qualify-visual-conversation.test.mjs scripts/workspace.test.mjs",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual SQLite projection/activation and original-owner canonical mutation reads; asynchronous published 2.0 lifecycle projection, exact validation metadata, owner-bound candidate/activation/finalized-memory joins, real source forgetting and retention expiry, isolated pure semantic replay with no storage/provider/effect callbacks. Isolated authenticated HTTP memory/advice/publication regressions.",
+    "scripted": "Visual observations, subject association, transformation confidence, context fixture inputs and clocks are synthetic. No actual camera/image provider/native game/control/save/remote contact/performance/platform/Human acceptance."
+  },
+  "semantics": [
+    "Only actual original-owner reads can donate recorded canonical activation UUIDs; copied/schema-valid/legacy/hostile input cannot mint source provenance. New private WeakSet marks are historical read provenance, not currency or authority.",
+    "Existing bounded optional asynchronous journal projects memory.lifecycleChanged using original mutation UUID, old/new revision, source revision, UTC and exact redacted validation metadata; shared candidate/lifecycle producer and sequence, unknown original monotonic clock remains null. No new database, migration, schema, route or sink.",
+    "Both histories are independently current-owner/consent fenced and recheck actual memory/source custody; memory-owner deletion, correction, expiry, withdrawal, close/reset and rollback withhold queued/retained metadata. Bounds remain128 pending/128 retained with60s dual clocks.",
+    "Genuine candidate/activation/context joins require exact memory IDs, owner binding between memory sources, candidate record/source digest and revision, and temporal ordering. Context owner equivalence/current eligibility/provider admission/delivery/learning/effect authority stay unproved.",
+    "Isolated joined replay preserves original source event IDs/time/artifacts/canonical source mutation and shared replay producer in a new environment. No callback/media/storage/effect/learning route; copied/replay bundles cannot donate normal trace provenance. Historical retained bundles can be replayed after source deletion without database mutation or restoring eligibility."
+  ],
+  "initialFailures": [
+    {
+      "log": "tifa-s090-visual-lifecycle-projection-typecheck-joined.log",
+      "reason": "TypeScript inferred a union for combined replay events; accessing the first candidate backgroundJobId required explicit readonly record access. Corrected without changing runtime lineage."
+    },
+    {
+      "log": "tifa-s090-visual-lifecycle-projection-integration.log",
+      "reason": "Sandbox denied existing test localhost listeners with EPERM; isolated integration rerun with authorized local-test permission passed."
+    },
+    {
+      "log": "tifa-s090-visual-lifecycle-projection-browser.log",
+      "reason": "Same sandbox listener restriction caused host launcher fixture exit; rerun with local-test permission passed77 with86 optional skips."
+    }
+  ],
+  "limitations": [
+    "Whole S090 source lifecycle trace/replay and durable trace sink remain incomplete. Recorded activation and joined metadata are not actual recall, current source eligibility, provider admission, reply delivery or effects proof.",
+    "Legacy and other lifecycle histories stay partial; no missing IDs fabricated or source histories upcast. Original canonical activation source is available only for new original-owner mutations.",
+    "Actual reviewed native bridge/decoder/GUI/pause/ordinary-save, selected image-provider/lease/resources/performance, permitted help delivery/authentication and Human gates remain open.",
+    "Generic memory-selection amendment remains separately proposed/unimplemented; no pronoun-based ordinary extraction change or cross-game acceptance follows.",
+    "Primary S066/full LS-TEST-084, accepted original24/iPhone journeys, selected-model callback/causal failures and900msmedian/1500msp95onset targets preserved. Installed candidate and services unchanged; no publication, deployment, private export or live effect."
+  ],
+  "nextAction": "Continue finite inherited S093 authenticated help-reply intake using existing retained Human input and relationship memory, distinct from the separately proposed generic memory-selection amendment. Complete real provider/native/platform/model/performance/Human qualification and full lifecycle trace remain open; no live activation, channel transmission, deployment or export.",
+  "logDigests": {
+    "tifa-s090-visual-lifecycle-projection-browser-local.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-browser-local.log",
+      "sha256": "994a0c775d173d32973c3612456652b7be5689825644dd47e141f559d9f87a0b",
+      "bytes": 23885
+    },
+    "tifa-s090-visual-lifecycle-projection-browser.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-browser.log",
+      "sha256": "23cd910f48f681f7d4c07f051fa4eba139c78fabb93f71f79b49922e6828077e",
+      "bytes": 25306
+    },
+    "tifa-s090-visual-lifecycle-projection-build-final.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-build-final.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s090-visual-lifecycle-projection-build.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-build.log",
+      "sha256": "14b2de3ae2388bd403a73838e989c793b470a54b69d927582de20898379a42aa",
+      "bytes": 1074
+    },
+    "tifa-s090-visual-lifecycle-projection-diff.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-visual-lifecycle-projection-focused.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-focused.log",
+      "sha256": "6f47c55b90570cc5d95b278c9acb932e9de9118818b073f9c2249fccd4b5de12",
+      "bytes": 4471
+    },
+    "tifa-s090-visual-lifecycle-projection-full.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-full.log",
+      "sha256": "4526025f524cbc2b70c0dca4e49dad6ca740dcfe5b775db21ca0e0a0e4d965af",
+      "bytes": 275982
+    },
+    "tifa-s090-visual-lifecycle-projection-integration-local.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-integration-local.log",
+      "sha256": "61225a8dbdd5dc1989e4a4aa96e809c3709dd998a71555e088bf74992194503f",
+      "bytes": 18253
+    },
+    "tifa-s090-visual-lifecycle-projection-integration.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-integration.log",
+      "sha256": "2597ed517ef2d6ae0c57d97c57d6317449408cbddbe084c18fac864034687930",
+      "bytes": 26247
+    },
+    "tifa-s090-visual-lifecycle-projection-lint.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-visual-lifecycle-projection-packet.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-packet.log",
+      "sha256": "8c8cfef2cafa3b71bf4b5726b63e4812d00db65ce6e44ac7ed74a35dd2335bf5",
+      "bytes": 4513
+    },
+    "tifa-s090-visual-lifecycle-projection-preflight.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s090-visual-lifecycle-projection-private.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-private.log",
+      "sha256": "8f5f99eb504b9075d3407a7e2a6167c77b13cc872899e2a5e7dfee483a989e94",
+      "bytes": 28910
+    },
+    "tifa-s090-visual-lifecycle-projection-typecheck-final.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-visual-lifecycle-projection-typecheck-joined.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-typecheck-joined.log",
+      "sha256": "8b9431c97e47134c5920380b93b8dc496bd174654a11f8b9c7ee46172dd5a253",
+      "bytes": 1250
+    },
+    "tifa-s090-visual-lifecycle-projection-typecheck.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-visual-lifecycle-projection-workspace.log": {
+      "path": "/tmp/tifa-s090-visual-lifecycle-projection-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
