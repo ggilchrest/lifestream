@@ -1,0 +1,158 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S094",
+  "component": "bounded offline local-game lineage qualifier",
+  "componentStatus": "verified",
+  "wholeSliceStatus": "inProgress",
+  "recordedAt": "2026-09-30T18:33:48.673232Z",
+  "sourceRevision": "0490f47081b1464d0dcfc7f28e3b5004638b36f2",
+  "sourceFiles": [
+    "apps/server/src/runtime/game-lineage.ts",
+    "apps/server/test/game-lineage.test.ts",
+    "docs/local-game-acceptance.md",
+    "scripts/qualify-local-game.mjs",
+    "scripts/qualify-local-game.test.mjs"
+  ],
+  "verification": {
+    "fullSource": {
+      "revision": "0490f47081b1464d0dcfc7f28e3b5004638b36f2",
+      "pass": 2296,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 109975.579292
+    },
+    "focused": {
+      "pass": 26,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 2992.213708
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6435.278833
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "generatedGameTypes": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types apps/server/test/game-lineage.test.ts scripts/qualify-local-game.test.mjs",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual normal nine-section prepared input and minted decision sidecar, separately retained SQLite campaign journal/game episode/canonical memory projection, explicit synthetic consent and scoped custody. Offline regular-file input and owner-only report handling, exact source/input hashing and existing isolated replay are exercised. Contradictory owner/view/admission/frame/result/source/tombstone metadata, hostile shapes and forgetting are meaningful countercases.",
+    "scripted": "Game screen observations, native action/admission/authority/result receipts, ordinary-save references and host grounding predicates. No BizHawk effect, graphical launch, normal-speed display, native pause/save/recovery, channel authentication/delivery, causal advice success, actual selected-provider inference/perception or Human experience qualification."
+  },
+  "milestoneDistinctions": [
+    "Decision/proposal are distinct from declared admission, recorded started action/result, retained source and projection.",
+    "Matching supplied metadata does not authenticate native authority, source custody or actual effect.",
+    "Missing admission/result/release/source/advice custody remains explicit; no raw save/media fallback or reenactment.",
+    "UTC time does not establish monotonic controller latency or speech performance.",
+    "Newer terminal episodes suppress stale episode/projection payloads while replay has no memory write or durable reinforcement."
+  ],
+  "limitations": [
+    "Whole S094 remains inProgress. This is a bounded supplied-metadata diagnostic component separate from complete canonical trace integration.",
+    "Closed existing records only;256KiB regular-file input/32rows per array/8192nodes, no getters/proxies/cycles/binary data. Reports omit scene/advice/goal/prompt/recipient/control/save/media payloads and artifact paths.",
+    "Qualified graphical Linux/Windows ordinary-speed/watchability/display-loss/interruption pause/neutral controls/native ordinary-save flush/readback/restart/crash-loss/load evidence remains missing.",
+    "Configured-hours/contact/screenshot attachment/authenticated reply and native causal advice outcomes require separately authorized actual setup. Existing no-install/no-live-camera/game/save/provider/deploy/push/publication/private-export boundaries unchanged.",
+    "Selected-provider perception and200paired completed foreground speech turns per declared condition, resource/onset measurements and Human relevance/control remain open.",
+    "Primary S066 implementationCompleteVerificationPending/full LS-TEST-084, accepted original24 S083/S084 and iPhone Human journeys and selected-model causal/onset failures preserved. Installed candidate/services/Telegram/backup configuration unchanged."
+  ],
+  "retainedFailures": [],
+  "ownedOperation": {
+    "operation": "S094 game lineage exact-revision full source suite",
+    "sourceRevision": "0490f47081b1464d0dcfc7f28e3b5004638b36f2",
+    "startedAt": "2026-09-30T18:29:22.586737+00:00",
+    "wrapperPid": 81720,
+    "log": "/tmp/tifa-s094-lineage-full.log",
+    "status": "completed",
+    "childPid": 81724,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T18:31:12.765398+00:00"
+  },
+  "primaryCheckpoint": "LS-S066 implementationCompleteVerificationPending; full LS-TEST-084 preserved",
+  "installedCandidateChanged": false,
+  "appGoalControlSet": false,
+  "runDisposition": "continue",
+  "nextAction": "Continue S093 authenticated advice-to-episode retention/correction/forgetting custody; preserve canonical trace and actual native/platform/provider/performance/Human gates.",
+  "logDigests": {
+    "tifa-s094-lineage-browser.log": {
+      "path": "/tmp/tifa-s094-lineage-browser.log",
+      "sha256": "cda161b1bb5f68b4cf4b535c186a5f8b8dd3a916aadd389ac86b545a7aace6cd",
+      "bytes": 23882
+    },
+    "tifa-s094-lineage-build.log": {
+      "path": "/tmp/tifa-s094-lineage-build.log",
+      "sha256": "ed2468af7c13f6197c356767a647990c28287766222b3d41f1e95f74f2d876c6",
+      "bytes": 1074
+    },
+    "tifa-s094-lineage-diff.log": {
+      "path": "/tmp/tifa-s094-lineage-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s094-lineage-focused-final.log": {
+      "path": "/tmp/tifa-s094-lineage-focused-final.log",
+      "sha256": "648cdd8ba6056c4dc2c3b7e0bafce0e9c206cb5f707e55860054f38e69c944ab",
+      "bytes": 3130
+    },
+    "tifa-s094-lineage-focused-initial.log": {
+      "path": "/tmp/tifa-s094-lineage-focused-initial.log",
+      "sha256": "ca6ff7ef6f285ceeb6130cc97f867f6f6673bcfecc5a8e57c7b52d0a311d44fb",
+      "bytes": 2791
+    },
+    "tifa-s094-lineage-full.log": {
+      "path": "/tmp/tifa-s094-lineage-full.log",
+      "sha256": "789730a09ceb5ad6f8b88b2371347d1b9d0c33f79da676c57e10261623eb1ba0",
+      "bytes": 248445
+    },
+    "tifa-s094-lineage-game-generated.log": {
+      "path": "/tmp/tifa-s094-lineage-game-generated.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s094-lineage-lint.log": {
+      "path": "/tmp/tifa-s094-lineage-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s094-lineage-private.log": {
+      "path": "/tmp/tifa-s094-lineage-private.log",
+      "sha256": "e5e1231170e4f1c2fc9367ab537411dc282d317a65ad87c97f587b348647ddb4",
+      "bytes": 28893
+    },
+    "tifa-s094-lineage-typecheck-final.log": {
+      "path": "/tmp/tifa-s094-lineage-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s094-lineage-typecheck-initial.log": {
+      "path": "/tmp/tifa-s094-lineage-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s094-lineage-workspace.log": {
+      "path": "/tmp/tifa-s094-lineage-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
