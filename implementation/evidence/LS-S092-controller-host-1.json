@@ -1,0 +1,274 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S092",
+  "sliceStatus": "inProgress",
+  "component": "genuine prepared dispatch/controller budget/qualified adapter host join",
+  "componentStatus": "verified",
+  "recordedAt": "2026-09-30T21:34:35.654950Z",
+  "sourceRevision": "1a5d712c385185a0348928c40bb56b0ec1ff69be",
+  "hostImplementationRevision": "be257714ea7f2e960b0ed91d9dc86c2ee64e8123",
+  "sourceFiles": [
+    "apps/server/src/runtime/game-activity.ts",
+    "apps/server/test/game-activity-controller.test.ts",
+    "docs/local-game-acceptance.md",
+    "packages/providers-bizhawk/src/provider.ts",
+    "packages/providers-bizhawk/test/provider.test.ts",
+    "packages/runtime/src/activity/game-journal.ts"
+  ],
+  "ownedOperation": {
+    "operation": "S092 genuine prepared dispatch and controller budget host join exact-revision full source suite",
+    "sourceRevision": "1a5d712c385185a0348928c40bb56b0ec1ff69be",
+    "startedAt": "2026-09-30T21:30:16.432085+00:00",
+    "wrapperPid": 35886,
+    "log": "/tmp/tifa-s092-controller-host-full.log",
+    "status": "completed",
+    "childPid": 35889,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T21:32:10.210542+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "1a5d712c385185a0348928c40bb56b0ec1ff69be",
+      "pass": 2518,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 113555.009917
+    },
+    "focused": {
+      "pass": 206,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1747.457125
+    },
+    "planningLifecycleRegression": {
+      "pass": 177,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1766.65425
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6980.444167
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "generatedGameTypes": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types packages/providers-bizhawk/test/provider.test.ts packages/providers-bizhawk/test/transport.test.ts apps/server/test/game-activity-controller.test.ts packages/runtime/test/game-dispatch-context.test.ts packages/storage-sqlite/test/controller-reservations.test.ts",
+    "node --test --experimental-strip-types apps/server/test/game-activity-controller.test.ts apps/server/test/game-activity-planning.test.ts apps/server/test/game-activity-lifecycle.test.ts packages/runtime/test/game-dispatch-context.test.ts packages/storage-sqlite/test/controller-reservations.test.ts",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual original prepared view/binding/decision/proposal/dispatch provenance is joined to SQLite controller reservations and guarded adapter source/claim/native-result boundary. Duplicate/reentrant/copy/transplant/port/source changes and abortion fence invocation. Once-only qualified usage preserves committed accounting; late source loss withholds current downstream result. Isolated authenticated socket transport fixtures and real timers exercise expiry and disconnection.",
+    "scripted": "Game pixels, visible-state decoding, native current installation/input/neutralization, actual effect admission and monotonic usage qualifiers are scripted. Frozen wall-clock tests independently show owned timer expiry is not caller cancellation. No emulator/game/controller/save/contact/provider/Human effect or native acceptance executed."
+  },
+  "retainedFailures": [
+    {
+      "log": "tifa-s092-controller-host-focused-initial.log",
+      "result": {
+        "pass": 0,
+        "fail": 20,
+        "skip": 0,
+        "durationMs": 669.060042
+      },
+      "cause": "New fresh-observation fixture retained original capture before decision; correct source guard refused dispatch selection. Updated all fresh capture/receipt/screenshot/field clocks to the actual fixture selection time."
+    },
+    {
+      "log": "tifa-s092-controller-host-focused-repaired.log",
+      "result": {
+        "pass": 0,
+        "fail": 20,
+        "skip": 0,
+        "durationMs": 681.300541
+      },
+      "cause": "Fixture used Database without its required path option. Corrected to explicit isolated memory database; no source guard changed."
+    },
+    {
+      "log": "tifa-s092-controller-host-initial-full.log",
+      "result": {
+        "pass": 2515,
+        "fail": 1,
+        "skip": 1,
+        "durationMs": 112836.173083
+      },
+      "cause": "Existing transport admission timer could fire just before UTC millisecond boundary, reporting caller cancellation. Source repair pins owned admission/request expiry reason, preserves original cancellation/expiry assertions and adds deterministic frozen-wall-clock tests."
+    }
+  ],
+  "milestoneDistinctions": [
+    "No new authority owner/coordinator/history/automatic schedule or gameplay continuation. Actual governed claim/current native lease remains mandatory in guarded adapter host.",
+    "Exact original prepared/decision/proposal/dispatch identity cannot be donated by copied DTO/wrapper or altered proposal metadata.",
+    "Budget is held before adapter invocation; denial/unknown/abort/source/port/usage loss retains resources for trusted reconciliation.",
+    "Late loss after usage commit withholds current result without rolling back accounting or refunding resources.",
+    "In-process provenance fences are not a replacement for durable action/admission/idempotency/budget owners. Restart supplies no recovered source identity or replay authority.",
+    "Owned expiry uses its selected bound even when UTC has not advanced; caller cancellation remains separately classified."
+  ],
+  "limitations": [
+    "Whole S092/Phase16 inProgress. This is an internal source-host join, not installed enrollment or proof of live autonomous play/actual native source setup.",
+    "Actual reviewed bridge/decoder/screenshots/native lease/pause/save, Linux/Windows GUI/restart/load, real image provider/capture/permitted help/image delivery and prescribed performance/Human remain open.",
+    "Canonical trace integration remains incomplete. Existing context/inference/memory/capability events have opaque refs and artifacts; absence of dedicated visual/game event families alone does not establish that an extra private export is required. Correct existing semantics must be assessed first; any truly necessary canonical extension/export remains separately scoped.",
+    "S093 authenticated-help ingestion remains distinct from generic automatic-memory capture; G question supplies no blanket rule change.",
+    "Primary S066/full LS-TEST-084, original24 S083/S084 and iPhone acceptance, selected-model callback/causal/onset failures preserved. Installed candidate/services/Telegram/backup unchanged; no push/publication/deployment/new private export or live effects."
+  ],
+  "nextAction": "Continue S090/S094 canonical milestone and redacted lifecycle evidence joins using existing published event/artifact semantics; assess exact additional contract needs before any new private export. Actual native/provider/platform/performance/Human and scoped authenticated-help ingestion remain open.",
+  "logDigests": {
+    "tifa-s092-controller-host-browser-current.log": {
+      "path": "/tmp/tifa-s092-controller-host-browser-current.log",
+      "sha256": "45b3eb9776c746f9e48195d73dbdbabbf56b5cc36e4bd4e5a259b6bfed3b73c0",
+      "bytes": 23885
+    },
+    "tifa-s092-controller-host-browser.log": {
+      "path": "/tmp/tifa-s092-controller-host-browser.log",
+      "sha256": "79ee5c9819f5b73a3835ca941b25827ce84b2b48951f44126f8dc68fa2f9752b",
+      "bytes": 23869
+    },
+    "tifa-s092-controller-host-build-expiry.log": {
+      "path": "/tmp/tifa-s092-controller-host-build-expiry.log",
+      "sha256": "e3263f107ec605e42e2e334f3521d9a67de4bcc637d9c9dda12e43fd99224f7f",
+      "bytes": 1018
+    },
+    "tifa-s092-controller-host-build.log": {
+      "path": "/tmp/tifa-s092-controller-host-build.log",
+      "sha256": "e3263f107ec605e42e2e334f3521d9a67de4bcc637d9c9dda12e43fd99224f7f",
+      "bytes": 1018
+    },
+    "tifa-s092-controller-host-diff-final.log": {
+      "path": "/tmp/tifa-s092-controller-host-diff-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s092-controller-host-diff.log": {
+      "path": "/tmp/tifa-s092-controller-host-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s092-controller-host-focused-current.log": {
+      "path": "/tmp/tifa-s092-controller-host-focused-current.log",
+      "sha256": "9834f72e4b06775c6f537e381006ad2cbda29e2ead2fb8c1d39a56634332dda6",
+      "bytes": 9160
+    },
+    "tifa-s092-controller-host-focused-expiry-repaired.log": {
+      "path": "/tmp/tifa-s092-controller-host-focused-expiry-repaired.log",
+      "sha256": "85f66933158ed2c4dea42fa3afc62082ce5989e989fb5ac2bf658226cf4bd6fd",
+      "bytes": 17140
+    },
+    "tifa-s092-controller-host-focused-final.log": {
+      "path": "/tmp/tifa-s092-controller-host-focused-final.log",
+      "sha256": "f0420a2e7b3680620b6cd68f9c828dce0c50aa4fdfc87e2a5b1c810a0d3d6048",
+      "bytes": 15210
+    },
+    "tifa-s092-controller-host-focused-initial.log": {
+      "path": "/tmp/tifa-s092-controller-host-focused-initial.log",
+      "sha256": "fbdc1aee85e3dbf8e5a612f8c1a262742d498b1f79d380026bd2a2fe888460de",
+      "bytes": 25063
+    },
+    "tifa-s092-controller-host-focused-repaired-db.log": {
+      "path": "/tmp/tifa-s092-controller-host-focused-repaired-db.log",
+      "sha256": "678fa3e3f5bfdd82b66a2d5c1a57a3ccc997988ad6301bc051e461e76386417a",
+      "bytes": 1975
+    },
+    "tifa-s092-controller-host-focused-repaired.log": {
+      "path": "/tmp/tifa-s092-controller-host-focused-repaired.log",
+      "sha256": "7ad235cce84ff8a1c969358440675647dd1861513ed8479a086a72475a2bcd43",
+      "bytes": 23709
+    },
+    "tifa-s092-controller-host-full.log": {
+      "path": "/tmp/tifa-s092-controller-host-full.log",
+      "sha256": "7b2f2283888c5ab3152a096b63060c8d8ebca6c4749c83fb23a4c1c536b32aa4",
+      "bytes": 268741
+    },
+    "tifa-s092-controller-host-generated.log": {
+      "path": "/tmp/tifa-s092-controller-host-generated.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s092-controller-host-initial-full.log": {
+      "path": "/tmp/tifa-s092-controller-host-initial-full.log",
+      "sha256": "81247feefa18873c0ee2927fe7310ab921e8350b87feb9e4780782a3b7f862d1",
+      "bytes": 269986
+    },
+    "tifa-s092-controller-host-lint-expiry.log": {
+      "path": "/tmp/tifa-s092-controller-host-lint-expiry.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-controller-host-lint-final.log": {
+      "path": "/tmp/tifa-s092-controller-host-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-controller-host-lint.log": {
+      "path": "/tmp/tifa-s092-controller-host-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-controller-host-preflight.log": {
+      "path": "/tmp/tifa-s092-controller-host-preflight.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s092-controller-host-private-expiry.log": {
+      "path": "/tmp/tifa-s092-controller-host-private-expiry.log",
+      "sha256": "1e64e3d150a1bd06914368253a7ca027e65da0e3e82821a40edf636bdc6c4285",
+      "bytes": 28871
+    },
+    "tifa-s092-controller-host-private.log": {
+      "path": "/tmp/tifa-s092-controller-host-private.log",
+      "sha256": "fa3e3db80f07cde4af0433f471624af1e6b5d19430ff895ff49e57fd792535eb",
+      "bytes": 28905
+    },
+    "tifa-s092-controller-host-typecheck-current-final.log": {
+      "path": "/tmp/tifa-s092-controller-host-typecheck-current-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-controller-host-typecheck-current.log": {
+      "path": "/tmp/tifa-s092-controller-host-typecheck-current.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-controller-host-typecheck-expiry.log": {
+      "path": "/tmp/tifa-s092-controller-host-typecheck-expiry.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-controller-host-typecheck-final.log": {
+      "path": "/tmp/tifa-s092-controller-host-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-controller-host-typecheck-initial.log": {
+      "path": "/tmp/tifa-s092-controller-host-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-controller-host-workspace-final.log": {
+      "path": "/tmp/tifa-s092-controller-host-workspace-final.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    },
+    "tifa-s092-controller-host-workspace.log": {
+      "path": "/tmp/tifa-s092-controller-host-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
