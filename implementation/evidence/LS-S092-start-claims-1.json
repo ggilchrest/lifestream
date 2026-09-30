@@ -1,0 +1,218 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S092",
+  "operation": "durableAutomaticStartOccurrenceAndPausedRunReplacementFences",
+  "status": "verified",
+  "qualificationScope": "Scoped software component; whole S092 inProgress",
+  "sourceRevision": "b10670fac66e1801805ecbe23a6d7ac601f9b344",
+  "baseRevision": "29db7f899ab34de58e3211eb0b7fcb605f146a1d",
+  "recordedAt": "2026-09-30T11:06:38.567682Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      ".private/roadmap/packets/LS-S092.json": "7f53a8408d6936da1135bb665523c6b02e566882f3faf8a507c9dd183d6ea7bc",
+      ".private/docs/31-local-game-activity.md": "fa81107f2eb216686b989b269d3a39cc9798681f11511f8e1e0698b1e10d4238",
+      "packages/contracts/src/schemas/local-game-activity.schema.json": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+    },
+    "exactSchemaApproval": "LS-DEC-050; bytes unchanged; no new export"
+  },
+  "claims": {
+    "authenticCalendarAndExactPolicyBoundsToDurableMetadataJoin": true,
+    "opaqueWindowOccurrenceRunFencesSurviveSQLiteAndSeparateProcessRestart": true,
+    "dstRepeatedHourAndPolicyRevisionCannotDuplicateScopedWindow": true,
+    "assistantWideRollingStartCountsIncludeSpentOrUnknownClaims": true,
+    "oneAssistantBlockingSlotAcrossActivitiesAndWindows": true,
+    "pausedAndRecoveryRequiredRetainBlockingSlotAfterRestart": true,
+    "qualifiedExactOldRunTerminalOnlyReleasesSlotAndNeverSuccessor": true,
+    "separateSafetyDispositionAfterGameplayWithdrawal": true,
+    "finalAdmissionWindowAndDispositionWithdrawalRollBackAtomically": true,
+    "pinnedFiniteQuotasNoFenceEvictionOrUnknownRefund": true,
+    "restoreOwnerClockAndSameRevisionPolicyBoundsFences": true,
+    "inspectionAlwaysContinuationAuthorityFalse": true,
+    "actualEnrolledSchedulerRuntimeLifecycleNativePauseGameOrSaveProof": false,
+    "installedCandidateChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 79,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1509.049417
+    },
+    "fullSource": {
+      "revision": "b10670fac66e1801805ecbe23a6d7ac601f9b344",
+      "pass": 1892,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 102514.586041
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6065.120959
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "workspaceCheck": "pass",
+    "migration": {
+      "newId": 63,
+      "priorSqlBytesUnchanged": true,
+      "previousMigrationRecordsAndClockFloorPreserved": true,
+      "fiveUpgradeHealthInventoriesUpdated": true
+    }
+  },
+  "mappedCases": [
+    "LS-TEST-174",
+    "LS-TEST-175",
+    "LS-TEST-176",
+    "LS-TEST-177"
+  ],
+  "commands": [
+    "node --test --experimental-strip-types apps/server/test/game-activity.test.ts packages/runtime/test/activity-policy.test.ts packages/storage-sqlite/test/database.test.ts",
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --check",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "retainedFailures": [
+    {
+      "log": "tifa-s092-start-claims-focused-final.log",
+      "pass": 78,
+      "fail": 1,
+      "skip": 0,
+      "durationMs": 1009.49075,
+      "reason": "Fresh child test evaluated from repository root could not resolve bare runtime package. Harness uses actual resolved module URL; repaired79/full1892 pass, no dependency installation."
+    }
+  ],
+  "proofKinds": {
+    "real": "Actual canonical calendar/prepared source join, SQLite close/open, separate fresh Node process, additive upgrade and transaction rollback/identity/slot/counter persistence",
+    "scripted": "Enrollment/current policy/resource/authority/native pause or terminal source predicates; no actual scheduler registration, emulator/game/save or outbound effect"
+  },
+  "exclusions": [
+    "Actual runtime enrollment/scheduler and complete lifecycle/watchdog/input-owner/controller/checkpoint/planning integration",
+    "Actual emulator pause/stop/fresh authorized resume, ordinary-save recovery, graphical Linux/Windows/selected-model/performance/Human qualification; whole S091/S092 remain inProgress",
+    "Rolling wall/frame/model/token/play budget ownership remains host admission; this store persists start-count ceiling only",
+    "S090 full visual trace/replay; S093 grounded memory/help/return conversation; S094 integrated qualification",
+    "S089 automatic appearance comparisons, primary S066/full LS-TEST-084 and selected-model/onset failure gates",
+    "Installed candidate promotion or live camera/game/save/schedule/contact/provider effects, deployment, push/publication/private exports"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue existing runtime checkpoint/reservation/planning integration and source-bound lifecycle/watchdog/old-lease shutdown wiring; preserve independently missing actual setup/native/provider/platform/Human gates.",
+  "logDigests": {
+    "tifa-s092-start-claims-browser.log": {
+      "path": "/tmp/tifa-s092-start-claims-browser.log",
+      "sha256": "f0dd19b837beb6ec4310c307f58e71a6c08f64ce6bd4c393a0ad9727a9cbb5cd",
+      "bytes": 23887
+    },
+    "tifa-s092-start-claims-build-final-source.log": {
+      "path": "/tmp/tifa-s092-start-claims-build-final-source.log",
+      "sha256": "a818c22d26760a7c5f6c120067d3e3200e9b276ee252b15b7037cc90e8398698",
+      "bytes": 1074
+    },
+    "tifa-s092-start-claims-build-final.log": {
+      "path": "/tmp/tifa-s092-start-claims-build-final.log",
+      "sha256": "a818c22d26760a7c5f6c120067d3e3200e9b276ee252b15b7037cc90e8398698",
+      "bytes": 1074
+    },
+    "tifa-s092-start-claims-build-initial.log": {
+      "path": "/tmp/tifa-s092-start-claims-build-initial.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s092-start-claims-build.log": {
+      "path": "/tmp/tifa-s092-start-claims-build.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s092-start-claims-focused-final.log": {
+      "path": "/tmp/tifa-s092-start-claims-focused-final.log",
+      "sha256": "c39d24c3c162b7195cabb401685511ef7be43b84f6e637e07dbbaef0984d34f0",
+      "bytes": 9330
+    },
+    "tifa-s092-start-claims-focused-initial.log": {
+      "path": "/tmp/tifa-s092-start-claims-focused-initial.log",
+      "sha256": "a7547baad802d386110ff0fd88dcec8f15eb12f29dd87216f6b55b2a71c678ad",
+      "bytes": 6053
+    },
+    "tifa-s092-start-claims-focused-repaired.log": {
+      "path": "/tmp/tifa-s092-start-claims-focused-repaired.log",
+      "sha256": "e18c43e9266490f36b34d42d793de020a3e051a5d69971514cba6704be89fbb9",
+      "bytes": 7069
+    },
+    "tifa-s092-start-claims-full.log": {
+      "path": "/tmp/tifa-s092-start-claims-full.log",
+      "sha256": "753ddde35926698fe1b68b48113694e5bd390e1cb75d904bbe9f7a83a5a725cd",
+      "bytes": 212116
+    },
+    "tifa-s092-start-claims-generated-game.log": {
+      "path": "/tmp/tifa-s092-start-claims-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s092-start-claims-generated-original.log": {
+      "path": "/tmp/tifa-s092-start-claims-generated-original.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s092-start-claims-lint.log": {
+      "path": "/tmp/tifa-s092-start-claims-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-start-claims-preflight.log": {
+      "path": "/tmp/tifa-s092-start-claims-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s092-start-claims-private.log": {
+      "path": "/tmp/tifa-s092-start-claims-private.log",
+      "sha256": "4717074bd31026b5a0120019d10216cb0028262d159d30ceb599f222f22421bd",
+      "bytes": 28869
+    },
+    "tifa-s092-start-claims-typecheck-final-source.log": {
+      "path": "/tmp/tifa-s092-start-claims-typecheck-final-source.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-start-claims-typecheck-final.log": {
+      "path": "/tmp/tifa-s092-start-claims-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-start-claims-typecheck-initial.log": {
+      "path": "/tmp/tifa-s092-start-claims-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-start-claims-typecheck.log": {
+      "path": "/tmp/tifa-s092-start-claims-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-start-claims-workspace-initial.log": {
+      "path": "/tmp/tifa-s092-start-claims-workspace-initial.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    },
+    "tifa-s092-start-claims-workspace.log": {
+      "path": "/tmp/tifa-s092-start-claims-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
