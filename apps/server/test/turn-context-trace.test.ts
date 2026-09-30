@@ -5,7 +5,7 @@ import {createContractValidator} from '@lifestream/contracts';
 import {createPreparedTurnBinding,finalizePreparedTurn,requestForFinalizedTurn,isFinalizedTurnRequest} from '@lifestream/runtime/inference/prompt';
 import {unavailableVisualSelection} from '@lifestream/runtime/perception/observation';
 import {VisualTurnEvidence,startVisualTurnEvidence} from '../src/runtime/visual-turn-evidence.ts';
-import {captureTurnContextTrace,materializeTurnContextTrace} from '../src/runtime/turn-context-trace.ts';
+import {captureTurnContextTrace,materializeTurnContextTrace,correlateTurnContextTrace,replayTurnContextTrace} from '../src/runtime/turn-context-trace.ts';
 
 function fixture(options:{environment?:string;legacy?:boolean;replay?:boolean}={}){
  let utc=Date.now(),mono=100;
@@ -94,5 +94,32 @@ test('late observation of the finalized milestone preserves expiry rather than r
   const trace=f.journal.contextTraces(f.actor)[0]!;
   assert.equal((trace.events[0]!.payload as {freshness:string}).freshness,'stale');
   assert.equal(trace.deliveryProved,false);
+ }finally{f.journal.close();}
+});
+
+test('canonical context joins original finalized receipt; mismatched digests, scope, time and stage stay unjoined',async()=>{
+ const f=fixture({environment:randomUUID()});try{
+  const t=f.open();t.recorder.finalized(t.turn,t.request);t.recorder.providerInvoked();await Promise.resolve();
+  const trace=f.journal.contextTraces(f.actor)[0]!,receipt=f.journal.receipts(f.actor)[0]!;
+  const joined=correlateTurnContextTrace(trace,receipt);assert.ok(joined);assert.equal(joined.manifestDigest,receipt.finalized!.manifestDigest);assert.equal(joined.deliveryProved,false);assert.equal(joined.learningAuthority,false);
+  for(const bad of [{...receipt,interactionId:randomUUID()},{...receipt,occurredAtMs:receipt.occurredAtMs+1},{...receipt,stage:'providerInvoked' as const},{...receipt,finalized:{...receipt.finalized!,manifestDigest:'0'.repeat(64)}},{...receipt,finalized:{...receipt.finalized!,conversationSectionDigest:'0'.repeat(64)}}])assert.equal(correlateTurnContextTrace(trace,bad),null);
+  assert.equal(correlateTurnContextTrace({...trace},receipt),null);
+  let getters=0;const hostile={...receipt};Object.defineProperty(hostile,'finalized',{get(){getters++;return receipt.finalized;}});assert.equal(correlateTurnContextTrace(trace,hostile),null);assert.equal(getters,0);
+  assert.equal(correlateTurnContextTrace(trace,new Proxy(receipt,{})),null);
+ }finally{f.journal.close();}
+});
+
+test('isolated canonical semantic replay preserves original source/time/manifest with new IDs and explicit virtual clock',async()=>{
+ const f=fixture({environment:randomUUID()});try{
+  const t=f.open();t.recorder.finalized(t.turn,t.request);await Promise.resolve();const trace=f.journal.contextTraces(f.actor)[0]!,before=JSON.stringify(trace);
+  f.journal.reset();const replay=replayTurnContextTrace(trace);assert.ok(replay);
+  assert.equal(replay.manifest,trace.manifest);assert.equal(replay.sourceTraceId,t.request.scope.interactionId);assert.equal(replay.complete,false);assert.equal(replay.liveEffects,false);assert.equal(replay.durableReinforcement,false);assert.equal(replay.perceptionReplayed,false);assert.equal(replay.timeline,'source-relative-virtual');
+  const validator=createContractValidator();
+  for(const [i,event] of replay.events.entries()){
+   assert.ok(validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid);
+   assert.notEqual(event.eventId,trace.events[i]!.eventId);assert.deepEqual(event.sourceEventIds,[trace.events[i]!.eventId]);assert.equal(event.executionMode,'replay');assert.equal(event.eventTime,trace.events[i]!.eventTime);assert.equal(event.environmentId,replay.environmentId);assert.notEqual(event.environmentId,trace.events[i]!.environmentId);
+   assert.equal((event.monotonic as {clockId:string}).clockId,replay.clockMapping.replayClockId);assert.deepEqual(event.payload,trace.events[i]!.payload);
+  }
+  assert.equal(JSON.stringify(trace),before);assert.deepEqual(f.journal.contextTraces(f.actor),[]);assert.equal(replayTurnContextTrace({...trace}),null);assert.equal(replayTurnContextTrace(replay as never),null,'replay cannot impersonate a newly retained normal source');assert.doesNotMatch(JSON.stringify(replay),/PRIVATE_INPUT_SECRET|PRIVATE_SCENE_AND_DIALOGUE/);
  }finally{f.journal.close();}
 });

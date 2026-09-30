@@ -81,6 +81,14 @@ eviction, lazy 60-second expiry, reset and close boundaries. They contain no
 scene, dialogue, user input or reply text, grant no current eligibility, and
 prove neither provider admission nor delivery. Whole canonical lifecycle,
 durable trace sink and joined replay integration remain incomplete.
+
+The genuine retained context bundle can now join a matching finalized receipt
+by actual interaction/view/time and exact manifest/section digests. Mismatches
+remain unjoined; source currency and delivery remain unproved. Its pure semantic
+replay uses new event/trace/environment IDs, links each original event ID, retains
+original source times and manifest, and names its source-relative virtual clock.
+It has no provider/media/storage/effect callback and cannot become a new normal
+source. Replay does not refresh context, activate capture or reinforce memory.
 Selected-provider physical input, unannounced animal interpretation, historical
 appearance comparison, paired performance under pressure and Human experience
 qualification remain separate gates. Metadata fixtures do not satisfy them.

@@ -1,7 +1,9 @@
 import {createHash,randomUUID} from 'node:crypto';
+import {types} from 'node:util';
 import {createContractValidator} from '@lifestream/contracts';
 import {isFinalizedTurnRequest,type FinalizedTurn} from '@lifestream/runtime/inference/prompt';
 import type {InferenceRequest} from '@lifestream/runtime/inference';
+import type {VisualTurnReceipt} from './visual-turn-evidence.ts';
 
 const uuid=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(value);
 const sha=(value:string)=>createHash('sha256').update(value).digest('hex');
@@ -16,6 +18,21 @@ type Capture=Readonly<{scope:Readonly<{assistantId:string;conversationId:string;
   artifact:Readonly<{reference:Artifact;bytes:string}>}>;
 export type TurnContextTrace=Readonly<{events:readonly Readonly<Record<string,unknown>>[];manifest:Capture['artifact'];coverage:'bounded_best_effort';complete:false;durable:false;deliveryProved:false}>;
 const captures=new WeakSet<object>();
+const traces=new WeakSet<object>();
+function receiptSnapshot(value:unknown):VisualTurnReceipt|null {
+  let nodes=0;const seen=new Set<object>();
+  const copy=(v:unknown,depth=0):unknown=>{
+    if(++nodes>4096||depth>16)throw Error('bound');
+    if(v===null||typeof v==='boolean'||typeof v==='number'&&Number.isFinite(v))return v;
+    if(typeof v==='string'&&Buffer.byteLength(v)<=8192)return v;
+    if(!v||typeof v!=='object'||types.isProxy(v)||seen.has(v))throw Error('plain');
+    const array=Array.isArray(v);if(Object.getPrototypeOf(v)!==(array?Array.prototype:Object.prototype))throw Error('prototype');seen.add(v);
+    const out:Record<string,unknown>|unknown[]=array?[]:{};
+    for(const key of Reflect.ownKeys(v)){if(array&&key==='length')continue;if(typeof key!=='string')throw Error('key');const descriptor=Object.getOwnPropertyDescriptor(v,key)!;if(!descriptor.enumerable||!Object.hasOwn(descriptor,'value'))throw Error('accessor');Object.defineProperty(out,key,{value:copy(descriptor.value,depth+1),enumerable:true,writable:true,configurable:true});}
+    seen.delete(v);return out;
+  };
+  try{const result=copy(value);if(Buffer.byteLength(JSON.stringify(result))>32768)return null;return result as VisualTurnReceipt;}catch{return null;}
+}
 
 /** The internal nine-section manifest is explicitly different from the published
  * provider InputManifest. Its bytes contain digests/metadata, never prompt text.
@@ -45,6 +62,35 @@ export function materializeTurnContextTrace(capture:Capture,clock:{occurredAtMs:
     const payloads=[{eventType:'context.viewSelected',payload:{...capture.view,freshness:clock.occurredAtMs<capture.freshUntilMs?'fresh':'stale'}},...capture.sections.map(payload=>({eventType:'context.sourceUsed',payload}))];
     const events=payloads.map((item,sequence)=>({schemaVersion:'2.0.0',eventId:randomUUID(),traceScope:'interaction',interactionTraceId:interactionId,backgroundJobId:null,correlationId:interactionId,sequence,eventVersion:'1.0.0',eventTime:new Date(clock.occurredAtMs).toISOString(),processingTime:new Date(clock.processingAtMs).toISOString(),monotonic:{clockId:clock.clockId,milliseconds:clock.monotonicMs},...scope,executionMode:'normal',privacyClass:'restricted',causedByEventIds:[],sourceEventIds:[],...item,redactions:['prompt content omitted; section digests retained']}));
     if(events.some(event=>!validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid))return null;
-    return freeze({events,manifest:capture.artifact,coverage:'bounded_best_effort',complete:false,durable:false,deliveryProved:false});
+    const trace:TurnContextTrace=freeze({events,manifest:capture.artifact,coverage:'bounded_best_effort',complete:false,durable:false,deliveryProved:false});
+    traces.add(trace);return trace;
+  }catch{return null;}
+}
+
+/** Correlate the original host trace with a retained diagnostic finalized
+ * receipt. Equality explains metadata lineage, not source currency or delivery. */
+export function correlateTurnContextTrace(trace:TurnContextTrace,receipt:VisualTurnReceipt){
+  try{
+    if(!traces.has(trace))return null;
+    const snapshot=receiptSnapshot(receipt);if(!snapshot)return null;receipt=snapshot;
+    const first=trace.events[0]!,view=first.payload as Capture['view'],f=receipt.finalized;
+    if(receipt.stage!=='finalized'||receipt.interactionId!==first.interactionTraceId||receipt.occurredAtMs!==Date.parse(first.eventTime as string)||!f||f.viewId!==view.viewId||f.revision!==view.revision||f.manifestDigest!==trace.manifest.reference.sha256)return null;
+    const manifest=JSON.parse(trace.manifest.bytes) as InferenceRequest['manifest'];
+    if(f.sections.length!==9||f.sections.some((s,i)=>s.kind!==manifest.sections[i]!.kind||s.contentDigest!==manifest.sections[i]!.contentDigest||s.tokenCount!==manifest.sections[i]!.tokenCount)||f.conversationSectionDigest!==manifest.sections[7]!.contentDigest)return null;
+    return freeze({state:'joined' as const,interactionDigest:sha(receipt.interactionId),viewDigest:sha(view.viewId),manifestDigest:trace.manifest.reference.sha256,conversationSectionDigest:f.conversationSectionDigest,sourceEventDigests:trace.events.map(e=>sha(e.eventId as string)),coverage:'bounded_best_effort' as const,sourceCurrencyProved:false as const,deliveryProved:false as const,learningAuthority:false as const,effectAuthority:false as const});
+  }catch{return null;}
+}
+
+/** A pure semantic replay of the genuine retained context bundle. There is no
+ * callback, provider route, storage handle, media or effect executor. Virtual
+ * monotonic values preserve the original timeline with an explicit clock map. */
+export function replayTurnContextTrace(trace:TurnContextTrace){
+  try{
+    if(!traces.has(trace))return null;
+    const replayId=randomUUID(),environmentId=randomUUID(),clockId=randomUUID(),processingTime=new Date().toISOString();
+    const first=trace.events[0]!,sourceClock=(first.monotonic as {clockId:string}).clockId;
+    const events=trace.events.map(event=>({...event,eventId:randomUUID(),interactionTraceId:replayId,correlationId:replayId,environmentId,executionMode:'replay',processingTime,monotonic:{...(event.monotonic as {milliseconds:number}),clockId},causedByEventIds:[],sourceEventIds:[event.eventId as string]}));
+    const validator=createContractValidator();if(events.some(event=>!validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid))return null;
+    return freeze({replayId,environmentId,executionMode:'replay' as const,timeline:'source-relative-virtual' as const,sourceTraceId:first.interactionTraceId,sourceEnvironmentId:first.environmentId,clockMapping:{sourceClockId:sourceClock,replayClockId:clockId},manifest:trace.manifest,events,complete:false as const,rawMediaAvailable:false as const,perceptionReplayed:false as const,liveEffects:false as const,durableReinforcement:false as const,sourceCurrencyProved:false as const,deliveryProved:false as const});
   }catch{return null;}
 }
