@@ -167,6 +167,10 @@
     "./activity/policy": {
       "types": "./dist/activity/policy.d.ts",
       "import": "./dist/activity/policy.js"
+    },
+    "./activity/memory": {
+      "types": "./dist/activity/memory.d.ts",
+      "import": "./dist/activity/memory.js"
     }
   },
   "scripts": {

@@ -1,0 +1,9 @@
+import {randomUUID} from 'node:crypto';
+import {projectGameEpisode} from '../../src/activity/memory.ts';
+import type {GameExperienceEpisode} from '@lifestream/contracts/game-activity';
+export function fixtureEpisode(now=Date.now()):GameExperienceEpisode{
+ return {schemaVersion:'1.0.0',recordType:'gameExperienceEpisode',episodeId:randomUUID(),revision:1,scope:{principalId:randomUUID(),assistantId:randomUUID(),relationshipId:randomUUID(),environmentId:randomUUID(),activityId:randomUUID(),runId:randomUUID(),campaignId:randomUUID(),timelineId:randomUUID(),timelineRevision:1,activityEpoch:1,observationDomain:'simulatedGame',contextBinding:{conversationId:randomUUID(),sessionId:randomUUID(),endpointId:randomUUID(),participationKind:'logicalActivity',humanSpeakerRef:null,audioOwnerEndpointId:null,ownerPermissionRef:'test-only:activity-owner'}},pinsDigest:'a'.repeat(64),policyRevision:1,frameRange:{from:20,to:30},occurredFrom:new Date(now-200).toISOString(),occurredTo:new Date(now-100).toISOString(),rawEvidenceAvailability:'notRetained',sourceAdmissionIds:[randomUUID()],sourceActionIds:[randomUUID()],sourceObservationIds:[randomUUID()],summary:'A recorded attempt did not cross the visible gate; the resulting frame still showed it closed.',independenceKey:randomUUID(),sourceKind:'simulatedGameExperience',uncertainty:'The screenshot supports a closed gate, not the hidden reason.',adviceRefs:[],recordedAt:new Date(now-50).toISOString(),retentionPolicyRef:'test-only:independently-enabled-game-memory',expiresAt:new Date(now+60000).toISOString(),state:'retained',untrusted:true};
+}
+export function projection(e:GameExperienceEpisode,now=Date.now()){
+ return projectGameEpisode({episode:e,memoryId:randomUUID(),estimate:{value:0.6,basis:'Test-only source-to-summary review; no perception calibration.',policyRef:'test-only:transformation-policy:1'},nowMs:now},()=>true)!;
+}

@@ -34,6 +34,10 @@
     "./game-journal": {
       "types": "./dist/game-journal.d.ts",
       "import": "./dist/game-journal.js"
+    },
+    "./game-memory": {
+      "types": "./dist/game-memory.d.ts",
+      "import": "./dist/game-memory.js"
     }
   }
 }
