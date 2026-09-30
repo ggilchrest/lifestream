@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S094",
+  "component": "offline supplied paired game speech/resource/presentation performance scoring",
+  "componentStatus": "verified",
+  "wholeSliceStatus": "inProgress",
+  "recordedAt": "2026-09-30T20:16:11.826178Z",
+  "sourceRevision": "af3bc534b4a0cc1aaa9342d0d4ed6dbcc1824996",
+  "sourceFiles": [
+    "docs/local-game-acceptance.md",
+    "packages/performance/src/benchmark.ts",
+    "packages/performance/test/game-activity.test.ts",
+    "scripts/qualify-local-game-performance.mjs",
+    "scripts/qualify-local-game-performance.test.mjs"
+  ],
+  "verification": {
+    "fullSource": {
+      "revision": "af3bc534b4a0cc1aaa9342d0d4ed6dbcc1824996",
+      "pass": 2390,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 111016.656709
+    },
+    "focused": {
+      "pass": 38,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 360.035875
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6436.185709
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "generatedGameTypes": "pass",
+    "diffCheck": "pass",
+    "scorerTypecheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm exec tsc --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext --strict --noUncheckedIndexedAccess --types node --skipLibCheck packages/performance/src/benchmark.ts",
+    "node --test --experimental-strip-types packages/performance/test/game-activity.test.ts packages/performance/test/visual-input.test.ts scripts/qualify-local-game-performance.test.mjs scripts/qualify-visual-performance.test.mjs",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual offline scorer/CLI, bounded regular-file reads, source/input hashing and fresh owner-only output with no overwrite or connected-root/symlink export. FIFO rejected without waiting. Existing speech/prepared/stop objectives, exact200 warm requested-speech pairing, incomplete/cancelled/failed/timeout/cold evidence handling, acknowledgments versus requested speech, no discarded fast-sample filtering, explicit optional-work outcomes, resource headroom/pressure and separate presentation/decision/idle/pause distributions are exercised. Hostile getters/proxies/cycles/raw data/prototype condition names and nonfinite derived speed rejected. Existing visual scorer/CLI regressions remain passing.",
+    "scripted": "All clocks, requested-speech outcomes, platform/provider labels, memory/GPU/queue resources, game frames/display/control baselines and optional planning/perception/checkpoint/reflection work are synthetic supplied measurements. No actual speech/provider/game/camera/resource collection or native/platform/Human performance was run."
+  },
+  "limitations": [
+    "Whole S094/Phase16 remains inProgress. Actual per-platform200paired foreground speech trials under all prescribed pressure/cold/hung conditions plus real memory headroom and emulator-only display/control comparison remain open.",
+    "The evaluator consumes supplied local measurements only; it starts no collection/provider/camera/game/control/save/schedule/contact and claims no native performance, game competence, runtime or Human acceptance.",
+    "Native graphical Linux/Windows ordinary-save persistence/readback/restart/load, actual selected-provider interpretation/causal advice, canonical trace and Human acceptance remain open.",
+    "Primary S066/full LS-TEST-084 pending verification, accepted original24 S083/S084/iPhone journeys, selected-model causal/onset failures and installed candidate/services/Telegram/backup settings remain preserved; no publication/private export/live effects."
+  ],
+  "retainedFailures": [],
+  "ownedOperation": {
+    "operation": "S094 offline game performance tooling exact-revision full source suite",
+    "sourceRevision": "af3bc534b4a0cc1aaa9342d0d4ed6dbcc1824996",
+    "startedAt": "2026-09-30T20:13:56.226960+00:00",
+    "wrapperPid": 8953,
+    "log": "/tmp/tifa-s094-performance-tool-full.log",
+    "status": "completed",
+    "childPid": 8962,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T20:15:47.781488+00:00"
+  },
+  "primaryCheckpoint": "LS-S066 implementationCompleteVerificationPending; full LS-TEST-084 preserved",
+  "installedCandidateChanged": false,
+  "appGoalControlSet": false,
+  "runDisposition": "continue",
+  "nextAction": "Continue dependency-ready S092 fresh-observation dispatch validation and bounded action/evidence integration; actual native/platform/provider/performance/Human and canonical trace gates remain open.",
+  "logDigests": {
+    "tifa-s094-performance-tool-browser.log": {
+      "path": "/tmp/tifa-s094-performance-tool-browser.log",
+      "sha256": "63ff5c4c1bd7a02fd9b2b5754a71763ae854fa5c1e5e81c20e3cdf6f6a7ab20e",
+      "bytes": 23857
+    },
+    "tifa-s094-performance-tool-build.log": {
+      "path": "/tmp/tifa-s094-performance-tool-build.log",
+      "sha256": "70d9b14e8ee2456fa94543f1a04fe8989f2db90b2f76905d6b24cc02cf2c08af",
+      "bytes": 1074
+    },
+    "tifa-s094-performance-tool-diff.log": {
+      "path": "/tmp/tifa-s094-performance-tool-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s094-performance-tool-focused-current.log": {
+      "path": "/tmp/tifa-s094-performance-tool-focused-current.log",
+      "sha256": "4dd1e4c69c6389de7534d7c4d7e3d0fca780786d74af7430f8c405c358d17b6b",
+      "bytes": 3997
+    },
+    "tifa-s094-performance-tool-focused-final.log": {
+      "path": "/tmp/tifa-s094-performance-tool-focused-final.log",
+      "sha256": "27b27b3cdcb0d2f31662011392e1725adb23be506fa61d411692df60e5d93f3b",
+      "bytes": 4107
+    },
+    "tifa-s094-performance-tool-focused-initial.log": {
+      "path": "/tmp/tifa-s094-performance-tool-focused-initial.log",
+      "sha256": "ad06123d5c70298400fb81c405d6c5f58546e38a9100196d9b605abfded0c279",
+      "bytes": 3850
+    },
+    "tifa-s094-performance-tool-full.log": {
+      "path": "/tmp/tifa-s094-performance-tool-full.log",
+      "sha256": "fcf79234e78234f6ddad69b3f4814e7d5e6f0bb43142a8c067ecd37f66904aa6",
+      "bytes": 257644
+    },
+    "tifa-s094-performance-tool-generated.log": {
+      "path": "/tmp/tifa-s094-performance-tool-generated.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s094-performance-tool-lint-current.log": {
+      "path": "/tmp/tifa-s094-performance-tool-lint-current.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s094-performance-tool-lint.log": {
+      "path": "/tmp/tifa-s094-performance-tool-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s094-performance-tool-preflight.log": {
+      "path": "/tmp/tifa-s094-performance-tool-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s094-performance-tool-private-current.log": {
+      "path": "/tmp/tifa-s094-performance-tool-private-current.log",
+      "sha256": "01aa23eb4c4836483acd8758966cd60ce26d9d01c011644369e5cdb0a5cfcb4b",
+      "bytes": 28897
+    },
+    "tifa-s094-performance-tool-private.log": {
+      "path": "/tmp/tifa-s094-performance-tool-private.log",
+      "sha256": "3ae304ffcec549109b820993c584d30f1958e2c00cd1f7283874fdae02c746a3",
+      "bytes": 28882
+    },
+    "tifa-s094-performance-tool-scorer-typecheck-current.log": {
+      "path": "/tmp/tifa-s094-performance-tool-scorer-typecheck-current.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s094-performance-tool-scorer-typecheck-final.log": {
+      "path": "/tmp/tifa-s094-performance-tool-scorer-typecheck-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s094-performance-tool-scorer-typecheck.log": {
+      "path": "/tmp/tifa-s094-performance-tool-scorer-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s094-performance-tool-typecheck.log": {
+      "path": "/tmp/tifa-s094-performance-tool-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s094-performance-tool-workspace.log": {
+      "path": "/tmp/tifa-s094-performance-tool-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  },
+  "milestoneDistinctions": [
+    "Supplied200 warm completed speech pairs cannot hide other failed/timed-out/cancelled attempts; cold trials remain separate.",
+    "Optional-work admission/outcome counts do not prove authority, native progress or supplied predicate authenticity.",
+    "Game display/speed/controller response/decision progress and measured headroom remain separate from measured speech objectives.",
+    "No game-specific paired latency or native rendering/capacity threshold was invented; native/platform/Human qualification remains unproved.",
+    "Supplied physical/development labels cannot authenticate clocks, providers, audible output or acceptance."
+  ]
+}
