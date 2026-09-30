@@ -1,0 +1,260 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "component": "bounded asynchronous source-host visual lifecycle diagnostics",
+  "componentStatus": "verified",
+  "wholeSliceStatus": "inProgress",
+  "recordedAt": "2026-09-30T17:04:49.681275Z",
+  "sourceRevision": "eac6c30157fad049387fb85c0f790ea6c90189f4",
+  "sourceFiles": [
+    "apps/server/src/runtime/visual-input.ts",
+    "apps/server/src/runtime/visual-lifecycle-evidence.ts",
+    "apps/server/test/visual-lifecycle-evidence.test.ts",
+    "apps/server/test/visual-lineage.test.ts",
+    "docs/visual-conversation-acceptance.md"
+  ],
+  "verification": {
+    "fullSource": {
+      "revision": "eac6c30157fad049387fb85c0f790ea6c90189f4",
+      "pass": 2238,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 108886.671917
+    },
+    "focused": {
+      "pass": 38,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 970.805458
+    },
+    "visualHttpRegression": {
+      "pass": 71,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 3355.764375
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6674.797042
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types apps/server/test/visual-lifecycle-evidence.test.ts apps/server/test/visual-lineage.test.ts apps/server/test/visual-turn-evidence.test.ts",
+    "node --test --experimental-strip-types apps/server/test/visual-input.test.ts apps/server/test/visual-memory-publication.test.ts apps/server/test/visual-memory.test.ts",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --check",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual isolated source-host negotiation, runtime lease state, admitted frame sequences, rejected ingress, failure after admitted submission, selected-context expiry timer, stopping and unmatched stop. Actual selected canonical request and SQLite source custody/forgetting remain joined. Bounded asynchronous ring/owner isolation/freeze/UTC and monotonic expiry/rollback/reset/close and failure containment exercised. Existing isolated authenticated HTTP visual/memory regression.",
+    "scripted": "Synthetic PNG bytes, perception outputs, subject association and transformation confidence. Runtime capture leases are fixture control state, not physical camera activation or broker-release acknowledgment. No selected-provider perception or Human experience qualification follows."
+  },
+  "milestoneDistinctions": [
+    "Negotiated version is separate from enabled runtime capture.",
+    "Observed inactive runtime state is separate from actual runtime lease termination and physical broker-release acknowledgment.",
+    "Unmatched old stop is a no-op; it cannot stop or claim stopping a successor lease.",
+    "Rejected ingress and failure after admitted batch are distinct; neither proves usable perception, context inclusion or retained memory.",
+    "Selected context expiry does not terminate its capture lease or erase separately governed retained memory.",
+    "Asynchronous diagnostics have no authority and cannot block on a consumer; clock or release-hook failure does not create new authority."
+  ],
+  "limitations": [
+    "Internal bounded lifecycle receipts are separate from the closed canonical trace envelope. Canonical visual event integration, pre-retention memory admission and lifecycle-to-replay joins remain incomplete.",
+    "At most128 pending and128 retained receipts per host with lazy60s expiry under either clock; no completeness or idle-erasure claim. No raw IDs/media/scene/user input/recipient/chain-of-thought retained.",
+    "Actual selected-provider camera interpretation, animal recognition, historical appearance comparison, paired pressure/performance/onset and Human qualification remain open.",
+    "Primary S066 implementationCompleteVerificationPending/full LS-TEST-084, original24 S083/S084 and iPhone Human acceptance and selected-model causal/onset failures remain unchanged.",
+    "Whole S091-S094, production authenticated game source/advice/action/outcome/privacy projection, graphical Linux/Windows native-save/platform/provider/Human and permitted contact/image gates remain open. No installation, camera/game/save/contact/provider/deployment/publication effects."
+  ],
+  "retainedFailures": [
+    {
+      "log": "tifa-s090-lifecycle-focused-initial.log",
+      "pass": 32,
+      "fail": 1,
+      "cause": "Test expected wrong-lease stop to throw, but existing runtime intentionally treats it as a safe no-op. Diagnostic also incorrectly labeled that inactive/stop case; corrected to unmatched no-op versus observed inactive state, preserving original control behavior."
+    },
+    {
+      "log": "tifa-s090-lifecycle-focused-source.log",
+      "pass": 37,
+      "fail": 1,
+      "cause": "Test expected release-hook exception propagation; existing runtime intentionally contains it. Corrected assertion; diagnostics still clear and no capture authority returns."
+    }
+  ],
+  "ownedOperation": {
+    "operation": "S090 lifecycle exact-revision full source suite",
+    "sourceRevision": "eac6c30157fad049387fb85c0f790ea6c90189f4",
+    "startedAt": "2026-09-30T17:01:53.811030+00:00",
+    "wrapperPid": 74572,
+    "log": "/tmp/tifa-s090-lifecycle-full.log",
+    "status": "completed",
+    "childPid": 74575,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T17:03:42.901224+00:00"
+  },
+  "primaryCheckpoint": "LS-S066 implementationCompleteVerificationPending; full LS-TEST-084 preserved",
+  "installedCandidateChanged": false,
+  "appGoalControlSet": false,
+  "runDisposition": "continue",
+  "nextAction": "Join bounded source-host lifecycle diagnostics with publication/context/reply/memory metadata and isolated replay; canonical trace and pre-retention memory admission plus real camera/provider/performance/Human/native gates remain open.",
+  "logDigests": {
+    "tifa-s090-lifecycle-browser.log": {
+      "path": "/tmp/tifa-s090-lifecycle-browser.log",
+      "sha256": "5d978de05c5aa41069dbbee350e671d23dba2ec1820d235d9e9ee5eface902b0",
+      "bytes": 23892
+    },
+    "tifa-s090-lifecycle-build-corrected.log": {
+      "path": "/tmp/tifa-s090-lifecycle-build-corrected.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s090-lifecycle-build-observed.log": {
+      "path": "/tmp/tifa-s090-lifecycle-build-observed.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s090-lifecycle-build-source.log": {
+      "path": "/tmp/tifa-s090-lifecycle-build-source.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s090-lifecycle-build.log": {
+      "path": "/tmp/tifa-s090-lifecycle-build.log",
+      "sha256": "64385f508f55b8836df0612d6525527f0aa1c7c3d53cc13ab11c8a3ccbe59112",
+      "bytes": 1075
+    },
+    "tifa-s090-lifecycle-diff-final.log": {
+      "path": "/tmp/tifa-s090-lifecycle-diff-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-lifecycle-diff-verified.log": {
+      "path": "/tmp/tifa-s090-lifecycle-diff-verified.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-lifecycle-diff.log": {
+      "path": "/tmp/tifa-s090-lifecycle-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-lifecycle-focused-corrected.log": {
+      "path": "/tmp/tifa-s090-lifecycle-focused-corrected.log",
+      "sha256": "8a708c5d49e5cf5d1619ff20150977f720b18217a96f89046c1fe2881f77cad3",
+      "bytes": 3995
+    },
+    "tifa-s090-lifecycle-focused-final.log": {
+      "path": "/tmp/tifa-s090-lifecycle-focused-final.log",
+      "sha256": "90d1eb93c7f6e83c8d91231ffd4ce8776c01f3592a6cc859df0dd358533a5bf9",
+      "bytes": 4211
+    },
+    "tifa-s090-lifecycle-focused-initial.log": {
+      "path": "/tmp/tifa-s090-lifecycle-focused-initial.log",
+      "sha256": "f518c0541ab9cafc0f75f185c4b5c906b4c31f5f7cf01ce54e0f42a1cac6b304",
+      "bytes": 4561
+    },
+    "tifa-s090-lifecycle-focused-observed.log": {
+      "path": "/tmp/tifa-s090-lifecycle-focused-observed.log",
+      "sha256": "9cc2befa9aaabf9c39bce53bb3a7bf6b121683b5c450691cd780d126a0ce4fcb",
+      "bytes": 4004
+    },
+    "tifa-s090-lifecycle-focused-source.log": {
+      "path": "/tmp/tifa-s090-lifecycle-focused-source.log",
+      "sha256": "a87628ace12288c4a8ac906b1b4dfea9f7c6d7e44ab172d8b1f2179d4937f112",
+      "bytes": 5074
+    },
+    "tifa-s090-lifecycle-focused-verified.log": {
+      "path": "/tmp/tifa-s090-lifecycle-focused-verified.log",
+      "sha256": "f86f039d40b2580862aec1647bde39560a1e7c7ce371b1496413fd0424ec8280",
+      "bytes": 4313
+    },
+    "tifa-s090-lifecycle-full.log": {
+      "path": "/tmp/tifa-s090-lifecycle-full.log",
+      "sha256": "66bb3ee6477de178bd3a981237930a330fd042b763892caf8cb1db1e103200bd",
+      "bytes": 241970
+    },
+    "tifa-s090-lifecycle-generated-game.log": {
+      "path": "/tmp/tifa-s090-lifecycle-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s090-lifecycle-generated.log": {
+      "path": "/tmp/tifa-s090-lifecycle-generated.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s090-lifecycle-http-regression.log": {
+      "path": "/tmp/tifa-s090-lifecycle-http-regression.log",
+      "sha256": "d2d2ba2c2f47971783e0626d4b24dd69de43bca6204cd88e04faa4bab956a1ac",
+      "bytes": 7211
+    },
+    "tifa-s090-lifecycle-lint-final.log": {
+      "path": "/tmp/tifa-s090-lifecycle-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-lifecycle-lint.log": {
+      "path": "/tmp/tifa-s090-lifecycle-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-lifecycle-preflight.log": {
+      "path": "/tmp/tifa-s090-lifecycle-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s090-lifecycle-private.log": {
+      "path": "/tmp/tifa-s090-lifecycle-private.log",
+      "sha256": "3e5cab5e23830a6be74e1e487adbc852e7d8b0650dbed311827e5375f5687083",
+      "bytes": 28885
+    },
+    "tifa-s090-lifecycle-typecheck-corrected.log": {
+      "path": "/tmp/tifa-s090-lifecycle-typecheck-corrected.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-lifecycle-typecheck-observed.log": {
+      "path": "/tmp/tifa-s090-lifecycle-typecheck-observed.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-lifecycle-typecheck-source.log": {
+      "path": "/tmp/tifa-s090-lifecycle-typecheck-source.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-lifecycle-typecheck.log": {
+      "path": "/tmp/tifa-s090-lifecycle-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-lifecycle-workspace-final.log": {
+      "path": "/tmp/tifa-s090-lifecycle-workspace-final.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    },
+    "tifa-s090-lifecycle-workspace.log": {
+      "path": "/tmp/tifa-s090-lifecycle-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
