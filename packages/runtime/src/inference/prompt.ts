@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { types } from "node:util";
 import type { InferenceRequest, InferenceSection, InputManifest } from "./port.js";
-import { formatPreparedRelationshipContext, type PreparedRelationshipContext } from "../context/builder.ts";
+import { formatPreparedRelationshipContext, selectedRelationshipSources, type PreparedRelationshipContext } from "../context/builder.ts";
 import type { PreparedWorldContext } from "../context/world.ts";
 import {hasCanonicalContextScope,materializePreparedContext,requestFromPreparedContext,type PreparedContextView} from '../context/prepared-view.ts';
 import {visualConversationContent, type PreparedVisualContext} from "../perception/observation.ts";
@@ -122,6 +122,7 @@ export function buildCanonicalPrompt(input: PromptInput): InferenceRequest {
 
 /** Authentic cached turn; canonical prepared context is present for fully bound UUID scopes. */
 export type FinalizedTurn = Readonly<{
+  selectedMemoryIds?:readonly string[];
   binding:PreparedTurnBinding|null;
   preparedContext:PreparedContextView|null;
   sourceRevisions:Readonly<Record<string,string>>;
@@ -207,7 +208,10 @@ export function finalizePreparedTurn(input:PromptInput,current:()=>boolean):Fina
   const stillCurrent=()=>beforeDeadline()&&currentTurn(current)&&currentTurn(visualCurrent)&&beforeDeadline();
   if(!stillCurrent())throw unavailableTurn();
   freezeTurn(request);
-  const turn:FinalizedTurn=Object.freeze({binding,preparedContext,sourceRevisions:Object.freeze(inventory),sections:request.manifest.sections});
+  const sources=snapshot.preparedRelationshipContext?selectedRelationshipSources(snapshot.preparedRelationshipContext):undefined;
+  const memoryIds=sources?.filter(source=>source.memoryRecord===true).map(source=>source.id);
+  const knownMemoryIds=memoryIds&&memoryIds.length<=100&&new Set(memoryIds).size===memoryIds.length&&memoryIds.every(id=>/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/u.test(id))?Object.freeze(memoryIds):undefined;
+  const turn:FinalizedTurn=Object.freeze({...(knownMemoryIds?{selectedMemoryIds:knownMemoryIds}:{}),binding,preparedContext,sourceRevisions:Object.freeze(inventory),sections:request.manifest.sections});
   finalizedTurns.set(turn,{request,current:stillCurrent,retired:false});
   return turn;
 }

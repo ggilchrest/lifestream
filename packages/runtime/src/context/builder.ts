@@ -40,11 +40,24 @@ export function formatPreparedRelationshipContext(context: PreparedRelationshipC
   return formatted;
 }
 
-export type RelationshipContextRecord = { id: string; content: string; revision: number; sourceFamily: string; status: string; use: "baseline" | "correction" | "relevant"; personalization: boolean; mention: boolean; uncertainty?: string; expiresAt?: string; visualObservation?: boolean; gameExperience?:boolean; gameHelp?:boolean };
+export type RelationshipContextRecord = { id: string; content: string; revision: number; sourceFamily: string; status: string; use: "baseline" | "correction" | "relevant"; personalization: boolean; mention: boolean; uncertainty?: string; expiresAt?: string; visualObservation?: boolean; gameExperience?:boolean; gameHelp?:boolean; memoryRecord?:boolean };
 export type ContextOmission = { id: string; revision: number; reason: string };
-export type ContextSelection = { id: string; revision: number; sourceFamily: string; lane: RelationshipContextRecord["use"]; byteContribution: number };
+export type ContextSelection = { id: string; revision: number; sourceFamily: string; lane: RelationshipContextRecord["use"]; byteContribution: number; memoryRecord?:boolean };
 export type CompiledRelationshipContext = PreparedRelationshipContext & { compilerRevision: string; representationRevision: string; builtAt: string; freshUntil: string; sourceRevisions: readonly string[]; selections: readonly ContextSelection[]; omissions: readonly ContextOmission[]; budget: { maximumBytes: number; usedBytes: number; estimator: "utf8-bytes-upper-bound" }; preparationCount: 1 };
-export const RELATIONSHIP_COMPILER_REVISION = "relationship-context:9";
+export const RELATIONSHIP_COMPILER_REVISION = "relationship-context:10";
+/** Exact source metadata after the formatter's final optional allocation.
+ * Compiler selection alone can precede discovery displacing an optional item.
+ * This describes rendered sources; it grants no new source eligibility. */
+export function selectedRelationshipSources(context:PreparedRelationshipContext):readonly ContextSelection[]|undefined {
+  try{
+    if(!('selections' in context)||!Array.isArray(context.selections)||context.selections.length>512)return undefined;
+    const selected=context.selections as ContextSelection[];
+    if(selected.some(source=>!source||typeof source.id!=='string'||typeof source.sourceFamily!=='string'||!['baseline','correction','relevant'].includes(source.lane)||!Number.isSafeInteger(source.revision)||source.revision<1||!Number.isFinite(source.byteContribution)||source.byteContribution<0))return undefined;
+    const optional=new Set(buildContext([...(context.discoveryContent?[{id:'discovery',content:context.discoveryContent,rank:-1}]:[]),...context.relevantContext]).map(source=>source.id));
+    const conventions=new Set(context.compiledConventions?.flatMap(group=>group.sources.map(source=>source.id))??[]);
+    return selected.filter(source=>source.lane!=='relevant'||optional.has(source.id)||conventions.has(source.id));
+  }catch{return undefined;}
+}
 const bytes = (value: string) => new TextEncoder().encode(value).length;
 // A bounded cue from the current request only, never from retrieved records.
 // This changes allocation, not eligibility, privacy, consent, or zero controls.
@@ -84,7 +97,7 @@ export function compileRelationshipContext(input: { records: readonly Relationsh
   const take = (record: RelationshipContextRecord): boolean => {
     const size = input.representation === "conventionOriented" ? bytes(JSON.stringify({lane:record.use,text:record.content,sources:[{id:record.id,revision:record.revision,family:record.sourceFamily}]})) + 2 : bytes(record.content) + bytes(record.id) + 16;
     if (used + size > payloadCapacity) return false;
-    used += size; selected.push({ id: record.id, revision: record.revision, sourceFamily: record.sourceFamily, lane: record.use, byteContribution: size }); return true;
+    used += size; selected.push({ id: record.id, revision: record.revision, sourceFamily: record.sourceFamily, lane: record.use, byteContribution: size,...(record.memoryRecord===true?{memoryRecord:true}:{}) }); return true;
   };
   const mandatory = eligible.filter(record => record.use !== "relevant");
   for (const record of mandatory) {

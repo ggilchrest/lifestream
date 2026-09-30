@@ -4,6 +4,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import {createContractValidator} from '@lifestream/contracts';
 import {createPreparedTurnBinding,finalizePreparedTurn,requestForFinalizedTurn,isFinalizedTurnRequest} from '@lifestream/runtime/inference/prompt';
 import {unavailableVisualSelection} from '@lifestream/runtime/perception/observation';
+import {compileRelationshipContext} from '@lifestream/runtime/context';
 import {VisualTurnEvidence,startVisualTurnEvidence} from '../src/runtime/visual-turn-evidence.ts';
 import {captureTurnContextTrace,materializeTurnContextTrace,correlateTurnContextTrace,replayTurnContextTrace} from '../src/runtime/turn-context-trace.ts';
 
@@ -121,5 +122,16 @@ test('isolated canonical semantic replay preserves original source/time/manifest
    assert.equal((event.monotonic as {clockId:string}).clockId,replay.clockMapping.replayClockId);assert.deepEqual(event.payload,trace.events[i]!.payload);
   }
   assert.equal(JSON.stringify(trace),before);assert.deepEqual(f.journal.contextTraces(f.actor),[]);assert.equal(replayTurnContextTrace({...trace}),null);assert.equal(replayTurnContextTrace(replay as never),null,'replay cannot impersonate a newly retained normal source');assert.doesNotMatch(JSON.stringify(replay),/PRIVATE_INPUT_SECRET|PRIVATE_SCENE_AND_DIALOGUE/);
+ }finally{f.journal.close();}
+});
+
+test('published memory selection references only actual marked records included by final preparation and survives semantic replay without promotion',async()=>{
+ const f=fixture({environment:randomUUID()});try{
+  const memoryId=randomUUID(),relationshipId=randomUUID(),context=compileRelationshipContext({records:[{id:memoryId,content:'azure visible notebook',revision:2,sourceFamily:'visual:synthetic-episode',status:'approved',use:'relevant',personalization:true,mention:true,memoryRecord:true,visualObservation:true},{id:relationshipId,content:'azure reminder',revision:1,sourceFamily:'synthetic-relationship',status:'approved',use:'relevant',personalization:true,mention:true}],userInput:'azure',audienceScope:'authenticatedSession',profileRevision:'p1',relationshipRevision:'r1',configurationRevision:'c1'});
+  const interactionId=randomUUID(),recorder=startVisualTurnEvidence(f.journal.observer(f.actor,unavailableVisualSelection('no_observations'),f.binding,null,randomUUID()),interactionId,'text');
+  const turn=finalizePreparedTurn({assistantId:f.actor.assistantId,sessionId:f.actor.sessionId,interactionId,endpointId:f.binding.scope.endpointId,conversation:f.binding.conversation,preparedTurnBinding:f.binding,preparedRelationshipContext:context},()=>true),request=requestForFinalizedTurn(turn,f.binding,()=>true);
+  recorder.finalized(turn,request);await Promise.resolve();const trace=f.journal.contextTraces(f.actor)[0]!,event=trace.events.find(e=>e.eventType==='memory.referencesSelected')!;
+  assert.ok(event);assert.deepEqual((event.payload as {memoryIds:string[]}).memoryIds,[memoryId]);assert.ok(createContractValidator().validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid);
+  assert.deepEqual(replayTurnContextTrace(trace)!.events.find(e=>e.eventType==='memory.referencesSelected')!.payload,event.payload);assert.doesNotMatch(JSON.stringify(trace),/azure visible notebook|azure reminder/);
  }finally{f.journal.close();}
 });

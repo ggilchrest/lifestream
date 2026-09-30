@@ -89,6 +89,12 @@ replay uses new event/trace/environment IDs, links each original event ID, retai
 original source times and manifest, and names its source-relative virtual clock.
 It has no provider/media/storage/effect callback and cannot become a new normal
 source. Replay does not refresh context, activate capture or reinforce memory.
+
+Published `memory.referencesSelected` events now name only retained MemoryRecord
+UUIDs represented in the final prepared-memory formatting. Relationship-record
+UUIDs stay distinct. Discovery displacement and unknown/legacy metadata cannot
+create a memory-selection claim; mandatory/convention-rendered sources remain
+accounted for. This adds source metadata, not memory capture or retrieval policy.
 Selected-provider physical input, unannounced animal interpretation, historical
 appearance comparison, paired performance under pressure and Human experience
 qualification remain separate gates. Metadata fixtures do not satisfy them.

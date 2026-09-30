@@ -12,6 +12,7 @@ function freeze<T>(value:T):T{if(value&&typeof value==='object'){for(const child
 type Revision=Readonly<{providerRef:string;revision:string;highWaterMark:null}>;
 type Artifact=Readonly<{reference:string;sha256:string;mediaType:'application/json';schemaRef:string;byteLength:number}>;
 type Capture=Readonly<{scope:Readonly<{assistantId:string;conversationId:string;sessionId:string;endpointId:string;environmentId:string;interactionId:string}>;
+  memorySelection:Readonly<{memoryIds:readonly string[];sourceRevision:Revision}>|null;
   freshUntilMs:number;
   view:Readonly<{viewId:string;revision:number;sourceRevisions:readonly Revision[];freshness:'fresh'}>;
   sections:readonly Readonly<{reference:string;sourceRevision:Revision}>[];
@@ -45,7 +46,8 @@ export function captureTurnContextTrace(turn:FinalizedTurn,request:InferenceRequ
     const bytes=JSON.stringify(request.manifest);
     if(Buffer.byteLength(bytes)>65536)return null;
     const digest=sha(bytes);
-    const capture:Capture=freeze({freshUntilMs:Date.parse(view.freshUntil),scope:{assistantId:view.assistantId,conversationId:view.conversationId,sessionId:view.sessionId,endpointId:view.endpointId,environmentId,interactionId:request.scope.interactionId},
+    const memorySection=request.manifest.sections[4]!;
+    const capture:Capture=freeze({memorySelection:turn.selectedMemoryIds?{memoryIds:turn.selectedMemoryIds,sourceRevision:{providerRef:diagnostic(memorySection.sourceRef,500),revision:diagnostic(memorySection.sourceRevision,300),highWaterMark:null}}:null,freshUntilMs:Date.parse(view.freshUntil),scope:{assistantId:view.assistantId,conversationId:view.conversationId,sessionId:view.sessionId,endpointId:view.endpointId,environmentId,interactionId:request.scope.interactionId},
       view:{viewId:view.viewId,revision:view.revision,sourceRevisions:view.sourceRevisions.map(source=>({providerRef:diagnostic(source.source,500),revision:diagnostic(source.revision,300),highWaterMark:null})),freshness:'fresh'},
       sections:request.manifest.sections.map(section=>({reference:`urn:lifestream:prompt-section:sha256:${section.contentDigest}`,sourceRevision:{providerRef:diagnostic(section.sourceRef,500),revision:diagnostic(section.sourceRevision,300),highWaterMark:null}})),
       artifact:{reference:{reference:`urn:lifestream:runtime-turn-manifest:sha256:${digest}`,sha256:digest,mediaType:'application/json',schemaRef:'urn:lifestream:runtime-input-manifest:1.0.0',byteLength:Buffer.byteLength(bytes)},bytes}});
@@ -59,7 +61,7 @@ export function materializeTurnContextTrace(capture:Capture,clock:{occurredAtMs:
   try{
     if(!captures.has(capture)||!uuid(clock.clockId)||![clock.occurredAtMs,clock.processingAtMs,clock.monotonicMs].every(value=>Number.isFinite(value)&&value>=0)||clock.processingAtMs<clock.occurredAtMs)return null;
     const validator=createContractValidator(),{interactionId,...scope}=capture.scope;
-    const payloads=[{eventType:'context.viewSelected',payload:{...capture.view,freshness:clock.occurredAtMs<capture.freshUntilMs?'fresh':'stale'}},...capture.sections.map(payload=>({eventType:'context.sourceUsed',payload}))];
+    const payloads=[{eventType:'context.viewSelected',payload:{...capture.view,freshness:clock.occurredAtMs<capture.freshUntilMs?'fresh':'stale'}},...capture.sections.map(payload=>({eventType:'context.sourceUsed',payload})),...(capture.memorySelection?[{eventType:'memory.referencesSelected',payload:capture.memorySelection}]:[])];
     const events=payloads.map((item,sequence)=>({schemaVersion:'2.0.0',eventId:randomUUID(),traceScope:'interaction',interactionTraceId:interactionId,backgroundJobId:null,correlationId:interactionId,sequence,eventVersion:'1.0.0',eventTime:new Date(clock.occurredAtMs).toISOString(),processingTime:new Date(clock.processingAtMs).toISOString(),monotonic:{clockId:clock.clockId,milliseconds:clock.monotonicMs},...scope,executionMode:'normal',privacyClass:'restricted',causedByEventIds:[],sourceEventIds:[],...item,redactions:['prompt content omitted; section digests retained']}));
     if(events.some(event=>!validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid))return null;
     const trace:TurnContextTrace=freeze({events,manifest:capture.artifact,coverage:'bounded_best_effort',complete:false,durable:false,deliveryProved:false});
