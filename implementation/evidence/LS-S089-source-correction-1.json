@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S089",
+  "operation": "sourceAttributedHumanVisualCorrection",
+  "status": "verified",
+  "qualificationScope": "Scoped software increment only; whole S089 inProgress",
+  "sourceRevision": "b6f06d6620deb1b0862fc92e526b5290cb0f5527",
+  "baseRevision": "a60e45b",
+  "recordedAt": "2026-09-30T06:21:26.497767Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      "roadmap/packets/LS-S089.json": "1ab10f584dab0e50c28f27e7a8ea46522169158faf150c4db02e59fbd73adb51",
+      "docs/30-conversational-vision.md": "e5302919fdfb4842d713ce4ed344a44a52dcdb11b38185d2dee293406dedd6e8",
+      "docs/04-memory-and-dreaming.md": "e567d364dcc505349ead8e1eb40521c80c3b61df6f46dd0ddaa17151ee573794",
+      "contracts/conversational-vision.schema.json": "4f00aaf9b3ae40db636482cc2fc20ebb22b43d6131155dda2d4e32fc3ee80b7e"
+    }
+  },
+  "mappedCases": [
+    "LS-TEST-164",
+    "LS-TEST-165",
+    "LS-TEST-166"
+  ],
+  "claims": {
+    "exactHumanEntrySeparateFromObservation": true,
+    "originalAppearanceAttributionSourceFamilyDigestTimesPreserved": true,
+    "appendOnlyCorrectionLifecycleAndFileRestart": true,
+    "canonicalProjectionContradictedUnverified": true,
+    "unsupportedHistorySuppressedAfterCorrection": true,
+    "currentPreparedSelectionsAndLateSourceIdsFenced": true,
+    "captureAuthorityPreservedForIndependentSources": true,
+    "maximumCorrectionsPerEpisode": 16,
+    "bothDirectionForgetPolicyExpiryQuarantineErasesCorrectionPayload": true,
+    "ordinaryReplyReflectionIntegration": false,
+    "rawMediaRetained": false,
+    "sourceTurnFabricated": false,
+    "confidenceFabricated": false,
+    "syntheticPerception": true,
+    "actualImageUnderstanding": false
+  },
+  "verification": {
+    "focused": {
+      "revision": "b6f06d6620deb1b0862fc92e526b5290cb0f5527",
+      "pass": 74,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 3190.285667
+    },
+    "fullSource": {
+      "revision": "b6f06d6620deb1b0862fc92e526b5290cb0f5527",
+      "pass": 1554,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 96250.469292
+    },
+    "renderedChrome": {
+      "pass": 2,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 6160.074209,
+      "input": "Synthetic local UI responses; real installed Chrome, no camera or live effects"
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "workspaceCheck": "pass",
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    }
+  },
+  "retainedFailures": [],
+  "logDigests": {
+    "tifa-s089-correction-build-final.log": {
+      "path": "/tmp/tifa-s089-correction-build-final.log",
+      "sha256": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155",
+      "bytes": 1047
+    },
+    "tifa-s089-correction-build.log": {
+      "path": "/tmp/tifa-s089-correction-build.log",
+      "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446",
+      "bytes": 1047
+    },
+    "tifa-s089-correction-chrome-final.log": {
+      "path": "/tmp/tifa-s089-correction-chrome-final.log",
+      "sha256": "811edae6f2bf31467c06a231f52faf9937cd6335ef37e3301b4bd6df6dd9158f",
+      "bytes": 351
+    },
+    "tifa-s089-correction-chrome.log": {
+      "path": "/tmp/tifa-s089-correction-chrome.log",
+      "sha256": "3d1f618b118c8ad5d35d19220a8cd1a0e355bc3897eb0242fa7d29cd351dd326",
+      "bytes": 355
+    },
+    "tifa-s089-correction-focused-exact.log": {
+      "path": "/tmp/tifa-s089-correction-focused-exact.log",
+      "sha256": "49de25082f37d4174a20fb328a889ddf2d26e314f0f0336a96ba0d29b35618a7",
+      "bytes": 6790
+    },
+    "tifa-s089-correction-focused-final.log": {
+      "path": "/tmp/tifa-s089-correction-focused-final.log",
+      "sha256": "27e22c745e8058187fa83c4ad57a0f1e4ebd002118074dac7be29cf1e63f0714",
+      "bytes": 6798
+    },
+    "tifa-s089-correction-focused.log": {
+      "path": "/tmp/tifa-s089-correction-focused.log",
+      "sha256": "018e23d3258c30b7feb0a84a4ade8f7f26d4f3f2f462ab4ea2b8394d4cc639e9",
+      "bytes": 6130
+    },
+    "tifa-s089-correction-full.log": {
+      "path": "/tmp/tifa-s089-correction-full.log",
+      "sha256": "7910f8bcbd6140727cb06afde33be687d6e0a6065904aef04cc5f76a058eee72",
+      "bytes": 184747
+    },
+    "tifa-s089-correction-lint-final.log": {
+      "path": "/tmp/tifa-s089-correction-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s089-correction-lint.log": {
+      "path": "/tmp/tifa-s089-correction-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s089-correction-private.log": {
+      "path": "/tmp/tifa-s089-correction-private.log",
+      "sha256": "22f56bc3cf6efc9fac4785ff0e98e53b4457251a498263b0e9a8d88bb02485b6",
+      "bytes": 28956
+    },
+    "tifa-s089-correction-typecheck-final.log": {
+      "path": "/tmp/tifa-s089-correction-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-correction-typecheck.log": {
+      "path": "/tmp/tifa-s089-correction-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-correction-workspace.log": {
+      "path": "/tmp/tifa-s089-correction-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  },
+  "exclusions": [
+    "Whole S089 acceptance",
+    "Active canonical recall and ordinary-reply/reflection use",
+    "Human correction semantics measured on a selected model",
+    "Real image-provider/camera/performance/physical/Human proof",
+    "S090 full trace/replay",
+    "S091-S094 games/native saves/Linux/Windows/Human proof",
+    "S066/full LS-TEST-084",
+    "Installed candidate promotion",
+    "Push/publication/deployment/live effects"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue active source-bound canonical lifecycle and ordinary prepared memory/context integration, then typed experience/reflection; independent Phase16 game foundations remain authorized."
+}
