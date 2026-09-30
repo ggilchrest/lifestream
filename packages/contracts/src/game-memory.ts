@@ -16,11 +16,11 @@ export function gameEpisodeSnapshot(input:unknown,now:number):GameExperienceEpis
  if(e.sourceActionIds.length!==e.sourceAdmissionIds.length)return null;
  return e;
 }
-export function gameProjectionSnapshot(input:unknown,now:number):GameMemoryProjection|null{
+export function gameProjectionSnapshot(input:unknown,now:number,statuses:readonly string[]=['candidate']):GameMemoryProjection|null{
  const p=boundedGameDataSnapshot(input,32768) as GameMemoryProjection|null;
  if(!p||!validator.validate(schema+'GameMemoryProjection',p).valid)return null;
  const e=gameEpisodeSnapshot(p.episode,now),m=p.memoryRecord,b=m.extensions?.['lifestream.localGameActivity'] as GameMemoryBinding|undefined;
- if(!e||!b||Object.keys(m.extensions!).length!==1||m.status!=='candidate'||m.kind!=='experiential'||m.factuality!=='unverified'||m.sensitivity!=='personal'||m.assistantId!==e.scope.assistantId||m.createdBy!==e.scope.principalId||m.content!==e.summary||m.lastReinforcedAt!==null||m.contradictedBy.length||m.worldEvidenceRefs!==undefined||m.supersedes!==undefined||m.reviewAfter!==undefined||m.confidence!==b.transformationConfidence.value||m.provenance.transformationId!=='lifestream.game-episode-projection'||m.provenance.transformationVersion!=='1.0.0'||m.provenance.sourceRefs.length!==1||m.provenance.sourceRefs[0]!==`game-episode:${e.episodeId}:${e.revision}:${gameEpisodeDigest(e)}`||Date.parse(m.createdAt)<Date.parse(e.recordedAt)||Date.parse(m.createdAt)>now||Date.parse(m.createdAt)>=Date.parse(e.expiresAt))return null;
+ if(!e||!b||Object.keys(m.extensions!).length!==1||!statuses.includes(m.status)||m.kind!=='experiential'||m.factuality!=='unverified'||m.sensitivity!=='personal'||m.assistantId!==e.scope.assistantId||m.createdBy!==e.scope.principalId||m.content!==e.summary||m.lastReinforcedAt!==null||m.contradictedBy.length||m.worldEvidenceRefs!==undefined||m.supersedes!==undefined||m.reviewAfter!==undefined||m.confidence!==b.transformationConfidence.value||m.provenance.transformationId!=='lifestream.game-episode-projection'||m.provenance.transformationVersion!=='1.0.0'||m.provenance.sourceRefs.length!==1||m.provenance.sourceRefs[0]!==`game-episode:${e.episodeId}:${e.revision}:${gameEpisodeDigest(e)}`||Date.parse(m.createdAt)<Date.parse(e.recordedAt)||Date.parse(m.createdAt)>now||Date.parse(m.createdAt)>=Date.parse(e.expiresAt))return null;
  if(b.episodeId!==e.episodeId||b.episodeRevision!==e.revision||b.activityId!==e.scope.activityId||b.runId!==e.scope.runId||b.timelineId!==e.scope.timelineId||b.campaignId!==e.scope.campaignId||b.pinsDigest!==e.pinsDigest)return null;
  return p;
 }

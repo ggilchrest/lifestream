@@ -40,11 +40,11 @@ export function formatPreparedRelationshipContext(context: PreparedRelationshipC
   return formatted;
 }
 
-export type RelationshipContextRecord = { id: string; content: string; revision: number; sourceFamily: string; status: string; use: "baseline" | "correction" | "relevant"; personalization: boolean; mention: boolean; uncertainty?: string; expiresAt?: string; visualObservation?: boolean };
+export type RelationshipContextRecord = { id: string; content: string; revision: number; sourceFamily: string; status: string; use: "baseline" | "correction" | "relevant"; personalization: boolean; mention: boolean; uncertainty?: string; expiresAt?: string; visualObservation?: boolean; gameExperience?:boolean };
 export type ContextOmission = { id: string; revision: number; reason: string };
 export type ContextSelection = { id: string; revision: number; sourceFamily: string; lane: RelationshipContextRecord["use"]; byteContribution: number };
 export type CompiledRelationshipContext = PreparedRelationshipContext & { compilerRevision: string; representationRevision: string; builtAt: string; freshUntil: string; sourceRevisions: readonly string[]; selections: readonly ContextSelection[]; omissions: readonly ContextOmission[]; budget: { maximumBytes: number; usedBytes: number; estimator: "utf8-bytes-upper-bound" }; preparationCount: 1 };
-export const RELATIONSHIP_COMPILER_REVISION = "relationship-context:7";
+export const RELATIONSHIP_COMPILER_REVISION = "relationship-context:8";
 const bytes = (value: string) => new TextEncoder().encode(value).length;
 // A bounded cue from the current request only, never from retrieved records.
 // This changes allocation, not eligibility, privacy, consent, or zero controls.
@@ -61,6 +61,7 @@ export function compileRelationshipContext(input: { records: readonly Relationsh
   const now = input.now ?? Date.now(), maximumBytes = 8192;
   const view: CompiledRelationshipContext = { profileRevision: input.profileRevision, relationshipRevision: input.relationshipRevision, configurationRevision: input.configurationRevision, ...(input.controls ? { configurationControls: input.controls } : {}), compilerRevision: RELATIONSHIP_COMPILER_REVISION, representationRevision: input.representation === "conventionOriented" ? "convention-oriented:1" : "record-oriented:1", builtAt: new Date(now).toISOString(), freshUntil: new Date(now + 120_000).toISOString(), approvedBaseline: [], criticalCorrections: [], relevantContext: [], sourceRevisions: [], selections: [], omissions: [], budget: { maximumBytes, usedBytes: 0, estimator: "utf8-bytes-upper-bound" }, preparationCount: 1, limitations: ["Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences.", "Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect.", "Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall.", "Selection and byte contributions are observed inputs, not causal proof of reply behavior."] };
   if(input.records.some(record=>record.visualObservation))view.limitations=[...view.limitations,'Visual recall is a past sampled model interpretation, not a user statement or current/continuous sight. Unknown perception confidence stays unknown; model scores are uncalibrated. The capture interval includes clock uncertainty, not an exact event time. Raw media was not retained. Tentative inference omitted by the appearance intake is not remembered evidence.'];
+  if(input.records.some(record=>record.gameExperience))view.limitations=[...view.limitations,'Game recall is attributed historical simulated experience from its recorded timeline, not current game progress, Human testimony, physical-world evidence or observed feelings. Transformation confidence is not perception calibration.'];
   const selected: ContextSelection[] = [], omitted: ContextOmission[] = [], eligible: RelationshipContextRecord[] = [];
   const records = [...input.records].sort((a,b) => a.id.localeCompare(b.id));
   for (const record of records) {

@@ -43,9 +43,9 @@ export class MemoryRepository {
       const now=(host.now??Date.now)();if(!Number.isSafeInteger(now)||now<this.observedGameTime)return false;this.observedGameTime=now;
       const canonical=record.provenance.canonical as {extensions?:Record<string,unknown>}|undefined;
       const binding=boundedGameDataSnapshot(canonical?.extensions?.['lifestream.localGameActivity']) as GameMemoryBinding|null;if(!binding)return false;freezeGame(binding);
-      const projection=gameProjectionSnapshot({schemaVersion:'1.0.0',recordType:'gameMemoryProjection',episode:host.resolveSource(binding),memoryRecord:canonical},now);if(!projection)return false;
+      const projection=gameProjectionSnapshot({schemaVersion:'1.0.0',recordType:'gameMemoryProjection',episode:host.resolveSource(binding),memoryRecord:canonical},now,['candidate','active','invalidated']);if(!projection)return false;
       const e=freezeGame(projection.episode),m=projection.memoryRecord;
-      if(record.id!==m.memoryId||record.assistantId!==m.assistantId||record.content!==m.content||record.createdAt!==m.createdAt||record.provenance.actor!==e.scope.principalId||record.provenance.relationshipId!==e.scope.relationshipId||record.provenance.gameEpisodeId!==e.episodeId||record.provenance.gameEpisodeRevision!==e.revision||record.provenance.gameEpisodeDigest!==gameEpisodeDigest(e)||record.provenance.gameEpisodeKey!==createHash('sha256').update(e.episodeId).digest('hex')||record.provenance.gameFamilyKey!==gameEpisodeFamilyKey(e)||record.lifecycle.status!=='candidate'||record.lifecycle.kind!=='experiential'||record.lifecycle.factuality!=='unverified'||record.lifecycle.confidence!==m.confidence||record.lifecycle.revision!==1||record.lifecycle.lastReinforcedAt!==null)return false;
+      if(record.id!==m.memoryId||record.assistantId!==m.assistantId||record.content!==m.content||record.createdAt!==m.createdAt||record.provenance.actor!==e.scope.principalId||record.provenance.relationshipId!==e.scope.relationshipId||record.provenance.gameEpisodeId!==e.episodeId||record.provenance.gameEpisodeRevision!==e.revision||record.provenance.gameEpisodeDigest!==gameEpisodeDigest(e)||record.provenance.gameEpisodeKey!==createHash('sha256').update(e.episodeId).digest('hex')||record.provenance.gameFamilyKey!==gameEpisodeFamilyKey(e)||record.provenance.gameOccurredFrom!==e.occurredFrom||record.provenance.gameExpiresAt!==e.expiresAt||record.provenance.gameUncertainty!==e.uncertainty||record.provenance.gameRawEvidenceAvailability!==e.rawEvidenceAvailability||record.lifecycle.status!==m.status||record.lifecycle.kind!=='experiential'||record.lifecycle.factuality!=='unverified'||record.lifecycle.confidence!==m.confidence||!Number.isSafeInteger(record.lifecycle.revision)||Number(record.lifecycle.revision)<1||record.lifecycle.lastReinforcedAt!==null)return false;
       if(host.memoryPolicyCurrent(e)!==true||host.sourceCurrent(e)!==true)return false;
       const end=(host.now??Date.now)();if(!Number.isSafeInteger(end)||end<now||end>=Date.parse(e.expiresAt))return false;this.observedGameTime=end;
       return host.memoryPolicyCurrent(e)===true&&host.sourceCurrent(e)===true;
@@ -53,7 +53,7 @@ export class MemoryRepository {
   }
   private guardGameWrite(record:MemoryRecord){
     if(!gameMarked(record))return;
-    if(!this.gameSourceAvailable(record))throw new Error('Game memory source or independent consent unavailable');
+    if(record.lifecycle.status!=='candidate'||!this.gameSourceAvailable(record))throw new Error('Game memory source or independent consent unavailable');
     const host=this.gameSources!,db=this.database!;
     const duplicate=db.connection.prepare("SELECT id FROM memories WHERE json_extract(provenance_json,'$.gameFamilyKey')=? OR json_extract(provenance_json,'$.gameEpisodeKey')=? LIMIT 1").get(record.provenance.gameFamilyKey as string,record.provenance.gameEpisodeKey as string);
     if(duplicate)throw new Error('Game memory source already retained or excluded');
@@ -72,8 +72,23 @@ export class MemoryRepository {
     const p=gameProjectionSnapshot(raw,(this.gameSources?.now??Date.now)());if(!p)throw new Error('Invalid game memory projection');
     const {episode:e,memoryRecord:m}=p;
     return this.save({id:m.memoryId,assistantId:m.assistantId,content:m.content,createdAt:m.createdAt,
-      provenance:{actor:e.scope.principalId,relationshipId:e.scope.relationshipId,gameEpisodeId:e.episodeId,gameEpisodeRevision:e.revision,gameEpisodeDigest:gameEpisodeDigest(e),gameEpisodeKey:createHash('sha256').update(e.episodeId).digest('hex'),gameFamilyKey:gameEpisodeFamilyKey(e),canonical:m},
+      provenance:{actor:e.scope.principalId,relationshipId:e.scope.relationshipId,gameEpisodeId:e.episodeId,gameEpisodeRevision:e.revision,gameEpisodeDigest:gameEpisodeDigest(e),gameEpisodeKey:createHash('sha256').update(e.episodeId).digest('hex'),gameFamilyKey:gameEpisodeFamilyKey(e),gameOccurredFrom:e.occurredFrom,gameExpiresAt:e.expiresAt,gameUncertainty:e.uncertainty,gameRawEvidenceAvailability:e.rawEvidenceAvailability,canonical:m},
       lifecycle:{kind:m.kind,factuality:m.factuality,confidence:m.confidence,sensitivity:m.sensitivity,status:m.status,revision:1,lastReinforcedAt:null,contradictedBy:[]}});
+  }
+  activateGameCandidate(assistantId:string,id:string,actor:string,expectedRevision:number):MemoryRecord|undefined{
+    if(!this.database)throw new Error('Game memory requires durable storage');
+    const existing=this.get(assistantId,id);if(!existing||!gameMarked(existing)||existing.provenance.actor!==actor||existing.lifecycle.status!=='candidate'||existing.lifecycle.revision!==expectedRevision)return undefined;
+    const db=this.database;return db.transaction(tx=>{
+      const consent=()=>!!tx.get('SELECT 1 FROM automatic_memory_policies WHERE principal_id=? AND assistant_id=? AND relationship_id IS ? AND enabled=1',actor,assistantId,existing.provenance.relationshipId);
+      if(!consent()||!this.gameSourceAvailable(existing))throw new Error('Game memory current consent/source unavailable');
+      const count=tx.get<{n:number}>("SELECT count(*) AS n FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(lifecycle_json,'$.status')='active'",assistantId,actor)!.n;if(count>=240)throw new Error('Active memory scope capacity exceeded');
+      const next=structuredClone(existing),canonical=next.provenance.canonical as {status:string};canonical.status='active';next.lifecycle={...next.lifecycle,status:'active',revision:expectedRevision+1};
+      tx.run("UPDATE memories SET provenance_json=?,lifecycle_json=? WHERE id=? AND assistant_id=? AND json_extract(lifecycle_json,'$.status')='candidate' AND json_extract(lifecycle_json,'$.revision')=?",JSON.stringify(next.provenance),JSON.stringify(next.lifecycle),id,assistantId,expectedRevision);
+      if(tx.get<{n:number}>('SELECT changes() AS n')!.n!==1)throw new Error('Game memory revision conflict');
+      const revision=tx.get<{n:number}>('SELECT coalesce(max(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',id)!.n;
+      tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES(?,?,?,?,?,?)',id,assistantId,revision,'lifecycleChanged',JSON.stringify(next.lifecycle),new Date((this.gameSources?.now??Date.now)()).toISOString());
+      if(!this.gameSourceAvailable(next)||!consent())throw new Error('Game memory changed during activation');return next;
+    });
   }
   save(record: MemoryRecord): MemoryRecord {
     const copy = structuredClone(record);
@@ -117,6 +132,12 @@ export class MemoryRepository {
     const seen = new Set<string>(); for (const record of records) { if (seen.has(record.id) || this.records.has(record.id)) throw new Error("memory is immutable"); seen.add(record.id); }
     for (const record of records) this.save(record);
   }
+  /** Exact actor-owned target for authenticated destructive privacy replay.
+   * This bypasses source-use admission only for cleanup, never context/recall. */
+  getForPrivacy(assistantId:string,id:string,actor:string):MemoryRecord|undefined{
+    if(this.database){const row=this.database.connection.prepare('SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND id=?').get(assistantId,id) as MemoryRow|undefined;const record=row?fromRow(row):undefined;return record?.provenance.actor===actor?record:undefined;}
+    const record=this.records.get(id);return record?.assistantId===assistantId&&record.provenance.actor===actor?structuredClone(record):undefined;
+  }
   get(assistantId: string, id: string): MemoryRecord | undefined {
     if (this.database) { const row = this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? AND id = ?").get(assistantId, id) as MemoryRow | undefined;const record=row?fromRow(row):undefined;return record&&this.visualSourceAvailable(record)&&this.gameSourceAvailable(record)?record:undefined; }
     const record = this.records.get(id); return record?.assistantId === assistantId&&this.visualSourceAvailable(record)&&this.gameSourceAvailable(record) ? structuredClone(record) : undefined;
@@ -129,7 +150,8 @@ export class MemoryRepository {
    * expiry alter its fingerprint before a prepared view or reply is reused. */
   contextBoundaryRows(assistantId:string,actor:string){
     if(!this.database)return this.contextRecords(assistantId,actor).map(r=>({id:r.id,revision:r.lifecycle.revision}));
-    return this.database.connection.prepare("SELECT m.id,json_extract(m.lifecycle_json,'$.revision') AS revision,v.revision AS visualRevision,v.expires_at AS visualExpiry,v.payload_json AS visualSource,CASE WHEN v.episode_id IS NOT NULL THEN m.provenance_json ELSE NULL END AS memorySource FROM memories m LEFT JOIN visual_observation_episodes v ON v.episode_id=json_extract(m.provenance_json,'$.visualEpisodeId') WHERE m.assistant_id=? AND json_extract(m.provenance_json,'$.actor')=? AND json_extract(m.lifecycle_json,'$.status')='active' AND (json_extract(m.provenance_json,'$.visualEpisodeId') IS NULL OR (v.state='retained' AND v.expires_at>? AND EXISTS (SELECT 1 FROM visual_memory_policies p WHERE p.scope_key=v.scope_key AND p.enabled=1 AND p.revision=json_extract(v.payload_json,'$.processingPolicyRevision')) AND EXISTS (SELECT 1 FROM automatic_memory_policies p WHERE p.principal_id=json_extract(m.provenance_json,'$.actor') AND p.assistant_id=m.assistant_id AND p.relationship_id=json_extract(m.provenance_json,'$.relationshipId') AND p.enabled=1))) ORDER BY m.id LIMIT 257").all(assistantId,actor,this.visualNow());
+    const game=(this.database.connection.prepare("SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(provenance_json,'$.gameEpisodeId') IS NOT NULL AND json_extract(lifecycle_json,'$.status')='active' ORDER BY id LIMIT 129").all(assistantId,actor) as MemoryRow[]).map(fromRow).map(record=>({id:record.id,revision:record.lifecycle.revision,gameDigest:record.provenance.gameEpisodeDigest,expiresAt:record.provenance.gameExpiresAt,current:this.gameSourceAvailable(record)}));
+    const rows=this.database.connection.prepare("SELECT m.id,json_extract(m.lifecycle_json,'$.revision') AS revision,v.revision AS visualRevision,v.expires_at AS visualExpiry,v.payload_json AS visualSource,CASE WHEN v.episode_id IS NOT NULL THEN m.provenance_json ELSE NULL END AS memorySource FROM memories m LEFT JOIN visual_observation_episodes v ON v.episode_id=json_extract(m.provenance_json,'$.visualEpisodeId') WHERE m.assistant_id=? AND json_extract(m.provenance_json,'$.actor')=? AND json_extract(m.lifecycle_json,'$.status')='active' AND (json_extract(m.provenance_json,'$.visualEpisodeId') IS NULL OR (v.state='retained' AND v.expires_at>? AND EXISTS (SELECT 1 FROM visual_memory_policies p WHERE p.scope_key=v.scope_key AND p.enabled=1 AND p.revision=json_extract(v.payload_json,'$.processingPolicyRevision')) AND EXISTS (SELECT 1 FROM automatic_memory_policies p WHERE p.principal_id=json_extract(m.provenance_json,'$.actor') AND p.assistant_id=m.assistant_id AND p.relationship_id=json_extract(m.provenance_json,'$.relationshipId') AND p.enabled=1))) ORDER BY m.id LIMIT 257").all(assistantId,actor,this.visualNow());return game.length?[...rows,...game]:rows;
   }
   contextRecords(assistantId: string, actor: string): MemoryRecord[] {
     if (this.database) return (this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(lifecycle_json,'$.status')='active' AND (EXISTS (SELECT 1 FROM memory_lifecycle_events e WHERE e.assistant_id=memories.assistant_id AND e.memory_id=memories.id AND e.event_type='lifecycleChanged' AND json_extract(e.payload_json,'$.status')='active') OR EXISTS (SELECT 1 FROM memory_lifecycle_events e WHERE e.assistant_id=memories.assistant_id AND e.event_type='correctionApplied' AND json_extract(e.payload_json,'$.correctionId')=memories.id)) ORDER BY id LIMIT 257").all(assistantId, actor) as MemoryRow[]).map(fromRow).filter(record=>this.visualSourceAvailable(record)&&this.gameSourceAvailable(record));
@@ -183,20 +205,21 @@ export class MemoryRepository {
   transition(assistantId: string, id: string, status: string, actor: string, reason?: string, expectedRevision?: number): MemoryRecord | undefined {
     const allowed = new Set(["candidate", "active", "superseded", "invalidated", "contradicted"]);
     if (!allowed.has(status)) throw new Error("unsupported memory lifecycle status");
-    const existing = this.get(assistantId, id); if (!existing) return undefined;
-    if(gameMarked(existing))throw new Error('Game episodes require source-aware correction and lifecycle');
+    const existing = this.get(assistantId, id)??(status==='invalidated'?this.getForPrivacy(assistantId,id,actor):undefined); if (!existing) return undefined;
+    if(gameMarked(existing)&&!(status==='invalidated'&&existing.provenance.actor===actor))throw new Error('Game episodes require source-aware correction and lifecycle');
     if(existing.provenance.visualEpisodeId)throw new Error('Visual candidates require source-aware lifecycle admission');
     const previousRevision = typeof existing.lifecycle.revision === "number" ? existing.lifecycle.revision : 1;
     if (expectedRevision !== undefined && expectedRevision !== previousRevision) throw new Error("memory revision conflict");
     const currentStatus = typeof existing.lifecycle.status === "string" ? existing.lifecycle.status : "candidate";
     const validTransition = currentStatus === "candidate" ? ["active", "invalidated", "contradicted", "superseded"].includes(status) : currentStatus === "active" ? ["invalidated", "contradicted", "superseded"].includes(status) : false;
     if (!validTransition) throw new Error("invalid memory lifecycle transition");
+    const provenance=structuredClone(existing.provenance);if(gameMarked(existing))(provenance.canonical as {status:string}).status=status;
     const lifecycle = { ...existing.lifecycle, status, revision: previousRevision + 1, changedBy: actor, ...(reason ? { reason } : {}) };
     if (this.database) {
-      this.database.transaction((tx) => { const eventRevision = tx.get<{ revision: number }>("SELECT COALESCE(MAX(revision), 0) + 1 AS revision FROM memory_lifecycle_events WHERE memory_id = ? AND assistant_id = ?", id, assistantId)?.revision ?? 1; tx.run("UPDATE memories SET lifecycle_json = ? WHERE assistant_id = ? AND id = ? AND json_extract(lifecycle_json, '$.revision') = ? AND json_extract(lifecycle_json, '$.status') = ?", JSON.stringify(lifecycle), assistantId, id, previousRevision, currentStatus); if ((tx.get<{ changes: number }>("SELECT changes() AS changes")?.changes ?? 0) !== 1) throw new Error("memory revision conflict"); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, eventRevision, "lifecycleChanged", JSON.stringify(lifecycle), new Date().toISOString()); });
-      return this.get(assistantId, id);
+      this.database.transaction((tx) => { const eventRevision = tx.get<{ revision: number }>("SELECT COALESCE(MAX(revision), 0) + 1 AS revision FROM memory_lifecycle_events WHERE memory_id = ? AND assistant_id = ?", id, assistantId)?.revision ?? 1; tx.run("UPDATE memories SET provenance_json=?,lifecycle_json = ? WHERE assistant_id = ? AND id = ? AND json_extract(lifecycle_json, '$.revision') = ? AND json_extract(lifecycle_json, '$.status') = ?", JSON.stringify(provenance),JSON.stringify(lifecycle), assistantId, id, previousRevision, currentStatus); if ((tx.get<{ changes: number }>("SELECT changes() AS changes")?.changes ?? 0) !== 1) throw new Error("memory revision conflict"); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, eventRevision, "lifecycleChanged", JSON.stringify(lifecycle), new Date().toISOString()); });
+      return this.get(assistantId, id)??(gameMarked(existing)&&status==='invalidated'?this.getForPrivacy(assistantId,id,actor):undefined);
     }
-    const updated = { ...existing, lifecycle }; this.records.set(id, updated); const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision: (events.at(-1)?.revision ?? 0) + 1, eventType: "lifecycleChanged", payload: structuredClone(lifecycle), occurredAt: new Date().toISOString() }); this.events.set(id, events); return structuredClone(updated);
+    const updated = { ...existing,provenance, lifecycle }; this.records.set(id, updated); const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision: (events.at(-1)?.revision ?? 0) + 1, eventType: "lifecycleChanged", payload: structuredClone(lifecycle), occurredAt: new Date().toISOString() }); this.events.set(id, events); return structuredClone(updated);
   }
   forget(assistantId: string, id: string, actor: string, reason = "source forgotten", expectedRevision?: number): ForgetResult | undefined {
     let existing = this.get(assistantId, id);

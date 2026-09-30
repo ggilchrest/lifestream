@@ -12,7 +12,7 @@ test("one compiled view preserves mandatory lanes, bounded relevant allocation a
   const view = compileRelationshipContext({...base,records});
   assert.deepEqual(view.approvedBaseline,[records[0]!.content]); assert.deepEqual(view.criticalCorrections,[records[1]!.content]); assert.deepEqual(view.relevantContext.map(item=>item.id),['relevant']); assert.equal(view.preparationCount,1);
   assert.ok(view.omissions.some(item=>item.id==='hobby'&&item.reason==='no current-task relevance')); assert.doesNotMatch(formatPreparedRelationshipContext(view),/UNAPPROVED_PRIVATE_VALUE|rare clocks/);
-  assert.ok(view.budget.usedBytes <= view.budget.maximumBytes); assert.equal(view.compilerRevision,'relationship-context:7'); assert.deepEqual(compileRelationshipContext({...base,records}),view);
+  assert.ok(view.budget.usedBytes <= view.budget.maximumBytes); assert.equal(view.compilerRevision,'relationship-context:8'); assert.deepEqual(compileRelationshipContext({...base,records}),view);
   const disabled=compileRelationshipContext({...base,records,controls:{callbackFrequency:0}}); assert.equal(disabled.relevantContext.length,0); assert.equal(disabled.criticalCorrections.length,1); assert.equal(disabled.approvedBaseline.length,1);
   const unknown=compileRelationshipContext({...base,records,audienceScope:'unknown'}); assert.deepEqual(unknown.selections,[]); assert.doesNotMatch(formatPreparedRelationshipContext(unknown),/project uses Python|rare clocks|introductory/);
   assert.throws(()=>compileRelationshipContext({...base,records:[record('a','x'.repeat(3900),'correction'),record('b','y'.repeat(3900),'correction')]}),/Mandatory relationship boundaries/);
@@ -65,4 +65,13 @@ test('selected retained source expiry bounds the same prepared relationship view
 
 test('optional selection receipts omit records that the existing final formatter cannot carry',async()=>{
  const {compileRelationshipContext}=await import('../src/context/builder.ts');const record={id:'oversized',content:'hat '.repeat(150),revision:1,sourceFamily:'retained',status:'approved',use:'relevant' as const,personalization:true,mention:true};const view=compileRelationshipContext({records:[record],userInput:'hat',audienceScope:'authenticatedSession',profileRevision:'p',relationshipRevision:'r',configurationRevision:'c'});assert.equal(view.selections.length,0);assert.equal(view.omissions[0]!.reason,'bounded allocation');assert.doesNotMatch(formatPreparedRelationshipContext(view),/oversized=/);
+});
+
+test('historical game memory uses the existing bounded lane with timeline uncertainty and privacy exclusions',async()=>{
+ const {compileRelationshipContext}=await import('../src/context/builder.ts');
+ const record={id:'game-memory',revision:2,sourceFamily:'game:one-independent-event',status:'approved',use:'relevant' as const,personalization:true,mention:true,gameExperience:true,expiresAt:new Date(5000).toISOString(),content:'Past simulated game experience at a recorded date [timeline=synthetic]. The gate stayed closed. Hidden cause unknown. Historical game memory, not current progress or a Human statement.'};
+ const input={records:[record],userInput:'Recall the game gate',audienceScope:'authenticatedSession' as const,profileRevision:'p',relationshipRevision:'r',configurationRevision:'c',now:1000};
+ const view=compileRelationshipContext(input);assert.equal(view.relevantContext.length,1);assert.equal(view.freshUntil,record.expiresAt);assert.equal(view.preparationCount,1);assert.ok(view.budget.usedBytes<=8192);assert.match(formatPreparedRelationshipContext(view),/Transformation confidence is not perception calibration/);
+ assert.equal(compileRelationshipContext({...input,now:5000}).selections.length,0);assert.equal(compileRelationshipContext({...input,audienceScope:'unknown'}).selections.length,0);assert.equal(compileRelationshipContext({...input,controls:{callbackFrequency:0}}).relevantContext.length,0);
+ const oversized=compileRelationshipContext({...input,records:[{...record,content:record.content.repeat(4)}]});assert.equal(oversized.selections.length,0);assert.equal(oversized.omissions[0]!.reason,'bounded allocation');
 });
