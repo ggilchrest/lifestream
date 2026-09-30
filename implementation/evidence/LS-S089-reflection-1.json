@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S089",
+  "operation": "typedVisualExperientialReflection",
+  "status": "verified",
+  "qualificationScope": "Scoped software increment only; whole S089 inProgress",
+  "sourceRevision": "82031b2a8c4c2c3fb7b580a1951fdd58acc3c27b",
+  "baseRevision": "c7b6fda325403145f2222f453e20b27be27836d4",
+  "recordedAt": "2026-09-30T07:16:37.672065Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      "roadmap/packets/LS-S089.json": "32bbe9ec116c6d7ba8cb4b74cff4503e426e087015a7fb98b7c37af0200cff67",
+      "docs/30-conversational-vision.md": "e5302919fdfb4842d713ce4ed344a44a52dcdb11b38185d2dee293406dedd6e8",
+      "docs/04-memory-and-dreaming.md": "e567d364dcc505349ead8e1eb40521c80c3b61df6f46dd0ddaa17151ee573794",
+      "contracts/conversational-vision.schema.json": "4f00aaf9b3ae40db636482cc2fc20ebb22b43d6131155dda2d4e32fc3ee80b7e"
+    }
+  },
+  "mappedCases": [
+    "LS-TEST-164",
+    "LS-TEST-165",
+    "LS-TEST-166"
+  ],
+  "claims": {
+    "typedCanonicalSourceInUnchangedExperienceEnvelope": true,
+    "originalCaptureTimeAndFamilyPreserved": true,
+    "unknownPerceptionConfidencePreserved": true,
+    "typedReflectionWithoutNumericMemoryEstimate": true,
+    "noFabricatedOwnerStatementSourceTurnOrRawMedia": true,
+    "independentExperienceEnablementAndExistingIdleSlotBudgets": true,
+    "highUncertaintyAndSupportedWorkspaceRequired": true,
+    "visualOrMixedEpisodeCannotSupportImprint": true,
+    "correctionForgetExpiryConsentAndLateOutputFenced": true,
+    "restoreQuarantinesVisualDependenciesPreservingIndependentOwnerLearning": true,
+    "realSelectedModelOrImageUnderstandingQualified": false,
+    "wholeS089Qualified": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 113,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 7057.275
+    },
+    "recoveryFocused": {
+      "pass": 29,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 6978.614625
+    },
+    "finalWorkspaceAdmission": {
+      "pass": 3,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 6993.17175
+    },
+    "fullSource": {
+      "revision": "82031b2a8c4c2c3fb7b580a1951fdd58acc3c27b",
+      "pass": 1573,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 96257.539541
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "workspaceCheck": "pass",
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    }
+  },
+  "retainedFailures": [
+    {
+      "attempt": "initial focused",
+      "pass": 33,
+      "fail": 1,
+      "reason": "The assertion incorrectly required independent owner-only lineage to be erased. It now checks affected visual lineage and retained independent owner history separately."
+    },
+    {
+      "attempt": "initial fullSource",
+      "pass": 1570,
+      "fail": 2,
+      "skip": 1,
+      "reason": "The visual consent guard also erased suspended owner-only learning during isolated restore. The causal repair keeps ordinary source retention governed by the existing quarantine policy and separately withholds visual sources. Both original restore cases and a new visual-quarantine case pass; repaired full source passes."
+    }
+  ],
+  "logDigests": {
+    "tifa-s089-reflection-build-repaired.log": {
+      "path": "/tmp/tifa-s089-reflection-build-repaired.log",
+      "sha256": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042",
+      "bytes": 1047
+    },
+    "tifa-s089-reflection-build.log": {
+      "path": "/tmp/tifa-s089-reflection-build.log",
+      "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446",
+      "bytes": 1047
+    },
+    "tifa-s089-reflection-focused-expanded.log": {
+      "path": "/tmp/tifa-s089-reflection-focused-expanded.log",
+      "sha256": "14b2f543b076eb3685abdc5b0033ceed0577268175a7a0b633db6dcc908e265e",
+      "bytes": 11382
+    },
+    "tifa-s089-reflection-focused-final.log": {
+      "path": "/tmp/tifa-s089-reflection-focused-final.log",
+      "sha256": "7a2a965ae417eb9a68ca8c8d7152ee16ec7a02475c9bda751dacc2800789220d",
+      "bytes": 4362
+    },
+    "tifa-s089-reflection-focused.log": {
+      "path": "/tmp/tifa-s089-reflection-focused.log",
+      "sha256": "829598c8aa04a960a230f1945438db3e8163536542e9a5df4b0b018edaf1f416",
+      "bytes": 5188
+    },
+    "tifa-s089-reflection-full-repaired.log": {
+      "path": "/tmp/tifa-s089-reflection-full-repaired.log",
+      "sha256": "c9442ff25c9c30ea8d32c127999417f17a2b626ae84c7043767da0a0ff8542f1",
+      "bytes": 186641
+    },
+    "tifa-s089-reflection-full.log": {
+      "path": "/tmp/tifa-s089-reflection-full.log",
+      "sha256": "52d7c93eb23561d004326ed474ed1c1db137643863264dcbdf7d2347c58c80d2",
+      "bytes": 188296
+    },
+    "tifa-s089-reflection-lint-final.log": {
+      "path": "/tmp/tifa-s089-reflection-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s089-reflection-lint.log": {
+      "path": "/tmp/tifa-s089-reflection-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s089-reflection-private-final.log": {
+      "path": "/tmp/tifa-s089-reflection-private-final.log",
+      "sha256": "0894c4035e08df00dc21c844a0d04412c35ea7a884b293d784a4372d530efe21",
+      "bytes": 28882
+    },
+    "tifa-s089-reflection-private.log": {
+      "path": "/tmp/tifa-s089-reflection-private.log",
+      "sha256": "2dac6e43878c30a645f9d6e457c0d82a108cd0f0640182970140f5923a2a1c6f",
+      "bytes": 28872
+    },
+    "tifa-s089-reflection-recovery-focused.log": {
+      "path": "/tmp/tifa-s089-reflection-recovery-focused.log",
+      "sha256": "0261b3f132b759288cb5c01bf0b44ab7fea0b1a954bb1376a84ded6ba22170bc",
+      "bytes": 3639
+    },
+    "tifa-s089-reflection-typecheck-final.log": {
+      "path": "/tmp/tifa-s089-reflection-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-reflection-typecheck-repaired.log": {
+      "path": "/tmp/tifa-s089-reflection-typecheck-repaired.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-reflection-typecheck.log": {
+      "path": "/tmp/tifa-s089-reflection-typecheck.log",
+      "sha256": "52f9a31d0e281620fca34f595f8acdfdaa580e795157f6ef48dd7ba8f9f65218",
+      "bytes": 674
+    },
+    "tifa-s089-reflection-workspace-final.log": {
+      "path": "/tmp/tifa-s089-reflection-workspace-final.log",
+      "sha256": "07304817ce51cc56325ba7d530d95a14ac990427ae02f57f6ee972938cf2479e",
+      "bytes": 648
+    },
+    "tifa-s089-reflection-workspace.log": {
+      "path": "/tmp/tifa-s089-reflection-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  },
+  "exclusions": [
+    "Whole S089 acceptance",
+    "Automatic historical-pattern ordinary-reply integration",
+    "Selected model quality or real image understanding",
+    "Real camera/provider/physical/performance/Human proof",
+    "S090 full trace/replay",
+    "S091-S094 games/native saves/Linux/Windows/Human proof",
+    "S066/full LS-TEST-084",
+    "Installed candidate promotion",
+    "Push/publication/deployment/live effects",
+    "Selected-model visual reflection quality",
+    "Automatic visual correction-text interpretation in ordinary reply/reflection"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue automatic source-qualified historical comparison and S090 lifecycle/replay integration; independently develop S091 typed adapter foundation after required reads, preserving missing emulator/platform/runtime-setup gates."
+}
