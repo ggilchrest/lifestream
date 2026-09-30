@@ -30,6 +30,10 @@
     "./game-activity": {
       "types": "./dist/game-activity.d.ts",
       "import": "./dist/game-activity.js"
+    },
+    "./game-journal": {
+      "types": "./dist/game-journal.d.ts",
+      "import": "./dist/game-journal.js"
     }
   }
 }

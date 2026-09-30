@@ -92,3 +92,32 @@ and visible-state-manifest pins, a real graphical watchable session, finite poli
 and runtime authority before actual play. Existing providers and installed services
 remain unchanged. Scripted tests use no real game, emulator, save, camera or external
 recipient.
+
+The emulator-independent campaign journal core now persists compact sourced
+continuity through `CampaignJournalRepository`. It creates no activity run, save
+or memory record. The host supplies explicit owner/restore gates, an enabled finite
+retention policy, journal/identity/source/byte quotas, verified source eligibility,
+exact derivative validation and authority to initialize a new campaign journal.
+These synchronous predicates are host-owned; a model's references or self-score
+cannot grant them. Missing journals stay unavailable until an authorized,
+source-grounded creation is supplied.
+
+SQLite writes compare journal and goal revisions, preserve immutable entry IDs,
+and acknowledge only committed metadata. Compaction cannot reset a goal revision
+or reinterpret an omitted source entry. Privacy erasure retains opaque fences;
+dependent entries/goals are removed before reuse while independent entries survive.
+If summary evidence is erased, inspection reports `needsReview` with no summary,
+and canonical selection is unavailable until a newly validated summary is written.
+Policy changes, finite expiry, source invalidation and explicit retraction cannot
+resurrect content after restart; clock rollback refuses reads/writes. Restore
+quarantine must be supplied by the trusted host and cannot be cleared by a journal.
+
+`selectCampaignContext` materializes the already compact journal for an existing
+conversation section, preserving source/epistemic labels and unfinished goals. It
+keeps all retained compact entries because this core has no contradiction oracle;
+insufficient context budget reports omission instead of dropping a contrary clue.
+The returned selection has a current-source callback for pending-use fencing.
+Runtime checkpoint/save binding, prepared-context integration, journal generation,
+fresh ordinary-save/view reconciliation and actual next-action selection remain
+implementation work. SQLite close/open with scripted sources proves metadata
+persistence only; it does not prove saved game progress or autonomous continuity.

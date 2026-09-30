@@ -151,6 +151,10 @@
     "./perception/observation": {
       "types": "./dist/perception/observation.d.ts",
       "import": "./dist/perception/observation.js"
+    },
+    "./activity/journal": {
+      "types": "./dist/activity/journal.d.ts",
+      "import": "./dist/activity/journal.js"
     }
   },
   "scripts": {
