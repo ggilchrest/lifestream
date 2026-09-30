@@ -3,9 +3,9 @@ import test from 'node:test';
 import {createHash,randomUUID} from 'node:crypto';
 import {createPreparedTurnBinding,finalizePreparedTurn,requestForFinalizedTurn} from '@lifestream/runtime/inference/prompt';
 import {compileRelationshipContext} from '@lifestream/runtime/context';
-import {captureTurnContextTrace,materializeTurnContextTrace,correlateVisualMemoryCandidate,replayVisualMemoryContextJoin} from '../src/runtime/turn-context-trace.ts';
+import {captureTurnContextTrace,materializeTurnContextTrace,correlateVisualMemoryCandidate,replayVisualMemoryContextJoin,correlateVisualMemoryLifecycle,replayVisualMemoryLifecycleJoin} from '../src/runtime/turn-context-trace.ts';
 import {createContractValidator} from '@lifestream/contracts';
-import {Database,MemoryRepository} from '@lifestream/storage-sqlite';
+import {Database,MemoryRepository,VisualMemoryRepository,isVisualActivationEvidence} from '@lifestream/storage-sqlite';
 import {AutomaticMemory} from '../src/runtime/automatic-memory.ts';
 import {VisualMemoryCandidateEvidence} from '../src/runtime/visual-memory-candidate-evidence.ts';
 import {visualEpisode,visualOwner} from '../../../packages/storage-sqlite/test/fixtures/visual-episode.ts';
@@ -95,4 +95,69 @@ test('isolated joined candidate/context replay preserves actual lineage, times a
  assert.equal(replay.events[0]!.monotonic,null);assert.notEqual(replay.events[0]!.backgroundJobId,candidate.event.backgroundJobId);assert.equal(JSON.stringify({candidate,context}),before);
  assert.equal(replayVisualMemoryContextJoin({...candidate},context),null);assert.equal(replayVisualMemoryContextJoin(candidate,replay as never),null);assert.equal(correlateVisualMemoryCandidate(candidate,replay as never),null);
  assert.doesNotMatch(JSON.stringify(replay),/SCRIPTED isolated conversation|confirmed participant appears|SCRIPTED transformation basis/);
+});
+
+test('actual activation asynchronously projects the recorded canonical mutation ID with exact artifact and shared producer ordering',async t=>{
+ const f=setup(t);f.project();assert.equal(f.worker.activateVisual(f.owner,f.v.episode.episodeId,2).state,'active');assert.deepEqual(f.worker.visualLifecycleHistory(f.owner),[]);await Promise.resolve();
+ const candidate=f.worker.visualCandidateHistory(f.owner)[0]!,lifecycle=f.worker.visualLifecycleHistory(f.owner)[0]!;assert.ok(lifecycle);
+ const source=new VisualMemoryRepository(f.db).activationEvidence(f.owner,f.source().episode.memoryRecordId!)!;assert.equal(isVisualActivationEvidence(source),true);assert.equal(isVisualActivationEvidence({...source}),false);
+ assert.equal(lifecycle.event.eventType,'memory.lifecycleChanged');assert.equal(lifecycle.event.backgroundJobId,candidate.event.backgroundJobId);assert.equal(lifecycle.event.sequence,2);assert.equal(lifecycle.event.interactionTraceId,null);assert.equal(lifecycle.event.monotonic,null);assert.deepEqual(lifecycle.event.sourceEventIds,[source.event.eventId]);assert.deepEqual(lifecycle.sourceMutation,source.event);assert.deepEqual(lifecycle.artifact,source.artifact);
+ assert.deepEqual(lifecycle.event.payload,{memoryId:source.event.memoryId,lifecycleEventId:source.event.eventId,oldRevision:1,newRevision:2,sourceRevision:source.event.sourceRevision});assert.equal(lifecycle.event.eventTime,source.event.occurredAt);
+ assert.equal(createContractValidator().validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',lifecycle.event).valid,true);assert.equal(createContractValidator().validate('https://lifestream.dev/contracts/memory-operations/1.0.0',lifecycle.sourceMutation).valid,true);
+ assert.equal(f.worker.activateVisual(f.owner,f.v.episode.episodeId,2).state,'alreadyActive');await Promise.resolve();assert.equal(f.worker.visualLifecycleHistory(f.owner).length,1);assert.equal(f.calls(),0);assert.equal(lifecycle.learningAuthority,false);assert.equal(lifecycle.effectAuthority,false);
+ assert.doesNotMatch(JSON.stringify(lifecycle),/confirmed participant appears|SCRIPTED transformation basis|synthetic-transform-policy-v1/);
+ for(const key of ['principalId','assistantId','relationshipId'] as const)assert.deepEqual(f.worker.visualLifecycleHistory({...f.owner,[key]:randomUUID()}),[]);
+});
+
+test('copies, hostile accessors and legacy receipts cannot donate canonical lifecycle sources; genuine bounded owner reads deduplicate',async t=>{
+ const f=setup(t);f.project();f.worker.activateVisual(f.owner,f.v.episode.episodeId,2);const source=new VisualMemoryRepository(f.db).activationEvidence(f.owner,f.source().episode.memoryRecordId!)!,journal=new VisualMemoryCandidateEvidence();t.after(()=>journal.close());
+ let calls=0;const hostile={...source};Object.defineProperty(hostile,'event',{get(){calls++;return source.event;}});journal.recordActivation(f.owner,hostile);journal.recordActivation(f.owner,new Proxy(source,{}));journal.recordActivation(f.owner,{...source});journal.recordActivation({...f.owner,relationshipId:randomUUID()},source);await Promise.resolve();assert.deepEqual(journal.lifecycleTraces(f.owner),[]);assert.equal(calls,0);
+ journal.recordActivation(f.owner,source);journal.recordActivation(f.owner,source);await Promise.resolve();assert.equal(journal.lifecycleTraces(f.owner).length,1);assert.deepEqual(journal.traces(f.owner),[]);
+});
+
+test('memory-owner deletion and host withdrawal/correction fence queued and retained lifecycle metadata without reinstall or replay',async t=>{
+ for(const mode of ['memoryForget','sourceForget','memory','visual','correct','scope','reentrant-memory','close'] as const)await t.test(mode,async child=>{
+  const f=setup(child);f.project();if(mode==='reentrant-memory')f.onChange(()=>{f.onChange(()=>{});f.worker.configure(f.owner,false,1);});f.worker.activateVisual(f.owner,f.v.episode.episodeId,2);const id=f.memories.list(f.owner.assistantId)[0]!.id;
+  if(mode==='memoryForget')f.memories.forget(f.owner.assistantId,id,f.owner.principalId);
+  else if(mode==='sourceForget')f.worker.forgetVisual(f.owner,f.v.episode.episodeId,2);
+  else if(mode==='memory')f.worker.configure(f.owner,false,1);
+  else if(mode==='visual')f.worker.configureVisual(f.owner,false,1,86400000);
+  else if(mode==='correct')f.worker.correctVisual(f.owner,f.v.episode.episodeId,2,'The scripted feature was mistaken.');
+  else if(mode==='scope')f.deny();else if(mode==='close')await f.worker.close();
+  await Promise.resolve();assert.deepEqual(f.worker.visualLifecycleHistory(f.owner),[]);assert.deepEqual(f.worker.visualCandidateHistory(f.owner),[]);
+ });
+});
+
+test('lifecycle metadata uses the same lazy dual-clock TTL, reset and close bounds as candidates',async t=>{
+ const f=setup(t);f.project();f.worker.activateVisual(f.owner,f.v.episode.episodeId,2);const source=new VisualMemoryRepository(f.db).activationEvidence(f.owner,f.source().episode.memoryRecordId!)!;
+ for(const mode of ['utc','mono','rollback','reset','close'] as const){let utc=Date.now()+100,mono=1000;const journal=new VisualMemoryCandidateEvidence({utcMs:()=>utc,monotonicMs:()=>mono});journal.recordActivation(f.owner,source);
+  if(mode==='utc'){await Promise.resolve();utc+=60000;}else if(mode==='mono'){await Promise.resolve();mono+=60000;}else if(mode==='rollback')utc--;else if(mode==='reset')journal.reset();else journal.close();
+  assert.deepEqual(journal.lifecycleTraces(f.owner),[]);await Promise.resolve();assert.deepEqual(journal.lifecycleTraces(f.owner),[]);journal.close();
+ }
+});
+
+test('source retention expiry removes candidate and lifecycle histories before another source operation',async t=>{
+ for(const activated of [false,true])await t.test(activated?'active':'candidate',async child=>{
+  const f=setup(child);f.project();if(activated)f.worker.activateVisual(f.owner,f.v.episode.episodeId,2);await Promise.resolve();
+  assert.equal(f.worker.visualCandidateHistory(f.owner).length,1);
+  f.db.connection.prepare('UPDATE visual_observation_episodes SET expires_at=? WHERE episode_id=?').run(Date.now()-1,f.v.episode.episodeId);
+  assert.deepEqual(f.worker.visualCandidateHistory(f.owner),[]);assert.deepEqual(f.worker.visualLifecycleHistory(f.owner),[]);
+  assert.equal(f.memories.list(f.owner.assistantId)[0]!.lifecycle.contentRemoved,true);
+ });
+});
+
+
+test('genuine candidate, original activation and final memory selection join exact owner/artifact lineage and reject other sources',async t=>{
+ const f=setup(t);f.project();f.worker.activateVisual(f.owner,f.v.episode.episodeId,2);await Promise.resolve();const candidate=f.worker.visualCandidateHistory(f.owner)[0]!,lifecycle=f.worker.visualLifecycleHistory(f.owner)[0]!,context=selectedTrace(f);
+ const joined=correlateVisualMemoryLifecycle(candidate,lifecycle,context);assert.ok(joined);assert.equal(joined.sourceLifecycleEventId,lifecycle.sourceMutation.eventId);assert.equal(joined.traceLifecycleEventId,lifecycle.event.eventId);assert.equal(joined.memorySourcesOwnerMatched,true);assert.equal(joined.ownerEquivalenceProved,false);assert.equal(joined.sourceCurrencyProved,false);assert.equal(joined.deliveryProved,false);assert.equal(joined.oldRevision,1);assert.equal(joined.newRevision,2);
+ assert.equal(correlateVisualMemoryLifecycle(candidate,{...lifecycle},context),null);assert.equal(correlateVisualMemoryLifecycle(candidate,lifecycle,{...context}),null);assert.equal(correlateVisualMemoryLifecycle(candidate,lifecycle,selectedTrace(f,{marked:false})),null);
+ const foreign=setup(t);foreign.project();foreign.worker.activateVisual(foreign.owner,foreign.v.episode.episodeId,2);await Promise.resolve();assert.equal(correlateVisualMemoryLifecycle(candidate,foreign.worker.visualLifecycleHistory(foreign.owner)[0]!,context),null);
+});
+
+test('joined activation replay preserves original mutation, artifacts and trace source IDs after actual forgetting with no callback or learning',async t=>{
+ const f=setup(t);f.project();f.worker.activateVisual(f.owner,f.v.episode.episodeId,2);await Promise.resolve();const candidate=f.worker.visualCandidateHistory(f.owner)[0]!,lifecycle=f.worker.visualLifecycleHistory(f.owner)[0]!,context=selectedTrace(f),original=JSON.stringify({candidate,lifecycle,context});
+ const id=f.source().episode.memoryRecordId!;f.memories.forget(f.owner.assistantId,id,f.owner.principalId);assert.deepEqual(f.worker.visualLifecycleHistory(f.owner),[]);assert.deepEqual(f.worker.visualCandidateHistory(f.owner),[]);const rowBefore=JSON.stringify(f.worker.inspect(f.owner));
+ const replay=replayVisualMemoryLifecycleJoin(candidate,lifecycle,context);assert.ok(replay);assert.equal(replay.sourceMutation,lifecycle.sourceMutation);assert.equal(replay.activationArtifact,lifecycle.artifact);assert.equal(replay.sourceLifecycleMonotonicClockAvailable,false);assert.equal(replay.complete,false);assert.equal(replay.liveEffects,false);assert.equal(replay.durableReinforcement,false);assert.equal(replay.effectAuthority,false);assert.equal(f.calls(),0);assert.equal(JSON.stringify(f.worker.inspect(f.owner)),rowBefore);
+ const sourceEvents=[candidate.event,lifecycle.event,...context.events],validator=createContractValidator();for(const [i,event] of replay.events.entries()){assert.deepEqual(event.sourceEventIds,[sourceEvents[i]!.eventId]);assert.equal(event.eventTime,sourceEvents[i]!.eventTime);assert.deepEqual(event.payload,sourceEvents[i]!.payload);assert.equal(event.environmentId,replay.environmentId);assert.equal(event.executionMode,'replay');assert.equal(validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid,true);}
+ assert.equal(replay.events[0]!.backgroundJobId,replay.events[1]!.backgroundJobId);assert.notEqual(replay.events[0]!.backgroundJobId,candidate.event.backgroundJobId);assert.equal(replay.events[1]!.monotonic,null);assert.equal(JSON.stringify({candidate,lifecycle,context}),original);assert.equal(replayVisualMemoryLifecycleJoin(candidate,lifecycle,replay as never),null);assert.equal(correlateVisualMemoryLifecycle(candidate,lifecycle,replay as never),null);assert.doesNotMatch(JSON.stringify(replay),/confirmed participant appears|SCRIPTED transformation basis|SCRIPTED isolated conversation/);
 });

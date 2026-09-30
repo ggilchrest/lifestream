@@ -5,7 +5,7 @@ import {buildCanonicalPrompt} from '@lifestream/runtime/inference/prompt';
 import type {InferenceProvider} from '@lifestream/runtime/inference';
 import {visualPublicationEpisode,type VisualMemoryPublication,type VisualMemorySelection} from './visual-memory-intake.ts';
 import {VisualMemoryEvidence} from './visual-memory-evidence.ts';
-import {VisualMemoryCandidateEvidence} from './visual-memory-candidate-evidence.ts';
+import {VisualMemoryCandidateEvidence,isVisualMemoryLifecycleTrace,type VisualMemoryCandidateTrace} from './visual-memory-candidate-evidence.ts';
 export type MemoryScope={principalId:string;assistantId:string;relationshipId:string};
 type Item={key:string;kind:'preference'|'proceduralHint'|'conversationSummary'|'relational'|'experiential';quote:string;subject:'owner';epistemic:'userStatement'};
 type Work={id:string;scope:string;source:string;revision:number;input:string;prepared:string|null;attempts:number;expires:number;state:string;reason:string|null};
@@ -80,9 +80,20 @@ export class AutomaticMemory {
  visualIntakeHistory(scope:MemoryScope){
   try{if(this.closed||!this.scopeAllowed(scope))return Object.freeze([]);const receipts=this.visualIntakeJournal.receipts(scope);return !this.closed&&this.scopeAllowed(scope)?receipts:Object.freeze([]);}catch{return Object.freeze([]);}
  }
+ private readableVisualTraceSources<T extends VisualMemoryCandidateTrace>(scope:MemoryScope,traces:readonly T[]):readonly T[]{
+  try{this.visual.sweep();for(const trace of traces){const memoryId=(trace.event.payload as {memoryId:string}).memoryId,record=this.memories.get(scope.assistantId,memoryId);
+   if(!record||record.provenance.actor!==scope.principalId||record.provenance.relationshipId!==scope.relationshipId||typeof record.provenance.visualEpisodeId!=='string'||!['candidate','active'].includes(String(record.lifecycle.status)))throw Error('source');
+   if(isVisualMemoryLifecycleTrace(trace)){const current=this.visual.activationEvidence(scope,memoryId);if(!current||current.event.eventId!==trace.sourceMutation.eventId||current.artifact.reference.sha256!==trace.artifact.reference.sha256)throw Error('mutation source');}
+   else {const metadata=JSON.parse(trace.artifact.bytes);if(record.provenance.visualEpisodeId!==metadata.sourceEpisodeId||record.provenance.visualSourceDigest!==metadata.sourceDigest)throw Error('candidate source');}
+  }return traces;}catch{this.visualCandidateJournal.forgetOwner(scope);return Object.freeze([]);}
+ }
  /** Historical candidate metadata only; consent and current owner scope fence reads. */
  visualCandidateHistory(scope:MemoryScope){
-  try{const memory=this.policy(scope),visual=this.visual.policy(scope);if(this.closed||!memory.enabled||!visual.enabled||!this.scopeAllowed(scope))return Object.freeze([]);return !this.closed&&this.scopeAllowed(scope)&&this.policy(scope).enabled&&this.policy(scope).revision===memory.revision&&this.visual.policy(scope).enabled&&this.visual.policy(scope).revision===visual.revision?this.visualCandidateJournal.traces(scope):Object.freeze([]);}catch{return Object.freeze([]);}
+  try{const memory=this.policy(scope),visual=this.visual.policy(scope);if(this.closed||!memory.enabled||!visual.enabled||!this.scopeAllowed(scope))return Object.freeze([]);return !this.closed&&this.scopeAllowed(scope)&&this.policy(scope).enabled&&this.policy(scope).revision===memory.revision&&this.visual.policy(scope).enabled&&this.visual.policy(scope).revision===visual.revision?this.readableVisualTraceSources(scope,this.visualCandidateJournal.traces(scope)):Object.freeze([]);}catch{return Object.freeze([]);}
+ }
+ /** Same restricted source journal and scope/consent fences as candidate metadata. */
+ visualLifecycleHistory(scope:MemoryScope){
+  try{const memory=this.policy(scope),visual=this.visual.policy(scope);if(this.closed||!memory.enabled||!visual.enabled||!this.scopeAllowed(scope))return Object.freeze([]);return !this.closed&&this.scopeAllowed(scope)&&this.policy(scope).enabled&&this.policy(scope).revision===memory.revision&&this.visual.policy(scope).enabled&&this.visual.policy(scope).revision===visual.revision?this.readableVisualTraceSources(scope,this.visualCandidateJournal.lifecycleTraces(scope)):Object.freeze([]);}catch{return Object.freeze([]);}
  }
  constructor(options:{database:Database;memories:MemoryRepository;provider:()=>{provider:InferenceProvider;revision:string};idle:()=>boolean;changed:()=>void;scopeAllowed?:(scope:MemoryScope)=>boolean;contentAllowed?:(scope:MemoryScope,content:string)=>boolean}){
   this.scopeAllowed=options.scopeAllowed??(()=>true);this.contentAllowed=options.contentAllowed??(()=>true);this.database=options.database;this.memories=options.memories;this.provider=options.provider;this.idle=options.idle;this.changed=options.changed;
@@ -151,7 +162,7 @@ export class AutomaticMemory {
   const policy=this.policy(scope),visual=this.visual.inspect(scope,this.scopeAllowed(scope)),episode=visual.episodes.find(row=>row.episodeId===id)?.episode;
   if(!policy.enabled||!this.scopeAllowed(scope)||!episode||!this.contentAllowed(scope,episode.summary)||episode.observations.some(o=>!this.contentAllowed(scope,o.description)))return {state:'policyDenied' as const};
   if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==policy.revision||this.visual.policy(scope).revision!==visual.policy.revision)return {state:'policyDenied' as const};
-  const result=this.visual.activate(scope,id,revision);if(result.state==='active')this.changed();return result;
+  const result=this.visual.activate(scope,id,revision);if(result.state==='active'){try{const evidence=this.visual.activationEvidence(scope,result.memoryId);if(evidence)this.visualCandidateJournal.recordActivation(scope,evidence);}catch{/* Actual mutation is independent of optional trace projection. */}this.changed();}return result;
  }
  visualEpisodesCurrent(scope:MemoryScope,episodes:readonly import('@lifestream/contracts/visual-memory').VisualObservationEpisode[],memoryRevision:number){
   if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==memoryRevision)return false;

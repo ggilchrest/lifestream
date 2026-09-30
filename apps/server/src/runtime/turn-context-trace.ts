@@ -3,7 +3,7 @@ import {types} from 'node:util';
 import {createContractValidator} from '@lifestream/contracts';
 import {isFinalizedTurnRequest,type FinalizedTurn} from '@lifestream/runtime/inference/prompt';
 import type {InferenceRequest} from '@lifestream/runtime/inference';
-import {isVisualMemoryCandidateTrace,type VisualMemoryCandidateTrace} from './visual-memory-candidate-evidence.ts';
+import {isVisualMemoryCandidateTrace,isVisualMemoryLifecycleTrace,visualMemoryTraceOwnersMatch,type VisualMemoryCandidateTrace,type VisualMemoryLifecycleTrace} from './visual-memory-candidate-evidence.ts';
 import type {VisualTurnReceipt} from './visual-turn-evidence.ts';
 
 const uuid=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(value);
@@ -121,5 +121,30 @@ export function replayVisualMemoryContextJoin(candidate:VisualMemoryCandidateTra
   const event={...source,eventId:randomUUID(),backgroundJobId:randomUUID(),correlationId:replay.replayId,environmentId:replay.environmentId,executionMode:'replay',processingTime:new Date().toISOString(),monotonic:null,sourceEventIds:[source.eventId],causedByEventIds:[]};
   if(!createContractValidator().validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid)return null;
   return freeze({...replay,events:[event,...replay.events],candidateArtifact:candidate.artifact,sourceCandidateEventId:source.eventId,sourceCandidateMonotonicClockAvailable:false as const,join:joined,ownerEquivalenceProved:false as const,learningAuthority:false as const,effectAuthority:false as const});
+ }catch{return null;}
+}
+
+/** Exact candidate -> original-owner activation -> final rendered selection.
+ * Metadata lineage is historical; context owner/current-use/delivery remain
+ * independently qualified. A missing lifecycle source is never filled in. */
+export function correlateVisualMemoryLifecycle(candidate:VisualMemoryCandidateTrace,lifecycle:VisualMemoryLifecycleTrace,context:TurnContextTrace){
+ try{
+  const joined=correlateVisualMemoryCandidate(candidate,context);if(!joined||!isVisualMemoryLifecycleTrace(lifecycle)||!visualMemoryTraceOwnersMatch(candidate,lifecycle))return null;
+  const payload=lifecycle.event.payload as {memoryId:string;lifecycleEventId:string;oldRevision:number;newRevision:number},source=lifecycle.sourceMutation;
+  const metadata=JSON.parse(candidate.artifact.bytes),validation=JSON.parse(lifecycle.artifact.bytes),selected=context.events.find(event=>event.eventType==='memory.referencesSelected')!;
+  if(payload.memoryId!==joined.memoryId||payload.lifecycleEventId!==source.eventId||payload.oldRevision!==source.oldRevision||payload.newRevision!==source.newRevision||payload.newRevision!==payload.oldRevision+1||metadata.recordDigest!==validation.candidateRecordDigest||metadata.sourceEpisodeId!==validation.episodeId||metadata.sourceEpisodeRevision!==validation.episodeRevision||metadata.sourceDigest!==validation.sourceDigest||Date.parse(candidate.event.eventTime as string)>Date.parse(lifecycle.event.eventTime as string)||Date.parse(lifecycle.event.eventTime as string)>Date.parse(selected.eventTime as string))return null;
+  return freeze({...joined,sourceLifecycleEventId:source.eventId,traceLifecycleEventId:lifecycle.event.eventId,activationArtifactDigest:lifecycle.artifact.reference.sha256,memorySourcesOwnerMatched:true as const,oldRevision:payload.oldRevision,newRevision:payload.newRevision});
+ }catch{return null;}
+}
+
+/** Isolated semantic replay of the three genuine retained metadata bundles.
+ * Source canonical mutation is historical evidence, never an executable command. */
+export function replayVisualMemoryLifecycleJoin(candidate:VisualMemoryCandidateTrace,lifecycle:VisualMemoryLifecycleTrace,context:TurnContextTrace){
+ try{
+  const join=correlateVisualMemoryLifecycle(candidate,lifecycle,context);if(!join)return null;
+  const replay=replayVisualMemoryContextJoin(candidate,context);if(!replay)return null;
+  const source=lifecycle.event,event={...source,eventId:randomUUID(),backgroundJobId:(replay.events[0]! as Readonly<Record<string,unknown>>).backgroundJobId,correlationId:replay.replayId,environmentId:replay.environmentId,executionMode:'replay',processingTime:new Date().toISOString(),monotonic:null,sourceEventIds:[source.eventId],causedByEventIds:[]};
+  if(!createContractValidator().validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid)return null;
+  return freeze({...replay,events:[replay.events[0]!,event,...replay.events.slice(1)],activationArtifact:lifecycle.artifact,sourceMutation:lifecycle.sourceMutation,sourceLifecycleMonotonicClockAvailable:false as const,join});
  }catch{return null;}
 }

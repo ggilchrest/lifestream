@@ -25,6 +25,9 @@ export type VisualUserCorrection={recordType:'visualUserCorrection';sourceType:'
 const activationIdSql="CASE WHEN json_valid(payload_json) THEN coalesce(json_extract(payload_json,'$.visualActivationEvidence.event.eventId'),json_extract(payload_json,'$.visualActivationEventId')) ELSE NULL END";
 export const visualLifecyclePayloadErasure=`json_patch(?,CASE WHEN length(${activationIdSql})=36 AND ${activationIdSql} LIKE '________-____-____-____-____________' AND ${activationIdSql} NOT GLOB '*[^0-9a-f-]*' THEN json_object('visualActivationEventId',${activationIdSql}) ELSE '{}' END)`;
 export type VisualActivationEvidence=Readonly<{schemaVersion:'1.0.0';recordType:'visualActivationEvidence';ownerDigest:string;scope:Readonly<Pick<VisualMemoryScope,'assistantId'|'environmentId'|'conversationId'|'sessionId'|'endpointId'>>;event:Readonly<Record<string,unknown>>;artifact:Readonly<{reference:Readonly<{reference:string;sha256:string;mediaType:'application/json';schemaRef:string;byteLength:number}>;bytes:string}>}>;
+const visualActivationSources=new WeakSet<object>();
+/** Genuine original-owner read provenance, not current eligibility or authority. */
+export function isVisualActivationEvidence(value:unknown):value is VisualActivationEvidence{return !!value&&typeof value==='object'&&visualActivationSources.has(value);}
 /** Called only within the actual activation owner's transaction after current
  * consent/source/typed projection/candidate/capacity checks have succeeded. */
 function activationEvidence(owner:VisualMemoryOwner,episode:VisualObservationEpisode,memory:VisualMemoryProjection['memoryRecord'],oldRevision:number,now:number,memoryPolicyRevision:number):VisualActivationEvidence|null {
@@ -141,7 +144,7 @@ export class VisualMemoryRepository{
    const memory=JSON.parse(String(memoryRow.provenance_json)).canonical as VisualMemoryProjection['memoryRecord'];
    if(validation.candidateRecordDigest!==digest({...memory,status:'candidate'})||!isDeepStrictEqual(evidence.event.sourceRevision,{providerRef:'urn:lifestream:sqlite:visual-memory',revision:`episode:${episode.episodeId}:${episode.revision}:${episode.sourceDigest}`,highWaterMark:null})||memory.status!=='active'||episode.memoryRecordId!==memoryId||episode.revision!==validation.episodeRevision||episode.sourceDigest!==validation.sourceDigest||episode.processingPolicyRevision!==this.policy(owner).revision||!validateVisualMemoryProjection({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:memory}).valid)return null;
    const {assistantId,environmentId,conversationId,sessionId,endpointId}=episode.scope;if(!isDeepStrictEqual(evidence.scope,{assistantId,environmentId,conversationId,sessionId,endpointId}))return null;
-   return immutable(evidence);
+   const result=immutable(evidence);visualActivationSources.add(result);return result;
   }catch{return null;}
  }
  admit(owner:VisualMemoryOwner,input:unknown,admission:VisualMemoryAdmission):VisualMemoryReceipt{

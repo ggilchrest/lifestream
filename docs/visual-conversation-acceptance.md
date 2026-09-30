@@ -142,3 +142,19 @@ Existing privacy erasure removes validation/source payload and preserves only th
 real opaque event UUID; repeated erasure cannot mint or discard that ID. Ordinary
 legacy receipts and independent Human memory retain their existing semantics.
 Canonical asynchronous lifecycle projection and full joined replay remain next.
+
+The existing bounded background memory journal now asynchronously projects
+published `memory.lifecycleChanged` from genuine storage-owner activation reads.
+The payload references the original recorded canonical mutation UUID and exact
+revisions/source, with source UTC and null unrecorded monotonic clock. Copies,
+proxies and schema-only/legacy data cannot donate normal source provenance.
+Candidate and lifecycle events share producer order and 128 pending/retained
+bounds, owner policy, lazy dual-clock expiry, reset/close/rollback and erasure.
+Reads also withhold/purge bodies erased directly through the memory owner.
+Genuine candidate/activation/finalized-memory bundles can join exact owner,
+record/episode/source digests and chronological source events. Context owner
+qualification, current eligibility and reply delivery remain unproved. Pure
+joined replay preserves all three exact artifacts and canonical mutation/source
+IDs in an isolated environment, with no media/provider/storage/effect callback
+or reinforcement; erased history cannot become a normal source. Legacy and other
+mutation/capture/perception/native lifecycle coverage remains partial.
