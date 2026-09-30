@@ -133,3 +133,17 @@ copied views, decisions or selection wrappers cannot donate identity. This
 deterministic check dispatches nothing: independently issued current capability
 admission, budget/idempotency accounting and atomic actual native frame/input
 ownership checks remain required immediately before controller entry.
+
+The existing activity metadata owner can reserve a finite controller action's
+worst-case frames, wall time and action count under an explicitly configured
+quota and current host qualification. Opaque action/idempotency/admission/
+invocation identities and a request digest survive reopen without retaining an
+executable request or button transcript. Duplicate identities and exhausted
+budgets deny another reservation. Unknown or unqualified outcomes remain held;
+only independently qualified actual monotonic usage and a neutralized terminal
+receipt settle resources once. Actual usage floors, held resources, expiry and
+privacy fences survive restart or older-save reconciliation. Metadata reservation
+never substitutes for the existing governed capability admission/I/O claim or
+current native input ownership. The additive controller table leaves prior
+migration bytes and installed database/candidate unchanged until separately
+authorized packaging/recovery work.

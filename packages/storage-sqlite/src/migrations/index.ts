@@ -73,7 +73,8 @@ export function loadMigrations(): Migration[] {
     [63, "game_start_claims", "0063_game_start_claims.sql"],
     [64, "game_experience", "0064_game_experience.sql"],
     [65, "game_help", "0065_game_help.sql"],
-    [66, "game_advice_custody", "0066_game_advice_custody.sql"]
+    [66, "game_advice_custody", "0066_game_advice_custody.sql"],
+    [67, "activity_controller_reservations", "0067_activity_controller_reservations.sql"]
   ].map(([id, name, file]) => {
     const sql = readFileSync(join(migrationDirectory, file as string), "utf8");
     return { id: id as number, name: name as string, sql, digest: createHash("sha256").update(sql).digest("hex") };
