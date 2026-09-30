@@ -53,6 +53,40 @@ bridge, qualified save persistence/readback, restart from an actual game save,
 campaign journal and runtime lifecycle are still implementation/qualification work.
 A successful synthetic boundary test does not establish saved game progress.
 
+`createAuthenticatedGameTransport` now operates an already connected stream; it
+creates no listener or reconnect. Its control framing matches the UTF-8 byte length
+and space prefix in the [referenced BizHawk socket implementation](https://raw.githubusercontent.com/TASEmulators/BizHawk/2.11.1/src/BizHawk.Client.Common/Api/SocketServer.cs).
+That source connects outward from the emulator. It is an API reference, not a
+selected or qualified installed build. A future bridge must detect partial native
+sends and fail safely; native screenshot retry behavior must not become controller
+retry behavior. No Lua peer or screenshot byte lane is supplied by this increment.
+
+An explicitly paired credential of 32–128 bytes authenticates a fresh per-connection
+challenge using HMAC-SHA256 over the exact challenge JSON. The challenge binds the
+protocol, random session/nonce, provider, pins, scope digest and finite expiry.
+The bridge replies with closed canonical JSON containing `type: authenticate`
+and `proof`; the host confirms `type: authenticated`. Credentials and proofs are
+never error text. The scope and credential are copied at creation; the host's
+credential copy remains under host custody. Pairing proves possession of a bridge
+credential; current authority, qualified source and reviewed observations remain
+separate required predicates. Missing pairing has no fallback grant.
+
+Control frames are at most 128 KiB, length prefixes at most six digits, and text
+decoding rejects malformed UTF-8. The session duration is explicit and bounded.
+Up to eight calls can await replies, with one additional release slot. The registry
+retains at most 256 request identities plus a reserved release identity during that
+connection. Authenticated replies must match the original operation, request,
+correlation and provider; the existing boundary still validates complete records.
+One late response for an abandoned call is discarded. Replays and unrelated replies
+close the channel. A lost effect outcome stays potentially executed; no reconnect,
+retry or durable reconciliation is inferred from a new connection.
+
+The host receives one redacted disconnect notification and must fence ownership
+and pursue real pause. A queued release and its scripted acknowledgment do not prove
+that a busy native bridge can stop an emulator. Tests cover a temporary loopback TCP
+socket with a scripted peer; actual Lua, graphical emulator, game and save effects
+remain separate implementation and qualification work.
+
 The operator must provide the exact legitimate game/build/core/configuration/script
 and visible-state-manifest pins, a real graphical watchable session, finite policies
 and runtime authority before actual play. Existing providers and installed services
