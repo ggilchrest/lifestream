@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import {validateVisualMemoryProjection} from '@lifestream/contracts/visual-memory';
 import type { Database } from "./database.js";
 
 export type MemoryRecord = { id: string; assistantId: string; content: string; provenance: Record<string, unknown>; lifecycle: Record<string, unknown>; createdAt: string };
@@ -12,6 +13,13 @@ export class MemoryRepository {
   private readonly events = new Map<string, MemoryLifecycleEvent[]>();
   private readonly database: Database | undefined;
   constructor(database?: Database) { this.database = database; }
+  private visualSourceAvailable(record:MemoryRecord):boolean {
+    if(!record.provenance.visualEpisodeId)return true;
+    if(!this.database)return false;
+    const row=this.database.connection.prepare("SELECT revision,payload_json FROM visual_observation_episodes WHERE episode_id=? AND state='retained' AND expires_at>?").get(String(record.provenance.visualEpisodeId),Date.now()) as {revision:number;payload_json:string}|undefined;
+    if(!row||row.revision!==record.provenance.visualEpisodeRevision||record.lifecycle.status!=='candidate')return false;
+    try{const episode=JSON.parse(row.payload_json),canonical=record.provenance.canonical as {memoryId?:unknown;content?:unknown};return episode.scope.principalId===record.provenance.actor&&episode.scope.relationshipId===record.provenance.relationshipId&&episode.sourceDigest===record.provenance.visualSourceDigest&&canonical?.memoryId===record.id&&canonical.content===record.content&&validateVisualMemoryProjection({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:canonical}).valid;}catch{return false;}
+  }
   save(record: MemoryRecord): MemoryRecord {
     const copy = structuredClone(record);
     if (this.database) {
@@ -53,12 +61,12 @@ export class MemoryRepository {
     for (const record of records) this.save(record);
   }
   get(assistantId: string, id: string): MemoryRecord | undefined {
-    if (this.database) { const row = this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? AND id = ?").get(assistantId, id) as MemoryRow | undefined; return row ? fromRow(row) : undefined; }
-    const record = this.records.get(id); return record?.assistantId === assistantId ? structuredClone(record) : undefined;
+    if (this.database) { const row = this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? AND id = ?").get(assistantId, id) as MemoryRow | undefined;const record=row?fromRow(row):undefined;return record&&this.visualSourceAvailable(record)?record:undefined; }
+    const record = this.records.get(id); return record?.assistantId === assistantId&&this.visualSourceAvailable(record) ? structuredClone(record) : undefined;
   }
   list(assistantId: string): MemoryRecord[] {
-    if (this.database) return (this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? ORDER BY id").all(assistantId) as MemoryRow[]).map(fromRow);
-    return [...this.records.values()].filter((record) => record.assistantId === assistantId).map((record) => structuredClone(record));
+    if (this.database) return (this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? ORDER BY id").all(assistantId) as MemoryRow[]).map(fromRow).filter(record=>this.visualSourceAvailable(record));
+    return [...this.records.values()].filter((record) => record.assistantId === assistantId&&this.visualSourceAvailable(record)).map((record) => structuredClone(record));
   }
   contextRecords(assistantId: string, actor: string): MemoryRecord[] {
     if (this.database) return (this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(lifecycle_json,'$.status')='active' AND (EXISTS (SELECT 1 FROM memory_lifecycle_events e WHERE e.assistant_id=memories.assistant_id AND e.memory_id=memories.id AND e.event_type='lifecycleChanged' AND json_extract(e.payload_json,'$.status')='active') OR EXISTS (SELECT 1 FROM memory_lifecycle_events e WHERE e.assistant_id=memories.assistant_id AND e.event_type='correctionApplied' AND json_extract(e.payload_json,'$.correctionId')=memories.id)) ORDER BY id LIMIT 257").all(assistantId, actor) as MemoryRow[]).map(fromRow);
@@ -81,6 +89,7 @@ export class MemoryRepository {
   }
   proposeCorrection(assistantId: string, id: string, proposedContent: string, actor: string): MemoryLifecycleEvent | undefined {
     const existing = this.get(assistantId, id); if (!existing || existing.lifecycle.contentRemoved || !["active","candidate"].includes(String(existing.lifecycle.status))) return undefined;
+    if(existing.provenance.visualEpisodeId)throw new Error('Visual observations require typed source correction');
     const occurredAt = new Date().toISOString(); const payload = { proposedContent, status: "needsReview", actor };
     const revision = this.database ? this.database.transaction((tx) => { const nextRevision = tx.get<{ revision: number }>("SELECT COALESCE(MAX(revision), 0) + 1 AS revision FROM memory_lifecycle_events WHERE memory_id = ? AND assistant_id = ?", id, assistantId)?.revision ?? 1; tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, nextRevision, "correctionProposed", JSON.stringify(payload), occurredAt); return nextRevision; }) : (this.events.get(id)?.at(-1)?.revision ?? 0) + 1;
     if (!this.database) { const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt }); this.events.set(id, events); }
@@ -110,6 +119,7 @@ export class MemoryRepository {
     const allowed = new Set(["candidate", "active", "superseded", "invalidated", "contradicted"]);
     if (!allowed.has(status)) throw new Error("unsupported memory lifecycle status");
     const existing = this.get(assistantId, id); if (!existing) return undefined;
+    if(existing.provenance.visualEpisodeId)throw new Error('Visual candidates require source-aware lifecycle admission');
     const previousRevision = typeof existing.lifecycle.revision === "number" ? existing.lifecycle.revision : 1;
     if (expectedRevision !== undefined && expectedRevision !== previousRevision) throw new Error("memory revision conflict");
     const currentStatus = typeof existing.lifecycle.status === "string" ? existing.lifecycle.status : "candidate";
@@ -137,6 +147,7 @@ export class MemoryRepository {
       if(tx.get<{changes:number}>("SELECT changes() AS changes")?.changes!==1)throw new Error("memory revision conflict");
       tx.run("UPDATE memory_lifecycle_events SET payload_json=? WHERE assistant_id=? AND memory_id=?",JSON.stringify({payloadRemoved:true}),assistantId,id);
       tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",id,assistantId,journalRevision,"forgotten",JSON.stringify(payload),occurredAt);
+      if(existing.provenance.visualEpisodeId)tx.run("UPDATE visual_observation_episodes SET state='forgotten',payload_json=NULL,revision=revision+1 WHERE episode_id=? AND state='retained' AND json_extract(payload_json,'$.memoryRecordId')=?",existing.provenance.visualEpisodeId,id);
     });
     else {this.records.set(id,{...existing,content:"",provenance,lifecycle});this.events.set(id,[...(this.events.get(id)??[]).map(event=>({...event,payload:{payloadRemoved:true}})),{memoryId:id,assistantId,revision:journalRevision,eventType:"forgotten",payload,occurredAt}]);}
     return { memoryId: id, assistantId, status: "forgotten", contentRemoved: true, lifecycleRetained: true, externalCopies: "not-controlled", revision };

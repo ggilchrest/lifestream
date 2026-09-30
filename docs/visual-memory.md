@@ -31,3 +31,9 @@ repeated interpretation cannot recreate it. Restore remains quarantined.
 Historical comparison, ordinary-reply/reflection integration and complete visual
 qualification are still pending. Isolated wiring checks establish neither visual
 understanding nor physical-camera, performance or Human acceptance.
+
+## Optional memory projection
+
+An isolated host may supply a separate transformation-confidence estimate with an explicit basis and policy reference. The idle worker can then create a canonical experiential MemoryRecord candidate with `unverified` factuality and `interaction` provenance. Its namespaced visual binding identifies the exact episode revision and digest; it preserves unknown perception confidence and creates no participant quote or source turn. Missing estimates leave only the typed episode. Invalid estimates do not create a memory projection. At most 128 visual candidates can be retained per owner/Assistant/relationship.
+
+Candidates remain outside normal memory recall and reflection. Generic promotion and correction are unavailable until their source-aware paths are implemented. Forgetting either linked record, withdrawing either memory policy, expiry, and restore quarantine erase the source and projection payloads while retaining opaque replay fences. Memory inspection/export validates the current source binding and refuses expired or mismatched visual candidates. This does not qualify automatic historical comparisons, correction attribution, ordinary-reply use, live confidence policy, or real image understanding.

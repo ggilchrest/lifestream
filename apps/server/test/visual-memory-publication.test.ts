@@ -44,6 +44,14 @@ test('validated publication automatically retains typed source at idle with cons
  await f.batch();await f.worker.tick();assert.equal(f.inspect().episodes.length,1);
 });
 
+test('optional host transformation estimate creates only an unverified candidate, fenced by either policy withdrawal',async t=>{
+ for(const policy of ['ordinary','visual'])await t.test(policy,async child=>{
+  const f=fixture(child);f.enable();f.selection(value=>({...value,transformationConfidence:{value:0.8,basis:'Synthetic source-to-summary fidelity assessment, not perception truth.',policyRef:'synthetic-policy:1.0.0'}}));const published=await f.batch();await f.worker.tick();const row=f.inspect().episodes[0]!,memories=new MemoryRepository(f.db),record=memories.get(f.owner.assistantId,row.episode!.memoryRecordId!)!;
+  assert.equal(f.inspect().intakeReceipts[0]!.requestId,published.requestId);assert.equal(record.lifecycle.status,'candidate');assert.equal(record.lifecycle.factuality,'unverified');assert.equal(memories.contextRecords(f.owner.assistantId,f.owner.principalId).length,0);assert.equal(f.calls(),0);assert.equal(f.inspect().episodes[0]!.episode!.observations[0]!.confidence,null);
+  if(policy==='ordinary')f.worker.configure(f.owner,false,1);else f.worker.configureVisual(f.owner,false,1,86400000);assert.equal(f.inspect().episodes[0]!.episode,null);assert.equal(memories.get(f.owner.assistantId,record.id)!.content,'');assert.equal(memories.get(f.owner.assistantId,record.id)!.lifecycle.contentRemoved,true);
+ });
+});
+
 test('pending source expires during foreground work and cannot be restored by clock rollback',async t=>{
  const f=fixture(t);f.enable();f.busy(true);const source=await f.batch();f.advance(6000);await f.worker.tick();assert.equal(f.inspect().episodes.length,0);assert.deepEqual(f.inspect().intakeReceipts,[{requestId:source.requestId,state:'sourceExpired'}]);f.advance(-5000);f.busy(false);await f.worker.tick();assert.equal(f.inspect().episodes.length,0);
 });

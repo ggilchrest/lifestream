@@ -1,5 +1,5 @@
 import {randomUUID} from 'node:crypto';
-import type {VisualMemoryObservation,VisualMemoryScope,VisualObservationEpisode} from '@lifestream/contracts/visual-memory';
+import type {VisualMemoryObservation,VisualMemoryScope,VisualObservationEpisode,VisualTransformationConfidence} from '@lifestream/contracts/visual-memory';
 import {visualEpisodeSourceDigest,type VisualMemoryAdmission,type VisualMemoryPolicy} from '@lifestream/storage-sqlite';
 import type {VisualObservationBatch} from '@lifestream/runtime/perception/observation';
 
@@ -7,6 +7,7 @@ import type {VisualObservationBatch} from '@lifestream/runtime/perception/observ
  * supplies an identity, meaningful-event decision or independent source family. */
 export type VisualMemorySelection={
  reason:VisualMemoryAdmission['reason'];independenceKey:string;
+ transformationConfidence?:VisualTransformationConfidence;
  observations:readonly {observationId:string;subject:VisualMemoryObservation['subject'];visibility:VisualMemoryObservation['visibility']}[];
 };
 export type VisualMemoryPublication={batch:VisualObservationBatch;freshUntilMs:number;isCurrent:()=>boolean};

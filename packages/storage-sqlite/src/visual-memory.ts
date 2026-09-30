@@ -1,7 +1,7 @@
-import {createHash} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
-import {validateVisualEpisode,type VisualMemoryOwner,type VisualMemoryScope,type VisualObservationEpisode} from '@lifestream/contracts/visual-memory';
-import type {Database} from './database.ts';
+import {validateVisualEpisode,validateVisualMemoryProjection,type VisualMemoryProjection,type VisualTransformationConfidence,type VisualMemoryOwner,type VisualMemoryScope,type VisualObservationEpisode} from '@lifestream/contracts/visual-memory';
+import type {Database,Transaction} from './database.ts';
 
 export type VisualMemoryPolicy={enabled:boolean;revision:number;retentionMs:number|null;retentionPolicyRef:string|null};
 export type VisualMemoryAdmission={
@@ -20,6 +20,17 @@ const ownerValid=(owner:VisualMemoryOwner)=>[owner.principalId,owner.assistantId
 export const visualEpisodeSourceDigest=(episode:Pick<VisualObservationEpisode,'scope'|'observations'>)=>digest({scope:episode.scope,observations:episode.observations});
 type Row={episode_id:string;revision:number;state:string;expires_at:number;payload_json:string|null};
 
+/** Run inside the source lifecycle transaction. Candidate content and historic
+ * event payloads are erased; opaque lifecycle receipts remain. */
+export function retireVisualProjections(tx:Transaction,now:number){
+ const rows=tx.all<{id:string;assistant_id:string;provenance_json:string;lifecycle_json:string}>("SELECT id,assistant_id,provenance_json,lifecycle_json FROM memories WHERE json_extract(provenance_json,'$.visualEpisodeId') IN (SELECT episode_id FROM visual_observation_episodes WHERE state<>'retained') AND json_extract(lifecycle_json,'$.contentRemoved') IS NOT 1");
+ for(const row of rows){const provenance=JSON.parse(row.provenance_json) as {actor:string},lifecycle=JSON.parse(row.lifecycle_json) as {revision:number},revision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',row.id)!.n;
+  tx.run("UPDATE memories SET content='',provenance_json=?,lifecycle_json=? WHERE id=?",JSON.stringify({actor:provenance.actor,payloadRemoved:true}),JSON.stringify({status:'invalidated',revision:lifecycle.revision+1,contentRemoved:true,reason:'visual source retired',changedBy:provenance.actor}),row.id);
+  tx.run('UPDATE memory_lifecycle_events SET payload_json=? WHERE memory_id=?',JSON.stringify({payloadRemoved:true}),row.id);
+  tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',row.id,row.assistant_id,revision,'forgotten',JSON.stringify({status:'invalidated',contentRemoved:true,reason:'visual source retired'}),new Date(now).toISOString());
+ }return rows.length;
+}
+
 /** Typed episodes stay separate from owner quotes and canonical MemoryRecord projections.
  * No numeric transformation confidence, source turn, preference or reinforcement is fabricated. */
 export class VisualMemoryRepository{
@@ -37,10 +48,34 @@ export class VisualMemoryRepository{
    tx.run('INSERT INTO visual_memory_policies VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(scope_key) DO UPDATE SET enabled=excluded.enabled,revision=excluded.revision,retention_ms=excluded.retention_ms,approved_at=excluded.approved_at',key(owner),owner.principalId,owner.assistantId,owner.relationshipId,enabled?1:0,expectedRevision+1,retentionMs,now);
    // Disabling or changing processing policy retires old derived payloads immediately.
    tx.run("UPDATE visual_observation_episodes SET state='invalidated',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND state='retained'",key(owner));
+   retireVisualProjections(tx,now);
   });return this.policy(owner);
  }
  sweep():number{
-  return Number(this.db.connection.prepare("UPDATE visual_observation_episodes SET state='expired',payload_json=NULL,revision=revision+1 WHERE state='retained' AND expires_at<=?").run(this.now()).changes);
+  const now=this.now();return this.db.transaction(tx=>{tx.run("UPDATE visual_observation_episodes SET state='expired',payload_json=NULL,revision=revision+1 WHERE state='retained' AND expires_at<=?",now);const n=tx.get<{n:number}>('SELECT changes() AS n')!.n;retireVisualProjections(tx,now);return n;});
+ }
+ /** An optional host estimate enables only a canonical, inert candidate. No
+  * observation score, default number, model call or source turn is fabricated. */
+ project(owner:VisualMemoryOwner,id:string,expectedRevision:number,estimate:VisualTransformationConfidence|null){
+  this.sweep();if(estimate===null)return {state:'estimateUnavailable' as const};
+  const now=this.now(),policy=this.policy(owner);if(!policy.enabled)return {state:'policyDenied' as const};
+  return this.db.transaction(tx=>{
+   const row=tx.get<Row>('SELECT episode_id,revision,state,expires_at,payload_json FROM visual_observation_episodes WHERE scope_key=? AND episode_id=?',key(owner),id);
+   if(!row||row.state!=='retained'||row.revision!==expectedRevision||!row.payload_json||row.expires_at<=now)return {state:'sourceUnavailable' as const};
+   const source=JSON.parse(row.payload_json) as VisualObservationEpisode;
+   if(source.memoryRecordId)return {state:'alreadyProjected' as const,memoryId:source.memoryRecordId};
+   if(source.processingPolicyRevision!==policy.revision||source.sourceDigest!==visualEpisodeSourceDigest(source)||!validateVisualEpisode(source).valid)return {state:'sourceUnavailable' as const};
+   if(Number(tx.get<{n:number}>("SELECT count(*) AS n FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(provenance_json,'$.relationshipId')=? AND json_extract(provenance_json,'$.visualEpisodeId') IS NOT NULL AND json_extract(lifecycle_json,'$.status')='candidate'",owner.assistantId,owner.principalId,owner.relationshipId)!.n)>=128)return {state:'capacityExceeded' as const};
+   const memoryId=randomUUID(),episode:VisualObservationEpisode={...source,revision:row.revision+1,memoryRecordId:memoryId};
+   const projection:VisualMemoryProjection={schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:{schemaVersion:'2.0.0',memoryId,assistantId:owner.assistantId,kind:'experiential',content:episode.summary,factuality:'unverified',confidence:estimate.value,sensitivity:'personal',status:'candidate',provenance:{sourceType:'interaction',sourceRefs:[`visual-episode:${id}:${episode.revision}:${episode.sourceDigest}`],transformationId:'lifestream.visual-episode-projection',transformationVersion:'1.0.0'},createdAt:new Date(now).toISOString(),createdBy:owner.principalId,lastReinforcedAt:null,contradictedBy:[],extensions:{'lifestream.conversationalVision':{schemaVersion:'1.0.0',sourceKind:'modelVisualObservation',episodeId:id,episodeRevision:episode.revision,transformationConfidence:structuredClone(estimate),sourceDigest:episode.sourceDigest,rawMediaRetained:false}}}};
+   if(Buffer.byteLength(JSON.stringify(episode))>8192)return {state:'capacityExceeded' as const};
+   if(!validateVisualMemoryProjection(projection).valid)return {state:'invalidEstimate' as const};
+   const memory=projection.memoryRecord,lifecycle={kind:memory.kind,factuality:memory.factuality,confidence:memory.confidence,sensitivity:memory.sensitivity,status:memory.status,revision:1,lastReinforcedAt:null,contradictedBy:[],visualCandidate:true};
+   tx.run('INSERT INTO memories VALUES (?,?,?,?,?,?)',memoryId,owner.assistantId,memory.content,JSON.stringify({actor:owner.principalId,relationshipId:owner.relationshipId,epistemicStatus:'modelVisualObservation',visualEpisodeId:id,visualEpisodeRevision:episode.revision,visualSourceDigest:episode.sourceDigest,canonical:memory}),JSON.stringify(lifecycle),memory.createdAt);
+   tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',memoryId,owner.assistantId,1,'created',JSON.stringify(lifecycle),memory.createdAt);
+   tx.run('UPDATE visual_observation_episodes SET revision=?,payload_json=? WHERE episode_id=?',episode.revision,JSON.stringify(episode),id);
+   return {state:'projected' as const,memoryId};
+  });
  }
  admit(owner:VisualMemoryOwner,input:unknown,admission:VisualMemoryAdmission):VisualMemoryReceipt{
   this.sweep();let bytes:string;
@@ -87,15 +122,15 @@ export class VisualMemoryRepository{
   return {policy:this.policy(owner),complete:rows.length<=limit,episodes:rows.slice(0,limit).map(row=>({episodeId:row.episode_id,revision:row.revision,state:row.state,expiresAt:new Date(row.expires_at).toISOString(),episode:row.payload_json?JSON.parse(row.payload_json) as VisualObservationEpisode:null}))};
  }
  forget(owner:VisualMemoryOwner,id:string,expectedRevision:number):boolean{
-  this.sweep();const result=this.db.connection.prepare("UPDATE visual_observation_episodes SET state='forgotten',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND episode_id=? AND revision=? AND state='retained'").run(key(owner),id,expectedRevision);
-  if(result.changes!==1)throw Error('Visual episode revision conflict');return true;
+  this.sweep();return this.db.transaction(tx=>{tx.run("UPDATE visual_observation_episodes SET state='forgotten',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND episode_id=? AND revision=? AND state='retained'",key(owner),id,expectedRevision);
+   if(tx.get<{n:number}>('SELECT changes() AS n')!.n!==1)throw Error('Visual episode revision conflict');retireVisualProjections(tx,this.now());return true;});
  }
  /** Restore never carries visual consent or payload forward without current safety replay support. */
  quarantine():number{
   return this.db.transaction(tx=>{
    const n=Number(tx.get<{n:number}>("SELECT count(*) AS n FROM visual_observation_episodes WHERE state='retained'")!.n);
    tx.run("UPDATE visual_observation_episodes SET state='invalidated',payload_json=NULL,revision=revision+1 WHERE state='retained'");
-   tx.run('UPDATE visual_memory_policies SET enabled=0,revision=revision+1');return n;
+   tx.run('UPDATE visual_memory_policies SET enabled=0,revision=revision+1');retireVisualProjections(tx,this.now());return n;
   });
  }
 }

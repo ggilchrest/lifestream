@@ -1,5 +1,6 @@
 import {createHash} from 'node:crypto';
-import {VisualMemoryRepository,type VisualMemoryAdmission,type Database,type MemoryRepository,type MemoryRecord} from '@lifestream/storage-sqlite';
+import {VisualMemoryRepository,retireVisualProjections,type VisualMemoryAdmission,type Database,type MemoryRepository,type MemoryRecord} from '@lifestream/storage-sqlite';
+import type {VisualTransformationConfidence} from '@lifestream/contracts/visual-memory';
 import {buildCanonicalPrompt} from '@lifestream/runtime/inference/prompt';
 import type {InferenceProvider} from '@lifestream/runtime/inference';
 import {visualPublicationEpisode,type VisualMemoryPublication,type VisualMemorySelection} from './visual-memory-intake.ts';
@@ -114,8 +115,14 @@ export class AutomaticMemory {
   try{return item.publication.freshUntilMs>Date.now()&&this.policy(item.scope).enabled&&this.policy(item.scope).revision===item.memoryRevision&&this.visual.policy(item.scope).enabled&&this.visual.policy(item.scope).revision===item.visualRevision&&this.scopeAllowed(item.scope)&&item.publication.isCurrent();}catch{return false;}
  }
  forgetVisual(scope:MemoryScope,id:string,revision:number){if(!this.scopeAllowed(scope))throw Error('Visual memory scope unavailable');this.visual.forget(scope,id,revision);this.changed();}
+ projectVisual(scope:MemoryScope,id:string,revision:number,estimate:VisualTransformationConfidence|null){
+  const policy=this.policy(scope),visual=this.visual.inspect(scope,this.scopeAllowed(scope)),episode=visual.episodes.find(row=>row.episodeId===id)?.episode;
+  if(!policy.enabled||!this.scopeAllowed(scope)||!episode||!this.contentAllowed(scope,episode.summary)||episode.observations.some(o=>!this.contentAllowed(scope,o.description)))return {state:'policyDenied' as const};
+  if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==policy.revision||this.visual.policy(scope).revision!==visual.policy.revision)return {state:'policyDenied' as const};
+  const result=this.visual.project(scope,id,revision,estimate);if(result.state==='projected')this.changed();return result;
+ }
  configure(scope:MemoryScope,enabled:boolean,expectedRevision:number){
-  this.database.transaction(tx=>{const current=this.policy(scope);if(current.revision!==expectedRevision)throw new Error('Memory policy revision conflict');tx.run('INSERT INTO automatic_memory_policies VALUES (?,?,?,?,?,?,?) ON CONFLICT(scope_key) DO UPDATE SET enabled=excluded.enabled,revision=excluded.revision,approved_at=excluded.approved_at',key(scope),scope.principalId,scope.assistantId,scope.relationshipId,enabled?1:0,expectedRevision+1,new Date().toISOString());tx.run("UPDATE automatic_memory_work SET state='cancelled',input_text='',prepared_json=NULL,reason='policy_changed' WHERE scope_key=? AND state IN ('queued','running','prepared')",key(scope));if(!enabled){tx.run('UPDATE visual_memory_policies SET enabled=0,revision=revision+1 WHERE scope_key=? AND enabled=1',key(scope));tx.run("UPDATE visual_observation_episodes SET state='invalidated',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND state='retained'",key(scope));}});
+  this.database.transaction(tx=>{const current=this.policy(scope);if(current.revision!==expectedRevision)throw new Error('Memory policy revision conflict');tx.run('INSERT INTO automatic_memory_policies VALUES (?,?,?,?,?,?,?) ON CONFLICT(scope_key) DO UPDATE SET enabled=excluded.enabled,revision=excluded.revision,approved_at=excluded.approved_at',key(scope),scope.principalId,scope.assistantId,scope.relationshipId,enabled?1:0,expectedRevision+1,new Date().toISOString());tx.run("UPDATE automatic_memory_work SET state='cancelled',input_text='',prepared_json=NULL,reason='policy_changed' WHERE scope_key=? AND state IN ('queued','running','prepared')",key(scope));if(!enabled){tx.run('UPDATE visual_memory_policies SET enabled=0,revision=revision+1 WHERE scope_key=? AND enabled=1',key(scope));tx.run("UPDATE visual_observation_episodes SET state='invalidated',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND state='retained'",key(scope));retireVisualProjections(tx,Date.now());}});
   this.controller?.abort();return this.policy(scope);
  }
  enqueue(scope:MemoryScope,source:string,input:string,attribution:'authenticatedTypedOwner'|'unknownSpeaker'){
@@ -152,7 +159,7 @@ export class AutomaticMemory {
   const pending=this.visualPending.entries().next().value;
   if(pending){
    const [id,item]=pending;this.visualPending.delete(id);
-   try{if(this.visualCurrent(item)){const candidate=visualPublicationEpisode(item.publication.batch,item.selection,this.visual.policy(item.scope),Date.now(),item.publication.freshUntilMs);const result=candidate?this.enqueueVisual(item.scope,candidate.episode,candidate.admission,()=>this.visualCurrent(item)):{state:'unattributedSubject'};this.noteVisual(item.scope,item.publication.batch.requestId,result.state);}}catch{this.noteVisual(item.scope,item.publication.batch.requestId,'invalidEpisode');}
+   try{if(this.visualCurrent(item)){const candidate=visualPublicationEpisode(item.publication.batch,item.selection,this.visual.policy(item.scope),Date.now(),item.publication.freshUntilMs);const result=candidate?this.enqueueVisual(item.scope,candidate.episode,candidate.admission,()=>this.visualCurrent(item)):{state:'unattributedSubject'};this.noteVisual(item.scope,item.publication.batch.requestId,result.state);if(result.state==='retained'&&candidate&&item.selection.transformationConfidence){try{this.projectVisual(item.scope,candidate.episode.episodeId,1,item.selection.transformationConfidence);}catch{/* The retained typed source is independent of optional projection failure. */}}}}catch{this.noteVisual(item.scope,item.publication.batch.requestId,'invalidEpisode');}
    return;
   }
   const work=this.database.connection.prepare("SELECT id,scope_key AS scope,source_turn AS source,policy_revision AS revision,input_text AS input,prepared_json AS prepared,attempts,expires_at AS expires,state,reason FROM automatic_memory_work WHERE state IN ('queued','prepared') ORDER BY created_at LIMIT 1").get() as Work|undefined;if(!work)return;
