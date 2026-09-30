@@ -155,6 +155,10 @@
     "./activity/journal": {
       "types": "./dist/activity/journal.d.ts",
       "import": "./dist/activity/journal.js"
+    },
+    "./activity/game-journal": {
+      "types": "./dist/activity/game-journal.d.ts",
+      "import": "./dist/activity/game-journal.js"
     }
   },
   "scripts": {

@@ -121,3 +121,23 @@ Runtime checkpoint/save binding, prepared-context integration, journal generatio
 fresh ordinary-save/view reconciliation and actual next-action selection remain
 implementation work. SQLite close/open with scripted sources proves metadata
 persistence only; it does not prove saved game progress or autonomous continuity.
+
+`selectGameCampaignContext` now checks the concrete game wrapper against that
+authoritative journal, exact activity/run/epoch/timeline/campaign, pins and a fresh
+game observation. Every entry has one explicit current/historical binding. Current
+entries must belong to the current timeline; older-save learning stays historical.
+Observed attempts require action references, observed entries require observation
+references, and attributed advice requires advice references. Those IDs still need
+host evidence validation; their presence alone cannot establish an effect or advice.
+
+The host must verify the actual loaded ordinary-save lineage, reviewed source and
+goal reconciliation, graphical/source/authority scope and authoritative core revision.
+Missing reconciliation, source loss, changed journal access, expiry or clock rollback
+withholds the selection and retires pending use. Game freshness uses explicit finite
+activity policy, independently of physical-camera TTL. Visible facts must cite an
+included screenshot; current decoded values retain exact timeline/source/freshness.
+The compact existing-section payload preserves epistemic labels, current versus
+historical entries and limited save metadata, without save bytes or executable controls.
+SQLite restart/forgetting tests use scripted game/save/source predicates. Actual save
+readback, older-save load, field decoding, runtime checkpoint/prepared-view integration
+and autonomous next-task behavior remain separate implementation and qualification.
