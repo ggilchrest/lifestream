@@ -7,10 +7,10 @@ import type * as G from '@lifestream/contracts/game-activity';
 import type {Database,Transaction} from './database.ts';
 import type {ActivityOwner} from './game-activity.ts';
 import type {GameMemorySourceOptions} from './memory.ts';
-import {retireGameHelpForEpisode} from './game-help.ts';
+import {eraseGameEpisodeDerivedPayloads,gameAdviceCustodyBinding,storeGameAdviceCustody,retainedGameAdviceCustody,type GameEpisodeAdviceSource} from './game-advice-custody.ts';
 type Row={episode_id:string;owner_key:string;revision:number;family_key:string;policy_digest:string;source_digest:string;expires_at:number;state:string;payload_json:string|null};
 export type GameEpisodeRetention={retentionMs:number;retentionPolicyRef:string;maximumEpisodes:number;maximumBytes:number};
-export type GameEpisodeSources={observations:G.GameObservation[];actions:G.GameActionReceipt[]};
+export type GameEpisodeSources={observations:G.GameObservation[];actions:G.GameActionReceipt[];advice?:GameEpisodeAdviceSource[]};
 export type GameEpisodeOptions={
  maximumFences:number;
  scopeCurrent:(owner:Readonly<ActivityOwner>)=>boolean;quarantined:()=>boolean;
@@ -21,6 +21,9 @@ export type GameEpisodeOptions={
  publicationCurrent:(episode:Readonly<G.GameExperienceEpisode>)=>boolean;
  /** Historical source/correction/privacy currency, independent of play authority. */
  retainedSourceCurrent:(episode:Readonly<G.GameExperienceEpisode>)=>boolean;
+ /** Exact authenticated Human reply, original help retention/privacy and
+  * historical attribution. No planning, recipient or resume grant. */
+ adviceSourceCurrent?:(episode:Readonly<G.GameExperienceEpisode>,source:Readonly<GameEpisodeAdviceSource>)=>boolean;
  now?:()=>number;
 };
 const validator=createContractValidator(),schema='https://lifestream.dev/contracts/local-game-activity/1.0.0#/$defs/';
@@ -31,21 +34,14 @@ const ownerOf=(e:G.GameExperienceEpisode):ActivityOwner=>({principalId:e.scope.p
 const freeze=<T>(v:T):T=>{if(v&&typeof v==='object'){for(const child of Object.values(v))freeze(child);Object.freeze(v);}return v;};
 const checked=(fn:()=>boolean)=>{try{return fn()===true;}catch{return false;}};
 const positive=(n:unknown,max:number):n is number=>typeof n==='number'&&Number.isSafeInteger(n)&&n>=1&&n<=max;
-function scrubProjections(tx:Transaction,id:string){
- retireGameHelpForEpisode(tx,id);
- for(const row of tx.all<{id:string;assistant_id:string;provenance_json:string;lifecycle_json:string}>("SELECT id,assistant_id,provenance_json,lifecycle_json FROM memories WHERE json_extract(provenance_json,'$.gameEpisodeId')=?",id)){
-  const p=JSON.parse(row.provenance_json),l=JSON.parse(row.lifecycle_json);
-  tx.run("UPDATE memories SET content='',provenance_json=?,lifecycle_json=? WHERE id=?",JSON.stringify({actor:p.actor,relationshipId:p.relationshipId,gameFamilyKey:p.gameFamilyKey,gameEpisodeKey:p.gameEpisodeKey,payloadRemoved:true}),JSON.stringify({status:'invalidated',revision:Number(l.revision)+1,contentRemoved:true}),row.id);
-  tx.run('UPDATE memory_lifecycle_events SET payload_json=? WHERE memory_id=? AND assistant_id=?',JSON.stringify({payloadRemoved:true}),row.id,row.assistant_id);
- }
-}
+const scrubProjections=eraseGameEpisodeDerivedPayloads;
 export function retireGameExperienceSource(tx:Transaction,id:string,owner:ActivityOwner,state:'forgotten'|'invalidated'){
  tx.run("UPDATE game_experience_episodes SET state=?,payload_json=NULL,revision=revision+1 WHERE episode_id=? AND owner_key=? AND state='retained'",state,id,ownerKey(owner));
  if(tx.get<{n:number}>('SELECT changes() AS n')!.n===1)scrubProjections(tx,id);
 }
 export function retireGameExperience(tx:Transaction,owner?:ActivityOwner):number{
  const rows=owner?tx.all<{episode_id:string}>("SELECT episode_id FROM game_experience_episodes WHERE owner_key=? AND state='retained'",ownerKey(owner)):tx.all<{episode_id:string}>("SELECT episode_id FROM game_experience_episodes WHERE state='retained'");
- for(const row of rows){tx.run("UPDATE game_experience_episodes SET state='invalidated',payload_json=NULL,revision=revision+1 WHERE episode_id=?",row.episode_id);scrubProjections(tx,row.episode_id);}return rows.length;
+ for(const row of rows){tx.run("UPDATE game_experience_episodes SET state='invalidated',payload_json=NULL,revision=revision+1 WHERE episode_id=? AND state='retained'",row.episode_id);if(tx.get<{n:number}>('SELECT changes() AS n')!.n===1)scrubProjections(tx,row.episode_id);}return rows.length;
 }
 /** Called by the existing isolated restore path before any restored source is
  * exposed. This never enables memory, gameplay, replay or native recovery. */
@@ -62,21 +58,27 @@ export class GameExperienceRepository{
   if(!memory||!p||Object.keys(p).sort().join(',')!=='maximumBytes,maximumEpisodes,retentionMs,retentionPolicyRef'||!positive(p.retentionMs,2147483647)||!positive(p.maximumEpisodes,128)||!positive(p.maximumBytes,16384)||typeof p.retentionPolicyRef!=='string'||!p.retentionPolicyRef.trim()||Buffer.byteLength(p.retentionPolicyRef)>2048)throw Error('Independent game memory retention unavailable');
   return freeze({memoryRevision:Number(memory.revision),...p});
  }
- private current(e:G.GameExperienceEpisode,p:ReturnType<GameExperienceRepository['policy']>){try{return this.options.retainedSourceCurrent(e)===true&&isDeepStrictEqual(this.policy(ownerOf(e),e.scope.activityId),p);}catch{return false;}}
+ private current(e:G.GameExperienceEpisode,p:ReturnType<GameExperienceRepository['policy']>){try{
+  if(this.options.retainedSourceCurrent(e)!==true||!isDeepStrictEqual(this.policy(ownerOf(e),e.scope.activityId),p))return false;
+  if(!e.adviceRefs.length||!this.row(e.episodeId))return true;
+  const advice=retainedGameAdviceCustody(this.db,e,this.time(),hash(p));
+  return !!advice&&advice.every(source=>this.options.adviceSourceCurrent?.(e,source)===true)&&isDeepStrictEqual(retainedGameAdviceCustody(this.db,e,this.time(),hash(p)),advice)&&this.options.retainedSourceCurrent(e)===true&&isDeepStrictEqual(this.policy(ownerOf(e),e.scope.activityId),p);
+ }catch{return false;}}
  private row(id:string){return this.db.connection.prepare('SELECT * FROM game_experience_episodes WHERE episode_id=?').get(id) as Row|undefined;}
  private erase(row:Row,state:'invalidated'|'expired'|'forgotten'){this.db.transaction(tx=>{tx.run('UPDATE game_experience_episodes SET state=?,payload_json=NULL,revision=revision+1 WHERE episode_id=? AND revision=?',state,row.episode_id,row.revision);scrubProjections(tx,row.episode_id);});}
  private sources(e:G.GameExperienceEpisode,now:number):GameEpisodeSources|null{
   const s=boundedGameDataSnapshot(this.options.sourceRecordsFor(e),131072) as GameEpisodeSources|null;
-  if(!s||Object.keys(s).sort().join(',')!=='actions,observations'||!Array.isArray(s.observations)||!Array.isArray(s.actions)||s.observations.length!==e.sourceObservationIds.length||s.actions.length!==e.sourceActionIds.length)return null;
+  if(!s||!['actions,observations','actions,advice,observations'].includes(Object.keys(s).sort().join(','))||!Array.isArray(s.observations)||!Array.isArray(s.actions)||s.observations.length!==e.sourceObservationIds.length||s.actions.length!==e.sourceActionIds.length)return null;
   const observations=new Map(s.observations.map(o=>[o.observationId,o])),actions=new Map(s.actions.map(a=>[a.actionId,a]));
   if(observations.size!==s.observations.length||actions.size!==s.actions.length||!e.sourceObservationIds.every(id=>observations.has(id))||!e.sourceActionIds.every(id=>actions.has(id)))return null;
   if(s.observations.some(o=>!validator.validate(schema+'GameObservation',o).valid||!isDeepStrictEqual(o.scope,e.scope)||o.pinsDigest!==e.pinsDigest||o.frameNumber<e.frameRange.from||o.frameNumber>e.frameRange.to||Date.parse(o.capturedAt)<Date.parse(e.occurredFrom)||Date.parse(o.capturedAt)>Date.parse(e.occurredTo)||Date.parse(o.receivedAt)<Date.parse(o.capturedAt)||Date.parse(o.receivedAt)>now||o.interpretedAt!==null&&(Date.parse(o.interpretedAt)<Date.parse(o.receivedAt)||Date.parse(o.interpretedAt)>now)||o.screenshots.some(f=>f.frameNumber!==o.frameNumber||f.capturedAt!==o.capturedAt)))return null;
   if(!isDeepStrictEqual([...e.sourceAdmissionIds].sort(),s.actions.map(a=>a.admissionId).sort())||s.actions.some(a=>!validator.validate(schema+'GameActionReceipt',a).valid||!isDeepStrictEqual(a.scope,e.scope)||!['started','completed','failed','cancelled','outcomeUnknown'].includes(a.disposition)||a.startedAt===null||a.beforeFrame===null||a.beforeFrame<e.frameRange.from||a.beforeFrame>e.frameRange.to||Date.parse(a.startedAt)<Date.parse(e.occurredFrom)||Date.parse(a.recordedAt)>Date.parse(e.recordedAt)||Date.parse(a.startedAt)>Date.parse(a.recordedAt)||a.completedAt!==null&&(Date.parse(a.completedAt)<Date.parse(a.startedAt)||Date.parse(a.completedAt)>Date.parse(a.recordedAt))||a.afterFrame!==null&&(a.afterFrame<a.beforeFrame||a.afterFrame>e.frameRange.to)||!s.observations.some(o=>(o.previousActionId===a.actionId||a.resultingObservationIds.includes(o.observationId))&&o.frameNumber>=a.beforeFrame!&&Date.parse(o.capturedAt)>=Date.parse(a.startedAt!))))return null;
+  if(!Array.isArray(s.advice??[])||(s.advice??[]).some(a=>!a||typeof a!=='object')||(s.advice??[]).length!==e.adviceRefs.length||new Set((s.advice??[]).map(a=>a.adviceRef)).size!==e.adviceRefs.length||(s.advice??[]).some(a=>!gameAdviceCustodyBinding(this.db,e,a,now,hash(this.policy(ownerOf(e),e.scope.activityId)))||!checked(()=>this.options.adviceSourceCurrent?.(e,a)===true)))return null;
   return freeze(s);
  }
  admit(raw:G.GameExperienceEpisode):boolean{
   const now=this.time(),e=gameEpisodeSnapshot(raw,now);if(!e)return false;freeze(e);const o=freeze(ownerOf(e)),p=this.policy(o,e.scope.activityId);
-  if(e.rawEvidenceAvailability!=='notRetained'||e.adviceRefs.length>0||e.retentionPolicyRef!==p.retentionPolicyRef||Date.parse(e.expiresAt)>Date.parse(e.occurredFrom)+p.retentionMs||Buffer.byteLength(JSON.stringify(e))>p.maximumBytes)return false;
+  if(e.rawEvidenceAvailability!=='notRetained'||e.retentionPolicyRef!==p.retentionPolicyRef||Date.parse(e.expiresAt)>Date.parse(e.occurredFrom)+p.retentionMs||Buffer.byteLength(JSON.stringify(e))>p.maximumBytes)return false;
   const sources=this.sources(e,now);if(!sources||!checked(()=>this.options.meaningfulGroundingCurrent(e,sources)&&this.options.publicationCurrent(e))||!this.current(e,p))return false;
   const sourceKeys=[...e.sourceObservationIds.map(id=>'observation:'+id),...e.sourceActionIds.map(id=>'action:'+id)].map(id=>hash([ownerKey(o),e.scope.campaignId,id]));
   return this.db.transaction(tx=>{
@@ -85,6 +87,7 @@ export class GameExperienceRepository{
    if(!this.current(e,p)||!checked(()=>this.options.publicationCurrent(e)))return false;
    tx.run("INSERT INTO game_experience_episodes VALUES(?,?,?,?,?,?,?,'retained',?)",e.episodeId,ownerKey(o),e.revision,gameEpisodeFamilyKey(e),hash(p),gameEpisodeDigest(e),Date.parse(e.expiresAt),JSON.stringify(e));
    for(const k of sourceKeys)tx.run('INSERT INTO game_experience_sources VALUES(?,?)',k,e.episodeId);
+   const bindings=(sources.advice??[]).map(a=>gameAdviceCustodyBinding(this.db,e,a,this.time(),hash(p)));if(bindings.some(b=>!b))throw Error('Game advice custody changed during admission');storeGameAdviceCustody(tx,e,bindings.filter(b=>b!==null));
    const finalSources=this.sources(e,this.time());
    if(!finalSources||!isDeepStrictEqual(finalSources,sources)||!checked(()=>this.options.meaningfulGroundingCurrent(e,finalSources)&&this.options.publicationCurrent(e))||!this.current(e,p)||!isDeepStrictEqual(this.sources(e,this.time()),sources)||tx.get<{revision:number}>('SELECT revision FROM automatic_memory_policies WHERE principal_id=? AND assistant_id=? AND relationship_id IS ? AND enabled=1',o.principalId,o.assistantId,o.relationshipId)?.revision!==p.memoryRevision||this.time()>=Date.parse(e.expiresAt))throw Error('Game episode changed during admission');return true;
   });

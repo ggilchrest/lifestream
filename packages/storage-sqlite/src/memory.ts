@@ -1,6 +1,7 @@
 import { randomUUID,createHash } from "node:crypto";
 import {gameProjectionSnapshot,gameEpisodeFamilyKey,gameEpisodeDigest} from '@lifestream/contracts/game-memory';
 import {retireGameExperienceSource} from './game-experience.ts';
+import {retireGameAdviceDependents} from './game-advice-custody.ts';
 import {boundedGameDataSnapshot} from '@lifestream/contracts/game-journal';
 import type {GameExperienceEpisode,GameMemoryBinding} from '@lifestream/contracts/game-activity';
 import {validateVisualMemoryProjection} from '@lifestream/contracts/visual-memory';
@@ -195,6 +196,7 @@ export class MemoryRepository {
       if (currentEvent?.revision !== event.revision - 1) throw new Error("correction revision conflict");
       tx.run("UPDATE memories SET lifecycle_json=? WHERE id=? AND assistant_id=? AND json_extract(lifecycle_json,'$.revision')=?", JSON.stringify(retired), id, assistantId, expectedRevision);
       if (tx.get<{ changes: number }>("SELECT changes() AS changes")?.changes !== 1) throw new Error("correction revision conflict");
+      retireGameAdviceDependents(tx,'memory',id);
       tx.run("INSERT INTO memories VALUES (?,?,?,?,?,?)", corrected.id, assistantId, corrected.content, JSON.stringify(corrected.provenance), JSON.stringify(corrected.lifecycle), now);
       tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?,?,?,?,?,?)", id, assistantId, event.revision, event.eventType, JSON.stringify(event.payload), now);
       tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?,?,?,?,?,?)", corrected.id, assistantId, 1, "created", JSON.stringify(corrected.lifecycle), now);
@@ -216,7 +218,7 @@ export class MemoryRepository {
     const provenance=structuredClone(existing.provenance);if(gameMarked(existing))(provenance.canonical as {status:string}).status=status;
     const lifecycle = { ...existing.lifecycle, status, revision: previousRevision + 1, changedBy: actor, ...(reason ? { reason } : {}) };
     if (this.database) {
-      this.database.transaction((tx) => { const eventRevision = tx.get<{ revision: number }>("SELECT COALESCE(MAX(revision), 0) + 1 AS revision FROM memory_lifecycle_events WHERE memory_id = ? AND assistant_id = ?", id, assistantId)?.revision ?? 1; tx.run("UPDATE memories SET provenance_json=?,lifecycle_json = ? WHERE assistant_id = ? AND id = ? AND json_extract(lifecycle_json, '$.revision') = ? AND json_extract(lifecycle_json, '$.status') = ?", JSON.stringify(provenance),JSON.stringify(lifecycle), assistantId, id, previousRevision, currentStatus); if ((tx.get<{ changes: number }>("SELECT changes() AS changes")?.changes ?? 0) !== 1) throw new Error("memory revision conflict"); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, eventRevision, "lifecycleChanged", JSON.stringify(lifecycle), new Date().toISOString()); });
+      this.database.transaction((tx) => { const eventRevision = tx.get<{ revision: number }>("SELECT COALESCE(MAX(revision), 0) + 1 AS revision FROM memory_lifecycle_events WHERE memory_id = ? AND assistant_id = ?", id, assistantId)?.revision ?? 1; tx.run("UPDATE memories SET provenance_json=?,lifecycle_json = ? WHERE assistant_id = ? AND id = ? AND json_extract(lifecycle_json, '$.revision') = ? AND json_extract(lifecycle_json, '$.status') = ?", JSON.stringify(provenance),JSON.stringify(lifecycle), assistantId, id, previousRevision, currentStatus); if ((tx.get<{ changes: number }>("SELECT changes() AS changes")?.changes ?? 0) !== 1) throw new Error("memory revision conflict"); tx.run("INSERT INTO memory_lifecycle_events (memory_id, assistant_id, revision, event_type, payload_json, occurred_at) VALUES (?, ?, ?, ?, ?, ?)", id, assistantId, eventRevision, "lifecycleChanged", JSON.stringify(lifecycle), new Date().toISOString()); if(status!=='active')retireGameAdviceDependents(tx,'memory',id); });
       return this.get(assistantId, id)??(gameMarked(existing)&&status==='invalidated'?this.getForPrivacy(assistantId,id,actor):undefined);
     }
     const updated = { ...existing,provenance, lifecycle }; this.records.set(id, updated); const events = this.events.get(id) ?? []; events.push({ memoryId: id, assistantId, revision: (events.at(-1)?.revision ?? 0) + 1, eventType: "lifecycleChanged", payload: structuredClone(lifecycle), occurredAt: new Date().toISOString() }); this.events.set(id, events); return structuredClone(updated);
@@ -241,6 +243,7 @@ export class MemoryRepository {
       if(tx.get<{changes:number}>("SELECT changes() AS changes")?.changes!==1)throw new Error("memory revision conflict");
       tx.run("UPDATE memory_lifecycle_events SET payload_json=? WHERE assistant_id=? AND memory_id=?",JSON.stringify({payloadRemoved:true}),assistantId,id);
       tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",id,assistantId,journalRevision,"forgotten",JSON.stringify(payload),occurredAt);
+      retireGameAdviceDependents(tx,'memory',id);
       if(existing.provenance.gameEpisodeId)retireGameExperienceSource(tx,String(existing.provenance.gameEpisodeId),{principalId:String(existing.provenance.actor),assistantId,relationshipId:existing.provenance.relationshipId as string|null},'forgotten');
       if(existing.provenance.visualEpisodeId){tx.run("UPDATE memory_lifecycle_events SET payload_json=? WHERE memory_id=? AND assistant_id=?",JSON.stringify({payloadRemoved:true}),`visual-episode:${existing.provenance.visualEpisodeId}`,assistantId);tx.run("UPDATE visual_observation_episodes SET state='forgotten',payload_json=NULL,revision=revision+1 WHERE episode_id=? AND state='retained' AND json_extract(payload_json,'$.memoryRecordId')=?",existing.provenance.visualEpisodeId,id);}
     });

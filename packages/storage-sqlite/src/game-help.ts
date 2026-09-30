@@ -6,6 +6,7 @@ import {gameEpisodeSnapshot,gameEpisodeDigest} from '@lifestream/contracts/game-
 import type {GameHelpItem,GameExperienceEpisode} from '@lifestream/contracts/game-activity';
 import type {ActivityOwner} from './game-activity.ts';
 import type {Database,Transaction} from './database.ts';
+import {retireGameAdviceDependents} from './game-advice-custody.ts';
 export type GameHelpRetention={revision:number;policyRef:string;retentionMs:number;maximumItems:number;maximumBytes:number};
 export type GameHelpOptions={
  maximumFences:number;scopeCurrent:(owner:Readonly<ActivityOwner>)=>boolean;quarantined:()=>boolean;
@@ -36,7 +37,9 @@ const unavailable=()=>Error('Current bounded pending game help unavailable');
  * database has no help payload; it never acquires one via this cleanup. */
 export function retireGameHelpForEpisode(tx:Transaction,episodeId:string){
  if(!tx.get("SELECT 1 FROM sqlite_master WHERE type='table' AND name='game_help_items'"))return;
+ const ids=tx.all<{help_id:string}>('SELECT help_id FROM game_help_items WHERE episode_id=?',episodeId);
  tx.run("UPDATE game_help_items SET state='invalidated',payload_json=NULL,payload_digest=NULL,revision=revision+1 WHERE episode_id=? AND state='pending'",episodeId);
+ for(const h of ids)retireGameAdviceDependents(tx,'help',h.help_id);
 }
 /** A pending metadata ledger only. No dispatcher, enrollment, retries,
  * attachment bytes, automatic resume or channel-outcome mutation exists. */
@@ -67,7 +70,7 @@ export class GameHelpRepository{
    if(!this.current(item,e,p,revision,situation)||this.time()>=v.expiresAt||!this.current(item,e,p,revision,situation)||this.time()>=v.expiresAt)throw unavailable();return true;
   });
  }
- private erase(row:Row,state:'forgotten'|'expired'|'invalidated'){this.db.connection.prepare('UPDATE game_help_items SET state=?,payload_json=NULL,payload_digest=NULL,revision=revision+1 WHERE help_id=? AND revision=? AND state=?').run(state,row.help_id,row.revision,'pending');}
+ private erase(row:Row,state:'forgotten'|'expired'|'invalidated'){this.db.transaction(tx=>{tx.run('UPDATE game_help_items SET state=?,payload_json=NULL,payload_digest=NULL,revision=revision+1 WHERE help_id=? AND revision=? AND state=?',state,row.help_id,row.revision,'pending');if(tx.get<{n:number}>('SELECT changes() AS n')!.n===1)retireGameAdviceDependents(tx,'help',row.help_id);});}
  get(raw:ActivityOwner,id:string){
   const o=this.owner(raw),now=this.time();if(!checked(()=>this.options.quarantined()===false&&this.options.scopeCurrent(o)))return null;
   const row=this.db.connection.prepare('SELECT * FROM game_help_items WHERE help_id=? AND owner_key=?').get(id,ownerKey(o)) as Row|undefined;if(!row||row.state!=='pending'||!row.payload_json)return null;if(now>=row.expires_at){this.erase(row,'expired');return null;}

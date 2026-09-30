@@ -48,3 +48,20 @@ qualified. Each Linux/Windows graphical ordinary-speed platform and selected
 provider needs its own actual evidence, including display loss, stationary-frame
 pause, durable ordinary save readback/restart/load and honest unsaved loss.
 Paired speech/resource tests and Human relevance/control are also separate gates.
+
+Advice-bearing episode admission additionally requires separately retained active
+Human input with its real activation history and exact owner, original turn,
+quote transformation and revision. The original help item and independent source
+retention must still be eligible; episode retention cannot outlive that question
+custody. Host qualification of the actual question delivery and authenticated
+reply remains mandatory on admission and historical reuse. The exact selected
+advice object can expose inert source references; a copied wrapper cannot.
+
+Additive custody metadata links these sources to the episode and canonical
+unverified experiential projection. It retains bounded source references, never
+a second advice quote or recipient configuration. Forgetting/correction of the
+Human input, help withdrawal, source erasure and restore quarantine remove
+dependent episode/projection payloads transactionally; opaque fences survive.
+Dependency cascades do not erase independent Human input. This source path does
+not send help, authenticate a channel, dispatch an action, prove advice success
+or promote installed/native platform qualification.

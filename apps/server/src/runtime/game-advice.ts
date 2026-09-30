@@ -21,12 +21,19 @@ export type GameAdvicePorts={
  adviceRelevantCurrent:(reply:Readonly<GameAdviceReply>,observation:Readonly<GameObservation>)=>boolean;
  now?:()=>number;
 };
-const adviceSources=new WeakMap<GameAdviceSelection,{scope:ActivityScope;observationId:string;observationRevision:number;pinsDigest:string;historicalSourceCurrent:()=>boolean}>();
+const adviceSources=new WeakMap<GameAdviceSelection,{scope:ActivityScope;observationId:string;observationRevision:number;pinsDigest:string;historicalSourceCurrent:()=>boolean;reply:GameAdviceReply}>();
 /** Exact minted source identity, not a model's copied attribution wrapper. */
 /** Historical custody only, never current context, planning or resume authority. */
 export function gameAdviceHistoricalSourceCurrent(advice:GameAdviceSelection):boolean{try{return adviceSources.get(advice)?.historicalSourceCurrent()===true;}catch{return false;}}
 export function gameAdviceMatchesResultPins(advice:GameAdviceSelection,observation:GameObservation):boolean{const source=adviceSources.get(advice);return !!source&&source.pinsDigest===observation.pinsDigest&&isDeepStrictEqual(source.scope,observation.scope);}
 export function gameAdviceMatchesDecision(advice:GameAdviceSelection,decision:import('@lifestream/contracts/game-activity').GameDecisionInput):boolean{try{const source=adviceSources.get(advice);return !!source&&gameAdviceHistoricalSourceCurrent(advice)&&isDeepStrictEqual(source.scope,decision.scope)&&source.observationId===decision.observationId&&source.observationRevision===decision.observationRevision&&!!advice.adviceRef&&decision.adviceRefs.includes(advice.adviceRef);}catch{return false;}}
+/** Only a genuinely selected authenticated source can expose its retention
+ * bindings. The returned data is not authority; custody must be requalified. */
+export function gameAdviceEpisodeSource(advice:GameAdviceSelection):import('@lifestream/storage-sqlite').GameEpisodeAdviceSource|null{
+ try{const source=adviceSources.get(advice);if(!source||!advice.adviceRef||!gameAdviceHistoricalSourceCurrent(advice))return null;const r=source.reply;
+  return Object.freeze({adviceRef:advice.adviceRef,helpId:r.helpId,helpRevision:r.helpRevision,memoryId:r.memoryId,memoryRevision:r.memoryRevision,sourceTurnRef:r.sourceTurnRef,sourceSessionRef:r.sourceSessionRef,receivedAt:r.receivedAt,questionDeliveryEvidenceRef:r.questionDeliveryEvidenceRef,authenticatedReplyEvidenceRef:r.authenticatedReplyEvidenceRef});
+ }catch{return null;}
+}
 export type GameAdviceSelection=Readonly<{state:'selected'|'unavailable';adviceRef:string|null;entry:CampaignJournal['entries'][number]|null;content:string|null;digest:string|null;isCurrent:()=>boolean;playAuthority:false;resumeAuthority:false;sendAuthority:false}>;
 const validator=createContractValidator(),schema='https://lifestream.dev/contracts/local-game-activity/1.0.0#/$defs/';
 const digest=(v:unknown)=>createHash('sha256').update(JSON.stringify(v)).digest('hex');
@@ -55,5 +62,5 @@ export function selectGameAdvice(raw:{scope:ActivityScope;reply:GameAdviceReply;
  const h=digest([owner,r.helpId,r.memoryId,r.sourceTurnRef]),id=`${h.slice(0,8)}-${h.slice(8,12)}-5${h.slice(13,16)}-8${h.slice(17,20)}-${h.slice(20,32)}`,adviceRef=`game-advice:${id}`;
  const entry:CampaignJournal['entries'][number]=freeze({entryId:id,kind:'humanAdvice',epistemicKind:'humanAdvice',content:memory.content,sourceRefs:[`game-help:${r.helpId}:${r.helpRevision}`,`memory:${memory.id}:${r.memoryRevision}:${memoryDigest}`,r.authenticatedReplyEvidenceRef],sourceSessionRef:r.sourceSessionRef,recordedAt:r.receivedAt,limitations:['Attributed authenticated input, not an observed game outcome or proof the advice works.','Advice cannot execute code, widen tools or grant play/resume/contact authority.']});
  const content=JSON.stringify({sourceKind:'attributedGameHumanAdvice',untrusted:true,sourceType:'participantStatement',adviceRef,helpId:r.helpId,scope:s,originalSourceTurnRef:r.sourceTurnRef,originalHumanSessionRef:r.sourceSessionRef,memoryId:r.memoryId,memoryRevision:r.memoryRevision,quotedAdvice:r.quotedAdvice,receivedAt:r.receivedAt,freshObservationId:o.observationId,freshObservationRevision:o.revision,observationCapturedAt:o.capturedAt,epistemicKind:'humanAdvice',limitations:entry.limitations});
- if(!validator.validate(schema+'CampaignJournal/properties/entries/items',entry).valid||Buffer.byteLength(content)>v.maximumBytes||!isCurrent())return unavailable();const selection:GameAdviceSelection=freeze({state:'selected',adviceRef,entry,content,digest:createHash('sha256').update(content).digest('hex'),isCurrent,playAuthority:false,resumeAuthority:false,sendAuthority:false});adviceSources.set(selection,{scope:s,observationId:o.observationId,observationRevision:o.revision,pinsDigest:o.pinsDigest,historicalSourceCurrent});return selection;
+ if(!validator.validate(schema+'CampaignJournal/properties/entries/items',entry).valid||Buffer.byteLength(content)>v.maximumBytes||!isCurrent())return unavailable();const selection:GameAdviceSelection=freeze({state:'selected',adviceRef,entry,content,digest:createHash('sha256').update(content).digest('hex'),isCurrent,playAuthority:false,resumeAuthority:false,sendAuthority:false});adviceSources.set(selection,{scope:s,observationId:o.observationId,observationRevision:o.revision,pinsDigest:o.pinsDigest,historicalSourceCurrent,reply:r});return selection;
 }
