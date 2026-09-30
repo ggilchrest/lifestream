@@ -1,0 +1,205 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "sliceStatus": "inProgress",
+  "component": "original-transaction canonical visual activation source and privacy-preserved mutation identity",
+  "componentStatus": "verified",
+  "recordedAt": "2026-09-30T23:13:15.080645Z",
+  "sourceRevision": "4afc148068043c1d0e8f9f10d5b07829d01df7bd",
+  "sourceFiles": [
+    "packages/storage-sqlite/src/visual-memory.ts",
+    "packages/storage-sqlite/src/memory.ts",
+    "packages/storage-sqlite/test/visual-activation-evidence.test.ts",
+    "docs/visual-conversation-acceptance.md"
+  ],
+  "ownedOperation": {
+    "operation": "S090 original-transaction visual activation source exact-revision full source suite",
+    "sourceRevision": "4afc148068043c1d0e8f9f10d5b07829d01df7bd",
+    "startedAt": "2026-09-30T23:09:53.479396+00:00",
+    "wrapperPid": 56739,
+    "log": "/tmp/tifa-s090-visual-activation-owner-full.log",
+    "status": "completed",
+    "childPid": 56748,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T23:11:52.652130+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "4afc148068043c1d0e8f9f10d5b07829d01df7bd",
+      "pass": 2564,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 118959.103125
+    },
+    "focused": {
+      "pass": 155,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 7283.397
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 7954.654916
+    },
+    "packetAndBootstrap": {
+      "pass": 48,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 24467.1135
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types apps/server/test/visual-memory.test.ts apps/server/test/visual-memory-publication.test.ts apps/server/test/visual-memory-candidate-evidence.test.ts apps/server/test/automatic-memory.test.ts apps/server/test/game-advice-memory.test.ts packages/storage-sqlite/test/visual-activation-evidence.test.ts packages/storage-sqlite/test/visual-memory.test.ts",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "pnpm lint",
+    "npm --prefix .private run validate",
+    "node --test scripts/qualify-visual-conversation.test.mjs scripts/workspace.test.mjs",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Existing SQLite activation/canonical mutation/validation metadata share actual transaction; rollback and retry, real close/reopen, exact artifact hash/bytes and published MemoryLifecycleEvent validation; actual source/policy/privacy/correction/clock and tamper fences; opaque real UUID retained through existing source and MemoryRepository erasure, independent Human record and ordinary legacy receipt unchanged. Isolated authenticated HTTP memory/advice/publication regressions.",
+    "scripted": "Visual observations, subject association and transformation estimate are explicit synthetic fixtures. No actual camera/image provider/native game/control/save/remote contact/performance/platform/Human acceptance."
+  },
+  "semantics": [
+    "New activation persists an actual canonical MemoryLifecycleEvent UUID/old-new revisions/actor/source and exact redacted validation metadata within original existing SQLite lifecycle payload. No new schema/table/migration, database/engine or authority owner.",
+    "Artifact binds actual candidate record/source digest, current owned consent, typed retained uncorrected source, revision and scope capacity checks; transformation/perception remains unverified. No scene/input/basis prose, prompts or hidden reasoning.",
+    "Rollback persists neither activation nor receipt. Duplicate activation does not mint another identity; close/reopen preserves actual source. Legacy/missing rows are never upcast with fabricated IDs.",
+    "Existing owned read validates envelope/artifact and current retained source; wrong owner, source/artifact/revision/scope, consent/expiry/correction/rollback withhold source. No receipt is eligibility or live authority.",
+    "Existing erasure preserves only the actual opaque UUID and removes validation/source body; repeated erasure does not discard or mint IDs. Invalid UUID metadata is erased. Independent Human record and ordinary legacy receipts stay unchanged."
+  ],
+  "initialFailures": [
+    {
+      "log": "tifa-s090-visual-activation-owner-focused-initial.log",
+      "result": "Initial activation source/rollback/restart/privacy focused suite passed."
+    },
+    {
+      "log": "tifa-s090-visual-activation-owner-focused-failed.log",
+      "reason": "Added malformed-JSON fault fixture was rejected at its own write by existing database JSON indexing, before erasure. Replaced with valid JSON containing a non-UUID private field; existing database guard unchanged."
+    },
+    {
+      "log": "tifa-s090-visual-activation-owner-integration-failed.log",
+      "reason": "Same fixture-only write failure in wider run retained; affected corrected integration rerun passed155."
+    }
+  ],
+  "limitations": [
+    "Whole S090 visual lifecycle trace/replay and durable trace sink remain incomplete; new metadata trace is not source currency, actual recall, provider admission, reply delivery or effect proof.",
+    "New visual activation has original-transaction canonical source evidence; legacy/other lifecycle rows remain missing. Asynchronous published lifecycle projection and complete joined replay remain next; no historical IDs fabricated.",
+    "Actual reviewed native bridge/decoder/GUI/pause/ordinary-save, selected image-provider/lease/resources/performance, permitted help delivery/authentication and Human gates remain open.",
+    "S093 advice assessment only; generic extraction unchanged and no cross-game acceptance inferred.",
+    "Primary S066/full LS-TEST-084 and accepted original24/iPhone journeys preserved. Selected callback/causal failures and900msmedian/1500msp95onset targets unwaived. No push/publication/deployment/new private export or live effect."
+  ],
+  "nextAction": "Continue S090 asynchronous canonical lifecycle projection from genuine existing-owner activation evidence and candidate/lifecycle/finalized-memory joins with isolated semantic replay. Legacy/missing source history stays partial; actual provider/native/platform/performance/Human and permitted help integration remain distinct. New generic memory-selection amendment stays proposed; no deployment, export or live effect.",
+  "logDigests": {
+    "tifa-s090-visual-activation-owner-browser.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-browser.log",
+      "sha256": "8af29ad76aabeb184f3e10cc8066eea1a6e10b2184c4ea3a757149097eb7f459",
+      "bytes": 23867
+    },
+    "tifa-s090-visual-activation-owner-build-final.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-build-final.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s090-visual-activation-owner-build.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-build.log",
+      "sha256": "70d9b14e8ee2456fa94543f1a04fe8989f2db90b2f76905d6b24cc02cf2c08af",
+      "bytes": 1074
+    },
+    "tifa-s090-visual-activation-owner-diff.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-visual-activation-owner-focused-failed.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-focused-failed.log",
+      "sha256": "81d7da9495e8db007765e76b830bca88248e78ffefa9a80b47ba6b5ae02ec853",
+      "bytes": 6503
+    },
+    "tifa-s090-visual-activation-owner-focused-initial.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-focused-initial.log",
+      "sha256": "17b64390e23eff1260dfdfe636fc933278d3b09c169df9689b9ea2bfc7492636",
+      "bytes": 5518
+    },
+    "tifa-s090-visual-activation-owner-focused.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-focused.log",
+      "sha256": "3133a2288598b749170c40e848c3d0c4cbf36302eb87df3d02971b628ac6b9af",
+      "bytes": 5501
+    },
+    "tifa-s090-visual-activation-owner-full.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-full.log",
+      "sha256": "033224897f97f462923f7719d07d12e137a8ee6273b1222eb37659e015741fee",
+      "bytes": 273625
+    },
+    "tifa-s090-visual-activation-owner-integration-failed.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-integration-failed.log",
+      "sha256": "dc5f701b514fb393e2400ac162b1e345022c870346d1fb6aa3c83997ab8d69f1",
+      "bytes": 16084
+    },
+    "tifa-s090-visual-activation-owner-integration.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-integration.log",
+      "sha256": "026b734f32213c48189d68283b81dba6ae1e45c63607ec754ec128c599fffac6",
+      "bytes": 15086
+    },
+    "tifa-s090-visual-activation-owner-lint-final.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-visual-activation-owner-lint.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-visual-activation-owner-packet.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-packet.log",
+      "sha256": "5c43051d84a44dfc388629c865ece757c20e2d117b5146b6c1e86a5f100b94a6",
+      "bytes": 4536
+    },
+    "tifa-s090-visual-activation-owner-preflight.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s090-visual-activation-owner-private.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-private.log",
+      "sha256": "04786ef58f7a59b290fff7eea375c7876bd30f66b92457d41bd122246010d4e7",
+      "bytes": 28896
+    },
+    "tifa-s090-visual-activation-owner-resume-preflight.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-resume-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s090-visual-activation-owner-typecheck-final.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-visual-activation-owner-typecheck.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-visual-activation-owner-workspace.log": {
+      "path": "/tmp/tifa-s090-visual-activation-owner-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
