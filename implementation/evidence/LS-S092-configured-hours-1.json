@@ -1,0 +1,206 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S092",
+  "operation": "explicitConfiguredPlayAndContactCalendarSelection",
+  "status": "verified",
+  "qualificationScope": "Scoped software component; whole S092 inProgress",
+  "sourceRevision": "1a4a8730b92e63ba5c21f4ee714c8dfd67b0887f",
+  "baseRevision": "1c9e072c302e961c5ae76ea4aeb7275efa0aa2ea",
+  "recordedAt": "2026-09-30T10:45:02.742928Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      ".private/roadmap/packets/LS-S092.json": "b9993aa53b3f760784102f6e0ca1f9f6619f1746640e2ff72524287d6ae5df46",
+      ".private/docs/31-local-game-activity.md": "fa81107f2eb216686b989b269d3a39cc9798681f11511f8e1e0698b1e10d4238",
+      "packages/contracts/src/schemas/local-game-activity.schema.json": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+    },
+    "exactSchemaApproval": "LS-DEC-050; bytes unchanged; no new export"
+  },
+  "claims": {
+    "explicitConfiguredIanaTimezoneAndFiniteBoundsOnly": true,
+    "separatePlayAndContactHoursNoInventedSetup": true,
+    "halfOpenNonoverlappingLocalDayWindows": true,
+    "realIntlCalendarDstRepeatAndMissingHourProof": true,
+    "sameOccurrenceIdentityAcrossDstRepeatAndNewRun": true,
+    "authenticImmutableSelectionAndHeldPolicyClockCalendarFencing": true,
+    "hostCurrentPolicyRequiredIncludingChangedLiveBytes": true,
+    "calendarSelectionGrantsNoAuthority": true,
+    "durableOccurrenceClaimsRestartDeduplicationLifecycleAndHostWiringComplete": false,
+    "actualScheduleEnrollmentStartContactOrNativeGameProof": false,
+    "installedCandidateChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 41,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 587.497333
+    },
+    "fullSource": {
+      "revision": "1a4a8730b92e63ba5c21f4ee714c8dfd67b0887f",
+      "pass": 1858,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 98804.028125
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 5677.349041
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "workspaceCheck": "pass"
+  },
+  "mappedCases": [
+    "LS-TEST-174",
+    "LS-TEST-175",
+    "LS-TEST-176",
+    "LS-TEST-177"
+  ],
+  "commands": [
+    "node --test --experimental-strip-types packages/runtime/test/activity-policy.test.ts",
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --check",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "retainedFailures": [
+    {
+      "log": "tifa-s092-hours-full.log",
+      "pass": 1572,
+      "fail": 286,
+      "skip": 1,
+      "durationMs": 39207.039625,
+      "reason": "Sandbox refused temporary loopback test listeners with EPERM; authorized isolated rerun passed at unchanged source."
+    },
+    {
+      "log": "tifa-s092-hours-browser.log",
+      "pass": 75,
+      "fail": 2,
+      "skip": 86,
+      "durationMs": 5481.548791,
+      "reason": "Sandbox refused temporary loopback review hosts with EPERM; authorized isolated rerun passed at unchanged source."
+    }
+  ],
+  "proofKinds": {
+    "real": "Actual Intl IANA/DST calendar calculations, canonical runtime validation and source regressions",
+    "scripted": "Configured policy/budgets and current source callbacks; no actual enrollment, schedule, recipient, emulator or game"
+  },
+  "exclusions": [
+    "Durable occurrence claiming/rolling-start limits/restart deduplication, lifecycle admission and runtime host wiring",
+    "Actual native/controller/ordinary-save/display/platform/model/performance/Human qualification; whole S091/S092 remain inProgress",
+    "S090 full visual trace/replay; S093 grounded memory/help/return conversation; S094 qualification",
+    "S089 automatic appearance comparisons, primary S066/full LS-TEST-084 and selected-model/onset failure gates",
+    "Installed candidate promotion or live camera/game/save/schedule/contact/provider effects, deployment, push/publication/private exports"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue durable configured-hours occurrence admission and paused-run lifecycle fencing, then integrate existing runtime host checkpoint/planning ports; preserve missing actual setup/native/provider/platform/Human gates.",
+  "logDigests": {
+    "tifa-s092-hours-browser-authorized.log": {
+      "path": "/tmp/tifa-s092-hours-browser-authorized.log",
+      "sha256": "bcadc6afaf7542d3fe434ce2e82cafc8d132af8e6caf4b304302c6f8f84c4a2e",
+      "bytes": 23869
+    },
+    "tifa-s092-hours-browser.log": {
+      "path": "/tmp/tifa-s092-hours-browser.log",
+      "sha256": "5029b19925feb99933747a18a727af821d1acbaee90a4bf75a4314717ed1edd5",
+      "bytes": 25300
+    },
+    "tifa-s092-hours-build-final.log": {
+      "path": "/tmp/tifa-s092-hours-build-final.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s092-hours-build.log": {
+      "path": "/tmp/tifa-s092-hours-build.log",
+      "sha256": "14b2de3ae2388bd403a73838e989c793b470a54b69d927582de20898379a42aa",
+      "bytes": 1074
+    },
+    "tifa-s092-hours-focused-final.log": {
+      "path": "/tmp/tifa-s092-hours-focused-final.log",
+      "sha256": "6b21294b93a7d467944844c9b42df5cb14f98b9149bc63c6f2fd8b37390b85b4",
+      "bytes": 3279
+    },
+    "tifa-s092-hours-focused-initial.log": {
+      "path": "/tmp/tifa-s092-hours-focused-initial.log",
+      "sha256": "dc892f0ffee76c820090561fe14da26e5492d3b06a2e032d6ecda66d603a53fc",
+      "bytes": 3149
+    },
+    "tifa-s092-hours-full-authorized.log": {
+      "path": "/tmp/tifa-s092-hours-full-authorized.log",
+      "sha256": "a3edc121fbb0fb142a934872095bf32371601937ab833bb196b7e1cc4b4f7d9c",
+      "bytes": 208785
+    },
+    "tifa-s092-hours-full.log": {
+      "path": "/tmp/tifa-s092-hours-full.log",
+      "sha256": "fff03fa5de2e154f72699212721c2504685afdce881d38cd5431e50895e5daf4",
+      "bytes": 355757
+    },
+    "tifa-s092-hours-generated-game.log": {
+      "path": "/tmp/tifa-s092-hours-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s092-hours-generated-original.log": {
+      "path": "/tmp/tifa-s092-hours-generated-original.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s092-hours-lint-final.log": {
+      "path": "/tmp/tifa-s092-hours-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-hours-lint.log": {
+      "path": "/tmp/tifa-s092-hours-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-hours-preflight.log": {
+      "path": "/tmp/tifa-s092-hours-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s092-hours-private.log": {
+      "path": "/tmp/tifa-s092-hours-private.log",
+      "sha256": "b70406c8f25e14445fb463f49fd5e82b906865827fd8b8c92c17176829ff53a4",
+      "bytes": 28886
+    },
+    "tifa-s092-hours-typecheck-final.log": {
+      "path": "/tmp/tifa-s092-hours-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-hours-typecheck-initial.log": {
+      "path": "/tmp/tifa-s092-hours-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-hours-typecheck.log": {
+      "path": "/tmp/tifa-s092-hours-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-hours-workspace.log": {
+      "path": "/tmp/tifa-s092-hours-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
