@@ -1,0 +1,266 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S091",
+  "operation": "typedGuardedAdapterBoundary",
+  "status": "verified",
+  "qualificationScope": "Scoped software component only; whole S091 inProgress",
+  "sourceRevision": "305949929e2e467e3161a1fc756cbc5a4bfaadce",
+  "baseRevision": "b73baae9bfbdb7614b7198c5d1563d05716d134f",
+  "recordedAt": "2026-09-30T07:49:24.484267Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      ".private/roadmap/packets/LS-S091.json": "a9cb48109604400566d884f9cbbc2432426b53ca113603d9bbdd0871221da209",
+      ".private/docs/31-local-game-activity.md": "fa81107f2eb216686b989b269d3a39cc9798681f11511f8e1e0698b1e10d4238",
+      "packages/contracts/src/schemas/local-game-activity.schema.json": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+    },
+    "exactSchemaApproval": "LS-DEC-050; existing copied bytes unchanged; no additional export"
+  },
+  "mappedCases": [
+    "LS-TEST-171",
+    "LS-TEST-172",
+    "LS-TEST-173"
+  ],
+  "claims": {
+    "gameTypesDerivedFromApprovedUnchangedSchema": true,
+    "originalProviderTypesUnchangedCheck": true,
+    "closedFourMethodGamePort": true,
+    "simulationDomainAndLogicalActivityScopePreserved": true,
+    "rawPathLuaCameraDomainAndHostileObjectsRefused": true,
+    "trustedQualifiedSourceAndReviewedObservationAdmissionRequired": true,
+    "controllerScopeButtonsPredicatesFrameAndPreparedExpiryChecked": true,
+    "trustedDurableEffectClaimRequiredWithExpiryAndCurrentScopeRechecks": true,
+    "effectsSerializedAndUnknownOperationQuarantinedUntilTrustedReconciliation": true,
+    "independentExactOldLeaseShutdownAdmissionAndAcknowledgmentConsistency": true,
+    "noSavestateOrImplicitInstallationLaunchConfiguration": true,
+    "realTransportAuthenticationImplemented": false,
+    "realLuaBridgeImplemented": false,
+    "actualGameScreenshotsOrPlayerVisibleStateDecoded": false,
+    "actualEmulatorPauseProven": false,
+    "ordinarySavePersistenceOrRestartQualified": false,
+    "LinuxOrWindowsQualified": false,
+    "installedCandidateChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 36,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 899.260708
+    },
+    "fullSource": {
+      "revision": "305949929e2e467e3161a1fc756cbc5a4bfaadce",
+      "pass": 1609,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 96157.750584
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "offlineFrozenLockfileCheck": "pass",
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "workspaceCheck": "pass"
+  },
+  "preflight": {
+    "disposition": "Foundation independently eligible under explicit Phase16 continuation; primary checkpoint preserved. No prerequisite acceptance inferred.",
+    "reportedMismatch": [
+      "primary checkpoint selects S066, not S091",
+      "checkpoint revision/files/scope differ from current increment",
+      "S087 not recorded wholly verified"
+    ],
+    "reusedPrerequisiteBoundary": "S017 fixture authority and S073 prepared-context source regression retained; selected-model S073 failure and full S087 vision qualification remain separate. No actual model/perception/game effect is used by this component."
+  },
+  "retainedFailures": [
+    {
+      "attempt": "initial package typecheck",
+      "reason": "New package lacked its local workspace contract link; linked only the new package to existing contracts, without reinstalling existing modules."
+    },
+    {
+      "attempt": "linked typecheck",
+      "reason": "Nullable receipt frame accounting required an explicit check; completed and incomplete receipts now preserve separate truthful states."
+    },
+    {
+      "attempt": "first focused run",
+      "pass": 0,
+      "fail": 1,
+      "reason": "Node strip-only mode rejected parameter properties; changed the new error class to explicit declared properties. Repaired focused36/full1609 pass."
+    }
+  ],
+  "dependencyLinking": {
+    "newExternalPackageDownloaded": false,
+    "existingModulesReinstalled": false,
+    "normalOfflineLinkPromptCompleted": false,
+    "newPackageOnlyLocalLink": true,
+    "frozenLockfileVerified": true
+  },
+  "exclusions": [
+    "Whole S091 acceptance",
+    "Real authenticated loopback transport/Lua controller",
+    "Reviewed actual game/core visible-state decoder and media custody",
+    "Installed game/build/core/script/manifest pins and runtime enrollment/authority",
+    "Linux/Windows real graphical window, watchability, ordinary1x speed, pause and ordinary native-save recovery",
+    "S092 bounded runtime/campaign journal",
+    "S093 memory/help/contact and S094 provider/performance/Human proof",
+    "Selected-model/image understanding",
+    "S089 automatic historical-pattern ordinary-reply integration and S090 full trace/replay",
+    "Primary S066/full LS-TEST-084",
+    "Installed candidate promotion",
+    "Push/publication/deployment or live camera/game/save/schedule/contact/provider effects"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue S091 authenticated bounded transport and reviewed visible-state/source validation; preserve missing real emulator/platform/artifact/runtime setup gates, and continue independently eligible historical comparison/lifecycle/campaign work.",
+  "logDigests": {
+    "tifa-s091-boundary-focused-expanded.log": {
+      "path": "/tmp/tifa-s091-boundary-focused-expanded.log",
+      "sha256": "fad65ff8ed11bbd2a06d3267b9df4ef39d45aa95a8de9cfe36eca179473c81c8",
+      "bytes": 2294
+    },
+    "tifa-s091-boundary-focused-final-source.log": {
+      "path": "/tmp/tifa-s091-boundary-focused-final-source.log",
+      "sha256": "d8475039d468e20a3993b7efcd2a94f04910b8c4567483ac07a223f99889c690",
+      "bytes": 2517
+    },
+    "tifa-s091-boundary-focused-final.log": {
+      "path": "/tmp/tifa-s091-boundary-focused-final.log",
+      "sha256": "2e4806651c60ebedf8f0a5fcacd387e37990053923bdd7381cb682e511f4cd04",
+      "bytes": 2173
+    },
+    "tifa-s091-boundary-focused-quarantine.log": {
+      "path": "/tmp/tifa-s091-boundary-focused-quarantine.log",
+      "sha256": "c72909b0a5ab75b3f711ccb72f19f2036319231b953a848c1cbdd220eb831a5b",
+      "bytes": 2520
+    },
+    "tifa-s091-boundary-focused-repaired.log": {
+      "path": "/tmp/tifa-s091-boundary-focused-repaired.log",
+      "sha256": "f25642cdde1c85745bea9b8d5f3fd012b96b36f86b85f3be48d2d4232d8660d6",
+      "bytes": 1552
+    },
+    "tifa-s091-boundary-focused-verified.log": {
+      "path": "/tmp/tifa-s091-boundary-focused-verified.log",
+      "sha256": "62f4723cba35aa6b1b750735aa9d84a7ac9a63304529ea05f4783759ef0612fa",
+      "bytes": 2400
+    },
+    "tifa-s091-boundary-focused.log": {
+      "path": "/tmp/tifa-s091-boundary-focused.log",
+      "sha256": "cbbf1a7c6f30cd24a0f69805b38bd872231a2ad6f66db8fdeabd96783d32a5fd",
+      "bytes": 1841
+    },
+    "tifa-s091-boundary-full.log": {
+      "path": "/tmp/tifa-s091-boundary-full.log",
+      "sha256": "da06e090ef0cd4467c8629d48c27e346c27832cc6b6e1a0369b2f5b1db7ae73c",
+      "bytes": 189041
+    },
+    "tifa-s091-boundary-typecheck-final.log": {
+      "path": "/tmp/tifa-s091-boundary-typecheck-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s091-boundary-typecheck-linked.log": {
+      "path": "/tmp/tifa-s091-boundary-typecheck-linked.log",
+      "sha256": "be68e5b6041cba35b1cb7e2a50f528fc89da061e7480b9f53a8a7ddb34ecdb69",
+      "bytes": 111
+    },
+    "tifa-s091-boundary-typecheck.log": {
+      "path": "/tmp/tifa-s091-boundary-typecheck.log",
+      "sha256": "cd3f5adf3e6744c31fad6ac34bf44ef7b2a9dd5d73c027e8dfbe39cb291a4d7b",
+      "bytes": 465
+    },
+    "tifa-s091-build-final-source.log": {
+      "path": "/tmp/tifa-s091-build-final-source.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s091-build-final.log": {
+      "path": "/tmp/tifa-s091-build-final.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s091-build-quarantine.log": {
+      "path": "/tmp/tifa-s091-build-quarantine.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s091-build-repaired.log": {
+      "path": "/tmp/tifa-s091-build-repaired.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s091-build-verified.log": {
+      "path": "/tmp/tifa-s091-build-verified.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s091-contract-build.log": {
+      "path": "/tmp/tifa-s091-contract-build.log",
+      "sha256": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155",
+      "bytes": 1047
+    },
+    "tifa-s091-generator-game.log": {
+      "path": "/tmp/tifa-s091-generator-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s091-generator-original.log": {
+      "path": "/tmp/tifa-s091-generator-original.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s091-lint-final-source.log": {
+      "path": "/tmp/tifa-s091-lint-final-source.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s091-lint.log": {
+      "path": "/tmp/tifa-s091-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s091-lock-check.log": {
+      "path": "/tmp/tifa-s091-lock-check.log",
+      "sha256": "595cf05acfbee7ce62f3853ac278766804fe07cddb1ee32bee93bb5b74c8b74e",
+      "bytes": 348
+    },
+    "tifa-s091-preflight-corrected.log": {
+      "path": "/tmp/tifa-s091-preflight-corrected.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s091-preflight.log": {
+      "path": "/tmp/tifa-s091-preflight.log",
+      "sha256": "d9db15cd2130c6ac9fecf1ffcb2185099704994d001f72fec1669ca33be299f4",
+      "bytes": 60
+    },
+    "tifa-s091-private.log": {
+      "path": "/tmp/tifa-s091-private.log",
+      "sha256": "1772c4289137398ac7ff0e168dd5a400a01dba7fd2fd71ed3cea7b5efb451f20",
+      "bytes": 28920
+    },
+    "tifa-s091-typecheck-final-source.log": {
+      "path": "/tmp/tifa-s091-typecheck-final-source.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s091-typecheck.log": {
+      "path": "/tmp/tifa-s091-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s091-workspace-link.log": {
+      "path": "/tmp/tifa-s091-workspace-link.log",
+      "sha256": "b77910ce23e6b0436a1c4359f09d497adf5302398558d029d4ed5389e8ac76a8",
+      "bytes": 459
+    },
+    "tifa-s091-workspace.log": {
+      "path": "/tmp/tifa-s091-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
