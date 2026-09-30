@@ -223,6 +223,11 @@ export class VisualObservationStore {
   }
   /** Benign empty/deferred work withdraws future selection, not an admitted snapshot. */
   withdrawCurrent(sessionId:string):void{const entry=this.entries.get(sessionId);if(entry)entry.selectable=false;}
+  /** Retire only selections depending on these retained source observations.
+   * Capture authority is untouched; a later independent scene may be admitted. */
+  invalidateSources(owner:Pick<VisualScope,'principalId'|'assistantId'|'relationshipId'>,ids:readonly string[]):void {
+    for(const [sessionId,entry] of this.entries)if(entry.batch.scope.principalId===owner.principalId&&entry.batch.scope.assistantId===owner.assistantId&&entry.batch.scope.relationshipId===owner.relationshipId&&entry.batch.observations.some(o=>ids.includes(o.observationId)))this.invalidate(sessionId);
+  }
   invalidate(sessionId:string):void{const entry=this.entries.get(sessionId);if(entry)entry.generation=++this.generation;this.entries.delete(sessionId);}
   clear():void{clearTimeout(this.expiryTimer);this.expiryTimer=undefined;for(const id of this.entries.keys())this.invalidate(id);}
   diagnostics(){const now=this.time();if(Number.isFinite(now))this.prune(now);return {sessions:this.entries.size,observations:[...this.entries.values()].reduce((sum,entry)=>sum+entry.batch.observations.length,0),bytes:[...this.entries.values()].reduce((sum,entry)=>sum+size(entry.batch),0)};}

@@ -846,9 +846,14 @@ export class LifestreamServer {
           try{this.automaticMemory.configureVisual(scope,body.enabled,Number(body.expectedRevision),body.retentionMs===null?null:Number(body.retentionMs));}catch{return json(response,409,{code:'visual_memory_policy_unavailable',message:'Enable owned automatic memory and refresh the visual policy before applying.'});}
           return json(response,200,this.automaticMemory.inspect(scope));
         }
+        if(body.operation==='correctVisual'){
+          if(Object.keys(body).some(k=>!['assistantId','relationshipId','operation','id','expectedRevision','content'].includes(k))||typeof body.id!=='string'||!Number.isSafeInteger(body.expectedRevision)||typeof body.content!=='string'||!body.content.trim()||body.content.length>1200)return json(response,422,{code:'invalid_visual_memory_correction'});
+          try{const corrected=this.automaticMemory.correctVisual(scope,body.id,Number(body.expectedRevision),body.content);this.visualInput.retireMemorySource(scope,corrected.sourceObservationIds);}catch{return json(response,409,{code:'visual_memory_correction_conflict',message:'Refresh the observation and current private memory scope before correcting.'});}
+          return json(response,200,this.automaticMemory.inspect(scope));
+        }
         if(body.operation==='forgetVisual'){
           if(Object.keys(body).some(k=>!['assistantId','relationshipId','operation','id','expectedRevision'].includes(k))||typeof body.id!=='string'||!Number.isSafeInteger(body.expectedRevision))return json(response,422,{code:'invalid_visual_memory_forget'});
-          try{this.automaticMemory.forgetVisual(scope,body.id,Number(body.expectedRevision));}catch{return json(response,409,{code:'visual_memory_forget_conflict',message:'Refresh the observation inventory before forgetting.'});}
+          try{const source=this.automaticMemory.inspect(scope).visual.episodes.find(row=>row.episodeId===body.id)?.episode;this.automaticMemory.forgetVisual(scope,body.id,Number(body.expectedRevision));if(source)this.visualInput.retireMemorySource(scope,source.sourceObservationIds);}catch{return json(response,409,{code:'visual_memory_forget_conflict',message:'Refresh the observation inventory before forgetting.'});}
           return json(response,200,this.automaticMemory.inspect(scope));
         }
         if(body.operation==='retry'){

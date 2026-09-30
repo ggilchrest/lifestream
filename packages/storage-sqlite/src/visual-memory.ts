@@ -18,6 +18,7 @@ const policyRef=(owner:VisualMemoryOwner,revision:number)=>`visual-memory-policy
 const ownerValid=(owner:VisualMemoryOwner)=>[owner.principalId,owner.assistantId,owner.relationshipId].every(x=>typeof x==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u.test(x));
 /** Source identity excludes retention, lifecycle and summary; recall or paraphrase is not new evidence. */
 export const visualEpisodeSourceDigest=(episode:Pick<VisualObservationEpisode,'scope'|'observations'>)=>digest({scope:episode.scope,observations:episode.observations});
+export type VisualUserCorrection={recordType:'visualUserCorrection';sourceType:'humanEntry';correctionId:string;actor:string;relationshipId:string;episodeId:string;sourceEpisodeRevision:number;sourceDigest:string;sourceObservationIds:string[];content:string;occurredAt:string;untrusted:true};
 type Row={episode_id:string;revision:number;state:string;expires_at:number;payload_json:string|null};
 export type VisualRetainedWindow=Readonly<{fromMs:number;toMs:number;complete:boolean;reason:'complete'|'scopeUnavailable'|'invalidWindow'|'capacityExceeded'|'missingSource';boundaryRevision:string;episodes:readonly VisualObservationEpisode[]}>;
 type WindowGuard={repository:VisualMemoryRepository;owner:VisualMemoryOwner;fromMs:number;toMs:number;revision:string;lastNow:number;deadline:number;retired:boolean;checking:boolean};
@@ -28,6 +29,7 @@ function immutable<T>(value:T):T{if(value&&typeof value==='object'){for(const ch
  * event payloads are erased; opaque lifecycle receipts remain. */
 export function retireVisualProjections(tx:Transaction,now:number){
  const rows=tx.all<{id:string;assistant_id:string;provenance_json:string;lifecycle_json:string}>("SELECT id,assistant_id,provenance_json,lifecycle_json FROM memories WHERE json_extract(provenance_json,'$.visualEpisodeId') IN (SELECT episode_id FROM visual_observation_episodes WHERE state<>'retained') AND json_extract(lifecycle_json,'$.contentRemoved') IS NOT 1");
+ tx.run("UPDATE memory_lifecycle_events SET payload_json=? WHERE event_type='visualUserCorrection' AND json_extract(payload_json,'$.episodeId') IN (SELECT episode_id FROM visual_observation_episodes WHERE state<>'retained')",JSON.stringify({payloadRemoved:true}));
  for(const row of rows){const provenance=JSON.parse(row.provenance_json) as {actor:string},lifecycle=JSON.parse(row.lifecycle_json) as {revision:number},revision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',row.id)!.n;
   tx.run("UPDATE memories SET content='',provenance_json=?,lifecycle_json=? WHERE id=?",JSON.stringify({actor:provenance.actor,payloadRemoved:true}),JSON.stringify({status:'invalidated',revision:lifecycle.revision+1,contentRemoved:true,reason:'visual source retired',changedBy:provenance.actor}),row.id);
   tx.run('UPDATE memory_lifecycle_events SET payload_json=? WHERE memory_id=?',JSON.stringify({payloadRemoved:true}),row.id);
@@ -67,6 +69,7 @@ export class VisualMemoryRepository{
    const row=tx.get<Row>('SELECT episode_id,revision,state,expires_at,payload_json FROM visual_observation_episodes WHERE scope_key=? AND episode_id=?',key(owner),id);
    if(!row||row.state!=='retained'||row.revision!==expectedRevision||!row.payload_json||row.expires_at<=now)return {state:'sourceUnavailable' as const};
    const source=JSON.parse(row.payload_json) as VisualObservationEpisode;
+   if(source.state!=='retained'||source.correctionRefs.length)return {state:'sourceUnavailable' as const};
    if(source.memoryRecordId)return {state:'alreadyProjected' as const,memoryId:source.memoryRecordId};
    if(source.processingPolicyRevision!==policy.revision||source.sourceDigest!==visualEpisodeSourceDigest(source)||!validateVisualEpisode(source).valid)return {state:'sourceUnavailable' as const};
    if(Number(tx.get<{n:number}>("SELECT count(*) AS n FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(provenance_json,'$.relationshipId')=? AND json_extract(provenance_json,'$.visualEpisodeId') IS NOT NULL AND json_extract(lifecycle_json,'$.status')='candidate'",owner.assistantId,owner.principalId,owner.relationshipId)!.n)>=128)return {state:'capacityExceeded' as const};
@@ -120,12 +123,43 @@ export class VisualMemoryRepository{
    return {state:'retained',episodeId:episode.episodeId};
   });
  }
+ /** An authenticated Human entry qualifies the original interpretation; it is
+  * not a rewritten observation or independently observed sensor opportunity.
+  * No numeric transformation confidence or spoken turn is manufactured. */
+ correct(owner:VisualMemoryOwner,id:string,expectedRevision:number,content:string){
+  this.sweep();const now=this.now(),policy=this.policy(owner);
+  if(!ownerValid(owner)||!policy.enabled||typeof content!=='string'||!content.trim()||content.length>1200||Buffer.byteLength(content)>2400)throw Error('Visual correction unavailable');
+  return this.db.transaction(tx=>{
+   const row=tx.get<Row>('SELECT episode_id,revision,state,expires_at,payload_json FROM visual_observation_episodes WHERE scope_key=? AND episode_id=?',key(owner),id);
+   if(!row||row.state!=='retained'||row.revision!==expectedRevision||!row.payload_json||row.expires_at<=now)throw Error('Visual correction revision conflict');
+   const original=JSON.parse(row.payload_json) as VisualObservationEpisode;
+   if(!validateVisualEpisode(original).valid||!['retained','superseded'].includes(original.state)||original.sourceDigest!==visualEpisodeSourceDigest(original)||original.processingPolicyRevision!==policy.revision||!['principalId','assistantId','relationshipId'].every(field=>original.scope[field as keyof VisualMemoryOwner]===owner[field as keyof VisualMemoryOwner])||original.correctionRefs.length>=16)throw Error('Visual correction source unavailable');
+   const correction:VisualUserCorrection={recordType:'visualUserCorrection',sourceType:'humanEntry',correctionId:randomUUID(),actor:owner.principalId,relationshipId:owner.relationshipId,episodeId:id,sourceEpisodeRevision:expectedRevision,sourceDigest:original.sourceDigest,sourceObservationIds:[...original.sourceObservationIds],content,occurredAt:new Date(now).toISOString(),untrusted:true};
+   const episode:VisualObservationEpisode={...original,revision:row.revision+1,state:'superseded',correctionRefs:[...original.correctionRefs,correction.correctionId]};
+   if(Buffer.byteLength(JSON.stringify(episode))>8192)throw Error('Visual correction capacity exceeded');
+   if(original.memoryRecordId){
+    const memory=tx.get<{provenance_json:string;lifecycle_json:string}>('SELECT provenance_json,lifecycle_json FROM memories WHERE id=? AND assistant_id=?',original.memoryRecordId,owner.assistantId);
+    if(!memory)throw Error('Visual correction projection unavailable');
+    const provenance=JSON.parse(memory.provenance_json),lifecycle=JSON.parse(memory.lifecycle_json),canonical=provenance.canonical as VisualMemoryProjection['memoryRecord'];
+    if(provenance.actor!==owner.principalId||provenance.relationshipId!==owner.relationshipId||provenance.visualEpisodeRevision!==row.revision||!validateVisualMemoryProjection({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode:original,memoryRecord:canonical}).valid)throw Error('Visual correction projection unavailable');
+    canonical.status='contradicted';canonical.provenance.sourceRefs=[`visual-episode:${id}:${episode.revision}:${episode.sourceDigest}`];canonical.extensions['lifestream.conversationalVision'].episodeRevision=episode.revision;
+    const next={...lifecycle,status:'contradicted',revision:Number(lifecycle.revision)+1,changedBy:owner.principalId,needsReview:true};
+    tx.run('UPDATE memories SET provenance_json=?,lifecycle_json=? WHERE id=?',JSON.stringify({...provenance,visualEpisodeRevision:episode.revision,canonical}),JSON.stringify(next),original.memoryRecordId);
+    const revision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',original.memoryRecordId)!.n;
+    tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',original.memoryRecordId,owner.assistantId,revision,'visualCorrectionApplied',JSON.stringify({actor:owner.principalId,correctionId:correction.correctionId,status:'contradicted',sourceEpisodeRevision:expectedRevision}),correction.occurredAt);
+   }
+   const eventKey=`visual-episode:${id}`,eventRevision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',eventKey)!.n;
+   tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',eventKey,owner.assistantId,eventRevision,'visualUserCorrection',JSON.stringify(correction),correction.occurredAt);
+   tx.run('UPDATE visual_observation_episodes SET revision=?,payload_json=? WHERE episode_id=?',episode.revision,JSON.stringify(episode),id);
+   return {episodeId:id,revision:episode.revision,sourceObservationIds:episode.sourceObservationIds,correctionId:correction.correctionId};
+  });
+ }
  /** Complete bounded inventory with terminal receipts; fresh permission is supplied by the host. */
  inspect(owner:VisualMemoryOwner,allowed:boolean,limit=128){
   this.sweep();if(!Number.isSafeInteger(limit)||limit<1||limit>128)throw Error('Visual inventory bound exceeded');
   if(!allowed)return {policy:this.policy(owner),episodes:[],complete:false};
   const rows=this.db.connection.prepare('SELECT episode_id,revision,state,expires_at,payload_json FROM visual_observation_episodes WHERE scope_key=? ORDER BY retained_at DESC,episode_id LIMIT ?').all(key(owner),limit+1) as Row[];
-  return {policy:this.policy(owner),complete:rows.length<=limit,episodes:rows.slice(0,limit).map(row=>({episodeId:row.episode_id,revision:row.revision,state:row.state,expiresAt:new Date(row.expires_at).toISOString(),episode:row.payload_json?JSON.parse(row.payload_json) as VisualObservationEpisode:null}))};
+  return {policy:this.policy(owner),complete:rows.length<=limit,episodes:rows.slice(0,limit).map(row=>({episodeId:row.episode_id,revision:row.revision,state:row.state,expiresAt:new Date(row.expires_at).toISOString(),episode:row.payload_json?JSON.parse(row.payload_json) as VisualObservationEpisode:null,corrections:row.payload_json?(this.db.connection.prepare("SELECT payload_json FROM memory_lifecycle_events WHERE memory_id=? AND assistant_id=? AND event_type='visualUserCorrection' ORDER BY revision LIMIT 16").all(`visual-episode:${row.episode_id}`,owner.assistantId) as {payload_json:string}[]).map(event=>JSON.parse(event.payload_json) as VisualUserCorrection):[]}))};
  }
  /** Exhaustive scoped inventory, never a top-k semantic search. Missing erased
   * metadata suppresses coverage rather than hiding a potential contrary source.

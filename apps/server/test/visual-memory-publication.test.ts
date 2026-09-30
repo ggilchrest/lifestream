@@ -31,7 +31,7 @@ function fixture(t:import('node:test').TestContext){
  const offer=visual.capabilities(actor,['1.0.0']);mono+=10;t.mock.timers.tick(10);utc=Date.now();const lease=visual.camera(actor,{action:'enable',expectedRevision:0,idempotencyKey:randomUUID(),challengeId:offer.negotiation!.challenge!.id,endpointClockId:'synthetic-clock',endpointReceivedMonotonicMs:5000});
  let sequence=0;
  const batch=()=>{mono+=1100;t.mock.timers.tick(1100);utc=Date.now();const frameId=randomUUID();return visual.batch(actor,{leaseId:lease.leaseId!,endpointClockId:'synthetic-clock',correlationId:randomUUID(),frames:[{frameId,sequence:sequence++,capturedMonotonicMs:mono-5000-10,clockMappingId:lease.clockMappingId!,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]},new Map([[frameId,png]]));};
- return {owner,db,worker,visual,queued,batch,calls:()=>calls,enable:()=>{worker.configure(owner,true,0);worker.configureVisual(owner,true,0,86400000);},inspect:()=>worker.inspect(owner).visual,deny:()=>allowed=false,busy:(value:boolean)=>idle=!value,select:(value:boolean)=>selected=value,outcome:(value:typeof status)=>status=value,
+ return {owner,db,worker,visual,actor,conversationId,queued,batch,calls:()=>calls,enable:()=>{worker.configure(owner,true,0);worker.configureVisual(owner,true,0,86400000);},inspect:()=>worker.inspect(owner).visual,deny:()=>allowed=false,busy:(value:boolean)=>idle=!value,select:(value:boolean)=>selected=value,outcome:(value:typeof status)=>status=value,
   family:()=>family=randomUUID(),invalidate:()=>generation++,stop:()=>visual.camera(actor,{action:'stop',expectedRevision:0,idempotencyKey:randomUUID(),leaseId:lease.leaseId!}),hook:(fn:()=>void)=>hook=fn,content:(fn:()=>boolean)=>content=fn,selection:(fn:typeof transform)=>transform=fn,advance:(ms:number)=>{if(ms>=0){mono+=ms;t.mock.timers.tick(ms);}else t.mock.timers.setTime(Date.now()+ms);utc=Date.now();}};
 }
 
@@ -125,7 +125,27 @@ test('authenticated HTTP publication reaches consented memory inspection through
  const adminMemory=`/api/admin/v1/assistants/${assistantId}/memories/${row.episode.memoryRecordId}`;
  const correction=await request(adminMemory+'/correction',{content:'Synthetic changed appearance declaration.'});assert.equal(correction.status,422);assert.equal((await correction.json()).code,'visual_source_correction_unavailable');assert.equal((await request(adminMemory+'/lifecycle',{status:'active',expectedRevision:1})).status,422);
  const exported=await(await request(`/api/admin/v1/assistants/${assistantId}/memories/export`)).json();assert.equal(exported.memories.length,1);assert.equal(exported.memories[0].provenance.canonical.factuality,'unverified');assert.equal(exported.memories[0].provenance.canonical.confidence,0.8);assert.equal(exported.memories[0].lifecycle.status,'candidate');
+ const typedCorrection={...scope,operation:'correctVisual',id:row.episodeId,expectedRevision:row.revision,content:'I was wearing a hood, not a hat.'};
+ assert.equal((await request(memory,typedCorrection,'POST',{'x-lifestream-csrf':'wrong'})).status,403);
+ assert.equal((await request(memory,{...typedCorrection,content:''})).status,422);
+ const correctedResponse=await request(memory,typedCorrection);assert.equal(correctedResponse.status,200,await correctedResponse.clone().text());const corrected=(await correctedResponse.json()).visual.episodes[0];assert.equal(corrected.episode.state,'superseded');assert.equal(corrected.episode.summary,row.episode.summary);assert.equal(corrected.episode.observations[0].confidence,null);assert.equal(corrected.corrections[0].actor,identity.principalId);assert.equal(corrected.corrections[0].content,typedCorrection.content);assert.equal(corrected.corrections[0].sourceType,'humanEntry');assert.equal((await request(memory,typedCorrection)).status,409);
+ const exportedCorrection=await(await request(`/api/admin/v1/assistants/${assistantId}/memories/export`)).json();assert.equal(exportedCorrection.memories[0].lifecycle.status,'contradicted');assert.equal(exportedCorrection.memories[0].content,row.episode.summary);assert.equal(exportedCorrection.memories[0].provenance.canonical.factuality,'unverified');
+ row.revision=corrected.revision;
  assert.equal((await request(memory,{...scope,operation:'forgetVisual',id:row.episodeId,expectedRevision:row.revision},'POST',{'x-lifestream-csrf':'wrong'})).status,403);
  assert.equal((await request(memory,{...scope,operation:'forgetVisual',id:row.episodeId,expectedRevision:row.revision})).status,200);assert.equal((await(await request(query)).json()).visual.episodes[0].episode,null);
  assert.equal((await request(route('camera'),{...wire,action:'stop',expectedRevision:0,idempotencyKey:randomUUID(),leaseId:camera.leaseId},'PUT')).status,200);
+});
+
+
+test('visual correction rechecks consent and content-hook authority without manufacturing a user turn',async t=>{
+ const f=fixture(t);f.enable();await f.batch();await f.worker.tick();const row=f.inspect().episodes[0]!;f.content(()=>{f.deny();return true;});assert.throws(()=>f.worker.correctVisual(f.owner,row.episodeId,row.revision,'My explicit correction.'),/scope changed|scope unavailable/);assert.equal(f.db.connection.prepare('SELECT revision FROM visual_observation_episodes WHERE episode_id=?').get(row.episodeId)!.revision,row.revision);
+});
+
+
+test('source correction fences a selected current scene and a late reinterpretation without removing capture authority',async t=>{
+ const f=fixture(t);f.enable();const first=await f.batch();await f.worker.tick();const row=f.inspect().episodes[0]!;
+ const prepare=()=>f.visual.prepareContext(f.actor,{viewId:randomUUID(),revision:1,invalidationKey:randomUUID(),conversation:'[]',explicitQuestion:true,allowAside:true,expectedConversationId:f.conversationId,expectedRelationshipId:f.owner.relationshipId});const view=prepare()!;assert.ok(view);assert.equal(f.visual.contextCurrent(view),true);
+ f.worker.correctVisual(f.owner,row.episodeId,row.revision,'A separate exact Human correction.');f.visual.retireMemorySource(f.owner,row.episode!.sourceObservationIds);assert.equal(f.visual.contextCurrent(view),false);assert.equal(prepare(),null);assert.equal(f.visual.state(f.actor).captureActive,true);
+ const rejected=(f.visual as unknown as {sourceRetired:(owner:typeof f.owner,ids:string[])=>boolean}).sourceRetired(f.owner,[first.result.observations[0]!.observationId]);assert.equal(rejected,true);assert.equal((f.visual as any).sourceRetired({...f.owner,relationshipId:randomUUID()},[first.result.observations[0]!.observationId]),false);
+ f.family();await f.batch();assert.ok(prepare(),'an independent later source remains eligible under the unchanged capture lease');assert.equal(f.visual.contextCurrent(view),false);
 });

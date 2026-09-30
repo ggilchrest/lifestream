@@ -114,6 +114,8 @@ export class VisualInputHost {
   private publicationClock=-Infinity;
   private publicationMono=-Infinity;
   private closed=false;
+  private readonly retiredSources=new Map<string,number>();
+  private allSourcesRetiredUntil=0;
 
   constructor(options: VisualInputOptions,onContextChanged:()=>void=()=>{},audience:()=>AudienceCoordinator|undefined=()=>undefined,onMemoryPublication:(publication:VisualMemoryPublication,selection:VisualMemorySelection)=>void=()=>{}) {
     this.onMemoryPublication=onMemoryPublication;
@@ -347,7 +349,7 @@ export class VisualInputHost {
           requestId:source.requestId,provider:source.provider,capturedAtEarliestMs:source.capturedAtEarliestMs,
           capturedAtLatestMs:source.capturedAtLatestMs,receivedAtMs:source.receivedAtMs,
           interpretedAtMs,observations:result.observations};
-        const published=this.observations.publish(batch);
+        const published=!this.sourceRetired(batch.scope,batch.observations.map(o=>o.observationId))&&this.observations.publish(batch);
         if(published){
           if(lane)lane.scene=source;publication=source;disposition='published';reason='published';
           // Current host publication, never the lossy diagnostic receipt. The
@@ -423,6 +425,17 @@ export class VisualInputHost {
     }
     if(state.leaseId&&state.reason!=='provider_unavailable')this.unavailableLeases.delete(state.leaseId);
     return state;
+  }
+  private sourceKey(owner:Pick<VisualScope,'principalId'|'assistantId'|'relationshipId'>,id:string){return JSON.stringify([owner.principalId,owner.assistantId,owner.relationshipId,id]);}
+  private sourceRetired(owner:Pick<VisualScope,'principalId'|'assistantId'|'relationshipId'>,ids:readonly string[]){
+    const now=(this.options.monotonicMs??(()=>performance.now()))();for(const [key,expiry] of this.retiredSources)if(expiry<=now)this.retiredSources.delete(key);
+    return now<this.allSourcesRetiredUntil||ids.some(id=>this.retiredSources.has(this.sourceKey(owner,id)));
+  }
+  retireMemorySource(owner:Pick<VisualScope,'principalId'|'assistantId'|'relationshipId'>,ids:readonly string[]){
+    this.sourceRetired(owner,[]);const now=(this.options.monotonicMs??(()=>performance.now()))();
+    if(ids.length>8||this.retiredSources.size+ids.length>128){this.observations.clear();this.retiredSources.clear();this.allSourcesRetiredUntil=now+this.runtime.bounds.freshnessMs;}
+    else for(const id of ids)this.retiredSources.set(this.sourceKey(owner,id),now+this.runtime.bounds.freshnessMs);
+    this.observations.invalidateSources(owner,ids);this.onContextChanged();
   }
   invalidate(sessionId: string) { this.observations.invalidate(sessionId); this.cancelUpload(sessionId); this.runtime.invalidate(sessionId); this.onContextChanged(); }
   reset() { this.publications.length=0;this.turnJournal.reset();for (const timer of this.viewExpiries.values()) clearTimeout(timer); this.viewExpiries.clear(); this.observations.clear(); this.onContextChanged(); for (const upload of this.uploads.values()) upload.abort(); this.runtime.close(); }

@@ -17,8 +17,8 @@ export class MemoryRepository {
     if(!record.provenance.visualEpisodeId)return true;
     if(!this.database)return false;
     const row=this.database.connection.prepare("SELECT revision,payload_json FROM visual_observation_episodes WHERE episode_id=? AND state='retained' AND expires_at>?").get(String(record.provenance.visualEpisodeId),Date.now()) as {revision:number;payload_json:string}|undefined;
-    if(!row||row.revision!==record.provenance.visualEpisodeRevision||record.lifecycle.status!=='candidate')return false;
-    try{const episode=JSON.parse(row.payload_json),canonical=record.provenance.canonical as {memoryId?:unknown;content?:unknown};return episode.scope.principalId===record.provenance.actor&&episode.scope.relationshipId===record.provenance.relationshipId&&episode.sourceDigest===record.provenance.visualSourceDigest&&canonical?.memoryId===record.id&&canonical.content===record.content&&validateVisualMemoryProjection({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:canonical}).valid;}catch{return false;}
+    if(!row||row.revision!==record.provenance.visualEpisodeRevision||!['candidate','contradicted'].includes(String(record.lifecycle.status)))return false;
+    try{const episode=JSON.parse(row.payload_json),canonical=record.provenance.canonical as {memoryId?:unknown;content?:unknown};return episode.scope.principalId===record.provenance.actor&&episode.scope.relationshipId===record.provenance.relationshipId&&episode.sourceDigest===record.provenance.visualSourceDigest&&canonical?.memoryId===record.id&&canonical.content===record.content&&(canonical as {status?:unknown}).status===record.lifecycle.status&&validateVisualMemoryProjection({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:canonical}).valid;}catch{return false;}
   }
   save(record: MemoryRecord): MemoryRecord {
     const copy = structuredClone(record);
@@ -147,7 +147,7 @@ export class MemoryRepository {
       if(tx.get<{changes:number}>("SELECT changes() AS changes")?.changes!==1)throw new Error("memory revision conflict");
       tx.run("UPDATE memory_lifecycle_events SET payload_json=? WHERE assistant_id=? AND memory_id=?",JSON.stringify({payloadRemoved:true}),assistantId,id);
       tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",id,assistantId,journalRevision,"forgotten",JSON.stringify(payload),occurredAt);
-      if(existing.provenance.visualEpisodeId)tx.run("UPDATE visual_observation_episodes SET state='forgotten',payload_json=NULL,revision=revision+1 WHERE episode_id=? AND state='retained' AND json_extract(payload_json,'$.memoryRecordId')=?",existing.provenance.visualEpisodeId,id);
+      if(existing.provenance.visualEpisodeId){tx.run("UPDATE memory_lifecycle_events SET payload_json=? WHERE memory_id=? AND assistant_id=?",JSON.stringify({payloadRemoved:true}),`visual-episode:${existing.provenance.visualEpisodeId}`,assistantId);tx.run("UPDATE visual_observation_episodes SET state='forgotten',payload_json=NULL,revision=revision+1 WHERE episode_id=? AND state='retained' AND json_extract(payload_json,'$.memoryRecordId')=?",existing.provenance.visualEpisodeId,id);}
     });
     else {this.records.set(id,{...existing,content:"",provenance,lifecycle});this.events.set(id,[...(this.events.get(id)??[]).map(event=>({...event,payload:{payloadRemoved:true}})),{memoryId:id,assistantId,revision:journalRevision,eventType:"forgotten",payload,occurredAt}]);}
     return { memoryId: id, assistantId, status: "forgotten", contentRemoved: true, lifecycleRetained: true, externalCopies: "not-controlled", revision };

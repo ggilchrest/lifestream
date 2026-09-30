@@ -66,3 +66,8 @@ test('migration reads only plain proof descriptors and cannot repeat a completed
   assert.equal(f.store.rebindAudience(f.previous,f.next),true);assert.equal(f.store.rebindAudience(f.previous,f.next),false,'the old scope no longer owns the cached result');
   assert.ok(f.prepare(f.next.scope));f.store.clear();
 });
+
+
+test('retiring retained source IDs invalidates exactly the matching owner selections',()=>{
+ const f=fixture(),view=f.prepare()!;f.store.invalidateSources({...scope,principalId:'other'},['scene-1']);assert.equal(f.store.isCurrent(view),true);f.store.invalidateSources(scope,['unrelated']);assert.equal(f.store.isCurrent(view),true);f.store.invalidateSources(scope,['scene-1']);assert.equal(f.store.isCurrent(view),false);assert.equal(f.prepare(),null);f.store.clear();
+});
