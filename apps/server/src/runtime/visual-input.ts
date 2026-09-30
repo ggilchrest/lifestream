@@ -8,6 +8,7 @@ import {MAX_VISUAL_METADATA_BYTES,VISUAL_FRAMING_BYTES} from './visual-multipart
 import type {VisualBounds, VisualFrame, VisualMediaType, VisualPerceptionProvider, VisualPerceptionResult, VisualScope} from '@lifestream/runtime/perception/port';
 import type {PreparedTurnBinding} from '@lifestream/runtime/inference/prompt';
 import {VisualTurnEvidence,visualDiagnosticId,type VisualTurnEvidenceFactory} from './visual-turn-evidence.ts';
+import type {VisualMemoryPublication,VisualMemorySelection} from './visual-memory-intake.ts';
 
 export type VisualActor = Readonly<{principalId: string; sessionId: string; assistantId: string}>;
 export type VisualSource = Readonly<{bindingRef: string; connected: boolean; configurationRevision: number; audienceSourceId?:string}>;
@@ -22,6 +23,8 @@ export type VisualInputOptions = Readonly<{
   monotonicMs?: () => number;
   utcMs?: () => number;
   newId?: () => string;
+  /** Explicit host association and event selection; provider output cannot supply it. */
+  memorySelection?: (publication:VisualMemoryPublication) => VisualMemorySelection|null;
 }>;
 
 export type CameraInput = Readonly<{
@@ -90,6 +93,7 @@ export type VisualPublicationReceipt = Readonly<{
 const publicationReceiptLimit=128,publicationReceiptLifetimeMs=60_000;
 const diagnosticId=(value:string)=>Buffer.byteLength(value)<=256?value:`sha256:${createHash('sha256').update(value).digest('hex')}`;
 const diagnosticActor=(actor:VisualActor)=>createHash('sha256').update(JSON.stringify([actor.principalId,actor.sessionId,actor.assistantId])).digest('hex');
+function freezeMemorySource<T>(value:T):T{if(value&&typeof value==='object'){for(const child of Object.values(value))freezeMemorySource(child);Object.freeze(value);}return value;}
 type PublicationEntry={actor:string;receipt:VisualPublicationReceipt;expiresAtMs:number;expiresMono:number};
 
 /** Binds an authenticated session to a host-owned physical source and policy. */
@@ -99,6 +103,7 @@ export class VisualInputHost {
   private readonly observations: VisualObservationStore;
   private readonly viewExpiries=new Map<number,ReturnType<typeof setTimeout>>();
   private readonly onContextChanged:()=>void;
+  private readonly onMemoryPublication:(publication:VisualMemoryPublication,selection:VisualMemorySelection)=>void;
   private readonly commands = new Map<string, CameraInput>();
   private readonly uploads = new Map<string,AbortController>();
   private readonly cameras=new Map<string,CameraLane>();
@@ -110,7 +115,8 @@ export class VisualInputHost {
   private publicationMono=-Infinity;
   private closed=false;
 
-  constructor(options: VisualInputOptions,onContextChanged:()=>void=()=>{},audience:()=>AudienceCoordinator|undefined=()=>undefined) {
+  constructor(options: VisualInputOptions,onContextChanged:()=>void=()=>{},audience:()=>AudienceCoordinator|undefined=()=>undefined,onMemoryPublication:(publication:VisualMemoryPublication,selection:VisualMemorySelection)=>void=()=>{}) {
+    this.onMemoryPublication=onMemoryPublication;
     this.turnJournal=new VisualTurnEvidence({utcMs:options.utcMs??Date.now,monotonicMs:options.monotonicMs??(()=>performance.now())});
     this.audience=audience;
     this.onContextChanged=()=>queueMicrotask(onContextChanged);
@@ -337,11 +343,23 @@ export class VisualInputHost {
       }
       if (result.status==='complete' && result.observations.length) {
         const interpretedAtMs=(this.options.utcMs ?? Date.now)();
-        const published=this.observations.publish({scope:source.scope,leaseId:source.leaseId,sequence:source.hostSequence,
+        const batch={scope:source.scope,leaseId:source.leaseId,sequence:source.hostSequence,
           requestId:source.requestId,provider:source.provider,capturedAtEarliestMs:source.capturedAtEarliestMs,
           capturedAtLatestMs:source.capturedAtLatestMs,receivedAtMs:source.receivedAtMs,
-          interpretedAtMs,observations:result.observations});
-        if(published){if(lane)lane.scene=source;publication=source;disposition='published';reason='published';}
+          interpretedAtMs,observations:result.observations};
+        const published=this.observations.publish(batch);
+        if(published){
+          if(lane)lane.scene=source;publication=source;disposition='published';reason='published';
+          // Current host publication, never the lossy diagnostic receipt. The
+          // worker rechecks this closure after optional scheduling/content hooks.
+          const retainedSource=source;
+          const memoryPublication:VisualMemoryPublication=Object.freeze({batch:freezeMemorySource(structuredClone(batch)),freshUntilMs:source.capturedAtEarliestMs+this.runtime.bounds.freshnessMs,isCurrent:()=>{
+            if(this.closed||!this.runtime.provenanceCurrent(retainedSource))return false;
+            const latest=this.observations.availability(retainedSource.scope,retainedSource.leaseId);
+            return latest?.sourceRevision===retainedSource.hostSequence;
+          }});
+          try{const selection=this.options.memorySelection?.(memoryPublication);if(selection&&memoryPublication.isCurrent())this.onMemoryPublication(memoryPublication,selection);}catch{/* Memory does not fail transient conversation. */}
+        }
         else {
           reason=interpretedAtMs>=source.capturedAtEarliestMs+this.runtime.bounds.freshnessMs?'observation_expired':'observation_not_admitted';
           if(lane)lane.scene=undefined;this.observations.invalidate(actor.sessionId); this.onContextChanged();

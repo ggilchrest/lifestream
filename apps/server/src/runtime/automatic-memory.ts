@@ -2,6 +2,7 @@ import {createHash} from 'node:crypto';
 import {VisualMemoryRepository,type VisualMemoryAdmission,type Database,type MemoryRepository,type MemoryRecord} from '@lifestream/storage-sqlite';
 import {buildCanonicalPrompt} from '@lifestream/runtime/inference/prompt';
 import type {InferenceProvider} from '@lifestream/runtime/inference';
+import {visualPublicationEpisode,type VisualMemoryPublication,type VisualMemorySelection} from './visual-memory-intake.ts';
 export type MemoryScope={principalId:string;assistantId:string;relationshipId:string};
 type Item={key:string;kind:'preference'|'proceduralHint'|'conversationSummary'|'relational'|'experiential';quote:string;subject:'owner';epistemic:'userStatement'};
 type Work={id:string;scope:string;source:string;revision:number;input:string;prepared:string|null;attempts:number;expires:number;state:string;reason:string|null};
@@ -63,6 +64,12 @@ export class AutomaticMemory {
  private readonly provider:()=>{provider:InferenceProvider;revision:string};private readonly idle:()=>boolean;
  private readonly scopeAllowed:(scope:MemoryScope)=>boolean;private readonly contentAllowed:(scope:MemoryScope,content:string)=>boolean;
  private readonly changed:()=>void;private timer:ReturnType<typeof setInterval>;private controller:AbortController|null=null;private activeWork:{id:string;expires:number}|null=null;private closed=false;
+ private readonly visualPending=new Map<string,{publication:VisualMemoryPublication;selection:VisualMemorySelection;scope:MemoryScope;memoryRevision:number;visualRevision:number}>();
+ private readonly visualIntakeReceipts=new Map<string,{scope:MemoryScope;requestId:string;state:string;expires:number}>();
+ private noteVisual(scope:MemoryScope,requestId:string,state:string){
+  const id=hash([key(scope),requestId]);this.visualIntakeReceipts.delete(id);this.visualIntakeReceipts.set(id,{scope,requestId,state,expires:Date.now()+60000});
+  if(this.visualIntakeReceipts.size>128)this.visualIntakeReceipts.delete(this.visualIntakeReceipts.keys().next().value!);
+ }
  constructor(options:{database:Database;memories:MemoryRepository;provider:()=>{provider:InferenceProvider;revision:string};idle:()=>boolean;changed:()=>void;scopeAllowed?:(scope:MemoryScope)=>boolean;contentAllowed?:(scope:MemoryScope,content:string)=>boolean}){
   this.scopeAllowed=options.scopeAllowed??(()=>true);this.contentAllowed=options.contentAllowed??(()=>true);this.database=options.database;this.memories=options.memories;this.provider=options.provider;this.idle=options.idle;this.changed=options.changed;
   this.visual=new VisualMemoryRepository(this.database);this.sweepExpired();this.database.exec("UPDATE automatic_memory_work SET state=CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END WHERE state='running'");
@@ -74,7 +81,7 @@ export class AutomaticMemory {
   const policy=this.visual.configure(scope,enabled,expectedRevision,retentionMs);this.changed();return policy;
  }
  /** Canonical host-only intake. No synthetic user turn or inference-provider call. */
- enqueueVisual(scope:MemoryScope,input:unknown,admission:VisualMemoryAdmission){
+ enqueueVisual(scope:MemoryScope,input:unknown,admission:VisualMemoryAdmission,current:()=>boolean=()=>admission.current){
   let copy:unknown;try{const raw=JSON.stringify(input);if(Buffer.byteLength(raw)>8192)return {state:'invalidEpisode' as const};copy=JSON.parse(raw);}catch{return {state:'invalidEpisode' as const};}
   const memoryRevision=this.policy(scope).revision;
   if(!this.policy(scope).enabled||!this.scopeAllowed(scope))return {state:'policyDenied' as const};
@@ -82,7 +89,29 @@ export class AutomaticMemory {
   if(typeof value?.summary!=='string'||!Array.isArray(value.observations)||secret.test(value.summary)||!this.contentAllowed(scope,value.summary)||value.observations.some(o=>!o||typeof o.description!=='string'||secret.test(o.description)||!this.contentAllowed(scope,o.description)))return {state:'policyDenied' as const};
   // Content/privacy hooks may revoke authority while checking the source.
   if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==memoryRevision)return {state:'policyDenied' as const};
+  if(!current())return {state:'scopeChanged' as const};
+  if(!this.policy(scope).enabled||this.policy(scope).revision!==memoryRevision)return {state:'policyDenied' as const};
   const result=this.visual.admit(scope,copy,admission);if(result.state==='retained')this.changed();return result;
+ }
+ /** One latest publication per session, at most four sessions. No model work,
+  * persistence or foreground waiting occurs in the publication callback. */
+ queueVisualPublication(publication:VisualMemoryPublication,selection:VisualMemorySelection){
+  if(this.closed||!publication.batch.scope.relationshipId)return {state:'notAdmitted' as const};
+  const scope={principalId:publication.batch.scope.principalId,assistantId:publication.batch.scope.assistantId,relationshipId:publication.batch.scope.relationshipId};
+  const memory=this.policy(scope),visual=this.visual.policy(scope);
+  if(!memory.enabled||!visual.enabled||!this.scopeAllowed(scope)||!publication.isCurrent()){this.noteVisual(scope,publication.batch.requestId,'policyDenied');return {state:'policyDenied' as const};}
+  try{
+   const serialized=JSON.stringify({batch:publication.batch,freshUntilMs:publication.freshUntilMs,selection});if(Buffer.byteLength(serialized)>32768)return {state:'capacityExceeded' as const};
+   const copy=JSON.parse(serialized) as {batch:VisualMemoryPublication['batch'];freshUntilMs:number;selection:VisualMemorySelection};
+   if(!publication.isCurrent()||this.policy(scope).revision!==memory.revision||this.visual.policy(scope).revision!==visual.revision)return {state:'policyDenied' as const};
+   const pendingKey=publication.batch.scope.sessionId;
+   if(!this.visualPending.has(pendingKey)&&this.visualPending.size>=4)return {state:'capacityExceeded' as const};
+   const previous=this.visualPending.get(pendingKey);if(previous)this.noteVisual(previous.scope,previous.publication.batch.requestId,'replaced');
+   this.visualPending.set(pendingKey,{publication:{batch:copy.batch,freshUntilMs:copy.freshUntilMs,isCurrent:publication.isCurrent},selection:copy.selection,scope,memoryRevision:memory.revision,visualRevision:visual.revision});this.noteVisual(scope,copy.batch.requestId,'queued');return {state:'queued' as const};
+  }catch{return {state:'notAdmitted' as const};}
+ }
+ private visualCurrent(item:{publication:VisualMemoryPublication;scope:MemoryScope;memoryRevision:number;visualRevision:number}){
+  try{return item.publication.freshUntilMs>Date.now()&&this.policy(item.scope).enabled&&this.policy(item.scope).revision===item.memoryRevision&&this.visual.policy(item.scope).enabled&&this.visual.policy(item.scope).revision===item.visualRevision&&this.scopeAllowed(item.scope)&&item.publication.isCurrent();}catch{return false;}
  }
  forgetVisual(scope:MemoryScope,id:string,revision:number){if(!this.scopeAllowed(scope))throw Error('Visual memory scope unavailable');this.visual.forget(scope,id,revision);this.changed();}
  configure(scope:MemoryScope,enabled:boolean,expectedRevision:number){
@@ -97,13 +126,15 @@ export class AutomaticMemory {
   const count=this.database.connection.prepare("SELECT count(*) AS n FROM automatic_memory_work WHERE state IN ('queued','running','prepared')").get() as {n:number};if(count.n>=128)return {state:'capacityExceeded'};
   const now=Date.now();this.database.connection.prepare("INSERT INTO automatic_memory_work (id,scope_key,source_turn,policy_revision,state,input_text,input_digest,created_at,expires_at) VALUES (?,?,?,?,'queued',?,?,?,?)").run(id,key(scope),source,policy.revision,input,hash(input),now,now+86400000);return {state:'queued'};
  }
- inspect(scope:MemoryScope){const jobs=this.database.connection.prepare('SELECT id,state,result_json AS result,reason,created_at AS createdAt FROM automatic_memory_work WHERE scope_key=? ORDER BY created_at DESC LIMIT 20').all(key(scope));const visual=this.visual.inspect(scope,this.scopeAllowed(scope));const allowedEpisodes=visual.episodes.filter(row=>!row.episode||this.contentAllowed(scope,row.episode.summary)&&row.episode.observations.every(o=>this.contentAllowed(scope,o.description)));const current=this.visual.policy(scope);const valid=this.scopeAllowed(scope)&&current.revision===visual.policy.revision;return {policy:this.policy(scope),jobs,visual:{...visual,policy:current,episodes:valid?allowedEpisodes:[],complete:valid&&visual.complete&&allowedEpisodes.length===visual.episodes.length}};}
+ inspect(scope:MemoryScope){this.sweepExpired();const jobs=this.database.connection.prepare('SELECT id,state,result_json AS result,reason,created_at AS createdAt FROM automatic_memory_work WHERE scope_key=? ORDER BY created_at DESC LIMIT 20').all(key(scope));const visual=this.visual.inspect(scope,this.scopeAllowed(scope));const allowedEpisodes=visual.episodes.filter(row=>!row.episode||this.contentAllowed(scope,row.episode.summary)&&row.episode.observations.every(o=>this.contentAllowed(scope,o.description)));const current=this.visual.policy(scope);const valid=this.scopeAllowed(scope)&&current.revision===visual.policy.revision;return {policy:this.policy(scope),jobs,visual:{...visual,policy:current,episodes:valid?allowedEpisodes:[],complete:valid&&visual.complete&&allowedEpisodes.length===visual.episodes.length,intakeReceipts:valid?[...this.visualIntakeReceipts.values()].filter(row=>key(row.scope)===key(scope)).map(({requestId,state})=>({requestId,state})):[]}};}
  isIdle(){return !this.controller;}
  preempt(){this.controller?.abort('foreground');}
  retry(scope:MemoryScope,id:string){this.sweepExpired();const result=this.database.connection.prepare("UPDATE automatic_memory_work SET state=CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END,reason='retry_requested' WHERE id=? AND scope_key=? AND state='failed' AND attempts<6 AND expires_at>?").run(id,key(scope),Date.now());if(result.changes!==1)throw new Error('Memory retry is unavailable');}
  private expireWork(id:string){this.database.connection.prepare("UPDATE automatic_memory_work SET state='expired',input_text='',prepared_json=NULL,reason='retention_expired' WHERE id=? AND state IN ('queued','running','prepared','failed')").run(id);}
  private sweepExpired(){
   this.visual.sweep();const now=Date.now();
+  for(const [id,row] of this.visualIntakeReceipts)if(row.expires<=now)this.visualIntakeReceipts.delete(id);
+  for(const [id,item] of this.visualPending)if(!this.visualCurrent(item)){this.visualPending.delete(id);this.noteVisual(item.scope,item.publication.batch.requestId,item.publication.freshUntilMs<=now?'sourceExpired':'scopeChanged');}
   // Source retention is independent of foreground scheduling. Preserve receipts
   // for completed admission; only pending work and retained payloads expire.
   this.database.connection.prepare("UPDATE automatic_memory_work SET state='expired',input_text='',prepared_json=NULL,reason='retention_expired' WHERE expires_at<=? AND (state IN ('queued','running','prepared','failed') OR input_text<>'' OR prepared_json IS NOT NULL)").run(now);
@@ -118,6 +149,12 @@ export class AutomaticMemory {
  }
  async tick():Promise<void>{
   if(this.closed)return;this.sweepExpired();if(this.controller||!this.idle())return;
+  const pending=this.visualPending.entries().next().value;
+  if(pending){
+   const [id,item]=pending;this.visualPending.delete(id);
+   try{if(this.visualCurrent(item)){const candidate=visualPublicationEpisode(item.publication.batch,item.selection,this.visual.policy(item.scope),Date.now(),item.publication.freshUntilMs);const result=candidate?this.enqueueVisual(item.scope,candidate.episode,candidate.admission,()=>this.visualCurrent(item)):{state:'unattributedSubject'};this.noteVisual(item.scope,item.publication.batch.requestId,result.state);}}catch{this.noteVisual(item.scope,item.publication.batch.requestId,'invalidEpisode');}
+   return;
+  }
   const work=this.database.connection.prepare("SELECT id,scope_key AS scope,source_turn AS source,policy_revision AS revision,input_text AS input,prepared_json AS prepared,attempts,expires_at AS expires,state,reason FROM automatic_memory_work WHERE state IN ('queued','prepared') ORDER BY created_at LIMIT 1").get() as Work|undefined;if(!work)return;
   if(work.attempts>=2&&!work.prepared&&work.reason!=='retry_requested'){this.database.connection.prepare("UPDATE automatic_memory_work SET state='failed',reason='extraction_attempt_limit' WHERE id=?").run(work.id);return;}
   const owner=this.database.connection.prepare('SELECT principal_id AS principalId,assistant_id AS assistantId,relationship_id AS relationshipId,enabled,revision FROM automatic_memory_policies WHERE scope_key=?').get(work.scope) as (MemoryScope&{enabled:number;revision:number})|undefined;
@@ -153,5 +190,5 @@ export class AutomaticMemory {
    if(!this.closed)this.database.connection.prepare("UPDATE automatic_memory_work SET state=CASE WHEN attempts<2 THEN CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END ELSE 'failed' END,reason='extraction_or_persistence_failed' WHERE id=? AND state IN ('running','prepared') AND expires_at>?").run(work.id,Date.now());
   }finally{clearTimeout(timeout);this.sweepExpired();if(this.controller===controller){this.controller=null;this.activeWork=null;}}
  }
- async close(){this.closed=true;clearInterval(this.timer);this.controller?.abort();while(this.controller)await new Promise(r=>setTimeout(r,5));}
+ async close(){this.closed=true;this.visualPending.clear();this.visualIntakeReceipts.clear();clearInterval(this.timer);this.controller?.abort();while(this.controller)await new Promise(r=>setTimeout(r,5));}
 }
