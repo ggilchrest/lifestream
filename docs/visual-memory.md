@@ -32,8 +32,7 @@ after 60 seconds, and do not survive restart. Episode content follows its explic
 retention policy. Forgetting removes the payload and retains a source fence so a
 repeated interpretation cannot recreate it. Restore remains quarantined.
 
-Reflection integration and complete visual
-qualification are still pending. Isolated wiring checks establish neither visual
+Complete visual qualification is still pending. Isolated wiring checks establish neither visual
 understanding nor physical-camera, performance or Human acceptance.
 
 ## Optional memory projection
@@ -60,4 +59,11 @@ The original projection becomes contradicted and remains inspectable with its un
 
 The idle publication path may activate a validated attributed projection without per-observation confirmation. Its canonical factuality remains unverified and recall does not reinforce it. Missing host transformation estimates still leave only typed source episodes. Active source reads require both policies, exact lifecycle/digest binding and current retention. The same bounded relationship cache fingerprint includes visual source/policy changes and expiry; it does not add another prompt section or await perception.
 
-Selected recall text carries the original capture date, original source family in selection lineage, source-specific limitations and a past model-interpretation label. Repeated system uncertainty/raw-media/clock wording is factored into a shared limitation in the same prepared view; source-specific uncertainty is preserved. The existing 512-byte optional formatting bound remains, and oversized records are omitted in selection receipts. Selected retention expiry bounds the view and delayed reply admission/delivery. Source correction, forgetting and policy changes invalidate dependencies before further output. Scripted authenticated HTTP inference verifies assembled ordinary requests and delayed-output fencing; selected model behavior and performance remain unqualified. Reflection and automatic historical-pattern reply integration remain pending.
+Selected recall text carries the original capture date, original source family in selection lineage, source-specific limitations and a past model-interpretation label. Repeated system uncertainty/raw-media/clock wording is factored into a shared limitation in the same prepared view; source-specific uncertainty is preserved. The existing 512-byte optional formatting bound remains, and oversized records are omitted in selection receipts. Selected retention expiry bounds the view and delayed reply admission/delivery. Source correction, forgetting and policy changes invalidate dependencies before further output. Scripted authenticated HTTP inference verifies assembled ordinary requests and delayed-output fencing; selected model behavior and performance remain unqualified. Automatic historical-pattern reply integration remains pending.
+
+
+## Background experiential reflection
+
+Typed retained episodes may enter the existing independently enabled experiential-learning worker under both memory policies and current private content scope. This does not require a numeric MemoryRecord transformation estimate. The unchanged bounded Source envelope carries the validated typed episode, original capture date, original source family, source identifiers, subject basis, unknown confidence and attribution limits. Oversized episodes are omitted. No owner statement, source turn or raw media is manufactured.
+
+Automatic collection uses visual content only for an already supported open question or project. It keeps the existing idle debounce, daily call/token limits and shared provider priority. Publication must preserve the existing workspace identity and supporting owner source, carry high uncertainty, and remain bound to current source content, consent and retention. A visual or mixed visual episode cannot support a preference imprint; scene wording about enjoyment is not owner preference evidence. Correction, forgetting, expiry or consent withdrawal cancels dependent work and erases affected derived content while preserving independently supported owner material. Restore withholds typed visual sources under the existing quarantine. Scripted SQLite, runtime and HTTP checks establish software behavior only; selected-model reflection quality, real image understanding and performance remain separate qualification gaps.

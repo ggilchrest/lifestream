@@ -1,3 +1,5 @@
+import {createHash} from 'node:crypto';
+import {validateVisualEpisode,type VisualObservationEpisode} from './visual-memory.ts';
 export type ExperienceScope={assistantId:string;principalId:string;relationshipId:string};
 export const dimensions=['attentionGardening','attentionAstronomy','attentionReading','attentionCooking','attentionMusic','attentionGames'] as const;
 export type Dimension=typeof dimensions[number];
@@ -17,3 +19,12 @@ export type Job={recordType:'job';id:string;scope:ExperienceScope;policyRevision
 export type Selection={recordType:'selection';id:string;revision:number;considered:string[];selected:string|null;reason:'ranked'|'noEligibleItems'|'disabled'|'uninvited'|'directRequest';inputDigest:string;at:string;observedOutput:boolean};
 export type State={recordType:'experienceState';schemaVersion:'1.0.0';scope:ExperienceScope;revision:number;epoch:number;configuration:{recordType:'configuration';revision:number;enabled:boolean;frozen:boolean;retention:'sourceBound';processingPolicyRevision:number;bounds:typeof experienceBounds;topicPolicies:Record<Topic,Treatment>};items:Item[];imprints:Imprint[];funnel:Record<'eligible'|'admitted'|'calls'|'failures'|'skips'|'noChange'|'published'|'considered'|'selected'|'outputs',number>;lastReason:string;lastEligibleEpisode:string|null};
 export type ExperiencePolicy={revision:number;allowed:boolean;dimensions:Partial<Record<Dimension,{minimum:number;maximum:number;delta:number;rolling?:number;minimumEvidence?:number;confidence?:number}>>};
+
+
+/** Producer-owned namespace in the unchanged Source envelope. This is typed
+ * model evidence, not a retained owner quote or new source turn. */
+export function visualExperienceEpisode(source:Source):VisualObservationEpisode|null{
+ if(!source.id.startsWith('visual-episode:')||!source.family.startsWith('visual:')||source.content.length>4000)return null;
+ try{const episode=JSON.parse(source.content) as VisualObservationEpisode;if(!validateVisualEpisode(episode).valid||episode.state!=='retained'||episode.correctionRefs.length||source.id!==`visual-episode:${episode.episodeId}`||source.revision!==episode.revision||source.family!==`visual:${episode.independenceKeys[0]}`||source.occurredAt!==episode.occurredAt||source.digest!==createHash('sha256').update(source.content).digest('hex')||episode.sourceDigest!==createHash('sha256').update(JSON.stringify({scope:episode.scope,observations:episode.observations})).digest('hex'))return null;return episode;}catch{return null;}
+}
+export const isVisualExperienceSource=(source:Source)=>source.id.startsWith('visual-episode:')||source.family.startsWith('visual:');

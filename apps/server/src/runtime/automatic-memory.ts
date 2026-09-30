@@ -133,6 +133,20 @@ export class AutomaticMemory {
   if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==policy.revision||this.visual.policy(scope).revision!==visual.policy.revision)return {state:'policyDenied' as const};
   const result=this.visual.activate(scope,id,revision);if(result.state==='active')this.changed();return result;
  }
+ visualEpisodesCurrent(scope:MemoryScope,episodes:readonly import('@lifestream/contracts/visual-memory').VisualObservationEpisode[],memoryRevision:number){
+  if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==memoryRevision)return false;
+  if(!episodes.length)return true;
+  const inventory=this.visual.inspect(scope,true);return inventory.policy.enabled&&episodes.every(episode=>episode.processingPolicyRevision===inventory.policy.revision&&inventory.episodes.some(row=>row.episode&&JSON.stringify(row.episode)===JSON.stringify(episode)))&&this.scopeAllowed(scope)&&this.policy(scope).revision===memoryRevision&&this.visual.policy(scope).revision===inventory.policy.revision;
+ }
+ /** Typed retained input for independently enabled reflection. It does not
+  * require or manufacture a numeric canonical-memory projection estimate. */
+ retainedVisualEpisodes(scope:MemoryScope){
+  const policy=this.policy(scope),inventory=this.visual.inspect(scope,policy.enabled&&this.scopeAllowed(scope));
+  const episodes=inventory.episodes.flatMap(row=>row.episode&&row.episode.state==='retained'&&!row.episode.correctionRefs.length&&row.episode.processingPolicyRevision===inventory.policy.revision?[row.episode]:[]);
+  const eligible=episodes.filter(episode=>{const text=JSON.stringify(episode);return !secret.test(text)&&this.contentAllowed(scope,text);});
+  if(!policy.enabled||!this.visualEpisodesCurrent(scope,eligible,policy.revision)||this.visual.policy(scope).revision!==inventory.policy.revision||!inventory.policy.enabled)return [];
+  return eligible;
+ }
  visualHistory(scope:MemoryScope,fromMs:number,toMs:number){
   const policy=this.policy(scope),allowed=()=>this.policy(scope).enabled&&this.policy(scope).revision===policy.revision&&this.scopeAllowed(scope),window=this.visual.retainedWindow(scope,allowed(),fromMs,toMs);
   const content=()=>window.episodes.every(episode=>this.contentAllowed(scope,episode.summary)&&episode.observations.every(o=>this.contentAllowed(scope,o.description)));let retired=!window.complete;
