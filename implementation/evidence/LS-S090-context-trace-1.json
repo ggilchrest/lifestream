@@ -1,0 +1,180 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "sliceStatus": "inProgress",
+  "component": "canonical finalized-context milestones and exact internal manifest host join",
+  "componentStatus": "verified",
+  "recordedAt": "2026-09-30T21:54:36.904582Z",
+  "sourceRevision": "212a2200d9438cf1b98c53cdf438cf93608f4f85",
+  "sourceFiles": [
+    "apps/server/src/index.ts",
+    "apps/server/src/runtime/turn-context-trace.ts",
+    "apps/server/src/runtime/visual-input.ts",
+    "apps/server/src/runtime/visual-turn-evidence.ts",
+    "apps/server/test/turn-context-trace.test.ts",
+    "apps/server/test/visual-context.test.ts",
+    "docs/visual-conversation-acceptance.md",
+    "packages/runtime/src/inference/prompt.ts"
+  ],
+  "ownedOperation": {
+    "operation": "S090 canonical finalized context milestone exact-revision full source suite",
+    "sourceRevision": "212a2200d9438cf1b98c53cdf438cf93608f4f85",
+    "startedAt": "2026-09-30T21:51:15.020751+00:00",
+    "wrapperPid": 38962,
+    "log": "/tmp/tifa-s090-context-trace-full.log",
+    "status": "completed",
+    "childPid": 38966,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T21:53:09.755932+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "212a2200d9438cf1b98c53cdf438cf93608f4f85",
+      "pass": 2526,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 114441.830166
+    },
+    "focused": {
+      "pass": 118,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 7081.323375
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 7309.996083
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types apps/server/test/turn-context-trace.test.ts apps/server/test/visual-turn-evidence.test.ts apps/server/test/visual-context.test.ts apps/server/test/visual-input.test.ts apps/server/test/visual-route-lifecycle.test.ts apps/server/test/visual-lineage.test.ts",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual immutable finalizer/request provenance, exact nine-section metadata bytes/digests, published closed canonical context-event validation, authenticated isolated HTTP/SQLite composition and actor/environment/expiry/reset/clock/eviction/close joins. Optional asynchronous metadata failure grants no context or output authority.",
+    "scripted": "Image interpretation, camera/source lease facts and inference output are scripted. Fixture clocks and pixels are synthetic. No actual camera/provider/game/control/save/contact, perceptual/performance/platform or Human acceptance."
+  },
+  "retainedFailures": [
+    {
+      "operation": "private packet-digest helper",
+      "result": "KeyError files before metadata update; repaired by reading actual nested path records",
+      "scope": "Bookkeeping helper only; no runtime/test guard weakened."
+    }
+  ],
+  "milestoneDistinctions": [
+    "Published context.viewSelected/context.sourceUsed record final input assembly, not inference admission or output delivery.",
+    "Internal manifest artifact explicitly uses urn:lifestream:runtime-input-manifest:1.0.0; it is not the incompatible published provider InputManifest. No missing request/profile/snapshot IDs invented.",
+    "Context trace requires exact minted finalizer/request, actual deployment UUID, actual conversation/session/endpoint/view and compatible selected visual environment. Legacy/missing/foreign identity or replay withholds canonical normal projection.",
+    "Original event UTC, processing UTC and runtime monotonic clock are distinct; late finalized receipt reports stale rather than renewed freshness.",
+    "Restricted host-only canonical context bundles share existing bounded128 receipt capacity/lazy60s retention and actor/reset/close boundaries, not a new database or remote sink. No raw scene/dialogue/input/reply/hidden reasoning."
+  ],
+  "limitations": [
+    "Whole S090/S094/Phase16 inProgress. Complete canonical capture/perception/memory/controller/native lifecycle and durable trace sink/joined replay remain incomplete.",
+    "Existing event/artifact semantics close actual context milestones, but negotiation/enablement/drop/expiry and background control are not to be mislabeled as context source-use or provider health. Additional exact canonical extension/export may be needed after coverage assessment; no export authority inferred.",
+    "No installed candidate update or live authority; actual reviewed native source/bridge/decoder/GUI/pause/save, selected image-provider/resource/performance and permitted remote-help delivery/authentication/Human gates remain open.",
+    "S093 authenticated-help ingestion remains scoped separately from generic automatic-memory capture; question changed no capture rule or cross-game semantics.",
+    "Primary S066/full LS-TEST-084 and accepted original24/iPhone journeys preserved. Callback/causal failures and900msmedian/1500msp95onset targets unwaived. No public push/publication/deployment/new private export or live effect."
+  ],
+  "nextAction": "Continue S090 source joins and isolated redacted replay for actual canonical finalized-context milestones. Assess only truly missing lifecycle contract coverage before any additional private export; preserve scoped advice-ingestion assessment and actual native/provider/platform/performance/Human gates.",
+  "logDigests": {
+    "tifa-s090-context-trace-browser.log": {
+      "path": "/tmp/tifa-s090-context-trace-browser.log",
+      "sha256": "fe7cbcb54ce571124315e4ff127d030e1ce0f1b8754e97abd9e87b9f928bf7be",
+      "bytes": 23887
+    },
+    "tifa-s090-context-trace-build-final.log": {
+      "path": "/tmp/tifa-s090-context-trace-build-final.log",
+      "sha256": "a818c22d26760a7c5f6c120067d3e3200e9b276ee252b15b7037cc90e8398698",
+      "bytes": 1074
+    },
+    "tifa-s090-context-trace-build.log": {
+      "path": "/tmp/tifa-s090-context-trace-build.log",
+      "sha256": "e50ff0e002cb10c9e1f29b492c92668e9757cd520b888d2656f9c44634c30ba0",
+      "bytes": 1074
+    },
+    "tifa-s090-context-trace-diff.log": {
+      "path": "/tmp/tifa-s090-context-trace-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-context-trace-focused-final.log": {
+      "path": "/tmp/tifa-s090-context-trace-focused-final.log",
+      "sha256": "fac9ea9f5e63c7f87dcdf3a839b7d062470d24a4744dd6f1f91d10d7894f4913",
+      "bytes": 13818
+    },
+    "tifa-s090-context-trace-focused-initial.log": {
+      "path": "/tmp/tifa-s090-context-trace-focused-initial.log",
+      "sha256": "05f9ac70d0d54780f5f8097766111bd1b80082aa58f24615f9eb2e7424016d48",
+      "bytes": 1215
+    },
+    "tifa-s090-context-trace-focused.log": {
+      "path": "/tmp/tifa-s090-context-trace-focused.log",
+      "sha256": "177c59528866f7f6f76dfae0bc41e3d76b68e3df289cecabb290f134b66a05e7",
+      "bytes": 13531
+    },
+    "tifa-s090-context-trace-full.log": {
+      "path": "/tmp/tifa-s090-context-trace-full.log",
+      "sha256": "c40ce23b3a63069a9de5a7d76ef7de9f364afa65acc655c96fc037174af3487d",
+      "bytes": 269650
+    },
+    "tifa-s090-context-trace-http.log": {
+      "path": "/tmp/tifa-s090-context-trace-http.log",
+      "sha256": "ee3254a97ed4c0725cfa99b648dadeb8f864ae009a9aab0b93e08d22367c8e3c",
+      "bytes": 3569
+    },
+    "tifa-s090-context-trace-lint-final.log": {
+      "path": "/tmp/tifa-s090-context-trace-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-context-trace-lint.log": {
+      "path": "/tmp/tifa-s090-context-trace-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-context-trace-private-final.log": {
+      "path": "/tmp/tifa-s090-context-trace-private-final.log",
+      "sha256": "7185dfd45289c64d9b88412800b70c5c65d243f1e6cd247be2408869b8f6334a",
+      "bytes": 28909
+    },
+    "tifa-s090-context-trace-private.log": {
+      "path": "/tmp/tifa-s090-context-trace-private.log",
+      "sha256": "1fc4104f264b520a51b4a0668615e888672e6944b9f0326b17a966ffc4d3956f",
+      "bytes": 28888
+    },
+    "tifa-s090-context-trace-typecheck-final.log": {
+      "path": "/tmp/tifa-s090-context-trace-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-context-trace-typecheck.log": {
+      "path": "/tmp/tifa-s090-context-trace-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-context-trace-workspace.log": {
+      "path": "/tmp/tifa-s090-context-trace-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
