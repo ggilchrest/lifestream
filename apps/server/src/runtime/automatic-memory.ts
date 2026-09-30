@@ -5,6 +5,7 @@ import {buildCanonicalPrompt} from '@lifestream/runtime/inference/prompt';
 import type {InferenceProvider} from '@lifestream/runtime/inference';
 import {visualPublicationEpisode,type VisualMemoryPublication,type VisualMemorySelection} from './visual-memory-intake.ts';
 import {VisualMemoryEvidence} from './visual-memory-evidence.ts';
+import {VisualMemoryCandidateEvidence} from './visual-memory-candidate-evidence.ts';
 export type MemoryScope={principalId:string;assistantId:string;relationshipId:string};
 type Item={key:string;kind:'preference'|'proceduralHint'|'conversationSummary'|'relational'|'experiential';quote:string;subject:'owner';epistemic:'userStatement'};
 type Work={id:string;scope:string;source:string;revision:number;input:string;prepared:string|null;attempts:number;expires:number;state:string;reason:string|null};
@@ -69,6 +70,7 @@ export class AutomaticMemory {
  private readonly visualPending=new Map<string,{publication:VisualMemoryPublication;selection:VisualMemorySelection;scope:MemoryScope;memoryRevision:number;visualRevision:number}>();
  private readonly visualIntakeReceipts=new Map<string,{scope:MemoryScope;requestId:string;state:string;expires:number}>();
  private readonly visualIntakeJournal=new VisualMemoryEvidence();
+ private readonly visualCandidateJournal=new VisualMemoryCandidateEvidence();
  private noteVisual(scope:MemoryScope,requestId:string,state:string){
   const id=hash([key(scope),requestId]);this.visualIntakeReceipts.delete(id);this.visualIntakeReceipts.set(id,{scope,requestId,state,expires:Date.now()+60000});
   if(this.visualIntakeReceipts.size>128)this.visualIntakeReceipts.delete(this.visualIntakeReceipts.keys().next().value!);
@@ -78,6 +80,10 @@ export class AutomaticMemory {
  visualIntakeHistory(scope:MemoryScope){
   try{if(this.closed||!this.scopeAllowed(scope))return Object.freeze([]);const receipts=this.visualIntakeJournal.receipts(scope);return !this.closed&&this.scopeAllowed(scope)?receipts:Object.freeze([]);}catch{return Object.freeze([]);}
  }
+ /** Historical candidate metadata only; consent and current owner scope fence reads. */
+ visualCandidateHistory(scope:MemoryScope){
+  try{const memory=this.policy(scope),visual=this.visual.policy(scope);if(this.closed||!memory.enabled||!visual.enabled||!this.scopeAllowed(scope))return Object.freeze([]);return !this.closed&&this.scopeAllowed(scope)&&this.policy(scope).enabled&&this.policy(scope).revision===memory.revision&&this.visual.policy(scope).enabled&&this.visual.policy(scope).revision===visual.revision?this.visualCandidateJournal.traces(scope):Object.freeze([]);}catch{return Object.freeze([]);}
+ }
  constructor(options:{database:Database;memories:MemoryRepository;provider:()=>{provider:InferenceProvider;revision:string};idle:()=>boolean;changed:()=>void;scopeAllowed?:(scope:MemoryScope)=>boolean;contentAllowed?:(scope:MemoryScope,content:string)=>boolean}){
   this.scopeAllowed=options.scopeAllowed??(()=>true);this.contentAllowed=options.contentAllowed??(()=>true);this.database=options.database;this.memories=options.memories;this.provider=options.provider;this.idle=options.idle;this.changed=options.changed;
   this.visual=new VisualMemoryRepository(this.database);this.sweepExpired();this.database.exec("UPDATE automatic_memory_work SET state=CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END WHERE state='running'");
@@ -86,7 +92,7 @@ export class AutomaticMemory {
  policy(scope:MemoryScope){const row=this.database.connection.prepare('SELECT enabled,revision,approved_at AS approvedAt FROM automatic_memory_policies WHERE scope_key=?').get(key(scope)) as {enabled:number;revision:number;approvedAt:string}|undefined;return row?{...row,enabled:row.enabled===1}:{enabled:false,revision:0,approvedAt:null};}
  configureVisual(scope:MemoryScope,enabled:boolean,expectedRevision:number,retentionMs:number|null){
   if(enabled&&(!this.policy(scope).enabled||!this.scopeAllowed(scope)))throw Error('Visual memory requires current owned memory consent');
-  const policy=this.visual.configure(scope,enabled,expectedRevision,retentionMs);this.changed();return policy;
+  const policy=this.visual.configure(scope,enabled,expectedRevision,retentionMs);this.visualCandidateJournal.forgetOwner(scope);this.changed();return policy;
  }
  /** Canonical host-only intake. No synthetic user turn or inference-provider call. */
  enqueueVisual(scope:MemoryScope,input:unknown,admission:VisualMemoryAdmission,current:()=>boolean=()=>admission.current){
@@ -121,18 +127,25 @@ export class AutomaticMemory {
  private visualCurrent(item:{publication:VisualMemoryPublication;scope:MemoryScope;memoryRevision:number;visualRevision:number}){
   try{return item.publication.freshUntilMs>Date.now()&&this.policy(item.scope).enabled&&this.policy(item.scope).revision===item.memoryRevision&&this.visual.policy(item.scope).enabled&&this.visual.policy(item.scope).revision===item.visualRevision&&this.scopeAllowed(item.scope)&&item.publication.isCurrent();}catch{return false;}
  }
- forgetVisual(scope:MemoryScope,id:string,revision:number){if(!this.scopeAllowed(scope))throw Error('Visual memory scope unavailable');this.visual.forget(scope,id,revision);this.changed();}
+ forgetVisual(scope:MemoryScope,id:string,revision:number){if(!this.scopeAllowed(scope))throw Error('Visual memory scope unavailable');this.visual.forget(scope,id,revision);this.visualCandidateJournal.forgetOwner(scope);this.changed();}
  correctVisual(scope:MemoryScope,id:string,revision:number,content:string){
   const policy=this.policy(scope),visual=this.visual.inspect(scope,this.scopeAllowed(scope)),episode=visual.episodes.find(row=>row.episodeId===id)?.episode;
   if(!policy.enabled||!this.scopeAllowed(scope)||!episode||typeof content!=='string'||!content.trim()||content.length>1200||secret.test(content)||!this.contentAllowed(scope,content)||!this.contentAllowed(scope,episode.summary)||episode.observations.some(o=>!this.contentAllowed(scope,o.description)))throw Error('Visual correction scope unavailable');
   if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==policy.revision||this.visual.policy(scope).revision!==visual.policy.revision)throw Error('Visual correction scope changed');
-  const result=this.visual.correct(scope,id,revision,content);this.changed();return result;
+  const result=this.visual.correct(scope,id,revision,content);this.visualCandidateJournal.forgetOwner(scope);this.changed();return result;
  }
  projectVisual(scope:MemoryScope,id:string,revision:number,estimate:VisualTransformationConfidence|null){
   const policy=this.policy(scope),visual=this.visual.inspect(scope,this.scopeAllowed(scope)),episode=visual.episodes.find(row=>row.episodeId===id)?.episode;
   if(!policy.enabled||!this.scopeAllowed(scope)||!episode||!this.contentAllowed(scope,episode.summary)||episode.observations.some(o=>!this.contentAllowed(scope,o.description)))return {state:'policyDenied' as const};
   if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==policy.revision||this.visual.policy(scope).revision!==visual.policy.revision)return {state:'policyDenied' as const};
-  const result=this.visual.project(scope,id,revision,estimate);if(result.state==='projected')this.changed();return result;
+  const result=this.visual.project(scope,id,revision,estimate);
+  if(result.state==='projected'){
+   // Read the actual committed projection before invalidation callbacks. This
+   // optional background evidence never repairs a missing source or mints a turn.
+   try{const episode=this.visual.inspect(scope,true).episodes.find(row=>row.episodeId===id)?.episode,memory=this.memories.get(scope.assistantId,result.memoryId);if(episode&&memory)this.visualCandidateJournal.record(scope,{schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:memory.provenance.canonical});}catch{/* Projection success is independent of diagnostics. */}
+   this.changed();
+  }
+  return result;
  }
  activateVisual(scope:MemoryScope,id:string,revision:number){
   const policy=this.policy(scope),visual=this.visual.inspect(scope,this.scopeAllowed(scope)),episode=visual.episodes.find(row=>row.episodeId===id)?.episode;
@@ -162,7 +175,7 @@ export class AutomaticMemory {
  }
  configure(scope:MemoryScope,enabled:boolean,expectedRevision:number){
   this.database.transaction(tx=>{const current=this.policy(scope);if(current.revision!==expectedRevision)throw new Error('Memory policy revision conflict');tx.run('INSERT INTO automatic_memory_policies VALUES (?,?,?,?,?,?,?) ON CONFLICT(scope_key) DO UPDATE SET enabled=excluded.enabled,revision=excluded.revision,approved_at=excluded.approved_at',key(scope),scope.principalId,scope.assistantId,scope.relationshipId,enabled?1:0,expectedRevision+1,new Date().toISOString());tx.run("UPDATE automatic_memory_work SET state='cancelled',input_text='',prepared_json=NULL,reason='policy_changed' WHERE scope_key=? AND state IN ('queued','running','prepared')",key(scope));if(!enabled){retireGameExperience(tx,scope);tx.run('UPDATE visual_memory_policies SET enabled=0,revision=revision+1 WHERE scope_key=? AND enabled=1',key(scope));tx.run("UPDATE visual_observation_episodes SET state='invalidated',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND state='retained'",key(scope));retireVisualProjections(tx,Date.now());}});
-  this.controller?.abort();return this.policy(scope);
+  this.visualCandidateJournal.forgetOwner(scope);this.controller?.abort();return this.policy(scope);
  }
  enqueue(scope:MemoryScope,source:string,input:string,attribution:'authenticatedTypedOwner'|'unknownSpeaker'){
   const policy=this.policy(scope);if(!this.scopeAllowed(scope)||!policy.enabled||attribution!=='authenticatedTypedOwner'||!source||source.length>160||input.length>4000||secret.test(input)||thirdParty.test(input))return {state:'notAdmitted'};
@@ -236,5 +249,5 @@ export class AutomaticMemory {
    if(!this.closed)this.database.connection.prepare("UPDATE automatic_memory_work SET state=CASE WHEN attempts<2 THEN CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END ELSE 'failed' END,reason='extraction_or_persistence_failed' WHERE id=? AND state IN ('running','prepared') AND expires_at>?").run(work.id,Date.now());
   }finally{clearTimeout(timeout);this.sweepExpired();if(this.controller===controller){this.controller=null;this.activeWork=null;}}
  }
- async close(){this.closed=true;this.visualIntakeJournal.close();this.visualPending.clear();this.visualIntakeReceipts.clear();clearInterval(this.timer);this.controller?.abort();while(this.controller)await new Promise(r=>setTimeout(r,5));}
+ async close(){this.closed=true;this.visualIntakeJournal.close();this.visualCandidateJournal.close();this.visualPending.clear();this.visualIntakeReceipts.clear();clearInterval(this.timer);this.controller?.abort();while(this.controller)await new Promise(r=>setTimeout(r,5));}
 }

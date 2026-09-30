@@ -98,3 +98,19 @@ accounted for. This adds source metadata, not memory capture or retrieval policy
 Selected-provider physical input, unannounced animal interpretation, historical
 appearance comparison, paired performance under pressure and Human experience
 qualification remain separate gates. Metadata fixtures do not satisfy them.
+
+The actual existing SQLite visual projection owner now queues a restricted
+published `memory.candidateProposed` milestone only after its committed candidate
+and typed source validate together. Source MemoryRecord/episode IDs, revisions,
+source digest and creation UTC are preserved. Its separately named artifact is
+small redacted candidate metadata with actual bytes, size and digest; it is not
+a full MemoryRecord body. Prose, observations and confidence-policy notes are
+omitted. The background producer has its own UUID, no invented Human interaction
+or source event IDs, and no fabricated source monotonic clock. This separate
+metadata journal bounds pending and retained records to 128 each with lazy
+60-second dual-clock expiry, owner isolation, consent revision/forget/correction,
+reset/close and rollback fences. It never changes projection or activation,
+ordinary extraction, eligibility or authority. Activation does not rewrite a
+historical candidate as active. Durable sink, lifecycle-change source identity
+and full joined replay remain incomplete: current memory lifecycle rows have
+no recorded UUID event ID, which diagnostics must not invent.
