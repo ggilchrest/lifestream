@@ -1,0 +1,177 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "sliceStatus": "inProgress",
+  "component": "canonical visual-memory candidate evidence at actual committed projection owner",
+  "componentStatus": "verified",
+  "recordedAt": "2026-09-30T22:36:39.650783Z",
+  "sourceRevision": "892c83e48c75aa9a8c557bc7d7ec3f3c8a5c873b",
+  "sourceFiles": [
+    "apps/server/src/runtime/automatic-memory.ts",
+    "apps/server/src/runtime/visual-memory-candidate-evidence.ts",
+    "apps/server/test/visual-memory-candidate-evidence.test.ts",
+    "docs/visual-conversation-acceptance.md"
+  ],
+  "ownedOperation": {
+    "operation": "S090 canonical visual-memory candidate exact-revision full source suite",
+    "sourceRevision": "892c83e48c75aa9a8c557bc7d7ec3f3c8a5c873b",
+    "startedAt": "2026-09-30T22:33:49.911711+00:00",
+    "wrapperPid": 43246,
+    "log": "/tmp/tifa-s090-memory-candidate-full.log",
+    "status": "completed",
+    "childPid": 43250,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T22:35:44.712708+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "892c83e48c75aa9a8c557bc7d7ec3f3c8a5c873b",
+      "pass": 2544,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 114579.202292
+    },
+    "focused": {
+      "pass": 84,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 3381.975458
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 7513.400458
+    },
+    "packetAndBootstrap": {
+      "pass": 48,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 18302.496625
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types apps/server/test/visual-memory-candidate-evidence.test.ts apps/server/test/visual-memory.test.ts apps/server/test/visual-memory-publication.test.ts apps/server/test/visual-memory-evidence.test.ts apps/server/test/automatic-memory.test.ts",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "pnpm lint",
+    "npm --prefix .private run validate",
+    "node --test scripts/qualify-visual-conversation.test.mjs scripts/workspace.test.mjs",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Existing SQLite typed source/projection transaction, actual MemoryRepository canonical candidate read, asynchronous restricted published memory.candidateProposed validation, actual artifact bytes/digest and owner/policy/forget/correction/reentry fences. Isolated authenticated loopback memory/publication regressions.",
+    "scripted": "Perception, subject association and transformation confidence are explicit synthetic fixtures. Direct journal capacity tests clone typed fixtures; they do not authenticate source custody. No actual pixels/camera/image provider/game/control/save/remote delivery/performance/Human acceptance."
+  },
+  "semantics": [
+    "Emit only after existing projection returns projected and actual committed MemoryRecord and typed episode validate together; missing confidence, denial, duplicate and activation do not emit candidate success.",
+    "Producer UUID names this real background journal; source actual environment/conversation/session/endpoint retained, no synthetic Human interaction, source event IDs or measured source monotonic clock. Actual MemoryRecord createdAt is eventTime; actual drain UTC is processingTime.",
+    "Artifact explicitly redactedVisualMemoryCandidateMetadata under internal versioned format, with actual UTF-8 bytes/length/digest and canonical record/source/transformation digests. Not full MemoryRecord body, raw media, scene prose, prompt or policy basis text.",
+    "Additional bounded diagnostic pending128/retained128, lazy60s UTC/monotonic TTL, global sequence gaps/owner filter, asynchronous drain, dedup within retained lifetime, epoch/reset/close/clock rollback.",
+    "Current owned consent/scope fences reads; memory/visual policy revision, forgetting and correction erase owner diagnostic metadata. Independent owners and canonical source/history owners unchanged. Activation leaves historical candidate unchanged.",
+    "No new memory engine/store, schedule, remote sink, authority, capture/retrieval rule, canonical schema or private export. Projection result does not depend on diagnostic success."
+  ],
+  "initialFailures": [
+    {
+      "log": "tifa-s090-memory-candidate-focused-initial.log",
+      "reason": "Node strip-only mode rejected TypeScript parameter property. Replaced with explicit field/constructor assignment."
+    },
+    {
+      "log": "tifa-s090-memory-candidate-focused-repaired.log",
+      "reason": "Reentrant withdrawal fixture remained armed during later consent restoration and hit revision conflict; made its intended withdrawal callback one-shot. No runtime consent guard weakened."
+    }
+  ],
+  "limitations": [
+    "Whole S090 visual lifecycle trace/replay and durable trace sink remain incomplete; new metadata trace is not source currency, actual recall, provider admission, reply delivery or effect proof.",
+    "Existing legacy memory lifecycle rows lack full canonical mutation event identity and operation/evidence envelope; do not synthesize historical source IDs merely to fill published lifecycleChanged payload.",
+    "Actual reviewed native bridge/decoder/GUI/pause/ordinary-save, selected image-provider/lease/resources/performance, permitted help delivery/authentication and Human gates remain open.",
+    "S093 advice assessment only; generic extraction unchanged and no cross-game acceptance inferred.",
+    "Primary S066/full LS-TEST-084 and accepted original24/iPhone journeys preserved. Selected callback/causal failures and900msmedian/1500msp95onset targets unwaived. No push/publication/deployment/new private export or live effect."
+  ],
+  "nextAction": "Continue S090 canonical visual candidate-to-finalized-memory selection correlation and isolated semantic replay using genuine producer bundles; lifecycle mutation traces require complete actual owner evidence, not fabricated IDs or histories. Preserve actual native/provider/platform/performance/Human and scoped authenticated-help ingestion gates; no generic capture, new export or installed promotion.",
+  "logDigests": {
+    "tifa-s090-memory-candidate-browser.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-browser.log",
+      "sha256": "53a813d34d1bf597099428cc48f47fc2e48949d2d661e98bc68b0b36ccbe5443",
+      "bytes": 23894
+    },
+    "tifa-s090-memory-candidate-build.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-build.log",
+      "sha256": "70d9b14e8ee2456fa94543f1a04fe8989f2db90b2f76905d6b24cc02cf2c08af",
+      "bytes": 1074
+    },
+    "tifa-s090-memory-candidate-diff.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-memory-candidate-focused-initial.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-focused-initial.log",
+      "sha256": "afab6cd4134f2c33ab59068cb670551a6a90cc93c9083e8804928edf79c3b1ef",
+      "bytes": 2187
+    },
+    "tifa-s090-memory-candidate-focused-repaired.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-focused-repaired.log",
+      "sha256": "113f4f6c29086035b1d1be1553468aae9ede1b0814980432325203b50627b5fa",
+      "bytes": 2560
+    },
+    "tifa-s090-memory-candidate-focused.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-focused.log",
+      "sha256": "df6e1c0d52c6248ed0977482acb2f500ad0baa6d1da6882547b8d3baa467e0df",
+      "bytes": 1146
+    },
+    "tifa-s090-memory-candidate-full.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-full.log",
+      "sha256": "e65c06d5021428e46365f902d1d28a4489b1df4ade79f465ee5e246e15de17d3",
+      "bytes": 271648
+    },
+    "tifa-s090-memory-candidate-integration.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-integration.log",
+      "sha256": "52cb6a09e1b9c1d96d9c353aca506535c1b64198ebb27d481d30fe19c2be9436",
+      "bytes": 8402
+    },
+    "tifa-s090-memory-candidate-lint.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-memory-candidate-packet.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-packet.log",
+      "sha256": "ec84c404bbc4ec2b360c55766d2513fc83deaec138816b5fec44801fd9f314b4",
+      "bytes": 4519
+    },
+    "tifa-s090-memory-candidate-preflight.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s090-memory-candidate-private.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-private.log",
+      "sha256": "61af4b60848dd2159902b30257c471e7d8e382e30882f4ddd842fc2f868df9aa",
+      "bytes": 28928
+    },
+    "tifa-s090-memory-candidate-typecheck.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-memory-candidate-workspace.log": {
+      "path": "/tmp/tifa-s090-memory-candidate-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
