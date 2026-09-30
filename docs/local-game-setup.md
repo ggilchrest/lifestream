@@ -283,3 +283,28 @@ keys cannot untrack an earlier suspended job. Actual SQLite reopen and the real
 shared coordinator are tested with scripted provider/tokenizer/source/lifecycle and
 terminal predicates. No enrolled runtime, controller dispatch, actual model competence
 or native pause/save/GUI/performance/Human qualification follows from these passes.
+
+`interruptGameRun` now performs one exact old-lease shutdown outside the inference
+slot. A required synchronous host fence disables new effects/plans and durably
+claims the shutdown identity before cancellation or asynchronous release. The
+existing coordinator cancels its exact planning key; a suspended inference port
+cannot delay safety release. Release uses a separate bounded shutdown deadline
+and trusted old-lease intent, independently of withdrawn gameplay permission.
+No action, save, retry, timer enrollment or successor control is granted.
+
+Canonical reply identity/provider/lease, fenced epoch, two equal frames at increasing
+monotonic times and current source checks are necessary. An independent pinned
+native evidence predicate must also qualify the withdrawal; stationary schema
+fields or a connected socket alone cannot prove actual pause. Missing, failed,
+late, advancing-frame, stale or unqualified acknowledgment remains unconfirmed.
+A preserved successor is distinct from paused controls. Duplicate rejected claims
+perform no second release or metadata overwrite. Durable publication failure also
+returns unconfirmed while separately retaining already observed pause evidence.
+Reports retain execution mode and grant neither resume nor replay authority.
+
+Tests join real SQLite start-slot metadata and the actual shared coordinator to
+scripted native receipts in simulation mode. They prove software ordering,
+cancellation, bounded unknown outcomes and metadata consistency, not emulator
+pause. Actual enrolled lifecycle/event/watchdog routing, native controller/save,
+fresh explicit authorized resume, graphical platform/provider/performance/Human
+qualification and the S093/S094 journeys remain required.

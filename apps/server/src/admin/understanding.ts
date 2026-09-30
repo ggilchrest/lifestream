@@ -48,6 +48,7 @@ export class DiscoveryAdministration {
   }
   foregroundStarted():()=>void{return this.coordinator.foregroundStarted();}
   backgroundIdle(){return this.coordinator.isIdle();}
+  cancelBackground(key:string,reason:'explicit'|'scopeInvalidated'|'shutdown'='explicit'){return this.coordinator.cancel(key,reason);}
   async runBackground<T>(work:BackgroundWork<T>){
     if(this.closed)return {state:'suppressed' as const,reason:'runtimeClosed',completedSteps:0};
     if(this.backgroundKeys.size>=8)return {state:'suppressed' as const,reason:'backgroundCapacity',completedSteps:0};
