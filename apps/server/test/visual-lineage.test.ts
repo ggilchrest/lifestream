@@ -11,8 +11,8 @@ import {startVisualTurnEvidence} from '../src/runtime/visual-turn-evidence.ts';
 import {correlateVisualLineage,replayVisualLineage,type VisualLineageInput} from '../src/runtime/visual-lineage.ts';
 
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+5gz/qwAAAABJRU5ErkJggg==','base64');
-async function fixture(t:import('node:test').TestContext,modality:'text'|'audio'='text'){
- t.mock.timers.enable({apis:['Date'],now:Date.now()});
+async function fixture(t:import('node:test').TestContext,modality:'text'|'audio'='text',mockTimeouts=false){
+ t.mock.timers.enable({apis:mockTimeouts?['Date','setTimeout']:['Date'],now:Date.now()});
  const owner={principalId:randomUUID(),assistantId:randomUUID(),relationshipId:randomUUID()},actor={principalId:owner.principalId,assistantId:owner.assistantId,sessionId:randomUUID()},scope={...actor,relationshipId:owner.relationshipId,environmentId:randomUUID(),conversationId:randomUUID(),endpointId:randomUUID(),sessionRevision:1,audienceRevision:1,scopeGeneration:1};
  const db=new Database({path:':memory:'});db.migrate();const memories=new MemoryRepository(db);
  let mono=10000,utc=Date.now(),providerCalls=0;
@@ -38,7 +38,9 @@ async function fixture(t:import('node:test').TestContext,modality:'text'|'audio'
   const episodes=worker.inspect(owner).visual.episodes.filter(row=>row.episode!==null).map(row=>row.episode!),projections=episodes.filter(e=>e.memoryRecordId).map(episode=>({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:memories.get(owner.assistantId,episode.memoryRecordId!)!.provenance.canonical}) as VisualMemoryProjection);
   return {publications:visual.publicationReceipts(actor),turns:visual.turnReceipts(actor),episodes,projections,terminalSources:[]};
  };
- return {input,worker,owner,memories,providerCalls:()=>providerCalls,advance:(ms:number)=>{mono+=ms;t.mock.timers.tick(ms);utc=Date.now();}};
+ return {input,worker,owner,memories,visual,actor,providerCalls:()=>providerCalls,advance:(ms:number)=>{mono+=ms;utc+=ms;t.mock.timers.tick(ms);},nextBatch:(copied?:()=>void,invalid=false)=>{
+  mono+=1100;t.mock.timers.tick(1100);utc=Date.now();const frameId=randomUUID();return visual.batch(actor,{leaseId:lease.leaseId!,endpointClockId:'synthetic-clock',correlationId:randomUUID(),frames:[{frameId,sequence:1,capturedMonotonicMs:mono-5010,clockMappingId:lease.clockMappingId!,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]},new Map([[frameId,invalid?Buffer.from('NOT_AN_IMAGE'):png]]),copied);
+ }};
 }
 
 test('actual isolated publication, prepared request and SQLite projection correlate without scene prose or delivery inference',async t=>{
@@ -125,4 +127,49 @@ test('supplied audience-rebound publication joins its published scope while reta
  for(const row of input.turns){row.lineage.selected.audienceRevision++;row.lineage.publication.audienceRevision++;row.lineage.publication.leaseRevision++;}
  e.sourceDigest=sha(JSON.stringify({scope:e.scope,observations:e.observations}));projection.episode=structuredClone(e);projection.memoryRecord.provenance.sourceRefs=[`visual-episode:${e.episodeId}:${e.revision}:${e.sourceDigest}`];projection.memoryRecord.extensions['lifestream.conversationalVision'].sourceDigest=e.sourceDigest;
  const result=correlateVisualLineage(input);assert.deepEqual(result.contradictions,[]);assert.equal(result.sourceCurrencyProved,false);const metadata=result.events.find(e=>e.kind==='publication')!;assert.equal(metadata.publicationAudienceRevision,2);assert.equal((metadata.sourceEpochs as {audience:number}).audience,1);
+});
+
+test('actual isolated host lifecycle records negotiated lease, admitted frame sequence and stopped runtime lease separately',async t=>{
+ const f=await fixture(t),publication=f.input().publications[0]!,sha=(value:string)=>createHash('sha256').update(value).digest('hex'),rows=f.visual.lifecycleReceipts(f.actor);
+ assert.deepEqual(rows.map(row=>row.kind),['negotiated','cameraEnabled','batchAdmitted']);const admitted=rows[2]!;assert.equal(admitted.requestDigest,sha(publication.admission.requestId));assert.equal(admitted.hostSequence,publication.admission.hostSequence);assert.equal(admitted.frames[0]!.frameDigest,sha(publication.admission.frameIds[0]!));assert.equal(admitted.frames[0]!.sequence,0);assert.equal(admitted.sourceEpochs!.configuration,1);assert.equal(admitted.authority,false);assert.doesNotMatch(JSON.stringify(rows),/PRIVATE_|appearance/);
+ f.visual.camera(f.actor,{action:'stop',expectedRevision:0,idempotencyKey:randomUUID(),leaseId:publication.admission.leaseId});await Promise.resolve();assert.deepEqual(f.visual.lifecycleReceipts(f.actor).slice(-2).map(row=>[row.kind,row.reason]),[['captureLeaseEnded','stop'],['cameraInactiveObserved','stop']]);assert.equal(f.visual.state(f.actor).captureActive,false);
+ assert.deepEqual(f.visual.lifecycleReceipts({...f.actor,sessionId:randomUUID()}),[]);
+});
+
+test('host failure after accepted batch is separate from rejected ingress and creates no publication or memory claim',async t=>{
+ const f=await fixture(t);await assert.rejects(f.nextBatch(()=>{throw Error('PRIVATE_UPLOAD_CALLBACK');}),/PRIVATE_UPLOAD_CALLBACK/);await Promise.resolve();const rows=f.visual.lifecycleReceipts(f.actor);assert.deepEqual(rows.slice(-2).map(row=>row.kind),['batchAdmitted','batchFailed']);assert.equal(rows.at(-1)!.reason,'host_processing_failed');assert.equal(rows.at(-1)!.requestDigest,null);assert.equal(f.input().publications.length,1);assert.equal(f.input().episodes.length,1);assert.doesNotMatch(JSON.stringify(rows),/PRIVATE_UPLOAD_CALLBACK/);
+});
+
+test('invalid frame and stale camera requests retain only bounded failure metadata and preserve existing runtime behavior',async t=>{
+ const f=await fixture(t);await assert.rejects(f.nextBatch(undefined,true));await Promise.resolve();assert.equal(f.visual.lifecycleReceipts(f.actor).at(-1)!.kind,'batchRejected');assert.equal(f.visual.lifecycleReceipts(f.actor).at(-1)!.reason,'frame_invalid');assert.equal(f.input().publications.length,1);
+ f.visual.camera(f.actor,{action:'stop',expectedRevision:0,idempotencyKey:randomUUID(),leaseId:randomUUID()});await Promise.resolve();assert.equal(f.visual.lifecycleReceipts(f.actor).at(-1)!.kind,'cameraStopNoop');assert.equal(f.visual.lifecycleReceipts(f.actor).at(-1)!.reason,'stale_lease');assert.equal(f.visual.state(f.actor).captureActive,true);assert.equal(f.providerCalls(),0);
+ f.visual.reset();await Promise.resolve();assert.deepEqual(f.visual.lifecycleReceipts(f.actor),[]);
+});
+
+
+test('actual host context-expiry timer records source withdrawal without ending its capture lease',async t=>{
+ const f=await fixture(t,'text',true),publication=f.input().publications[0]!;f.advance(6000);await Promise.resolve();const expired=f.visual.lifecycleReceipts(f.actor).filter(row=>row.kind==='contextExpired');
+ assert.equal(expired.length,1);assert.equal(expired[0]!.requestDigest,createHash('sha256').update(publication.admission.requestId).digest('hex'));assert.equal(expired[0]!.hostSequence,publication.admission.hostSequence);assert.equal(expired[0]!.reason,'expired');assert.equal(f.visual.state(f.actor).captureActive,true);assert.equal(f.visual.state(f.actor).currentObservationUsable,false);assert.equal(f.input().episodes.length,1);
+});
+
+test('failed optional lifecycle clock leaves actual batch publication and canonical source behavior intact',async t=>{
+ const f=await fixture(t);(f.visual as any).lifecycleJournal.clocks.utcMs=()=>{throw Error('PRIVATE_DIAGNOSTIC_CLOCK');};
+ const next=await f.nextBatch();assert.equal(next.result.status,'complete');assert.equal(f.input().publications.length,2);assert.deepEqual(f.visual.lifecycleReceipts(f.actor),[]);assert.equal(f.providerCalls(),0);
+});
+
+test('rejected renewal remains distinct from an unmatched stop and cannot replace the current capture lease',async t=>{
+ const f=await fixture(t),before=f.visual.state(f.actor);
+ assert.throws(()=>f.visual.camera(f.actor,{action:'renew',expectedRevision:999,idempotencyKey:randomUUID(),leaseId:before.leaseId!}));await Promise.resolve();const row=f.visual.lifecycleReceipts(f.actor).at(-1)!;
+ assert.equal(row.kind,'cameraRejected');assert.equal(row.reason,'clock_challenge_invalid');assert.equal(f.visual.state(f.actor).leaseId,before.leaseId);assert.equal(f.visual.state(f.actor).captureActive,true);assert.equal(f.input().publications.length,1);
+});
+
+test('host unavailability records negotiation only and grants no camera activity',async()=>{
+ const actor={principalId:randomUUID(),assistantId:randomUUID(),sessionId:randomUUID()},visual=new VisualInputHost({scopeFor:()=>null,sourceFor:()=>null,captureAuthority:()=>({sourceConnected:false,devicePermission:false,hostCaptureLease:false,interpretationAllowed:false,remoteEgressAllowed:false,foregroundVisible:false})});
+ try{assert.equal(visual.capabilities(actor,['1.0.0']).available,false);await Promise.resolve();const rows=visual.lifecycleReceipts(actor);assert.equal(rows.length,1);assert.equal(rows[0]!.kind,'negotiated');assert.equal(rows[0]!.reason,'source_unavailable');assert.equal(rows[0]!.scopeDigest,null);assert.equal(rows[0]!.observedCaptureActive,null);assert.equal(rows[0]!.authority,false);assert.equal(visual.state(actor).captureActive,false);}finally{visual.close();}
+});
+
+test('host close clears lifecycle diagnostics even when the existing release hook throws',async t=>{
+ const f=await fixture(t);assert.ok(f.visual.lifecycleReceipts(f.actor).length);
+ (f.visual as any).options.releaseCapture=()=>{throw Error('PRIVATE_RELEASE_HOOK');};assert.doesNotThrow(()=>f.visual.close());await Promise.resolve();assert.deepEqual(f.visual.lifecycleReceipts(f.actor),[]);assert.deepEqual(f.visual.turnReceipts(f.actor),[]);
+ (f.visual as any).options.releaseCapture=undefined;
 });

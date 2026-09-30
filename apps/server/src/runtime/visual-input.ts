@@ -8,6 +8,7 @@ import {MAX_VISUAL_METADATA_BYTES,VISUAL_FRAMING_BYTES} from './visual-multipart
 import type {VisualBounds, VisualFrame, VisualMediaType, VisualPerceptionProvider, VisualPerceptionResult, VisualScope} from '@lifestream/runtime/perception/port';
 import type {PreparedTurnBinding} from '@lifestream/runtime/inference/prompt';
 import {VisualTurnEvidence,visualDiagnosticId,type VisualTurnEvidenceFactory} from './visual-turn-evidence.ts';
+import {VisualLifecycleEvidence} from './visual-lifecycle-evidence.ts';
 import type {VisualMemoryPublication,VisualMemorySelection} from './visual-memory-intake.ts';
 
 export type VisualActor = Readonly<{principalId: string; sessionId: string; assistantId: string}>;
@@ -111,6 +112,7 @@ export class VisualInputHost {
   private readonly audience:()=>AudienceCoordinator|undefined;
   private readonly publications:PublicationEntry[]=[];
   private readonly turnJournal:VisualTurnEvidence;
+  private readonly lifecycleJournal:VisualLifecycleEvidence;
   private publicationClock=-Infinity;
   private publicationMono=-Infinity;
   private closed=false;
@@ -120,6 +122,7 @@ export class VisualInputHost {
   constructor(options: VisualInputOptions,onContextChanged:()=>void=()=>{},audience:()=>AudienceCoordinator|undefined=()=>undefined,onMemoryPublication:(publication:VisualMemoryPublication,selection:VisualMemorySelection)=>void=()=>{}) {
     this.onMemoryPublication=onMemoryPublication;
     this.turnJournal=new VisualTurnEvidence({utcMs:options.utcMs??Date.now,monotonicMs:options.monotonicMs??(()=>performance.now())});
+    this.lifecycleJournal=new VisualLifecycleEvidence({utcMs:options.utcMs??Date.now,monotonicMs:options.monotonicMs??(()=>performance.now())});
     this.audience=audience;
     this.onContextChanged=()=>queueMicrotask(onContextChanged);
     this.options = options;
@@ -131,6 +134,7 @@ export class VisualInputHost {
       ...(options.utcMs ? {utcMs:options.utcMs} : {}),
       ...(options.newId ? {newId:options.newId} : {}),
       onLeaseEnded: (scope,leaseId,reason) => {
+        this.lifecycleJournal.record({principalId:scope.principalId,assistantId:scope.assistantId,sessionId:scope.sessionId},{kind:'captureLeaseEnded',scope,leaseId,reason});
         this.unavailableLeases.delete(leaseId);
         const lane=this.cameras.get(scope.sessionId);
         // Retire our binding before the reducer callback; source end must not
@@ -188,6 +192,7 @@ export class VisualInputHost {
     } catch { return Object.freeze([]); }
   }
   turnReceipts(actor:VisualActor) {return this.turnJournal.receipts(actor);}
+  lifecycleReceipts(actor:VisualActor) {return this.lifecycleJournal.receipts(actor);}
   /** Capture lineage while the store view is authentic. Later expiry may be
    * diagnosed, but this observer never grants or refreshes context authority. */
   turnEvidence(actor:VisualActor,selection:VisualContextSelection,binding:PreparedTurnBinding|undefined):VisualTurnEvidenceFactory|undefined {
@@ -264,13 +269,17 @@ export class VisualInputHost {
 
   capabilities(actor: VisualActor, supportedVersions: readonly string[]) {
     const scope = this.scope(actor);
-    if (!scope) return {available:false,reason:'source_unavailable' as const,negotiation:null,camera:this.runtime.cameraStateFor(actor.sessionId,actor.principalId,actor.assistantId)};
+    if (!scope) {this.lifecycleJournal.record(actor,{kind:'negotiated',reason:'source_unavailable'});return {available:false,reason:'source_unavailable' as const,negotiation:null,camera:this.runtime.cameraStateFor(actor.sessionId,actor.principalId,actor.assistantId)};}
     const negotiation = this.runtime.negotiate(scope,supportedVersions,true);
     const reason = !negotiation.configured ? 'unconfigured' : !negotiation.selectedVersion ? 'unsupported' : !negotiation.providerConnected ? 'provider_unavailable' : !negotiation.mediaTypes.length ? 'unsupported' : null;
+    this.lifecycleJournal.record(actor,{kind:'negotiated',scope,reason,selectedVersion:negotiation.selectedVersion});
     return {available:reason === null,reason,negotiation,transport:{maxConcurrentUploadsPerSession:1,maxConcurrentUploadsPerHost:this.runtime.bounds.maxHostSessions,uploadDeadlineMs:5_000},camera:this.state(actor)};
   }
 
   camera(actor: VisualActor, input: CameraInput) {
+    try{return this.applyCamera(actor,input);}catch(error){this.lifecycleJournal.record(actor,{kind:'cameraRejected',reason:error instanceof VisualAdmissionError?error.reason:'host_processing_failed',metadata:input});throw error;}
+  }
+  private applyCamera(actor:VisualActor,input:CameraInput){
     const key = JSON.stringify([actor.principalId,actor.sessionId,input.idempotencyKey]);
     const prior = this.commands.get(key);
     if (prior) {
@@ -278,6 +287,7 @@ export class VisualInputHost {
       return this.runtime.cameraStateFor(actor.sessionId,actor.principalId,actor.assistantId);
     }
     let result: ReturnType<VisualAdmission['cameraState']>;
+    let cameraScope:VisualScope|null=null;
     if (input.action === 'stop') {
       if (!input.leaseId) throw new VisualAdmissionError('stale_lease');
       this.runtime.stop(actor.sessionId,input.leaseId,actor.principalId,actor.assistantId);
@@ -285,6 +295,7 @@ export class VisualInputHost {
     } else {
       const scope = this.scope(actor);
       if (!scope) throw new VisualAdmissionError('source_unavailable');
+      cameraScope=scope;
       const source = this.options.sourceFor(actor,scope.endpointId);
       const authority = this.options.captureAuthority(actor,scope);
       if (!source?.connected || !authority.sourceConnected) throw new VisualAdmissionError('source_unavailable');
@@ -301,10 +312,16 @@ export class VisualInputHost {
     if (input.action === 'renew') { this.observations.invalidate(actor.sessionId); this.onContextChanged(); }
     this.commands.set(key,structuredClone(input));
     if (this.commands.size > 256) this.commands.delete(this.commands.keys().next().value!);
+    this.lifecycleJournal.record(actor,{kind:input.action==='enable'?result.captureActive?'cameraEnabled':'cameraEnableInactive':input.action==='renew'?result.captureActive?'cameraRenewed':'cameraRenewInactive':result.captureActive?'cameraStopNoop':'cameraInactiveObserved',scope:cameraScope,leaseId:input.action==='stop'?input.leaseId??null:result.leaseId,clockMappingId:result.clockMappingId,captureActive:result.captureActive,reason:input.action==='stop'?result.captureActive?'stale_lease':'stop':result.reason});
     return result;
   }
 
   async batch(actor: VisualActor, meta: BatchMeta, parts: ReadonlyMap<string,Uint8Array>, copied?:()=>void) {
+    let admitted=false;
+    try{return await this.processBatch(actor,meta,parts,()=>{admitted=true;},copied);}
+    catch(error){this.lifecycleJournal.record(actor,{kind:admitted?'batchFailed':'batchRejected',reason:error instanceof VisualAdmissionError?error.reason:'host_processing_failed',metadata:meta});throw error;}
+  }
+  private async processBatch(actor:VisualActor,meta:BatchMeta,parts:ReadonlyMap<string,Uint8Array>,onAdmitted:()=>void,copied?:()=>void){
     const scope = this.scope(actor);
     if (!scope) { this.runtime.stop(actor.sessionId,meta.leaseId,actor.principalId,actor.assistantId); throw new VisualAdmissionError('scope_changed'); }
     let authority:CaptureAuthority;
@@ -316,6 +333,8 @@ export class VisualInputHost {
     if (!Array.isArray(meta.frames) || meta.frames.length !== parts.size || meta.frames.length > this.runtime.bounds.maxFramesPerBatch || meta.frames.some(frame => !parts.has(frame.frameId))) throw new VisualAdmissionError('frame_invalid');
     const frames: VisualFrame[] = meta.frames.map(frame => ({...frame,bytes:parts.get(frame.frameId)!}));
     const admitted = this.runtime.submit(scope,meta.leaseId,meta.endpointClockId,frames,meta.correlationId);
+    onAdmitted();
+    this.lifecycleJournal.record(actor,{kind:'batchAdmitted',provenance:admitted.provenance,frames});
     copied?.();
     const result = await admitted.completion;
     const deferred=this.runtime.isAdmissionDeferral(result);
@@ -401,7 +420,7 @@ export class VisualInputHost {
       // One deadline per capture time, not per request. This also fences queued
       // endpoint playback after synthesis has ended, with bounded timer state.
       if (this.viewExpiries.size>=32) return unavailableVisualSelection('expiry_capacity');
-      const timer=setTimeout(()=>{this.viewExpiries.delete(view.expiresAtMs);this.onContextChanged();},
+      const timer=setTimeout(()=>{this.viewExpiries.delete(view.expiresAtMs);this.lifecycleJournal.record(actor,{kind:'contextExpired',scope:view.scope,leaseId:view.leaseId,requestId:view.requestId,hostSequence:view.sourceRevision,reason:'expired'});this.onContextChanged();},
         Math.max(1,Math.ceil(view.expiresAtMs-(this.options.utcMs ?? Date.now)())));
       timer.unref();this.viewExpiries.set(view.expiresAtMs,timer);
     }
@@ -438,6 +457,6 @@ export class VisualInputHost {
     this.observations.invalidateSources(owner,ids);this.onContextChanged();
   }
   invalidate(sessionId: string) { this.observations.invalidate(sessionId); this.cancelUpload(sessionId); this.runtime.invalidate(sessionId); this.onContextChanged(); }
-  reset() { this.publications.length=0;this.turnJournal.reset();for (const timer of this.viewExpiries.values()) clearTimeout(timer); this.viewExpiries.clear(); this.observations.clear(); this.onContextChanged(); for (const upload of this.uploads.values()) upload.abort(); this.runtime.close(); }
-  close() { this.closed=true;this.reset();this.turnJournal.close(); }
+  reset() { try{this.publications.length=0;this.turnJournal.reset();for (const timer of this.viewExpiries.values()) clearTimeout(timer); this.viewExpiries.clear(); this.observations.clear(); this.onContextChanged(); for (const upload of this.uploads.values()) upload.abort(); this.runtime.close();}finally{this.lifecycleJournal.reset();} }
+  close() { this.closed=true;try{this.reset();}finally{this.turnJournal.close();this.lifecycleJournal.close();} }
 }

@@ -33,9 +33,20 @@ memory write, reinforcement or external effect. Its equality check compares
 metadata payloads, not perception or generated replies. Reports use a fresh file
 outside connected repository roots with owner-only permissions.
 
-The full visual lifecycle trace remains incomplete: negotiation/enablement,
-individual capture sequences, rejected ingress, memory admission before
-retention, and production trace/replay wiring need further implementation.
+The source host separately exposes actor-scoped `lifecycleReceipts`. These
+asynchronous diagnostic rings retain at most 128 pending and 128 published
+receipts, with lazy expiry after 60 seconds on either clock. They cover
+negotiation, observed runtime camera state, actual runtime lease termination,
+admitted frame sequence/clock metadata, rejected ingress, failure after admission
+and selected context expiry. An unmatched stop is a no-op; an inactive state
+observation does not prove that a physical capture device stopped. Receipt
+failure cannot change source-host authority or publication. No idle erasure or
+complete inventory is promised.
+
+The full visual lifecycle trace remains incomplete: the offline correlator above
+does not yet join these lifecycle receipts or pre-retention memory admission.
+Production trace/replay integration remains pending; these internal diagnostics
+are separate from the closed canonical trace envelope and its event catalogue.
 Selected-provider physical input, unannounced animal interpretation, historical
 appearance comparison, paired performance under pressure and Human experience
 qualification remain separate gates. Metadata fixtures do not satisfy them.
