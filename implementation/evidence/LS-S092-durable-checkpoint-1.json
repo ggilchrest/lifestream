@@ -1,0 +1,248 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S092",
+  "operation": "durableActivityCheckpointAndPlanningReservationMetadata",
+  "status": "verified",
+  "qualificationScope": "Scoped software component; whole S092 inProgress",
+  "sourceRevision": "1941c38dd276d957304a75d7e0b62620b2f323a6",
+  "baseRevision": "b08c89a2aef34ced1968a5a51e14d5d2bed9228b",
+  "recordedAt": "2026-09-30T10:17:03.319759Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      ".private/roadmap/packets/LS-S092.json": "6049d0fcdc55bf525fea0230305843e3c2f582b254dd21f086334a2370723783",
+      ".private/docs/31-local-game-activity.md": "fa81107f2eb216686b989b269d3a39cc9798681f11511f8e1e0698b1e10d4238",
+      "packages/contracts/src/schemas/local-game-activity.schema.json": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+    },
+    "exactSchemaApproval": "LS-DEC-050; bytes unchanged; no new export"
+  },
+  "claims": {
+    "canonicalCheckpointCASOwnerAndRunCollisionIsolation": true,
+    "epochStateAndSameTimelineRevisionFloorsPersist": true,
+    "explicitFinitePinnedQuotaRetentionAndExactGameBounds": true,
+    "actualCumulativeSerializedCheckpointByteCharges": true,
+    "separateHeldWorstCaseReservationsAndActualUsage": true,
+    "viewRunScopeProviderOnceOnlyReservationDeduplicationSurvivesRestart": true,
+    "qualifiedTerminalSettlesOnceUnknownCancellationDoesNotRefund": true,
+    "olderSaveMetadataNewEpochPreservesUsageAndOriginalAttribution": true,
+    "sourceInvalidationErasesDependentProsePreservesOpaqueFloors": true,
+    "policyChangeExpiryOwnerClockAndQuarantineFences": true,
+    "postCallbackRevocationExpiryAtomicRollback": true,
+    "actualSQLiteCloseOpenAndSeparateNodeProcessMetadataProof": true,
+    "recoveryReadNeverGrantsResumeAuthorityOrReplaysActions": true,
+    "actualGameSaveNativeRecoveryOrModelProof": false,
+    "runtimeHostRestoreCleanupLifecycleAndPlanningWiringComplete": false,
+    "installedCandidateChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 45,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1458.00575
+    },
+    "fullSource": {
+      "revision": "1941c38dd276d957304a75d7e0b62620b2f323a6",
+      "pass": 1817,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 99560.143125
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "workspaceCheck": "pass",
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6174.432541
+    },
+    "migration": {
+      "newId": 62,
+      "priorSqlBytesUnchanged": true,
+      "fiveExistingUpgradeHealthInventoriesUpdated": true,
+      "coveredByFullSource": true
+    }
+  },
+  "mappedCases": [
+    "LS-TEST-174",
+    "LS-TEST-175",
+    "LS-TEST-176",
+    "LS-TEST-177"
+  ],
+  "preflight": {
+    "disposition": "Independently eligible source/metadata/context foundation; primary S066 and actual S091/S092 acceptance remain separate",
+    "reportedMismatch": [
+      "primary selects S066",
+      "source revision/files/scope mismatch",
+      "whole S091 prerequisite not verified"
+    ]
+  },
+  "retainedFailures": [
+    {
+      "log": "tifa-s092-checkpoint-focused-initial.log",
+      "pass": 4,
+      "fail": 1,
+      "reason": "Node strip-only loader rejected TypeScript constructor parameter properties. Converted to explicit field declarations; repaired focused38/final45/full1817 pass."
+    }
+  ],
+  "exclusions": [
+    "Whole S091/S092 acceptance; actual runtime host/enrollment/lifecycle/restore/cleanup/planning port wiring remains incomplete",
+    "Actual game/ordinary-save/native bridge/visible decoder/dispatch/pause/crash recovery or autonomous next-task choice",
+    "Selected-model planning/tokenizer competence or measured priority/speech/resource/display/Linux/Windows/platform/Human qualification",
+    "S093 foreground history/help/memory/contact and S094 integrated qualification",
+    "S089 automatic historical appearance comparisons and S090 full trace/replay",
+    "Primary S066/full LS-TEST-084 and selected-model/onset failures",
+    "Installed candidate promotion",
+    "Push/publication/deployment or live camera/game/save/schedule/contact/provider effects"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue configured-hours/lifecycle admission validation and existing runtime host integration of durable checkpoint/planning ports, preserving missing actual setup/native/provider/platform/Human gates and no live enrollment/effect boundaries.",
+  "logDigests": {
+    "tifa-s092-game-context-browser.log": {
+      "path": "/tmp/tifa-s092-game-context-browser.log",
+      "sha256": "55703ce2168f3e24b142bb3e234f56da5b955b52121b610fbdb36f2b0acc8aab",
+      "bytes": 23878
+    },
+    "tifa-s092-game-context-build-final-source.log": {
+      "path": "/tmp/tifa-s092-game-context-build-final-source.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s092-game-context-build-final.log": {
+      "path": "/tmp/tifa-s092-game-context-build-final.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s092-game-context-build.log": {
+      "path": "/tmp/tifa-s092-game-context-build.log",
+      "sha256": "509b3f0e4c488db4ff7dbe84a87dfab27dd2d7f3fed738b2194f52dfd33c845d",
+      "bytes": 1074
+    },
+    "tifa-s092-game-context-focused-final-source.log": {
+      "path": "/tmp/tifa-s092-game-context-focused-final-source.log",
+      "sha256": "bb6a351a4a10db9b1b38f4a63415193e2f3f0a70d785a6586dcfa896369d6390",
+      "bytes": 5099
+    },
+    "tifa-s092-game-context-focused-final.log": {
+      "path": "/tmp/tifa-s092-game-context-focused-final.log",
+      "sha256": "62e5787f68d1ecef88821c86387f67e507df085918bef28054880b2d72f5bfc2",
+      "bytes": 5100
+    },
+    "tifa-s092-game-context-focused-initial.log": {
+      "path": "/tmp/tifa-s092-game-context-focused-initial.log",
+      "sha256": "b1acc9cc98650a8c6b593bf9f94f32ff6116bb9fb8df1e5e640117e55c05c97c",
+      "bytes": 17668
+    },
+    "tifa-s092-game-context-focused-repaired.log": {
+      "path": "/tmp/tifa-s092-game-context-focused-repaired.log",
+      "sha256": "e450c9c8bb3a2b124cd97d1d8744f3ac35a6654d485cb1ab75470471b6d8c012",
+      "bytes": 4802
+    },
+    "tifa-s092-game-context-full.log": {
+      "path": "/tmp/tifa-s092-game-context-full.log",
+      "sha256": "c0e7fa69d4a95221e47e4984340d564f39ea9e789c599c18253b5922e4cb19b5",
+      "bytes": 196418
+    },
+    "tifa-s092-game-context-generated-game.log": {
+      "path": "/tmp/tifa-s092-game-context-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s092-game-context-generated-original.log": {
+      "path": "/tmp/tifa-s092-game-context-generated-original.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s092-game-context-lint-final.log": {
+      "path": "/tmp/tifa-s092-game-context-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-game-context-lint.log": {
+      "path": "/tmp/tifa-s092-game-context-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-game-context-preflight.log": {
+      "path": "/tmp/tifa-s092-game-context-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s092-game-context-private.log": {
+      "path": "/tmp/tifa-s092-game-context-private.log",
+      "sha256": "7682cefe12104cf2a705869ee4aaab23b599bc222a9639c6a3d1256bdbcb01de",
+      "bytes": 28896
+    },
+    "tifa-s092-game-context-typecheck-final-source.log": {
+      "path": "/tmp/tifa-s092-game-context-typecheck-final-source.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-game-context-typecheck-final.log": {
+      "path": "/tmp/tifa-s092-game-context-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-game-context-typecheck-initial.log": {
+      "path": "/tmp/tifa-s092-game-context-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-game-context-typecheck.log": {
+      "path": "/tmp/tifa-s092-game-context-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-game-context-workspace.log": {
+      "path": "/tmp/tifa-s092-game-context-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --check",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check",
+    "node --test --experimental-strip-types packages/storage-sqlite/test/activity-checkpoints.test.ts packages/storage-sqlite/test/database.test.ts"
+  ],
+  "proofKinds": {
+    "real": "Actual SQLite close/open and separate fresh Node process using persisted synthetic metadata; migration upgrades and public health regressions; actual transaction rollback/floor/deduplication/source erasure",
+    "scripted": "Checkpoint source, older-save artifact, transition/policy/enrollment/provider-terminal grounding. No game/save bytes or emulator/model effects; no live controller or installed candidate migration"
+  },
+  "logFiles": [
+    "/tmp/tifa-s092-checkpoint-browser.log",
+    "/tmp/tifa-s092-checkpoint-build-final.log",
+    "/tmp/tifa-s092-checkpoint-build-repaired.log",
+    "/tmp/tifa-s092-checkpoint-build.log",
+    "/tmp/tifa-s092-checkpoint-focused-final.log",
+    "/tmp/tifa-s092-checkpoint-focused-initial.log",
+    "/tmp/tifa-s092-checkpoint-focused-repaired.log",
+    "/tmp/tifa-s092-checkpoint-full.log",
+    "/tmp/tifa-s092-checkpoint-generated-game.log",
+    "/tmp/tifa-s092-checkpoint-generated-original.log",
+    "/tmp/tifa-s092-checkpoint-lint.log",
+    "/tmp/tifa-s092-checkpoint-preflight.log",
+    "/tmp/tifa-s092-checkpoint-private.log",
+    "/tmp/tifa-s092-checkpoint-typecheck-final.log",
+    "/tmp/tifa-s092-checkpoint-typecheck-initial.log",
+    "/tmp/tifa-s092-checkpoint-typecheck-repaired.log",
+    "/tmp/tifa-s092-checkpoint-typecheck.log",
+    "/tmp/tifa-s092-checkpoint-workspace.log"
+  ]
+}
