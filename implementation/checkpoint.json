@@ -307,13 +307,24 @@
     "README.md",
     "apps/ios/ios/App/App.xcodeproj/project.pbxproj",
     "apps/ios/ios/App/App/Info.plist",
-    "implementation/PRODUCT-REALITY-AUDIT.md",
-    "apps/ios/native/.swiftpm/",
+    "apps/ios/native/.swiftpm/xcode/xcuserdata/gg.xcuserdatad/xcschemes/xcschememanagement.plist",
+    "apps/server/src/runtime/automatic-memory.ts",
+    "apps/server/src/runtime/visual-memory-intake.ts",
+    "apps/server/test/visual-memory-publication.test.ts",
     "docs/s083-s084-acceptance-guide.html",
+    "docs/visual-memory.md",
+    "implementation/PRODUCT-REALITY-AUDIT.md",
+    "implementation/checkpoint.json",
+    "implementation/evidence/GOAL-RESUMPTION-20260930.json",
     "implementation/evidence/IOS-V01-HUMAN-ACCEPTANCE-20260928.json",
     "implementation/evidence/LS-S089-memory-projection-1.json",
+    "implementation/evidence/LS-S089-publication-intake-1.json",
     "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
-    "implementation/evidence/S083-S084-human-acceptance-1.json"
+    "implementation/evidence/S083-S084-human-acceptance-1.json",
+    "packages/contracts/src/visual-memory.ts",
+    "packages/storage-sqlite/src/memory.ts",
+    "packages/storage-sqlite/src/visual-memory.ts",
+    "packages/storage-sqlite/test/visual-memory.test.ts"
   ],
   "validation": [
     {
@@ -1384,11 +1395,9 @@
       "evidence": "implementation/evidence/LS-S089-publication-intake-1.json"
     },
     {
-      "operation": "attributedCanonicalVisualMemoryCandidate",
-      "sourceRevision": "6658b0e476b8f9ddebf38b5d98e477edfd95ac52",
-      "status": "pass",
-      "evidence": "implementation/evidence/LS-S089-memory-projection-1.json",
-      "scope": "independent S089 software increment only"
+      "command": "Full source1530 (1529pass,0fail,1optional skip),focused54,HTTP23,typecheck/lint/build/private365/workspace",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S089-memory-projection-1.json"
     }
   ],
   "decisions": [
