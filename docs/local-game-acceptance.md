@@ -1,0 +1,50 @@
+# Local game qualification
+
+Platform, native control/save recovery, selected-provider perception, speech
+performance and Human qualification are separate claims. Existing fixture passes
+and receipt shapes do not establish actual play or useful autonomous progress.
+
+The offline evaluator consumes already collected scoped snapshots:
+
+```sh
+node --experimental-strip-types scripts/qualify-local-game.mjs \
+  --input /operator-local/game-diagnostics.json \
+  --output /operator-local/new-game-lineage-report.json
+```
+
+Its input is a closed object with `decisions`, `proposals`, `admissions`, `actions`,
+`observations`, `campaigns`, `episodes`, `projections` and `terminalEpisodes` arrays.
+The first eight contain existing canonical record shapes; terminal records contain
+only an episode UUID, newer revision and forgotten/expired/invalidated state.
+Input is a regular local file bounded to 256 KiB, at most 32 rows per array and
+the existing safe snapshot limit of 8,192 nodes. Getters, proxies, cycles, binary
+payloads and extra raw-media/save/authority fields are rejected.
+
+Available decision/observation/journal, proposal/prepared-view,
+action/admission/frame/result and retained episode/projection metadata is
+correlated. Missing records remain explicit gaps. Contradictory supplied metadata
+produces a diagnostic report and CLI exit code 2; partial metadata yields exit
+code 0 while `claimsRuntimeAcceptance` remains false. Neither result passes an
+acceptance case. A completed receipt, neutral-controls flag or save digest is
+still a supplied assertion requiring its independent native owner qualification.
+UTC timestamps do not measure monotonic execution latency.
+
+Reports hash opaque identities and source references and omit scene descriptions,
+questions/advice prose, goals, prompts, controller buttons, recipient/channel
+references, artifact paths, raw screenshots and save bytes. They preserve source
+families, frame ranges, original dates, pinned digests and distinct milestones.
+A newer terminal episode suppresses stale episode/projection payloads; replay
+cannot restore or reinforce memory. The existing isolated replay path creates new
+IDs and pins the redacted artifact, without accepting a runner/provider callback
+or invoking capture, controllers, saves, scheduling, contacts or learning.
+Equality compares metadata only. Reports use fresh owner-only files outside the
+connected repository roots and never overwrite an existing report.
+
+This tool is a bounded diagnostic component, separate from a complete canonical
+activity trace. Current source custody, exact full prepared-input lineage,
+budgets, native pause and ordinary-save recovery, configured-hours/contact/image
+outcomes, authenticated advice and its actual causal result remain independently
+qualified. Each Linux/Windows graphical ordinary-speed platform and selected
+provider needs its own actual evidence, including display loss, stationary-frame
+pause, durable ordinary save readback/restart/load and honest unsaved loss.
+Paired speech/resource tests and Human relevance/control are also separate gates.
