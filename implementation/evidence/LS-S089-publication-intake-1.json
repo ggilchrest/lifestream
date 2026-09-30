@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S089",
+  "operation": "currentPublicationToIdleTypedMemoryIntake",
+  "status": "verified",
+  "qualificationScope": "Scoped software increment only; whole S089 remains inProgress",
+  "sourceRevision": "eb20ddedb67b8a32d7f9bda64d93631e743cd7aa",
+  "baseRevision": "8dd3414cdab56286fa76248fbdf4bff0905ead86",
+  "recordedAt": "2026-09-30T05:02:08.543898Z",
+  "authorization": [
+    "LS-DEC-049",
+    "LS-DEC-050",
+    "2026-09-30 explicit new-thread goal transfer/resumption"
+  ],
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      "docs/30-conversational-vision.md": "e5302919fdfb4842d713ce4ed344a44a52dcdb11b38185d2dee293406dedd6e8",
+      "roadmap/packets/LS-S089.json": "04baae0960e22e3389f824755c49c1017d7da91831eba404f9a5f6639705ac96",
+      "contracts/conversational-vision.schema.json": "4f00aaf9b3ae40db636482cc2fc20ebb22b43d6131155dda2d4e32fc3ee80b7e"
+    }
+  },
+  "mappedCases": [
+    "LS-TEST-164",
+    "LS-TEST-166"
+  ],
+  "requirements": [
+    "LS-MEM-100",
+    "LS-MEM-101",
+    "LS-MEM-103"
+  ],
+  "claims": {
+    "currentMintedHostPublicationBinding": true,
+    "separateMemoryAndVisualConsent": true,
+    "explicitHostSubjectAndEventFamilySelection": true,
+    "atMostFourLatestPendingSessionSources": true,
+    "foregroundDoesNotAwaitIntake": true,
+    "idleRetentionOnly": true,
+    "scopeSourceAudiencePolicyExpiryAndContentHookFences": true,
+    "opaqueRecentIntakeReceipts": true,
+    "duplicateAndForgetReplayFences": true,
+    "unknownConfidencePreserved": true,
+    "numericTransformationConfidenceInvented": false,
+    "memoryRecordsProjected": false,
+    "rawMediaRetained": false,
+    "ownerTurnsFabricated": false,
+    "memoryModelCalls": 0
+  },
+  "verification": {
+    "recoveredBaseline": {
+      "revision": "8dd3414cdab56286fa76248fbdf4bff0905ead86",
+      "pass": 1494,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 108896.583542
+    },
+    "finalSource": {
+      "pass": 1516,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 108363.28225
+    },
+    "focusedPublication": {
+      "pass": 22,
+      "fail": 0,
+      "skip": 0
+    },
+    "browserSurface": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86
+    },
+    "workspaceTests": {
+      "pass": 44,
+      "fail": 0
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "workspaceCheck": "pass",
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0
+    },
+    "diffCheck": "pass"
+  },
+  "retainedFailures": [
+    {
+      "attempt": "initial sandbox source and browser suites",
+      "reason": "EPERM on isolated loopback test listeners; successful approved loopback reruns retained separately."
+    },
+    {
+      "attempt": "private validation at pause checkpoint",
+      "reason": "Packet contained unsupported status/extra execution fields; corrected S089 aid to existing legacy packet schema without weakening validator."
+    },
+    {
+      "attempt": "first new-increment full suite",
+      "pass": 1513,
+      "failedTests": 3,
+      "skip": 1,
+      "reason": "Concurrent build rewrote generated migration files during restore tests; two leaf cases rejected migration digests. Source/dist digests match after build; sequential stable committed-source suite passes. Failed log retained."
+    }
+  ],
+  "logDigests": {
+    "tifa-resume-full-20260930": {
+      "path": "/tmp/tifa-resume-full-20260930.log",
+      "sha256": "34fda8ab9847457ef64223fe3c0af426b0d77bdd552412098c12264dda04046c",
+      "bytes": 325531
+    },
+    "tifa-resume-full-unsandboxed-20260930": {
+      "path": "/tmp/tifa-resume-full-unsandboxed-20260930.log",
+      "sha256": "960a18b74c19a68c1a361338467f76bf9c587a660e0186d3fc59a88051b2678e",
+      "bytes": 179810
+    },
+    "tifa-resume-workspace-tests-20260930": {
+      "path": "/tmp/tifa-resume-workspace-tests-20260930.log",
+      "sha256": "71889c826f173639dafda98d399699a0f66e8b1163429fce1c10fbc0fb305fe8",
+      "bytes": 4096
+    },
+    "tifa-resume-workspace-check-20260930": {
+      "path": "/tmp/tifa-resume-workspace-check-20260930.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    },
+    "tifa-resume-private-validate-20260930": {
+      "path": "/tmp/tifa-resume-private-validate-20260930.log",
+      "sha256": "6cd285618b91be963eef07fa3b3f718491eec9b75e53eea50be882a5bfb3b04d",
+      "bytes": 28381
+    },
+    "tifa-s089-publication-full": {
+      "path": "/tmp/tifa-s089-publication-full.log",
+      "sha256": "e68e1d96e50a65ef7fdd9444473b23d731c886593d6ab6d0d897feba9c3d7024",
+      "bytes": 184000
+    },
+    "tifa-s089-publication-final-full": {
+      "path": "/tmp/tifa-s089-publication-final-full.log",
+      "sha256": "fd5292b0cec511d99012837c62bf31edb0b314f133a556889de1ff6ff5a7deb1",
+      "bytes": 181600
+    },
+    "tifa-s089-publication-final-focused": {
+      "path": "/tmp/tifa-s089-publication-final-focused.log",
+      "sha256": "9b3d161b4b7b97c726e821c0655db1f9b061d9cd816f2284f3f28fd7dda2a13c",
+      "bytes": 1945
+    },
+    "tifa-s089-publication-final-typecheck": {
+      "path": "/tmp/tifa-s089-publication-final-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-publication-final-lint": {
+      "path": "/tmp/tifa-s089-publication-final-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s089-publication-final-build": {
+      "path": "/tmp/tifa-s089-publication-final-build.log",
+      "sha256": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155",
+      "bytes": 1047
+    },
+    "tifa-s089-publication-browser": {
+      "path": "/tmp/tifa-s089-publication-browser.log",
+      "sha256": "0a3fe324013216cc0161fbb7edb93c121e5b850cdc25d0fb538a2cb614814b75",
+      "bytes": 25301
+    },
+    "tifa-s089-publication-browser-unsandboxed": {
+      "path": "/tmp/tifa-s089-publication-browser-unsandboxed.log",
+      "sha256": "69aaebf0bea8e91d4cd75b0031d2344af57df009fac64d590e15b588f85c2d38",
+      "bytes": 23876
+    },
+    "tifa-s089-publication-final-private": {
+      "path": "/tmp/tifa-s089-publication-final-private.log",
+      "sha256": "d15687c4409b9e30888c19940c6764e603c74fbc67546a4f47d6b271199d9537",
+      "bytes": 28891
+    },
+    "tifa-s089-publication-final-workspace": {
+      "path": "/tmp/tifa-s089-publication-final-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    },
+    "tifa-resume-s089-preflight-20260930": {
+      "path": "/tmp/tifa-resume-s089-preflight-20260930.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    }
+  },
+  "exclusions": [
+    "Selected real visual-provider and physical camera",
+    "Production host subject/event association binding",
+    "Public HTTP publication-to-inspection joined check (next increment)",
+    "MemoryRecord projection with attributed transformation confidence",
+    "Historical comparison and reflection/ordinary-reply integration",
+    "Whole S088/S089 and full S090 lifecycle replay",
+    "S091-S094 game software/platform/native-save qualification",
+    "Primary S066/full LS-TEST-084",
+    "New Human, physical or performance qualification",
+    "Installed candidate promotion/deployment/push/publication/live effects"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Verify joined isolated HTTP publication/intake/inspection, then continue source-qualified projection/lifecycle/history/context integration."
+}

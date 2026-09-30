@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-09-30T05:02:08.543898Z",
+  "status": "inProgress",
+  "runDisposition": "continue",
+  "workspace": "/Users/gg/Development/Agentic/Tifa",
+  "projectId": "6d68c78d-9a5e-4022-9d81-f17523d1c42e",
+  "threadId": "01a0f095-50e7-711b-b41d-0780d97b30dc",
+  "oldThreadId": "01a0bc71-7795-7122-bc48-d74113694500",
+  "oldThreadObserved": "idle",
+  "oldThreadResumed": false,
+  "persistentGoalControlSet": false,
+  "metadataVerification": "Model/reasoning/service are not exposed; native Codex UI read is denied by computer-use policy. No mismatch inferred.",
+  "revisions": {
+    "composition": "b41d2f6b9cb19c8cce9f7c42ea786766ff174d15",
+    "lifestream": "eb20ddedb67b8a32d7f9bda64d93631e743cd7aa",
+    "pwce": "6bdeba9553b3da82b53f306ce006c3427e022aea",
+    "lifestreamPrivate": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8"
+  },
+  "primaryCheckpoint": {
+    "slice": "LS-S066",
+    "status": "implementationCompleteVerificationPending",
+    "fullLS_TEST_084": "pending"
+  },
+  "independentOperation": "currentPublicationToIdleTypedMemoryIntake",
+  "evidence": "implementation/evidence/LS-S089-publication-intake-1.json",
+  "installedCandidateChanged": false,
+  "boundaries": [
+    "No push/publication/deployment/live capture/game/save effects",
+    "Accepted iPhone/original24 retained",
+    "Selected-model callback/causal failures and900/1500ms onset targets retained",
+    "Telegram binding and encrypted-backup configuration preserved"
+  ],
+  "nextAction": "Verify joined isolated HTTP publication/intake/inspection, then continue source-qualified projection/lifecycle/history/context integration."
+}
