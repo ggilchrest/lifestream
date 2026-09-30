@@ -61,6 +61,14 @@ export function gameDecisionInput(view:PreparedGameCampaignContext,binding:Prepa
 }
 /** Proposal validation is a planning check only; a new dispatch observation
  * and independently issued capability admission remain mandatory. */
+/** Recorded identity only. An old decision remains attributable after the
+ * latest observation changes, but this check supplies no current use grant. */
+export function gameDecisionHasPreparedIdentity(view:PreparedGameCampaignContext,binding:PreparedTurnBinding,decision:G.GameDecisionInput):boolean {
+ return decisions.get(decision)===view&&preparedGames.get(view)?.binding===binding;
+}
+export function gameDecisionMatchesPreparedContext(view:PreparedGameCampaignContext,binding:PreparedTurnBinding,decision:G.GameDecisionInput):boolean {
+ try{if(decisions.get(decision)!==view)return false;gameCampaignConversationContent(view,binding);return true;}catch{return false;}
+}
 export function gameProposalMatchesPreparedContext(view:PreparedGameCampaignContext,binding:PreparedTurnBinding,decision:G.GameDecisionInput,proposal:G.GameActionProposal):boolean {
  try{if(decisions.get(decision)!==view)return false;const copy=boundedGameDataSnapshot(proposal) as G.GameActionProposal|null;if(!copy)return false;proposal=copy;gameCampaignConversationContent(view,binding);const entry=selections.get(preparedGames.get(view)!.selection)!,o=entry.input.observation;
   if(!validator.validate(schema+'GameActionProposal',proposal).valid||!isDeepStrictEqual(proposal.scope,entry.scope)||proposal.observationId!==decision.observationId||proposal.observationRevision!==decision.observationRevision||proposal.preparedViewId!==binding.viewId||proposal.preparedViewRevision!==binding.revision||proposal.invalidationKey!==binding.invalidationKey||proposal.adviceRefs.some(ref=>!decision.adviceRefs.includes(ref))||new Set(proposal.preconditions.map(p=>p.predicateId)).size!==proposal.preconditions.length||new Set(proposal.preconditions.map(p=>p.fieldId)).size!==proposal.preconditions.length||proposal.buttons.includes('up')&&proposal.buttons.includes('down')||proposal.buttons.includes('left')&&proposal.buttons.includes('right'))return false;
