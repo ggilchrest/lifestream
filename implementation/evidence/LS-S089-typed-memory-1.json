@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S089",
+  "operation": "canonicalTypedVisualMemoryIncrement",
+  "status": "implementationCompleteVerificationPending",
+  "sourceRevision": "c2a40eb8f6357bb59ebb1abeae76555b65e0f701",
+  "recordedAt": "2026-09-30T04:20:52.533746Z",
+  "authorization": [
+    "LS-DEC-049",
+    "LS-DEC-050"
+  ],
+  "claims": {
+    "typedEpisodes": true,
+    "sqliteDurability": true,
+    "separateExplicitConsent": true,
+    "boundedDeduplication": true,
+    "expiryAndForgetPayloadRemoval": true,
+    "ownerScopedPublicControlApi": true,
+    "restoreQuarantine": true,
+    "numericTransformationConfidenceInvented": false,
+    "ownerTranscriptFabricated": false,
+    "rawMediaRetained": false,
+    "modelCallsForIntake": 0
+  },
+  "verification": {
+    "focused": {
+      "pass": 48,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 3419.452583
+    },
+    "publicApiAndAffectedMigrationRegressions": {
+      "pass": 71,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 4449.022334
+    },
+    "renderedChrome": {
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 7322.513333
+    },
+    "defaultBrowserSurface": {
+      "pass": 77,
+      "fail": 0,
+      "skipped": 86
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "diffCheck": "pass",
+    "initialFullRun": {
+      "pass": 1488,
+      "fail": 5,
+      "skipped": 1,
+      "durationMs": 107945.57975,
+      "failureClass": "Exact migration inventories omitted newly added migration 60; all five affected tests subsequently pass in the 71-test run.",
+      "finalFullRerun": "pendingOperatorPause"
+    }
+  },
+  "logDigests": {
+    "phase16-typecheck-final": {
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "phase16-lint-final": {
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "phase16-build-final": {
+      "sha256": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155",
+      "bytes": 1047
+    },
+    "phase16-focused-final": {
+      "sha256": "3902a6d75864d70ebf6612ca82d48ae4d2d75d57a2d3c3b6f15fcfda809a3b56",
+      "bytes": 5557
+    },
+    "visual-memory-api-migrations": {
+      "sha256": "6c1902a845a5288ad9a2c37536fd4ca20b3d6f0c14002abf0a234b3c1acdc4d4",
+      "bytes": 9375
+    },
+    "visual-memory-browser-final": {
+      "sha256": "f36ff3a798b162b440cff8df4b25281b2df8dcd40cdc0746bb3b3afadc940384",
+      "bytes": 354
+    },
+    "phase16-browser-surface": {
+      "sha256": "da5815298c61dd1056e00cf2aed9a74e3443b3bb073f0725aa1de7734ab50cbc",
+      "bytes": 23854
+    },
+    "phase16-full-test": {
+      "sha256": "bb601328f32b7869c1c8a63004ee485463fceab94721b350110efe1c0f08ba03",
+      "bytes": 186203
+    }
+  },
+  "exclusions": [
+    "Full LS-S088/LS-S089 qualification",
+    "Selected real visual-provider adapter and live camera capture",
+    "Canonical current-publication to durable intake binding",
+    "MemoryRecord projection with attributed transformation confidence",
+    "Historical comparison and reflection/ordinary-reply integration",
+    "Full LS-TEST-084 for primary LS-S066",
+    "New Human acceptance or server/iPhone deployment"
+  ],
+  "disposition": "stopped",
+  "stopReason": "Operator: pause this as soon as its safe to stop",
+  "nextAction": "After explicit resume, rerun full source suite and workspace/private checks, then continue canonical publication-to-memory and lifecycle/context integration while preserving existing acceptance."
+}
