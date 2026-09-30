@@ -65,3 +65,15 @@ dependent episode/projection payloads transactionally; opaque fences survive.
 Dependency cascades do not erase independent Human input. This source path does
 not send help, authenticate a channel, dispatch an action, prove advice success
 or promote installed/native platform qualification.
+
+Ordinary foreground HTTP conversation can select this validated advice-bearing
+episode through the existing nine-section prepared-memory path. It remains dated
+historical game experience with uncertainty, without raw advice/authentication or
+recipient references in its game context. Held replies recheck source custody,
+consent and audience before releasing prose. Original Human/source forgetting,
+correction, help erasure, authentication withdrawal or expiry fences a selected
+reply; an unknown, shared or foreign relationship audience cannot select it.
+Historical recall does not itself require a current game pause or contact grant.
+Isolated HTTP/SQLite fixtures verify these fences; their synthetic Human input,
+channel authentication and native action predicates do not qualify live advice,
+causal success or platform acceptance.
