@@ -1,0 +1,153 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S089",
+  "operation": "activeSourceBoundPreparedVisualMemory",
+  "status": "verified",
+  "qualificationScope": "Scoped software increment only; whole S089 inProgress",
+  "sourceRevision": "10484a1e0c2cb2cf5f58b4ef98dee64e4189113c",
+  "baseRevision": "9c65e1e4c763679eb559a037121120604367766e",
+  "recordedAt": "2026-09-30T06:43:16.498218Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      "roadmap/packets/LS-S089.json": "cc37f38e4fdd657826b7d143a7fba000520dc3f5d88792c058b05113cf4d915f",
+      "docs/30-conversational-vision.md": "e5302919fdfb4842d713ce4ed344a44a52dcdb11b38185d2dee293406dedd6e8",
+      "docs/04-memory-and-dreaming.md": "e567d364dcc505349ead8e1eb40521c80c3b61df6f46dd0ddaa17151ee573794",
+      "contracts/conversational-vision.schema.json": "4f00aaf9b3ae40db636482cc2fc20ebb22b43d6131155dda2d4e32fc3ee80b7e"
+    }
+  },
+  "mappedCases": [
+    "LS-TEST-164",
+    "LS-TEST-165",
+    "LS-TEST-166"
+  ],
+  "claims": {
+    "automaticActivationUnderBothPoliciesAndHostTransformationEstimate": true,
+    "canonicalFactualityUnverified": true,
+    "datedPastInterpretationInActualAssembledOrdinaryRequest": true,
+    "existingNineSectionsAndPreparedMemoryLane": true,
+    "originalFamilyInSelectionLineage": true,
+    "unknownPerceptionConfidenceAndSourceSpecificLimitationsPreserved": true,
+    "noForegroundVisualModelCallOrNewPreparedContext": true,
+    "sameCacheBoundaryIncludesSourcePolicyAndExpiry": true,
+    "retentionBoundsPreparedViewAndHeldReply": true,
+    "correctionCancelsHeldSyntheticOutput": true,
+    "expiryConsentRollbackMalformedMetadataReadFences": true,
+    "optionalSelectionReceiptsRespectExisting512ByteFormatterBound": true,
+    "reflectionInputIntegrated": false,
+    "realImageUnderstanding": false,
+    "selectedModelReplyQualityQualified": false,
+    "performanceQualified": false,
+    "sourceTurnFabricated": false,
+    "rawMediaRetained": false,
+    "recallReinforces": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 87,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 3191.180917
+    },
+    "fullSource": {
+      "revision": "10484a1e0c2cb2cf5f58b4ef98dee64e4189113c",
+      "pass": 1562,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 95891.495458
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "workspaceCheck": "pass",
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    }
+  },
+  "retainedFailures": [
+    {
+      "attempt": "initial ordinary-context focused suite",
+      "pass": 85,
+      "fail": 1,
+      "reason": "The selected record was642 UTF-8 bytes and final optional formatter omitted it at the512-byte bound. Repeated system wording is now factored into the same prepared-view limitation, retaining date and source-specific limitations. Selection receipts now report oversized optional records omitted. Bounds were not raised. Repaired focused87/full1562 pass."
+    }
+  ],
+  "logDigests": {
+    "tifa-s089-context-budget-diagnostic.log": {
+      "path": "/tmp/tifa-s089-context-budget-diagnostic.log",
+      "sha256": "9d64b85a24d414ea3f3e0a27bc83e3aea49d4a5a0e0390e7d346ccbe2e9cb4c0",
+      "bytes": 7078
+    },
+    "tifa-s089-context-build-final.log": {
+      "path": "/tmp/tifa-s089-context-build-final.log",
+      "sha256": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155",
+      "bytes": 1047
+    },
+    "tifa-s089-context-focused-final.log": {
+      "path": "/tmp/tifa-s089-context-focused-final.log",
+      "sha256": "33771f89050a83bc28dc1ffd69e48792a0127cb2333532747b46e720e1420325",
+      "bytes": 8091
+    },
+    "tifa-s089-context-focused-repaired.log": {
+      "path": "/tmp/tifa-s089-context-focused-repaired.log",
+      "sha256": "84f9bf80a6996cdbd9f5b341c3bb5ccd1da49b7ec4d4afebb596b80a4cedcc39",
+      "bytes": 7983
+    },
+    "tifa-s089-context-focused.log": {
+      "path": "/tmp/tifa-s089-context-focused.log",
+      "sha256": "a17c18ba2ee88ff5d75efe1a083af82be802671011b457556c4fe3e6a8c2c8ec",
+      "bytes": 12039
+    },
+    "tifa-s089-context-full.log": {
+      "path": "/tmp/tifa-s089-context-full.log",
+      "sha256": "28a1532243cb189ccc3cca2af0e1ac67846edfcbf0bbb0f92f23682f22cc2abc",
+      "bytes": 185495
+    },
+    "tifa-s089-context-lint-final.log": {
+      "path": "/tmp/tifa-s089-context-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s089-context-private.log": {
+      "path": "/tmp/tifa-s089-context-private.log",
+      "sha256": "e0e9c6310739c9a0bb4e08bf319e5ed347062182d46317e510cfbe75b766d7a3",
+      "bytes": 28953
+    },
+    "tifa-s089-context-typecheck-final.log": {
+      "path": "/tmp/tifa-s089-context-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-context-typecheck-repaired.log": {
+      "path": "/tmp/tifa-s089-context-typecheck-repaired.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-context-typecheck.log": {
+      "path": "/tmp/tifa-s089-context-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-context-workspace.log": {
+      "path": "/tmp/tifa-s089-context-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  },
+  "exclusions": [
+    "Whole S089 acceptance",
+    "Typed visual experience/reflection integration",
+    "Automatic historical-pattern ordinary-reply integration",
+    "Selected model quality or real image understanding",
+    "Real camera/provider/physical/performance/Human proof",
+    "S090 full trace/replay",
+    "S091-S094 games/native saves/Linux/Windows/Human proof",
+    "S066/full LS-TEST-084",
+    "Installed candidate promotion",
+    "Push/publication/deployment/live effects"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue typed visual observation input to existing experience/reflection with uncertain source attribution, original family/time and no automatic preference or imprint evidence from model-only scene text; then dependency-ready Phase16 lifecycle/game work."
+}
