@@ -1,0 +1,231 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S093",
+  "component": "source-bound authenticated advice-bearing game episode custody",
+  "componentStatus": "verified",
+  "wholeSliceStatus": "inProgress",
+  "recordedAt": "2026-09-30T19:20:55.153138Z",
+  "sourceRevision": "3963f8fc608f6a107e581ccd5b34dfeb10675819",
+  "sourceFiles": [
+    "apps/server/src/runtime/game-advice.ts",
+    "apps/server/test/game-activity-help.test.ts",
+    "apps/server/test/game-activity.test.ts",
+    "apps/server/test/server.test.ts",
+    "docs/local-game-acceptance.md",
+    "packages/storage-sqlite/src/game-advice-custody.ts",
+    "packages/storage-sqlite/src/game-experience.ts",
+    "packages/storage-sqlite/src/game-help.ts",
+    "packages/storage-sqlite/src/index.ts",
+    "packages/storage-sqlite/src/memory.ts",
+    "packages/storage-sqlite/src/migrations/0066_game_advice_custody.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/test/game-advice-custody.test.ts",
+    "packages/storage-sqlite/test/game-experience.test.ts",
+    "packages/storage-sqlite/test/game-help.test.ts",
+    "packages/storage-sqlite/test/initiative-delivery.test.ts",
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
+    "packages/storage-sqlite/test/session-handoff.test.ts",
+    "packages/storage-sqlite/test/urgent-away.test.ts"
+  ],
+  "verification": {
+    "fullSource": {
+      "revision": "3963f8fc608f6a107e581ccd5b34dfeb10675819",
+      "pass": 2330,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 109672.170666
+    },
+    "focused": {
+      "pass": 187,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 2257.376125
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6696.594542
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "generatedGameTypes": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types packages/storage-sqlite/test/game-advice-custody.test.ts packages/storage-sqlite/test/game-experience.test.ts packages/storage-sqlite/test/game-help.test.ts packages/storage-sqlite/test/game-memory.test.ts apps/server/test/game-activity-help.test.ts",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual isolated SQLite active Human-memory history and exact owner/original-turn/revision/quote transformation, separately retained original question/source/artifact/policy lineage, genuine selected advice and prepared observed-attempt metadata, and durable unverified experiential source/projection. Reopen, tamper, expired custody, missing activation, wrong source pins/scope/policy, late withdrawal, correction/forgetting/help/restore erasure and multi-episode cascades are exercised. Additive migration66 preserves previous fingerprints, memory and source/help/budget clocks.",
+    "scripted": "Synthetic Human content/principal/channel delivery/authentication predicates and native game action/admission/observation/outcome/meaningful-grounding predicates. No live message, Human reply, controller effect, save, native scene interpretation or causal advice success is qualified."
+  },
+  "milestoneDistinctions": [
+    "Authentic selected advice can expose inert original input refs; copied wrappers cannot supply source identity.",
+    "Advice-bearing source requires explicit current authentication and separate memory/help custody; no payload grants authority.",
+    "Canonical game memory remains unverified experiential interaction source with attributed transformation confidence and no reinforcement or manufactured Human turn.",
+    "Correction/forgetting/help withdrawal and restore quarantine erase derived payloads atomically, keeping opaque dependency fences without erasing independent Human input.",
+    "Retention cannot outlive original help custody; stored refs cannot restore a forgotten source or qualify a channel/native effect."
+  ],
+  "limitations": [
+    "Whole S093 remains inProgress. Production qualified authenticated channel/native historical source resolvers remain required; fixture authentication is not actual remote delivery or Human acceptance.",
+    "Native graphical Linux/Windows normal-speed play, control/pause/save/recovery, actual observation/perception/model and causal advice-success proof remain open.",
+    "Permitted recipient/channel/hours/attachment/configured-hours setup and native effects remain separately authorized. No changes to installed candidate/services/Telegram or repaired backup schedule/key.",
+    "Canonical visual/game trace integration,200paired completed foreground speech turns per declared pressure condition, resource/onset and Human qualification remain open.",
+    "Primary S066 implementationCompleteVerificationPending/full LS-TEST-084, accepted original24 S083/S084 and iPhone Human journeys and selected-model causal/onset failures preserved. No pushes/publication/deploy/private exports/provider changes/new live effects."
+  ],
+  "retainedFailures": [
+    {
+      "log": "tifa-s093-advice-custody-focused-initial.log",
+      "cause": "New fixture called nonexistent help.admit and omitted a source-helper import; corrected to existing closed queue API with stable synthetic situation key. Additive migration inventory expectations advanced to66. These were fixture/bookkeeping failures; existing policy/admission guards were not weakened."
+    }
+  ],
+  "ownedOperation": {
+    "operation": "S093 advice custody exact-revision full source suite",
+    "sourceRevision": "3963f8fc608f6a107e581ccd5b34dfeb10675819",
+    "startedAt": "2026-09-30T19:15:18.826107+00:00",
+    "wrapperPid": 91063,
+    "log": "/tmp/tifa-s093-advice-custody-full.log",
+    "status": "completed",
+    "childPid": 91067,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T19:17:08.726801+00:00"
+  },
+  "primaryCheckpoint": "LS-S066 implementationCompleteVerificationPending; full LS-TEST-084 preserved",
+  "installedCandidateChanged": false,
+  "appGoalControlSet": false,
+  "runDisposition": "continue",
+  "nextAction": "Continue S093 advice-bearing ordinary conversation/privacy integration and independently eligible S091-S094 source work; actual native/platform/provider/performance/Human and canonical-trace gates remain open.",
+  "logDigests": {
+    "tifa-s093-advice-custody-browser.log": {
+      "path": "/tmp/tifa-s093-advice-custody-browser.log",
+      "sha256": "44ac484679fdc1298661f1f726a1bef55288ef6a1e40759e9c7bf83531cf3f12",
+      "bytes": 23866
+    },
+    "tifa-s093-advice-custody-build-bound-source.log": {
+      "path": "/tmp/tifa-s093-advice-custody-build-bound-source.log",
+      "sha256": "e50ff0e002cb10c9e1f29b492c92668e9757cd520b888d2656f9c44634c30ba0",
+      "bytes": 1074
+    },
+    "tifa-s093-advice-custody-build-final.log": {
+      "path": "/tmp/tifa-s093-advice-custody-build-final.log",
+      "sha256": "e50ff0e002cb10c9e1f29b492c92668e9757cd520b888d2656f9c44634c30ba0",
+      "bytes": 1074
+    },
+    "tifa-s093-advice-custody-build-initial.log": {
+      "path": "/tmp/tifa-s093-advice-custody-build-initial.log",
+      "sha256": "b438e66ffe187bfde27122faaba7847ce17a4004899c95d4c454a6a3072e4aa2",
+      "bytes": 1074
+    },
+    "tifa-s093-advice-custody-diff.log": {
+      "path": "/tmp/tifa-s093-advice-custody-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s093-advice-custody-focused-current.log": {
+      "path": "/tmp/tifa-s093-advice-custody-focused-current.log",
+      "sha256": "63274358d293f794159e80dd124864bf6caa1c8d2002446b0fe013aa26061915",
+      "bytes": 15738
+    },
+    "tifa-s093-advice-custody-focused-final.log": {
+      "path": "/tmp/tifa-s093-advice-custody-focused-final.log",
+      "sha256": "def3334e9c3fb9be171294881012247992a11076256122132c75aff1e4ba8d9e",
+      "bytes": 15631
+    },
+    "tifa-s093-advice-custody-focused-initial.log": {
+      "path": "/tmp/tifa-s093-advice-custody-focused-initial.log",
+      "sha256": "5c5293e4e6693f560ea92f68bf7350cbce9ffea590538643cadb13faf65f6376",
+      "bytes": 43493
+    },
+    "tifa-s093-advice-custody-focused-repaired-1.log": {
+      "path": "/tmp/tifa-s093-advice-custody-focused-repaired-1.log",
+      "sha256": "9753b0d2a672952798d5b2a3a8c6e3718e8966923f5a2d7560285caa1c20c606",
+      "bytes": 8155
+    },
+    "tifa-s093-advice-custody-focused-repaired-2.log": {
+      "path": "/tmp/tifa-s093-advice-custody-focused-repaired-2.log",
+      "sha256": "700e5724a06f5e1788ac014f904dddd25f1c4b79db4b84404ed1514e5e91ed29",
+      "bytes": 15289
+    },
+    "tifa-s093-advice-custody-full.log": {
+      "path": "/tmp/tifa-s093-advice-custody-full.log",
+      "sha256": "1074aec2cce58c25bfc66b491c4101df2baa08e0c56b9c1fb5298532cf7d770e",
+      "bytes": 251453
+    },
+    "tifa-s093-advice-custody-game-generated.log": {
+      "path": "/tmp/tifa-s093-advice-custody-game-generated.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s093-advice-custody-http-source-initial.log": {
+      "path": "/tmp/tifa-s093-advice-custody-http-source-initial.log",
+      "sha256": "ffd432b4fcbac9f299b023013b1da876f9ded1c27a1a58a809b03297b59336ad",
+      "bytes": 5937
+    },
+    "tifa-s093-advice-custody-lint-current.log": {
+      "path": "/tmp/tifa-s093-advice-custody-lint-current.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-advice-custody-lint.log": {
+      "path": "/tmp/tifa-s093-advice-custody-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-advice-custody-private.log": {
+      "path": "/tmp/tifa-s093-advice-custody-private.log",
+      "sha256": "af675f45851ab15bca3b6c16bef15f84ff3621b9c9c7d33da4c05aaf2bba26e9",
+      "bytes": 28864
+    },
+    "tifa-s093-advice-custody-question-binding.log": {
+      "path": "/tmp/tifa-s093-advice-custody-question-binding.log",
+      "sha256": "db6b8ce448ac57839b9c4ac61d24b4605e92f1ac073e491c6e77382a87ef4b63",
+      "bytes": 2762
+    },
+    "tifa-s093-advice-custody-typecheck-bound-source.log": {
+      "path": "/tmp/tifa-s093-advice-custody-typecheck-bound-source.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-advice-custody-typecheck-current.log": {
+      "path": "/tmp/tifa-s093-advice-custody-typecheck-current.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-advice-custody-typecheck-final.log": {
+      "path": "/tmp/tifa-s093-advice-custody-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-advice-custody-typecheck-initial.log": {
+      "path": "/tmp/tifa-s093-advice-custody-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-advice-custody-typecheck-integrated.log": {
+      "path": "/tmp/tifa-s093-advice-custody-typecheck-integrated.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-advice-custody-workspace.log": {
+      "path": "/tmp/tifa-s093-advice-custody-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
