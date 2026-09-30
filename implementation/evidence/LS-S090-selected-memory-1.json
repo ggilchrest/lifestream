@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "sliceStatus": "inProgress",
+  "component": "exact rendered retained-memory selection and published source trace",
+  "componentStatus": "verified",
+  "recordedAt": "2026-09-30T22:17:53.329979Z",
+  "sourceRevision": "60c8aeb0fabf38926b5ff90872a1399de81035ba",
+  "sourceFiles": [
+    "apps/server/src/index.ts",
+    "apps/server/src/runtime/game-memory.ts",
+    "apps/server/src/runtime/turn-context-trace.ts",
+    "apps/server/test/turn-context-trace.test.ts",
+    "docs/visual-conversation-acceptance.md",
+    "packages/runtime/src/context/builder.ts",
+    "packages/runtime/src/inference/prompt.ts",
+    "packages/runtime/test/context-selected-sources.test.ts",
+    "packages/runtime/test/context.test.ts"
+  ],
+  "ownedOperation": {
+    "operation": "S090 exact selected memory source trace exact-revision full source suite",
+    "sourceRevision": "60c8aeb0fabf38926b5ff90872a1399de81035ba",
+    "startedAt": "2026-09-30T22:12:41.304540+00:00",
+    "wrapperPid": 41511,
+    "log": "/tmp/tifa-s090-selected-memory-full.log",
+    "status": "completed",
+    "childPid": 41514,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T22:14:35.621759+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "60c8aeb0fabf38926b5ff90872a1399de81035ba",
+      "pass": 2533,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 114108.565334
+    },
+    "focused": {
+      "pass": 71,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 7878.320125
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6557.587084
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types packages/runtime/test/context-selected-sources.test.ts packages/runtime/test/context.test.ts apps/server/test/turn-context-trace.test.ts apps/server/test/visual-context.test.ts apps/server/test/game-advice-memory.test.ts apps/server/test/game-activity-memory.test.ts",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual compiler/formatter final allocation, immutable finalized request selection, published closed memory.referencesSelected events, original source trace/semantic replay, typed visual/game memory owner markers and isolated authenticated HTTP/SQLite regressions. Relationship UUIDs, unrepresented optional records, unknown audience/lifecycle and legacy/malformed metadata do not donate memory selection.",
+    "scripted": "Visual/game interpretation, camera/native/admission/source qualification and inference/provider output remain fixtures. No actual camera/game/control/save/contact, native/performance/platform or Human acceptance."
+  },
+  "retainedFailures": [
+    {
+      "log": "tifa-s090-selected-memory-focused-initial.log",
+      "result": {
+        "pass": 10,
+        "fail": 2,
+        "skip": 0,
+        "durationMs": 681.736
+      },
+      "cause": "Discovery-displacement fixture random UUID lexical ordering did not create intended displacement. Made e/f UUID ordering deterministic and preserved original formatter/relevance/allocation semantics."
+    }
+  ],
+  "milestoneDistinctions": [
+    "Retained MemoryRecord source marker comes from existing source-validated owner records; relationship records, discovery and pending help remain separate.",
+    "Final formatter allocation determines optional representation. Discovery can displace an item after first compiler selection; mandatory and convention-rendered sources remain represented.",
+    "Exact marked MemoryRecord UUIDs are frozen in the authentic FinalizedTurn, not inferred from arbitrary UUIDs, textual mentions or source family names.",
+    "Published memory.referencesSelected uses genuine selected IDs and existing prepared-memory source revision, including honestly empty known selections. Missing/legacy/malformed metadata supplies no invented event.",
+    "Context compiler revision advances9to10 for new selection metadata; capture/retrieval/privacy/provenance/retention policies and source text allocation unchanged.",
+    "Semantic replay preserves selected-memory source payloads without activation, currency, learning or effect authority."
+  ],
+  "limitations": [
+    "Whole S090/S094/Phase16 inProgress. Complete canonical capture/perception/memory/controller/native lifecycle and durable trace sink/joined replay remain incomplete.",
+    "Existing event/artifact semantics close actual context milestones, but negotiation/enablement/drop/expiry and background control are not to be mislabeled as context source-use or provider health. Additional exact canonical extension/export may be needed after coverage assessment; no export authority inferred.",
+    "No installed candidate update or live authority; actual reviewed native source/bridge/decoder/GUI/pause/save, selected image-provider/resource/performance and permitted remote-help delivery/authentication/Human gates remain open.",
+    "S093 authenticated-help ingestion remains scoped separately from generic automatic-memory capture; question changed no capture rule or cross-game semantics.",
+    "Primary S066/full LS-TEST-084 and accepted original24/iPhone journeys preserved. Callback/causal failures and900msmedian/1500msp95onset targets unwaived. No public push/publication/deployment/new private export or live effect."
+  ],
+  "nextAction": "Continue canonical selective-memory candidate/lifecycle source joins using actual existing MemoryRepository/typed visual episode owners; never fabricate missing lifecycle IDs. Preserve full lifecycle/native/provider/platform/performance/Human and scoped authenticated-help ingestion gates; no generic capture, new export or installed promotion.",
+  "logDigests": {
+    "tifa-s090-selected-memory-browser.log": {
+      "path": "/tmp/tifa-s090-selected-memory-browser.log",
+      "sha256": "f86308f56a59c8d0e4dd5cc4377b82b3553c4874853f699291e54c027e77704b",
+      "bytes": 23880
+    },
+    "tifa-s090-selected-memory-build.log": {
+      "path": "/tmp/tifa-s090-selected-memory-build.log",
+      "sha256": "e50ff0e002cb10c9e1f29b492c92668e9757cd520b888d2656f9c44634c30ba0",
+      "bytes": 1074
+    },
+    "tifa-s090-selected-memory-diff.log": {
+      "path": "/tmp/tifa-s090-selected-memory-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-selected-memory-focused-initial.log": {
+      "path": "/tmp/tifa-s090-selected-memory-focused-initial.log",
+      "sha256": "f0faf6419eda930cdc5821eeaa069f7b5d0dc272131640064230ea4e70eed3df",
+      "bytes": 6377
+    },
+    "tifa-s090-selected-memory-focused-repaired.log": {
+      "path": "/tmp/tifa-s090-selected-memory-focused-repaired.log",
+      "sha256": "394012fa33d6441db03638bfd35eea9329f554a34f0df39399abe9eedb4eccc6",
+      "bytes": 3062
+    },
+    "tifa-s090-selected-memory-full.log": {
+      "path": "/tmp/tifa-s090-selected-memory-full.log",
+      "sha256": "086190255d727873001b317e74918aa4a7e5ea5382767fe553f2d761e2609821",
+      "bytes": 270563
+    },
+    "tifa-s090-selected-memory-integration.log": {
+      "path": "/tmp/tifa-s090-selected-memory-integration.log",
+      "sha256": "e9aae07972cfcac9b21b80ae261593719fc32831d9f854e012435d85d6a90eab",
+      "bytes": 8282
+    },
+    "tifa-s090-selected-memory-lint.log": {
+      "path": "/tmp/tifa-s090-selected-memory-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-selected-memory-preflight.log": {
+      "path": "/tmp/tifa-s090-selected-memory-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s090-selected-memory-private.log": {
+      "path": "/tmp/tifa-s090-selected-memory-private.log",
+      "sha256": "2eb5fc496e4e8994aeac0126c841be784e5f9c4439384ac118a8aabd3c643476",
+      "bytes": 28915
+    },
+    "tifa-s090-selected-memory-typecheck-final.log": {
+      "path": "/tmp/tifa-s090-selected-memory-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-selected-memory-typecheck.log": {
+      "path": "/tmp/tifa-s090-selected-memory-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-selected-memory-workspace.log": {
+      "path": "/tmp/tifa-s090-selected-memory-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
