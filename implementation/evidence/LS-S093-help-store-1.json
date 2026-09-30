@@ -1,0 +1,190 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S093",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      ".private/roadmap/packets/LS-S093.json": "a5f73fe0101438a6a1df73a831876f58a179547d3d18c5352a449f3fc0ed983d",
+      ".private/docs/31-local-game-activity.md": "fa81107f2eb216686b989b269d3a39cc9798681f11511f8e1e0698b1e10d4238",
+      "packages/contracts/src/schemas/local-game-activity.schema.json": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+    },
+    "exactSchemaApproval": "LS-DEC-050; exact schema bytes unchanged; no new export"
+  },
+  "exclusions": [
+    "This ledger persists pending help only: ordinary conversation selection, channel outcomes, finite contact/retry ledger, authenticated attributed advice/use/outcome, governed game-image delivery and native runtime integration remain open. No contact, scheduling, play/resume or Human acceptance follows.",
+    "Concrete production controller/outcome publication and owner/source qualification remain required; gameMemory injection is restricted to explicitly isolated loopback local-auth test profile and dropped on profile/database replacement.",
+    "Grounded help/advice, away-return initiative relevance/prior-mention, actual current run/screenshot attachment/contact outcomes and game reflection remain incomplete; neither whole essential journey nor whole S091/S092/S093/S094 is accepted.",
+    "Actual graphical Linux and Windows game/controller/ordinary-save recovery, native pause/resume/watchdog integration, selected game/perception provider, normal-speed/resource/speech and Human qualification require their separately authorized environments.",
+    "S090 full visual trace/replay, S089 automatic appearance comparison, primary S066/full LS-TEST-084 and selected-model callback/causal/onset failure gates remain open.",
+    "No installed candidate promotion/live camera/game/save/schedule/contact/provider effects, deployment, push/publication or new private export."
+  ],
+  "operation": "boundedPendingGameHelpPersistence",
+  "status": "verified",
+  "qualificationScope": "Scoped bounded pending-help persistence/deduplication and existing source privacy/restore integration; whole S093 remains inProgress",
+  "sourceRevision": "6387179c387dfa86f93df11d84dd4cc366801f61",
+  "baseRevision": "b9a1a9a9671904a50892463f2b739e6af771065d",
+  "recordedAt": "2026-09-30T14:38:59.405749Z",
+  "claims": {
+    "actualRetainedSourceCustodyAndIndependentMemoryAndHelpRetentionRequired": true,
+    "canonicalPendingQueuedDeferredMetadataOnly": true,
+    "exactEpisodeScopeTimelineOriginalAttemptAndObservationBindings": true,
+    "qualifiedPauseRecipientQuestionAndAttachmentPredicateRequired": true,
+    "finitePayloadTTLPerOwnerAndPersistentGlobalFenceBounds": true,
+    "situationDedupExcludesQuestionWordingRunTimelineAndPolicyChanges": true,
+    "closeReopenPreservesPendingAndOpaqueDedupFences": true,
+    "lateSourceMemoryPolicyBoundaryForgetAndExpiryFences": true,
+    "ownerPrivacyCleanupAfterUseWithdrawal": true,
+    "sourceMemoryForgettingAndAutomaticPolicyDisableAtomicallyEraseHelp": true,
+    "actualIsolatedSnapshotRestoreScrubsHelpWithoutChangingOriginal": true,
+    "additiveMigration65PreservesEarlierAppliedDigestsAndClocks": true,
+    "sendAuthority": false,
+    "resumeAuthority": false,
+    "actualNativeSourceQualificationOrHumanJourneyAccepted": false,
+    "installedCandidateChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 190,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 7042.678833
+    },
+    "fullSource": {
+      "revision": "6387179c387dfa86f93df11d84dd4cc366801f61",
+      "pass": 2118,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 105054.851667
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6337.336708
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "workspaceCheck": "pass"
+  },
+  "mappedCases": [
+    "LS-TEST-178",
+    "LS-TEST-180",
+    "LS-TEST-181",
+    "LS-TEST-182"
+  ],
+  "commands": [
+    "node --test --experimental-strip-types packages/storage-sqlite/test/game-help.test.ts packages/storage-sqlite/test/game-experience.test.ts packages/runtime/test/activity-help.test.ts apps/server/test/candidate-snapshot.test.ts apps/server/test/server.test.ts apps/server/test/game-activity.test.ts packages/storage-sqlite/test/initiative-expression.test.ts packages/storage-sqlite/test/initiative-delivery.test.ts packages/storage-sqlite/test/urgent-away.test.ts packages/storage-sqlite/test/session-handoff.test.ts",
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --check",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "retainedFailures": [],
+  "proofKinds": {
+    "real": "Actual canonical retained SQLite game source custody, existing memory consent, explicit help retention policy, additive migration65, bounded pending metadata persistence, close/reopen, equivalence fences, late callback/SQL policy withdrawal, owner/privacy erasure, existing automatic-memory disable and actual isolated candidate snapshot/restore with unchanged original.",
+    "scripted": "Game observations/action outcomes, native pause, question relevance, configured recipient and attachment/source qualification. Existing inert-help selector is executed on those synthetic sources. No help contact, Human answer, image transfer, live game/save or platform qualification."
+  },
+  "runDisposition": "continue",
+  "nextAction": "Continue typed authenticated Human advice linkage and observed advice-disposition/outcome integration; pending-help ordinary context/contact/image route and actual native/platform/provider/Human/full visual trace-replay gates remain open.",
+  "logDigests": {
+    "tifa-s093-help-store-browser.log": {
+      "path": "/tmp/tifa-s093-help-store-browser.log",
+      "sha256": "8818c4e305b2ca27c9c2bd021323dfbaba0ef17805658b927d548b20b76c6eb9",
+      "bytes": 23887
+    },
+    "tifa-s093-help-store-build-final.log": {
+      "path": "/tmp/tifa-s093-help-store-build-final.log",
+      "sha256": "a818c22d26760a7c5f6c120067d3e3200e9b276ee252b15b7037cc90e8398698",
+      "bytes": 1074
+    },
+    "tifa-s093-help-store-build-initial.log": {
+      "path": "/tmp/tifa-s093-help-store-build-initial.log",
+      "sha256": "b438e66ffe187bfde27122faaba7847ce17a4004899c95d4c454a6a3072e4aa2",
+      "bytes": 1074
+    },
+    "tifa-s093-help-store-build-join.log": {
+      "path": "/tmp/tifa-s093-help-store-build-join.log",
+      "sha256": "a818c22d26760a7c5f6c120067d3e3200e9b276ee252b15b7037cc90e8398698",
+      "bytes": 1074
+    },
+    "tifa-s093-help-store-focused-initial.log": {
+      "path": "/tmp/tifa-s093-help-store-focused-initial.log",
+      "sha256": "bde9a754a1db207ae832ddd5f79a3559566243af5dc292461110449459d9963a",
+      "bytes": 6237
+    },
+    "tifa-s093-help-store-focused-joined.log": {
+      "path": "/tmp/tifa-s093-help-store-focused-joined.log",
+      "sha256": "acabca5b857b2f515fde3aabfacf2a211e0e40f67c20da3c75bc46d931d14b9b",
+      "bytes": 19824
+    },
+    "tifa-s093-help-store-full.log": {
+      "path": "/tmp/tifa-s093-help-store-full.log",
+      "sha256": "547ba943637df3ba40bd6bbf2d312ae0d08b877071c2f14241f16e9c3301be7f",
+      "bytes": 231174
+    },
+    "tifa-s093-help-store-generated-game.log": {
+      "path": "/tmp/tifa-s093-help-store-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s093-help-store-generated.log": {
+      "path": "/tmp/tifa-s093-help-store-generated.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s093-help-store-lint-final.log": {
+      "path": "/tmp/tifa-s093-help-store-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-help-store-lint.log": {
+      "path": "/tmp/tifa-s093-help-store-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-help-store-preflight.log": {
+      "path": "/tmp/tifa-s093-help-store-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s093-help-store-private.log": {
+      "path": "/tmp/tifa-s093-help-store-private.log",
+      "sha256": "07736b72c2d7c31c9bc7fd390562b0e6595654207f22f22ec0673335402d811f",
+      "bytes": 28896
+    },
+    "tifa-s093-help-store-typecheck-final.log": {
+      "path": "/tmp/tifa-s093-help-store-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-help-store-typecheck-initial.log": {
+      "path": "/tmp/tifa-s093-help-store-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-help-store-typecheck-join.log": {
+      "path": "/tmp/tifa-s093-help-store-typecheck-join.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-help-store-workspace.log": {
+      "path": "/tmp/tifa-s093-help-store-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
