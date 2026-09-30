@@ -221,3 +221,19 @@ action. Tests use actual SQLite close/open and a separate real Node process to v
 metadata/usage/reservation persistence and duplicate refusal. Save/source/transition/
 usage predicates are scripted; actual saved game progress, native crash recovery,
 model/controller behavior and restore pipeline/runtime host wiring remain unqualified.
+
+`selectGameWindow` checks explicitly configured play or separate contact hours
+against the operator's IANA timezone, current policy revision and finite GameBounds.
+Local-day windows are half-open and nonoverlapping; overnight hours require split
+windows. Disabled, missing, invalid or withdrawn setup cannot supply eligibility.
+Selections are immutable and authentic; current policy, clock rollback, window end
+and local-date changes fence pending use. Temporal eligibility grants no start,
+controller, resume, recipient or delivery authority.
+
+Occurrence identities use the scoped owner/activity, purpose, policy revision,
+timezone, local date and window. Repeated local hours during DST fall-back share
+one identity even across different run IDs; nonexistent spring-forward hours create
+no match. Actual Intl calendar tests cover those transitions. This component
+registers no schedule or contact, and does not yet persist occurrence claims or
+enforce restart deduplication. Those durable lifecycle/host gates remain required;
+a paused run must require explicit authorized resume rather than replacement start.

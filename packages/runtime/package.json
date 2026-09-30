@@ -163,6 +163,10 @@
     "./activity/coordinator": {
       "types": "./dist/activity/coordinator.d.ts",
       "import": "./dist/activity/coordinator.js"
+    },
+    "./activity/policy": {
+      "types": "./dist/activity/policy.d.ts",
+      "import": "./dist/activity/policy.js"
     }
   },
   "scripts": {
