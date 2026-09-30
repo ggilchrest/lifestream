@@ -171,6 +171,10 @@
     "./activity/memory": {
       "types": "./dist/activity/memory.d.ts",
       "import": "./dist/activity/memory.js"
+    },
+    "./activity/help": {
+      "types": "./dist/activity/help.d.ts",
+      "import": "./dist/activity/help.js"
     }
   },
   "scripts": {
