@@ -4,6 +4,7 @@ import {validateVisualEpisode,validateVisualMemoryProjection,type VisualObservat
 import {createReplayManifest,replayTrace,type ReplayEvent} from '@lifestream/runtime/replay';
 import type {VisualPublicationReceipt} from './visual-input.ts';
 import type {VisualTurnReceipt} from './visual-turn-evidence.ts';
+import type {VisualLifecycleReceipt} from './visual-lifecycle-evidence.ts';
 
 /** Supplied diagnostic snapshots carry no consent, identity or action authority.
  * The caller must obtain scoped receipts through their existing host/repository.
@@ -14,6 +15,7 @@ export type VisualLineageInput=Readonly<{
  episodes:readonly VisualObservationEpisode[];
  projections:readonly VisualMemoryProjection[];
  terminalSources:readonly Readonly<{episodeId:string;revision:number;state:'forgotten'|'expired'|'invalidated'}>[];
+ lifecycle?:readonly VisualLifecycleReceipt[];
 }>;
 const maximumBytes=4*1024*1024,maximumRows=128;
 const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
@@ -56,7 +58,17 @@ function snapshot(input:unknown):VisualLineageInput{
  try{if(!plain(input))return fail();const text=JSON.stringify(input);if(Buffer.byteLength(text)>maximumBytes)return fail();return JSON.parse(text) as VisualLineageInput;}catch{return fail();}
 }
 function validate(input:VisualLineageInput){
- if(!keys(input,'publications,turns,episodes,projections,terminalSources')||![input.publications,input.turns,input.episodes,input.projections,input.terminalSources].every(list))fail();
+ if(!keys(input,'publications,turns,episodes,projections,terminalSources')&&!keys(input,'publications,turns,episodes,projections,terminalSources,lifecycle')||![input.publications,input.turns,input.episodes,input.projections,input.terminalSources,input.lifecycle??[]].every(list))fail();
+ for(const l of input.lifecycle??[]){
+  if(!keys(l,'eventId,sequence,occurredAtMs,kind,reason,scopeDigest,leaseDigest,clockMappingDigest,requestDigest,correlationDigest,hostSequence,sourceEpochs,providerDigest,frames,selectedVersion,observedCaptureActive,coverage,authority')||
+   !string(l.eventId)||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(l.eventId)||!number(l.sequence)||l.sequence<1||!time(l.occurredAtMs)||
+   !oneOf(l.kind,'negotiated,cameraEnabled,cameraEnableInactive,cameraRenewed,cameraRenewInactive,cameraInactiveObserved,cameraStopNoop,captureLeaseEnded,batchAdmitted,batchRejected,batchFailed,cameraRejected,contextExpired')||
+   !(l.reason===null||oneOf(l.reason,'disabled,unsupported,unconfigured,source_unavailable,permission_denied,lease_conflict,stale_revision,stale_lease,scope_changed,clock_challenge_invalid,clock_uncertain,frame_invalid,frame_oversize,frame_stale,frame_future,rate_limited,foreground_priority,provider_unavailable,provider_invalid,deadline,replaced,cancelled,stop,expired,invalidated,host_processing_failed'))||
+   ![l.scopeDigest,l.leaseDigest,l.clockMappingDigest,l.requestDigest,l.correlationDigest,l.providerDigest].every(value=>value===null||hex(value))||!(l.hostSequence===null||number(l.hostSequence))||
+   l.sourceEpochs!==null&&(!keys(l.sourceEpochs,'session,audience,generation,configuration')||!Object.values(l.sourceEpochs).every(number))||
+   !Array.isArray(l.frames)||l.frames.length>3||l.frames.some(f=>!keys(f,'frameDigest,sequence,capturedMonotonicMs,clockMappingDigest')||!hex(f.frameDigest)||!(f.sequence===null||number(f.sequence))||!(f.capturedMonotonicMs===null||time(f.capturedMonotonicMs))||!(f.clockMappingDigest===null||hex(f.clockMappingDigest)))||
+   !(l.selectedVersion===null||l.selectedVersion==='1.0.0')||!(l.observedCaptureActive===null||typeof l.observedCaptureActive==='boolean')||l.coverage!=='bounded_best_effort'||l.authority!==false)fail();
+ }
  for(const p of input.publications){
   const a=p.admission,s=a?.scope;
   if(!keys(p,'admission,publication,perceptionStatus,disposition,reason,observationIds,completedAtMs,captureFreshUntilMs')||
@@ -100,6 +112,28 @@ export function correlateVisualLineage(value:unknown){
  const contradictions=new Set<string>(),missing=new Set<string>();
  const publicationById=new Map(input.publications.map(p=>[p.admission.requestId,p]));
  const events:Record<string,unknown>[]=input.publications.map(p=>({kind:'publication',request:id(p.admission.requestId),scope:scopeDigest(p.admission.scope),lease:id(p.admission.leaseId),clockMapping:id(p.admission.clockMappingId),hostSequence:p.admission.hostSequence,publicationAudienceRevision:p.publication?.audienceRevision??null,publicationLeaseRevision:p.publication?.leaseRevision??null,sourceEpochs:{session:p.admission.scope.sessionRevision,audience:p.admission.scope.audienceRevision,generation:p.admission.scope.scopeGeneration,configuration:p.admission.scope.captureConfigurationRevision},provider:digest(p.admission.provider),frameIds:p.admission.frameIds.map(id),observationIds:p.observationIds.map(id),captureFromMs:p.admission.capturedAtEarliestMs,captureToMs:p.admission.capturedAtLatestMs,receivedAtMs:p.admission.receivedAtMs,completedAtMs:p.completedAtMs,freshUntilMs:p.captureFreshUntilMs,perceptionStatus:p.perceptionStatus,disposition:p.disposition,reason:p.reason}));
+ const lifecycle=[...(input.lifecycle??[])].sort((a,b)=>a.sequence-b.sequence);
+ if(!lifecycle.length)missing.add('lifecycleCoverageMissing');
+ if(new Set(lifecycle.map(l=>l.eventId)).size!==lifecycle.length||new Set(lifecycle.map(l=>l.sequence)).size!==lifecycle.length)contradictions.add('duplicateLifecycleReceipt');
+ if(lifecycle[0]?.sequence!==1&&lifecycle.length||lifecycle.some((l,i)=>i>0&&l.sequence!==lifecycle[i-1]!.sequence+1))missing.add('lifecycleSequenceGap');
+ for(const [i,l] of lifecycle.entries()){
+  if(i>0&&l.occurredAtMs<lifecycle[i-1]!.occurredAtMs)contradictions.add('lifecycleClockReversed');
+  if(['cameraEnabled','cameraRenewed','cameraStopNoop'].includes(l.kind)&&l.observedCaptureActive!==true||['cameraEnableInactive','cameraRenewInactive','cameraInactiveObserved'].includes(l.kind)&&l.observedCaptureActive!==false)contradictions.add('cameraStateMilestoneMismatch');
+  events.push({kind:'lifecycle',sourceEventDigest:hash(l.eventId),sequence:l.sequence,occurredAtMs:l.occurredAtMs,stage:l.kind,reason:l.reason,scopeDigest:l.scopeDigest,leaseDigest:l.leaseDigest,clockMappingDigest:l.clockMappingDigest,requestDigest:l.requestDigest,correlationDigest:l.correlationDigest,hostSequence:l.hostSequence,sourceEpochs:l.sourceEpochs,providerDigest:l.providerDigest,frames:l.frames,selectedVersion:l.selectedVersion,observedCaptureActive:l.observedCaptureActive,authority:false});
+ }
+ for(const p of input.publications){
+  const a=p.admission,admissions=lifecycle.filter(l=>l.kind==='batchAdmitted'&&l.requestDigest===hash(a.requestId));
+  if(!admissions.length){missing.add('publicationAdmissionMissing');continue;}
+  if(admissions.length>1)contradictions.add('duplicateLifecycleAdmission');
+  for(const l of admissions){
+   const epochs={session:a.scope.sessionRevision,audience:a.scope.audienceRevision,generation:a.scope.scopeGeneration,configuration:a.scope.captureConfigurationRevision};
+   if(l.hostSequence!==a.hostSequence||l.leaseDigest!==hash(a.leaseId)||l.clockMappingDigest!==hash(a.clockMappingId)||l.correlationDigest!==hash(a.correlationId)||l.scopeDigest!==scopeDigest(a.scope)||!orderedSame(l.sourceEpochs,epochs)||l.providerDigest!==digest([a.provider.id,a.provider.version])||l.occurredAtMs<a.receivedAtMs||l.occurredAtMs>p.completedAtMs)contradictions.add('lifecyclePublicationMismatch');
+   if(!l.frames.length)missing.add('admittedFrameMetadataMissing');
+   else if(!orderedSame(l.frames.map(f=>f.frameDigest),a.frameIds.map(hash))||l.frames.some(f=>f.sequence===null||f.capturedMonotonicMs===null||f.clockMappingDigest!==hash(a.clockMappingId))||new Set(l.frames.map(f=>f.sequence)).size!==l.frames.length||l.frames.some((f,i)=>i>0&&f.sequence!<=l.frames[i-1]!.sequence!))contradictions.add('admittedFrameMetadataMismatch');
+   if(!lifecycle.some(row=>row.kind==='cameraEnabled'&&row.leaseDigest===l.leaseDigest&&row.sequence<l.sequence))missing.add('captureEnablementMissing');
+   if(lifecycle.some(row=>row.kind==='captureLeaseEnded'&&row.leaseDigest===l.leaseDigest&&row.sequence<l.sequence))contradictions.add('leaseEndedBeforeAdmission');
+  }
+ }
  const groups=new Map<string,VisualTurnReceipt[]>();
  for(const t of input.turns){const rows=groups.get(t.interactionId)??[];rows.push(t);groups.set(t.interactionId,rows);}
  const turns=[...groups].map(([interactionId,rows])=>{
@@ -139,7 +173,7 @@ export function correlateVisualLineage(value:unknown){
  }
  for(const t of input.terminalSources)events.push({kind:'terminalSource',episode:id(t.episodeId),revision:t.revision,state:t.state});
  if(!input.publications.length)missing.add('publicationCoverageMissing');if(!input.turns.length)missing.add('turnCoverageMissing');
- return {schemaVersion:'1.0.0',kind:'supplied-visual-diagnostic-lineage',status:contradictions.size?'contradictoryMetadata':'partialDiagnosticCorrelation',coverage:'bounded_best_effort',contradictions:[...contradictions].sort(),missingEvidence:[...missing].sort(),turns,events,claimsRuntimeAcceptance:false,sourceCurrencyProved:false,perceptionQualityProved:false,rawMediaAvailable:false,limitations:['Supplied metadata is not an authenticated or complete canonical lifecycle trace.','Negotiation, enablement, rejected ingress, capture sequences and memory admission before retention are not covered by this input.','Endpoint acknowledgment is a recorded diagnostic; actual delivery, perception and Human acceptance remain unproved.','No raw media, scene prose, Human corrections, prompts, recipients or private chain-of-thought are replayed.','Terminal sources suppress retained source and projection payloads; replay grants no eligibility, learning or effects.']};
+ return {schemaVersion:'1.0.0',kind:'supplied-visual-diagnostic-lineage',status:contradictions.size?'contradictoryMetadata':'partialDiagnosticCorrelation',coverage:'bounded_best_effort',contradictions:[...contradictions].sort(),missingEvidence:[...missing].sort(),turns,events,claimsRuntimeAcceptance:false,sourceCurrencyProved:false,perceptionQualityProved:false,rawMediaAvailable:false,limitations:['Supplied metadata is not an authenticated or complete canonical lifecycle trace.','Optional lifecycle receipts cover host milestones where retained; missing ingress or pre-retention memory admission remains unproved.','Runtime capture state and lease termination are separate from physical capture or broker-release acknowledgment.','Endpoint acknowledgment is a recorded diagnostic; actual delivery, perception and Human acceptance remain unproved.','No raw media, scene prose, Human corrections, prompts, recipients or private chain-of-thought are replayed.','Terminal sources suppress retained source and projection payloads; replay grants no eligibility, learning or effects.']};
 }
 
 /** Re-derive the redacted trace from the bounded original snapshot. Never accept

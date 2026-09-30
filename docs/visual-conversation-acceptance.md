@@ -8,8 +8,8 @@ collected local snapshot and replays its redacted metadata in isolation:
 node --experimental-strip-types scripts/qualify-visual-conversation.mjs --input /operator-local/diagnostics.json --output /operator-local/new-report.json
 ```
 
-The input contains only `publications`, `turns`, `episodes`, `projections` and
-`terminalSources`. Obtain these through the existing scoped host/repository;
+The input contains `publications`, `turns`, `episodes`, `projections`,
+`terminalSources` and optional `lifecycle`. Obtain these through the existing scoped host/repository;
 matching supplied identifiers does not authenticate the source or establish
 current consent. Each array is bounded to 128 rows and the input to 4 MiB. A
 canonical projection must match its exact typed episode and attributed
@@ -43,8 +43,16 @@ observation does not prove that a physical capture device stopped. Receipt
 failure cannot change source-host authority or publication. No idle erasure or
 complete inventory is promised.
 
-The full visual lifecycle trace remains incomplete: the offline correlator above
-does not yet join these lifecycle receipts or pre-retention memory admission.
+The offline correlator joins available lifecycle admission, frame/clock, provider,
+source epoch and runtime enablement metadata to publication. Legacy snapshots
+without lifecycle receipts and truncated inventories remain explicitly partial.
+Negotiation, observed capture, admission, source publication, prepared context,
+generation, endpoint acknowledgment and memory retention remain separate
+milestones. These receipts can be replayed with the same redacted source/time
+lineage, without reopening capture or granting authority.
+
+The full visual lifecycle trace remains incomplete: pre-retention memory admission
+is not joined and missing receipts do not establish event completeness.
 Production trace/replay integration remains pending; these internal diagnostics
 are separate from the closed canonical trace envelope and its event catalogue.
 Selected-provider physical input, unannounced animal interpretation, historical

@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash,randomUUID} from 'node:crypto';
+import {mkdtemp,writeFile,readFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {Database,MemoryRepository} from '@lifestream/storage-sqlite';
 import {fixtureVisualProvider} from '@lifestream/runtime/perception/fixture';
 import {createPreparedTurnBinding,finalizePreparedTurn,requestForFinalizedTurn} from '@lifestream/runtime/inference/prompt';
@@ -9,6 +12,7 @@ import {VisualInputHost} from '../src/runtime/visual-input.ts';
 import {AutomaticMemory} from '../src/runtime/automatic-memory.ts';
 import {startVisualTurnEvidence} from '../src/runtime/visual-turn-evidence.ts';
 import {correlateVisualLineage,replayVisualLineage,type VisualLineageInput} from '../src/runtime/visual-lineage.ts';
+import {evaluateVisualConversationFile} from '../../../scripts/qualify-visual-conversation.mjs';
 
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+5gz/qwAAAABJRU5ErkJggg==','base64');
 async function fixture(t:import('node:test').TestContext,modality:'text'|'audio'='text',mockTimeouts=false){
@@ -36,7 +40,7 @@ async function fixture(t:import('node:test').TestContext,modality:'text'|'audio'
  if(modality==='audio'){recorder.synthesisCompleted();recorder.endpointSettled('completed',4800);}recorder.ended('completed');await Promise.resolve();
  const input=():VisualLineageInput=>{
   const episodes=worker.inspect(owner).visual.episodes.filter(row=>row.episode!==null).map(row=>row.episode!),projections=episodes.filter(e=>e.memoryRecordId).map(episode=>({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:memories.get(owner.assistantId,episode.memoryRecordId!)!.provenance.canonical}) as VisualMemoryProjection);
-  return {publications:visual.publicationReceipts(actor),turns:visual.turnReceipts(actor),episodes,projections,terminalSources:[]};
+  return {publications:visual.publicationReceipts(actor),turns:visual.turnReceipts(actor),episodes,projections,terminalSources:[],lifecycle:visual.lifecycleReceipts(actor)};
  };
  return {input,worker,owner,memories,visual,actor,providerCalls:()=>providerCalls,advance:(ms:number)=>{mono+=ms;utc+=ms;t.mock.timers.tick(ms);},nextBatch:(copied?:()=>void,invalid=false)=>{
   mono+=1100;t.mock.timers.tick(1100);utc=Date.now();const frameId=randomUUID();return visual.batch(actor,{leaseId:lease.leaseId!,endpointClockId:'synthetic-clock',correlationId:randomUUID(),frames:[{frameId,sequence:1,capturedMonotonicMs:mono-5010,clockMappingId:lease.clockMappingId!,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]},new Map([[frameId,invalid?Buffer.from('NOT_AN_IMAGE'):png]]),copied);
@@ -106,7 +110,7 @@ test('bounded closed data rejects hostile objects, oversize, duplicate sources a
 
 test('supplied long source-binding digests correlate without implying current host eligibility',async t=>{
  const f=await fixture(t),input=JSON.parse(JSON.stringify(f.input())),e=input.episodes[0],p=input.publications[0],projection=input.projections[0],long='PRIVATE_SYNTHETIC_CAMERA_PATH'.repeat(12),sha=(value:string)=>createHash('sha256').update(value).digest('hex');
- e.scope.sourceBindingRef=long;p.admission.scope.sourceBindingRef='sha256:'+sha(long);
+ delete input.lifecycle;e.scope.sourceBindingRef=long;p.admission.scope.sourceBindingRef='sha256:'+sha(long);
  const config=JSON.parse(e.observations[0].providerConfigurationRef);config[2]=long;e.observations[0].providerConfigurationRef=JSON.stringify(config);e.sourceDigest=sha(JSON.stringify({scope:e.scope,observations:e.observations}));
  projection.episode=structuredClone(e);projection.memoryRecord.provenance.sourceRefs=[`visual-episode:${e.episodeId}:${e.revision}:${e.sourceDigest}`];projection.memoryRecord.extensions['lifestream.conversationalVision'].sourceDigest=e.sourceDigest;
  const result=correlateVisualLineage(input);assert.deepEqual(result.contradictions,[]);assert.equal(result.sourceCurrencyProved,false);assert.doesNotMatch(JSON.stringify(result),/PRIVATE_SYNTHETIC_CAMERA_PATH/);
@@ -172,4 +176,39 @@ test('host close clears lifecycle diagnostics even when the existing release hoo
  const f=await fixture(t);assert.ok(f.visual.lifecycleReceipts(f.actor).length);
  (f.visual as any).options.releaseCapture=()=>{throw Error('PRIVATE_RELEASE_HOOK');};assert.doesNotThrow(()=>f.visual.close());await Promise.resolve();assert.deepEqual(f.visual.lifecycleReceipts(f.actor),[]);assert.deepEqual(f.visual.turnReceipts(f.actor),[]);
  (f.visual as any).options.releaseCapture=undefined;
+});
+
+test('actual lifecycle metadata joins admission/frame sequences to publication and isolated replay',async t=>{
+ const f=await fixture(t),input=f.input(),result=await replayVisualLineage(input);assert.deepEqual(result.correlation.contradictions,[]);assert.deepEqual(result.correlation.missingEvidence,[]);
+ const rows=result.events.filter(event=>event.payload.kind==='lifecycle');assert.equal(rows.length,3);assert.deepEqual(rows.map(row=>row.payload.stage),['negotiated','cameraEnabled','batchAdmitted']);assert.equal(result.comparison.equal,true);assert.equal(result.correlation.sourceCurrencyProved,false);assert.ok(rows.every(row=>row.payload.authority===false));assert.doesNotMatch(JSON.stringify(result),/PRIVATE_|sourceBindingRef/);
+});
+
+test('legacy input and expired lifecycle inventory stay explicitly partial without forged enablement',async t=>{
+ const f=await fixture(t),input=f.input(),legacy=JSON.parse(JSON.stringify(input));delete legacy.lifecycle;const result=correlateVisualLineage(legacy);assert.deepEqual(result.contradictions,[]);assert.ok(result.missingEvidence.includes('lifecycleCoverageMissing'));assert.ok(result.missingEvidence.includes('publicationAdmissionMissing'));assert.equal(result.claimsRuntimeAcceptance,false);
+ const truncated={...input,lifecycle:input.lifecycle!.slice(-1)},partial=correlateVisualLineage(truncated);assert.deepEqual(partial.contradictions,[]);assert.ok(partial.missingEvidence.includes('captureEnablementMissing'));assert.ok(partial.missingEvidence.includes('lifecycleSequenceGap'));
+});
+
+const lifecycleMutations:readonly [string,(input:any)=>void,string][]=[
+ ['source epoch',input=>input.lifecycle[2].sourceEpochs.configuration++,'lifecyclePublicationMismatch'],
+ ['provider',input=>input.lifecycle[2].providerDigest='a'.repeat(64),'lifecyclePublicationMismatch'],
+ ['scope',input=>input.lifecycle[2].scopeDigest='a'.repeat(64),'lifecyclePublicationMismatch'],
+ ['lease',input=>input.lifecycle[2].leaseDigest='a'.repeat(64),'lifecyclePublicationMismatch'],
+ ['clock mapping',input=>input.lifecycle[2].clockMappingDigest='a'.repeat(64),'lifecyclePublicationMismatch'],
+ ['capture frame',input=>input.lifecycle[2].frames[0].frameDigest='a'.repeat(64),'admittedFrameMetadataMismatch'],
+ ['duplicate event',input=>input.lifecycle.push(input.lifecycle[2]),'duplicateLifecycleReceipt'],
+ ['late admission',input=>input.lifecycle[2].occurredAtMs++,'lifecyclePublicationMismatch'],
+ ['inactive enablement',input=>input.lifecycle[1].observedCaptureActive=false,'cameraStateMilestoneMismatch'],
+ ['terminated lease',input=>input.lifecycle[1].kind='captureLeaseEnded','leaseEndedBeforeAdmission']
+];
+for(const [name,mutate,code] of lifecycleMutations)test(`lifecycle ${name} contradicts available source metadata without runtime acceptance`,async t=>{
+ const f=await fixture(t),input=JSON.parse(JSON.stringify(f.input()));mutate(input);const result=correlateVisualLineage(input);assert.equal(result.status,'contradictoryMetadata');assert.ok(result.contradictions.includes(code));assert.equal(result.sourceCurrencyProved,false);assert.equal(result.claimsRuntimeAcceptance,false);
+});
+
+test('lifecycle closed-shape and no-authority boundaries reject secret text, excess frames and self-issued authority',async t=>{
+ const f=await fixture(t),original=f.input();for(const mutate of [(v:any)=>v.lifecycle[0].scene='PRIVATE_SCENE',(v:any)=>v.lifecycle[0].authority=true,(v:any)=>v.lifecycle[2].frames=Array(4).fill(v.lifecycle[2].frames[0]),(v:any)=>v.lifecycle[0].kind='PRIVATE_STAGE',(v:any)=>v.lifecycle[0].eventId='PRIVATE_ID']){const input=JSON.parse(JSON.stringify(original));mutate(input);assert.throws(()=>correlateVisualLineage(input));}
+});
+
+test('offline file qualifier replays actual isolated host/SQLite lifecycle join with no scene or raw-ID export',async t=>{
+ const f=await fixture(t),dir=await mkdtemp(join(tmpdir(),'visual-lifecycle-join-'));t.after(()=>rm(dir,{recursive:true,force:true}));const path=join(dir,'input.json'),output=join(dir,'report.json');await writeFile(path,JSON.stringify(f.input()),{mode:0o600});
+ const result=await evaluateVisualConversationFile(path,output),report=JSON.parse(await readFile(output,'utf8'));assert.equal(result.status,'partialDiagnosticCorrelation');assert.equal(result.metadataReplayEqual,true);assert.equal(result.claimsRuntimeAcceptance,false);assert.deepEqual(report.correlation.contradictions,[]);assert.deepEqual(report.correlation.missingEvidence,[]);assert.equal(report.events.filter((e:any)=>e.payload.kind==='lifecycle').length,3);assert.doesNotMatch(JSON.stringify(report),/PRIVATE_|sourceBindingRef/);assert.equal(f.providerCalls(),0);assert.equal(f.input().episodes.length,1);
 });
