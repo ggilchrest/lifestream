@@ -1,0 +1,192 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S092",
+  "operation": "durableCheckpointAndExistingP2PlanningHostJoin",
+  "status": "verified",
+  "qualificationScope": "Scoped software component; whole S092 inProgress",
+  "sourceRevision": "c583b81a120709632c2bdce600ec864a8ce54947",
+  "baseRevision": "3109897d209d242a002a80ae6752496b431d19c8",
+  "recordedAt": "2026-09-30T11:29:09.695561Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      ".private/roadmap/packets/LS-S092.json": "7ae25e4a29214689347cf3f93b227dc1e4f23367283159b4bc51a48b73a9059c",
+      ".private/docs/31-local-game-activity.md": "fa81107f2eb216686b989b269d3a39cc9798681f11511f8e1e0698b1e10d4238",
+      "packages/contracts/src/schemas/local-game-activity.schema.json": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+    },
+    "exactSchemaApproval": "LS-DEC-050; bytes unchanged; no new export"
+  },
+  "claims": {
+    "sameAuthenticPreparedGameAndCanonicalCheckpointScopePinsCampaignAccessRevision": true,
+    "sameCachedNineSectionRequestAndExistingDiscoveryAdministrationP2Coordinator": true,
+    "actualCurrentLifecycleAuthorityIndependentOfRestoreMetadata": true,
+    "persistentOnceOnlyReservationBeforeInferenceAndTerminalQualifiedUsageSettlement": true,
+    "actualVsHeldAccountingSurvivesSQLiteReopenAndPublicationFailure": true,
+    "newViewCannotBypassConsumedPlanningBudget": true,
+    "inertCanonicalProposalOnlyNoDispatchOrFabricatedReceipt": true,
+    "foregroundAndRuntimeClosureCancelSharedSuspendedWork": true,
+    "duplicateBackgroundKeyCannotUntrackPriorRunningJob": true,
+    "sourceOwnerCheckpointProviderPriorityStoreCoordinatorChangesFenceLateOutput": true,
+    "failureOrUnknownWorkNeverSilentlyRefundedOrReplayed": true,
+    "actualSelectedProviderNativePauseEnrollmentGameSaveProof": false,
+    "installedCandidateChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 131,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1457.718542
+    },
+    "fullSource": {
+      "revision": "c583b81a120709632c2bdce600ec864a8ce54947",
+      "pass": 1930,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 102553.019791
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6338.0395
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "workspaceCheck": "pass"
+  },
+  "mappedCases": [
+    "LS-TEST-174",
+    "LS-TEST-175",
+    "LS-TEST-176",
+    "LS-TEST-177"
+  ],
+  "commands": [
+    "node --test --experimental-strip-types apps/server/test/game-activity-planning.test.ts packages/runtime/test/activity-planning.test.ts packages/storage-sqlite/test/activity-checkpoints.test.ts",
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --check",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "retainedFailures": [],
+  "proofKinds": {
+    "real": "Actual existing DiscoveryAdministration shared P2 coordinator/foreground/shutdown cancellation, immutable canonical prepared request identity, SQLite persistent reservations/usage/reopen and current metadata source join",
+    "scripted": "Provider/tokenizer counts/terminal evidence, game source/lifecycle/enrollment/authority and meaningful visible predicate/proposal; no live model/controller/game/save or native pause"
+  },
+  "exclusions": [
+    "Actual runtime enrollment/scheduler and complete lifecycle/watchdog/input-owner/controller/old-lease shutdown integration",
+    "Actual selected-provider/model/tokenizer competence or measured preemption/slot/speech/resource/onset performance",
+    "Actual emulator pause/stop/fresh authorized resume, ordinary-save recovery, graphical Linux/Windows/platform/Human qualification; whole S091/S092 remain inProgress",
+    "S090 full visual trace/replay; S093 grounded memory/help/return conversation; S094 integrated qualification",
+    "S089 automatic appearance comparisons, primary S066/full LS-TEST-084 and selected-model/onset failure gates",
+    "Installed candidate promotion or live camera/game/save/schedule/contact/provider effects, deployment, push/publication/private exports"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue source-bound interruption/watchdog/old-lease shutdown and truthful lifecycle metadata integration; preserve missing actual setup/native/provider/platform/Human qualification and no live-effect boundaries.",
+  "logDigests": {
+    "tifa-s092-checkpoint-planning-browser.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-browser.log",
+      "sha256": "75120ccdbc84645ba7085e1ca4cd1857c8725e037e57e078026832ce5468c2c1",
+      "bytes": 23885
+    },
+    "tifa-s092-checkpoint-planning-build-final-source.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-build-final-source.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s092-checkpoint-planning-build-final.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-build-final.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s092-checkpoint-planning-build-initial.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-build-initial.log",
+      "sha256": "e50ff0e002cb10c9e1f29b492c92668e9757cd520b888d2656f9c44634c30ba0",
+      "bytes": 1074
+    },
+    "tifa-s092-checkpoint-planning-focused-final-source.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-focused-final-source.log",
+      "sha256": "44daecf8a6007f72305c577ef48a267ab88ff2f3248a612b73e1ba82012785e3",
+      "bytes": 10469
+    },
+    "tifa-s092-checkpoint-planning-focused-final.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-focused-final.log",
+      "sha256": "cc721f96f14dbcc1f190cd33e0ac4a7110639605b31439d144b2355b9ece3d90",
+      "bytes": 10173
+    },
+    "tifa-s092-checkpoint-planning-focused-initial.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-focused-initial.log",
+      "sha256": "39bb1091e708901e9ff971f7efd9663a5ac8caaf3d68a0a659963a1363f848cb",
+      "bytes": 2700
+    },
+    "tifa-s092-checkpoint-planning-full.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-full.log",
+      "sha256": "d723e09718134989c15571cd18bb322153d399588bc8af3de9fa5b83c3062fb7",
+      "bytes": 215415
+    },
+    "tifa-s092-checkpoint-planning-generated-game.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s092-checkpoint-planning-generated-original.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-generated-original.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s092-checkpoint-planning-lint-final.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-checkpoint-planning-lint.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-checkpoint-planning-preflight.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s092-checkpoint-planning-private.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-private.log",
+      "sha256": "ec7d3201c027ea9098730392570b1df8e9f38e641a7fdf0c66b61acaeff20551",
+      "bytes": 28871
+    },
+    "tifa-s092-checkpoint-planning-typecheck-final-source.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-typecheck-final-source.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-checkpoint-planning-typecheck-final.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-checkpoint-planning-typecheck-initial.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-checkpoint-planning-workspace.log": {
+      "path": "/tmp/tifa-s092-checkpoint-planning-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
