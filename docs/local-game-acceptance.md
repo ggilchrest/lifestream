@@ -77,3 +77,14 @@ Historical recall does not itself require a current game pause or contact grant.
 Isolated HTTP/SQLite fixtures verify these fences; their synthetic Human input,
 channel authentication and native action predicates do not qualify live advice,
 causal success or platform acceptance.
+
+The adapter's save boundary requires an independent host qualifier for actual
+native persistence/readback before entering a save-control operation and after
+its result. Closed metadata checks bind request, timeline, pinned artifact and
+save/readback/confirmation clocks; verification preserves the older ordinary
+save's original timeline, frame, bytes digest and creation date. Existing ordinary
+save creation may precede the current flush request. A shape-valid success or
+opaque readback reference cannot qualify itself. Failed or withdrawn qualification
+after entry leaves the operation potentially executed and quarantined until
+trusted reconciliation. This code performs no file/save/emulator operation and
+does not prove native flush, restart/load or recover lost unsaved progress.
