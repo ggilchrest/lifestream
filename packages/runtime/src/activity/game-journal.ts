@@ -85,7 +85,7 @@ export type GameDispatchBoundary={
  observationCurrent:(observation:Readonly<G.GameObservation>)=>boolean;now?:()=>number;
 };
 export type GameDispatchSelection=Readonly<{status:'selected'|'unavailable';validation:Readonly<DispatchValidation>|null;isCurrent:()=>boolean}>;
-const dispatchSelections=new WeakMap<GameDispatchSelection,Readonly<DispatchValidation>>();
+const dispatchSelections=new WeakMap<GameDispatchSelection,{validation:Readonly<DispatchValidation>;view:PreparedGameCampaignContext;binding:PreparedTurnBinding;decision:G.GameDecisionInput;proposal:G.GameActionProposal}>();
 /** Revalidate the same genuine prepared proposal against a separately qualified
  * fresh observation. This emits inert validation metadata, never a dispatch,
  * admission, lease, save operation or renewed prepared-context expiry. */
@@ -113,13 +113,18 @@ export function selectGameDispatchValidation(view:PreparedGameCampaignContext,bi
   };
   if(!isCurrent())return no();
   const validation:DispatchValidation=frozen({planningObservationId:planning.observationId,dispatchObservationId:o.observationId,dispatchObservationRevision:o.revision,checkedFrameNumber:o.frameNumber,checkedAt:new Date(now).toISOString(),validatorRef,predicateChecks:predicates.map(({p,field})=>({predicateId:p.predicateId,fieldId:p.fieldId,observedValue:field!.value,matched:true as const,sourceObservationId:o.observationId})),planningCapturedAt:planning.capturedAt,planningFrameNumber:planning.frameNumber,preparedContextFreshUntil:new Date(freshUntil).toISOString()});
-  if(!isCurrent())return no();const selection:GameDispatchSelection=frozen({status:'selected',validation,isCurrent});dispatchSelections.set(selection,validation);return selection;
+  if(!isCurrent())return no();const selection:GameDispatchSelection=frozen({status:'selected',validation,isCurrent});dispatchSelections.set(selection,{validation,view,binding,decision,proposal});return selection;
  }catch{return no();}
 }
 /** Only the original still-current host selection exposes canonical metadata.
  * A copied wrapper or DTO cannot renew its identity or controller authority. */
 export function gameDispatchValidationFor(selection:GameDispatchSelection):Readonly<DispatchValidation>|null{
- const validation=dispatchSelections.get(selection);return validation&&selection.isCurrent()?validation:null;
+ const source=dispatchSelections.get(selection);return source&&selection.isCurrent()?source.validation:null;
+}
+/** Exact original prepared/decision/proposal binding; inert metadata cannot be
+ * transplanted onto another proposal or copied selection. Never an I/O grant. */
+export function gameDispatchSelectionMatchesPreparedContext(selection:GameDispatchSelection,view:PreparedGameCampaignContext,binding:PreparedTurnBinding,decision:G.GameDecisionInput,rawProposal:G.GameActionProposal):boolean{
+ try{const source=dispatchSelections.get(selection),proposal=boundedGameDataSnapshot(rawProposal);return !!source&&source.view===view&&source.binding===binding&&source.decision===decision&&!!proposal&&isDeepStrictEqual(source.proposal,proposal)&&gameProposalMatchesPreparedContext(view,binding,decision,source.proposal)&&selection.isCurrent();}catch{return false;}
 }
 /** Typed game wrapper around the same compact journal; this creates no action,
  * save, runtime run, alternate Assistant or extra inference prompt section. */

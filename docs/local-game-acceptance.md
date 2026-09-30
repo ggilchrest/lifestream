@@ -157,3 +157,15 @@ potentially executed; qualified unknown results remain explicit unknown output
 and retain that fence. This callback does not issue capability authority, settle
 resource budgets or demonstrate actual native input ownership. Those existing
 owners and real platform evidence remain separately required.
+
+The source host now joins one genuine prepared decision/proposal and original
+fresh-dispatch selection to the existing checkpoint/controller budget owner and
+an already guarded adapter. Exact proposal and validation matching prevents
+transplanting inert metadata or copied wrappers into another action. Reservation
+precedes adapter invocation; current source/owner/port identity is rechecked around
+callbacks and awaits. Reentrant or reused selections cannot start another call.
+Unknown/denied/aborted/withdrawn/unqualified outcomes retain resources for trusted
+reconciliation. Once usage settles, later source loss withholds current downstream
+results without rolling back historical accounting. This source join creates no
+schedule, live enrollment, authority owner or automatic gameplay continuation.
+Native source/admission/lease/usage facts are still host qualification dependencies.
