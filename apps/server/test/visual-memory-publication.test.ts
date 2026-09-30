@@ -1,12 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createHash,randomUUID} from 'node:crypto';
+import {createHash,randomBytes,randomUUID} from 'node:crypto';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {Database,MemoryRepository} from '@lifestream/storage-sqlite';
 import {fixtureVisualProvider} from '@lifestream/runtime/perception/fixture';
 import {VisualInputHost} from '../src/runtime/visual-input.ts';
 import {AutomaticMemory} from '../src/runtime/automatic-memory.ts';
 import type {VisualMemorySelection} from '../src/runtime/visual-memory-intake.ts';
 import {visualOwner} from '../../../packages/storage-sqlite/test/fixtures/visual-episode.ts';
+import {createLifestreamServer} from '../src/index.ts';
+import {loadProfile} from '../src/config/loader.ts';
+import {readSessionEndpoint} from '../src/runtime/session-context.ts';
 
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+5gz/qwAAAABJRU5ErkJggg==','base64');
 function fixture(t:import('node:test').TestContext){
@@ -68,4 +74,39 @@ test('queued publication cannot cross stop, source change, audience withdrawal, 
   if(mode==='stop')f.stop();if(mode==='source')f.invalidate();if(mode==='audience')f.deny();if(mode==='visualPolicy')f.worker.configureVisual(f.owner,false,1,86400000);if(mode==='memoryPolicy')f.worker.configure(f.owner,false,1);if(mode==='contentHook')f.content(()=>{f.stop();return true;});
   await f.worker.tick();assert.equal(f.inspect().episodes.length,0);assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM visual_observation_episodes').get()!.n,0);assert.equal(f.calls(),0);
  });
+});
+
+test('authenticated HTTP publication reaches consented memory inspection through the server binding',{timeout:15000},async t=>{
+ const root=await mkdtemp(join(tmpdir(),'ls-visual-publication-http-'));
+ const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'state.sqlite'),artifactDirectory:join(root,'artifacts')};
+ const installerToken=randomBytes(32).toString('hex'),password=randomBytes(32).toString('hex'),environmentId=randomUUID(),family=randomUUID();
+ let app:ReturnType<typeof createLifestreamServer>,relationshipId:string|null=null;
+ const internals=()=>app as unknown as {database:Database;automaticMemory:AutomaticMemory};
+ app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'auth'),installerToken},audiencePrivacy:{sourceIds:[]},visualInput:{
+  provider:fixtureVisualProvider(request=>({requestId:request.requestId,status:'complete',observations:[{observationId:randomUUID(),frameIds:[request.frames[0]!.frameId],appearance:'A synthetic participant appears to wear a hat.',inference:null,confidence:null,limitations:['Scripted interpretation of a one-pixel fixture; no real image understanding.']}],reason:null})),
+  scopeFor:actor=>{const db=internals().database,session=readSessionEndpoint(db,actor.sessionId),row=db.connection.prepare("SELECT conversation_id AS conversationId FROM sessions WHERE id=? AND status='active'").get(actor.sessionId) as {conversationId:string}|undefined;
+   if(!session.endpoint||!row||!relationshipId)return null;return {...actor,relationshipId,environmentId,conversationId:row.conversationId,endpointId:session.endpoint.endpointId,sessionRevision:session.revision,audienceRevision:1,scopeGeneration:1};},
+  sourceFor:()=>({bindingRef:'isolated-synthetic-source',connected:true,configurationRevision:1}),captureAuthority:()=>({sourceConnected:true,devicePermission:true,hostCaptureLease:true,interpretationAllowed:true,remoteEgressAllowed:false,foregroundVisible:true}),
+  memorySelection:publication=>({reason:'appearanceContinuity',independenceKey:family,observations:[{observationId:publication.batch.observations[0]!.observationId,subject:{subjectRef:'explicit-synthetic-subject',binding:'userConfirmed',basisRefs:['synthetic-specific-confirmation'],limitations:['Synthetic association, not inferred from account login.']},visibility:'inView'}]})
+ }});
+ t.after(async()=>{await app.shutdown();await rm(root,{recursive:true,force:true});});await app.start();
+ const base=`http://127.0.0.1:${app.address().port}`;let cookie='',csrf='';
+ const request=(path:string,body?:unknown,method=body===undefined?'GET':'POST',extra:Record<string,string>={})=>fetch(base+path,{method,headers:{origin:base,cookie,'content-type':'application/json','x-lifestream-csrf':csrf,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
+ const setup=await request('/api/auth/v1/setup',{username:'synthetic',password,installerToken});assert.equal(setup.status,201);cookie=setup.headers.get('set-cookie')!.split(';')[0]!;const identity=(await setup.json()).session;csrf=identity.csrfToken;
+ const assistant=await(await request('/api/admin/v1/assistants',{displayName:'Synthetic publication Assistant'})).json(),assistantId=assistant.assistantId as string;
+ assert.equal((await request(`/api/admin/v1/assistants/${assistantId}/activate`,{profileId:assistant.profile.profileId,expectedActiveRevision:null})).status,200);
+ relationshipId=(await(await request(`/api/admin/v1/assistants/${assistantId}/relationships`,{})).json()).relationship.relationshipId;
+ assert.equal((await request('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession',bindingKey:randomUUID()})).status,200);assert.equal((await request('/api/runtime/v1/audience',{mode:'solo',seconds:300})).status,200);
+ const scope={assistantId,relationshipId},memory='/api/runtime/v1/memory',query=memory+'?'+new URLSearchParams({assistantId,relationshipId:relationshipId!});
+ assert.equal((await request(memory,{...scope,enabled:true,expectedRevision:0})).status,200);assert.equal((await request(memory,{...scope,operation:'configureVisual',enabled:true,expectedRevision:0,retentionMs:86400000})).status,200);
+ const route=(op:string)=>`/api/runtime/vision/v1/sessions/${identity.sessionId}/${op}`,wire={schemaVersion:'1.0.0',assistantId};
+ const offered=await request(route('capabilities'),{...wire,supportedVersions:['1.0.0']});assert.equal(offered.status,200,await offered.clone().text());const capability=await offered.json();
+ const enabled=await request(route('camera'),{...wire,action:'enable',expectedRevision:0,idempotencyKey:randomUUID(),challengeId:capability.negotiation.challenge.id,endpointClockId:'synthetic-clock',endpointReceivedMonotonicMs:performance.now()},'PUT');assert.equal(enabled.status,200,await enabled.clone().text());const camera=(await enabled.json()).camera;
+ const frameId=randomUUID(),metadata={...wire,leaseId:camera.leaseId,endpointClockId:'synthetic-clock',correlationId:randomUUID(),frames:[{frameId,sequence:0,capturedMonotonicMs:performance.now(),clockMappingId:camera.clockMappingId,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]},boundary='synthetic-publication-boundary';
+ const body=Buffer.concat([Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="metadata"\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(metadata)}\r\n`),Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="${frameId}"\r\nContent-Type: image/png\r\n\r\n`),png,Buffer.from(`\r\n--${boundary}--\r\n`)]);
+ const published=await fetch(base+route('batches'),{method:'POST',headers:{origin:base,cookie,'x-lifestream-csrf':csrf,'content-type':`multipart/form-data; boundary=${boundary}`},body});assert.equal(published.status,200,await published.clone().text());const receipt=await published.json();assert.equal(receipt.result.status,'complete');
+ await internals().automaticMemory.tick();const inspected=await(await request(query)).json();assert.equal(inspected.visual.episodes.length,1,JSON.stringify(inspected.visual));const row=inspected.visual.episodes[0];assert.equal(row.episode.observations[0].batchId,receipt.requestId);assert.equal(row.episode.sourceObservationIds[0],receipt.result.observations[0].observationId);assert.equal(row.episode.memoryRecordId,null);assert.equal(row.episode.rawMediaRetained,false);assert.equal(row.episode.observations[0].confidence,null);assert.deepEqual(inspected.visual.intakeReceipts,[{requestId:receipt.requestId,state:'retained'}]);
+ assert.equal((await request(memory,{...scope,operation:'forgetVisual',id:row.episodeId,expectedRevision:row.revision},'POST',{'x-lifestream-csrf':'wrong'})).status,403);
+ assert.equal((await request(memory,{...scope,operation:'forgetVisual',id:row.episodeId,expectedRevision:row.revision})).status,200);assert.equal((await(await request(query)).json()).visual.episodes[0].episode,null);
+ assert.equal((await request(route('camera'),{...wire,action:'stop',expectedRevision:0,idempotencyKey:randomUUID(),leaseId:camera.leaseId},'PUT')).status,200);
 });
