@@ -40,3 +40,5 @@ export type {ChannelPersonalContext} from './channel-personal-context.ts';
 export * from './visual-memory.ts';
 export * from './campaign-journal.ts';
 export * from './game-activity.ts';
+
+export * from './game-experience.ts';

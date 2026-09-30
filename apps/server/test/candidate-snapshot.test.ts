@@ -8,6 +8,8 @@ import {DatabaseSync} from 'node:sqlite';
 import {Database,ChannelPersonalContextRepository,ChannelSubscriptionRepository,TelegramPairingRepository,MemoryRepository,ExperienceRepository,UrgentAwayRepository,UrgentAttentionRepository,type UrgentAttentionCondition} from '@lifestream/storage-sqlite';
 import {defaultTopics,type ExperienceScope,type ExperiencePolicy,type Source} from '@lifestream/contracts/experience';
 import {snapshotCandidate,restoreCandidate} from '../src/admin/candidate-snapshot.ts';
+import {GameExperienceRepository} from '@lifestream/storage-sqlite';
+import {fixtureEpisode,projection,fixtureGameEpisodeSources} from '../../../packages/runtime/test/fixtures/game-memory.ts';
 import {createLifestreamServer} from '../src/index.ts';
 import {loadProfile} from '../src/config/loader.ts';
 
@@ -24,6 +26,15 @@ async function fixture(t:any){
  const record=(await api(path+'/candidates',{content:'SYNTHETIC_FORGET_AFTER_BACKUP',source:'synthetic',sourceFamily:'recovery-test',uncertainty:'low',expectedRevision:relationship.revision,idempotencyKey:randomUUID()})).candidate;
  return {root,candidate,packages,config,password,identity,headers,request,api,path,record,assistant,relationship,async startRestore(directory:string){await app.shutdown();const restored=structuredClone(config);restored.storage={databasePath:join(directory,'data.sqlite'),artifactDirectory:join(directory,'artifacts')};app=createLifestreamServer({config:restored,localAuth:{stateDirectory:join(directory,'safety')},presentationPackages:{directory:join(directory,'packages')}});await app.start();base=`http://127.0.0.1:${app.address().port}`;headers.origin=base;}};
 }
+test('actual isolated snapshot restore scrubs synthetic game sources and memory derivatives while preserving original source and opaque fences',async t=>{
+ const f=await fixture(t),now=Date.now(),e=fixtureEpisode(now),owner={principalId:f.identity.session.principalId,assistantId:f.assistant.assistantId,relationshipId:f.relationship.relationshipId};Object.assign(e.scope,owner);
+ await f.api('/api/runtime/v1/memory',{...owner,principalId:undefined,enabled:true,expectedRevision:0});
+ const db=new Database({path:join(f.candidate,'data.sqlite')}),sources=fixtureGameEpisodeSources(e),repo=new GameExperienceRepository(db,{maximumFences:4,scopeCurrent:()=>true,quarantined:()=>false,retentionFor:()=>({retentionMs:86400000,retentionPolicyRef:e.retentionPolicyRef,maximumEpisodes:4,maximumBytes:8192}),sourceRecordsFor:()=>sources,meaningfulGroundingCurrent:()=>true,publicationCurrent:()=>true,retainedSourceCurrent:()=>true,now:()=>now});
+ assert.equal(repo.admit(e),true);const memory=new MemoryRepository(db,repo.memorySources(4)).saveGameProjection(projection(e,now));db.close();
+ const snapshot=join(f.root,'game-snapshot'),destination=join(f.root,'game-restored');await snapshotCandidate({candidate:f.candidate,packages:f.packages,destination:snapshot});const receipt=await restoreCandidate({snapshot,currentSafety:join(f.candidate,'safety'),destination});assert.equal(receipt.authority,'quarantined');
+ const restored=new DatabaseSync(join(destination,'data.sqlite'),{readOnly:true});assert.equal(restored.prepare('SELECT state FROM game_experience_episodes').get()!.state,'invalidated');assert.equal(restored.prepare('SELECT payload_json FROM game_experience_episodes').get()!.payload_json,null);assert.equal(restored.prepare('SELECT content FROM memories WHERE id=?').get(memory.id)!.content,'');assert.equal(restored.prepare('SELECT count(*) AS n FROM game_experience_sources').get()!.n,2);assert.equal(restored.prepare('SELECT enabled FROM automatic_memory_policies').get()!.enabled,0);restored.close();
+ const original=new DatabaseSync(join(f.candidate,'data.sqlite'),{readOnly:true});assert.equal(JSON.parse(String(original.prepare('SELECT payload_json FROM game_experience_episodes').get()!.payload_json)).summary,e.summary);assert.equal(original.prepare('SELECT content FROM memories WHERE id=?').get(memory.id)!.content,e.summary);original.close();
+});
 test('consistent export and isolated restore replay newer forgetting and authentication safety, preserve package defaults and quarantine authority',async t=>{
  const f=await fixture(t),snapshot=join(f.root,'snapshot');const manifest=await snapshotCandidate({candidate:f.candidate,packages:f.packages,destination:snapshot});assert.equal(manifest.packageCount,1);assert.ok(!manifest.files.some(f=>f.path.includes('unrelated-source')));
  const relationship=(await f.api(f.path)).relationship;await f.api(f.path+'/privacy',{action:'forget-derived-information',expectedRevision:relationship.revision,idempotencyKey:randomUUID(),targets:[{kind:'record',id:f.record.candidateId,revision:1}]});

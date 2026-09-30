@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import {VisualMemoryRepository,retireVisualProjections,type VisualMemoryAdmission,type Database,type MemoryRepository,type MemoryRecord} from '@lifestream/storage-sqlite';
+import {VisualMemoryRepository,retireVisualProjections,retireGameExperience,type VisualMemoryAdmission,type Database,type MemoryRepository,type MemoryRecord} from '@lifestream/storage-sqlite';
 import type {VisualTransformationConfidence} from '@lifestream/contracts/visual-memory';
 import {buildCanonicalPrompt} from '@lifestream/runtime/inference/prompt';
 import type {InferenceProvider} from '@lifestream/runtime/inference';
@@ -154,7 +154,7 @@ export class AutomaticMemory {
   if(!isCurrent())return {window:this.visual.retainedWindow(scope,false,fromMs,toMs),isCurrent:()=>false};return {window,isCurrent};
  }
  configure(scope:MemoryScope,enabled:boolean,expectedRevision:number){
-  this.database.transaction(tx=>{const current=this.policy(scope);if(current.revision!==expectedRevision)throw new Error('Memory policy revision conflict');tx.run('INSERT INTO automatic_memory_policies VALUES (?,?,?,?,?,?,?) ON CONFLICT(scope_key) DO UPDATE SET enabled=excluded.enabled,revision=excluded.revision,approved_at=excluded.approved_at',key(scope),scope.principalId,scope.assistantId,scope.relationshipId,enabled?1:0,expectedRevision+1,new Date().toISOString());tx.run("UPDATE automatic_memory_work SET state='cancelled',input_text='',prepared_json=NULL,reason='policy_changed' WHERE scope_key=? AND state IN ('queued','running','prepared')",key(scope));if(!enabled){tx.run('UPDATE visual_memory_policies SET enabled=0,revision=revision+1 WHERE scope_key=? AND enabled=1',key(scope));tx.run("UPDATE visual_observation_episodes SET state='invalidated',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND state='retained'",key(scope));retireVisualProjections(tx,Date.now());}});
+  this.database.transaction(tx=>{const current=this.policy(scope);if(current.revision!==expectedRevision)throw new Error('Memory policy revision conflict');tx.run('INSERT INTO automatic_memory_policies VALUES (?,?,?,?,?,?,?) ON CONFLICT(scope_key) DO UPDATE SET enabled=excluded.enabled,revision=excluded.revision,approved_at=excluded.approved_at',key(scope),scope.principalId,scope.assistantId,scope.relationshipId,enabled?1:0,expectedRevision+1,new Date().toISOString());tx.run("UPDATE automatic_memory_work SET state='cancelled',input_text='',prepared_json=NULL,reason='policy_changed' WHERE scope_key=? AND state IN ('queued','running','prepared')",key(scope));if(!enabled){retireGameExperience(tx,scope);tx.run('UPDATE visual_memory_policies SET enabled=0,revision=revision+1 WHERE scope_key=? AND enabled=1',key(scope));tx.run("UPDATE visual_observation_episodes SET state='invalidated',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND state='retained'",key(scope));retireVisualProjections(tx,Date.now());}});
   this.controller?.abort();return this.policy(scope);
  }
  enqueue(scope:MemoryScope,source:string,input:string,attribution:'authenticatedTypedOwner'|'unknownSpeaker'){
