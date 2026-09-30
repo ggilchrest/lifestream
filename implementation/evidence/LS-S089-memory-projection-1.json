@@ -1,0 +1,158 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S089",
+  "operation": "attributedCanonicalVisualMemoryCandidate",
+  "status": "verified",
+  "qualificationScope": "Scoped software increment only; whole S089 inProgress",
+  "sourceRevision": "6658b0e476b8f9ddebf38b5d98e477edfd95ac52",
+  "baseRevision": "699e4ea",
+  "recordedAt": "2026-09-30T05:31:02.152788Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      "docs/30-conversational-vision.md": "e5302919fdfb4842d713ce4ed344a44a52dcdb11b38185d2dee293406dedd6e8",
+      "docs/04-memory-and-dreaming.md": "e567d364dcc505349ead8e1eb40521c80c3b61df6f46dd0ddaa17151ee573794",
+      "roadmap/packets/LS-S089.json": "653fe36493528ba3178fdd18ce83ccc622bee213b1f03daf0027fe62700a803b",
+      "contracts/conversational-vision.schema.json": "4f00aaf9b3ae40db636482cc2fc20ebb22b43d6131155dda2d4e32fc3ee80b7e",
+      "contracts/memory-record.schema.json": "1d5ba67e9c3c89fdda0e2233b3f1afb8b49af4ff443c81ceaeb4a41fd37b6317"
+    }
+  },
+  "mappedCases": [
+    "LS-TEST-164",
+    "LS-TEST-166"
+  ],
+  "requirements": [
+    "LS-MEM-100",
+    "LS-MEM-103",
+    "LS-COMP-066"
+  ],
+  "claims": {
+    "joinedAuthenticatedHttpPublicationToInspection": true,
+    "separateAttributedTransformationConfidenceRequired": true,
+    "unknownPerceptionConfidencePreserved": true,
+    "canonicalProjectionCandidateOnly": true,
+    "unverifiedInteractionProvenance": true,
+    "atomicSourceAndProjectionPersistence": true,
+    "sourceRevisionDigestScopeAndRetentionReadChecks": true,
+    "bothDirectionForgettingAndConsentExpiryRestoreFences": true,
+    "projectionCapacityBound": 128,
+    "normalRecallReflectionPromotion": false,
+    "typedSourceCorrectionImplemented": false,
+    "syntheticPerception": true,
+    "actualImageUnderstanding": false,
+    "rawMediaRetained": false,
+    "userTurnFabricated": false,
+    "memoryModelCalls": 0
+  },
+  "verification": {
+    "httpPublicationBinding": {
+      "revision": "699e4ea",
+      "pass": 23,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 3127.001958
+    },
+    "focusedProjection": {
+      "pass": 54,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 3144.125375
+    },
+    "fullSource": {
+      "revision": "6658b0e476b8f9ddebf38b5d98e477edfd95ac52",
+      "pass": 1529,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 96348.745875
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "workspaceCheck": "pass",
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    }
+  },
+  "retainedFailures": [
+    {
+      "attempt": "initial projection focused suite",
+      "pass": 42,
+      "fail": 8,
+      "reason": "New INSERT omitted generated lifecycle-table ID column. Corrected to explicit named columns; repaired focused and full source checks pass."
+    }
+  ],
+  "logDigests": {
+    "tifa-s089-publication-http": {
+      "path": "/tmp/tifa-s089-publication-http.log",
+      "sha256": "0fefb30c9a336d5d1aca479e8c1636b4f3c64cc836e0757a34e4a00631c20338",
+      "bytes": 2057
+    },
+    "tifa-s089-http-typecheck": {
+      "path": "/tmp/tifa-s089-http-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-http-lint": {
+      "path": "/tmp/tifa-s089-http-lint.log",
+      "sha256": "8a273bf53075ccfbbb81949394b21de7d27faabd07b98d7083dc385ab946a4d7",
+      "bytes": 212
+    },
+    "tifa-s089-projection-focused": {
+      "path": "/tmp/tifa-s089-projection-focused.log",
+      "sha256": "0240838df5f35d4d3f008c295407bbb7ebf07ff1f085248307da3cdff96981ed",
+      "bytes": 15555
+    },
+    "tifa-s089-projection-focused-final": {
+      "path": "/tmp/tifa-s089-projection-focused-final.log",
+      "sha256": "70fee6449509835e6f39849b6d226d1f96f9d7ff68f5c7d7de3ccb04870b780b",
+      "bytes": 5291
+    },
+    "tifa-s089-projection-full": {
+      "path": "/tmp/tifa-s089-projection-full.log",
+      "sha256": "71845e4ef59d936e090904f7916f3b2367754f6462f41d06a522078ec9a5fc9a",
+      "bytes": 182757
+    },
+    "tifa-s089-projection-typecheck-final": {
+      "path": "/tmp/tifa-s089-projection-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-projection-lint-final": {
+      "path": "/tmp/tifa-s089-projection-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s089-projection-build": {
+      "path": "/tmp/tifa-s089-projection-build.log",
+      "sha256": "b456e547a5ebedc08e6519a3073771a5d3fc4bfd94a23131d06bc3456d686042",
+      "bytes": 1047
+    },
+    "tifa-s089-projection-workspace": {
+      "path": "/tmp/tifa-s089-projection-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    },
+    "tifa-s089-projection-private-final": {
+      "path": "/tmp/tifa-s089-projection-private-final.log",
+      "sha256": "d2b1b8b8d78bbe4a2a7ff89d67de2a7009af33c06f47504de5999e5b456384ce",
+      "bytes": 28944
+    }
+  },
+  "exclusions": [
+    "Whole S089 acceptance",
+    "Source-attributed visual correction",
+    "Historical pattern comparison connected to retained sources",
+    "Reflection and ordinary-reply integration",
+    "Live host confidence policy and subject association",
+    "Real selected image-provider/camera and physical behavior",
+    "Full S090 lifecycle trace/replay/performance",
+    "S091-S094 game implementation and Linux/Windows GUI/native-save qualification",
+    "S066/full LS-TEST-084",
+    "New Human acceptance or installed candidate promotion",
+    "Deployment/push/publication/live effects"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Implement source-aware visual correction and retained-history/context/experience adapters; independently continue eligible Phase16 game work after slice preflight and required reads."
+}
