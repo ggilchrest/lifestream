@@ -1,0 +1,230 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S092",
+  "sliceStatus": "inProgress",
+  "component": "durable controller budget reservations and qualified terminal settlement",
+  "componentStatus": "verified",
+  "recordedAt": "2026-09-30T20:56:11.347211Z",
+  "sourceRevision": "cd3ddbcfc7163733a6d9f92b7eae62ed9195adfa",
+  "implementationRevision": "0051290d642168aaefbe8aa1bbfba991371f03c8",
+  "sourceFiles": [
+    "apps/server/test/game-activity.test.ts",
+    "apps/server/test/server.test.ts",
+    "docs/local-game-acceptance.md",
+    "packages/storage-sqlite/src/game-activity.ts",
+    "packages/storage-sqlite/src/migrations/0067_activity_controller_reservations.sql",
+    "packages/storage-sqlite/src/migrations/index.ts",
+    "packages/storage-sqlite/test/controller-reservations.test.ts",
+    "packages/storage-sqlite/test/game-advice-custody.test.ts",
+    "packages/storage-sqlite/test/game-experience.test.ts",
+    "packages/storage-sqlite/test/game-help.test.ts",
+    "packages/storage-sqlite/test/initiative-delivery.test.ts",
+    "packages/storage-sqlite/test/initiative-expression.test.ts",
+    "packages/storage-sqlite/test/session-handoff.test.ts",
+    "packages/storage-sqlite/test/urgent-away.test.ts"
+  ],
+  "ownedOperation": {
+    "operation": "S092 durable controller reservations exact-revision full source suite",
+    "sourceRevision": "cd3ddbcfc7163733a6d9f92b7eae62ed9195adfa",
+    "startedAt": "2026-09-30T20:51:44.155121+00:00",
+    "wrapperPid": 23486,
+    "log": "/tmp/tifa-s092-controller-reservations-full.log",
+    "status": "completed",
+    "childPid": 23492,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T20:53:35.590789+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "cd3ddbcfc7163733a6d9f92b7eae62ed9195adfa",
+      "pass": 2473,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 111203.797917
+    },
+    "focused": {
+      "pass": 223,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 2311.10025
+    },
+    "migrationRepair": {
+      "pass": 34,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1610.120791
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6798.834583
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass after cumulative scope aid repair",
+    "generatedGameTypes": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types packages/storage-sqlite/test/controller-reservations.test.ts and scoped activity/privacy/migration regressions",
+    "node --test --experimental-strip-types apps/server/test/game-activity.test.ts",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual SQLite additive migration67, transactions, duplicate fences, worst-case cumulative accounting, qualified once-only settlement, privacy/expiry scrubbing, close/open and separate Node process recovery. Original checkpoint bytes and prior migration fingerprints/clocks remain preserved.",
+    "scripted": "Controller/admission/native source, actual monotonic wall-usage qualifier, buttons/pixels/observations and policy setup are scripted. No capability grant, emulator/controller/game/save effect or Human acceptance executed."
+  },
+  "retainedFailures": [
+    {
+      "log": "tifa-s092-controller-reservations-initial-full.log",
+      "result": {
+        "pass": 2472,
+        "fail": 1,
+        "skip": 1,
+        "durationMs": 113616.637417
+      },
+      "cause": "Existing server migration63 inventory expected63..66; additive67 was correctly applied. Repaired expected inventory, retaining exact prior migration preservation assertion."
+    },
+    {
+      "log": "tifa-s092-controller-reservations-workspace.log",
+      "cause": "Cumulative checkpoint changedFiles included prior S094 scorer path absent from allowedFiles. Restored its exact owned path; no historical changed-file deletion or unrelated source staged."
+    }
+  ],
+  "evidenceCorrection": "The earlier S092-dispatch-context receipt described its workspace check as passing, but its retained log reports the missing cumulative scorer scope path. The preceding S094 workspace check passed before its evidence update added that historical changed-file entry. Those historical claims are superseded only for workspace aid validation by this explicit correction; full source results remain unchanged. Current repaired workspace check passes.",
+  "milestoneDistinctions": [
+    "Metadata budgets never grant capability admission, actual input ownership or controller I/O.",
+    "Request/buttons/prose/media/save payloads are not stored in the opaque controller reservation table.",
+    "Unknown or unqualified outcomes retain worst-case resources across restart and privacy loss; no blind action replay or authority follows.",
+    "Actual usage settlement requires independent monotonic qualification, neutralized terminal receipt, exact original identity and ledger/policy checks before and after callbacks.",
+    "Original checkpoint historical usage cannot roll back durable used floors or held budgets."
+  ],
+  "limitations": [
+    "Whole S092/Phase16 remains inProgress; existing governed capability admission and actual current native frame/input ownership still require host integration.",
+    "Actual reviewed Lua/game/core/decoder/GUI/native saves, real image provider/capture, exact permitted help/image delivery, per-platform performance and Human evidence remain open.",
+    "Canonical lifecycle trace coverage remains incomplete; diagnostic joins/replay are bounded partial correlation and grant no authority.",
+    "Primary S066/full LS-TEST-084, selected-model causal/callback/onset failures and original24 S083/S084 plus accepted iPhone journeys remain preserved. Installed candidate/services/Telegram/backup unchanged. No push/publication/deployment/private export or live camera/game/save/schedule/recipient/provider effects."
+  ],
+  "nextAction": "Continue S091/S092 actual controller-result qualification and existing governed/budget/host integration; real native/platform/provider/performance/Human and canonical trace gates remain open.",
+  "logDigests": {
+    "tifa-s092-controller-reservations-browser.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-browser.log",
+      "sha256": "85583af91e2c7c289aa538cc13466beb5792c560e30de8e82155cbdc77e3ea78",
+      "bytes": 23892
+    },
+    "tifa-s092-controller-reservations-build-final.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-build-final.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s092-controller-reservations-build.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-build.log",
+      "sha256": "70d9b14e8ee2456fa94543f1a04fe8989f2db90b2f76905d6b24cc02cf2c08af",
+      "bytes": 1074
+    },
+    "tifa-s092-controller-reservations-diff-final.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-diff-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s092-controller-reservations-diff.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s092-controller-reservations-focused-current.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-focused-current.log",
+      "sha256": "74b91f2c018a8446f4af56c327686470f31e560f6ffd47a803b0d8e65d83e261",
+      "bytes": 22053
+    },
+    "tifa-s092-controller-reservations-focused-final.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-focused-final.log",
+      "sha256": "8c76c3265a51b19d68107a2a30cb23de91acbff7c455821621cfab0ca2e4ac0f",
+      "bytes": 22158
+    },
+    "tifa-s092-controller-reservations-focused-initial.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-focused-initial.log",
+      "sha256": "779a15f132aa224ae6456514e0f07d47672ec824b795e79212dc3eff7b935e38",
+      "bytes": 7707
+    },
+    "tifa-s092-controller-reservations-full.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-full.log",
+      "sha256": "cc2f41b5230c4683284602b553f57d6563d73245b6ffb2e19b12fdd9cb8e15e6",
+      "bytes": 264422
+    },
+    "tifa-s092-controller-reservations-generated.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-generated.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s092-controller-reservations-initial-full.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-initial-full.log",
+      "sha256": "c81601b7eb1c9b15996db1ad7e499b0444b6db19b582909964249c65c3434d8f",
+      "bytes": 265666
+    },
+    "tifa-s092-controller-reservations-lint-final.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-controller-reservations-lint.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-controller-reservations-migration-repaired.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-migration-repaired.log",
+      "sha256": "cc81b95c7684026c3d24c728d311536d3f736d07947765e23aab1f4bd2b46648",
+      "bytes": 3407
+    },
+    "tifa-s092-controller-reservations-preflight.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-preflight.log",
+      "sha256": "067045e36a123811ec34c40605b1354abe81a767954738b083a979e3855097fd",
+      "bytes": 56
+    },
+    "tifa-s092-controller-reservations-private.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-private.log",
+      "sha256": "c597904fe015748c7801bde1ba82fe6214468a6a6072e51a137d0263ca20c853",
+      "bytes": 28893
+    },
+    "tifa-s092-controller-reservations-typecheck-final.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-controller-reservations-typecheck-initial.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-controller-reservations-typecheck.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-controller-reservations-workspace-repaired.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-workspace-repaired.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    },
+    "tifa-s092-controller-reservations-workspace.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-workspace.log",
+      "sha256": "067045e36a123811ec34c40605b1354abe81a767954738b083a979e3855097fd",
+      "bytes": 56
+    }
+  }
+}
