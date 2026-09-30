@@ -1,0 +1,184 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S091",
+  "sliceStatus": "inProgress",
+  "component": "independent controller native-result qualification and terminal chronology",
+  "componentStatus": "verified",
+  "recordedAt": "2026-09-30T21:10:57.155215Z",
+  "sourceRevision": "76d63ea476b58b53de51e38a66ea792a66afed41",
+  "sourceFiles": [
+    "docs/local-game-acceptance.md",
+    "packages/providers-bizhawk/src/provider.ts",
+    "packages/providers-bizhawk/test/provider.test.ts",
+    "packages/providers-bizhawk/test/transport.test.ts"
+  ],
+  "ownedOperation": {
+    "operation": "S091 independent native controller result boundary exact-revision full source suite",
+    "sourceRevision": "76d63ea476b58b53de51e38a66ea792a66afed41",
+    "startedAt": "2026-09-30T21:08:02.325621+00:00",
+    "wrapperPid": 32506,
+    "log": "/tmp/tifa-s091-action-boundary-full.log",
+    "status": "completed",
+    "childPid": 32509,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T21:10:01.924483+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "76d63ea476b58b53de51e38a66ea792a66afed41",
+      "pass": 2492,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 119334.329625
+    },
+    "focused": {
+      "pass": 168,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1727.087834
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6507.908
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "generatedGameTypes": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types packages/providers-bizhawk/test/provider.test.ts packages/providers-bizhawk/test/native-saves.test.ts packages/storage-sqlite/test/controller-reservations.test.ts",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Closed canonical action/result correlation and immutable host callback custody in the actual adapter boundary. Missing qualifier prevents claim/entry. Strict qualification of success and rejection, exact action/admission/frame clocks and unresolved-operation fence are exercised; cancelled/failed zero-usage terminal and unknown outcomes remain distinct.",
+    "scripted": "Native input/neutralization/source/result/authority/monotonic wall usage predicates and result receipts are scripted. No game/emulator/native input/save, actual grant/recipient/provider or Human effect/acceptance executed."
+  },
+  "retainedFailures": [
+    {
+      "log": "tifa-s091-action-boundary-initial-full.log",
+      "pass": 2490,
+      "fail": 2,
+      "skip": 1,
+      "cause": "Two scripted transport controller fixtures lacked the newly mandatory native result qualifier, so entry correctly denied. Added explicit scripted qualifier to the fixture only; disconnect/expiry assertions remain unchanged."
+    }
+  ],
+  "retainedFindings": [
+    {
+      "log": "tifa-s091-action-boundary-focused-initial.log",
+      "finding": "All initial87 checks passed, but review found the rejected fixture omitted required Problem correlationId/details and could fail schema before its intended native qualifier. Completed canonical error and asserted the qualifier was invoked exactly once. Final168 checks include this strengthened negative plus qualified rejection, captured callback replacement and zero-usage terminal positives."
+    }
+  ],
+  "milestoneDistinctions": [
+    "Captured native-result qualifier is required before effect claim/provider entry; later configuration replacement cannot install or bypass it.",
+    "Schema-valid completed/rejected native result cannot clear ownership uncertainty without strict independent qualification. Promise/false/throw and late withdrawal quarantine potentially executed work.",
+    "Qualified unknown result is honest output and remains fenced, without redispatch.",
+    "Completed/cancelled/failed neutralized terminals require explicit bounded frame accounting and admission/start/completion/recording chronology. UTC correlation is not actual monotonic usage qualification.",
+    "No new capability/grant/authority owner; native callback never replaces existing governed dispatch or durable budget settlement."
+  ],
+  "limitations": [
+    "Whole S091/S092/Phase16 inProgress; native reviewed bridge/decoder/screenshot/pause/input/save sources and actual governed/budget/host loop remain independently required.",
+    "Real Linux/Windows GUI/save/restart/load, provider/capture/contact/image and prescribed performance/Human/canonical trace gates remain open.",
+    "Primary S066/full LS-TEST-084, original24 S083/S084 and iPhone acceptance, selected-model callback/causal/onset failures preserved. Installed candidate/ai5090/iPhone services, Telegram/backup unchanged. No publication/push/deployment/new private export or live effects."
+  ],
+  "nextAction": "Continue S092 genuine prepared dispatch to existing checkpoint/controller budget and qualified adapter host integration; canonical trace and real native/platform/provider/performance/Human gates remain open.",
+  "logDigests": {
+    "tifa-s091-action-boundary-browser.log": {
+      "path": "/tmp/tifa-s091-action-boundary-browser.log",
+      "sha256": "29e406307dea5b32f79422cd33e42f109ebf9556f6870698e96e1a067eddcd6b",
+      "bytes": 23874
+    },
+    "tifa-s091-action-boundary-build.log": {
+      "path": "/tmp/tifa-s091-action-boundary-build.log",
+      "sha256": "e3263f107ec605e42e2e334f3521d9a67de4bcc637d9c9dda12e43fd99224f7f",
+      "bytes": 1018
+    },
+    "tifa-s091-action-boundary-diff.log": {
+      "path": "/tmp/tifa-s091-action-boundary-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s091-action-boundary-focused-final.log": {
+      "path": "/tmp/tifa-s091-action-boundary-focused-final.log",
+      "sha256": "0fc41ae1b9f5e6f956a423b9c5db0b1cb02af08eb7a48c1d562918146fdfa43e",
+      "bytes": 12286
+    },
+    "tifa-s091-action-boundary-focused-initial.log": {
+      "path": "/tmp/tifa-s091-action-boundary-focused-initial.log",
+      "sha256": "c9904b5ace08759398ee1bec4698950a134a0c27553ab74008d7179c12d026ea",
+      "bytes": 7426
+    },
+    "tifa-s091-action-boundary-focused-repaired.log": {
+      "path": "/tmp/tifa-s091-action-boundary-focused-repaired.log",
+      "sha256": "36e316b57b7f810799be12561114d0f170ce8aaed5ec175f3a6f75390a21f740",
+      "bytes": 14732
+    },
+    "tifa-s091-action-boundary-full.log": {
+      "path": "/tmp/tifa-s091-action-boundary-full.log",
+      "sha256": "8bf65a5e77a3ac0431f8083c36cbb212d8da9de9717af56575cd52e5de522399",
+      "bytes": 266238
+    },
+    "tifa-s091-action-boundary-generated.log": {
+      "path": "/tmp/tifa-s091-action-boundary-generated.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s091-action-boundary-initial-full.log": {
+      "path": "/tmp/tifa-s091-action-boundary-initial-full.log",
+      "sha256": "7913a3e1e7ea667ee3c39789351bb6a050c5d68bc136d6520d9cbd26f9725a1c",
+      "bytes": 268968
+    },
+    "tifa-s091-action-boundary-lint-final.log": {
+      "path": "/tmp/tifa-s091-action-boundary-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s091-action-boundary-lint-repaired.log": {
+      "path": "/tmp/tifa-s091-action-boundary-lint-repaired.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s091-action-boundary-lint.log": {
+      "path": "/tmp/tifa-s091-action-boundary-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s091-action-boundary-preflight.log": {
+      "path": "/tmp/tifa-s091-action-boundary-preflight.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s091-action-boundary-private.log": {
+      "path": "/tmp/tifa-s091-action-boundary-private.log",
+      "sha256": "1dc31c621e11971506fe53d6827bff0708cb06aba8d0d0e75707be6bb272fb9f",
+      "bytes": 28910
+    },
+    "tifa-s091-action-boundary-typecheck.log": {
+      "path": "/tmp/tifa-s091-action-boundary-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s091-action-boundary-workspace.log": {
+      "path": "/tmp/tifa-s091-action-boundary-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
