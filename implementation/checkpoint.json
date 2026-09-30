@@ -1716,6 +1716,11 @@
       "command": "git diff --check",
       "result": "pass",
       "evidence": "implementation/evidence/LS-S092-campaign-journal-1.json"
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/storage-sqlite/test/initiative-delivery.test.ts packages/storage-sqlite/test/initiative-expression.test.ts packages/storage-sqlite/test/session-handoff.test.ts packages/storage-sqlite/test/urgent-away.test.ts",
+      "result": "pass",
+      "evidence": "implementation/evidence/LS-S092-campaign-journal-1.json"
     }
   ],
   "decisions": [

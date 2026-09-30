@@ -70,7 +70,14 @@
     "browserSource": {
       "pass": 77,
       "fail": 0,
-      "skip": 86
+      "skip": 86,
+      "durationMs": 6257.106875
+    },
+    "migrationFocused": {
+      "pass": 41,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 3224.424042
     }
   },
   "preflight": {
