@@ -5,6 +5,7 @@ import {createReplayManifest,replayTrace,type ReplayEvent} from '@lifestream/run
 import type {VisualPublicationReceipt} from './visual-input.ts';
 import type {VisualTurnReceipt} from './visual-turn-evidence.ts';
 import type {VisualLifecycleReceipt} from './visual-lifecycle-evidence.ts';
+import type {VisualMemoryIntakeReceipt} from './visual-memory-evidence.ts';
 
 /** Supplied diagnostic snapshots carry no consent, identity or action authority.
  * The caller must obtain scoped receipts through their existing host/repository.
@@ -16,6 +17,7 @@ export type VisualLineageInput=Readonly<{
  projections:readonly VisualMemoryProjection[];
  terminalSources:readonly Readonly<{episodeId:string;revision:number;state:'forgotten'|'expired'|'invalidated'}>[];
  lifecycle?:readonly VisualLifecycleReceipt[];
+ memoryIntake?:readonly VisualMemoryIntakeReceipt[];
 }>;
 const maximumBytes=4*1024*1024,maximumRows=128;
 const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
@@ -58,7 +60,13 @@ function snapshot(input:unknown):VisualLineageInput{
  try{if(!plain(input))return fail();const text=JSON.stringify(input);if(Buffer.byteLength(text)>maximumBytes)return fail();return JSON.parse(text) as VisualLineageInput;}catch{return fail();}
 }
 function validate(input:VisualLineageInput){
- if(!keys(input,'publications,turns,episodes,projections,terminalSources')&&!keys(input,'publications,turns,episodes,projections,terminalSources,lifecycle')||![input.publications,input.turns,input.episodes,input.projections,input.terminalSources,input.lifecycle??[]].every(list))fail();
+ const fields='publications,turns,episodes,projections,terminalSources'+(Object.hasOwn(input,'lifecycle')?',lifecycle':'')+(Object.hasOwn(input,'memoryIntake')?',memoryIntake':'');
+ if(!keys(input,fields)||![input.publications,input.turns,input.episodes,input.projections,input.terminalSources,input.lifecycle??[],input.memoryIntake??[]].every(list)||Object.hasOwn(input,'lifecycle')&&!list(input.lifecycle)||Object.hasOwn(input,'memoryIntake')&&!list(input.memoryIntake))fail();
+ for(const m of input.memoryIntake??[]){
+  if(!keys(m,'eventId,sequence,occurredAtMs,producerScope,ownerDigest,requestDigest,state,coverage,authority')||
+   !string(m.eventId)||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(m.eventId)||!number(m.sequence)||m.sequence<1||!time(m.occurredAtMs)||
+   m.producerScope!=='backgroundVisualMemoryIntake'||!hex(m.ownerDigest)||!hex(m.requestDigest)||!oneOf(m.state,'queued,policyDenied,replaced,sourceExpired,scopeChanged,invalidEpisode,unattributedSubject,retained,duplicateSource,appearanceBound,sessionBound,capacityExceeded,unclassified')||m.coverage!=='bounded_best_effort'||m.authority!==false)fail();
+ }
  for(const l of input.lifecycle??[]){
   if(!keys(l,'eventId,sequence,occurredAtMs,kind,reason,scopeDigest,leaseDigest,clockMappingDigest,requestDigest,correlationDigest,hostSequence,sourceEpochs,providerDigest,frames,selectedVersion,observedCaptureActive,coverage,authority')||
    !string(l.eventId)||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(l.eventId)||!number(l.sequence)||l.sequence<1||!time(l.occurredAtMs)||
@@ -157,10 +165,29 @@ export function correlateVisualLineage(value:unknown){
  });
  const terminalById=new Map(input.terminalSources.map(t=>[t.episodeId,t]));
  const episodeById=new Map(input.episodes.map(e=>[e.episodeId,e]));
+ const memoryIntake=[...(input.memoryIntake??[])].sort((a,b)=>a.sequence-b.sequence);
+ const ownerDigest=(scope:VisualObservationEpisode['scope']|VisualPublicationReceipt['admission']['scope'])=>digest([scope.principalId,scope.assistantId,scope.relationshipId]);
+ const publicationByDigest=new Map(input.publications.map(p=>[hash(p.admission.requestId),p]));
+ if(!memoryIntake.length)missing.add('memoryIntakeCoverageMissing');
+ if(new Set(memoryIntake.map(m=>m.eventId)).size!==memoryIntake.length||new Set(memoryIntake.map(m=>m.sequence)).size!==memoryIntake.length)contradictions.add('duplicateMemoryIntakeReceipt');
+ // Sequences are global to the producer while inspection is owner-scoped. Gaps
+ // can mean filtering, expiry or bounded eviction; they never prove a failure.
+ if(memoryIntake.length&&(memoryIntake[0]!.sequence!==1||memoryIntake.some((m,i)=>i>0&&m.sequence!==memoryIntake[i-1]!.sequence+1)))missing.add('memoryIntakeSequenceGap');
+ for(const [i,m] of memoryIntake.entries()){
+  if(i>0&&m.occurredAtMs<memoryIntake[i-1]!.occurredAtMs)contradictions.add('memoryIntakeClockReversed');
+  const p=publicationByDigest.get(m.requestDigest);
+  if(!p)missing.add('memoryIntakePublicationMissing');
+  else if(m.ownerDigest!==ownerDigest(p.admission.scope)||m.occurredAtMs<p.admission.receivedAtMs||m.state==='retained'&&(p.disposition!=='published'||m.occurredAtMs>=p.captureFreshUntilMs))contradictions.add('memoryIntakePublicationMismatch');
+  if(m.state==='retained'&&!input.episodes.some(e=>ownerDigest(e.scope)===m.ownerDigest&&e.observations.some(o=>hash(diagnosticId(o.batchId))===m.requestDigest)))missing.add('retainedIntakeSourceUnjoined');
+  events.push({kind:'memoryIntake',sourceEventDigest:hash(m.eventId),sequence:m.sequence,occurredAtMs:m.occurredAtMs,producerScope:m.producerScope,ownerDigest:m.ownerDigest,requestDigest:m.requestDigest,state:m.state,authority:false});
+ }
  for(const e of input.episodes){
   const terminal=terminalById.get(e.episodeId);
   if(terminal){if(terminal.revision<=e.revision)contradictions.add('terminalRevisionMismatch');continue;}
   for(const o of e.observations){const p=publicationById.get(o.batchId);
+   const retained=memoryIntake.filter(m=>m.ownerDigest===ownerDigest(e.scope)&&m.requestDigest===hash(diagnosticId(o.batchId))&&m.state==='retained');
+   if(!retained.length)missing.add('retainedSourceIntakeMissing');
+   else if(retained.every(m=>m.occurredAtMs<Date.parse(e.retainedAt)))contradictions.add('retainedSourceIntakeTimeMismatch');
    if(!p)missing.add('retainedPublicationMissing');
    else if(p.disposition!=='published'||!orderedSame(diagnosticScope(e.scope),{...p.admission.scope,audienceRevision:p.publication?.audienceRevision??p.admission.scope.audienceRevision})||!p.observationIds.includes(o.observationId)||!subset(o.sourceFrameIds,p.admission.frameIds)||Date.parse(o.earliestCaptureAt)!==milliseconds(p.admission.capturedAtEarliestMs)||Date.parse(o.latestCaptureAt)!==milliseconds(p.admission.capturedAtLatestMs)||Date.parse(o.receivedAt)!==milliseconds(p.admission.receivedAtMs)||Date.parse(o.interpretedAt)>p.completedAtMs||Date.parse(o.interpretedAt)<p.admission.receivedAtMs||Date.parse(o.expiresAt)!==milliseconds(p.captureFreshUntilMs)||!providerBindingMatches(o.providerConfigurationRef,p))contradictions.add('retainedPublicationMismatch');
   }
@@ -173,7 +200,7 @@ export function correlateVisualLineage(value:unknown){
  }
  for(const t of input.terminalSources)events.push({kind:'terminalSource',episode:id(t.episodeId),revision:t.revision,state:t.state});
  if(!input.publications.length)missing.add('publicationCoverageMissing');if(!input.turns.length)missing.add('turnCoverageMissing');
- return {schemaVersion:'1.0.0',kind:'supplied-visual-diagnostic-lineage',status:contradictions.size?'contradictoryMetadata':'partialDiagnosticCorrelation',coverage:'bounded_best_effort',contradictions:[...contradictions].sort(),missingEvidence:[...missing].sort(),turns,events,claimsRuntimeAcceptance:false,sourceCurrencyProved:false,perceptionQualityProved:false,rawMediaAvailable:false,limitations:['Supplied metadata is not an authenticated or complete canonical lifecycle trace.','Optional lifecycle receipts cover host milestones where retained; missing ingress or pre-retention memory admission remains unproved.','Runtime capture state and lease termination are separate from physical capture or broker-release acknowledgment.','Endpoint acknowledgment is a recorded diagnostic; actual delivery, perception and Human acceptance remain unproved.','No raw media, scene prose, Human corrections, prompts, recipients or private chain-of-thought are replayed.','Terminal sources suppress retained source and projection payloads; replay grants no eligibility, learning or effects.']};
+ return {schemaVersion:'1.0.0',kind:'supplied-visual-diagnostic-lineage',status:contradictions.size?'contradictoryMetadata':'partialDiagnosticCorrelation',coverage:'bounded_best_effort',contradictions:[...contradictions].sort(),missingEvidence:[...missing].sort(),turns,events,claimsRuntimeAcceptance:false,sourceCurrencyProved:false,perceptionQualityProved:false,rawMediaAvailable:false,limitations:['Supplied metadata is not an authenticated or complete canonical lifecycle trace.','Optional lifecycle and background memory-intake receipts cover retained milestones only; missing, filtered or expired history stays partial.','Memory-intake states supply no consent, current memory eligibility, Human turn or projection authority. A retained state and a typed source remain separate evidence.','Runtime capture state and lease termination are separate from physical capture or broker-release acknowledgment.','Endpoint acknowledgment is a recorded diagnostic; actual delivery, perception and Human acceptance remain unproved.','No raw media, scene prose, Human corrections, prompts, recipients or private chain-of-thought are replayed.','Terminal sources suppress retained source and projection payloads; replay grants no eligibility, learning or effects.']};
 }
 
 /** Re-derive the redacted trace from the bounded original snapshot. Never accept

@@ -51,8 +51,8 @@ generation, endpoint acknowledgment and memory retention remain separate
 milestones. These receipts can be replayed with the same redacted source/time
 lineage, without reopening capture or granting authority.
 
-The full visual lifecycle trace remains incomplete: pre-retention memory admission
-is not joined and missing receipts do not establish event completeness.
+The full visual lifecycle trace remains incomplete; missing receipts do not
+establish event completeness.
 The memory worker separately exposes owner-scoped `visualIntakeHistory`: bounded
 asynchronous background receipts preserve queued, replaced, denied, expired and
 retained decisions instead of overwriting each request's earlier milestone. They
@@ -60,8 +60,16 @@ contain only hashed owner/request references and closed diagnostic states, with
 the same 128 pending/128 retained and lazy 60-second dual-clock bounds. Owner
 permission is rechecked on inspection; close removes pending history. No Human
 turn/session is created, and neither diagnostic state nor its inspection supplies
-consent, recall content, source currency or learning. Its offline replay join and
-canonical trace integration remain pending.
+consent, recall content, source currency or learning. The offline correlator now
+joins available intake request/owner/time metadata to publication and separately
+retained typed sources. Queuing may precede publication completion; replacement,
+refusal and expiry remain distinct from retention or projection. Global sequence
+gaps can reflect owner filtering, expiry or bounded eviction and remain explicit
+coverage gaps. Legacy snapshots and sources without retained intake history stay
+partial. Replay keeps intake states historical after forgetting, suppresses stale
+source/projection payloads, and never reactivates memory. Supplied metadata cannot
+authenticate consent or current custody; canonical trace integration remains
+pending.
 Production trace/replay integration remains pending; these internal diagnostics
 are separate from the closed canonical trace envelope and its event catalogue.
 Selected-provider physical input, unannounced animal interpretation, historical

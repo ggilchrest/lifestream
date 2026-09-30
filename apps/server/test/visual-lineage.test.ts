@@ -41,7 +41,7 @@ async function fixture(t:import('node:test').TestContext,modality:'text'|'audio'
  if(modality==='audio'){recorder.synthesisCompleted();recorder.endpointSettled('completed',4800);}recorder.ended('completed');await Promise.resolve();
  const input=():VisualLineageInput=>{
   const episodes=worker.inspect(owner).visual.episodes.filter(row=>row.episode!==null).map(row=>row.episode!),projections=episodes.filter(e=>e.memoryRecordId).map(episode=>({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:memories.get(owner.assistantId,episode.memoryRecordId!)!.provenance.canonical}) as VisualMemoryProjection);
-  return {publications:visual.publicationReceipts(actor),turns:visual.turnReceipts(actor),episodes,projections,terminalSources:[],lifecycle:visual.lifecycleReceipts(actor)};
+  return {publications:visual.publicationReceipts(actor),turns:visual.turnReceipts(actor),episodes,projections,terminalSources:[],lifecycle:visual.lifecycleReceipts(actor),memoryIntake:worker.visualIntakeHistory(owner)};
  };
  return {input,worker,owner,memories,visual,actor,providerCalls:()=>providerCalls,denyScope:()=>scopeAllowed=false,busy:(value:boolean)=>idle=!value,scopeHook:(hook:()=>void)=>scopeHook=hook,advance:(ms:number)=>{mono+=ms;utc+=ms;t.mock.timers.tick(ms);},nextBatch:(copied?:()=>void,invalid=false)=>{
   mono+=1100;t.mock.timers.tick(1100);utc=Date.now();const frameId=randomUUID();return visual.batch(actor,{leaseId:lease.leaseId!,endpointClockId:'synthetic-clock',correlationId:randomUUID(),frames:[{frameId,sequence:nextSequence++,capturedMonotonicMs:mono-5010,clockMappingId:lease.clockMappingId!,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]},new Map([[frameId,invalid?Buffer.from('NOT_AN_IMAGE'):png]]),copied);
@@ -230,4 +230,65 @@ test('broken intake diagnostics never prevent later actual source retention or c
 
 test('actual busy worker records replacement and admission denial without retaining repeated appearance',async t=>{
  const f=await fixture(t);f.busy(true);await f.nextBatch();await f.nextBatch();await Promise.resolve();const queued=f.worker.visualIntakeHistory(f.owner);assert.deepEqual(queued.map(row=>row.state),['queued','retained','queued','replaced','queued']);assert.equal(queued[2]!.requestDigest,queued[3]!.requestDigest);assert.notEqual(queued[3]!.requestDigest,queued[4]!.requestDigest);await f.worker.tick();assert.equal(f.input().episodes.length,1);f.busy(false);await f.worker.tick();await Promise.resolve();assert.equal(f.worker.visualIntakeHistory(f.owner).at(-1)!.state,'appearanceBound');assert.equal(f.input().episodes.length,1);assert.equal(f.providerCalls(),0);
+});
+
+test('actual background intake joins publication and typed source in isolated replay without memory authority',async t=>{
+ const f=await fixture(t),input=f.input(),result=await replayVisualLineage(input),rows=result.events.filter(e=>e.payload.kind==='memoryIntake');
+ assert.deepEqual(result.correlation.contradictions,[]);assert.deepEqual(result.correlation.missingEvidence,[]);assert.deepEqual(rows.map(e=>e.payload.state),['queued','retained']);assert.equal(rows[0]!.payload.requestDigest,createHash('sha256').update(input.publications[0]!.admission.requestId).digest('hex'));assert.ok(rows.every(e=>e.payload.authority===false&&e.payload.producerScope==='backgroundVisualMemoryIntake'));assert.equal(result.comparison.equal,true);assert.equal(result.correlation.sourceCurrencyProved,false);assert.equal(result.durableReinforcement,false);assert.equal(f.providerCalls(),0);assert.equal(f.memories.contextRecords(f.owner.assistantId,f.owner.principalId).length,1);assert.doesNotMatch(JSON.stringify(result),/PRIVATE_|sessionId|interactionId/);
+});
+
+test('busy replacement and refused repeated appearance replay as separate milestones without new source retention',async t=>{
+ const f=await fixture(t);f.busy(true);await f.nextBatch();await f.nextBatch();f.busy(false);await f.worker.tick();await Promise.resolve();const result=await replayVisualLineage(f.input());
+ assert.deepEqual(result.correlation.contradictions,[]);assert.deepEqual(result.events.filter(e=>e.payload.kind==='memoryIntake').map(e=>e.payload.state),['queued','retained','queued','replaced','queued','appearanceBound']);assert.equal(result.events.filter(e=>e.payload.kind==='retainedSource').length,1);assert.equal(result.events.filter(e=>e.payload.kind==='memoryProjection').length,1);assert.equal(result.correlation.claimsRuntimeAcceptance,false);
+});
+
+test('legacy, expired, owner-filtered and unjoined retained intake inventories stay partial',async t=>{
+ const f=await fixture(t),input=f.input(),legacy=JSON.parse(JSON.stringify(input));delete legacy.memoryIntake;let result=correlateVisualLineage(legacy);assert.deepEqual(result.contradictions,[]);assert.ok(result.missingEvidence.includes('memoryIntakeCoverageMissing'));assert.ok(result.missingEvidence.includes('retainedSourceIntakeMissing'));
+ result=correlateVisualLineage({...input,memoryIntake:input.memoryIntake!.slice(-1)});assert.deepEqual(result.contradictions,[]);assert.ok(result.missingEvidence.includes('memoryIntakeSequenceGap'));
+ result=correlateVisualLineage({...input,episodes:[],projections:[]});assert.deepEqual(result.contradictions,[]);assert.ok(result.missingEvidence.includes('retainedIntakeSourceUnjoined'));
+ f.advance(60000);result=correlateVisualLineage({...input,memoryIntake:f.worker.visualIntakeHistory(f.owner)});assert.deepEqual(result.contradictions,[]);assert.ok(result.missingEvidence.includes('memoryIntakeCoverageMissing'));assert.equal(result.sourceCurrencyProved,false);
+});
+
+test('queued intake may precede completed publication without implying retention or rejected source metadata',async t=>{
+ const f=await fixture(t),input=JSON.parse(JSON.stringify(f.input()));input.publications[0].completedAtMs++;
+ // A supplied delayed publication completes before a separately delayed turn;
+ // background queuing is a producer callback, not post-completion admission.
+ for(const row of input.turns)row.occurredAtMs++;
+ const result=correlateVisualLineage(input);assert.deepEqual(result.contradictions,[]);assert.equal(result.sourceCurrencyProved,false);
+});
+
+const intakeMutations:readonly [string,(input:any)=>void,string][]=[
+ ['foreign owner',input=>input.memoryIntake[0].ownerDigest='a'.repeat(64),'memoryIntakePublicationMismatch'],
+ ['pre-admission queue',input=>input.memoryIntake[0].occurredAtMs=input.publications[0].admission.receivedAtMs-1,'memoryIntakePublicationMismatch'],
+ ['expired retention',input=>input.memoryIntake[1].occurredAtMs=input.publications[0].captureFreshUntilMs,'memoryIntakePublicationMismatch'],
+ ['retention before typed source',input=>{input.memoryIntake[1].occurredAtMs--;input.memoryIntake[0].occurredAtMs--;input.publications[0].admission.receivedAtMs--;input.publications[0].admission.capturedAtEarliestMs--;},'retainedSourceIntakeTimeMismatch'],
+ ['duplicate event',input=>input.memoryIntake.push(input.memoryIntake[1]),'duplicateMemoryIntakeReceipt'],
+ ['backward clock',input=>input.memoryIntake[1].occurredAtMs--,'memoryIntakeClockReversed']
+];
+for(const [name,mutate,code] of intakeMutations)test(`memory intake ${name} contradicts supplied bindings without minting authority`,async t=>{
+ const f=await fixture(t),input=JSON.parse(JSON.stringify(f.input()));mutate(input);const result=correlateVisualLineage(input);assert.ok(result.contradictions.includes(code));assert.equal(result.status,'contradictoryMetadata');assert.equal(result.claimsRuntimeAcceptance,false);assert.equal(result.sourceCurrencyProved,false);
+});
+
+test('missing request and retained milestone remain explicit coverage gaps rather than fabricated custody',async t=>{
+ const f=await fixture(t),input=JSON.parse(JSON.stringify(f.input()));input.memoryIntake[1].requestDigest='a'.repeat(64);const result=correlateVisualLineage(input);assert.deepEqual(result.contradictions,[]);assert.ok(result.missingEvidence.includes('memoryIntakePublicationMissing'));assert.ok(result.missingEvidence.includes('retainedIntakeSourceUnjoined'));assert.ok(result.missingEvidence.includes('retainedSourceIntakeMissing'));
+});
+
+test('newer forgetting keeps intake historical while suppressing source and projection payloads',async t=>{
+ const f=await fixture(t),input=f.input(),episode=input.episodes[0]!;f.worker.forgetVisual(f.owner,episode.episodeId,episode.revision);const terminal=f.worker.inspect(f.owner).visual.episodes[0]!;
+ const result=await replayVisualLineage({...input,terminalSources:[{episodeId:episode.episodeId,revision:terminal.revision,state:'forgotten'}]});assert.deepEqual(result.correlation.contradictions,[]);assert.deepEqual(result.events.filter(e=>e.payload.kind==='memoryIntake').map(e=>e.payload.state),['queued','retained']);assert.ok(result.events.every(e=>!['retainedSource','memoryProjection'].includes(e.payload.kind as string)));assert.equal(f.memories.contextRecords(f.owner.assistantId,f.owner.principalId).length,0);assert.equal(result.durableReinforcement,false);
+});
+
+test('closed intake shape rejects private prose, invented producers, self-issued authority and invalid inventory',async t=>{
+ const f=await fixture(t),original=f.input();for(const mutate of [(v:any)=>v.memoryIntake[0].scene='PRIVATE_SCENE',(v:any)=>v.memoryIntake[0].producerScope='humanInteraction',(v:any)=>v.memoryIntake[0].authority=true,(v:any)=>v.memoryIntake[0].state='PRIVATE_STAGE',(v:any)=>v.memoryIntake[0].eventId='PRIVATE_ID',(v:any)=>v.memoryIntake[0].ownerDigest='PRIVATE_OWNER',(v:any)=>v.memoryIntake=null,(v:any)=>v.memoryIntake=Array(129).fill(v.memoryIntake[0])]){const input=JSON.parse(JSON.stringify(original));mutate(input);assert.throws(()=>correlateVisualLineage(input));}
+});
+
+test('actual queued source expiry replays refusal without creating a second retained source',async t=>{
+ const f=await fixture(t);f.busy(true);await f.nextBatch();f.advance(6000);await f.worker.tick();await Promise.resolve();const result=await replayVisualLineage(f.input());assert.deepEqual(result.correlation.contradictions,[]);assert.deepEqual(result.events.filter(e=>e.payload.kind==='memoryIntake').map(e=>e.payload.state),['queued','retained','queued','sourceExpired']);assert.equal(result.events.filter(e=>e.payload.kind==='retainedSource').length,1);assert.equal(f.input().episodes.length,1);assert.equal(result.correlation.sourceCurrencyProved,false);
+});
+
+test('labeled long diagnostic request stays partial without changing canonical UUID source bytes',async t=>{
+ const f=await fixture(t),input=JSON.parse(JSON.stringify(f.input())),source=JSON.stringify(input.episodes),sha=(value:string)=>createHash('sha256').update(value).digest('hex'),long='PRIVATE_REQUEST'.repeat(25),normalized='sha256:'+sha(long);
+ input.publications[0].admission.requestId=normalized;for(const row of input.turns){row.lineage.selected.requestId=normalized;row.lineage.publication.requestId=normalized;}
+ input.lifecycle[2].requestDigest=sha(normalized);for(const row of input.memoryIntake)row.requestDigest=sha(normalized);
+ const result=correlateVisualLineage(input);assert.deepEqual(result.contradictions,[]);assert.ok(result.missingEvidence.includes('retainedPublicationMissing'));assert.ok(result.missingEvidence.includes('retainedSourceIntakeMissing'));assert.ok(result.missingEvidence.includes('retainedIntakeSourceUnjoined'));assert.equal(result.events.find(e=>e.kind==='publication')!.request,'sha256:'+result.events.find(e=>e.kind==='memoryIntake')!.requestDigest);assert.equal(JSON.stringify(input.episodes),source);assert.doesNotMatch(JSON.stringify(result),/PRIVATE_REQUEST/);assert.equal(result.sourceCurrencyProved,false);
 });
