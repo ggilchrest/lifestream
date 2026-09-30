@@ -1,0 +1,231 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S093",
+  "operation": "typedAttributedGameMemoryCandidateInExistingStore",
+  "status": "verified",
+  "qualificationScope": "Scoped candidate projection/write/read boundary; whole S093 inProgress",
+  "sourceRevision": "0ac773ac6e655f235751cef8d91669f6afd0cb74",
+  "baseRevision": "c04f150458aff77e8e04a1502ea32cfa71e25f2f",
+  "recordedAt": "2026-09-30T12:15:57.627993Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      ".private/roadmap/packets/LS-S093.json": "ac0750804f95e1ef6f45d0d7a0b9a7d11adf3fb2bb18092ff58012abdf7e0f87",
+      ".private/docs/31-local-game-activity.md": "fa81107f2eb216686b989b269d3a39cc9798681f11511f8e1e0698b1e10d4238",
+      "packages/contracts/src/schemas/local-game-activity.schema.json": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+    },
+    "exactSchemaApproval": "LS-DEC-050; bytes unchanged; no new export"
+  },
+  "claims": {
+    "closedCanonicalCandidatePreservesSimulatedDomainTimelineFrameTimeUncertainty": true,
+    "attributedTransformationConfidenceNotPerceptionCalibration": true,
+    "independentSourceAndMemoryConsentMandatoryAtWriteAndRead": true,
+    "existingSQLiteMemoryAndLifecycleStoreNoSecondEngineOrFakeHumanTurn": true,
+    "candidateCannotEnterOrdinaryRecallReflectionOrGenericActivationCorrection": true,
+    "runTimelineReloadParaphraseCannotMultiplySourceFamily": true,
+    "forgetErasesPayloadAndHistoryKeepsOpaqueBoundedExclusion": true,
+    "forgetRemainsAvailableAfterSourceOrConsentWithdrawal": true,
+    "lateConsentWithdrawalRollsBackMemoryAndLifecycleWrites": true,
+    "actualSQLiteReopenRequiresSeparateCurrentSourceHost": true,
+    "actualNativeGameOutcomeOrSelectedModelMemoryQualityAcceptance": false,
+    "installedCandidateChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 86,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 959.866708
+    },
+    "fullSource": {
+      "revision": "0ac773ac6e655f235751cef8d91669f6afd0cb74",
+      "pass": 1999,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 101629.0415
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6495.1325
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "workspaceCheck": "pass"
+  },
+  "mappedCases": [
+    "LS-TEST-178",
+    "LS-TEST-179",
+    "LS-TEST-181"
+  ],
+  "commands": [
+    "node --test --experimental-strip-types packages/runtime/test/activity-memory.test.ts packages/storage-sqlite/test/game-memory.test.ts packages/storage-sqlite/test/memory.test.ts packages/storage-sqlite/test/visual-memory.test.ts",
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --check",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "retainedFailures": [
+    {
+      "log": "/tmp/tifa-s093-projection-focused.log",
+      "reason": "Synthetic episode scope omitted required simulatedGame domain/logical context binding; repaired fixture without weakening schema. Also removed test-to-test import that duplicated cases."
+    },
+    {
+      "log": "/tmp/tifa-s093-projection-focused-final-source.log",
+      "pass": 75,
+      "fail": 8,
+      "reason": "Existing visual projection fixtures expired at Sept30 noon against actual wall clock. Pinned Date.now to the same advancing synthetic source clock; production expiry behavior unchanged."
+    }
+  ],
+  "proofKinds": {
+    "real": "Actual existing SQLite memories/lifecycle persistence, immutable source mapping, atomic rollback, bounded exclusion/deduplication/forget erasure and close/reopen; existing visual source regression",
+    "scripted": "Retained episode/source qualification, memory consent/retention, recorded game attempts/observations and transformation estimate. No emulator/game/model/Human or actual activity qualification."
+  },
+  "exclusions": [
+    "Durable game episode source owner/publication/admission/observation binding and retention cleanup are still required; host callbacks are mandatory and unconfigured host denies access",
+    "Source-aware Human game correction, activation, ordinary prepared-memory/return conversation and independently enabled reflection remain incomplete",
+    "Game memory does not yet establish either complete active-help or away-return journey; help/screenshots/contact/reply/advice implementation remains open",
+    "Concrete enrolled lifecycle host/event/watchdog routing, fresh authorized resume/controller, actual ordinary save/game/provider/graphical Linux/Windows/performance/Human and whole S091/S092/S093/S094 remain open",
+    "S090 full visual trace/replay; S089 automatic appearance comparisons; primary S066/full LS-TEST-084 and selected-model/onset failure gates",
+    "Installed candidate promotion, live camera/game/save/schedule/contact/provider effects, deployment, push/publication or new private exports"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue durable game episode publication/source-ledger binding and lifecycle/retention/correction integration, then scoped prepared memory/ordinary conversation and independently enabled reflection. Preserve actual native/setup/provider/platform/Human gates.",
+  "logDigests": {
+    "tifa-s093-projection-browser.log": {
+      "path": "/tmp/tifa-s093-projection-browser.log",
+      "sha256": "6070a405527d12836876a9a1b01aeca3f8f75253a290c719abb244020e579af0",
+      "bytes": 23882
+    },
+    "tifa-s093-projection-build-complete.log": {
+      "path": "/tmp/tifa-s093-projection-build-complete.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s093-projection-build-final-source.log": {
+      "path": "/tmp/tifa-s093-projection-build-final-source.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s093-projection-build-final.log": {
+      "path": "/tmp/tifa-s093-projection-build-final.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s093-projection-build-initial.log": {
+      "path": "/tmp/tifa-s093-projection-build-initial.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s093-projection-build.log": {
+      "path": "/tmp/tifa-s093-projection-build.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s093-projection-focused-clock-repair.log": {
+      "path": "/tmp/tifa-s093-projection-focused-clock-repair.log",
+      "sha256": "f33a504e966ad6d76901922afb734e2ca5a9a9b5bdc66f5c035fe6a15da5de48",
+      "bytes": 7589
+    },
+    "tifa-s093-projection-focused-complete.log": {
+      "path": "/tmp/tifa-s093-projection-focused-complete.log",
+      "sha256": "ac8991ef99fc54faa053f9927d9288f561c6c6d23da54f04c170746239e4c8fd",
+      "bytes": 7834
+    },
+    "tifa-s093-projection-focused-final-source.log": {
+      "path": "/tmp/tifa-s093-projection-focused-final-source.log",
+      "sha256": "dac3a5fd21f7d623329a312c7187397e41c7a4fa22c0d058754d331f92b211dc",
+      "bytes": 23114
+    },
+    "tifa-s093-projection-focused-final.log": {
+      "path": "/tmp/tifa-s093-projection-focused-final.log",
+      "sha256": "bb2ed50021ac392932eb6f36bd07dd4b3fc41db13e40f6d3cf6323dbc38ae708",
+      "bytes": 3751
+    },
+    "tifa-s093-projection-focused.log": {
+      "path": "/tmp/tifa-s093-projection-focused.log",
+      "sha256": "75b3592f43520d637c85d67b6d36e84982b61044e3a2a2b28f124216ff6827cc",
+      "bytes": 39667
+    },
+    "tifa-s093-projection-full.log": {
+      "path": "/tmp/tifa-s093-projection-full.log",
+      "sha256": "34538b5fbe1de7707a84f71a5f60e9a16d9eb8d203ccff6c5b46f99fb4aca1af",
+      "bytes": 221227
+    },
+    "tifa-s093-projection-generated-game.log": {
+      "path": "/tmp/tifa-s093-projection-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s093-projection-generated-original.log": {
+      "path": "/tmp/tifa-s093-projection-generated-original.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s093-projection-lint-complete.log": {
+      "path": "/tmp/tifa-s093-projection-lint-complete.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-projection-lint.log": {
+      "path": "/tmp/tifa-s093-projection-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-projection-preflight.log": {
+      "path": "/tmp/tifa-s093-projection-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s093-projection-private.log": {
+      "path": "/tmp/tifa-s093-projection-private.log",
+      "sha256": "3500be199c5015ba80e34ef553791e93d4700fd8d92a6984948bc207f3803d84",
+      "bytes": 28915
+    },
+    "tifa-s093-projection-typecheck-complete.log": {
+      "path": "/tmp/tifa-s093-projection-typecheck-complete.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-projection-typecheck-final-source.log": {
+      "path": "/tmp/tifa-s093-projection-typecheck-final-source.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-projection-typecheck-final.log": {
+      "path": "/tmp/tifa-s093-projection-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-projection-typecheck-initial.log": {
+      "path": "/tmp/tifa-s093-projection-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-projection-typecheck.log": {
+      "path": "/tmp/tifa-s093-projection-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-projection-workspace.log": {
+      "path": "/tmp/tifa-s093-projection-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
