@@ -88,3 +88,36 @@ opaque readback reference cannot qualify itself. Failed or withdrawn qualificati
 after entry leaves the operation potentially executed and quarantined until
 trusted reconciliation. This code performs no file/save/emulator operation and
 does not prove native flush, restart/load or recover lost unsaved progress.
+
+Already collected paired speech/resource/display measurements can be scored with:
+
+```sh
+node --experimental-strip-types scripts/qualify-local-game-performance.mjs \
+  --input /operator-local/game-measurements.json \
+  --output /operator-local/new-game-performance-report.json
+```
+
+The closed input has `environment` and `runs`. The pinned environment declares
+the Linux or Windows profile, source/providers/configuration/game digests,
+monotonic clock mapping, nominal core frame rate and two to eight pressure
+conditions beginning with `disabled`. Each condition holds at most 5,000 trials;
+the local regular-file input is bounded to 32 MiB. Trials retain requested-speech,
+prepared-read, interruption-stop and audio-continuity milestones, warm/cold
+status, optional-work outcomes, resource observations and separate game
+presentation measurements. Missing values remain explicit. Every failed,
+timed-out and cancelled foreground attempt stays in its denominator; cold
+successes never fill the required 200 exact warm completed speech pairs.
+
+The scorer preserves the existing 900/1,500 ms spoken-word, 15/40 ms prepared-read
+and 150/250 ms audible-stop median/p95 objectives. Paired overhead is reported
+without inventing a game-specific threshold. Optional planning/perception,
+checkpoint/reflection deferrals, drops and failures remain separate from
+foreground speech. Resource headroom, memory pressure, display cadence,
+nominal-speed ratio, controller response, decisions, idle and deliberate pauses
+are reported separately. A disconnected viewer with an available display is
+distinct from display loss. Neither a measured speech pass nor a supplied
+`physical` label qualifies native performance, useful gameplay or Human review;
+matched emulator-only presentation/control and actual per-platform evidence
+still require independent qualification. The tool starts no measurement run,
+provider, camera, game, save, schedule or contact, and creates a fresh owner-only
+report outside connected repository roots.
