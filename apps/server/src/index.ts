@@ -1685,7 +1685,7 @@ export class LifestreamServer {
       result.isCurrent=()=>ownerCurrent() && this.visualInput.contextCurrent(preparedVisualContext);
       result.onCompleted=interactionId=>{completed?.(interactionId);this.visualInput.markContextUsed(preparedVisualContext);};
     }
-    const visualTurnEvidence=this.visualInput.turnEvidence(visualActor,visualSelection,preparedTurnBinding);
+    const visualTurnEvidence=this.visualInput.turnEvidence(visualActor,visualSelection,preparedTurnBinding,this.sessionEnvironmentId);
     if(visualTurnEvidence)result.visualTurnEvidence=visualTurnEvidence;
     if (this.config.providers.world === "pwce") {
       const world = this.providers.world, ownerCurrent = result.isCurrent;

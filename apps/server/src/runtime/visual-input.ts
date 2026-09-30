@@ -192,17 +192,18 @@ export class VisualInputHost {
     } catch { return Object.freeze([]); }
   }
   turnReceipts(actor:VisualActor) {return this.turnJournal.receipts(actor);}
+  turnContextTraces(actor:VisualActor) {return this.turnJournal.contextTraces(actor);}
   lifecycleReceipts(actor:VisualActor) {return this.lifecycleJournal.receipts(actor);}
   /** Capture lineage while the store view is authentic. Later expiry may be
    * diagnosed, but this observer never grants or refreshes context authority. */
-  turnEvidence(actor:VisualActor,selection:VisualContextSelection,binding:PreparedTurnBinding|undefined):VisualTurnEvidenceFactory|undefined {
+  turnEvidence(actor:VisualActor,selection:VisualContextSelection,binding:PreparedTurnBinding|undefined,environmentId?:string):VisualTurnEvidenceFactory|undefined {
     try {
       if(this.closed||!binding||binding.scope.principalId!==actor.principalId||binding.scope.sessionId!==actor.sessionId||binding.scope.assistantId!==actor.assistantId)return undefined;
       const view=selection.view;
       if(view&&(!this.observations.isCurrent(view)||view.scope.principalId!==actor.principalId||view.scope.sessionId!==actor.sessionId||view.scope.assistantId!==actor.assistantId||view.scope.endpointId!==binding.scope.endpointId||view.scope.conversationId!==binding.scope.conversationId||view.scope.relationshipId!==binding.scope.relationshipId||view.viewId!==binding.viewId||view.revision!==binding.revision||view.invalidationKey!==binding.invalidationKey))return undefined;
       const published=view?this.publicationReceipts(actor).findLast(receipt=>receipt.disposition==='published'&&receipt.admission.requestId===visualDiagnosticId(view.requestId)&&receipt.admission.hostSequence===view.sourceRevision&&receipt.publication?.audienceRevision===view.scope.audienceRevision):undefined;
       const publication=published?.publication?{requestId:published.admission.requestId,hostSequence:published.admission.hostSequence,audienceRevision:published.publication.audienceRevision,leaseRevision:published.publication.leaseRevision,clockMappingId:published.admission.clockMappingId}:null;
-      return this.turnJournal.observer(actor,selection,binding,publication);
+      return this.turnJournal.observer(actor,selection,binding,publication,environmentId);
     }catch{return undefined;}
   }
   private prunePublications():{utc:number;mono:number}|null {

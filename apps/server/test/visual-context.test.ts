@@ -14,16 +14,16 @@ const marker='SYNTHETIC_VISUAL_SCENE_AZURE';
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+5gz/qwAAAABJRU5ErkJggg==','base64');
 const authority={sourceConnected:true,devicePermission:true,hostCaptureLease:true,interpretationAllowed:true,remoteEgressAllowed:false,foregroundVisible:true};
 
-async function fixture(t:import('node:test').TestContext,cameraAudience=false){
+async function fixture(t:import('node:test').TestContext,cameraAudience=false,environmentId?:string,visualEnvironmentId=environmentId){
   const directory=await mkdtemp(join(tmpdir(),'ls-visual-context-'));t.after(()=>rm(directory,{recursive:true,force:true}));
   const config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(directory,'state.sqlite'),artifactDirectory:join(directory,'artifacts')};
   let app:ReturnType<typeof createLifestreamServer>,mono=5000,sequence=0,connected=true,visualStatus:'complete'|'empty'|'failed'='complete',visualRelationshipId:string|null=null;
   const epoch=Date.now()-mono,requests:InferenceRequest[]=[];
   let count:'zero'|'one'|'multiple'|'uncertain'|undefined='multiple',providerReason:string|null=null;
   const installerToken=randomBytes(32).toString('hex');
-  app=createLifestreamServer({config,localAuth:{stateDirectory:join(directory,'auth'),installerToken},audiencePrivacy:{sourceIds:[],...(cameraAudience?{cameraSourceIds:['synthetic-camera-count'],now:()=>epoch+mono,monotonicMs:()=>mono}:{})},visualInput:{
+  app=createLifestreamServer({config,...(environmentId?{sessionEnvironmentId:environmentId}:{}),localAuth:{stateDirectory:join(directory,'auth'),installerToken},audiencePrivacy:{sourceIds:[],...(cameraAudience?{cameraSourceIds:['synthetic-camera-count'],now:()=>epoch+mono,monotonicMs:()=>mono}:{})},visualInput:{
     provider:fixtureVisualProvider(request=>visualStatus!=='complete'?{requestId:request.requestId,status:visualStatus,reason:providerReason??(visualStatus==='failed'?'synthetic_provider_failure':null),observations:[]}:({requestId:request.requestId,status:'complete',reason:providerReason,...(cameraAudience&&count?{humanCount:{frameIds:[request.frames[0]!.frameId],classification:count,confidence:null,fieldOfView:'Generated test frame only',coverage:'frameOnly' as const,limitations:['Scripted count; no people observed.']}}:{}),observations:[{observationId:randomUUID(),frameIds:[request.frames[0]!.frameId],appearance:`${marker}: a blue notebook is visible on the table.`,inference:null,confidence:null,limitations:['Scripted observation from a synthetic fixture; no actual image understanding.']}]})),
-    scopeFor:actor=>{const database=(app as any).database,current=readSessionEndpoint(database,actor.sessionId),row=database.connection.prepare("SELECT conversation_id AS conversationId FROM sessions WHERE id=? AND status='active'").get(actor.sessionId) as {conversationId:string}|undefined;if(!current.endpoint||!row)return null;return {...actor,relationshipId:visualRelationshipId,environmentId:'synthetic',conversationId:row.conversationId,endpointId:current.endpoint.endpointId,sessionRevision:current.revision,audienceRevision:cameraAudience?(app as any).audience.snapshot({principalId:actor.principalId,sessionId:actor.sessionId,endpointId:current.endpoint.endpointId}).revision:1,scopeGeneration:1};},
+    scopeFor:actor=>{const database=(app as any).database,current=readSessionEndpoint(database,actor.sessionId),row=database.connection.prepare("SELECT conversation_id AS conversationId FROM sessions WHERE id=? AND status='active'").get(actor.sessionId) as {conversationId:string}|undefined;if(!current.endpoint||!row)return null;return {...actor,relationshipId:visualRelationshipId,environmentId:visualEnvironmentId??'synthetic',conversationId:row.conversationId,endpointId:current.endpoint.endpointId,sessionRevision:current.revision,audienceRevision:cameraAudience?(app as any).audience.snapshot({principalId:actor.principalId,sessionId:actor.sessionId,endpointId:current.endpoint.endpointId}).revision:1,scopeGeneration:1};},
     sourceFor:()=>connected?{bindingRef:'synthetic-camera',connected:true,configurationRevision:1,...(cameraAudience?{audienceSourceId:'synthetic-camera-count'}:{})}:null,
     captureAuthority:()=>authority,monotonicMs:()=>mono,utcMs:()=>epoch+mono
   }});
@@ -230,6 +230,7 @@ test('ordinary HTTP text evidence joins published visual lineage to the exact fi
   const request=await f.turn();
   const actor={principalId:f.session.principalId,sessionId:f.session.sessionId,assistantId:f.assistantId};
   const records=host.turnReceipts(actor),publication=host.publicationReceipts(actor).find(item=>item.admission.requestId===batch.requestId)!;
+  assert.deepEqual(host.turnContextTraces(actor),[],'unconfigured host environment must not be fabricated');
   const admitted=records.find(item=>item.stage==='providerInvoked'&&item.interactionId===request.scope.interactionId)!;
   assert.ok(admitted,JSON.stringify(records));assert.ok(publication);assert.equal(publication.disposition,'published');
   assert.equal(admitted.lineage.selected!.requestId,batch.requestId);assert.equal(admitted.lineage.publication!.requestId,publication.admission.requestId);
@@ -240,4 +241,25 @@ test('ordinary HTTP text evidence joins published visual lineage to the exact fi
   for(const key of ['principalId','sessionId','assistantId'] as const)assert.deepEqual(host.turnReceipts({...actor,[key]:randomUUID()}),[]);
   const before=JSON.stringify(records);await f.stop(state);assert.equal(JSON.stringify(host.turnReceipts(actor)),before,'withdrawal does not rewrite historical receipts or imply current permission');
   const absent=await f.turn();const noScene=host.turnReceipts(actor).find(item=>item.stage==='providerInvoked'&&item.interactionId===absent.scope.interactionId)!;assert.equal(noScene.finalized!.visualIncluded,false);assert.equal(noScene.lineage.selected,null);assert.equal(noScene.lineage.publication,null);
+});
+
+test('authenticated HTTP visual turn uses actual deployment identity for canonical context trace and exact provider manifest',{timeout:15000},async t=>{
+ const environmentId=randomUUID(),f=await fixture(t,false,environmentId),state=await f.begin();await f.batch(state);
+ const request=await f.turn(),host=(f.app as any).visualInput as import('../src/runtime/visual-input.ts').VisualInputHost;
+ const actor={principalId:f.session.principalId,sessionId:f.session.sessionId,assistantId:f.assistantId};
+ const trace=host.turnContextTraces(actor).find(item=>item.events[0]!.interactionTraceId===request.scope.interactionId)!;
+ assert.ok(trace);assert.equal(trace.events[0]!.environmentId,environmentId);assert.equal(trace.manifest.bytes,JSON.stringify(request.manifest));
+ assert.ok(trace.events.some(event=>(event.payload as {reference?:string}).reference===`urn:lifestream:prompt-section:sha256:${request.sections[7]!.contentDigest}`));
+ assert.doesNotMatch(JSON.stringify(trace),new RegExp(marker));assert.doesNotMatch(JSON.stringify(trace),/What can you see\?/);assert.doesNotMatch(JSON.stringify(trace),new RegExp(png.toString('base64')));
+ assert.equal(trace.complete,false);assert.equal(trace.deliveryProved,false);
+ for(const key of ['principalId','sessionId','assistantId'] as const)assert.deepEqual(host.turnContextTraces({...actor,[key]:randomUUID()}),[]);
+ const before=JSON.stringify(trace);await f.stop(state);assert.equal(JSON.stringify(host.turnContextTraces(actor)[0]),before,'historical metadata cannot restore capture or context eligibility');
+});
+
+test('foreign configured visual environment withholds canonical projection without changing ordinary source admission',{timeout:15000},async t=>{
+ const f=await fixture(t,false,randomUUID(),randomUUID()),state=await f.begin();await f.batch(state);
+ const request=await f.turn(),host=(f.app as any).visualInput as import('../src/runtime/visual-input.ts').VisualInputHost;
+ const actor={principalId:f.session.principalId,sessionId:f.session.sessionId,assistantId:f.assistantId};
+ assert.match(request.sections[7]!.content,new RegExp(marker));assert.ok(host.turnReceipts(actor).some(receipt=>receipt.stage==='providerInvoked'));
+ assert.deepEqual(host.turnContextTraces(actor),[]);
 });

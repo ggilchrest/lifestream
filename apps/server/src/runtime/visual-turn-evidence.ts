@@ -1,4 +1,6 @@
-import {createHash} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
+import {captureTurnContextTrace,materializeTurnContextTrace,type TurnContextTrace} from './turn-context-trace.ts';
+import {isFinalizedTurnRequest} from '@lifestream/runtime/inference/prompt';
 import {types} from 'node:util';
 import type {InferenceRequest} from '@lifestream/runtime/inference';
 import type {FinalizedTurn,PreparedTurnBinding} from '@lifestream/runtime/inference/prompt';
@@ -58,7 +60,7 @@ function actorKey(actor:Actor):string|null {
   return values.every(value=>typeof value==='string'&&value.length>0&&value.length<=4096)?hash(JSON.stringify(values)):null;
 }
 const limit=128,lifetimeMs=60_000;
-type Entry={actor:string;receipt:VisualTurnReceipt;expiresAtMs:number;expiresMono:number};
+type Entry={actor:string;receipt:VisualTurnReceipt;expiresAtMs:number;expiresMono:number;capture:ReturnType<typeof captureTurnContextTrace>;monotonicMs:number;contextTrace:TurnContextTrace|null};
 const outcomes=new Set<VisualTurnOutcome>(['completed','exhausted','failed','cancelled','invalidated','deadline','disconnected']);
 const endpointOutcomes=new Set<EndpointOutcome>(['completed','stopped','timeout','disconnected','invalidated']);
 
@@ -66,6 +68,7 @@ const endpointOutcomes=new Set<EndpointOutcome>(['completed','stopped','timeout'
  * sink. At most 128 pending + 128 retained records. Expiry is lazy on reads/writes;
  * this does not promise idle erasure, perceived output, a visual mention or memory. */
 export class VisualTurnEvidence {
+  private readonly clockId=randomUUID();
   private readonly pending:Entry[]=[];
   private readonly journal:Entry[]=[];
   private queued=false;
@@ -88,10 +91,15 @@ export class VisualTurnEvidence {
     try {if(this.closed||!this.time())return Object.freeze([]);const key=actorKey(actor);return Object.freeze(this.journal.filter(entry=>entry.actor===key).map(entry=>entry.receipt));}
     catch{return Object.freeze([]);}
   }
+  /** Same actor boundary, expiry and eviction as the existing turn journal.
+   * Partial canonical context events grant no currency, learning or effects. */
+  contextTraces(actor:Actor):readonly TurnContextTrace[] {
+    try{if(this.closed||!this.time())return Object.freeze([]);const key=actorKey(actor);return Object.freeze(this.journal.filter(entry=>entry.actor===key&&entry.contextTrace).map(entry=>entry.contextTrace!));}catch{return Object.freeze([]);}
+  }
   close():void{this.closed=true;this.epoch++;this.pending.length=0;this.journal.length=0;}
   reset():void{this.epoch++;this.queued=false;this.pending.length=0;this.journal.length=0;}
   /** Called only by the host after it authenticates the selected store view. */
-  observer(actor:Actor,selection:VisualContextSelection,binding:PreparedTurnBinding|undefined,publication:VisualPublicationLink|null):VisualTurnEvidenceFactory|undefined {
+  observer(actor:Actor,selection:VisualContextSelection,binding:PreparedTurnBinding|undefined,publication:VisualPublicationLink|null,environmentId?:string):VisualTurnEvidenceFactory|undefined {
     try {
       const key=actorKey(actor),opened=this.time();if(!key||!opened||this.closed)return undefined;
       if(binding&&(binding.scope.principalId!==actor.principalId||binding.scope.sessionId!==actor.sessionId||binding.scope.assistantId!==actor.assistantId))return undefined;
@@ -110,14 +118,14 @@ export class VisualTurnEvidence {
         started=true;
         let sequence=0,metadata:FinalizedMetadata|null=null,invoked=false,generationEnded=false,ended=false,rejected=false,synthesized=false,settled=false,fenced=false;
         const emitted=new Set<string>();
-        const append=(stage:VisualTurnReceipt['stage'],outcome:VisualTurnReceipt['outcome']=null,channel:VisualTurnReceipt['channel']=null,receivedSamples:number|null=null)=>{
+        const append=(stage:VisualTurnReceipt['stage'],outcome:VisualTurnReceipt['outcome']=null,channel:VisualTurnReceipt['channel']=null,receivedSamples:number|null=null,capture:ReturnType<typeof captureTurnContextTrace>=null)=>{
           try {
             if(this.closed||epoch!==this.epoch)return;
             const time=this.time();if(!time||epoch!==this.epoch)return;
             const receipt:VisualTurnReceipt=Object.freeze({interactionId,modality,sequence:++sequence,occurredAtMs:time.utc,stage,outcome,channel,receivedSamples,lineage,finalized:metadata,coverage:'bounded_best_effort',endpointAcknowledged:stage==='endpointSettled'&&(outcome==='completed'||outcome==='stopped')});
-            this.pending.push({actor:key,receipt,expiresAtMs:time.utc+lifetimeMs,expiresMono:time.mono+lifetimeMs});
+            this.pending.push({actor:key,receipt,expiresAtMs:time.utc+lifetimeMs,expiresMono:time.mono+lifetimeMs,capture,monotonicMs:time.mono,contextTrace:null});
             if(this.pending.length>limit)this.pending.shift();
-            if(!this.queued){this.queued=true;const drainEpoch=this.epoch;queueMicrotask(()=>{if(drainEpoch!==this.epoch)return;this.queued=false;if(this.closed||!this.time())return;this.journal.push(...this.pending.splice(0));if(this.journal.length>limit)this.journal.splice(0,this.journal.length-limit);});}
+            if(!this.queued){this.queued=true;const drainEpoch=this.epoch;queueMicrotask(()=>{if(drainEpoch!==this.epoch)return;this.queued=false;const processing=this.time();if(this.closed||!processing)return;const entries=this.pending.splice(0);for(const entry of entries){if(entry.capture)entry.contextTrace=materializeTurnContextTrace(entry.capture,{occurredAtMs:entry.receipt.occurredAtMs,processingAtMs:processing.utc,monotonicMs:entry.monotonicMs,clockId:this.clockId});entry.capture=null;}this.journal.push(...entries);if(this.journal.length>limit)this.journal.splice(0,this.journal.length-limit);});}
           }catch{/* No diagnostic failure can change the ordinary path. */}
         };
         return Object.freeze({
@@ -125,13 +133,13 @@ export class VisualTurnEvidence {
             if(metadata||invoked||rejected||ended)return;
             // Call-site receives the authentic finalizer result. Require its exact
             // frozen manifest and bound scope; never retain either prompt object.
-            if(!Object.isFrozen(turn)||!Object.isFrozen(request)||turn.sections!==request.manifest.sections||turn.binding!==(bindingRef?.deref()??null)||request.scope.interactionId!==interactionId||request.scope.assistantId!==expectedScope.assistantId||request.scope.sessionId!==expectedScope.sessionId||request.scope.endpointId!==expectedScope.endpointId)return;
+            if(!isFinalizedTurnRequest(turn,request)||!Object.isFrozen(turn)||!Object.isFrozen(request)||turn.sections!==request.manifest.sections||turn.binding!==(bindingRef?.deref()??null)||request.scope.interactionId!==interactionId||request.scope.assistantId!==expectedScope.assistantId||request.scope.sessionId!==expectedScope.sessionId||request.scope.endpointId!==expectedScope.endpointId)return;
             const conversation=request.sections.find(section=>section.kind==='conversation');
             if(request.sections.length!==9||!conversation||conversationDigest!==null&&conversation.contentDigest!==conversationDigest)return;
             metadata=Object.freeze({viewId:turn.binding?visualDiagnosticId(turn.binding.viewId):null,revision:turn.binding?.revision??null,invalidationKey:turn.binding?visualDiagnosticId(turn.binding.invalidationKey):null,
               manifestDigest:hash(JSON.stringify(request.manifest)),conversationSectionDigest:conversation.contentDigest,visualIncluded:selected!==null,
               sections:Object.freeze(request.manifest.sections.map(section=>Object.freeze({kind:section.kind,contentDigest:section.contentDigest,tokenCount:section.tokenCount})))});
-            append('finalized');
+            append('finalized',null,null,null,captureTurnContextTrace(turn,request,view&&view.scope.environmentId!==environmentId?undefined:environmentId));
           },
           rejected:reason=>{if(invoked||rejected||ended||!['context_unavailable','provider_unavailable','cancelled','deadline'].includes(reason))return;rejected=true;append('admissionRejected',reason);},
           providerInvoked:()=>{if(!metadata||invoked||rejected||ended)return;invoked=true;append('providerInvoked');},

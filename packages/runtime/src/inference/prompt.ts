@@ -129,6 +129,12 @@ export type FinalizedTurn = Readonly<{
 }>;
 type FinalizedTurnEntry={request:InferenceRequest;current:()=>boolean;retired:boolean};
 const finalizedTurns=new WeakMap<FinalizedTurn,FinalizedTurnEntry>();
+/** Read-only diagnostic provenance check; never evaluates currency or retires a turn. */
+export function isFinalizedTurnRequest(turn:unknown,request:unknown):turn is FinalizedTurn {
+  if(!turn||typeof turn!=='object')return false;
+  const entry=finalizedTurns.get(turn as FinalizedTurn);
+  return !!entry&&entry.request===request;
+}
 const currentTurn=(current:()=>boolean):boolean=>{try{return current()===true;}catch{return false;}};
 const unavailableTurn=()=>new Error('Finalized turn is unavailable or does not match its prepared binding');
 

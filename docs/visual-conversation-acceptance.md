@@ -70,8 +70,17 @@ partial. Replay keeps intake states historical after forgetting, suppresses stal
 source/projection payloads, and never reactivates memory. Supplied metadata cannot
 authenticate consent or current custody; canonical trace integration remains
 pending.
-Production trace/replay integration remains pending; these internal diagnostics
-are separate from the closed canonical trace envelope and its event catalogue.
+The finalized-turn host now asynchronously retains published `context.viewSelected`
+and `context.sourceUsed` envelopes alongside the exact internal nine-section
+manifest metadata and section digests. It requires the actual deployment ID,
+UUID scope and original finalizer/request identity. Missing/foreign identity and
+replay do not fabricate normal events. The internal manifest is explicitly not
+the published provider `InputManifest`; no provider/profile/snapshot IDs are invented.
+These restricted host-only records share the existing actor scope, 128-record
+eviction, lazy 60-second expiry, reset and close boundaries. They contain no
+scene, dialogue, user input or reply text, grant no current eligibility, and
+prove neither provider admission nor delivery. Whole canonical lifecycle,
+durable trace sink and joined replay integration remain incomplete.
 Selected-provider physical input, unannounced animal interpretation, historical
 appearance comparison, paired performance under pressure and Human experience
 qualification remain separate gates. Metadata fixtures do not satisfy them.
