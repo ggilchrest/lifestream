@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S089",
+  "operation": "completeRetainedVisualHistoryBoundary",
+  "status": "verified",
+  "qualificationScope": "Scoped software increment only; whole S089 inProgress",
+  "sourceRevision": "f31a0c67679fdd104e3c8456c48e29a74542a3a8",
+  "baseRevision": "120a08e",
+  "recordedAt": "2026-09-30T06:01:49.956364Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      "roadmap/packets/LS-S089.json": "6ed46a5727247434c1062890936fed325e659e7f30f256a57265656e60e5c48e",
+      "docs/30-conversational-vision.md": "e5302919fdfb4842d713ce4ed344a44a52dcdb11b38185d2dee293406dedd6e8",
+      "contracts/conversational-vision.schema.json": "4f00aaf9b3ae40db636482cc2fc20ebb22b43d6131155dda2d4e32fc3ee80b7e"
+    }
+  },
+  "mappedCases": [
+    "LS-TEST-164",
+    "LS-TEST-165",
+    "LS-TEST-166"
+  ],
+  "claims": {
+    "exhaustiveRetainedWindow": true,
+    "capacityBound": 128,
+    "counterexamplesIncludedInDenominator": true,
+    "forgettingMakesCoverageIncomplete": true,
+    "authenticSourceBoundaryAndClockRollbackRetirement": true,
+    "consentAudienceContentExpiryRechecks": true,
+    "historicalEligibilityUsesRetention": true,
+    "scriptedHeadAndHatAssessment": true,
+    "actualImageUnderstanding": false,
+    "ordinaryReplyIntegration": false,
+    "sourceAwareCorrection": false,
+    "rawMediaRetained": false,
+    "memoryModelCalls": 0,
+    "producerClockUncertaintyPreserved": true,
+    "httpUnsupportedCorrectionReturns422": true
+  },
+  "verification": {
+    "focused": {
+      "pass": 84,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 3185.244834
+    },
+    "fullSource": {
+      "revision": "f31a0c67679fdd104e3c8456c48e29a74542a3a8",
+      "pass": 1542,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 96332.24675
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "workspaceCheck": "pass",
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    }
+  },
+  "retainedFailures": [
+    {
+      "attempt": "history focused final",
+      "pass": 82,
+      "fail": 1,
+      "reason": "HTTP revealed mismatch with producer permitted clock-uncertainty upper bound. Intake now preserves original interval and enforces producer +250ms bound; earliest capture must still precede receipt. Repaired 84 focused and full source checks pass."
+    }
+  ],
+  "logDigests": {
+    "tifa-s089-history-build-final.log": {
+      "path": "/tmp/tifa-s089-history-build-final.log",
+      "sha256": "96d5bbcbc38aef1af6e6a4d1084fc9c244a7d98c88fa60b2f47190b7e83b1155",
+      "bytes": 1047
+    },
+    "tifa-s089-history-build.log": {
+      "path": "/tmp/tifa-s089-history-build.log",
+      "sha256": "c568474d47a49eae390b060ac37436f7eb88588fefeba257edcfb378115ba446",
+      "bytes": 1047
+    },
+    "tifa-s089-history-focused-final.log": {
+      "path": "/tmp/tifa-s089-history-focused-final.log",
+      "sha256": "bf88e71e9f657fa35cd71c71a66bf330edb42c0e257030cb1aeed3d04f827138",
+      "bytes": 9019
+    },
+    "tifa-s089-history-focused-repaired.log": {
+      "path": "/tmp/tifa-s089-history-focused-repaired.log",
+      "sha256": "56de17511bb85d8ea8bf5984a876dff3e216be79b3272f7d86a7b5f1f6973b0f",
+      "bytes": 8089
+    },
+    "tifa-s089-history-focused.log": {
+      "path": "/tmp/tifa-s089-history-focused.log",
+      "sha256": "69f0a1abb44332464575a30cfe07ee7952c756b9a3fff4b064a630c6c8fc3253",
+      "bytes": 7600
+    },
+    "tifa-s089-history-full.log": {
+      "path": "/tmp/tifa-s089-history-full.log",
+      "sha256": "c99df8976f4bb1166874879b6529cfa3b7a2dc826770ac772e5fe96bca411e08",
+      "bytes": 183680
+    },
+    "tifa-s089-history-lint-final.log": {
+      "path": "/tmp/tifa-s089-history-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s089-history-lint.log": {
+      "path": "/tmp/tifa-s089-history-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s089-history-typecheck-final.log": {
+      "path": "/tmp/tifa-s089-history-typecheck-final.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-history-typecheck.log": {
+      "path": "/tmp/tifa-s089-history-typecheck.log",
+      "sha256": "cfacec1880364c4f243cf964697bbfc3bc43c06973394a2ae4de7eb43a63c8cf",
+      "bytes": 357
+    },
+    "tifa-s089-history-workspace.log": {
+      "path": "/tmp/tifa-s089-history-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    },
+    "tifa-s089-history-private.log": {
+      "path": "/tmp/tifa-s089-history-private.log",
+      "sha256": "4579d0f59e6dad21181c54163e66fae3e40de760e8913d8e42b949a222f55b64",
+      "bytes": 28932
+    }
+  },
+  "exclusions": [
+    "Whole S089 acceptance",
+    "Source-attributed visual correction",
+    "Ordinary reply and reflection integration",
+    "Runtime image classification or live confidence policy/subject association",
+    "Selected provider/camera/physical/performance proof",
+    "S090 full trace/replay",
+    "S091-S094 games/native saves/platform/Human proof",
+    "S066/full LS-TEST-084",
+    "Installed candidate promotion or new Human acceptance",
+    "Push/publication/deployment/live effects"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue source-aware lifecycle/correction and prepared ordinary context/experience integration; independently eligible Phase16 game foundations remain authorized."
+}
