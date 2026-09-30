@@ -234,6 +234,33 @@ Occurrence identities use the scoped owner/activity, purpose, policy revision,
 timezone, local date and window. Repeated local hours during DST fall-back share
 one identity even across different run IDs; nonexistent spring-forward hours create
 no match. Actual Intl calendar tests cover those transitions. This component
-registers no schedule or contact, and does not yet persist occurrence claims or
-enforce restart deduplication. Those durable lifecycle/host gates remain required;
-a paused run must require explicit authorized resume rather than replacement start.
+registers no schedule or contact. Temporal selection alone does not persist a
+claim or grant lifecycle admission.
+
+`claimConfiguredGameStart` now joins the authentic temporal selection, exact policy
+and bounds to `GameStartRepository`. Additive migration63 stores bounded opaque
+start identities and an Assistant-wide blocking controller slot. Required trusted
+host predicates cover actual enrollment, registered current policy, authority,
+source/display, takeover/old-run resolution and all remaining resource budgets.
+Explicit finite rolling start limits and repository quotas have no default. A
+claim conservatively consumes identity before any effect; it does not launch a
+game, persist a checkpoint, grant input ownership or execute a command.
+
+One automatic claim per scoped local window/date survives restart, repeated DST
+hours and policy-revision changes. All claims, including uncertain starts, count
+toward the explicit Assistant-wide rolling start ceiling across policy/activity
+changes. Spent opaque fences are never evicted to free another start; bounded
+capacity exhaustion denies claims. A paused or recovery-required run retains its
+blocking slot, so later windows and different activities cannot replace it. Missing
+actual existing-run/takeover resolution must also deny through host admission.
+Only independently qualified exact-old-run terminal evidence can release that
+slot, including under separate safety authority after gameplay permission ends.
+An old terminal cannot release a successor. No refund, catch-up queue or automatic
+resume exists; recovery inspection always has `continuationAuthority:false`.
+
+Actual SQLite reopen, a separate fresh Node process and migration tests establish
+metadata persistence and duplicate refusal. Native pause/terminal evidence and
+enrollment/authority/limits are scripted in these tests. The new helper is a source
+integration surface, not an enrolled scheduler or installed runtime. Existing
+runtime lifecycle/watchdog, checkpoints/planning integration, real emulator pause,
+fresh authorized resume and native save/platform qualification remain required.

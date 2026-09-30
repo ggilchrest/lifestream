@@ -1,4 +1,5 @@
 export { Database } from "./database.js";
+export * from './game-starts.ts';
 export { loadMigrations } from "./migrations/index.js";
 export type { Transaction } from "./database.js";
 export { AssistantProfileRepository } from "./assistant-profile.js";

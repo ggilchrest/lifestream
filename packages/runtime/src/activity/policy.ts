@@ -1,4 +1,5 @@
 import {createHash} from 'node:crypto';
+import {isDeepStrictEqual} from 'node:util';
 import {createContractValidator} from '@lifestream/contracts';
 import {boundedGameDataSnapshot} from '@lifestream/contracts/game-journal';
 import type * as G from '@lifestream/contracts/game-activity';
@@ -7,7 +8,7 @@ type Purpose='play'|'contact';type Windows=G.GamePolicy['schedule']['windows'];
 export type GameWindowInput={scope:G.ActivityScope;policy:G.GamePolicy;bounds:G.GameBounds;purpose:Purpose;nowMs:number};
 export type GameWindowBoundary={policyCurrent:(scope:G.ActivityScope,policy:G.GamePolicy,bounds:G.GameBounds)=>boolean;now?:()=>number};
 export type GameWindowSelection=Readonly<{status:'inside'|'outside'|'unavailable';reason:'inside'|'outside'|'disabled'|'invalidInput'|'invalidWindows'|'policyUnavailable';purpose:Purpose;policyRevision:number|null;windowId:string|null;localDate:string|null;occurrenceKey:string|null;authority:false;isCurrent:()=>boolean}>;
-const known=new WeakMap<GameWindowSelection,{scope:G.ActivityScope;current:()=>boolean}>();
+const known=new WeakMap<GameWindowSelection,{scope:G.ActivityScope;policy:G.GamePolicy;bounds:G.GameBounds;current:()=>boolean}>();
 const freeze=<T>(v:T):T=>{if(v&&typeof v==='object'){for(const child of Object.values(v))freeze(child);Object.freeze(v);}return v;};
 const canonical=(v:any):any=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
 const hash=(v:unknown)=>createHash('sha256').update(JSON.stringify(canonical(v))).digest('hex');
@@ -40,11 +41,12 @@ export function selectGameWindow(raw:GameWindowInput,boundary:GameWindowBoundary
  if(!current())return no('policyUnavailable');
  // No run/epoch/UTC offset enters the occurrence identity. A repeated local
  // window during DST fall-back is one occurrence, not another start/contact.
- const selection:GameWindowSelection=freeze({status:'inside',reason:'inside',purpose:input.purpose,policyRevision:input.policy.revision,windowId,localDate:date,occurrenceKey:hash([input.scope.assistantId,input.scope.principalId,input.scope.relationshipId,input.scope.environmentId,input.scope.activityId,input.purpose,input.policy.revision,config.timeZone,date,windowId]),authority:false,isCurrent:current});known.set(selection,{scope:input.scope,current});return selection;
+ const selection:GameWindowSelection=freeze({status:'inside',reason:'inside',purpose:input.purpose,policyRevision:input.policy.revision,windowId,localDate:date,occurrenceKey:hash([input.scope.assistantId,input.scope.principalId,input.scope.relationshipId,input.scope.environmentId,input.scope.activityId,input.purpose,input.policy.revision,config.timeZone,date,windowId]),authority:false,isCurrent:current});known.set(selection,{scope:input.scope,policy:input.policy,bounds:input.bounds,current});return selection;
 }
 /** Authentic temporal selection is still only one input to separate current
  * lifecycle/capability/contact admission. Clones cannot donate its callback. */
-export function gameWindowCurrent(selection:GameWindowSelection,scope:Pick<G.ActivityScope,'assistantId'|'principalId'|'relationshipId'|'environmentId'|'activityId'>):boolean{
+export function gameWindowCurrent(selection:GameWindowSelection,scope:Pick<G.ActivityScope,'assistantId'|'principalId'|'relationshipId'|'environmentId'|'activityId'>,configuration?:{policy:G.GamePolicy;bounds:G.GameBounds}):boolean{
  const entry=known.get(selection),snapshot=boundedGameDataSnapshot(scope) as typeof scope|null;if(!entry||!snapshot||Object.keys(snapshot).sort().join(',')!=='activityId,assistantId,environmentId,principalId,relationshipId'&&!validator.validate(schema+'ActivityScope',snapshot).valid)return false;
+ if(configuration!==undefined){const config=boundedGameDataSnapshot(configuration) as typeof configuration|null;if(!config||Object.keys(config).sort().join(',')!=='bounds,policy'||!isDeepStrictEqual(config.policy,entry.policy)||!isDeepStrictEqual(config.bounds,entry.bounds))return false;}
  return (['assistantId','principalId','relationshipId','environmentId','activityId'] as const).every(k=>snapshot[k]===entry.scope[k])&&entry.current();
 }
