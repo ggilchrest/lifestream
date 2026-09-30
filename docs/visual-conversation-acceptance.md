@@ -126,3 +126,19 @@ context virtual clock, and leaves the missing candidate monotonic clock null.
 There is no provider, source-refresh, memory or effect callback. Held metadata
 after forgetting can explain history but cannot reactivate or reinforce memory,
 or masquerade as a new normal source. Full lifecycle/media replay remains open.
+
+New visual activations now persist a canonical MemoryLifecycleEvent and an exact
+redacted validation artifact in the original existing SQLite lifecycle transaction.
+The UUID names the committed mutation, not a historical ID invented during trace
+projection. Actual candidate/record revisions, source episode/digest, actor and
+current consent/projection/capacity checks bind the receipt. The artifact stores
+actual metadata bytes/size/digest and proves neither perception quality nor truth.
+Rollback leaves no activation receipt, duplicate activation creates none, and
+SQLite reopen preserves identity. There is no new schema, table, migration or
+memory engine. Legacy rows remain missing rather than receiving synthetic IDs.
+Owner reads validate the stored envelope/artifact against actual current source;
+correction, erasure, expiry, consent loss, mismatches and rollback withhold it.
+Existing privacy erasure removes validation/source payload and preserves only the
+real opaque event UUID; repeated erasure cannot mint or discard that ID. Ordinary
+legacy receipts and independent Human memory retain their existing semantics.
+Canonical asynchronous lifecycle projection and full joined replay remain next.

@@ -1,4 +1,5 @@
 import {createHash,randomUUID} from 'node:crypto';
+import {createContractValidator} from '@lifestream/contracts';
 import {isDeepStrictEqual} from 'node:util';
 import {validateVisualEpisode,validateVisualMemoryProjection,type VisualMemoryProjection,type VisualTransformationConfidence,type VisualMemoryOwner,type VisualMemoryScope,type VisualObservationEpisode} from '@lifestream/contracts/visual-memory';
 import type {Database,Transaction} from './database.ts';
@@ -19,6 +20,24 @@ const ownerValid=(owner:VisualMemoryOwner)=>[owner.principalId,owner.assistantId
 /** Source identity excludes retention, lifecycle and summary; recall or paraphrase is not new evidence. */
 export const visualEpisodeSourceDigest=(episode:Pick<VisualObservationEpisode,'scope'|'observations'>)=>digest({scope:episode.scope,observations:episode.observations});
 export type VisualUserCorrection={recordType:'visualUserCorrection';sourceType:'humanEntry';correctionId:string;actor:string;relationshipId:string;episodeId:string;sourceEpisodeRevision:number;sourceDigest:string;sourceObservationIds:string[];content:string;occurredAt:string;untrusted:true};
+/** Existing payload erasure keeps only the real opaque activation UUID. Legacy
+ * rows remain exactly payloadRemoved; no new identity is minted by erasure. */
+const activationIdSql="CASE WHEN json_valid(payload_json) THEN coalesce(json_extract(payload_json,'$.visualActivationEvidence.event.eventId'),json_extract(payload_json,'$.visualActivationEventId')) ELSE NULL END";
+export const visualLifecyclePayloadErasure=`json_patch(?,CASE WHEN length(${activationIdSql})=36 AND ${activationIdSql} LIKE '________-____-____-____-____________' AND ${activationIdSql} NOT GLOB '*[^0-9a-f-]*' THEN json_object('visualActivationEventId',${activationIdSql}) ELSE '{}' END)`;
+export type VisualActivationEvidence=Readonly<{schemaVersion:'1.0.0';recordType:'visualActivationEvidence';ownerDigest:string;scope:Readonly<Pick<VisualMemoryScope,'assistantId'|'environmentId'|'conversationId'|'sessionId'|'endpointId'>>;event:Readonly<Record<string,unknown>>;artifact:Readonly<{reference:Readonly<{reference:string;sha256:string;mediaType:'application/json';schemaRef:string;byteLength:number}>;bytes:string}>}>;
+/** Called only within the actual activation owner's transaction after current
+ * consent/source/typed projection/candidate/capacity checks have succeeded. */
+function activationEvidence(owner:VisualMemoryOwner,episode:VisualObservationEpisode,memory:VisualMemoryProjection['memoryRecord'],oldRevision:number,now:number,memoryPolicyRevision:number):VisualActivationEvidence|null {
+ try{
+  if(!Number.isSafeInteger(now)||now<Date.parse(memory.createdAt)||now>=Date.parse(episode.expiresAt)||memory.status!=='candidate'||!Number.isSafeInteger(oldRevision)||oldRevision<1||!Number.isSafeInteger(memoryPolicyRevision)||memoryPolicyRevision<1||!validateVisualMemoryProjection({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:memory}).valid)return null;
+  const sourceRevision={providerRef:'urn:lifestream:sqlite:visual-memory',revision:`episode:${episode.episodeId}:${episode.revision}:${episode.sourceDigest}`,highWaterMark:null};
+  const bytes=JSON.stringify({schemaVersion:'1.0.0',recordType:'redactedVisualActivationValidation',memoryId:memory.memoryId,assistantId:owner.assistantId,episodeId:episode.episodeId,episodeRevision:episode.revision,sourceDigest:episode.sourceDigest,candidateRecordDigest:digest(memory),oldRevision,newRevision:oldRevision+1,memoryPolicyRevision,visualPolicyRevision:episode.processingPolicyRevision,validatedAt:new Date(now).toISOString(),checks:['ownedCurrentConsent','retainedUncorrectedSource','typedProjection','candidateRevision','scopeCapacity'],perceptionQualityProved:false});
+  const sha256=createHash('sha256').update(bytes).digest('hex'),reference={reference:`urn:lifestream:visual-activation-validation:sha256:${sha256}`,sha256,mediaType:'application/json' as const,schemaRef:'urn:lifestream:visual-activation-validation:1.0.0',byteLength:Buffer.byteLength(bytes)};
+  const event={schemaVersion:'1.0.0',eventId:randomUUID(),assistantId:owner.assistantId,memoryId:memory.memoryId,oldRevision,newRevision:oldRevision+1,occurredAt:new Date(now).toISOString(),actorRef:owner.principalId,correlationId:memory.memoryId,operation:{type:'activate',memoryId:memory.memoryId,expectedRevision:oldRevision,validationRef:reference,reason:{code:'visual_candidate_validated',summary:'Current owned consent and retained typed candidate checks passed; perception remains unverified.'}},sourceRevision};
+  if(!createContractValidator().validate('https://lifestream.dev/contracts/memory-operations/1.0.0',event).valid)return null;
+  return immutable({schemaVersion:'1.0.0',recordType:'visualActivationEvidence',ownerDigest:key(owner),scope:{assistantId:owner.assistantId,environmentId:episode.scope.environmentId,conversationId:episode.scope.conversationId,sessionId:episode.scope.sessionId,endpointId:episode.scope.endpointId},event,artifact:{reference,bytes}});
+ }catch{return null;}
+}
 type Row={episode_id:string;revision:number;state:string;expires_at:number;payload_json:string|null};
 export type VisualRetainedWindow=Readonly<{fromMs:number;toMs:number;complete:boolean;reason:'complete'|'scopeUnavailable'|'invalidWindow'|'capacityExceeded'|'missingSource';boundaryRevision:string;episodes:readonly VisualObservationEpisode[]}>;
 type WindowGuard={repository:VisualMemoryRepository;owner:VisualMemoryOwner;fromMs:number;toMs:number;revision:string;lastNow:number;deadline:number;retired:boolean;checking:boolean};
@@ -29,10 +48,10 @@ function immutable<T>(value:T):T{if(value&&typeof value==='object'){for(const ch
  * event payloads are erased; opaque lifecycle receipts remain. */
 export function retireVisualProjections(tx:Transaction,now:number){
  const rows=tx.all<{id:string;assistant_id:string;provenance_json:string;lifecycle_json:string}>("SELECT id,assistant_id,provenance_json,lifecycle_json FROM memories WHERE json_extract(provenance_json,'$.visualEpisodeId') IN (SELECT episode_id FROM visual_observation_episodes WHERE state<>'retained') AND json_extract(lifecycle_json,'$.contentRemoved') IS NOT 1");
- tx.run("UPDATE memory_lifecycle_events SET payload_json=? WHERE event_type='visualUserCorrection' AND json_extract(payload_json,'$.episodeId') IN (SELECT episode_id FROM visual_observation_episodes WHERE state<>'retained')",JSON.stringify({payloadRemoved:true}));
+ tx.run(`UPDATE memory_lifecycle_events SET payload_json=${visualLifecyclePayloadErasure} WHERE event_type='visualUserCorrection' AND json_extract(payload_json,'$.episodeId') IN (SELECT episode_id FROM visual_observation_episodes WHERE state<>'retained')`,JSON.stringify({payloadRemoved:true}));
  for(const row of rows){const provenance=JSON.parse(row.provenance_json) as {actor:string},lifecycle=JSON.parse(row.lifecycle_json) as {revision:number},revision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',row.id)!.n;
   tx.run("UPDATE memories SET content='',provenance_json=?,lifecycle_json=? WHERE id=?",JSON.stringify({actor:provenance.actor,payloadRemoved:true}),JSON.stringify({status:'invalidated',revision:lifecycle.revision+1,contentRemoved:true,reason:'visual source retired',changedBy:provenance.actor}),row.id);
-  tx.run('UPDATE memory_lifecycle_events SET payload_json=? WHERE memory_id=?',JSON.stringify({payloadRemoved:true}),row.id);
+  tx.run(`UPDATE memory_lifecycle_events SET payload_json=${visualLifecyclePayloadErasure} WHERE memory_id=?`,JSON.stringify({payloadRemoved:true}),row.id);
   tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',row.id,row.assistant_id,revision,'forgotten',JSON.stringify({status:'invalidated',contentRemoved:true,reason:'visual source retired'}),new Date(now).toISOString());
  }return rows.length;
 }
@@ -96,12 +115,34 @@ export class VisualMemoryRepository{
    const provenance=JSON.parse(memory.provenance_json),lifecycle=JSON.parse(memory.lifecycle_json),canonical=provenance.canonical as VisualMemoryProjection['memoryRecord'];if(provenance.actor!==owner.principalId||provenance.relationshipId!==owner.relationshipId||!validateVisualMemoryProjection({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:canonical}).valid)return {state:'sourceUnavailable' as const};
    if(canonical.status==='active')return {state:'alreadyActive' as const};if(canonical.status!=='candidate'||lifecycle.status!=='candidate')return {state:'sourceUnavailable' as const};
    const count=tx.get<{n:number}>("SELECT count(*) AS n FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(lifecycle_json,'$.status')='active'",owner.assistantId,owner.principalId)!.n;if(count>=240)return {state:'capacityExceeded' as const};
+   const memoryPolicy=tx.get<{revision:number}>('SELECT revision FROM automatic_memory_policies WHERE principal_id=? AND assistant_id=? AND relationship_id=? AND enabled=1',owner.principalId,owner.assistantId,owner.relationshipId);
+   const evidence=memoryPolicy?activationEvidence(owner,episode,canonical,Number(lifecycle.revision),now,memoryPolicy.revision):null;
    canonical.status='active';const next={...lifecycle,status:'active',revision:Number(lifecycle.revision)+1};
    const metadata={visualOccurredAt:episode.occurredAt,visualExpiresAt:episode.expiresAt,visualSourceFamily:episode.independenceKeys[0],visualUncertainty:episode.observations.map(o=>o.uncertainty),visualLimitations:[...new Set(episode.observations.flatMap(o=>[...o.limitations,...o.subject.limitations]))]};
    tx.run('UPDATE memories SET provenance_json=?,lifecycle_json=? WHERE id=?',JSON.stringify({...provenance,...metadata,canonical}),JSON.stringify(next),episode.memoryRecordId);
    const revision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',episode.memoryRecordId)!.n;
-   tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',episode.memoryRecordId,owner.assistantId,revision,'lifecycleChanged',JSON.stringify(next),new Date(now).toISOString());return {state:'active' as const,memoryId:episode.memoryRecordId};
+   tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',episode.memoryRecordId,owner.assistantId,revision,'lifecycleChanged',JSON.stringify({...next,...(evidence?{visualActivationEvidence:evidence}:{})}),new Date(now).toISOString());return {state:'active' as const,memoryId:episode.memoryRecordId};
   });
+ }
+ /** Read existing new-format source evidence only. Legacy rows stay missing;
+  * no historical upcast, identity fabrication or new activation occurs. */
+ activationEvidence(owner:VisualMemoryOwner,memoryId:string):VisualActivationEvidence|null {
+  try{
+   if(!ownerValid(owner)||!this.policy(owner).enabled||!this.db.connection.prepare('SELECT 1 FROM automatic_memory_policies WHERE principal_id=? AND assistant_id=? AND relationship_id=? AND enabled=1').get(owner.principalId,owner.assistantId,owner.relationshipId))return null;
+   const row=this.db.connection.prepare("SELECT payload_json,occurred_at FROM memory_lifecycle_events WHERE assistant_id=? AND memory_id=? AND event_type='lifecycleChanged' AND json_type(payload_json,'$.visualActivationEvidence')='object' ORDER BY revision DESC LIMIT 1").get(owner.assistantId,memoryId);if(!row)return null;
+   const evidence=JSON.parse(String(row.payload_json)).visualActivationEvidence as VisualActivationEvidence;
+   if(evidence.schemaVersion!=='1.0.0'||evidence.recordType!=='visualActivationEvidence'||evidence.ownerDigest!==key(owner)||evidence.event.assistantId!==owner.assistantId||evidence.event.memoryId!==memoryId||evidence.event.actorRef!==owner.principalId||evidence.event.occurredAt!==row.occurred_at||!createContractValidator().validate('https://lifestream.dev/contracts/memory-operations/1.0.0',evidence.event).valid)return null;
+   const operation=evidence.event.operation as {type:string;expectedRevision:number;validationRef:unknown};if(operation.type!=='activate'||operation.expectedRevision!==evidence.event.oldRevision)return null;
+   const {reference,bytes}=evidence.artifact;if(typeof bytes!=='string'||Buffer.byteLength(bytes)>4096||reference.byteLength!==Buffer.byteLength(bytes)||reference.sha256!==createHash('sha256').update(bytes).digest('hex')||reference.mediaType!=='application/json'||reference.schemaRef!=='urn:lifestream:visual-activation-validation:1.0.0'||reference.reference!==`urn:lifestream:visual-activation-validation:sha256:${reference.sha256}`||JSON.stringify((evidence.event.operation as {validationRef:unknown}).validationRef)!==JSON.stringify(reference))return null;
+   const validation=JSON.parse(bytes),now=this.now();if(!Number.isSafeInteger(now)||now<Date.parse(String(evidence.event.occurredAt))||validation.schemaVersion!=='1.0.0'||validation.recordType!=='redactedVisualActivationValidation'||validation.memoryId!==memoryId||validation.assistantId!==owner.assistantId||validation.validatedAt!==evidence.event.occurredAt||validation.oldRevision!==evidence.event.oldRevision||validation.newRevision!==evidence.event.newRevision||validation.newRevision!==validation.oldRevision+1)return null;
+   const episodeRow=this.db.connection.prepare('SELECT state,expires_at,payload_json FROM visual_observation_episodes WHERE scope_key=? AND episode_id=?').get(key(owner),validation.episodeId);
+   if(!episodeRow||episodeRow.state!=='retained'||Number(episodeRow.expires_at)<=now||!episodeRow.payload_json)return null;
+   const episode=JSON.parse(String(episodeRow.payload_json)) as VisualObservationEpisode,memoryRow=this.db.connection.prepare('SELECT provenance_json FROM memories WHERE assistant_id=? AND id=?').get(owner.assistantId,memoryId);if(!memoryRow)return null;
+   const memory=JSON.parse(String(memoryRow.provenance_json)).canonical as VisualMemoryProjection['memoryRecord'];
+   if(validation.candidateRecordDigest!==digest({...memory,status:'candidate'})||!isDeepStrictEqual(evidence.event.sourceRevision,{providerRef:'urn:lifestream:sqlite:visual-memory',revision:`episode:${episode.episodeId}:${episode.revision}:${episode.sourceDigest}`,highWaterMark:null})||memory.status!=='active'||episode.memoryRecordId!==memoryId||episode.revision!==validation.episodeRevision||episode.sourceDigest!==validation.sourceDigest||episode.processingPolicyRevision!==this.policy(owner).revision||!validateVisualMemoryProjection({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:memory}).valid)return null;
+   const {assistantId,environmentId,conversationId,sessionId,endpointId}=episode.scope;if(!isDeepStrictEqual(evidence.scope,{assistantId,environmentId,conversationId,sessionId,endpointId}))return null;
+   return immutable(evidence);
+  }catch{return null;}
  }
  admit(owner:VisualMemoryOwner,input:unknown,admission:VisualMemoryAdmission):VisualMemoryReceipt{
   this.sweep();let bytes:string;
