@@ -81,6 +81,12 @@ importers:
 
   packages/contracts: {}
 
+  packages/providers-bizhawk:
+    dependencies:
+      '@lifestream/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   packages/providers-fixture:
     dependencies:
       '@lifestream/runtime':

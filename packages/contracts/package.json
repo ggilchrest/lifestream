@@ -26,6 +26,10 @@
     "./visual-memory": {
       "types": "./dist/visual-memory.d.ts",
       "import": "./dist/visual-memory.js"
+    },
+    "./game-activity": {
+      "types": "./dist/game-activity.d.ts",
+      "import": "./dist/game-activity.js"
     }
   }
 }
