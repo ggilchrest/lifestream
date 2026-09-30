@@ -1,0 +1,280 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "component": "bounded visual diagnostic correlation and isolated metadata replay",
+  "componentStatus": "verified",
+  "wholeSliceStatus": "inProgress",
+  "recordedAt": "2026-09-30T16:37:33.894430Z",
+  "sourceRevision": "234c0d7273a9bda69d7e4aec3a1d0ead40a5a4cc",
+  "sourceFiles": [
+    "apps/server/src/runtime/visual-lineage.ts",
+    "apps/server/test/visual-lineage.test.ts",
+    "docs/visual-conversation-acceptance.md",
+    "scripts/qualify-visual-conversation.mjs",
+    "scripts/qualify-visual-conversation.test.mjs"
+  ],
+  "verification": {
+    "fullSource": {
+      "revision": "234c0d7273a9bda69d7e4aec3a1d0ead40a5a4cc",
+      "pass": 2226,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 108745.733125
+    },
+    "focused": {
+      "pass": 30,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 921.546166
+    },
+    "publicationHttpRegression": {
+      "pass": 33,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 3282.092583
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6567.314083
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types apps/server/test/visual-lineage.test.ts apps/server/test/visual-turn-evidence.test.ts scripts/qualify-visual-conversation.test.mjs",
+    "node --test --experimental-strip-types apps/server/test/visual-memory-publication.test.ts",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --check",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual isolated host publication using bounded PNG bytes; authentic selected visual view and nine-section prepared request; actual SQLite typed source, canonical unverified projection, correction, forgetting and source custody. Existing isolated authenticated HTTP publication regression. Real bounded local file evaluation, owner-only report creation, repository/symlink/FIFO safety. Existing isolated replay implementation produces new event IDs without runner callback or memory/provider side effects.",
+    "scripted": "Synthetic perception outputs, captured frame, explicit subject association, memory policy and transformation confidence. Audio endpoint settlement is an observer fixture. Long binding and audience-rebound joins are supplied metadata countercases, not qualified capture eligibility."
+  },
+  "limitations": [
+    "Partial supplied-metadata correlation is not an authenticated or complete canonical lifecycle trace. It does not prove source currency, actual perception, delivery or Human acceptance.",
+    "Negotiation/enablement, individual frame sequences, rejected ingress, memory admission before retention and production lifecycle/replay wiring remain incomplete.",
+    "Metadata equality is not media perception or semantic inference replay. No live capture/provider fallback, durable reinforcement or effects.",
+    "Actual selected-provider camera/media interpretation, animal recognition, historical comparison, paired performance/onset pressure and Human qualification remain open.",
+    "Primary LS-S066 implementationCompleteVerificationPending and full LS-TEST-084, accepted iPhone/original24 S083/S084 journeys and selected-model causal/onset failures are unchanged.",
+    "S091-S094 native graphical Linux/Windows ordinary-save/platform/provider/Human qualification, concrete production host and scoped contact/image delivery remain open; no game/save/schedule/contact effects or deployment."
+  ],
+  "retainedFailures": [
+    {
+      "log": "tifa-s090-lineage-focused-initial.log",
+      "pass": 37,
+      "fail": 18,
+      "cause": "New fixture used a nonexistent prepared-context property; corrected to authentic base binding plus selected visual context. Existing isolated HTTP test hit default sandbox loopback EPERM and passed with the authorized isolated-test sandbox allowance."
+    },
+    {
+      "log": "tifa-s090-lineage-focused-binding.log",
+      "pass": 13,
+      "fail": 9,
+      "cause": "Fixture source family was not a canonical UUID; corrected. Structured clone preserved shared receipt references, so mutation assertions were corrected to detached JSON countercases."
+    },
+    {
+      "log": "tifa-s090-lineage-focused-complete.log",
+      "pass": 27,
+      "fail": 1,
+      "cause": "A long binding exceeded current host eligibility; replaced with explicitly supplied historical metadata countercase without changing the host guard."
+    },
+    {
+      "log": "tifa-s090-lineage-focused-verified.log",
+      "pass": 27,
+      "fail": 1,
+      "cause": "Equivalent source scopes hashed differently with JSON key order. Canonical key ordering repaired only diagnostic scope hash; canonical source digests unchanged."
+    }
+  ],
+  "ownedOperation": {
+    "operation": "S090 exact-revision full source suite",
+    "sourceRevision": "234c0d7273a9bda69d7e4aec3a1d0ead40a5a4cc",
+    "startedAt": "2026-09-30T16:34:18.670578+00:00",
+    "wrapperPid": 72175,
+    "log": "/tmp/tifa-s090-lineage-full.log",
+    "status": "completed",
+    "childPid": 72178,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T16:36:07.633876+00:00"
+  },
+  "primaryCheckpoint": "LS-S066 implementationCompleteVerificationPending; full LS-TEST-084 preserved",
+  "installedCandidateChanged": false,
+  "appGoalControlSet": false,
+  "runDisposition": "continue",
+  "nextAction": "Continue bounded S090 lifecycle producer instrumentation and canonical trace integration; preserve separate real-camera/provider/performance/Human and native/game/save/contact gates.",
+  "logDigests": {
+    "tifa-s090-lineage-browser.log": {
+      "path": "/tmp/tifa-s090-lineage-browser.log",
+      "sha256": "1b374899be877ee23758e1f75100b2e9857b5d2335baa579bbe190a612f10b78",
+      "bytes": 23876
+    },
+    "tifa-s090-lineage-build-final.log": {
+      "path": "/tmp/tifa-s090-lineage-build-final.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s090-lineage-build-source.log": {
+      "path": "/tmp/tifa-s090-lineage-build-source.log",
+      "sha256": "a818c22d26760a7c5f6c120067d3e3200e9b276ee252b15b7037cc90e8398698",
+      "bytes": 1074
+    },
+    "tifa-s090-lineage-build-verified.log": {
+      "path": "/tmp/tifa-s090-lineage-build-verified.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s090-lineage-build.log": {
+      "path": "/tmp/tifa-s090-lineage-build.log",
+      "sha256": "70d9b14e8ee2456fa94543f1a04fe8989f2db90b2f76905d6b24cc02cf2c08af",
+      "bytes": 1074
+    },
+    "tifa-s090-lineage-diff.log": {
+      "path": "/tmp/tifa-s090-lineage-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-lineage-focused-binding.log": {
+      "path": "/tmp/tifa-s090-lineage-focused-binding.log",
+      "sha256": "cca1851f1c6272631ed2aa137c7aa4636b9d0fd3ef45e1888fa2a697b319d618",
+      "bytes": 9301
+    },
+    "tifa-s090-lineage-focused-complete.log": {
+      "path": "/tmp/tifa-s090-lineage-focused-complete.log",
+      "sha256": "70a63f68317053f4ebd408ab94e745f3b8074e6ec18390142fa567479a9247b1",
+      "bytes": 4157
+    },
+    "tifa-s090-lineage-focused-corrected.log": {
+      "path": "/tmp/tifa-s090-lineage-focused-corrected.log",
+      "sha256": "5cc0d92f15f4d526b39f31b85795c5f28da9b101b52e753e239f53a23fafec28",
+      "bytes": 2507
+    },
+    "tifa-s090-lineage-focused-custody.log": {
+      "path": "/tmp/tifa-s090-lineage-focused-custody.log",
+      "sha256": "39e9b91271805cce08fe9064eed3bf2e196493606ee000b42058cbacbc74b7d3",
+      "bytes": 1459
+    },
+    "tifa-s090-lineage-focused-final.log": {
+      "path": "/tmp/tifa-s090-lineage-focused-final.log",
+      "sha256": "57ff2d1b3c924883b0bfc9564196aa7b601a135431d7f87d89270919a0a774a5",
+      "bytes": 2927
+    },
+    "tifa-s090-lineage-focused-initial.log": {
+      "path": "/tmp/tifa-s090-lineage-focused-initial.log",
+      "sha256": "04a2bc08065bda22b2cffbbcde924159c84db106a99926b6868ddbc5c5a26628",
+      "bytes": 19841
+    },
+    "tifa-s090-lineage-focused-pass.log": {
+      "path": "/tmp/tifa-s090-lineage-focused-pass.log",
+      "sha256": "27a6984add52341d067c307e4b284e6d0a975e657a0830f8e01070acec4c374e",
+      "bytes": 3153
+    },
+    "tifa-s090-lineage-focused-source.log": {
+      "path": "/tmp/tifa-s090-lineage-focused-source.log",
+      "sha256": "dbda2ecfa71e9663a55ad93815a462a3a913e9f3511fe5d9df939b5506e05a95",
+      "bytes": 3336
+    },
+    "tifa-s090-lineage-focused-verified.log": {
+      "path": "/tmp/tifa-s090-lineage-focused-verified.log",
+      "sha256": "04d8ba8e89e696154ade05e6597f1676b7c48f7b507d9fd1a49227270fecb3a9",
+      "bytes": 4205
+    },
+    "tifa-s090-lineage-full.log": {
+      "path": "/tmp/tifa-s090-lineage-full.log",
+      "sha256": "03fb5e38869d55280987f765696edcc29e84875e5dc6a6f8e03a7bb426fa6731",
+      "bytes": 240488
+    },
+    "tifa-s090-lineage-generated-game.log": {
+      "path": "/tmp/tifa-s090-lineage-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s090-lineage-generated.log": {
+      "path": "/tmp/tifa-s090-lineage-generated.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s090-lineage-lint-final.log": {
+      "path": "/tmp/tifa-s090-lineage-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-lineage-lint-source.log": {
+      "path": "/tmp/tifa-s090-lineage-lint-source.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-lineage-lint.log": {
+      "path": "/tmp/tifa-s090-lineage-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-lineage-preflight.log": {
+      "path": "/tmp/tifa-s090-lineage-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s090-lineage-private.log": {
+      "path": "/tmp/tifa-s090-lineage-private.log",
+      "sha256": "3966d5b27ce100056cca134b31d0d4a36d61015948fe8ef6e0057ab96185607d",
+      "bytes": 28880
+    },
+    "tifa-s090-lineage-publication-http.log": {
+      "path": "/tmp/tifa-s090-lineage-publication-http.log",
+      "sha256": "637beb4567e5fa3d1710070b3fbbc0c1488d0d310a25f628d40447b947740dc5",
+      "bytes": 3006
+    },
+    "tifa-s090-lineage-script.log": {
+      "path": "/tmp/tifa-s090-lineage-script.log",
+      "sha256": "37bd9629beff8156e8d6cd9417c0900384529ce63cb7dde4dbacb8f440b70f84",
+      "bytes": 553
+    },
+    "tifa-s090-lineage-typecheck-final.log": {
+      "path": "/tmp/tifa-s090-lineage-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-lineage-typecheck-metadata.log": {
+      "path": "/tmp/tifa-s090-lineage-typecheck-metadata.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-lineage-typecheck-source.log": {
+      "path": "/tmp/tifa-s090-lineage-typecheck-source.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-lineage-typecheck-verified.log": {
+      "path": "/tmp/tifa-s090-lineage-typecheck-verified.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-lineage-typecheck.log": {
+      "path": "/tmp/tifa-s090-lineage-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-lineage-workspace.log": {
+      "path": "/tmp/tifa-s090-lineage-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
