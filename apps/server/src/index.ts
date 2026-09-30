@@ -94,6 +94,7 @@ export type HealthState = "starting" | "ready" | "degraded" | "draining" | "stop
 export type UrgentAwayHostOptions={destinations:Array<UrgentAwayDestination&{authentication:()=>LocalContext|undefined}>;source?:Pick<PwceConditionClient,'snapshot'|'changes'>;pollIntervalMs?:number};
 export type TelegramHostOptions={localAlerts?:Omit<TelegramAlertComposition,'authority'>;alerts?:TelegramAlertComposition;botId:string;token:()=>string|undefined;enabled:()=>boolean;transport?:Pick<TelegramBotApi,'verify'|'updates'|'send'>};
 import {gameMemoryContextRecord,type GameMemoryHostOptions} from './runtime/game-memory.ts';
+import {retainGameHelpAdvice,type GameHelpAdviceInput} from './runtime/game-advice.ts';
 import {projectGameEpisode} from '@lifestream/runtime/activity/memory';
 import {gameEpisodeDigest,gameEpisodeSnapshot} from '@lifestream/contracts/game-memory';
 import type {GameExperienceEpisode} from '@lifestream/contracts/game-activity';
@@ -680,7 +681,7 @@ export class LifestreamServer {
   private readonly acknowledgmentRequiresSync:(()=>boolean)|undefined;
   constructor(options: ServerOptions) {
     if(options.gameMemory&&(options.config.profile!=='test'||options.config.authority.authentication!=='local-password'||!options.localAuth||!['127.0.0.1','localhost','::1'].includes(options.host??'127.0.0.1')))throw Error('Game memory source injection requires isolated loopback local-auth tests');
-    const gameMemory=options.gameMemory?Object.freeze({...options.gameMemory,source:Object.freeze({...options.gameMemory.source}),...(options.gameMemory.help?{help:Object.freeze({...options.gameMemory.help,options:Object.freeze({...options.gameMemory.help.options})})}:{})}):undefined;
+    const gameMemory=options.gameMemory?Object.freeze({...options.gameMemory,source:Object.freeze({...options.gameMemory.source}),...(options.gameMemory.help?{help:Object.freeze({...options.gameMemory.help,options:Object.freeze({...options.gameMemory.help.options}),...(options.gameMemory.help.reply?{reply:Object.freeze({...options.gameMemory.help.reply})}:{})})}:{})}):undefined;
     if(gameMemory?.help&&(!Number.isSafeInteger(gameMemory.help.maximumCandidates)||gameMemory.help.maximumCandidates<1||gameMemory.help.maximumCandidates>4))throw Error("Bounded pending help allocation required");
     this.gameMemoryOptions=gameMemory;
     if(options.sessionEnvironmentId!==undefined&&!validUuid(options.sessionEnvironmentId))throw Error("A valid composition-supplied session environment ID is required");this.sessionEnvironmentId=options.sessionEnvironmentId;
@@ -1588,6 +1589,15 @@ export class LifestreamServer {
   publishGameHelp(raw:Parameters<GameHelpRepository['queue']>[0]):{state:'retained'|'unavailable'}{
     const host=this.gameHelp;if(!host||this.state!=='ready'||this.profileSwitching||this.restoreQuarantine)return {state:'unavailable'};
     try{const copy=boundedGameDataSnapshot(raw,32768) as typeof raw|null;if(!copy)return {state:'unavailable'};raw=copy;if(!host.queue(raw)||host!==this.gameHelp||!host.get({principalId:raw.item.scope.principalId,assistantId:raw.item.scope.assistantId,relationshipId:raw.item.scope.relationshipId},raw.item.helpId))return {state:'unavailable'};this.invalidateRuntimeInputs();return {state:'retained'};}catch{return {state:'unavailable'};}
+  }
+  /** Explicit host-selected authenticated answer only; no public/model route,
+   * generic capture, channel delivery or native lifecycle effect. */
+  publishGameHelpAdvice(raw:GameHelpAdviceInput){
+    const host=this.gameHelp,options=this.gameMemoryOptions,reply=options?.help?.reply;
+    const unavailable=()=>({state:'unavailable' as const,reply:null,playAuthority:false as const,resumeAuthority:false as const,sendAuthority:false as const});
+    if(!host||!options||!reply||this.state!=='ready'||this.profileSwitching||this.restoreQuarantine)return unavailable();
+    const result=retainGameHelpAdvice(raw,{...reply,help:host,memories:this.memories,...(options.source.now?{now:options.source.now}:{}),memoryPolicy:owner=>this.automaticMemory.policy(owner),scopeCurrent:(owner,content)=>host===this.gameHelp&&options===this.gameMemoryOptions&&this.state==='ready'&&!this.profileSwitching&&!this.restoreQuarantine&&options.source.quarantined()===false&&options.source.scopeCurrent(owner)&&this.admin.automaticMemoryAllowed(owner.assistantId,owner.relationshipId,owner.principalId,content)&&!!this.database.connection.prepare('SELECT 1 FROM local_accounts WHERE principal_id=? AND disabled=0').get(owner.principalId)&&this.personalContextAllowed(owner.assistantId,owner.principalId)});
+    if(result.state==='retained')this.invalidateRuntimeInputs();return result;
   }
   private createAutomaticMemory():AutomaticMemory {return new AutomaticMemory({database:this.database,memories:this.memories,scopeAllowed:scope=>!!this.admin?.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId)&&!!(this.database.connection.prepare('SELECT principal_id FROM local_accounts WHERE principal_id=? AND disabled=0').get(scope.principalId))&&this.personalContextAllowed(scope.assistantId,scope.principalId),contentAllowed:(scope,content)=>this.admin.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId,content),provider:()=>{const runtime=isolatedLabRuntime(this.providers,this.config);return {provider:runtime.provider,revision:JSON.stringify(runtime.identity)};},idle:()=>this.state==="ready"&&!this.telegram?.busy&&!this.activeWork.size&&!this.runtimeFences.size&&this.admin.discovery.backgroundIdle(),changed:()=>this.invalidateRuntimeInputs()});}
   private sessionEnded(sessionId:string):boolean{return !!this.database.connection.prepare("SELECT 1 FROM sessions WHERE id=? AND status!='active'").get(sessionId);}

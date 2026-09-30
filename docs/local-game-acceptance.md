@@ -57,6 +57,28 @@ custody. Host qualification of the actual question delivery and authenticated
 reply remains mandatory on admission and historical reuse. The exact selected
 advice object can expose inert source references; a copied wrapper cannot.
 
+The explicit host-only help-answer intake now creates that independent Human
+record through the existing relationship memory transaction. It requires an
+existing current question, actual retained authenticated whole answer, exact
+source/session/quote binding, independently qualified question delivery and
+reply, current consent and an explicit reasoning selection plus attributed
+transformation estimate. Pronouns are not an intake criterion. The exact answer
+remains unverified Human guidance; its applicability and observed game outcomes
+remain separate. Missing or unsupported source/selection yields no memory.
+The optional source guard runs before and after writes in the same transaction;
+late source/consent loss or write failure rolls back the record and both lifecycle
+rows. Exact source retries preserve one record and do not reinforce it; a forgotten
+source cannot be recreated across repository restart. Forgetting a question does
+not itself erase its independently retained Human answer. Fresh post-answer
+observation and the existing advice selector are still required for game use.
+
+The server publication method has no HTTP/model route or default reply owner.
+Actual channel delivery, input authentication and reasoning adapters remain
+separately configured and qualified; no message, native resume or tested advice
+success follows from intake. The separately proposed generic memory-selection
+amendment is unimplemented: ordinary extraction and its inference budget are
+unchanged, and no second inference is introduced by this scoped intake.
+
 Additive custody metadata links these sources to the episode and canonical
 unverified experiential projection. It retains bounded source references, never
 a second advice quote or recipient configuration. Forgetting/correction of the

@@ -102,10 +102,10 @@ export class MemoryRepository {
     return structuredClone(copy);
   }
   // Canonical memory and lifecycle records; the cold-path queue is not another memory store.
-  admitAutomatic(records: MemoryRecord[], actor: string, directCorrection: boolean): string[] {
+  admitAutomatic(records: MemoryRecord[], actor: string, directCorrection: boolean,current?:()=>boolean): string[] {
     if(!this.database)throw new Error("Automatic memory requires durable storage");
     if(records.length>6)throw new Error("Automatic memory admission bound exceeded");
-    return this.database.transaction(tx=>records.map(record=>{
+    return this.database.transaction(tx=>{if(current&&current()!==true)throw new Error('Memory source changed');const admitted=records.map(record=>{
       if(gameMarked(record))throw new Error("Game sources require typed memory admission");
       if(record.provenance.actor!==actor||typeof record.provenance.automaticMemoryKey!=="string"||!record.content||record.content.length>1200)throw new Error("Invalid automatic memory provenance");
       const existing=tx.get<{id:string}>("SELECT id FROM memories WHERE id=? AND assistant_id=?",record.id,record.assistantId);if(existing)return existing.id;
@@ -124,7 +124,7 @@ export class MemoryRepository {
       tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",record.id,record.assistantId,1,"created",JSON.stringify({...record.lifecycle,status:"candidate",revision:1}),record.createdAt);
       tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",record.id,record.assistantId,2,conflict?"conflictNeedsReview":"lifecycleChanged",JSON.stringify(lifecycle),record.createdAt);
       return record.id;
-    }));
+    });if(current&&current()!==true)throw new Error('Memory source changed');return admitted;});
   }
   saveMany(records: MemoryRecord[]): void {
     if (this.database) {

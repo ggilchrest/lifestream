@@ -1,7 +1,8 @@
 import type {MemoryRecord,GameEpisodeOptions,GameHelpOptions} from '@lifestream/storage-sqlite';
 import type {GameExperienceEpisode,GameMemoryBinding} from '@lifestream/contracts/game-activity';
 import type {RelationshipContextRecord} from '@lifestream/runtime/context';
-export type GameMemoryHostOptions={source:GameEpisodeOptions;maximumCandidates:number;estimate:(episode:Readonly<GameExperienceEpisode>)=>GameMemoryBinding['transformationConfidence']|null;help?:{options:Omit<GameHelpOptions,'episodeFor'|'scopeCurrent'|'quarantined'|'now'>;maximumCandidates:number}};
+import type {GameHelpAdviceIntakeOptions} from './game-advice.ts';
+export type GameMemoryHostOptions={source:GameEpisodeOptions;maximumCandidates:number;estimate:(episode:Readonly<GameExperienceEpisode>)=>GameMemoryBinding['transformationConfidence']|null;help?:{options:Omit<GameHelpOptions,'episodeFor'|'scopeCurrent'|'quarantined'|'now'>;maximumCandidates:number;reply?:GameHelpAdviceIntakeOptions}};
 /** Called only with a source-validated existing memory record. Full opaque
  * activity/run/campaign/artifact lineage remains in the typed source binding;
  * a compact dated timeline label fits the existing optional-memory allocation. */

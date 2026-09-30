@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {Database,MemoryRepository,GameExperienceRepository,GameHelpRepository,type MemoryRecord} from '@lifestream/storage-sqlite';
 import {fixtureEpisode,fixtureGameHelpItem,fixtureGameEpisodeSources,projection} from '../../../packages/runtime/test/fixtures/game-memory.ts';
-import {gameAdviceEpisodeSource,gameAdviceHistoricalSourceCurrent,selectGameAdvice,type GameAdvicePorts,type GameAdviceReply} from '../src/runtime/game-advice.ts';
+import {retainGameHelpAdvice,gameAdviceEpisodeSource,gameAdviceHistoricalSourceCurrent,selectGameAdvice,type GameAdvicePorts,type GameAdviceReply,type GameHelpAdviceInput,type GameHelpAdviceIntakePorts,type GameHelpHumanInput} from '../src/runtime/game-advice.ts';
 import {CampaignJournalRepository} from '@lifestream/storage-sqlite';
 import {campaignJournalFixture} from '../../../packages/storage-sqlite/test/fixtures/campaign-journal.ts';
 import {selectCampaignContext} from '@lifestream/runtime/activity/journal';
@@ -22,6 +22,46 @@ function fixture(t:import('node:test').TestContext){
  const input={scope:structuredClone(e.scope),reply,observation:o,maximumBytes:8192,maximumObservationAgeMs:6000,nowMs:now,freshUntilMs:now+5000},ports:GameAdvicePorts={memories,help,boundaryRevision:()=>String(revision),scopeCurrent:()=>current&&db.connection.prepare('SELECT enabled FROM automatic_memory_policies').get()!.enabled===1,replyCurrent:()=>authenticated,observationCurrent:()=>current,adviceRelevantCurrent:()=>relevant,now:()=>now};
  return {unpause:()=>paused=false,db,e,item,m,reply,memories,help,input,ports,advance:(ms:number)=>now+=ms,withdraw:()=>{current=false;revision++;},unauthenticate:()=>authenticated=false,irrelevant:()=>relevant=false,change:()=>revision++};
 }
+function intakeFixture(t:import('node:test').TestContext){
+ const f=fixture(t),{memoryId:_,memoryRevision:__,...reply}=f.reply;void _;void __;
+ const input:GameHelpAdviceInput={...reply,transformationConfidence:{value:.7,basis:'Scripted explicit exact-answer transformation estimate; not game truth.',policyRef:'synthetic:human-advice-selection-v1'}};
+ let source:GameHelpHumanInput|null={principalId:reply.principalId,assistantId:reply.assistantId,relationshipId:reply.relationshipId,sourceTurnRef:reply.sourceTurnRef,sourceSessionRef:reply.sourceSessionRef,receivedAt:reply.receivedAt,text:reply.quotedAdvice};
+ const policy=()=>{const row=f.db.connection.prepare('SELECT enabled,revision FROM automatic_memory_policies').get()!;return {enabled:row.enabled===1,revision:Number(row.revision)};};
+ const ports:GameHelpAdviceIntakePorts={memories:f.memories,help:f.help,inputFor:()=>source,replyCurrent:()=>f.ports.replyCurrent(f.reply),adviceSelectedCurrent:()=>true,boundaryRevision:f.ports.boundaryRevision,memoryPolicy:policy,scopeCurrent:()=>f.ports.scopeCurrent(f.input.scope),now:()=>f.input.nowMs};
+ return {...f,selectionInput:f.input,selectionPorts:f.ports,input,ports,removeSource:()=>source=null,changeSource:()=>source={...source!,text:'Changed actual source.'},rows:()=>Number(f.db.connection.prepare('SELECT count(*) AS n FROM memories').get()!.n)};
+}
+test('explicit pronoun-free authenticated game-help advice enters existing independent relationship memory and fresh selection',t=>{
+ const f=intakeFixture(t),before=f.rows(),result=retainGameHelpAdvice(f.input,f.ports);assert.equal(result.state,'retained');assert.ok(result.reply);assert.equal(f.rows(),before+1);
+ const memory=f.memories.get(f.reply.assistantId,result.reply.memoryId)!;assert.equal(memory.content,'User stated: '+f.reply.quotedAdvice);assert.equal(memory.provenance.sourceFamily,'turn:'+f.reply.sourceTurnRef);assert.equal(memory.provenance.gameEpisodeId,undefined);assert.equal(memory.provenance.visualEpisodeId,undefined);assert.equal(memory.provenance.gameHelpAdviceSelection,true);assert.deepEqual(memory.provenance.transformationConfidence,f.input.transformationConfidence);assert.equal(memory.lifecycle.factuality,'unverified');assert.equal(memory.lifecycle.confidence,.7);assert.equal(memory.lifecycle.lastReinforcedAt,null);
+ assert.equal(result.playAuthority,false);assert.equal(result.resumeAuthority,false);assert.equal(result.sendAuthority,false);assert.equal(f.help.get({principalId:f.input.principalId,assistantId:f.input.assistantId,relationshipId:f.input.relationshipId},f.item.helpId)!.item.status,'queued');
+ const selected=selectGameAdvice({...f.selectionInput,reply:result.reply},f.selectionPorts);assert.equal(selected.state,'selected');assert.equal(selected.entry!.epistemicKind,'humanAdvice');
+});
+for(const reason of ['sourceMissing','sourceChanged','unselected','replyUnauthenticated','scope','memoryPolicy','wrongChannel','wrongQuestion','partialQuote','missingEstimate','hostile','future','expired'] as const)test('scoped advice intake refuses '+reason+' without creating memory',t=>{
+ const f=intakeFixture(t),before=f.rows();let input=f.input;
+ if(reason==='sourceMissing')f.removeSource();if(reason==='sourceChanged')f.changeSource();if(reason==='unselected')f.ports.adviceSelectedCurrent=()=>false;if(reason==='replyUnauthenticated')f.unauthenticate();if(reason==='scope')f.withdraw();if(reason==='memoryPolicy')f.db.exec('UPDATE automatic_memory_policies SET enabled=0');if(reason==='wrongChannel')input={...input,channelRef:'foreign:channel'};if(reason==='wrongQuestion')input={...input,helpId:randomUUID()};if(reason==='partialQuote')input={...input,quotedAdvice:'the visible lever'};if(reason==='missingEstimate')input={...input,transformationConfidence:null} as never;if(reason==='hostile')input=new Proxy(input,{});if(reason==='future')input={...input,receivedAt:new Date(f.selectionInput.nowMs+1).toISOString()};if(reason==='expired')f.ports.now=()=>f.selectionInput.nowMs+30000;
+ assert.equal(retainGameHelpAdvice(input,f.ports).state,'unavailable');assert.equal(f.rows(),before);
+});
+test('late source or consent withdrawal during transaction rolls back memory and both lifecycle rows',async t=>{
+ for(const reason of ['source','policy','database'] as const)await t.test(reason,child=>{
+  const f=intakeFixture(child),before=f.rows(),events=Number(f.db.connection.prepare('SELECT count(*) AS n FROM memory_lifecycle_events').get()!.n);let calls=0;
+  if(reason==='database')f.db.exec("CREATE TRIGGER advice_write_fault BEFORE INSERT ON memories BEGIN SELECT RAISE(ABORT,'scripted atomic write failure'); END");
+  else f.ports.adviceSelectedCurrent=()=>{if(++calls===3){if(reason==='source')f.changeSource();else f.db.exec('UPDATE automatic_memory_policies SET enabled=0,revision=revision+1');}return true;};
+  assert.equal(retainGameHelpAdvice(f.input,f.ports).state,'unavailable');assert.equal(f.rows(),before);assert.equal(Number(f.db.connection.prepare('SELECT count(*) AS n FROM memory_lifecycle_events').get()!.n),events);
+ });
+});
+test('exact reply retry does not reinforce, another question does not rebind the Human source, and forgetting fences re-admission',t=>{
+ const f=intakeFixture(t),first=retainGameHelpAdvice(f.input,f.ports);assert.ok(first.reply);const id=first.reply.memoryId,count=f.rows(),history=JSON.stringify(f.memories.history(f.input.assistantId,id));
+ assert.deepEqual(retainGameHelpAdvice(f.input,f.ports),first);assert.equal(f.rows(),count);assert.equal(JSON.stringify(f.memories.history(f.input.assistantId,id)),history);
+ assert.equal(retainGameHelpAdvice({...f.input,helpId:randomUUID()},f.ports).state,'unavailable');
+ f.memories.forget(f.input.assistantId,id,f.input.principalId);assert.equal(retainGameHelpAdvice(f.input,f.ports).state,'unavailable');f.ports.memories=new MemoryRepository(f.db);assert.equal(retainGameHelpAdvice(f.input,f.ports).state,'unavailable');assert.equal(f.rows(),count);assert.equal(f.memories.getForPrivacy(f.input.assistantId,id,f.input.principalId)!.content,'');
+});
+test('last scope callback deleting the original input before commit cannot leave a retained answer',t=>{
+ const f=intakeFixture(t),before=f.rows();let calls=0;f.ports.scopeCurrent=()=>{if(++calls===6)f.removeSource();return true;};
+ assert.equal(retainGameHelpAdvice(f.input,f.ports).state,'unavailable');assert.equal(f.rows(),before);
+});
+test('forgetting the game question preserves the independently retained Human guidance',t=>{
+ const f=intakeFixture(t),v=retainGameHelpAdvice(f.input,f.ports);assert.ok(v.reply);f.help.forget({principalId:f.input.principalId,assistantId:f.input.assistantId,relationshipId:f.input.relationshipId},f.item.helpId,1);assert.equal(retainGameHelpAdvice(f.input,f.ports).state,'unavailable');assert.equal(f.memories.contextRecords(f.input.assistantId,f.input.principalId).some(m=>m.id===v.reply!.memoryId),true);
+});
 test('retained exact Human input and qualified reply select inert attributed advice with distinct Human session',t=>{
  const f=fixture(t),v=selectGameAdvice(f.input,f.ports);assert.equal(v.state,'selected');assert.equal(v.isCurrent(),true);assert.equal(v.entry!.kind,'humanAdvice');assert.equal(v.entry!.epistemicKind,'humanAdvice');assert.equal(v.entry!.content,f.m.content);assert.equal(v.entry!.sourceSessionRef,f.reply.sourceSessionRef);assert.notEqual(v.entry!.sourceSessionRef,f.e.scope.contextBinding.sessionId);assert.equal(v.playAuthority,false);assert.equal(v.resumeAuthority,false);assert.equal(v.sendAuthority,false);
  const source=JSON.parse(v.content!);assert.equal(source.sourceType,'participantStatement');assert.equal(source.quotedAdvice,f.reply.quotedAdvice);assert.equal(source.freshObservationId,f.input.observation.observationId);assert.match(v.content!,/not an observed game outcome/);assert.ok(!v.content!.includes(f.reply.recipientRef));assert.ok(Object.isFrozen(v.entry));assert.equal(selectGameAdvice(f.input,f.ports).adviceRef,v.adviceRef,'reselection cannot invent independent advice');assert.equal(f.help.get({principalId:f.e.scope.principalId,assistantId:f.e.scope.assistantId,relationshipId:f.e.scope.relationshipId},f.item.helpId)!.item.status,'queued','source selection cannot fabricate channel status');assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,0);

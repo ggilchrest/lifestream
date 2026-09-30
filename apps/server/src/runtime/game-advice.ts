@@ -41,6 +41,60 @@ const freeze=<T>(v:T):T=>{if(v&&typeof v==='object'){for(const c of Object.value
 const positive=(n:unknown,max:number):n is number=>typeof n==='number'&&Number.isSafeInteger(n)&&n>=1&&n<=max;
 const opaque=(v:unknown)=>typeof v==='string'&&v.trim().length>0&&Buffer.byteLength(v)<=2048;
 const uuid=(v:unknown)=>typeof v==='string'&&/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/u.test(v);
+export type GameHelpAdviceInput=Omit<GameAdviceReply,'memoryId'|'memoryRevision'> & {
+ transformationConfidence:{value:number;basis:string;policyRef:string};
+};
+export type GameHelpHumanInput=Readonly<Pick<GameHelpAdviceInput,'principalId'|'assistantId'|'relationshipId'|'sourceTurnRef'|'sourceSessionRef'|'receivedAt'> & {text:string}>;
+type GameHelpAdviceOwner=Readonly<Pick<GameHelpAdviceInput,'principalId'|'assistantId'|'relationshipId'>>;
+export type GameHelpAdviceIntakeOptions={
+ /** Read the actual retained authenticated Human input, not a model-authored
+  * source wrapper. A missing/deleted/expired source returns null. */
+ inputFor:(reply:Readonly<GameHelpAdviceInput>)=>GameHelpHumanInput|null;
+ /** Independent question-delivery and authenticated-answer owner. */
+ replyCurrent:(reply:Readonly<GameHelpAdviceInput>)=>boolean;
+ /** Explicit bounded reasoning selection of this whole answer as advice.
+  * This synchronous check reads an already selected result; it must not run
+  * inference. No lexical/pronoun/generalization/semantic-worth rule applies here. */
+ adviceSelectedCurrent:(reply:Readonly<GameHelpAdviceInput>)=>boolean;
+ boundaryRevision:()=>string|null;
+};
+export type GameHelpAdviceIntakePorts=GameHelpAdviceIntakeOptions & {
+ memories:Pick<MemoryRepository,'admitAutomatic'|'get'>;
+ help:Pick<GameHelpRepository,'get'>;
+ memoryPolicy:(owner:GameHelpAdviceOwner)=>{enabled:boolean;revision:number};
+ scopeCurrent:(owner:GameHelpAdviceOwner,content:string)=>boolean;
+ now?:()=>number;
+};
+/** One explicitly selected authenticated help answer enters the existing
+ * relationship memory owner. This creates no generic capture rule, message,
+ * observation, campaign entry, action, resume or tested-outcome claim. */
+export function retainGameHelpAdvice(raw:GameHelpAdviceInput,ports:GameHelpAdviceIntakePorts){
+ const unavailable=()=>Object.freeze({state:'unavailable' as const,reply:null,playAuthority:false as const,resumeAuthority:false as const,sendAuthority:false as const});
+ try{
+  const r=boundedGameDataSnapshot(raw,8192) as GameHelpAdviceInput|null;
+  if(!r||Object.keys(r).sort().join(',')!=='assistantId,authenticatedReplyEvidenceRef,channelRef,helpId,helpRevision,principalId,questionDeliveryEvidenceRef,quotedAdvice,receivedAt,recipientRef,relationshipId,sourceSessionRef,sourceTurnRef,transformationConfidence'||![r.helpId,r.principalId,r.assistantId,r.relationshipId].every(uuid)||!positive(r.helpRevision,2147483647)||![r.channelRef,r.recipientRef,r.sourceTurnRef,r.sourceSessionRef,r.questionDeliveryEvidenceRef,r.authenticatedReplyEvidenceRef].every(opaque)||typeof r.quotedAdvice!=='string'||!r.quotedAdvice.trim()||r.quotedAdvice.length>1000||!validator.validate('https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time',r.receivedAt).valid)return unavailable();
+  const estimate=r.transformationConfidence;
+  if(!estimate||Object.keys(estimate).sort().join(',')!=='basis,policyRef,value'||!Number.isFinite(estimate.value)||estimate.value<0||estimate.value>1||typeof estimate.basis!=='string'||!estimate.basis.trim()||Buffer.byteLength(estimate.basis)>1024||!opaque(estimate.policyRef))return unavailable();
+  freeze(r);const host=Object.freeze({...ports}),owner=freeze({principalId:r.principalId,assistantId:r.assistantId,relationshipId:r.relationshipId}),clock=host.now??Date.now;
+  const readInput=host.inputFor,readHelp=host.help.get.bind(host.help),readPolicy=host.memoryPolicy,received=Date.parse(r.receivedAt),start=clock();
+  if(!Number.isSafeInteger(start)||received>start)return unavailable();
+  const source=()=>{const input=boundedGameDataSnapshot(readInput(r),8192) as GameHelpHumanInput|null;return input&&Object.keys(input).sort().join(',')==='assistantId,principalId,receivedAt,relationshipId,sourceSessionRef,sourceTurnRef,text'&&input.principalId===r.principalId&&input.assistantId===r.assistantId&&input.relationshipId===r.relationshipId&&input.sourceTurnRef===r.sourceTurnRef&&input.sourceSessionRef===r.sourceSessionRef&&input.receivedAt===r.receivedAt&&input.text===r.quotedAdvice?input:null;};
+  const input=source(),help=readHelp(owner,r.helpId),policy=readPolicy(owner),revision=host.boundaryRevision();
+  if(!input||!help||help.revision!==r.helpRevision||help.item.channelRef!==r.channelRef||help.item.recipientRef!==r.recipientRef||help.item.scope.principalId!==r.principalId||help.item.scope.assistantId!==r.assistantId||help.item.scope.relationshipId!==r.relationshipId||received<Date.parse(help.item.queuedAt)||!policy.enabled||!positive(policy.revision,2147483647)||typeof revision!=='string'||!revision.trim()||Buffer.byteLength(revision)>1024||start>=help.expiresAt)return unavailable();
+  const inputDigest=digest(input),helpDigest=digest(help),deadline=performance.now()+help.expiresAt-start;let last=start,checking=false,retired=false;
+  const current=()=>{if(checking||retired)return false;checking=true;try{const now=clock();if(!Number.isSafeInteger(now)||now<last||now>=help.expiresAt||performance.now()>=deadline||host.boundaryRevision()!==revision||host.scopeCurrent(owner,r.quotedAdvice)!==true||host.replyCurrent(r)!==true||host.adviceSelectedCurrent(r)!==true){retired=true;return false;}const latestInput=source(),latestHelp=readHelp(owner,r.helpId),latestPolicy=readPolicy(owner),end=clock();if(!latestInput||digest(latestInput)!==inputDigest||!latestHelp||digest(latestHelp)!==helpDigest||!isDeepStrictEqual(latestPolicy,policy)||host.boundaryRevision()!==revision||host.scopeCurrent(owner,r.quotedAdvice)!==true||host.replyCurrent(r)!==true||!Number.isSafeInteger(end)||end<now||end>=help.expiresAt||performance.now()>=deadline){retired=true;return false;}const finalInput=source(),finalHelp=readHelp(owner,r.helpId),finalPolicy=readPolicy(owner),finalTime=clock();if(!finalInput||digest(finalInput)!==inputDigest||!finalHelp||digest(finalHelp)!==helpDigest||!isDeepStrictEqual(finalPolicy,policy)||!Number.isSafeInteger(finalTime)||finalTime<end||finalTime>=help.expiresAt||performance.now()>=deadline){retired=true;return false;}last=finalTime;return true;}catch{retired=true;return false;}finally{checking=false;}};
+  if(!current())return unavailable();
+  // Exact source identity only: another help/game cannot create reinforcement,
+  // and a forgotten original row cannot be recreated by replaying its answer.
+  const h=digest(['lifestream.game-help-human-input-v1',owner,r.sourceTurnRef]),id=`${h.slice(0,8)}-${h.slice(8,12)}-5${h.slice(13,16)}-8${h.slice(17,20)}-${h.slice(20,32)}`;
+  const record:MemoryRecord={id,assistantId:r.assistantId,content:`User stated: ${r.quotedAdvice}`,createdAt:new Date(start).toISOString(),provenance:{actor:r.principalId,relationshipId:r.relationshipId,sourceTurnRef:r.sourceTurnRef,sourceSessionRef:r.sourceSessionRef,sourceFamily:`turn:${r.sourceTurnRef}`,epistemicStatus:'userStatement',transformation:'exact-attributed-quote-v1',automaticMemoryKey:h,gameHelpAdviceSelection:true,transformationConfidence:estimate,limitations:['Attributed Human guidance; applicability and truth are unverified.','Game/run application and observed outcomes remain separate.']},lifecycle:{kind:'proceduralHint',factuality:'unverified',sensitivity:'private',confidence:estimate.value,status:'candidate',revision:1,lastReinforcedAt:null,contradictedBy:[]}};
+  if(host.memories.admitAutomatic([record],owner.principalId,false,current)[0]!==id)return unavailable();
+  const retained=host.memories.get(owner.assistantId,id);
+  if(!retained||retained.content!==record.content||retained.provenance.relationshipId!==owner.relationshipId||retained.provenance.sourceTurnRef!==r.sourceTurnRef||retained.lifecycle.status!=='active'||!positive(retained.lifecycle.revision,2147483647))return unavailable();
+  const {transformationConfidence:_,...reply}=r;void _;
+  return freeze({state:'retained' as const,reply:{...reply,memoryId:id,memoryRevision:retained.lifecycle.revision as number},playAuthority:false as const,resumeAuthority:false as const,sendAuthority:false as const});
+ }catch{return unavailable();}
+}
 /** An inert attributed advice source and campaign entry. No receipt/status,
  * journal, memory, plan, controller action or lifecycle mutation is performed. */
 export function selectGameAdvice(raw:{scope:ActivityScope;reply:GameAdviceReply;observation:GameObservation;maximumBytes:number;maximumObservationAgeMs:number;nowMs:number;freshUntilMs:number},ports:GameAdvicePorts):GameAdviceSelection{
