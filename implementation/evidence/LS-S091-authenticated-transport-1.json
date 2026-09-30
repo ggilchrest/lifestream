@@ -1,0 +1,221 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S091",
+  "operation": "authenticatedBoundedControlStream",
+  "status": "verified",
+  "qualificationScope": "Scoped software component only; whole S091 inProgress",
+  "sourceRevision": "2c2893de1fd60e5428cc02bc914efee28b07cc67",
+  "baseRevision": "31eebaf5d48a84638c2a8e5edcb35f324d4c7f81",
+  "recordedAt": "2026-09-30T08:19:50.485824Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      ".private/roadmap/packets/LS-S091.json": "3b56167f61aac090f58bad82f7da6f3ed7ed6f2f62f2fc899a9e43419009a600",
+      ".private/docs/31-local-game-activity.md": "fa81107f2eb216686b989b269d3a39cc9798681f11511f8e1e0698b1e10d4238",
+      "packages/contracts/src/schemas/local-game-activity.schema.json": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+    },
+    "exactSchemaApproval": "LS-DEC-050; bytes unchanged, no new export"
+  },
+  "mappedCases": [
+    "LS-TEST-171",
+    "LS-TEST-172",
+    "LS-TEST-173"
+  ],
+  "claims": {
+    "boundedUtf8ByteFraming": true,
+    "freshHmacAuthenticationBindsProviderPinsScopeAndFiniteExpiry": true,
+    "explicitCredentialNoLoopbackGrant": true,
+    "sourceScopeAndAdmissionRecheckedAfterAuthentication": true,
+    "responseIdentityCorrelationAndReplayFenced": true,
+    "finiteCapacityReservedForExactAdmittedSafetyRelease": true,
+    "oneLateAbandonedReplyCannotBecomeSuccessorEvidence": true,
+    "disconnectNotifiesHostOnceWithoutPauseClaim": true,
+    "potentiallyExecutedEffectQuarantinedNoReconnectOrRetry": true,
+    "realTemporaryLoopbackTcpWithScriptedPeer": true,
+    "actualBizHawkLuaPeer": false,
+    "actualGameStateOrScreenshotsDecoded": false,
+    "actualPauseSaveRestartLinuxWindowsQualification": false,
+    "installedCandidateChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 66,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 911.375209
+    },
+    "fullSource": {
+      "revision": "2c2893de1fd60e5428cc02bc914efee28b07cc67",
+      "pass": 1639,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 97159.740334
+    },
+    "typecheck": "pass",
+    "lint": "pass",
+    "build": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "workspaceCheck": "pass",
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 5797.787084
+    }
+  },
+  "primaryApiReference": {
+    "url": "https://raw.githubusercontent.com/TASEmulators/BizHawk/2.11.1/src/BizHawk.Client.Common/Api/SocketServer.cs",
+    "qualification": "Inspected native framing/direction only; not selected installed build"
+  },
+  "retainedFailures": [
+    {
+      "attempt": "package-filter typecheck",
+      "reason": "Package-filter invocation lacked root tsc PATH. Root pnpm typecheck succeeds without reinstalling dependencies."
+    },
+    {
+      "attempt": "initial focused loader",
+      "pass": 0,
+      "fail": 1,
+      "reason": "New parameter properties rejected by Node strip-only mode; replaced with explicit properties."
+    },
+    {
+      "attempt": "repaired loader",
+      "pass": 0,
+      "fail": 1,
+      "reason": "Direct source import needed .ts under rewriteRelativeImportExtensions; corrected without changing published exports."
+    },
+    {
+      "attempt": "first source focused",
+      "pass": 20,
+      "fail": 5,
+      "reason": "Scripted observation omitted required screenshot reference, invalidating successful replies; loopback listener denied in restricted sandbox. Added bounded opaque screenshot metadata and used approved temporary local TCP test."
+    },
+    {
+      "attempt": "browser source restricted",
+      "pass": 75,
+      "fail": 2,
+      "skip": 86,
+      "reason": "Local review-host listener denied by sandbox; approved bounded loopback run passes77/0/86."
+    }
+  ],
+  "preflight": {
+    "disposition": "Independently eligible under explicit Phase16 continuation; preserve primary S066 and actual prerequisite/provider qualification",
+    "reportedMismatch": [
+      "primary selects S066",
+      "source revision/files/scope mismatch",
+      "S087 whole prerequisite not verified"
+    ]
+  },
+  "exclusions": [
+    "Whole S091 acceptance",
+    "Actual authenticated Lua/native BizHawk bridge and reviewed game/core visible-state decoding",
+    "Selected installed artifacts, runtime pairing/enrollment/authority and real graphical/watchable normal-speed session",
+    "Ordinary native-save persistence and process-restart recovery",
+    "Linux and Windows platform qualification",
+    "S092 bounded runtime/campaign journal; S093 memory/help and S094 integrated acceptance",
+    "S089 automatic history ordinary-reply comparison and S090 trace/replay qualification",
+    "Primary S066/full LS-TEST-084 and selected-model/onset failure resolution",
+    "Installed candidate promotion",
+    "Push/publication/deployment or live camera/game/save/schedule/contact/provider effects"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue dependency-ready S089 source-bound historical comparison and S091 reviewed visible-state/source validation or S092 metadata/lifecycle integration; preserve missing actual artifact/provider/platform/runtime and Human gates.",
+  "logDigests": {
+    "tifa-s091-transport-browser-approved.log": {
+      "path": "/tmp/tifa-s091-transport-browser-approved.log",
+      "sha256": "64a4d0b7942f2f8e220139231058cbf280ed75a05fd043ac8631b197953dbb63",
+      "bytes": 23885
+    },
+    "tifa-s091-transport-browser.log": {
+      "path": "/tmp/tifa-s091-transport-browser.log",
+      "sha256": "e2d5c2306610d8eda709ce04ce9a245e1041d9357bb6f2efc199ae30aefe51b4",
+      "bytes": 25298
+    },
+    "tifa-s091-transport-build.log": {
+      "path": "/tmp/tifa-s091-transport-build.log",
+      "sha256": "b438e66ffe187bfde27122faaba7847ce17a4004899c95d4c454a6a3072e4aa2",
+      "bytes": 1074
+    },
+    "tifa-s091-transport-focused-expanded.log": {
+      "path": "/tmp/tifa-s091-transport-focused-expanded.log",
+      "sha256": "97ae027e015fc6f293061e346541752e6d777c116643f6d22378f9a63afd1ecd",
+      "bytes": 4976
+    },
+    "tifa-s091-transport-focused-initial.log": {
+      "path": "/tmp/tifa-s091-transport-focused-initial.log",
+      "sha256": "1fdb11b18f4bfda3547a00917885d3bd38b6063d5e2fbf7d3a2a9265ace365b6",
+      "bytes": 2210
+    },
+    "tifa-s091-transport-focused-loopback.log": {
+      "path": "/tmp/tifa-s091-transport-focused-loopback.log",
+      "sha256": "6c6ebdaf195863066386c2dc49e1046947e0ddcd85721b294994053fd85eb007",
+      "bytes": 2039
+    },
+    "tifa-s091-transport-focused-repaired.log": {
+      "path": "/tmp/tifa-s091-transport-focused-repaired.log",
+      "sha256": "49f9759494c9ac7520a25f07009ca76a464f51297963a1768b58a35f778b4067",
+      "bytes": 1546
+    },
+    "tifa-s091-transport-focused-source.log": {
+      "path": "/tmp/tifa-s091-transport-focused-source.log",
+      "sha256": "054b4b10257b5495cab600e47bed65fab4e36902a4ea4cb6f8df5f7c9644035c",
+      "bytes": 5057
+    },
+    "tifa-s091-transport-full.log": {
+      "path": "/tmp/tifa-s091-transport-full.log",
+      "sha256": "623f6eea0fc3c25a6b681ffb0887cfa0862dc64cf52600e61ae5c1f9acd9fd60",
+      "bytes": 191462
+    },
+    "tifa-s091-transport-generated-game.log": {
+      "path": "/tmp/tifa-s091-transport-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s091-transport-generated-original.log": {
+      "path": "/tmp/tifa-s091-transport-generated-original.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s091-transport-lint.log": {
+      "path": "/tmp/tifa-s091-transport-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s091-transport-preflight.log": {
+      "path": "/tmp/tifa-s091-transport-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s091-transport-private.log": {
+      "path": "/tmp/tifa-s091-transport-private.log",
+      "sha256": "fbf6dc2023778f8d6142996925656e70c5ed9d471b784ccf09a8754c26809bee",
+      "bytes": 28900
+    },
+    "tifa-s091-transport-typecheck-final.log": {
+      "path": "/tmp/tifa-s091-transport-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s091-transport-typecheck-initial.log": {
+      "path": "/tmp/tifa-s091-transport-typecheck-initial.log",
+      "sha256": "81dbf8dd42dbe1d4e333f40199d95ecdbe84a5198162ffe41bb4063b698955e0",
+      "bytes": 362
+    },
+    "tifa-s091-transport-typecheck.log": {
+      "path": "/tmp/tifa-s091-transport-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s091-transport-workspace.log": {
+      "path": "/tmp/tifa-s091-transport-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
