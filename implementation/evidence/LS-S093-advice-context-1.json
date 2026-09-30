@@ -1,0 +1,163 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S093",
+  "component": "advice-bearing game source ordinary conversation and held-reply privacy",
+  "componentStatus": "verified",
+  "wholeSliceStatus": "inProgress",
+  "recordedAt": "2026-09-30T19:41:21.937926Z",
+  "sourceRevision": "103d7159cabe077da9497a58c9f0c1c25395f2fb",
+  "sourceFiles": [
+    "apps/server/test/game-advice-memory.test.ts",
+    "docs/local-game-acceptance.md"
+  ],
+  "verification": {
+    "fullSource": {
+      "revision": "103d7159cabe077da9497a58c9f0c1c25395f2fb",
+      "pass": 2342,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 115276.308042
+    },
+    "focused": {
+      "pass": 73,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 8038.323375
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6469.808334
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "generatedGameTypes": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types apps/server/test/game-advice-memory.test.ts apps/server/test/game-activity-memory.test.ts apps/server/test/game-help-context.test.ts packages/storage-sqlite/test/game-advice-custody.test.ts",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual isolated authenticated loopback HTTP setup/session/CSRF/audience/memory consent, original game source and separately retained help/Human SQL activation plus advice-bearing source publication/canonical projection; ordinary nine-section prepared context and held HTTP reply source fences. HTTP privacy forget is CSRF-protected/idempotent and erases derived SQL source/projection/custody payloads. Human correction/invalidation, help forgetting, original source forgetting, authentication withdrawal, expiry, memory consent and audience changes suppress stale prose and next selection. Unknown/foreign relationship withholding and captured host authentication callback are exercised. Historical eligibility remains distinct from current pause/recipient contact authority.",
+    "scripted": "Synthetic Human content/source turn/session and channel delivery/authentication predicate, native action/observation/meaningful-grounding and inference output. This is not a real remote reply, selected-model causal advice success, native gameplay or Human acceptance."
+  },
+  "limitations": [
+    "Whole S093/S094 and integrated beta remain inProgress; actual authenticated channel/native source resolvers and graphical Linux/Windows ordinary-save/platform qualification remain open.",
+    "Canonical trace integration, selected-provider perception/causal outcomes, paired speech/resource/onset and Human qualification remain open; UTC fixture clocks do not qualify native performance.",
+    "Original24 S083/S084 and accepted iPhone Human journeys, selected-model causal/onset failures and primary S066/full LS-TEST-084 pending verification are preserved.",
+    "Installed candidate/services/Telegram/backup configuration unchanged. No camera/game/save/channel/schedule/provider/deployment/publication/private-export effects."
+  ],
+  "retainedFailures": [
+    {
+      "log": "tifa-s093-advice-context-focused-initial.log",
+      "pass": 10,
+      "fail": 1,
+      "cause": "New fixture incorrectly asserted a return value from existing void help.forget. Corrected assertion to verify actual erased custody/source/projection and fenced reply; API and source guards unchanged."
+    },
+    {
+      "log": "tifa-s093-advice-context-private.log",
+      "structuralPass": 365,
+      "cause": "S093 scope-aid addition required exact packet digest refresh. Updated only that manifest entry; approved schema digests remain unchanged."
+    }
+  ],
+  "ownedOperation": {
+    "operation": "S093 advice conversation/privacy exact-revision full source suite",
+    "sourceRevision": "103d7159cabe077da9497a58c9f0c1c25395f2fb",
+    "startedAt": "2026-09-30T19:38:34.659738+00:00",
+    "wrapperPid": 95527,
+    "log": "/tmp/tifa-s093-advice-context-full.log",
+    "status": "completed",
+    "childPid": 95534,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T19:40:30.243542+00:00"
+  },
+  "primaryCheckpoint": "LS-S066 implementationCompleteVerificationPending; full LS-TEST-084 preserved",
+  "installedCandidateChanged": false,
+  "appGoalControlSet": false,
+  "runDisposition": "continue",
+  "nextAction": "Continue dependency-ready S094 native-save qualification source and bounded evidence tooling; real graphical/platform/provider/performance/Human and canonical trace gates remain open.",
+  "logDigests": {
+    "tifa-s093-advice-context-browser.log": {
+      "path": "/tmp/tifa-s093-advice-context-browser.log",
+      "sha256": "50fab3b3f92e5b6e8a6d39c5c651cf3d6f4516403f0d65c02ce8b16ab29a5740",
+      "bytes": 23879
+    },
+    "tifa-s093-advice-context-build.log": {
+      "path": "/tmp/tifa-s093-advice-context-build.log",
+      "sha256": "70d9b14e8ee2456fa94543f1a04fe8989f2db90b2f76905d6b24cc02cf2c08af",
+      "bytes": 1074
+    },
+    "tifa-s093-advice-context-diff.log": {
+      "path": "/tmp/tifa-s093-advice-context-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s093-advice-context-focused-current.log": {
+      "path": "/tmp/tifa-s093-advice-context-focused-current.log",
+      "sha256": "ea5d2e8d0156ec9b3842ce0ae628e03fd758a18a5893748d134a29444fcb4314",
+      "bytes": 7141
+    },
+    "tifa-s093-advice-context-focused-initial.log": {
+      "path": "/tmp/tifa-s093-advice-context-focused-initial.log",
+      "sha256": "f1a47604473af358c857934977959cf88d9664a77b5a5339eaad1021be19670e",
+      "bytes": 2207
+    },
+    "tifa-s093-advice-context-full.log": {
+      "path": "/tmp/tifa-s093-advice-context-full.log",
+      "sha256": "6e7086027e3d471dee46a8b2ca2e5b1c8f6606060321b74a4d6f1970fa2c575e",
+      "bytes": 252836
+    },
+    "tifa-s093-advice-context-generated.log": {
+      "path": "/tmp/tifa-s093-advice-context-generated.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s093-advice-context-lint.log": {
+      "path": "/tmp/tifa-s093-advice-context-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-advice-context-preflight.log": {
+      "path": "/tmp/tifa-s093-advice-context-preflight.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s093-advice-context-private-current.log": {
+      "path": "/tmp/tifa-s093-advice-context-private-current.log",
+      "sha256": "7cc06f7b76662ec456b41d949f576b9fb6fa8eb9023a0d51d275920bb790cf30",
+      "bytes": 28885
+    },
+    "tifa-s093-advice-context-private.log": {
+      "path": "/tmp/tifa-s093-advice-context-private.log",
+      "sha256": "042146b1fdf457cbb01a2bd97535564340b0be753db6ce12bef25ec395166001",
+      "bytes": 28304
+    },
+    "tifa-s093-advice-context-typecheck.log": {
+      "path": "/tmp/tifa-s093-advice-context-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-advice-context-workspace.log": {
+      "path": "/tmp/tifa-s093-advice-context-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
