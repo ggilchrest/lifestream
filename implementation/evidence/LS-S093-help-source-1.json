@@ -1,0 +1,179 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S093",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      ".private/roadmap/packets/LS-S093.json": "a54817b278cf4ace67c057ab335d72b1913f33ed446d94e33192aa18a80e6144",
+      ".private/docs/31-local-game-activity.md": "fa81107f2eb216686b989b269d3a39cc9798681f11511f8e1e0698b1e10d4238",
+      "packages/contracts/src/schemas/local-game-activity.schema.json": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+    },
+    "exactSchemaApproval": "LS-DEC-050; exact schema bytes unchanged; no new export"
+  },
+  "exclusions": [
+    "This helper prepares an inert source only: durable pending-help deduplication, finite contact ledger, actual ordinary prepared-context opportunity, governed image-capable delivery/recipient grant and authenticated advice/outcome reconciliation remain unimplemented. No contact or game resume is authorized.",
+    "Concrete production controller/outcome publication and owner/source qualification remain required; gameMemory injection is restricted to explicitly isolated loopback local-auth test profile and dropped on profile/database replacement.",
+    "Grounded help/advice, away-return initiative relevance/prior-mention, actual current run/screenshot attachment/contact outcomes and game reflection remain incomplete; neither whole essential journey nor whole S091/S092/S093/S094 is accepted.",
+    "Actual graphical Linux and Windows game/controller/ordinary-save recovery, native pause/resume/watchdog integration, selected game/perception provider, normal-speed/resource/speech and Human qualification require their separately authorized environments.",
+    "S090 full visual trace/replay, S089 automatic appearance comparison, primary S066/full LS-TEST-084 and selected-model callback/causal/onset failure gates remain open.",
+    "No installed candidate promotion/live camera/game/save/schedule/contact/provider effects, deployment, push/publication or new private export."
+  ],
+  "operation": "inertConfiguredGameHelpSourcePreparation",
+  "status": "verified",
+  "qualificationScope": "Scoped inert configured pending-help source projection only; whole S093 inProgress",
+  "sourceRevision": "948bc7c5db2fa2250aa0cd2bcd83a7033481a3ad",
+  "baseRevision": "2c3012ff2d5e8c79a19ed7117da940d119ab588b",
+  "recordedAt": "2026-09-30T13:41:11.972677Z",
+  "claims": {
+    "exactCanonicalEpisodeHelpObservationScopeTimelinePinsAndOriginalReferences": true,
+    "attemptsTextMustMatchRetainedSourceSummary": true,
+    "independentCurrentRetainedSourceNativePauseConfiguredRecipientAndQuestionGroundingRequired": true,
+    "atomicBoundaryRevisionFencesLateSourcePolicyPauseAttachmentChanges": true,
+    "expiryMonotonicWatchdogUTCRollbackAndPermanentRetirement": true,
+    "closedFiniteInputAndOutputBoundsAndCapturedCallbacks": true,
+    "pictureMustMatchExactGameObservationAndSeparateQualifiedArtifactCustody": true,
+    "cameraDesktopForeignTimelineAndUnsupportedArtifactDigestDenied": true,
+    "sourceDatesUncertaintyRawAvailabilityAndAttachmentStatusRemainExplicit": true,
+    "rawMediaAndAttachmentPathsExcludedFromProjection": true,
+    "sendAuthority": false,
+    "resumeAuthority": false,
+    "pendingPersistenceDedupOrAuthenticatedAdviceComplete": false,
+    "ordinaryPreparedContextOrDeliveryIntegrationComplete": false,
+    "actualNativeSourceQualificationOrHumanJourneyAccepted": false,
+    "installedCandidateChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 69,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 678.634375
+    },
+    "fullSource": {
+      "revision": "948bc7c5db2fa2250aa0cd2bcd83a7033481a3ad",
+      "pass": 2067,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 103506.551917
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6145.690625
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "workspaceCheck": "pass"
+  },
+  "mappedCases": [
+    "LS-TEST-182"
+  ],
+  "commands": [
+    "node --test --experimental-strip-types packages/runtime/test/activity-help.test.ts packages/runtime/test/activity-memory.test.ts packages/runtime/test/activity-game-journal.test.ts",
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --check",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "retainedFailures": [
+    {
+      "log": "tifa-s093-help-focused-initial.log",
+      "pass": 18,
+      "fail": 1,
+      "cause": "Synthetic test attachment used noncanonical ArtifactRef fields. Corrected fixture to existing schema; runtime checks now also join artifact digest/media type/byte length. Final69/2067 independently pass."
+    }
+  ],
+  "proofKinds": {
+    "real": "Actual canonical schema/source-shape checks, bounded immutable source projection, exact original IDs/scope/timeline/pins/time, attachment-metadata join, callback capture, atomic revision/late withdrawal and clock retirement execution.",
+    "scripted": "Canonical game observations/action-result/retention and paused-lifecycle/configured recipient/question relevance/attachment custody qualification; no actual screenshot artifact bytes, native pause, help message, Human reply or live game."
+  },
+  "runDisposition": "continue",
+  "nextAction": "Continue typed game-episode reflection in the existing source-bound experience engine, preserving independent learning consent, family/uncertainty/privacy fences and actual Human preference attribution; pending-help persistence/advice and native/platform/provider/Human gates remain open.",
+  "logDigests": {
+    "tifa-s093-help-browser.log": {
+      "path": "/tmp/tifa-s093-help-browser.log",
+      "sha256": "36d0884bad152dbc185374794ef9263ab98bc39e9757f226a6286b7f4eebc3bf",
+      "bytes": 23887
+    },
+    "tifa-s093-help-build-complete.log": {
+      "path": "/tmp/tifa-s093-help-build-complete.log",
+      "sha256": "b438e66ffe187bfde27122faaba7847ce17a4004899c95d4c454a6a3072e4aa2",
+      "bytes": 1074
+    },
+    "tifa-s093-help-focused-complete.log": {
+      "path": "/tmp/tifa-s093-help-focused-complete.log",
+      "sha256": "a5fed1198cd98833f05e93f32db2fd6a7406a7c607ff341bc23d14a2dcfb99d7",
+      "bytes": 5125
+    },
+    "tifa-s093-help-focused-final-source.log": {
+      "path": "/tmp/tifa-s093-help-focused-final-source.log",
+      "sha256": "ca81ed0b1f872a4683e670c69e9b6a06682cf0a1af672ad05a6a087e22c2c548",
+      "bytes": 5117
+    },
+    "tifa-s093-help-focused-initial.log": {
+      "path": "/tmp/tifa-s093-help-focused-initial.log",
+      "sha256": "b5873dfc3266747a6a4da96407e36d33d687ce564ae6c0b431b0eb8e15490809",
+      "bytes": 2574
+    },
+    "tifa-s093-help-full.log": {
+      "path": "/tmp/tifa-s093-help-full.log",
+      "sha256": "469a088404356d579deb8a2b9a4eab899f2e19b1dff90574f0e2c03c39d8d61c",
+      "bytes": 226903
+    },
+    "tifa-s093-help-generated-game.log": {
+      "path": "/tmp/tifa-s093-help-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s093-help-generated-original.log": {
+      "path": "/tmp/tifa-s093-help-generated-original.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s093-help-lint.log": {
+      "path": "/tmp/tifa-s093-help-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-help-preflight.log": {
+      "path": "/tmp/tifa-s093-help-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s093-help-private.log": {
+      "path": "/tmp/tifa-s093-help-private.log",
+      "sha256": "c9c8e6fc59d1bc158994e3f026f28405b82c1033bcf123be323caca925923463",
+      "bytes": 28870
+    },
+    "tifa-s093-help-typecheck-complete.log": {
+      "path": "/tmp/tifa-s093-help-typecheck-complete.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-help-typecheck-initial.log": {
+      "path": "/tmp/tifa-s093-help-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-help-workspace.log": {
+      "path": "/tmp/tifa-s093-help-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
