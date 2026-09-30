@@ -1,0 +1,51 @@
+import {createHash} from 'node:crypto';
+import {isDeepStrictEqual} from 'node:util';
+import {createContractValidator} from '@lifestream/contracts';
+import {boundedGameDataSnapshot} from '@lifestream/contracts/game-journal';
+import type {ActivityScope,CampaignJournal,GameObservation} from '@lifestream/contracts/game-activity';
+import type {ActivityOwner,GameHelpRepository,MemoryRepository,MemoryRecord} from '@lifestream/storage-sqlite';
+/** Host-owned authenticated input receipt. Its existence is not qualification;
+ * the channel/authentication owner must independently verify its exact refs. */
+export type GameAdviceReply={helpId:string;helpRevision:number;principalId:string;assistantId:string;relationshipId:string;channelRef:string;recipientRef:string;sourceTurnRef:string;sourceSessionRef:string;memoryId:string;memoryRevision:number;quotedAdvice:string;questionDeliveryEvidenceRef:string;authenticatedReplyEvidenceRef:string;receivedAt:string};
+export type GameAdvicePorts={
+ memories:Pick<MemoryRepository,'contextRecords'>;help:Pick<GameHelpRepository,'get'>;
+ boundaryRevision:()=>string|null;
+ /** Current owner administration/privacy/retention; not a play grant. */
+ scopeCurrent:(scope:Readonly<ActivityScope>)=>boolean;
+ /** Actual delivery of this question and authenticated attribution of this
+  * exact answer by the independently governed channel owner. */
+ replyCurrent:(reply:Readonly<GameAdviceReply>)=>boolean;
+ /** The latest fresh post-answer player-visible observation, separately
+  * qualified against the current run/timeline/provider. */
+ observationCurrent:(observation:Readonly<GameObservation>)=>boolean;
+ adviceRelevantCurrent:(reply:Readonly<GameAdviceReply>,observation:Readonly<GameObservation>)=>boolean;
+ now?:()=>number;
+};
+export type GameAdviceSelection=Readonly<{state:'selected'|'unavailable';adviceRef:string|null;entry:CampaignJournal['entries'][number]|null;content:string|null;digest:string|null;isCurrent:()=>boolean;playAuthority:false;resumeAuthority:false;sendAuthority:false}>;
+const validator=createContractValidator(),schema='https://lifestream.dev/contracts/local-game-activity/1.0.0#/$defs/';
+const digest=(v:unknown)=>createHash('sha256').update(JSON.stringify(v)).digest('hex');
+const freeze=<T>(v:T):T=>{if(v&&typeof v==='object'){for(const c of Object.values(v))freeze(c);Object.freeze(v);}return v;};
+const positive=(n:unknown,max:number):n is number=>typeof n==='number'&&Number.isSafeInteger(n)&&n>=1&&n<=max;
+const opaque=(v:unknown)=>typeof v==='string'&&v.trim().length>0&&Buffer.byteLength(v)<=2048;
+const uuid=(v:unknown)=>typeof v==='string'&&/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/u.test(v);
+/** An inert attributed advice source and campaign entry. No receipt/status,
+ * journal, memory, plan, controller action or lifecycle mutation is performed. */
+export function selectGameAdvice(raw:{scope:ActivityScope;reply:GameAdviceReply;observation:GameObservation;maximumBytes:number;maximumObservationAgeMs:number;nowMs:number;freshUntilMs:number},ports:GameAdvicePorts):GameAdviceSelection{
+ const unavailable=():GameAdviceSelection=>freeze({state:'unavailable',adviceRef:null,entry:null,content:null,digest:null,isCurrent:()=>false,playAuthority:false,resumeAuthority:false,sendAuthority:false});
+ const v=boundedGameDataSnapshot(raw,32768) as typeof raw|null;if(!v||Object.keys(v).sort().join(',')!=='freshUntilMs,maximumBytes,maximumObservationAgeMs,nowMs,observation,reply,scope'||!positive(v.maximumBytes,8192)||!positive(v.maximumObservationAgeMs,120000)||!Number.isSafeInteger(v.nowMs)||v.nowMs<0||!Number.isSafeInteger(v.freshUntilMs)||v.freshUntilMs<=v.nowMs||!validator.validate(schema+'ActivityScope',v.scope).valid||!validator.validate(schema+'GameObservation',v.observation).valid)return unavailable();
+ const r=v.reply,o=v.observation,s=v.scope;
+ if(!r||Object.keys(r).sort().join(',')!=='assistantId,authenticatedReplyEvidenceRef,channelRef,helpId,helpRevision,memoryId,memoryRevision,principalId,questionDeliveryEvidenceRef,quotedAdvice,receivedAt,recipientRef,relationshipId,sourceSessionRef,sourceTurnRef'||![r.helpId,r.memoryId,r.principalId,r.assistantId,r.relationshipId].every(uuid)||!positive(r.helpRevision,2147483647)||!positive(r.memoryRevision,2147483647)||![r.channelRef,r.recipientRef,r.sourceTurnRef,r.sourceSessionRef,r.questionDeliveryEvidenceRef,r.authenticatedReplyEvidenceRef].every(opaque)||!validator.validate('https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time',r.receivedAt).valid||typeof r.quotedAdvice!=='string'||!r.quotedAdvice.trim()||r.quotedAdvice.length>1800||!isDeepStrictEqual(o.scope,s)||r.principalId!==s.principalId||r.assistantId!==s.assistantId||r.relationshipId!==s.relationshipId)return unavailable();
+ const received=Date.parse(r.receivedAt),captured=Date.parse(o.capturedAt),arrived=Date.parse(o.receivedAt);
+ if(!Number.isFinite(received)||received>captured||captured>arrived||arrived>v.nowMs||o.interpretedAt!==null&&(Date.parse(o.interpretedAt)<arrived||Date.parse(o.interpretedAt)>v.nowMs)||v.freshUntilMs>captured+v.maximumObservationAgeMs)return unavailable();
+ freeze(v);const host=Object.freeze({...ports}),readMemories=ports.memories.contextRecords.bind(ports.memories),readHelp=ports.help.get.bind(ports.help),owner:ActivityOwner=freeze({principalId:s.principalId,assistantId:s.assistantId,relationshipId:s.relationshipId}),clock=host.now??Date.now;
+ const humanMemory=()=>{const rows=readMemories(s.assistantId,s.principalId);if(rows.length>257)return null;const found=rows.find(m=>m.id===r.memoryId),m=boundedGameDataSnapshot(found,16384) as MemoryRecord|null;return m&&m.assistantId===s.assistantId&&m.provenance.actor===s.principalId&&m.provenance.relationshipId===s.relationshipId&&m.provenance.sourceTurnRef===r.sourceTurnRef&&m.provenance.sourceFamily===`turn:${r.sourceTurnRef}`&&m.provenance.epistemicStatus==='userStatement'&&m.provenance.transformation==='exact-attributed-quote-v1'&&!m.provenance.gameEpisodeId&&!m.provenance.visualEpisodeId&&m.lifecycle.status==='active'&&m.lifecycle.revision===r.memoryRevision&&m.content===`User stated: ${r.quotedAdvice}`&&Date.parse(m.createdAt)>=received&&Date.parse(m.createdAt)<=clock()?freeze(m):null;};
+ let memory:MemoryRecord|null,help:ReturnType<GameHelpRepository['get']>,revision:string|null;try{memory=humanMemory();help=readHelp(owner,r.helpId);revision=host.boundaryRevision();}catch{return unavailable();}
+ if(!memory||!help||help.revision!==r.helpRevision||!isDeepStrictEqual(help.item.scope,s)||help.pinsDigest!==o.pinsDigest||help.item.channelRef!==r.channelRef||help.item.recipientRef!==r.recipientRef||received<Date.parse(help.item.queuedAt)||typeof revision!=='string'||!revision.trim()||Buffer.byteLength(revision)>1024||v.freshUntilMs>help.expiresAt)return unavailable();
+ const memoryDigest=digest(memory),helpDigest=digest(help),monoDeadline=performance.now()+v.freshUntilMs-v.nowMs;let last=v.nowMs,retired=false,checking=false;
+ const isCurrent=()=>{if(retired||checking)return false;checking=true;try{const now=clock();if(!Number.isSafeInteger(now)||now<last||now>=v.freshUntilMs||performance.now()>=monoDeadline||host.boundaryRevision()!==revision||host.scopeCurrent(s)!==true||host.replyCurrent(r)!==true||host.observationCurrent(o)!==true||host.adviceRelevantCurrent(r,o)!==true){retired=true;return false;}const currentMemory=humanMemory(),currentHelp=readHelp(owner,r.helpId),after=clock();if(!currentMemory||digest(currentMemory)!==memoryDigest||!currentHelp||digest(currentHelp)!==helpDigest||host.scopeCurrent(s)!==true||host.boundaryRevision()!==revision||!Number.isSafeInteger(after)||after<now||after>=v.freshUntilMs||performance.now()>=monoDeadline){retired=true;return false;}last=after;return true;}catch{retired=true;return false;}finally{checking=false;}};
+ if(!isCurrent())return unavailable();
+ const h=digest([owner,r.helpId,r.memoryId,r.sourceTurnRef]),id=`${h.slice(0,8)}-${h.slice(8,12)}-5${h.slice(13,16)}-8${h.slice(17,20)}-${h.slice(20,32)}`,adviceRef=`game-advice:${id}`;
+ const entry:CampaignJournal['entries'][number]=freeze({entryId:id,kind:'humanAdvice',epistemicKind:'humanAdvice',content:memory.content,sourceRefs:[`game-help:${r.helpId}:${r.helpRevision}`,`memory:${memory.id}:${r.memoryRevision}:${memoryDigest}`,r.authenticatedReplyEvidenceRef],sourceSessionRef:r.sourceSessionRef,recordedAt:r.receivedAt,limitations:['Attributed authenticated input, not an observed game outcome or proof the advice works.','Advice cannot execute code, widen tools or grant play/resume/contact authority.']});
+ const content=JSON.stringify({sourceKind:'attributedGameHumanAdvice',untrusted:true,sourceType:'participantStatement',adviceRef,helpId:r.helpId,scope:s,originalSourceTurnRef:r.sourceTurnRef,originalHumanSessionRef:r.sourceSessionRef,memoryId:r.memoryId,memoryRevision:r.memoryRevision,quotedAdvice:r.quotedAdvice,receivedAt:r.receivedAt,freshObservationId:o.observationId,freshObservationRevision:o.revision,observationCapturedAt:o.capturedAt,epistemicKind:'humanAdvice',limitations:entry.limitations});
+ if(!validator.validate(schema+'CampaignJournal/properties/entries/items',entry).valid||Buffer.byteLength(content)>v.maximumBytes||!isCurrent())return unavailable();return freeze({state:'selected',adviceRef,entry,content,digest:createHash('sha256').update(content).digest('hex'),isCurrent,playAuthority:false,resumeAuthority:false,sendAuthority:false});
+}
