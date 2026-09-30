@@ -1,0 +1,251 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S093",
+  "operation": "durableSelectiveGameEpisodeSourceBindingAndErasure",
+  "status": "verified",
+  "qualificationScope": "Scoped durable source/projection/retention component; whole S093 inProgress",
+  "sourceRevision": "ee84f2da16850f3b855168121d3a8ffc15a02817",
+  "baseRevision": "6071df37e0aa2d5a15f3a2559335451467b941a6",
+  "recordedAt": "2026-09-30T12:44:21.153977Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      ".private/roadmap/packets/LS-S093.json": "0d4482880d8b803bf83d334494505203e42ea9af58cc59043c4a2df6873e8b69",
+      ".private/docs/31-local-game-activity.md": "fa81107f2eb216686b989b269d3a39cc9798681f11511f8e1e0698b1e10d4238",
+      "packages/contracts/src/schemas/local-game-activity.schema.json": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+    },
+    "exactSchemaApproval": "LS-DEC-050; bytes unchanged; no new export"
+  },
+  "claims": {
+    "actualCanonicalStartedActionAdmissionAndResultObservationCrossRecordJoin": true,
+    "separateExistingAutomaticMemoryConsentAndExplicitFiniteRetentionRequired": true,
+    "meaningfulSummaryAndPublicationQualificationRequiredFromTrustedHost": true,
+    "noRawFrameSaveControllerOrHumanTranscriptRetained": true,
+    "durableSourceFamilyObservationActionDedupAndUTCFloor": true,
+    "actualExistingCanonicalMemoryCandidateUsesRetainedSourceRepository": true,
+    "atomicLateSourceConsentPublicationWithdrawalRollback": true,
+    "sourceChecksumAndClosedShapeFenceCorruptPayloads": true,
+    "forgetExpiryCorrectionPolicyWithdrawalScrubSourcesAndMemoryHistory": true,
+    "existingMemoryDisableAndIsolatedRestoreJoinSourceErasure": true,
+    "originalSnapshotSourceUnchangedAndRestoreAlwaysQuarantined": true,
+    "replayReloadOrErasureCannotResetFiniteOpaqueFences": true,
+    "rawArtifactAndUnboundHumanAdvicePathsDenied": true,
+    "actualNativeOutcomeMeaningfulnessOrModelHumanAcceptance": false,
+    "installedCandidateChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 88,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 975.421834
+    },
+    "fullSource": {
+      "revision": "ee84f2da16850f3b855168121d3a8ffc15a02817",
+      "pass": 2032,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 101913.768
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6333.976375
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "workspaceCheck": "pass",
+    "earlierJoinedWorkingTree": {
+      "scope": "Earlier working tree before final source digest/raw-advice hardening; current full suite independently exercises all joined checks",
+      "pass": 132,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 6919.497125
+    }
+  },
+  "mappedCases": [
+    "LS-TEST-178",
+    "LS-TEST-179",
+    "LS-TEST-181"
+  ],
+  "commands": [
+    "node --test --experimental-strip-types packages/storage-sqlite/test/game-experience.test.ts packages/storage-sqlite/test/game-memory.test.ts packages/storage-sqlite/test/visual-memory.test.ts",
+    "node --test --experimental-strip-types apps/server/test/candidate-snapshot.test.ts apps/server/test/automatic-memory.test.ts apps/server/test/game-activity.test.ts packages/storage-sqlite/test/initiative-delivery.test.ts packages/storage-sqlite/test/initiative-expression.test.ts packages/storage-sqlite/test/session-handoff.test.ts packages/storage-sqlite/test/urgent-away.test.ts apps/server/test/server.test.ts",
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --check",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "retainedFailures": [],
+  "proofKinds": {
+    "real": "Actual SQLite episode/candidate persistence, source/action/result shape and identity join, transaction rollback, erase/dedup/expiry/UTC floors, second database connection/reopen, additive migration64, existing automatic-memory policy disable, and actual isolated snapshot/restore leaving original unchanged",
+    "scripted": "Game observations/admissions/started action outcomes, summary meaningfulness/publication/retained-source qualification and explicit retention configuration. No actual emulator/game/save/model/native pause/Human source evidence."
+  },
+  "exclusions": [
+    "Concrete runtime controller/outcome publication host remains required; trusted source/meaningfulness/current-owner predicates are not native qualification",
+    "Source-aware Human advice/correction, candidate activation and ordinary prepared-memory/return conversation/reflection remain incomplete; explicit raw-artifact retention and unbound advice are denied",
+    "Neither active-help nor configured away-return essential journey is accepted; screenshot/contact/delivery/authenticated-answer/advice behavior remains open",
+    "Enrolled lifecycle event/watchdog routing, fresh authorized resume/controller, actual ordinary-save recovery/game/provider/graphical Linux/Windows/performance/Human and whole S091/S092/S093/S094 remain open",
+    "S090 full visual trace/replay; S089 automatic appearance comparisons; primary S066/full LS-TEST-084 and selected-model/onset failure gates",
+    "Installed candidate promotion, live camera/game/save/schedule/contact/provider effects, deployment, push/publication or new private exports"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue source-aware game candidate activation and ordinary prepared-memory/return conversation through existing context/privacy fences; preserve unresolved concrete host/native/setup/provider/platform/Human gates.",
+  "logDigests": {
+    "tifa-s093-episodes-browser.log": {
+      "path": "/tmp/tifa-s093-episodes-browser.log",
+      "sha256": "96967f80e4345894a934f45c416c159d22df9a63f92cd5530a491b2b5ab1b9a3",
+      "bytes": 23881
+    },
+    "tifa-s093-episodes-build-complete.log": {
+      "path": "/tmp/tifa-s093-episodes-build-complete.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s093-episodes-build-final-source.log": {
+      "path": "/tmp/tifa-s093-episodes-build-final-source.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s093-episodes-build-final.log": {
+      "path": "/tmp/tifa-s093-episodes-build-final.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s093-episodes-build-restore.log": {
+      "path": "/tmp/tifa-s093-episodes-build-restore.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s093-episodes-build.log": {
+      "path": "/tmp/tifa-s093-episodes-build.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s093-episodes-focused-complete.log": {
+      "path": "/tmp/tifa-s093-episodes-focused-complete.log",
+      "sha256": "71cab0b0bb4a8b685e5bb2bc1d74b632e210b4a8fab6b6c25cbd02aa332c8c50",
+      "bytes": 7761
+    },
+    "tifa-s093-episodes-focused-final-source.log": {
+      "path": "/tmp/tifa-s093-episodes-focused-final-source.log",
+      "sha256": "12f3ca868294106616e33de787d8bdf8ec0464ea37431c3ec3867bbaafdff504",
+      "bytes": 8094
+    },
+    "tifa-s093-episodes-focused-final.log": {
+      "path": "/tmp/tifa-s093-episodes-focused-final.log",
+      "sha256": "a38635ea7c68ac76483bc21d05e5be3efcc40f6cb369cec1da0b86b66b399ae5",
+      "bytes": 7569
+    },
+    "tifa-s093-episodes-focused-restore.log": {
+      "path": "/tmp/tifa-s093-episodes-focused-restore.log",
+      "sha256": "a03227ad8c8dc49d8e4df6fb75fa86a46221108e09324e5dc5f14d28ebcd74e1",
+      "bytes": 3929
+    },
+    "tifa-s093-episodes-focused.log": {
+      "path": "/tmp/tifa-s093-episodes-focused.log",
+      "sha256": "a86790e6e3ed79db1fec971db0844cbbdcd74ae56149edb9e6c11dfeafe47383",
+      "bytes": 3733
+    },
+    "tifa-s093-episodes-full.log": {
+      "path": "/tmp/tifa-s093-episodes-full.log",
+      "sha256": "703d7f35b1ec6763a93cefc4264fb2bf46fcef87661c770c95d834e5312641d1",
+      "bytes": 223928
+    },
+    "tifa-s093-episodes-generated-game.log": {
+      "path": "/tmp/tifa-s093-episodes-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s093-episodes-generated-original.log": {
+      "path": "/tmp/tifa-s093-episodes-generated-original.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s093-episodes-joined.log": {
+      "path": "/tmp/tifa-s093-episodes-joined.log",
+      "sha256": "7312094927bd386a622357646b5c166e8f2c41fec829da68beae63e6be2bc733",
+      "bytes": 16197
+    },
+    "tifa-s093-episodes-lint-final-source.log": {
+      "path": "/tmp/tifa-s093-episodes-lint-final-source.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-episodes-lint-final.log": {
+      "path": "/tmp/tifa-s093-episodes-lint-final.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-episodes-lint.log": {
+      "path": "/tmp/tifa-s093-episodes-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-episodes-preflight.log": {
+      "path": "/tmp/tifa-s093-episodes-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s093-episodes-private.log": {
+      "path": "/tmp/tifa-s093-episodes-private.log",
+      "sha256": "f64ca44800c27a8324bf46336322a43c65f846938151c33d21fa85da29c8de9e",
+      "bytes": 28893
+    },
+    "tifa-s093-episodes-typecheck-complete.log": {
+      "path": "/tmp/tifa-s093-episodes-typecheck-complete.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-episodes-typecheck-final-source.log": {
+      "path": "/tmp/tifa-s093-episodes-typecheck-final-source.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-episodes-typecheck-final.log": {
+      "path": "/tmp/tifa-s093-episodes-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-episodes-typecheck-initial.log": {
+      "path": "/tmp/tifa-s093-episodes-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-episodes-typecheck-join.log": {
+      "path": "/tmp/tifa-s093-episodes-typecheck-join.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-episodes-typecheck-restore.log": {
+      "path": "/tmp/tifa-s093-episodes-typecheck-restore.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-episodes-typecheck.log": {
+      "path": "/tmp/tifa-s093-episodes-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-episodes-workspace.log": {
+      "path": "/tmp/tifa-s093-episodes-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
