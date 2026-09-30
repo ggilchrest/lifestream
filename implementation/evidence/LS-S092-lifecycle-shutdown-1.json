@@ -1,0 +1,181 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S092",
+  "operation": "boundedSourceFencedOldLeaseLifecycleShutdown",
+  "status": "verified",
+  "qualificationScope": "Scoped software component; whole S092 inProgress",
+  "sourceRevision": "dca4d6968a833eac43677c774e74fcce6195f692",
+  "baseRevision": "16376be5c7220871768860111ec4aaa575e1fe4d",
+  "recordedAt": "2026-09-30T11:55:38.153776Z",
+  "specification": {
+    "repositoryRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "effectiveWorkingDigests": {
+      ".private/roadmap/packets/LS-S092.json": "416e659c2167172c95badf7721f7065ac1d6fa2bdd773f719907146dcc3a03f0",
+      ".private/docs/31-local-game-activity.md": "fa81107f2eb216686b989b269d3a39cc9798681f11511f8e1e0698b1e10d4238",
+      "packages/contracts/src/schemas/local-game-activity.schema.json": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+    },
+    "exactSchemaApproval": "LS-DEC-050; bytes unchanged; no new export"
+  },
+  "claims": {
+    "synchronousTrustedDurableFenceBeforeCancellationOrRelease": true,
+    "oldLeaseShutdownIndependentOfWithdrawnGamePermission": true,
+    "existingP2CancellationAndReleaseOutsideInferenceSlot": true,
+    "boundedUTCAndMonotonicWatchdogNoRetryOrReplay": true,
+    "exactCanonicalEnvelopeLeaseProviderEpochAndIndependentNativeQualification": true,
+    "truthfulPauseStopSuccessorUnconfirmedDispositions": true,
+    "durableCASFailureCannotClaimSafeStop": true,
+    "pausedOrUnknownRunRetainsReplacementBlockingSlot": true,
+    "qualifiedExactOldRunStopCanReleaseOnlyItsSlot": true,
+    "lateProviderClockSourceAndOwnerChangesFenceReply": true,
+    "actualNativeEmulatorPauseStopOrResumeAcceptance": false,
+    "installedCandidateChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 70,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 990.380542
+    },
+    "fullSource": {
+      "revision": "dca4d6968a833eac43677c774e74fcce6195f692",
+      "pass": 1962,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 101465.214417
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6076.471084
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "generatedOriginalTypes": "pass",
+    "generatedGameTypes": "pass",
+    "workspaceCheck": "pass"
+  },
+  "mappedCases": [
+    "LS-TEST-174",
+    "LS-TEST-175",
+    "LS-TEST-176",
+    "LS-TEST-177"
+  ],
+  "commands": [
+    "node --test --experimental-strip-types apps/server/test/game-activity-lifecycle.test.ts apps/server/test/game-activity-planning.test.ts",
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --check",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "retainedFailures": [],
+  "proofKinds": {
+    "real": "Actual existing DiscoveryAdministration P2 cancellation while inference remains suspended; actual SQLite durable start-slot persistence and terminal dispositions; canonical release validation and bounded watchdog execution",
+    "scripted": "Game/native receipt, independent qualification, enrollment/authority, durable fence and test-only shutdown-intent host; no emulator/game/save/model/native pause or stop"
+  },
+  "exclusions": [
+    "Concrete enrolled lifecycle host/event/watchdog routing, fresh authorized resume and controller owner integration remain incomplete",
+    "Actual selected-provider/model/tokenizer competence or measured preemption/slot/speech/resource/onset performance",
+    "Actual emulator pause/stop/fresh authorized resume, ordinary-save recovery, graphical Linux/Windows/platform/Human qualification; whole S091/S092 remain inProgress",
+    "S090 full visual trace/replay; S093 grounded memory/help/return conversation; S094 integrated qualification",
+    "S089 automatic appearance comparisons, primary S066/full LS-TEST-084 and selected-model/onset failure gates",
+    "Installed candidate promotion or live camera/game/save/schedule/contact/provider effects, deployment, push/publication/private exports"
+  ],
+  "runDisposition": "continue",
+  "nextAction": "Continue canonical lifecycle owner/fresh authorized resume or independently eligible grounded game memory integration; preserve missing actual native/setup/provider/platform/Human qualification and no live effects.",
+  "logDigests": {
+    "tifa-s092-lifecycle-browser.log": {
+      "path": "/tmp/tifa-s092-lifecycle-browser.log",
+      "sha256": "726373975c8500c5c49a315de23e5dd8f29037fc0e88dea6d4d95065793d6ee4",
+      "bytes": 23867
+    },
+    "tifa-s092-lifecycle-build-final.log": {
+      "path": "/tmp/tifa-s092-lifecycle-build-final.log",
+      "sha256": "e50ff0e002cb10c9e1f29b492c92668e9757cd520b888d2656f9c44634c30ba0",
+      "bytes": 1074
+    },
+    "tifa-s092-lifecycle-build-initial.log": {
+      "path": "/tmp/tifa-s092-lifecycle-build-initial.log",
+      "sha256": "a818c22d26760a7c5f6c120067d3e3200e9b276ee252b15b7037cc90e8398698",
+      "bytes": 1074
+    },
+    "tifa-s092-lifecycle-build.log": {
+      "path": "/tmp/tifa-s092-lifecycle-build.log",
+      "sha256": "a818c22d26760a7c5f6c120067d3e3200e9b276ee252b15b7037cc90e8398698",
+      "bytes": 1074
+    },
+    "tifa-s092-lifecycle-focused-final.log": {
+      "path": "/tmp/tifa-s092-lifecycle-focused-final.log",
+      "sha256": "f0683a90f7f7c6e344ce795ed83523cd4713768445c51df163abf8b01555fd4f",
+      "bytes": 6136
+    },
+    "tifa-s092-lifecycle-focused-initial.log": {
+      "path": "/tmp/tifa-s092-lifecycle-focused-initial.log",
+      "sha256": "1cd6296ead603e63072f5e88c5ed03ecd6a9ae64451911945ee94272ba094b52",
+      "bytes": 2843
+    },
+    "tifa-s092-lifecycle-full.log": {
+      "path": "/tmp/tifa-s092-lifecycle-full.log",
+      "sha256": "8dae93d9f7d38696a5dcdfa4a565a965cdf24ce17641e57d380bc63bb918c573",
+      "bytes": 218110
+    },
+    "tifa-s092-lifecycle-generated-game.log": {
+      "path": "/tmp/tifa-s092-lifecycle-generated-game.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s092-lifecycle-generated-original.log": {
+      "path": "/tmp/tifa-s092-lifecycle-generated-original.log",
+      "sha256": "210315abec1782c0e32fc8710e4ccbb15e2e1f85305588a827c24572e10f8d37",
+      "bytes": 144
+    },
+    "tifa-s092-lifecycle-lint.log": {
+      "path": "/tmp/tifa-s092-lifecycle-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-lifecycle-preflight.log": {
+      "path": "/tmp/tifa-s092-lifecycle-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s092-lifecycle-private.log": {
+      "path": "/tmp/tifa-s092-lifecycle-private.log",
+      "sha256": "52a33b6128b5599d1b4f8ebccd5da94a1fdecbb03d21290d080162e030d387e1",
+      "bytes": 28906
+    },
+    "tifa-s092-lifecycle-typecheck-final.log": {
+      "path": "/tmp/tifa-s092-lifecycle-typecheck-final.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-lifecycle-typecheck-initial.log": {
+      "path": "/tmp/tifa-s092-lifecycle-typecheck-initial.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-lifecycle-typecheck.log": {
+      "path": "/tmp/tifa-s092-lifecycle-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-lifecycle-workspace.log": {
+      "path": "/tmp/tifa-s092-lifecycle-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
