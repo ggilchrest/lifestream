@@ -114,3 +114,15 @@ ordinary extraction, eligibility or authority. Activation does not rewrite a
 historical candidate as active. Durable sink, lifecycle-change source identity
 and full joined replay remain incomplete: current memory lifecycle rows have
 no recorded UUID event ID, which diagnostics must not invent.
+
+Genuine retained candidate bundles now correlate with genuine finalized-memory
+selection by exact MemoryRecord ID, Assistant and chronological source events.
+Cross-session/cross-environment use stays historical. Copies, mismatched Assistant,
+unselected records or reversed time remain unjoined. The join explicitly leaves
+owner equivalence, current usability and delivery unproved. Its pure semantic
+replay retains both exact redacted artifacts and original source event/time,
+uses a new isolated environment/event/background producer and the existing
+context virtual clock, and leaves the missing candidate monotonic clock null.
+There is no provider, source-refresh, memory or effect callback. Held metadata
+after forgetting can explain history but cannot reactivate or reinforce memory,
+or masquerade as a new normal source. Full lifecycle/media replay remains open.

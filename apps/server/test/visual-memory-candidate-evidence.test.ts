@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createHash,randomUUID} from 'node:crypto';
+import {createPreparedTurnBinding,finalizePreparedTurn,requestForFinalizedTurn} from '@lifestream/runtime/inference/prompt';
+import {compileRelationshipContext} from '@lifestream/runtime/context';
+import {captureTurnContextTrace,materializeTurnContextTrace,correlateVisualMemoryCandidate,replayVisualMemoryContextJoin} from '../src/runtime/turn-context-trace.ts';
 import {createContractValidator} from '@lifestream/contracts';
 import {Database,MemoryRepository} from '@lifestream/storage-sqlite';
 import {AutomaticMemory} from '../src/runtime/automatic-memory.ts';
@@ -61,4 +64,35 @@ test('malformed projection, hostile accessor/proxy and broken diagnostic clocks 
  const active=structuredClone(source) as any;active.memoryRecord.status='active';journal.record(f.owner,active);
  const owner:any={...f.owner};Object.defineProperty(owner,'principalId',{get(){calls++;return f.owner.principalId;}});journal.record(owner,source);
  const broken=new VisualMemoryCandidateEvidence({utcMs:()=>{throw Error('SCRIPTED clock failure');},monotonicMs:()=>0});assert.doesNotThrow(()=>broken.record(f.owner,source));broken.close();await Promise.resolve();assert.equal(calls,0);assert.deepEqual(journal.traces(f.owner),[]);
+});
+
+function selectedTrace(f:ReturnType<typeof setup>,options:{assistantId?:string;marked?:boolean;eventMs?:number}={}){
+ const record=f.memories.contextRecords(f.owner.assistantId,f.owner.principalId)[0]!;
+ const assistantId=options.assistantId??f.owner.assistantId,sessionId=randomUUID(),interactionId=randomUUID(),endpointId=randomUUID();
+ const context=compileRelationshipContext({records:[{id:record.id,content:record.content,revision:Number(record.lifecycle.revision),sourceFamily:String(record.provenance.sourceFamily),status:'approved',use:'relevant',personalization:true,mention:true,memoryRecord:options.marked!==false,visualObservation:true}],userInput:'blue hat',audienceScope:'authenticatedSession',profileRevision:'synthetic-p1',relationshipRevision:'synthetic-r1',configurationRevision:'synthetic-c1'});
+ const binding=createPreparedTurnBinding({viewId:randomUUID(),revision:1,invalidationKey:randomUUID(),scope:{...f.owner,assistantId,sessionId,conversationId:randomUUID(),endpointId},conversation:'SCRIPTED isolated conversation',sourceRevisions:{conversation:'synthetic-c1'}});
+ const turn=finalizePreparedTurn({assistantId,sessionId,interactionId,endpointId,conversation:binding.conversation,preparedTurnBinding:binding,preparedRelationshipContext:context},()=>true),request=requestForFinalizedTurn(turn,binding,()=>true);
+ const capture=captureTurnContextTrace(turn,request,randomUUID())!;assert.ok(capture);const time=options.eventMs??Date.now();return materializeTurnContextTrace(capture,{occurredAtMs:time,processingAtMs:time,monotonicMs:100,clockId:randomUUID()})!;
+}
+
+test('genuine candidate joins exact finalized selected MemoryRecord across sessions without currency, owner or delivery promotion',async t=>{
+ const f=setup(t);f.project();f.worker.activateVisual(f.owner,f.v.episode.episodeId,2);await Promise.resolve();const candidate=f.worker.visualCandidateHistory(f.owner)[0]!,context=selectedTrace(f);
+ const joined=correlateVisualMemoryCandidate(candidate,context);assert.ok(joined);assert.equal(joined.sourceCandidateEventId,candidate.event.eventId);assert.equal(joined.memoryId,f.source().episode.memoryRecordId);assert.equal(joined.crossSession,true);assert.equal(joined.sourceEnvironmentId,f.v.episode.scope.environmentId);
+ assert.equal(joined.sourceCurrencyProved,false);assert.equal(joined.ownerEquivalenceProved,false);assert.equal(joined.deliveryProved,false);assert.equal(joined.learningAuthority,false);assert.equal(joined.effectAuthority,false);assert.equal(joined.complete,false);
+ for(const invalid of [selectedTrace(f,{marked:false}),selectedTrace(f,{assistantId:randomUUID()}),selectedTrace(f,{eventMs:0})])assert.equal(correlateVisualMemoryCandidate(candidate,invalid),null);
+ assert.equal(correlateVisualMemoryCandidate({...candidate},context),null);assert.equal(correlateVisualMemoryCandidate(candidate,{...context}),null);assert.equal(correlateVisualMemoryCandidate(new Proxy(candidate,{}),context),null);
+ let calls=0;const hostile={...candidate};Object.defineProperty(hostile,'event',{get(){calls++;return candidate.event;}});assert.equal(correlateVisualMemoryCandidate(hostile,context),null);assert.equal(calls,0);
+});
+
+test('isolated joined candidate/context replay preserves actual lineage, times and artifacts after forgetting without any live mutation',async t=>{
+ const f=setup(t);f.project();f.worker.activateVisual(f.owner,f.v.episode.episodeId,2);await Promise.resolve();const candidate=f.worker.visualCandidateHistory(f.owner)[0]!,context=selectedTrace(f),before=JSON.stringify({candidate,context});
+ f.worker.forgetVisual(f.owner,f.v.episode.episodeId,2);assert.deepEqual(f.worker.visualCandidateHistory(f.owner),[]);
+ const rowBefore=JSON.stringify(f.worker.inspect(f.owner)),replay=replayVisualMemoryContextJoin(candidate,context);assert.ok(replay);assert.equal(JSON.stringify(f.worker.inspect(f.owner)),rowBefore);assert.equal(f.calls(),0);
+ assert.equal(replay.candidateArtifact,candidate.artifact);assert.equal(replay.manifest,context.manifest);assert.equal(replay.sourceCandidateMonotonicClockAvailable,false);assert.equal(replay.complete,false);assert.equal(replay.liveEffects,false);assert.equal(replay.durableReinforcement,false);assert.equal(replay.sourceCurrencyProved,false);
+ const validator=createContractValidator();for(const [i,event] of replay.events.entries()){
+  const original=i===0?candidate.event:context.events[i-1]!;assert.equal(validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid,true);assert.deepEqual(event.sourceEventIds,[original.eventId]);assert.notEqual(event.eventId,original.eventId);assert.equal(event.eventTime,original.eventTime);assert.equal(event.environmentId,replay.environmentId);assert.equal(event.executionMode,'replay');assert.deepEqual(event.payload,original.payload);
+ }
+ assert.equal(replay.events[0]!.monotonic,null);assert.notEqual(replay.events[0]!.backgroundJobId,candidate.event.backgroundJobId);assert.equal(JSON.stringify({candidate,context}),before);
+ assert.equal(replayVisualMemoryContextJoin({...candidate},context),null);assert.equal(replayVisualMemoryContextJoin(candidate,replay as never),null);assert.equal(correlateVisualMemoryCandidate(candidate,replay as never),null);
+ assert.doesNotMatch(JSON.stringify(replay),/SCRIPTED isolated conversation|confirmed participant appears|SCRIPTED transformation basis/);
 });

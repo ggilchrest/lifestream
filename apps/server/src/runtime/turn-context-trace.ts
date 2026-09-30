@@ -3,6 +3,7 @@ import {types} from 'node:util';
 import {createContractValidator} from '@lifestream/contracts';
 import {isFinalizedTurnRequest,type FinalizedTurn} from '@lifestream/runtime/inference/prompt';
 import type {InferenceRequest} from '@lifestream/runtime/inference';
+import {isVisualMemoryCandidateTrace,type VisualMemoryCandidateTrace} from './visual-memory-candidate-evidence.ts';
 import type {VisualTurnReceipt} from './visual-turn-evidence.ts';
 
 const uuid=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(value);
@@ -95,4 +96,30 @@ export function replayTurnContextTrace(trace:TurnContextTrace){
     const validator=createContractValidator();if(events.some(event=>!validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid))return null;
     return freeze({replayId,environmentId,executionMode:'replay' as const,timeline:'source-relative-virtual' as const,sourceTraceId:first.interactionTraceId,sourceEnvironmentId:first.environmentId,clockMapping:{sourceClockId:sourceClock,replayClockId:clockId},manifest:trace.manifest,events,complete:false as const,rawMediaAvailable:false as const,perceptionReplayed:false as const,liveEffects:false as const,durableReinforcement:false as const,sourceCurrencyProved:false as const,deliveryProved:false as const});
   }catch{return null;}
+}
+
+/** Join genuine recorded candidate creation to exact finalized memory selection.
+ * Cross-session use remains historical. This cannot prove current eligibility,
+ * owner equivalence, provider admission, delivery or durable reinforcement. */
+export function correlateVisualMemoryCandidate(candidate:VisualMemoryCandidateTrace,context:TurnContextTrace){
+ try{
+  if(!isVisualMemoryCandidateTrace(candidate)||!traces.has(context))return null;
+  const source=candidate.event,selected=context.events.find(event=>event.eventType==='memory.referencesSelected');if(!selected)return null;
+  const memoryId=(source.payload as {memoryId:string}).memoryId,selection=selected.payload as {memoryIds:readonly string[];sourceRevision:Revision};
+  if(source.assistantId!==selected.assistantId||!selection.memoryIds.includes(memoryId)||Date.parse(source.eventTime as string)>Date.parse(selected.eventTime as string))return null;
+  return freeze({state:'joined' as const,sourceCandidateEventId:source.eventId,selectedMemoryEventId:selected.eventId,memoryId,artifactDigest:candidate.artifact.reference.sha256,preparedMemorySourceRevision:selection.sourceRevision,sourceEnvironmentId:source.environmentId,selectedEnvironmentId:selected.environmentId,crossSession:source.sessionId!==selected.sessionId,coverage:'bounded_best_effort' as const,complete:false as const,sourceCurrencyProved:false as const,ownerEquivalenceProved:false as const,deliveryProved:false as const,learningAuthority:false as const,effectAuthority:false as const});
+ }catch{return null;}
+}
+
+/** Pure replay of a genuine joined metadata path. Neither stored artifact is
+ * executable or available to a provider. No storage/media/effect callbacks. */
+export function replayVisualMemoryContextJoin(candidate:VisualMemoryCandidateTrace,context:TurnContextTrace){
+ try{
+  const joined=correlateVisualMemoryCandidate(candidate,context);if(!joined)return null;
+  const replay=replayTurnContextTrace(context);if(!replay)return null;
+  const source=candidate.event;
+  const event={...source,eventId:randomUUID(),backgroundJobId:randomUUID(),correlationId:replay.replayId,environmentId:replay.environmentId,executionMode:'replay',processingTime:new Date().toISOString(),monotonic:null,sourceEventIds:[source.eventId],causedByEventIds:[]};
+  if(!createContractValidator().validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid)return null;
+  return freeze({...replay,events:[event,...replay.events],candidateArtifact:candidate.artifact,sourceCandidateEventId:source.eventId,sourceCandidateMonotonicClockAvailable:false as const,join:joined,ownerEquivalenceProved:false as const,learningAuthority:false as const,effectAuthority:false as const});
+ }catch{return null;}
 }

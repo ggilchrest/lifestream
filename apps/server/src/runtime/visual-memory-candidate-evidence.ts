@@ -27,6 +27,9 @@ export type VisualMemoryCandidateTrace=Readonly<{
  artifact:Readonly<{reference:Readonly<{reference:string;sha256:string;mediaType:'application/json';schemaRef:string;byteLength:number}>;bytes:string}>;
  coverage:'bounded_best_effort';complete:false;durable:false;learningAuthority:false;effectAuthority:false;
 }>;
+const candidateTraces=new WeakSet<object>();
+/** Genuine journal provenance only; this is not a current-memory eligibility check. */
+export function isVisualMemoryCandidateTrace(value:VisualMemoryCandidateTrace):boolean{return !!value&&typeof value==='object'&&candidateTraces.has(value);}
 type Pending={ownerDigest:string;dedup:string;expiresUtc:number;expiresMono:number;sequence:number;scope:Pick<VisualMemoryProjection['episode']['scope'],'assistantId'|'conversationId'|'sessionId'|'endpointId'|'environmentId'>;memoryId:string;eventTime:string;sourceRefs:string[];artifact:VisualMemoryCandidateTrace['artifact']};
 type Retained={ownerDigest:string;dedup:string;expiresUtc:number;expiresMono:number;trace:VisualMemoryCandidateTrace};
 
@@ -62,7 +65,8 @@ export class VisualMemoryCandidateEvidence {
   for(const row of this.pending.splice(0)){
    const event={schemaVersion:'2.0.0',eventId:randomUUID(),traceScope:'background',interactionTraceId:null,backgroundJobId:this.producerId,correlationId:row.memoryId,sequence:row.sequence,eventType:'memory.candidateProposed',eventVersion:'1.0.0',eventTime:row.eventTime,processingTime:new Date(at.utc).toISOString(),monotonic:null,assistantId:row.scope.assistantId,conversationId:row.scope.conversationId,sessionId:row.scope.sessionId,endpointId:row.scope.endpointId,environmentId:row.scope.environmentId,executionMode:'normal',privacyClass:'restricted',causedByEventIds:[],sourceEventIds:[],payload:{memoryId:row.memoryId,candidateArtifact:row.artifact.reference,sourceRefs:row.sourceRefs},redactions:['candidate prose, source descriptions and transformation basis omitted; metadata digests retained']};
    if(!validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid)continue;
-   this.retained.push({ownerDigest:row.ownerDigest,dedup:row.dedup,expiresUtc:row.expiresUtc,expiresMono:row.expiresMono,trace:freeze({event,artifact:row.artifact,coverage:'bounded_best_effort',complete:false,durable:false,learningAuthority:false,effectAuthority:false})});
+   const trace:VisualMemoryCandidateTrace=freeze({event,artifact:row.artifact,coverage:'bounded_best_effort',complete:false,durable:false,learningAuthority:false,effectAuthority:false});candidateTraces.add(trace);
+   this.retained.push({ownerDigest:row.ownerDigest,dedup:row.dedup,expiresUtc:row.expiresUtc,expiresMono:row.expiresMono,trace});
   }
   if(this.retained.length>128)this.retained.splice(0,this.retained.length-128);
  }catch{/* A diagnostic sink failure is not a memory outcome. */}}
