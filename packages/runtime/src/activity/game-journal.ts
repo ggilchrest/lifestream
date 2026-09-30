@@ -76,6 +76,51 @@ export function gameProposalMatchesPreparedContext(view:PreparedGameCampaignCont
  }catch{return false;}
 }
 function frozen<T>(value:T):T{if(value&&typeof value==='object'){for(const child of Object.values(value))frozen(child);Object.freeze(value);}return value;}
+type DispatchValidation=G.GameActionRequest['payload']['dispatchValidation'];
+export type GameDispatchBoundary={
+ /** Configured host bounds; model data cannot select these limits. */
+ maxPlanningAgeMs:number;maxPlanningFrameDelta:number;maximumObservationAgeMs:number;validatorRef:string;
+ /** Actual current installed/visible-state/epoch/input source qualification.
+  * This callback does not issue capability admission or controller authority. */
+ observationCurrent:(observation:Readonly<G.GameObservation>)=>boolean;now?:()=>number;
+};
+export type GameDispatchSelection=Readonly<{status:'selected'|'unavailable';validation:Readonly<DispatchValidation>|null;isCurrent:()=>boolean}>;
+const dispatchSelections=new WeakMap<GameDispatchSelection,Readonly<DispatchValidation>>();
+/** Revalidate the same genuine prepared proposal against a separately qualified
+ * fresh observation. This emits inert validation metadata, never a dispatch,
+ * admission, lease, save operation or renewed prepared-context expiry. */
+export function selectGameDispatchValidation(view:PreparedGameCampaignContext,binding:PreparedTurnBinding,decision:G.GameDecisionInput,rawProposal:G.GameActionProposal,rawObservation:G.GameObservation,boundary:GameDispatchBoundary):GameDispatchSelection{
+ const no=():GameDispatchSelection=>frozen({status:'unavailable',validation:null,isCurrent:()=>false});
+ try{
+  if(!gameProposalMatchesPreparedContext(view,binding,decision,rawProposal))return no();
+  const proposal=boundedGameDataSnapshot(rawProposal) as G.GameActionProposal|null,o=boundedGameDataSnapshot(rawObservation) as G.GameObservation|null,entry=selections.get(preparedGames.get(view)!.selection)!;
+  const maxAge=boundary.maxPlanningAgeMs,maxDelta=boundary.maxPlanningFrameDelta,observationAge=boundary.maximumObservationAgeMs,validatorRef=boundary.validatorRef,qualify=boundary.observationCurrent,clock=boundary.now??Date.now,now=clock(),startMono=performance.now(),planning=entry.input.observation;
+  if(!proposal||!o||!validator.validate(schema+'GameObservation',o).valid||!Number.isSafeInteger(maxAge)||maxAge<1||maxAge>120000||!Number.isSafeInteger(maxDelta)||maxDelta<0||maxDelta>2147483647||!Number.isSafeInteger(observationAge)||observationAge<1||observationAge>120000||typeof validatorRef!=='string'||validatorRef.length<1||validatorRef.length>1024||typeof qualify!=='function'||!Number.isSafeInteger(now)||now<0||!isDeepStrictEqual(o.scope,entry.scope)||o.pinsDigest!==entry.input.pinsDigest)return no();
+  const captured=Date.parse(o.capturedAt),received=Date.parse(o.receivedAt),planningCaptured=Date.parse(planning.capturedAt),expiry=Math.min(view.expiresAtMs,planningCaptured+maxAge,captured+observationAge);
+  if(captured<Date.parse(decision.selectedAt)||captured>received||received>now||o.interpretedAt!==null&&(Date.parse(o.interpretedAt)<received||Date.parse(o.interpretedAt)>now)||o.frameNumber<planning.frameNumber||o.frameNumber-planning.frameNumber>maxDelta||expiry<=now)return no();
+  if(o.observationId===planning.observationId&&(o.revision!==planning.revision||!isDeepStrictEqual(o,planning)))return no();
+  const screenshotIds=new Set(o.screenshots.map(s=>s.screenshotId));
+  if(screenshotIds.size!==o.screenshots.length||new Set(o.visibleState.map(f=>f.fieldId)).size!==o.visibleState.length||new Set(o.facts.map(f=>f.factId)).size!==o.facts.length||o.screenshots.some(s=>s.frameNumber!==o.frameNumber||s.capturedAt!==o.capturedAt||Date.parse(s.expiresAt)<=now)||o.facts.some(f=>f.sourceScreenshotIds.some(id=>!screenshotIds.has(id))))return no();
+  const predicates=proposal.preconditions.map(p=>({p,field:o.visibleState.find(f=>f.fieldId===p.fieldId)}));
+  if(predicates.some(({p,field})=>!field||field.visibility!=='visibleNow'||field.timelineId!==entry.scope.timelineId||field.lastObservedRef!==o.observationId||Date.parse(field.observedAt)<captured||Date.parse(field.observedAt)>received||Date.parse(field.freshUntil)<=now||!isDeepStrictEqual(field.value,p.expectedValue)))return no();
+  const freshUntil=Math.min(expiry,...predicates.map(({field})=>Date.parse(field!.freshUntil))),monoDeadline=startMono+freshUntil-now;
+  frozen(o);frozen(proposal);let retired=false,checking=false,lastNow=now;
+  const isCurrent=()=>{
+   if(retired||checking){retired=true;return false;}checking=true;
+   try{const time=clock();if(!Number.isSafeInteger(time)||time<lastNow||time>=freshUntil||performance.now()>=monoDeadline||boundary.maxPlanningAgeMs!==maxAge||boundary.maxPlanningFrameDelta!==maxDelta||boundary.maximumObservationAgeMs!==observationAge||boundary.validatorRef!==validatorRef||boundary.observationCurrent!==qualify||(boundary.now??Date.now)!==clock||!gameProposalMatchesPreparedContext(view,binding,decision,proposal)||qualify(o)!==true){retired=true;return false;}
+    const after=clock();if(retired||boundary.maxPlanningAgeMs!==maxAge||boundary.maxPlanningFrameDelta!==maxDelta||boundary.maximumObservationAgeMs!==observationAge||boundary.validatorRef!==validatorRef||boundary.observationCurrent!==qualify||(boundary.now??Date.now)!==clock||!Number.isSafeInteger(after)||after<time||after>=freshUntil||performance.now()>=monoDeadline||!gameProposalMatchesPreparedContext(view,binding,decision,proposal)){retired=true;return false;}lastNow=after;return true;
+   }catch{retired=true;return false;}finally{checking=false;}
+  };
+  if(!isCurrent())return no();
+  const validation:DispatchValidation=frozen({planningObservationId:planning.observationId,dispatchObservationId:o.observationId,dispatchObservationRevision:o.revision,checkedFrameNumber:o.frameNumber,checkedAt:new Date(now).toISOString(),validatorRef,predicateChecks:predicates.map(({p,field})=>({predicateId:p.predicateId,fieldId:p.fieldId,observedValue:field!.value,matched:true as const,sourceObservationId:o.observationId})),planningCapturedAt:planning.capturedAt,planningFrameNumber:planning.frameNumber,preparedContextFreshUntil:new Date(freshUntil).toISOString()});
+  if(!isCurrent())return no();const selection:GameDispatchSelection=frozen({status:'selected',validation,isCurrent});dispatchSelections.set(selection,validation);return selection;
+ }catch{return no();}
+}
+/** Only the original still-current host selection exposes canonical metadata.
+ * A copied wrapper or DTO cannot renew its identity or controller authority. */
+export function gameDispatchValidationFor(selection:GameDispatchSelection):Readonly<DispatchValidation>|null{
+ const validation=dispatchSelections.get(selection);return validation&&selection.isCurrent()?validation:null;
+}
 /** Typed game wrapper around the same compact journal; this creates no action,
  * save, runtime run, alternate Assistant or extra inference prompt section. */
 export function selectGameCampaignContext(value:GameCampaignContextInput,boundary:GameCampaignContextBoundary):GameCampaignContextSelection{

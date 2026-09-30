@@ -121,3 +121,15 @@ matched emulator-only presentation/control and actual per-platform evidence
 still require independent qualification. The tool starts no measurement run,
 provider, camera, game, save, schedule or contact, and creates a fresh owner-only
 report outside connected repository roots.
+
+Fresh dispatch validation binds the original genuinely prepared proposal to a
+separately qualified observation, within configured planning age, frame delta
+and observation-age limits. Every typed precondition must still be visible now,
+in the exact timeline and observation, with matching value and current expiry.
+The resulting metadata preserves both planning and dispatch capture/frame
+identity and never extends the prepared source's expiry. Source/configuration
+withdrawal, rollback, expiry and reentrant qualification retire the selection;
+copied views, decisions or selection wrappers cannot donate identity. This
+deterministic check dispatches nothing: independently issued current capability
+admission, budget/idempotency accounting and atomic actual native frame/input
+ownership checks remain required immediately before controller entry.
