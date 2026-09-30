@@ -103,6 +103,10 @@
     {
       "log": "tifa-s092-controller-reservations-workspace.log",
       "cause": "Cumulative checkpoint changedFiles included prior S094 scorer path absent from allowedFiles. Restored its exact owned path; no historical changed-file deletion or unrelated source staged."
+    },
+    {
+      "log": "tifa-s092-controller-reservations-workspace-receipt.log",
+      "cause": "Receipt helper used a descriptive validation result instead of the checkpoint pass/fail enum. Normalized to pass with repair details retained in evidence; current workspace-receipt-fixed check passes."
     }
   ],
   "evidenceCorrection": "The earlier S092-dispatch-context receipt described its workspace check as passing, but its retained log reports the missing cumulative scorer scope path. The preceding S094 workspace check passed before its evidence update added that historical changed-file entry. Those historical claims are superseded only for workspace aid validation by this explicit correction; full source results remain unchanged. Current repaired workspace check passes.",
@@ -225,6 +229,16 @@
       "path": "/tmp/tifa-s092-controller-reservations-workspace.log",
       "sha256": "067045e36a123811ec34c40605b1354abe81a767954738b083a979e3855097fd",
       "bytes": 56
+    },
+    "tifa-s092-controller-reservations-workspace-receipt.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-workspace-receipt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s092-controller-reservations-workspace-receipt-fixed.log": {
+      "path": "/tmp/tifa-s092-controller-reservations-workspace-receipt-fixed.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
     }
   }
 }

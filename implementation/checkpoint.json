@@ -3479,7 +3479,7 @@
     },
     {
       "command": "pnpm test",
-      "result": "pass after noted repairs",
+      "result": "pass",
       "evidence": "implementation/evidence/LS-S092-controller-reservations-1.json"
     },
     {
@@ -3499,7 +3499,7 @@
     },
     {
       "command": "node scripts/workspace.mjs check",
-      "result": "pass after noted repairs",
+      "result": "pass",
       "evidence": "implementation/evidence/LS-S092-controller-reservations-1.json"
     },
     {
