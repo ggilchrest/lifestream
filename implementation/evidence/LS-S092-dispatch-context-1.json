@@ -1,0 +1,171 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S092",
+  "component": "genuine prepared proposal fresh-dispatch observation validation",
+  "componentStatus": "verified",
+  "wholeSliceStatus": "inProgress",
+  "recordedAt": "2026-09-30T20:28:27.919508Z",
+  "sourceRevision": "8aab301e99e14bf51ce1a37fe4cea5363e8e53c7",
+  "sourceFiles": [
+    "docs/local-game-acceptance.md",
+    "packages/runtime/src/activity/game-journal.ts",
+    "packages/runtime/test/game-dispatch-context.test.ts"
+  ],
+  "verification": {
+    "fullSource": {
+      "revision": "8aab301e99e14bf51ce1a37fe4cea5363e8e53c7",
+      "pass": 2426,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 111618.862084
+    },
+    "focused": {
+      "pass": 92,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 719.767417
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6745.072709
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "generatedGameTypes": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types packages/runtime/test/game-dispatch-context.test.ts packages/runtime/test/prepared-game-context.test.ts packages/runtime/test/activity-game-journal.test.ts",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/generate-provider-types.mjs --game --check",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual genuine prepared turn/view/binding and canonical nine-section inference request metadata produce the original decision and proposal identity. Deterministic fresh-observation validation permits unchanged visible typed predicates at a newer bounded frame; exact scope/pins/chronology/screenshot/field/timeline/source identity and configured planning age/frame/observation limits constrain selection without extending prepared expiry. Copy/hostile data, altered/expired/foreign/withdrawn sources, configuration changes, clock rollback, reentrant and late withdrawal are refused. Metadata selection retires irreversibly.",
+    "scripted": "All planning/fresh observation pixels/visible-state/decoder/meaningful-source and current installed/graphical/input qualification predicates are scripted. No actual model, native controller, capability grant/admission, save, game effect, native outcome or Human acceptance was executed."
+  },
+  "limitations": [
+    "Whole S092/Phase16 remains inProgress. Durable action budget/idempotency and existing governed capability admission plus exact current native frame/input ownership and actual controller/outcome integration remain independently required.",
+    "The selector performs no dispatch and grants no live effect. Actual reviewed Lua/installed emulator/game/visible-state/per-platform/native-save/model/performance/Human qualification and canonical trace remain open.",
+    "Original24 S083/S084/iPhone Human journeys, selected-model causal/onset failures and primary S066/full LS-TEST-084 pending verification preserved. Installed candidate/services/Telegram/backup unchanged; no export/publication/live camera/game/save/contact/schedule/provider effects."
+  ],
+  "retainedFailures": [
+    {
+      "log": "tifa-s092-dispatch-context-focused-initial.log",
+      "cause": "New fixture declared runtime source revision without matching runtime-self context; canonical finalized request refused it. Intermediate empty source-revision attempt was refused by existing nonempty seed guard. Corrected to the actual fixture journal revision used by existing prepared-game tests; no canonical guard weakened."
+    },
+    {
+      "log": "tifa-s092-dispatch-context-focused-repaired.log",
+      "cause": "Intermediate empty source-revision seed refused; preserved as fixture failure. Final92focused tests pass."
+    }
+  ],
+  "ownedOperation": {
+    "operation": "S092 genuine fresh dispatch validation exact-revision full source suite",
+    "sourceRevision": "8aab301e99e14bf51ce1a37fe4cea5363e8e53c7",
+    "startedAt": "2026-09-30T20:24:29.171936+00:00",
+    "wrapperPid": 17993,
+    "log": "/tmp/tifa-s092-dispatch-context-full.log",
+    "status": "completed",
+    "childPid": 17996,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T20:26:21.005653+00:00"
+  },
+  "primaryCheckpoint": "LS-S066 implementationCompleteVerificationPending; full LS-TEST-084 preserved",
+  "installedCandidateChanged": false,
+  "appGoalControlSet": false,
+  "runDisposition": "continue",
+  "nextAction": "Continue dependency-ready S092 governed dispatch custody and finite action budget integration through existing owners; actual native/platform/provider/performance/Human and canonical trace gates remain open.",
+  "logDigests": {
+    "tifa-s092-dispatch-context-browser.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-browser.log",
+      "sha256": "541c5dbe9dd63d213b501d37ce617f988922af9f09525ca369f09e9d54978a6a",
+      "bytes": 23883
+    },
+    "tifa-s092-dispatch-context-build.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-build.log",
+      "sha256": "14b2de3ae2388bd403a73838e989c793b470a54b69d927582de20898379a42aa",
+      "bytes": 1074
+    },
+    "tifa-s092-dispatch-context-diff.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s092-dispatch-context-focused-current.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-focused-current.log",
+      "sha256": "fe73f9bf29b3d0f2388d3348225c0df518907816536bd6dad4fd927a369aff49",
+      "bytes": 6737
+    },
+    "tifa-s092-dispatch-context-focused-initial.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-focused-initial.log",
+      "sha256": "e59cd49bb6216749a8d544f76e4ffba9d2f3d6b593a40874dbe0c45ea298eeca",
+      "bytes": 47815
+    },
+    "tifa-s092-dispatch-context-focused-repaired.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-focused-repaired.log",
+      "sha256": "8deb15cda4a3c86f56d11c6f03a2ea1a057b032107f472eec72973b745febd16",
+      "bytes": 42237
+    },
+    "tifa-s092-dispatch-context-full.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-full.log",
+      "sha256": "446539ad86edf525061df548e68b1358fff2e0ad8182bd5a246b62239828c85a",
+      "bytes": 259927
+    },
+    "tifa-s092-dispatch-context-generated.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-generated.log",
+      "sha256": "63a593193a445ae597b19fe70b8b3d5ebab10f080cd897c1a2a3655bd7dc4c6f",
+      "bytes": 140
+    },
+    "tifa-s092-dispatch-context-lint.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s092-dispatch-context-preflight.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-preflight.log",
+      "sha256": "067045e36a123811ec34c40605b1354abe81a767954738b083a979e3855097fd",
+      "bytes": 56
+    },
+    "tifa-s092-dispatch-context-private.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-private.log",
+      "sha256": "a0d1d51739a8738a6621e1c68cee04be91d0a6bba1298f1c5a748982e777498b",
+      "bytes": 28890
+    },
+    "tifa-s092-dispatch-context-typecheck-current.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-typecheck-current.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-dispatch-context-typecheck.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s092-dispatch-context-workspace.log": {
+      "path": "/tmp/tifa-s092-dispatch-context-workspace.log",
+      "sha256": "067045e36a123811ec34c40605b1354abe81a767954738b083a979e3855097fd",
+      "bytes": 56
+    }
+  },
+  "milestoneDistinctions": [
+    "Only genuine original prepared decision/view/binding and grounded proposal can select dispatch metadata; copied wrappers cannot donate source identity.",
+    "Fresh unchanged typed predicates may admit a newer frame within configured age/frame limits; no timestamp/source currency can be self-renewed.",
+    "Host qualification and canonical metadata are not actual capability admission, controller authority, atomic native frame/input ownership or I/O.",
+    "Selection retires after source/configuration/expiry/rollback/reentrant withdrawal; no later restored callback revives it."
+  ]
+}
