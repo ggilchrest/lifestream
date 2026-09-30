@@ -141,3 +141,24 @@ historical entries and limited save metadata, without save bytes or executable c
 SQLite restart/forgetting tests use scripted game/save/source predicates. Actual save
 readback, older-save load, field decoding, runtime checkpoint/prepared-view integration
 and autonomous next-task behavior remain separate implementation and qualification.
+
+
+`prepareGameCampaignContext` binds an authentic immutable selection to one
+host-created prepared activity view with exact Assistant/owner/relationship and
+logical conversation/session/endpoint identity. Copies, accessors, another view and
+model-authored current callbacks cannot supply that identity. The existing prompt
+assembler admits it only for internal logical activity planning, with empty Human
+input and no voice/social opening/camera projection. It creates no public activity
+origin or widened wire enum, runtime enrollment, controller or delivery authority.
+Game data enter the same untrusted conversation section; nine-section order,
+selected Assistant identity, prepared memory and world/capability context remain.
+The canonical prepared view and manifest retain exact source identities and
+content digests. Game freshness tightens source expiry without extending other
+sources. Reuse through `requestForFinalizedTurn` checks the same prepared selection
+before admission and after asynchronous work; forgetting/reconciliation/source
+withdrawal permanently retires it. Callers must perform that check before using a
+late result. Tests assemble real canonical prepared requests, exercise actual
+SQLite reopen/forgetting and a scripted asynchronous provider. They do not prove
+selected-model planning, actual gameplay/save reconciliation or Human delivery.
+The runtime activity coordinator, durable lifecycle/checkpoint, native bridge and
+separate foreground history/help selection remain implementation work.
