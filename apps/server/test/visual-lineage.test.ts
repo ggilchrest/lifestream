@@ -15,12 +15,13 @@ import {correlateVisualLineage,replayVisualLineage,type VisualLineageInput} from
 import {evaluateVisualConversationFile} from '../../../scripts/qualify-visual-conversation.mjs';
 
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+5gz/qwAAAABJRU5ErkJggg==','base64');
-async function fixture(t:import('node:test').TestContext,modality:'text'|'audio'='text',mockTimeouts=false){
+async function fixture(t:import('node:test').TestContext,modality:'text'|'audio'='text',mockTimeouts=false,brokenIntakeClock=false){
  t.mock.timers.enable({apis:mockTimeouts?['Date','setTimeout']:['Date'],now:Date.now()});
  const owner={principalId:randomUUID(),assistantId:randomUUID(),relationshipId:randomUUID()},actor={principalId:owner.principalId,assistantId:owner.assistantId,sessionId:randomUUID()},scope={...actor,relationshipId:owner.relationshipId,environmentId:randomUUID(),conversationId:randomUUID(),endpointId:randomUUID(),sessionRevision:1,audienceRevision:1,scopeGeneration:1};
  const db=new Database({path:':memory:'});db.migrate();const memories=new MemoryRepository(db);
- let mono=10000,utc=Date.now(),providerCalls=0;
- const worker=new AutomaticMemory({database:db,memories,provider:()=>({revision:'unused',provider:{async *generate(){providerCalls++;yield {kind:'done' as const};}}}),idle:()=>true,scopeAllowed:()=>true,changed:()=>{}});
+ let mono=10000,utc=Date.now(),providerCalls=0,scopeAllowed=true,scopeHook=()=>{},idle=true,nextSequence=1;
+ const worker=new AutomaticMemory({database:db,memories,provider:()=>({revision:'unused',provider:{async *generate(){providerCalls++;yield {kind:'done' as const};}}}),idle:()=>idle,scopeAllowed:()=>{scopeHook();return scopeAllowed;},changed:()=>{}});
+ if(brokenIntakeClock)(worker as any).visualIntakeJournal.clocks.utcMs=()=>{throw Error('PRIVATE_DIAGNOSTIC_CLOCK');};
  const visual=new VisualInputHost({scopeFor:()=>scope,sourceFor:()=>({bindingRef:'PRIVATE_SYNTHETIC_CAMERA_PATH',connected:true,configurationRevision:1}),
   captureAuthority:()=>({sourceConnected:true,devicePermission:true,hostCaptureLease:true,interpretationAllowed:true,remoteEgressAllowed:false,foregroundVisible:true}),monotonicMs:()=>mono,utcMs:()=>utc,
   provider:fixtureVisualProvider(request=>({requestId:request.requestId,status:'complete',observations:[{observationId:randomUUID(),frameIds:[request.frames[0]!.frameId],appearance:'PRIVATE_SYNTHETIC_SCENE_PROSE',inference:null,confidence:null,limitations:['Scripted perception, no real camera.']}],reason:null})),
@@ -42,8 +43,8 @@ async function fixture(t:import('node:test').TestContext,modality:'text'|'audio'
   const episodes=worker.inspect(owner).visual.episodes.filter(row=>row.episode!==null).map(row=>row.episode!),projections=episodes.filter(e=>e.memoryRecordId).map(episode=>({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:memories.get(owner.assistantId,episode.memoryRecordId!)!.provenance.canonical}) as VisualMemoryProjection);
   return {publications:visual.publicationReceipts(actor),turns:visual.turnReceipts(actor),episodes,projections,terminalSources:[],lifecycle:visual.lifecycleReceipts(actor)};
  };
- return {input,worker,owner,memories,visual,actor,providerCalls:()=>providerCalls,advance:(ms:number)=>{mono+=ms;utc+=ms;t.mock.timers.tick(ms);},nextBatch:(copied?:()=>void,invalid=false)=>{
-  mono+=1100;t.mock.timers.tick(1100);utc=Date.now();const frameId=randomUUID();return visual.batch(actor,{leaseId:lease.leaseId!,endpointClockId:'synthetic-clock',correlationId:randomUUID(),frames:[{frameId,sequence:1,capturedMonotonicMs:mono-5010,clockMappingId:lease.clockMappingId!,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]},new Map([[frameId,invalid?Buffer.from('NOT_AN_IMAGE'):png]]),copied);
+ return {input,worker,owner,memories,visual,actor,providerCalls:()=>providerCalls,denyScope:()=>scopeAllowed=false,busy:(value:boolean)=>idle=!value,scopeHook:(hook:()=>void)=>scopeHook=hook,advance:(ms:number)=>{mono+=ms;utc+=ms;t.mock.timers.tick(ms);},nextBatch:(copied?:()=>void,invalid=false)=>{
+  mono+=1100;t.mock.timers.tick(1100);utc=Date.now();const frameId=randomUUID();return visual.batch(actor,{leaseId:lease.leaseId!,endpointClockId:'synthetic-clock',correlationId:randomUUID(),frames:[{frameId,sequence:nextSequence++,capturedMonotonicMs:mono-5010,clockMappingId:lease.clockMappingId!,mediaType:'image/png',sha256:createHash('sha256').update(png).digest('hex')}]},new Map([[frameId,invalid?Buffer.from('NOT_AN_IMAGE'):png]]),copied);
  }};
 }
 
@@ -211,4 +212,22 @@ test('lifecycle closed-shape and no-authority boundaries reject secret text, exc
 test('offline file qualifier replays actual isolated host/SQLite lifecycle join with no scene or raw-ID export',async t=>{
  const f=await fixture(t),dir=await mkdtemp(join(tmpdir(),'visual-lifecycle-join-'));t.after(()=>rm(dir,{recursive:true,force:true}));const path=join(dir,'input.json'),output=join(dir,'report.json');await writeFile(path,JSON.stringify(f.input()),{mode:0o600});
  const result=await evaluateVisualConversationFile(path,output),report=JSON.parse(await readFile(output,'utf8'));assert.equal(result.status,'partialDiagnosticCorrelation');assert.equal(result.metadataReplayEqual,true);assert.equal(result.claimsRuntimeAcceptance,false);assert.deepEqual(report.correlation.contradictions,[]);assert.deepEqual(report.correlation.missingEvidence,[]);assert.equal(report.events.filter((e:any)=>e.payload.kind==='lifecycle').length,3);assert.doesNotMatch(JSON.stringify(report),/PRIVATE_|sourceBindingRef/);assert.equal(f.providerCalls(),0);assert.equal(f.input().episodes.length,1);
+});
+
+test('actual visual-memory worker preserves pre-retention queued and typed retained history without recalling it',async t=>{
+ const f=await fixture(t);await Promise.resolve();const history=f.worker.visualIntakeHistory(f.owner);assert.deepEqual(history.map(row=>row.state),['queued','retained']);assert.equal(history[0]!.requestDigest,createHash('sha256').update(f.input().publications[0]!.admission.requestId).digest('hex'));assert.ok(history.every(row=>row.producerScope==='backgroundVisualMemoryIntake'&&row.authority===false));assert.doesNotMatch(JSON.stringify(history),/PRIVATE_|sessionId|interactionId/);assert.equal(f.input().episodes.length,1);assert.equal(f.memories.contextRecords(f.owner.assistantId,f.owner.principalId).length,1);assert.equal(f.providerCalls(),0);
+ assert.deepEqual(f.worker.visualIntakeHistory({...f.owner,relationshipId:randomUUID()}),[]);
+});
+
+test('owned history rechecks late scope withdrawal and close',async t=>{
+ const f=await fixture(t);await Promise.resolve();assert.equal(f.worker.visualIntakeHistory(f.owner).length,2);let reads=0;f.scopeHook(()=>{if(++reads===2)f.denyScope();});assert.deepEqual(f.worker.visualIntakeHistory(f.owner),[]);assert.equal(reads,2);f.scopeHook(()=>{});await f.worker.close();assert.deepEqual(f.worker.visualIntakeHistory(f.owner),[]);
+});
+
+test('broken intake diagnostics never prevent later actual source retention or canonical projection',async t=>{
+ const f=await fixture(t,'text',false,true);assert.equal(f.input().episodes.length,1);assert.equal(f.memories.contextRecords(f.owner.assistantId,f.owner.principalId).length,1);assert.deepEqual(f.worker.visualIntakeHistory(f.owner),[]);await f.nextBatch();await f.worker.tick();assert.equal(f.input().episodes.length,1,'repeated appearance still obeys its independent admission bound');assert.ok(f.worker.inspect(f.owner).visual.intakeReceipts.some(row=>row.state==='appearanceBound'));assert.equal(f.providerCalls(),0);
+});
+
+
+test('actual busy worker records replacement and admission denial without retaining repeated appearance',async t=>{
+ const f=await fixture(t);f.busy(true);await f.nextBatch();await f.nextBatch();await Promise.resolve();const queued=f.worker.visualIntakeHistory(f.owner);assert.deepEqual(queued.map(row=>row.state),['queued','retained','queued','replaced','queued']);assert.equal(queued[2]!.requestDigest,queued[3]!.requestDigest);assert.notEqual(queued[3]!.requestDigest,queued[4]!.requestDigest);await f.worker.tick();assert.equal(f.input().episodes.length,1);f.busy(false);await f.worker.tick();await Promise.resolve();assert.equal(f.worker.visualIntakeHistory(f.owner).at(-1)!.state,'appearanceBound');assert.equal(f.input().episodes.length,1);assert.equal(f.providerCalls(),0);
 });

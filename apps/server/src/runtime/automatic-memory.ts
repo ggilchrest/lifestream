@@ -4,6 +4,7 @@ import type {VisualTransformationConfidence} from '@lifestream/contracts/visual-
 import {buildCanonicalPrompt} from '@lifestream/runtime/inference/prompt';
 import type {InferenceProvider} from '@lifestream/runtime/inference';
 import {visualPublicationEpisode,type VisualMemoryPublication,type VisualMemorySelection} from './visual-memory-intake.ts';
+import {VisualMemoryEvidence} from './visual-memory-evidence.ts';
 export type MemoryScope={principalId:string;assistantId:string;relationshipId:string};
 type Item={key:string;kind:'preference'|'proceduralHint'|'conversationSummary'|'relational'|'experiential';quote:string;subject:'owner';epistemic:'userStatement'};
 type Work={id:string;scope:string;source:string;revision:number;input:string;prepared:string|null;attempts:number;expires:number;state:string;reason:string|null};
@@ -67,9 +68,15 @@ export class AutomaticMemory {
  private readonly changed:()=>void;private timer:ReturnType<typeof setInterval>;private controller:AbortController|null=null;private activeWork:{id:string;expires:number}|null=null;private closed=false;
  private readonly visualPending=new Map<string,{publication:VisualMemoryPublication;selection:VisualMemorySelection;scope:MemoryScope;memoryRevision:number;visualRevision:number}>();
  private readonly visualIntakeReceipts=new Map<string,{scope:MemoryScope;requestId:string;state:string;expires:number}>();
+ private readonly visualIntakeJournal=new VisualMemoryEvidence();
  private noteVisual(scope:MemoryScope,requestId:string,state:string){
   const id=hash([key(scope),requestId]);this.visualIntakeReceipts.delete(id);this.visualIntakeReceipts.set(id,{scope,requestId,state,expires:Date.now()+60000});
   if(this.visualIntakeReceipts.size>128)this.visualIntakeReceipts.delete(this.visualIntakeReceipts.keys().next().value!);
+  this.visualIntakeJournal.record(scope,requestId,state);
+ }
+ /** Internal owner-scoped diagnostics only; never part of model input or recall. */
+ visualIntakeHistory(scope:MemoryScope){
+  try{if(this.closed||!this.scopeAllowed(scope))return Object.freeze([]);const receipts=this.visualIntakeJournal.receipts(scope);return !this.closed&&this.scopeAllowed(scope)?receipts:Object.freeze([]);}catch{return Object.freeze([]);}
  }
  constructor(options:{database:Database;memories:MemoryRepository;provider:()=>{provider:InferenceProvider;revision:string};idle:()=>boolean;changed:()=>void;scopeAllowed?:(scope:MemoryScope)=>boolean;contentAllowed?:(scope:MemoryScope,content:string)=>boolean}){
   this.scopeAllowed=options.scopeAllowed??(()=>true);this.contentAllowed=options.contentAllowed??(()=>true);this.database=options.database;this.memories=options.memories;this.provider=options.provider;this.idle=options.idle;this.changed=options.changed;
@@ -229,5 +236,5 @@ export class AutomaticMemory {
    if(!this.closed)this.database.connection.prepare("UPDATE automatic_memory_work SET state=CASE WHEN attempts<2 THEN CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END ELSE 'failed' END,reason='extraction_or_persistence_failed' WHERE id=? AND state IN ('running','prepared') AND expires_at>?").run(work.id,Date.now());
   }finally{clearTimeout(timeout);this.sweepExpired();if(this.controller===controller){this.controller=null;this.activeWork=null;}}
  }
- async close(){this.closed=true;this.visualPending.clear();this.visualIntakeReceipts.clear();clearInterval(this.timer);this.controller?.abort();while(this.controller)await new Promise(r=>setTimeout(r,5));}
+ async close(){this.closed=true;this.visualIntakeJournal.close();this.visualPending.clear();this.visualIntakeReceipts.clear();clearInterval(this.timer);this.controller?.abort();while(this.controller)await new Promise(r=>setTimeout(r,5));}
 }

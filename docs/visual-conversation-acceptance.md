@@ -53,6 +53,15 @@ lineage, without reopening capture or granting authority.
 
 The full visual lifecycle trace remains incomplete: pre-retention memory admission
 is not joined and missing receipts do not establish event completeness.
+The memory worker separately exposes owner-scoped `visualIntakeHistory`: bounded
+asynchronous background receipts preserve queued, replaced, denied, expired and
+retained decisions instead of overwriting each request's earlier milestone. They
+contain only hashed owner/request references and closed diagnostic states, with
+the same 128 pending/128 retained and lazy 60-second dual-clock bounds. Owner
+permission is rechecked on inspection; close removes pending history. No Human
+turn/session is created, and neither diagnostic state nor its inspection supplies
+consent, recall content, source currency or learning. Its offline replay join and
+canonical trace integration remain pending.
 Production trace/replay integration remains pending; these internal diagnostics
 are separate from the closed canonical trace envelope and its event catalogue.
 Selected-provider physical input, unannounced animal interpretation, historical
