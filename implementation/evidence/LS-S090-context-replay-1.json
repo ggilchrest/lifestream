@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "sliceStatus": "inProgress",
+  "component": "canonical finalized-context source correlation and isolated semantic replay",
+  "componentStatus": "verified",
+  "recordedAt": "2026-09-30T22:04:42.388567Z",
+  "sourceRevision": "324a4a3a7a588a5156ee3a284d68c3cb3d4a40df",
+  "sourceFiles": [
+    "apps/server/src/runtime/turn-context-trace.ts",
+    "apps/server/test/turn-context-trace.test.ts",
+    "docs/visual-conversation-acceptance.md"
+  ],
+  "ownedOperation": {
+    "operation": "S090 canonical context lineage and isolated semantic replay exact-revision full source suite",
+    "sourceRevision": "324a4a3a7a588a5156ee3a284d68c3cb3d4a40df",
+    "startedAt": "2026-09-30T22:00:19.024548+00:00",
+    "wrapperPid": 39941,
+    "log": "/tmp/tifa-s090-context-replay-full.log",
+    "status": "completed",
+    "childPid": 39947,
+    "exitCode": 0,
+    "completedAt": "2026-09-30T22:02:14.108024+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "324a4a3a7a588a5156ee3a284d68c3cb3d4a40df",
+      "pass": 2528,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 114650.748458
+    },
+    "focused": {
+      "pass": 93,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 6931.821459
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6829.218083
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types apps/server/test/turn-context-trace.test.ts apps/server/test/visual-turn-evidence.test.ts apps/server/test/visual-context.test.ts apps/server/test/visual-lineage.test.ts",
+    "pnpm lint",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "npm --prefix .private run validate",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual finalized trace/receipt scope-time-manifest/section correlation, closed canonical replay envelopes, preserved source event IDs/time/digests with distinct replay environment and explicit virtual monotonic clock; exact copies/proxies/getters/mismatches refused without authority callbacks. Isolated authenticated HTTP/SQLite context regressions.",
+    "scripted": "Image/provider/inference/source capture/lease and fixture clocks remain synthetic; no actual perception/native/game/save/contact, physical/performance/platform or Human acceptance."
+  },
+  "retainedFailures": [],
+  "milestoneDistinctions": [
+    "Finalized context metadata join is separate from current source eligibility, provider admission, output generation/delivery and memory retention.",
+    "Pure semantic replay takes only genuine retained context metadata; no media/provider/storage/action callback or durable reinforcement. Copies and prior replay cannot mint a normal source.",
+    "New replay trace/event/environment IDs link each original canonical event via nonempty sourceEventIds. Original source time, payload refs and manifest bytes/digests preserved.",
+    "Explicit source-relative virtual clock map preserves original monotonic timeline without claiming new native or performance measurements.",
+    "Restricted bounded lazy-expiry host journal remains the source owner. Historical held metadata after reset carries no renewed source/learning/effect authority."
+  ],
+  "limitations": [
+    "Whole S090/S094/Phase16 inProgress. Complete canonical capture/perception/memory/controller/native lifecycle and durable trace sink/joined replay remain incomplete.",
+    "Existing event/artifact semantics close actual context milestones, but negotiation/enablement/drop/expiry and background control are not to be mislabeled as context source-use or provider health. Additional exact canonical extension/export may be needed after coverage assessment; no export authority inferred.",
+    "No installed candidate update or live authority; actual reviewed native source/bridge/decoder/GUI/pause/save, selected image-provider/resource/performance and permitted remote-help delivery/authentication/Human gates remain open.",
+    "S093 authenticated-help ingestion remains scoped separately from generic automatic-memory capture; question changed no capture rule or cross-game semantics.",
+    "Primary S066/full LS-TEST-084 and accepted original24/iPhone journeys preserved. Callback/causal failures and900msmedian/1500msp95onset targets unwaived. No public push/publication/deployment/new private export or live effect."
+  ],
+  "nextAction": "Continue exact selected-source trace/context joins through existing prepared-memory compiler and source owners; retain complete lifecycle, actual provider/native/platform/performance/Human and scoped authenticated-help ingestion gates. Do not infer new contract export, generic capture or installed promotion authority.",
+  "logDigests": {
+    "tifa-s090-context-replay-browser.log": {
+      "path": "/tmp/tifa-s090-context-replay-browser.log",
+      "sha256": "b76cecc086876997de4597522b85f9bc7bbe551213bda3dc6391195adda0209d",
+      "bytes": 23872
+    },
+    "tifa-s090-context-replay-build.log": {
+      "path": "/tmp/tifa-s090-context-replay-build.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s090-context-replay-diff.log": {
+      "path": "/tmp/tifa-s090-context-replay-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-context-replay-focused.log": {
+      "path": "/tmp/tifa-s090-context-replay-focused.log",
+      "sha256": "328a14a206efc0613a07c19ccee7d4c9ee0f22c2bfd8dad509256342ddcf58be",
+      "bytes": 1584
+    },
+    "tifa-s090-context-replay-full.log": {
+      "path": "/tmp/tifa-s090-context-replay-full.log",
+      "sha256": "c276f1a5e88d2a4acf01f1ea148a29cd10a759df94065b1bab7a922ea78f17c7",
+      "bytes": 269967
+    },
+    "tifa-s090-context-replay-integration.log": {
+      "path": "/tmp/tifa-s090-context-replay-integration.log",
+      "sha256": "8eb935d3ddca9a3353634c83bfb230e0d22a5aae4bc45725119c9f070b2c1c6a",
+      "bytes": 10713
+    },
+    "tifa-s090-context-replay-lint.log": {
+      "path": "/tmp/tifa-s090-context-replay-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-context-replay-preflight.log": {
+      "path": "/tmp/tifa-s090-context-replay-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s090-context-replay-private.log": {
+      "path": "/tmp/tifa-s090-context-replay-private.log",
+      "sha256": "427fb3241fd3b0b1a008e5921820a7b48d95441519f5d3bac7b66ffabf6d8738",
+      "bytes": 28879
+    },
+    "tifa-s090-context-replay-typecheck.log": {
+      "path": "/tmp/tifa-s090-context-replay-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-context-replay-workspace.log": {
+      "path": "/tmp/tifa-s090-context-replay-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
