@@ -1,5 +1,7 @@
 import {createHash} from 'node:crypto';
 import {validateVisualEpisode,type VisualObservationEpisode} from './visual-memory.ts';
+import {gameEpisodeSnapshot,gameEpisodeFamilyKey} from './game-memory.ts';
+import type {GameExperienceEpisode} from './game-activity.ts';
 export type ExperienceScope={assistantId:string;principalId:string;relationshipId:string};
 export const dimensions=['attentionGardening','attentionAstronomy','attentionReading','attentionCooking','attentionMusic','attentionGames'] as const;
 export type Dimension=typeof dimensions[number];
@@ -28,3 +30,11 @@ export function visualExperienceEpisode(source:Source):VisualObservationEpisode|
  try{const episode=JSON.parse(source.content) as VisualObservationEpisode;if(!validateVisualEpisode(episode).valid||episode.state!=='retained'||episode.correctionRefs.length||source.id!==`visual-episode:${episode.episodeId}`||source.revision!==episode.revision||source.family!==`visual:${episode.independenceKeys[0]}`||source.occurredAt!==episode.occurredAt||source.digest!==createHash('sha256').update(source.content).digest('hex')||episode.sourceDigest!==createHash('sha256').update(JSON.stringify({scope:episode.scope,observations:episode.observations})).digest('hex'))return null;return episode;}catch{return null;}
 }
 export const isVisualExperienceSource=(source:Source)=>source.id.startsWith('visual-episode:')||source.family.startsWith('visual:');
+
+/** Same source envelope, explicitly simulated historical experience; never a
+ * participant statement, physical world assertion or preference evidence. */
+export const isGameExperienceSource=(source:Source)=>source.id.startsWith('game-episode:')||source.family.startsWith('game:');
+export function gameExperienceEpisode(source:Source,now:number):GameExperienceEpisode|null{
+ if(!isGameExperienceSource(source)||source.content.length>4000)return null;
+ try{const e=gameEpisodeSnapshot(JSON.parse(source.content),now);if(!e||e.rawEvidenceAvailability!=='notRetained'||e.adviceRefs.length||source.id!==`game-episode:${e.episodeId}`||source.revision!==e.revision||source.family!==`game:${gameEpisodeFamilyKey(e)}`||source.occurredAt!==e.occurredFrom||source.digest!==createHash('sha256').update(source.content).digest('hex'))return null;return e;}catch{return null;}
+}

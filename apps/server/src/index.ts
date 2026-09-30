@@ -9,7 +9,7 @@ import {AuthenticatedSessionHandoff,HandoffError,type HandoffScope} from './runt
 import {experienceRetentionSuspended} from './admin/experience-recovery.ts';
 import {retainedExperienceSources} from './runtime/experience-inputs.ts';
 import {ExperientialLearning} from './runtime/experience.ts';
-import {isVisualExperienceSource,dimensions as experienceDimensions,type ExperienceScope,type ExperiencePolicy,type Source as ExperienceSource} from '@lifestream/contracts/experience';
+import {isGameExperienceSource,isVisualExperienceSource,dimensions as experienceDimensions,type ExperienceScope,type ExperiencePolicy,type Source as ExperienceSource} from '@lifestream/contracts/experience';
 import {AcknowledgmentCatalogService,type AcknowledgmentAlignment} from './runtime/acknowledgments.ts';
 import {acknowledgmentVoice,proposeAcknowledgments,synthesizeAcknowledgment} from './admin/acknowledgments.ts';
 import {UrgentAttentionHost,type UrgentAttentionOptions} from './runtime/urgent-attention-host.ts';
@@ -93,7 +93,7 @@ export type UrgentAwayHostOptions={destinations:Array<UrgentAwayDestination&{aut
 export type TelegramHostOptions={localAlerts?:Omit<TelegramAlertComposition,'authority'>;alerts?:TelegramAlertComposition;botId:string;token:()=>string|undefined;enabled:()=>boolean;transport?:Pick<TelegramBotApi,'verify'|'updates'|'send'>};
 import {gameMemoryContextRecord,type GameMemoryHostOptions} from './runtime/game-memory.ts';
 import {projectGameEpisode} from '@lifestream/runtime/activity/memory';
-import {gameEpisodeSnapshot} from '@lifestream/contracts/game-memory';
+import {gameEpisodeDigest,gameEpisodeSnapshot} from '@lifestream/contracts/game-memory';
 import type {GameExperienceEpisode} from '@lifestream/contracts/game-activity';
 export type ServerOptions = { gameMemory?:GameMemoryHostOptions; telegram?:TelegramHostOptions; urgentAway?:UrgentAwayHostOptions; urgentConditions?:UrgentAttentionOptions; sessionEnvironmentId?:string; experienceTestClock?:()=>number; visualInput?:VisualInputOptions; acknowledgmentAlignment?:()=>AcknowledgmentAlignment|undefined; acknowledgmentRequiresSync?:()=>boolean; incidentReview?:PwceIncidentOptions; audiencePrivacy?: AudienceOptions; presentationPackages?: { directory: string; ownerPrincipalId?: string; catalogOnly?: boolean }; pwceActionJournal?: { create?: boolean }; initiativeSimulation?:InitiativeSimulation; config: RuntimeConfig; host?: string; port?: number; shutdownDeadlineMs?: number; controlUiDirectory?: string; profileLoader?: (profile: Profile) => RuntimeConfig; localAuth?: LocalAuthOptions; capabilityProvider?: CapabilityProvider; capabilitySchemas?:CapabilitySchemaStore; capabilityProviderIdentity?: string; canonicalAuthority?: CanonicalAuthorityHost; canonicalCapabilities?: CanonicalCapabilityComposition | null };
 type Json = Record<string, unknown>;
@@ -1554,7 +1554,15 @@ export class LifestreamServer {
     for(const key of experienceDimensions){const d=Array.isArray(declared)?asObject(declared.find(x=>asObject(x)?.key===key)):undefined;if(d&&d.valueType==='number'&&d.sensitive!==true&&d.activation==='automatic'&&typeof d.minimum==='number'&&typeof d.maximum==='number'&&d.minimum<=0&&d.maximum>=0)result.dimensions[key]={minimum:Math.max(-1,d.minimum),maximum:Math.min(1,d.maximum),delta:Math.min(.05,typeof d.maxDeltaPerDreamingRun==='number'?d.maxDeltaPerDreamingRun:.05),rolling:Math.min(.20,typeof d.maxDeltaPer30Days==='number'?d.maxDeltaPer30Days:.20),minimumEvidence:Math.max(2,typeof d.minimumIndependentEvidence==='number'?d.minimumIndependentEvidence:2),confidence:typeof d.confidenceThreshold==='number'?d.confidenceThreshold:0};}
     return result;
   }
-  private experienceSources(scope:ExperienceScope):ExperienceSource[]{const memory=this.automaticMemory.policy(scope),episodes=this.automaticMemory.retainedVisualEpisodes(scope);const sources=retainedExperienceSources(this.memories,scope,content=>this.admin.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId,content),episodes);if(this.automaticMemory.policy(scope).revision!==memory.revision||!this.admin.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId))return [];return !episodes.length||this.automaticMemory.visualEpisodesCurrent(scope,episodes,memory.revision)?sources:sources.filter(source=>!isVisualExperienceSource(source));}
+  private experienceSources(scope:ExperienceScope):ExperienceSource[]{
+    const memory=this.automaticMemory.policy(scope),episodes=this.automaticMemory.retainedVisualEpisodes(scope),game=this.gameExperience;
+    let gameEpisodes:GameExperienceEpisode[]=[];try{gameEpisodes=game?.inspect(scope).flatMap(row=>row.episode?[row.episode]:[])??[];}catch{}
+    let sources=retainedExperienceSources(this.memories,scope,content=>this.admin.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId,content),episodes,gameEpisodes,(this.experienceTestClock??Date.now)());
+    if(this.automaticMemory.policy(scope).revision!==memory.revision||!this.admin.automaticMemoryAllowed(scope.assistantId,scope.relationshipId,scope.principalId))return [];
+    if(episodes.length&&!this.automaticMemory.visualEpisodesCurrent(scope,episodes,memory.revision))sources=sources.filter(source=>!isVisualExperienceSource(source));
+    try{if(game!==this.gameExperience||gameEpisodes.some(episode=>{const current=game?.get(scope,episode.episodeId);return !current||gameEpisodeDigest(current)!==gameEpisodeDigest(episode);}))sources=sources.filter(source=>!isGameExperienceSource(source));}catch{sources=sources.filter(source=>!isGameExperienceSource(source));}
+    return sources;
+  }
   private get experience():ExperientialLearning{return this.experiential??=new ExperientialLearning(this.database,{...(this.experienceTestClock?{now:this.experienceTestClock}:{}),policy:s=>this.experiencePolicy(s),retentionPolicy:s=>this.experiencePolicy(s,true),sources:s=>this.experienceSources(s),provider:()=>{const runtime=isolatedLabRuntime(this.providers,this.config);return {provider:runtime.provider,revision:JSON.stringify(runtime.identity),...(runtime.preemptionBoundMs===undefined?{}:{preemptionBoundMs:runtime.preemptionBoundMs}),...(runtime.slotReleaseBoundMs===undefined?{}:{slotReleaseBoundMs:runtime.slotReleaseBoundMs})};},run:work=>this.admin.discovery.runBackground(work),idle:()=>this.state==='ready'&&!this.telegram?.busy&&this.automaticMemory.isIdle()&&this.admin.discovery.backgroundIdle(),changed:()=>this.invalidateRuntimeInputs()});}
   publishGameEpisode(raw:GameExperienceEpisode):{state:'retained'|'unavailable';memoryId:string|null}{
     const host=this.gameExperience,options=this.gameMemoryOptions;

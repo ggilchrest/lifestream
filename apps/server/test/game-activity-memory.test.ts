@@ -9,13 +9,15 @@ import type {InferenceProvider,InferenceRequest} from '@lifestream/runtime/infer
 import {fixtureEpisode,fixtureGameEpisodeSources} from '../../../packages/runtime/test/fixtures/game-memory.ts';
 import {createLifestreamServer} from '../src/index.ts';
 import {loadProfile} from '../src/config/loader.ts';
+import {defaultTopics,type ExperienceScope} from '@lifestream/contracts/experience';
+import type {ExperientialLearning} from '../src/runtime/experience.ts';
 
-async function setup(t:import('node:test').TestContext){
+async function setup(t:import('node:test').TestContext,retentionMs=60000){
  const root=await mkdtemp(join(tmpdir(),'ls-game-memory-http-')),config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'state.sqlite'),artifactDirectory:join(root,'artifacts')};
- let now=Date.now(),current=true,meaningful=true;const e=fixtureEpisode(now);e.summary='The gate stayed closed.';e.uncertainty='Hidden cause unknown.';const sources=fixtureGameEpisodeSources(e);
+ let now=Date.now(),current=true,meaningful=true;const e=fixtureEpisode(now);e.expiresAt=new Date(now+retentionMs).toISOString();e.summary='The gate stayed closed.';e.uncertainty='Hidden cause unknown.';const sources=fixtureGameEpisodeSources(e);
  const installerToken=randomBytes(32).toString('hex'),password=randomBytes(32).toString('hex');
  const source:GameEpisodeOptions={maximumFences:8,scopeCurrent:o=>o.principalId===e.scope.principalId&&o.assistantId===e.scope.assistantId&&o.relationshipId===e.scope.relationshipId,quarantined:()=>false,retentionFor:()=>({retentionMs:86400000,retentionPolicyRef:e.retentionPolicyRef,maximumEpisodes:4,maximumBytes:8192}),sourceRecordsFor:()=>sources,meaningfulGroundingCurrent:()=>meaningful,publicationCurrent:()=>current,retainedSourceCurrent:()=>current,now:()=>now};
- const app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'auth'),installerToken},audiencePrivacy:{sourceIds:[]},gameMemory:{source,maximumCandidates:4,estimate:()=>({value:.6,basis:'Scripted summary fidelity only, not perception truth.',policyRef:'test-only:game-transform:1'})}});
+ const app=createLifestreamServer({config,experienceTestClock:()=>now,localAuth:{stateDirectory:join(root,'auth'),installerToken},audiencePrivacy:{sourceIds:[]},gameMemory:{source,maximumCandidates:4,estimate:()=>({value:.6,basis:'Scripted summary fidelity only, not perception truth.',policyRef:'test-only:game-transform:1'})}});
  t.after(async()=>{await app.shutdown();await rm(root,{recursive:true,force:true});});await app.start();
  const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={origin:base,'content-type':'application/json'};
  const request=(path:string,body?:unknown,extra:Record<string,string>={})=>fetch(base+path,{method:body===undefined?'GET':'POST',headers:{...headers,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
@@ -26,7 +28,7 @@ async function setup(t:import('node:test').TestContext){
  await api('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession',bindingKey:randomUUID()});await api('/api/runtime/v1/audience',{mode:'solo',seconds:300});
  e.scope.principalId=identity.principalId;e.scope.assistantId=assistantId;e.scope.relationshipId=relationshipId;
  for(const record of [...sources.actions,...sources.observations])record.scope=structuredClone(e.scope);
- const internals=app as unknown as {database:Database;memories:MemoryRepository;providers:{inference:InferenceProvider}};
+ const internals=app as unknown as {database:Database;memories:MemoryRepository;providers:{inference:InferenceProvider};experience:ExperientialLearning;experienceSources:(scope:ExperienceScope)=>import('@lifestream/contracts/experience').Source[]};
  const requests:InferenceRequest[]=[];internals.providers.inference={async *generate(input){requests.push(input);yield {kind:'text',text:'Scripted historical reply.'};yield {kind:'done'};}};
  const owner={assistantId,relationshipId},path=`/api/admin/v1/assistants/${assistantId}/relationships/${relationshipId}`;
  return {app,e,source,sources,internals,requests,request,api,owner,path,identity,enable:()=>api('/api/runtime/v1/memory',{...owner,enabled:true,expectedRevision:0}),withdraw:()=>current=false,meaningless:()=>meaningful=false,advance:(ms:number)=>now+=ms,reply:()=>request('/api/runtime/v1/messages',{...owner,userInput:'Recall the gate in our past game.'})};
@@ -79,4 +81,36 @@ test('privacy target cannot cross a game memory relationship while original owne
  const denied=await f.request(path+'/privacy',{action:'forget-derived-information',expectedRevision:other.revision,idempotencyKey:randomUUID(),targets:[{kind:'memory',id:published.memoryId,revision:2}]});assert.equal(denied.status,409);
  assert.equal(f.internals.memories.get(f.owner.assistantId,published.memoryId!)!.content,f.e.summary);
  const relationship=(await f.api(f.path)).relationship;assert.equal((await f.api(f.path+'/privacy',{action:'forget-derived-information',expectedRevision:relationship.revision,idempotencyKey:randomUUID(),targets:[{kind:'memory',id:published.memoryId,revision:2}]})).receipt.status,'completed');
+});
+
+test('authenticated game source ledger joins reflection only under separate learning consent and forget scrubs lineage',{timeout:15000},async t=>{
+ const f=await setup(t,3600000);await f.enable();const published=f.app.publishGameEpisode(f.e);assert.ok(published.memoryId);
+ const scope={...f.owner,principalId:f.identity.principalId},path=f.path+'/experience/v1',service=f.internals.experience;
+ let view=await f.api(path);assert.equal(view.state.configuration.enabled,false);assert.equal(f.internals.experienceSources(scope).length,1);
+ await service.tick();assert.equal(service.repository.read(scope).funnel.eligible,0);assert.equal(f.requests.length,0);
+ await f.api(path,{schemaVersion:'1.0.0',operation:'configure',expectedRevision:view.state.revision,enabled:true,frozen:false,retention:'sourceBound',topicPolicies:defaultTopics});
+ await service.tick();view=await f.api(path);assert.equal(view.state.funnel.eligible,1);assert.equal(view.state.funnel.calls,0);
+ assert.equal(f.internals.database.connection.prepare('SELECT count(*) AS n FROM experience_turns').get()!.n,0,'game sources cannot manufacture completed Human turns');
+ const job=service.repository.jobs(scope)[0]!,source=f.internals.experienceSources(scope)[0]!;assert.equal(source.id,'game-episode:'+f.e.episodeId);assert.equal(source.occurredAt,f.e.occurredFrom);
+ assert.equal(JSON.parse(source.content).scope.timelineId,f.e.scope.timelineId);assert.equal(service.repository.episodes(scope)[0]!.eligibleReason,'outcome');
+ await service.tick();assert.equal(service.repository.read(scope).funnel.eligible,1,'one original family is one episode');
+ const relationship=(await f.api(f.path)).relationship;await f.api(f.path+'/privacy',{action:'forget-derived-information',expectedRevision:relationship.revision,idempotencyKey:randomUUID(),targets:[{kind:'memory',id:published.memoryId,revision:2}]});
+ assert.deepEqual(f.internals.experienceSources(scope),[]);view=await f.api(path);assert.equal(service.repository.current(job),false);assert.equal(view.state.funnel.published,0);assert.doesNotMatch(JSON.stringify(view),/The gate stayed closed/);
+ assert.deepEqual(f.app.publishGameEpisode(f.e),{state:'unavailable',memoryId:null});
+});
+
+for(const cause of ['source','expiry','policy']as const)test('actual retained game reflection source disappears after '+cause,{timeout:15000},async t=>{
+ const f=await setup(t);await f.enable();assert.ok(f.app.publishGameEpisode(f.e).memoryId);const scope={...f.owner,principalId:f.identity.principalId};assert.equal(f.internals.experienceSources(scope).length,1);
+ if(cause==='source')f.withdraw();if(cause==='expiry')f.advance(60000);if(cause==='policy')await f.api('/api/runtime/v1/memory',{...f.owner,enabled:false,expectedRevision:1});
+ assert.deepEqual(f.internals.experienceSources(scope),[]);assert.equal(f.internals.database.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,0);
+});
+
+test('source-bound game reflection publishes an uncertain continuation into an ordinary private HTTP reply',{timeout:15000},async t=>{
+ const f=await setup(t,3600000);await f.enable();assert.ok(f.app.publishGameEpisode(f.e).memoryId);const scope={...f.owner,principalId:f.identity.principalId},path=f.path+'/experience/v1';let view=await f.api(path);
+ f.internals.providers.inference={tokenize:async()=>({count:40,identity:'scripted-tokenizer'}),async*generate(input){f.requests.push(input);if(input.scope.sessionId.startsWith('experience:')){const data=JSON.parse(input.sections.at(-1)!.content);yield {kind:'text',text:JSON.stringify({recordType:'reflectionResult',decision:'change',conclusion:'A past simulated attempt leaves an unresolved question.',items:[{id:'past-game-gate',expectedRevision:0,kind:'question',topic:'games',statement:'The recorded gate attempt did not cross; the cause is unknown.',nextStep:'Ask about the past game gate attempt.',uncertainty:'high',sourceRefs:data.sources.map((s:any)=>s.id),disposition:'open'}],changes:[]})};}else yield {kind:'text',text:'Scripted ordinary continuation.'};yield {kind:'done'};}};
+ await f.api(path,{schemaVersion:'1.0.0',operation:'configure',expectedRevision:view.state.revision,enabled:true,frozen:false,retention:'sourceBound',topicPolicies:defaultTopics});await f.internals.experience.tick();f.advance(60001);await f.internals.experience.tick();
+ view=await f.api(path);assert.equal(view.state.funnel.calls,1,JSON.stringify(view));assert.equal(view.state.funnel.published,1,JSON.stringify(view));assert.equal(view.state.items[0].uncertainty,'high');assert.equal(view.state.items[0].topic,'games');assert.ok(view.state.imprints.every((i:any)=>i.value===0));
+ const response=await f.request('/api/runtime/v1/messages',{...f.owner,userInput:'What should we work on next?'});assert.match(await response.text(),/interaction.completed/);const prepared=f.requests.at(-1)!.sections.find(s=>s.kind==='preparedMemory')!.content;assert.match(prepared,/Ask about the past game gate attempt/);assert.equal(f.requests.at(-1)!.sections.length,9);
+ await f.api('/api/runtime/v1/audience',{mode:'shared',seconds:300});await(await f.request('/api/runtime/v1/messages',{...f.owner,userInput:'What should we work on next?'})).text();assert.doesNotMatch(f.requests.at(-1)!.sections.find(s=>s.kind==='preparedMemory')!.content,/Ask about the past game gate attempt/);
+ assert.equal(f.internals.database.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,0);
 });
