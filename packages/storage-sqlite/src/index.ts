@@ -42,3 +42,4 @@ export * from './campaign-journal.ts';
 export * from './game-activity.ts';
 
 export * from './game-experience.ts';
+export * from './game-help.ts';

@@ -300,7 +300,7 @@ test('migration 53 preserves earlier schema records and unrelated application da
   db.close(); db = new Database({path}); t.after(() => db.close());
   const all = db.migrate();
   assert.deepEqual(all.slice(0, earlier.length), earlier);
-  assert.deepEqual(all.slice(earlier.length).map(m => m.id), [53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]);
+  assert.deepEqual(all.slice(earlier.length).map(m => m.id), [53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65]);
   assert.deepEqual(db.connection.prepare('SELECT * FROM synthetic_preservation').all(), before);
   assert.deepEqual(new UrgentAttentionRepository(db).settings(scope), settings);
   assert.equal(db.connection.prepare('SELECT count(*) AS n FROM urgent_away_dispatches').get()!.n, 0);

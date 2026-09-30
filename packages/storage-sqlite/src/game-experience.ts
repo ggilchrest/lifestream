@@ -7,6 +7,7 @@ import type * as G from '@lifestream/contracts/game-activity';
 import type {Database,Transaction} from './database.ts';
 import type {ActivityOwner} from './game-activity.ts';
 import type {GameMemorySourceOptions} from './memory.ts';
+import {retireGameHelpForEpisode} from './game-help.ts';
 type Row={episode_id:string;owner_key:string;revision:number;family_key:string;policy_digest:string;source_digest:string;expires_at:number;state:string;payload_json:string|null};
 export type GameEpisodeRetention={retentionMs:number;retentionPolicyRef:string;maximumEpisodes:number;maximumBytes:number};
 export type GameEpisodeSources={observations:G.GameObservation[];actions:G.GameActionReceipt[]};
@@ -31,6 +32,7 @@ const freeze=<T>(v:T):T=>{if(v&&typeof v==='object'){for(const child of Object.v
 const checked=(fn:()=>boolean)=>{try{return fn()===true;}catch{return false;}};
 const positive=(n:unknown,max:number):n is number=>typeof n==='number'&&Number.isSafeInteger(n)&&n>=1&&n<=max;
 function scrubProjections(tx:Transaction,id:string){
+ retireGameHelpForEpisode(tx,id);
  for(const row of tx.all<{id:string;assistant_id:string;provenance_json:string;lifecycle_json:string}>("SELECT id,assistant_id,provenance_json,lifecycle_json FROM memories WHERE json_extract(provenance_json,'$.gameEpisodeId')=?",id)){
   const p=JSON.parse(row.provenance_json),l=JSON.parse(row.lifecycle_json);
   tx.run("UPDATE memories SET content='',provenance_json=?,lifecycle_json=? WHERE id=?",JSON.stringify({actor:p.actor,relationshipId:p.relationshipId,gameFamilyKey:p.gameFamilyKey,gameEpisodeKey:p.gameEpisodeKey,payloadRemoved:true}),JSON.stringify({status:'invalidated',revision:Number(l.revision)+1,contentRemoved:true}),row.id);
