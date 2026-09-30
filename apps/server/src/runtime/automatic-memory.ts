@@ -127,6 +127,12 @@ export class AutomaticMemory {
   if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==policy.revision||this.visual.policy(scope).revision!==visual.policy.revision)return {state:'policyDenied' as const};
   const result=this.visual.project(scope,id,revision,estimate);if(result.state==='projected')this.changed();return result;
  }
+ activateVisual(scope:MemoryScope,id:string,revision:number){
+  const policy=this.policy(scope),visual=this.visual.inspect(scope,this.scopeAllowed(scope)),episode=visual.episodes.find(row=>row.episodeId===id)?.episode;
+  if(!policy.enabled||!this.scopeAllowed(scope)||!episode||!this.contentAllowed(scope,episode.summary)||episode.observations.some(o=>!this.contentAllowed(scope,o.description)))return {state:'policyDenied' as const};
+  if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==policy.revision||this.visual.policy(scope).revision!==visual.policy.revision)return {state:'policyDenied' as const};
+  const result=this.visual.activate(scope,id,revision);if(result.state==='active')this.changed();return result;
+ }
  visualHistory(scope:MemoryScope,fromMs:number,toMs:number){
   const policy=this.policy(scope),allowed=()=>this.policy(scope).enabled&&this.policy(scope).revision===policy.revision&&this.scopeAllowed(scope),window=this.visual.retainedWindow(scope,allowed(),fromMs,toMs);
   const content=()=>window.episodes.every(episode=>this.contentAllowed(scope,episode.summary)&&episode.observations.every(o=>this.contentAllowed(scope,o.description)));let retired=!window.complete;
@@ -171,7 +177,7 @@ export class AutomaticMemory {
   const pending=this.visualPending.entries().next().value;
   if(pending){
    const [id,item]=pending;this.visualPending.delete(id);
-   try{if(this.visualCurrent(item)){const candidate=visualPublicationEpisode(item.publication.batch,item.selection,this.visual.policy(item.scope),Date.now(),item.publication.freshUntilMs);const result=candidate?this.enqueueVisual(item.scope,candidate.episode,candidate.admission,()=>this.visualCurrent(item)):{state:'unattributedSubject'};this.noteVisual(item.scope,item.publication.batch.requestId,result.state);if(result.state==='retained'&&candidate&&item.selection.transformationConfidence){try{this.projectVisual(item.scope,candidate.episode.episodeId,1,item.selection.transformationConfidence);}catch{/* The retained typed source is independent of optional projection failure. */}}}}catch{this.noteVisual(item.scope,item.publication.batch.requestId,'invalidEpisode');}
+   try{if(this.visualCurrent(item)){const candidate=visualPublicationEpisode(item.publication.batch,item.selection,this.visual.policy(item.scope),Date.now(),item.publication.freshUntilMs);const result=candidate?this.enqueueVisual(item.scope,candidate.episode,candidate.admission,()=>this.visualCurrent(item)):{state:'unattributedSubject'};this.noteVisual(item.scope,item.publication.batch.requestId,result.state);if(result.state==='retained'&&candidate&&item.selection.transformationConfidence){try{const projected=this.projectVisual(item.scope,candidate.episode.episodeId,1,item.selection.transformationConfidence);if(projected.state==='projected')this.activateVisual(item.scope,candidate.episode.episodeId,2);}catch{/* The retained typed source is independent of optional projection failure. */}}}}catch{this.noteVisual(item.scope,item.publication.batch.requestId,'invalidEpisode');}
    return;
   }
   const work=this.database.connection.prepare("SELECT id,scope_key AS scope,source_turn AS source,policy_revision AS revision,input_text AS input,prepared_json AS prepared,attempts,expires_at AS expires,state,reason FROM automatic_memory_work WHERE state IN ('queued','prepared') ORDER BY created_at LIMIT 1").get() as Work|undefined;if(!work)return;

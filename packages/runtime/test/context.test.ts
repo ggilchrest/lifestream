@@ -56,3 +56,13 @@ test('explicit recall cannot bypass zero settings, lifecycle, mention, audience,
  const many=compileRelationshipContext({...base,records:Array.from({length:9},(_,n)=>({...record,id:'fact-'+n,content:'My tea preference '+n}))});assert.equal(many.relevantContext.length,4);assert.equal(many.omissions.filter(x=>x.reason==='bounded allocation').length,5);
  const large=compileRelationshipContext({...base,records:Array.from({length:8},(_,n)=>({...record,id:'large-'+n,content:'My tea preference '+('x'.repeat(3900))}))});assert.ok(large.budget.usedBytes<=8192);assert.equal((formatPreparedRelationshipContext(large).match(/x{100}/gu)??[]).length,0,'Existing optional 512-byte formatting bound still applies');
 });
+
+
+test('selected retained source expiry bounds the same prepared relationship view and stale records are omitted',async()=>{
+ const {compileRelationshipContext}=await import('../src/context/builder.ts');const record={id:'typed-visual-memory',content:'Past unverified model visual interpretation: a hat.',revision:2,sourceFamily:'original-family',status:'approved',use:'relevant' as const,personalization:true,mention:true,expiresAt:new Date(5000).toISOString()};const input={records:[record],userInput:'hat',audienceScope:'authenticatedSession' as const,profileRevision:'p',relationshipRevision:'r',configurationRevision:'c',now:1000};const view=compileRelationshipContext(input);assert.equal(view.selections.length,1);assert.equal(view.freshUntil,record.expiresAt);assert.equal(view.preparationCount,1);const expired=compileRelationshipContext({...input,now:5000});assert.equal(expired.selections.length,0);assert.equal(expired.omissions[0]!.reason,'source retention expired');
+});
+
+
+test('optional selection receipts omit records that the existing final formatter cannot carry',async()=>{
+ const {compileRelationshipContext}=await import('../src/context/builder.ts');const record={id:'oversized',content:'hat '.repeat(150),revision:1,sourceFamily:'retained',status:'approved',use:'relevant' as const,personalization:true,mention:true};const view=compileRelationshipContext({records:[record],userInput:'hat',audienceScope:'authenticatedSession',profileRevision:'p',relationshipRevision:'r',configurationRevision:'c'});assert.equal(view.selections.length,0);assert.equal(view.omissions[0]!.reason,'bounded allocation');assert.doesNotMatch(formatPreparedRelationshipContext(view),/oversized=/);
+});

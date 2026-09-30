@@ -84,6 +84,25 @@ export class VisualMemoryRepository{
    return {state:'projected' as const,memoryId};
   });
  }
+ /** Admit a validated candidate under current owner memory consent. Recall is
+  * not reinforcement and does not change the source event or episode revision. */
+ activate(owner:VisualMemoryOwner,id:string,expectedRevision:number){
+  this.sweep();const now=this.now();return this.db.transaction(tx=>{
+   const enabled=()=>!!tx.get('SELECT 1 FROM automatic_memory_policies WHERE principal_id=? AND assistant_id=? AND relationship_id=? AND enabled=1',owner.principalId,owner.assistantId,owner.relationshipId)&&this.policy(owner).enabled;
+   if(!enabled())return {state:'policyDenied' as const};
+   const row=tx.get<Row>('SELECT episode_id,revision,state,expires_at,payload_json FROM visual_observation_episodes WHERE scope_key=? AND episode_id=?',key(owner),id);if(!row||row.state!=='retained'||row.revision!==expectedRevision||!row.payload_json||row.expires_at<=now)return {state:'sourceUnavailable' as const};
+   const episode=JSON.parse(row.payload_json) as VisualObservationEpisode;if(!episode.memoryRecordId||episode.state!=='retained'||episode.correctionRefs.length||episode.processingPolicyRevision!==this.policy(owner).revision)return {state:'sourceUnavailable' as const};
+   const memory=tx.get<{provenance_json:string;lifecycle_json:string}>('SELECT provenance_json,lifecycle_json FROM memories WHERE id=? AND assistant_id=?',episode.memoryRecordId,owner.assistantId);if(!memory)return {state:'sourceUnavailable' as const};
+   const provenance=JSON.parse(memory.provenance_json),lifecycle=JSON.parse(memory.lifecycle_json),canonical=provenance.canonical as VisualMemoryProjection['memoryRecord'];if(provenance.actor!==owner.principalId||provenance.relationshipId!==owner.relationshipId||!validateVisualMemoryProjection({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:canonical}).valid)return {state:'sourceUnavailable' as const};
+   if(canonical.status==='active')return {state:'alreadyActive' as const};if(canonical.status!=='candidate'||lifecycle.status!=='candidate')return {state:'sourceUnavailable' as const};
+   const count=tx.get<{n:number}>("SELECT count(*) AS n FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(lifecycle_json,'$.status')='active'",owner.assistantId,owner.principalId)!.n;if(count>=240)return {state:'capacityExceeded' as const};
+   canonical.status='active';const next={...lifecycle,status:'active',revision:Number(lifecycle.revision)+1};
+   const metadata={visualOccurredAt:episode.occurredAt,visualExpiresAt:episode.expiresAt,visualSourceFamily:episode.independenceKeys[0],visualUncertainty:episode.observations.map(o=>o.uncertainty),visualLimitations:[...new Set(episode.observations.flatMap(o=>[...o.limitations,...o.subject.limitations]))]};
+   tx.run('UPDATE memories SET provenance_json=?,lifecycle_json=? WHERE id=?',JSON.stringify({...provenance,...metadata,canonical}),JSON.stringify(next),episode.memoryRecordId);
+   const revision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',episode.memoryRecordId)!.n;
+   tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',episode.memoryRecordId,owner.assistantId,revision,'lifecycleChanged',JSON.stringify(next),new Date(now).toISOString());return {state:'active' as const,memoryId:episode.memoryRecordId};
+  });
+ }
  admit(owner:VisualMemoryOwner,input:unknown,admission:VisualMemoryAdmission):VisualMemoryReceipt{
   this.sweep();let bytes:string;
   try{bytes=JSON.stringify(input);if(Buffer.byteLength(bytes)>8192)return {state:'invalidEpisode'};}catch{return {state:'invalidEpisode'};}

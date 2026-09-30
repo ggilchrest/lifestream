@@ -35,7 +35,7 @@ export function validateVisualEpisode(value:unknown):ValidationResult{
  * accuracy. Its author must supply a concrete basis and versioned policy. */
 export type VisualTransformationConfidence={value:number;basis:string;policyRef:string};
 export type VisualMemoryProjection={schemaVersion:'1.0.0';recordType:'visualMemoryProjection';episode:VisualObservationEpisode;memoryRecord:{
- schemaVersion:'2.0.0';memoryId:string;assistantId:string;kind:'experiential';content:string;factuality:'unverified';confidence:number;sensitivity:'personal';status:'candidate'|'contradicted';
+ schemaVersion:'2.0.0';memoryId:string;assistantId:string;kind:'experiential';content:string;factuality:'unverified';confidence:number;sensitivity:'personal';status:'candidate'|'active'|'contradicted';
  provenance:{sourceType:'interaction';sourceRefs:string[];transformationId:string;transformationVersion:string};createdAt:string;createdBy:string;lastReinforcedAt:null;contradictedBy:string[];
  extensions:{'lifestream.conversationalVision':{schemaVersion:'1.0.0';sourceKind:'modelVisualObservation';episodeId:string;episodeRevision:number;transformationConfidence:VisualTransformationConfidence;sourceDigest:string;rawMediaRetained:false}};
 }};
@@ -44,7 +44,7 @@ export function validateVisualMemoryProjection(value:unknown):ValidationResult{
  const {episode,memoryRecord:memory}=value as VisualMemoryProjection,binding=memory.extensions['lifestream.conversationalVision'];
  const sourceRef=`visual-episode:${episode.episodeId}:${episode.revision}:${episode.sourceDigest}`;
  const sourceDigest=createHash('sha256').update(JSON.stringify({scope:episode.scope,observations:episode.observations})).digest('hex');
- const consistent=episode.sourceDigest===sourceDigest&&(episode.state==='retained'&&memory.status==='candidate'&&episode.correctionRefs.length===0||episode.state==='superseded'&&memory.status==='contradicted'&&episode.correctionRefs.length>0)&&episode.memoryRecordId===memory.memoryId&&episode.scope.assistantId===memory.assistantId&&episode.scope.principalId===memory.createdBy&&
+ const consistent=episode.sourceDigest===sourceDigest&&(episode.state==='retained'&&['candidate','active'].includes(memory.status)&&episode.correctionRefs.length===0||episode.state==='superseded'&&memory.status==='contradicted'&&episode.correctionRefs.length>0)&&episode.memoryRecordId===memory.memoryId&&episode.scope.assistantId===memory.assistantId&&episode.scope.principalId===memory.createdBy&&
   binding.episodeId===episode.episodeId&&binding.episodeRevision===episode.revision&&binding.sourceDigest===episode.sourceDigest&&binding.transformationConfidence.value===memory.confidence&&
   memory.provenance.sourceRefs.length===1&&memory.provenance.sourceRefs[0]===sourceRef&&memory.content===episode.summary&&memory.kind==='experiential'&&memory.sensitivity==='personal'&&
   memory.lastReinforcedAt===null&&memory.contradictedBy.length===0&&Date.parse(memory.createdAt)>=Date.parse(episode.retainedAt)&&Date.parse(memory.createdAt)<Date.parse(episode.expiresAt);

@@ -32,15 +32,15 @@ after 60 seconds, and do not survive restart. Episode content follows its explic
 retention policy. Forgetting removes the payload and retains a source fence so a
 repeated interpretation cannot recreate it. Restore remains quarantined.
 
-Ordinary-reply/reflection integration and complete visual
+Reflection integration and complete visual
 qualification are still pending. Isolated wiring checks establish neither visual
 understanding nor physical-camera, performance or Human acceptance.
 
 ## Optional memory projection
 
-An isolated host may supply a separate transformation-confidence estimate with an explicit basis and policy reference. The idle worker can then create a canonical experiential MemoryRecord candidate with `unverified` factuality and `interaction` provenance. Its namespaced visual binding identifies the exact episode revision and digest; it preserves unknown perception confidence and creates no participant quote or source turn. Missing estimates leave only the typed episode. Invalid estimates do not create a memory projection. At most 128 visual candidates can be retained per owner/Assistant/relationship.
+An isolated host may supply a separate transformation-confidence estimate with an explicit basis and policy reference. The idle worker can then create a canonical experiential MemoryRecord with `unverified` factuality and `interaction` provenance. Its namespaced visual binding identifies the exact episode revision and digest; it preserves unknown perception confidence and creates no participant quote or source turn. Missing estimates leave only the typed episode. Invalid estimates do not create a memory projection. At most 128 visual candidates can await projection admission per owner/Assistant/relationship.
 
-Candidates remain outside normal memory recall and reflection. Generic promotion remains unavailable. Visual corrections use the separate source-aware operation below. Forgetting either linked record, withdrawing either memory policy, expiry, and restore quarantine erase the source and projection payloads while retaining opaque replay fences. Memory inspection/export validates the current source binding and refuses expired or mismatched visual candidates. This does not qualify automatic historical comparisons, ordinary-reply use, live confidence policy, or real image understanding.
+A validated candidate may become active automatically under both enabled policies and current private content scope. Generic promotion remains unavailable. Visual corrections use the separate source-aware operation below. Forgetting either linked record, withdrawing either memory policy, expiry, and restore quarantine erase the source and projection payloads while retaining opaque replay fences. Memory inspection/export validates the current source binding and refuses expired or mismatched visual candidates. This does not qualify automatic historical comparisons, selected-model ordinary-reply behavior, live confidence policy, or real image understanding.
 
 ## Retained history boundaries
 
@@ -54,3 +54,10 @@ Erased source metadata and capacity overflow make coverage incomplete. The host 
 An authenticated owner can enter an exact correction beside a retained observation in the conversation memory view. The operation checks the expected episode revision, both memory policies, current private audience and content scope. It appends a separately attributed `humanEntry` to the existing lifecycle journal and links it from the episode. It does not rewrite original appearance text, provider confidence, source family, capture times or attribution, and invents neither a spoken turn nor a numeric transformation estimate. Up to 16 bounded corrections may be linked per episode.
 
 The original projection becomes contradicted and remains inspectable with its unverified factuality. The corrected episode is superseded for historical selection; incomplete coverage suppresses unsupported pattern conclusions. Current prepared selections using its observation IDs are invalidated, and bounded host fences reject late reuse of those IDs while preserving capture authority for independent subsequent scenes. Forgetting, expiry, either consent withdrawal and restore quarantine erase both the observation/projection payload and the exact correction text. A correction is not a new independent visual observation or an automatic preference/imprint. Ordinary reply and reflection use of corrections remains pending.
+
+
+## Ordinary prepared memory
+
+The idle publication path may activate a validated attributed projection without per-observation confirmation. Its canonical factuality remains unverified and recall does not reinforce it. Missing host transformation estimates still leave only typed source episodes. Active source reads require both policies, exact lifecycle/digest binding and current retention. The same bounded relationship cache fingerprint includes visual source/policy changes and expiry; it does not add another prompt section or await perception.
+
+Selected recall text carries the original capture date, original source family in selection lineage, source-specific limitations and a past model-interpretation label. Repeated system uncertainty/raw-media/clock wording is factored into a shared limitation in the same prepared view; source-specific uncertainty is preserved. The existing 512-byte optional formatting bound remains, and oversized records are omitted in selection receipts. Selected retention expiry bounds the view and delayed reply admission/delivery. Source correction, forgetting and policy changes invalidate dependencies before further output. Scripted authenticated HTTP inference verifies assembled ordinary requests and delayed-output fencing; selected model behavior and performance remain unqualified. Reflection and automatic historical-pattern reply integration remain pending.
