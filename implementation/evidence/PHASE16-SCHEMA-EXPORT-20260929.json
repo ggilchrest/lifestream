@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "decision": "LS-DEC-050",
+  "approvedAt": "2026-09-30T04:16:20.972911Z",
+  "operatorStatement": "both schemas are approved for export.",
+  "scope": "Exact two-schema local ingestion and scoped local commit only. No other private artifacts, fixtures, character assets, push, publication, camera, game or provider activation.",
+  "copiedUnchanged": true,
+  "artifacts": [
+    {
+      "publicPath": "packages/contracts/src/schemas/conversational-vision.schema.json",
+      "schemaId": "https://lifestream.dev/contracts/conversational-vision/1.0.0",
+      "sha256": "4f00aaf9b3ae40db636482cc2fc20ebb22b43d6131155dda2d4e32fc3ee80b7e",
+      "bytes": 93535
+    },
+    {
+      "publicPath": "packages/contracts/src/schemas/local-game-activity.schema.json",
+      "schemaId": "https://lifestream.dev/contracts/local-game-activity/1.0.0",
+      "sha256": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5",
+      "bytes": 173293
+    }
+  ],
+  "compiledSchemaRoots": 28,
+  "compiledNewDefinitions": 63
+}

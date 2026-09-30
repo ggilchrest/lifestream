@@ -4,7 +4,7 @@ import {backup,DatabaseSync} from 'node:sqlite';
 import {existsSync} from 'node:fs';
 import {mkdir,realpath,lstat,readdir,readFile,writeFile,copyFile,rm} from 'node:fs/promises';
 import {join,dirname,resolve,sep} from 'node:path';
-import {Database,MemoryRepository,UrgentAttentionRepository,UrgentAwayRepository} from '@lifestream/storage-sqlite';
+import {Database,MemoryRepository,VisualMemoryRepository,UrgentAttentionRepository,UrgentAwayRepository} from '@lifestream/storage-sqlite';
 import {LocalAuthentication} from '../auth/local-auth.ts';
 import {RelationshipRecovery} from './relationship-recovery.ts';
 import {quarantineRestoredExperience} from './experience-recovery.ts';
@@ -55,6 +55,7 @@ export async function restoreCandidate(input:{snapshot:string;currentSafety:stri
   let unavailableDefaultPresentations=0,experientialLearning={scopes:0,retainedScopes:0,cancelledJobs:0},urgentAttention={scopes:0,cancelledDeliveries:0},urgentAway={cancelledReservations:0,uncertainAttempts:0};const db=new Database({path:join(target,'data.sqlite')});try{
    db.migrate();new LocalAuthentication(db,{stateDirectory:join(target,'safety')});const memories=new MemoryRepository(db),recovery=new RelationshipRecovery(db,memories,join(target,'safety/relationship-recovery'));if(recovery.journal.currency!=='current')throw Error('Restored privacy state cannot prove current currency');recovery.recover();
    const epoch=Number(db.connection.prepare('SELECT epoch FROM relationship_recovery_currency WHERE singleton=1').get()?.epoch);if(epoch!==recovery.journal.revision)throw Error('Restored privacy replay is incomplete');
+   new VisualMemoryRepository(db).quarantine();
    channels=quarantineRestoredChannels(db);
    experientialLearning=quarantineRestoredExperience(db,memories,recovery);
    urgentAttention=new UrgentAttentionRepository(db).quarantine(new Date().toISOString());

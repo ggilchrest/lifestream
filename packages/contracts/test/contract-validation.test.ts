@@ -6,7 +6,7 @@ import { createContractValidator } from "../src/validator.ts";
 
 test("compiles every exported schema and rejects unknown schema IDs", () => {
   const validator = createContractValidator();
-  assert.equal(validator.schemaIds().length, 26);
+  assert.equal(validator.schemaIds().length, 28);
   assert.equal(validator.validate("unknown", {}).valid, false);
 });
 
@@ -52,7 +52,7 @@ test("shared compiled schemas keep caller results, schema lists and inputs indep
   assert.equal(failure.valid,false);assert.doesNotMatch(JSON.stringify(failure),/SYNTHETIC_PRIVATE_VALUE/);
   assert.equal(second.validate(id,{schemaVersion:"1.0.0",operation:"inspect"}).valid,true);assert.deepEqual(failure,saved);assert.equal(JSON.stringify(invalid),before);
   failure.errors[0]!.message="caller mutation";assert.notEqual(second.validate(id,invalid).errors[0]!.message,"caller mutation");
-  const ids=first.schemaIds();ids.splice(0);assert.equal(second.schemaIds().length,26);
+  const ids=first.schemaIds();ids.splice(0);assert.equal(second.schemaIds().length,28);
   first.validate=()=>({valid:true,errors:[]});assert.equal(second.validate('unknown',{}).valid,false);
 });
 
@@ -61,4 +61,13 @@ test('experiential schema is exactly exported and rejects authority, unknown var
  const lock=JSON.parse(readFileSync(new URL('../../../spec-lock.json',import.meta.url),'utf8')),entry=lock.additionalExports.find((x:{slice:string})=>x.slice==='LS-S086');assert.equal(entry.artifacts.length,1);const artifact=entry.artifacts[0],bytes=readFileSync(new URL('../../../'+artifact.publicPath,import.meta.url));assert.equal(createHash('sha256').update(bytes).digest('hex'),artifact.sha256);
  const v=createContractValidator(),id=artifact.schemaId,reset={schemaVersion:'1.0.0',operation:'reset',expectedRevision:0};assert.equal(v.validate(id,reset).valid,true);for(const change of [{authority:true},{operation:'train'},{expectedRevision:-1},{schemaVersion:'2.0.0'}])assert.equal(v.validate(id,{...reset,...change}).valid,false);
  const change={dimension:'attentionGardening',delta:.05,episodeRefs:['episode-a','episode-b'],confidence:.8,reason:'Synthetic independent outcomes'};assert.equal(v.validate(id+'#/$defs/ChangeProposal',change).valid,true);for(const patch of [{delta:.05001},{dimension:'protectedTraitAversion'},{unreviewedCoreChange:true}])assert.equal(v.validate(id+'#/$defs/ChangeProposal',{...change,...patch}).valid,false);
+});
+
+// Exact approval covers schemas only. These tests author synthetic public inputs locally.
+test('approved Phase 16 exports retain exact bytes and compile every definition',()=>{
+ const lock=JSON.parse(readFileSync(new URL('../../../spec-lock.json',import.meta.url),'utf8'));
+ const entry=lock.additionalExports.find((e:any)=>e.artifacts?.some((a:any)=>a.schemaId==='https://lifestream.dev/contracts/conversational-vision/1.0.0'));
+ assert.equal(entry.artifacts.length,2);const v=createContractValidator();let count=0;
+ for(const a of entry.artifacts){const bytes=readFileSync(new URL('../../../'+a.publicPath,import.meta.url)),schema=JSON.parse(bytes.toString());assert.equal(createHash('sha256').update(bytes).digest('hex'),a.sha256);assert.ok(v.schemaIds().includes(a.schemaId));for(const name of Object.keys(schema.$defs)){assert.equal(v.validate(a.schemaId+'#/$defs/'+name,{}).errors.some(e=>e.keyword==='schema'),false);count++;}}
+ assert.equal(count,63);
 });

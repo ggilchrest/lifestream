@@ -1,0 +1,5523 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/local-game-activity/1.0.0",
+  "title": "Local game activity",
+  "description": "Specified, not executed. Additive local activity/adapter contract. Fixed game protocol only; no Lua evaluation, arbitrary paths/URLs, OS commands, hidden-state disclosure, camera audience or PWCE world evidence.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/GameActivityState"
+    },
+    {
+      "$ref": "#/$defs/ActivityCheckpoint"
+    },
+    {
+      "$ref": "#/$defs/GameActionProposal"
+    },
+    {
+      "$ref": "#/$defs/GameActionReceipt"
+    },
+    {
+      "$ref": "#/$defs/GameObservation"
+    },
+    {
+      "$ref": "#/$defs/GameDecisionInput"
+    },
+    {
+      "$ref": "#/$defs/GameExperienceEpisode"
+    },
+    {
+      "$ref": "#/$defs/GameMemoryProjection"
+    },
+    {
+      "$ref": "#/$defs/GameStateRequest"
+    },
+    {
+      "$ref": "#/$defs/GameStateResult"
+    },
+    {
+      "$ref": "#/$defs/GameControlRequest"
+    },
+    {
+      "$ref": "#/$defs/GameControlResult"
+    },
+    {
+      "$ref": "#/$defs/GameObserveRequest"
+    },
+    {
+      "$ref": "#/$defs/GameObserveResult"
+    },
+    {
+      "$ref": "#/$defs/GameActionRequest"
+    },
+    {
+      "$ref": "#/$defs/GameActionResult"
+    },
+    {
+      "$ref": "#/$defs/GameReleaseRequest"
+    },
+    {
+      "$ref": "#/$defs/GameReleaseResult"
+    },
+    {
+      "$ref": "#/$defs/GameSaveRequest"
+    },
+    {
+      "$ref": "#/$defs/GameSaveResult"
+    },
+    {
+      "$ref": "#/$defs/GameHelpItem"
+    },
+    {
+      "$ref": "#/$defs/CampaignJournal"
+    },
+    {
+      "$ref": "#/$defs/GameCampaignJournal"
+    }
+  ],
+  "$defs": {
+    "ActivityScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assistantId",
+        "principalId",
+        "relationshipId",
+        "environmentId",
+        "activityId",
+        "runId",
+        "activityEpoch",
+        "timelineId",
+        "timelineRevision",
+        "observationDomain",
+        "contextBinding",
+        "campaignId"
+      ],
+      "properties": {
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "principalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "relationshipId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "environmentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "activityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "runId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "activityEpoch": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "timelineId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "timelineRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "observationDomain": {
+          "const": "simulatedGame"
+        },
+        "contextBinding": {
+          "$ref": "#/$defs/ActivityContextBinding"
+        },
+        "campaignId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        }
+      },
+      "description": "Host-owned scope. Game timelines never authenticate people, establish camera audience, grant world authority or become PWCE facts."
+    },
+    "ActivityContextBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "conversationId",
+        "sessionId",
+        "endpointId",
+        "participationKind",
+        "humanSpeakerRef",
+        "audioOwnerEndpointId",
+        "ownerPermissionRef"
+      ],
+      "properties": {
+        "conversationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "endpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "participationKind": {
+          "const": "logicalActivity"
+        },
+        "humanSpeakerRef": {
+          "type": "null"
+        },
+        "audioOwnerEndpointId": {
+          "type": "null"
+        },
+        "ownerPermissionRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        }
+      },
+      "description": "Trusted runtime logical activity participation, not a fabricated user turn or physical endpoint/audience assertion. Owner/relationship permission is checked separately; no owner-private speaker or audio clearance is inherited."
+    },
+    "GamePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "unattended",
+        "save",
+        "reload",
+        "contact",
+        "playWindowRef",
+        "schedule",
+        "contactConfiguration"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "unattended": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "selection",
+            "decisionRef"
+          ],
+          "properties": {
+            "status": {
+              "const": "selected"
+            },
+            "selection": {
+              "const": "configuredHours"
+            },
+            "decisionRef": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            }
+          }
+        },
+        "save": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "selection",
+            "decisionRef"
+          ],
+          "properties": {
+            "status": {
+              "const": "selected"
+            },
+            "selection": {
+              "const": "ordinaryInGameOnly"
+            },
+            "decisionRef": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            }
+          }
+        },
+        "reload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "selection",
+            "decisionRef"
+          ],
+          "properties": {
+            "status": {
+              "const": "selected"
+            },
+            "selection": {
+              "const": "ordinaryInGameOnly"
+            },
+            "decisionRef": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            }
+          }
+        },
+        "contact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "selection",
+            "decisionRef"
+          ],
+          "properties": {
+            "status": {
+              "const": "selected"
+            },
+            "selection": {
+              "const": "existingAuthorizedRoutes"
+            },
+            "decisionRef": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            }
+          }
+        },
+        "playWindowRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schedule": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "timeZone",
+            "windows",
+            "validatedPolicyRevision",
+            "validatedAt",
+            "policyCurrent",
+            "unavailableReason"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "timeZone": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "windows": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "windowId",
+                  "daysOfWeek",
+                  "startMinute",
+                  "endMinute"
+                ],
+                "properties": {
+                  "windowId": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                  },
+                  "daysOfWeek": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 7,
+                    "uniqueItems": true,
+                    "items": {
+                      "enum": [
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday"
+                      ]
+                    }
+                  },
+                  "startMinute": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1439
+                  },
+                  "endMinute": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1440
+                  }
+                }
+              }
+            },
+            "validatedPolicyRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "validatedAt": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "policyCurrent": {
+              "type": "boolean"
+            },
+            "unavailableReason": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "description": "Autonomous configured-hours starts are the selected V1 rule, separate from actual operator enrollment/enablement. Initial setup is disabled with no invented timezone/windows. Enabled scheduling requires a valid IANA timezone, nonoverlapping local-day half-open windows (split overnight windows), current validated policy revision, explicit finite GameBounds, authority and prerequisites. Host occurrence identity/deduplication survives restart and DST repeats; a paused/interrupted run requires resume, never a replacement automatic start.",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "enabled"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "timeZone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "windows": {
+                    "type": "array",
+                    "minItems": 1
+                  },
+                  "validatedPolicyRevision": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+                  },
+                  "validatedAt": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                  },
+                  "policyCurrent": {
+                    "const": true
+                  },
+                  "unavailableReason": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "contactConfiguration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "timeZone",
+            "windows",
+            "validatedPolicyRevision",
+            "validatedAt",
+            "policyCurrent",
+            "unavailableReason",
+            "channelRef",
+            "recipientRef"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "timeZone": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "windows": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "windowId",
+                  "daysOfWeek",
+                  "startMinute",
+                  "endMinute"
+                ],
+                "properties": {
+                  "windowId": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                  },
+                  "daysOfWeek": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 7,
+                    "uniqueItems": true,
+                    "items": {
+                      "enum": [
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday"
+                      ]
+                    }
+                  },
+                  "startMinute": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1439
+                  },
+                  "endMinute": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1440
+                  }
+                }
+              }
+            },
+            "validatedPolicyRevision": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "validatedAt": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "policyCurrent": {
+              "type": "boolean"
+            },
+            "unavailableReason": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "channelRef": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "recipientRef": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "description": "Selected help contact uses existing initiative/disclosure/recipient authority only through an explicitly configured channel, recipient and contact-hours timezone/windows. Actual setup defaults disabled/null. Missing channel, unavailable delivery, disallowed time or current privacy defers one bounded deduplicated help item; queued/sent/delivered/replied requires corresponding evidence, and a reply is advice only after authenticated attribution.",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "enabled"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "timeZone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "windows": {
+                    "type": "array",
+                    "minItems": 1
+                  },
+                  "validatedPolicyRevision": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+                  },
+                  "validatedAt": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                  },
+                  "policyCurrent": {
+                    "const": true
+                  },
+                  "unavailableReason": {
+                    "type": "null"
+                  },
+                  "channelRef": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                  },
+                  "recipientRef": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "description": "All V1 behavior choices are selected: configured-hours autonomous starts; ordinary in-game save/load only; configured-channel/help-hours contact. Actual enrollment, hours, limits, channel and recipient remain disabled/unconfigured until supplied. Emulator savestates, snapshots, rewind and crash-recovery exceptions are forbidden. Existing live authority and privacy checks remain mandatory."
+    },
+    "GameBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxActionFrames",
+        "maxInputLeaseMs",
+        "maxActionWallMs",
+        "maxScreenshotBytes",
+        "maxScreenshotLongEdge",
+        "wallBudgetMs",
+        "frameBudget",
+        "actionBudget",
+        "startBudget",
+        "equivalentFailureBudget",
+        "screenshotQueueByteBudget",
+        "modelCallBudget",
+        "inputTokenBudget",
+        "outputTokenBudget",
+        "retryBudget",
+        "checkpointByteBudget",
+        "memoryEpisodeBudget",
+        "decisionDeadlineMs",
+        "renderedSpeedFactor",
+        "fastForwardEnabled",
+        "rewindEnabled",
+        "planningClockPolicy",
+        "maxPlanningAgeMs",
+        "maxPlanningFrameDelta"
+      ],
+      "properties": {
+        "maxActionFrames": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "maxInputLeaseMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "maxActionWallMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2000
+        },
+        "maxScreenshotBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2097152
+        },
+        "maxScreenshotLongEdge": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1280
+        },
+        "wallBudgetMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "frameBudget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "actionBudget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "startBudget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "equivalentFailureBudget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "screenshotQueueByteBudget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "modelCallBudget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "inputTokenBudget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "outputTokenBudget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "retryBudget": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "checkpointByteBudget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "memoryEpisodeBudget": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "decisionDeadlineMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "renderedSpeedFactor": {
+          "const": 1
+        },
+        "fastForwardEnabled": {
+          "const": false
+        },
+        "rewindEnabled": {
+          "const": false
+        },
+        "planningClockPolicy": {
+          "const": "continuesNormally"
+        },
+        "maxPlanningAgeMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "maxPlanningFrameDelta": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      },
+      "description": "Required finite configured budgets. Graphical game rendering runs at ordinary 1x speed independently of model planning: no hidden fast-forward, rewind or model-paced frame stepping. Commands remain at most120 frames/2000ms; expiry releases held input while ordinary game progression continues, except explicit interruption or safety pause. No default play hours, capacity or budgets are invented. Planning age and frame-delta ceilings are mandatory finite setup values, independent of physical-camera freshness; no numeric default is adopted."
+    },
+    "GameArtifactPins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "referenceProfile",
+        "gameId",
+        "platform",
+        "emulatorName",
+        "emulatorVersion",
+        "emulatorDigest",
+        "coreName",
+        "coreVersion",
+        "gameRegion",
+        "gameRevision",
+        "emulatorConfigurationDigest",
+        "coreConfigurationDigest",
+        "gameSettingsDigest",
+        "romDigest",
+        "scriptArtifact",
+        "stateManifestArtifact",
+        "controllerProfile",
+        "installationId",
+        "qualificationRef",
+        "renderingMode"
+      ],
+      "properties": {
+        "referenceProfile": {
+          "const": "chrono-trigger-snes-bizhawk-lua.v1"
+        },
+        "gameId": {
+          "const": "chrono-trigger-snes"
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "windows"
+          ]
+        },
+        "emulatorName": {
+          "const": "BizHawk"
+        },
+        "emulatorVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "emulatorDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "coreName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "coreVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "gameRegion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "gameRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "emulatorConfigurationDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "coreConfigurationDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "gameSettingsDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "romDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "scriptArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "stateManifestArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "controllerProfile": {
+          "const": "snes-standard-12"
+        },
+        "installationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "qualificationRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional prior evidence reference, not authority, admission or a prerequisite for a separately authorized qualification run. Readiness never claims accepted game/provider quality."
+        },
+        "renderingMode": {
+          "const": "graphical"
+        }
+      },
+      "description": "Reference adapter pins only. Fixture digests are synthetic. Actual user-supplied game/emulator/core/script/visible-state manifest identities must be verified before readiness. Movie/TAStudio, unsupported core/platform/API combinations and external input contention are unavailable."
+    },
+    "GameScreenshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "screenshotId",
+        "mediaRef",
+        "sha256",
+        "byteLength",
+        "mediaType",
+        "width",
+        "height",
+        "capturedAt",
+        "frameNumber",
+        "expiresAt"
+      ],
+      "properties": {
+        "screenshotId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "mediaRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sha256": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2097152
+        },
+        "mediaType": {
+          "const": "image/png"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1280
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1280
+        },
+        "capturedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "frameNumber": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        }
+      },
+      "description": "Purpose-scoped ephemeral screenshot bytes resolved only inside the selected perception adapter. No raw/base64/URL/path in control JSON. Not a camera frame, audience input, durable game save or normal conversational prompt attachment."
+    },
+    "PlayerVisibleFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "factId",
+        "description",
+        "epistemicKind",
+        "sourceScreenshotIds",
+        "extractionKind",
+        "extractorRef",
+        "uncertainty",
+        "limitations",
+        "sourceKind",
+        "untrusted"
+      ],
+      "properties": {
+        "factId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "epistemicKind": {
+          "enum": [
+            "visibleFeature",
+            "inference"
+          ]
+        },
+        "sourceScreenshotIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "extractionKind": {
+          "enum": [
+            "screenPixels",
+            "visibleUiExtractor"
+          ]
+        },
+        "extractorRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "uncertainty": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "sourceKind": {
+          "const": "playerVisibleGameObservation"
+        },
+        "untrusted": {
+          "const": true
+        }
+      },
+      "description": "Visible facts have screen provenance. An approved manifest-bound visible-UI extractor cannot expose hidden RAM, undiscovered maps, offscreen enemies, plot flags, guides, walkthroughs or solutions. User advice is separately attributed input, never a game observation."
+    },
+    "PlayerVisibleStateValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fieldId",
+        "value",
+        "visibility",
+        "firstObservedRef",
+        "lastObservedRef",
+        "timelineId",
+        "observedAt",
+        "freshUntil",
+        "decoderRevision",
+        "manifestDigest",
+        "limitations"
+      ],
+      "properties": {
+        "fieldId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 2000
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "visibility": {
+          "enum": [
+            "visibleNow",
+            "previouslyRevealed"
+          ]
+        },
+        "firstObservedRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "lastObservedRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "timelineId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "observedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "freshUntil": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "decoderRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+        },
+        "manifestDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      },
+      "description": "Value must match its reviewed manifest field schema and evidenced visibility on this exact game/core/timeline. Previously revealed values remain dated knowledge, not falsely current exact state. No arbitrary memory address or neighboring field is exported."
+    },
+    "GameObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "observationId",
+        "revision",
+        "pinsDigest",
+        "frameNumber",
+        "capturedAt",
+        "receivedAt",
+        "interpretedAt",
+        "providerConfigurationRef",
+        "screenshots",
+        "facts",
+        "visibleState",
+        "previousActionId",
+        "untrusted"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "gameObservation"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "observationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "pinsDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "frameNumber": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "capturedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "receivedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "interpretedAt": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "providerConfigurationRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "screenshots": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/GameScreenshot"
+          }
+        },
+        "facts": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/PlayerVisibleFact"
+          }
+        },
+        "visibleState": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/PlayerVisibleStateValue"
+          }
+        },
+        "previousActionId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "untrusted": {
+          "const": true
+        }
+      },
+      "description": "One current visible observation at a decision boundary. Lifecycle/chronology stay separate from model interpretation. No visible-person count, camera privacy claim, hidden state or real-world truth is admitted."
+    },
+    "GameActionProposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "proposalId",
+        "observationId",
+        "observationRevision",
+        "preparedViewId",
+        "preparedViewRevision",
+        "invalidationKey",
+        "buttons",
+        "durationFrames",
+        "maxWallMs",
+        "expectedVisibleOutcome",
+        "uncertainty",
+        "adviceRefs",
+        "reason",
+        "preconditions"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "gameActionProposal"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "proposalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "observationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "observationRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "preparedViewId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "preparedViewRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "invalidationKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "buttons": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 12,
+          "items": {
+            "enum": [
+              "up",
+              "down",
+              "left",
+              "right",
+              "a",
+              "b",
+              "x",
+              "y",
+              "l",
+              "r",
+              "start",
+              "select"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "durationFrames": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "maxWallMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2000
+        },
+        "expectedVisibleOutcome": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "uncertainty": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "adviceRefs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "preconditions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "predicateId",
+              "fieldId",
+              "expectedValue",
+              "sourceObservationId"
+            ],
+            "properties": {
+              "predicateId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "fieldId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              },
+              "expectedValue": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "sourceObservationId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              }
+            }
+          }
+        }
+      },
+      "description": "Inert bounded proposal from the cited planning observation/prepared view. During model latency the live 1x game continues; the host must obtain a new dispatch observation and deterministically check all relevant allowlisted scene/UI predicates before fresh capability admission. Changed/uncertain predicates reject/replan. Empty buttons means neutral input during ordinary live frames, not model-paced frame advance."
+    },
+    "GameAdmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admissionId",
+        "capabilityInvocationId",
+        "authorityContextRef",
+        "dispatchReceipt",
+        "scopeDigest",
+        "inputDigest",
+        "policyRevision",
+        "issuedAt",
+        "expiresAt"
+      ],
+      "properties": {
+        "admissionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "capabilityInvocationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "authorityContextRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/AuthorityContextRef"
+        },
+        "dispatchReceipt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "scopeDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "inputDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "policyRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "issuedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        }
+      },
+      "description": "Trusted runtime injection only, never a model/browser credential. Adapter resolves the immutable canonical dispatch receipt and exact input/scope/policy binding against the local authenticated admission ledger before the effect. Shape-valid data is not authority."
+    },
+    "GameActionReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "actionId",
+        "proposalId",
+        "idempotencyKey",
+        "inputDigest",
+        "admissionId",
+        "disposition",
+        "beforeFrame",
+        "afterFrame",
+        "framesApplied",
+        "buttonsNeutralized",
+        "startedAt",
+        "completedAt",
+        "resultingObservationIds",
+        "recordedAt",
+        "reason"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "gameActionReceipt"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "actionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "proposalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "inputDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "admissionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "disposition": {
+          "enum": [
+            "proposed",
+            "admitted",
+            "started",
+            "completed",
+            "cancelled",
+            "failed",
+            "outcomeUnknown"
+          ]
+        },
+        "beforeFrame": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "afterFrame": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "framesApplied": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "buttonsNeutralized": {
+          "type": "boolean"
+        },
+        "startedAt": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completedAt": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resultingObservationIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 3,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "recordedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "description": "Durable at-most-once attempt/outcome ledger. Unknown is not a success or a safe retry. Release is separately confirmed; a disconnect/watchdog failure pauses the activity and requires reconciliation, never blind redispatch."
+    },
+    "GameSaveArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact",
+        "contentClass",
+        "modelReadable",
+        "pinsDigest",
+        "sourceTimelineId",
+        "sourceFrameNumber",
+        "createdAt",
+        "verifiedAt",
+        "readbackQualificationRef"
+      ],
+      "properties": {
+        "artifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "contentClass": {
+          "const": "opaqueGameSaveRam"
+        },
+        "modelReadable": {
+          "const": false
+        },
+        "pinsDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "sourceTimelineId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sourceFrameNumber": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "createdAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "verifiedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "readbackQualificationRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        }
+      },
+      "description": "Opaque ordinary in-game SaveRAM bytes only, using configured sandboxed copies without overwriting the operator initial save. Verify actual file/digest/game/core identity and ordinary in-game load/readback behavior. No emulator savestate/snapshot, rewind state, hidden-state decoding or crash-recovery exception is permitted."
+    },
+    "ActivityCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "checkpointId",
+        "revision",
+        "stateRevision",
+        "policyRevision",
+        "pinsDigest",
+        "goalSummary",
+        "recentObservationIds",
+        "adviceRefs",
+        "lastObservationId",
+        "lastActionReceipt",
+        "saveArtifact",
+        "budgetUsed",
+        "recordedAt",
+        "resumeDisposition",
+        "campaignJournalRef"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "activityCheckpoint"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "checkpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "stateRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "policyRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "pinsDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "goalSummary": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 2000
+        },
+        "recentObservationIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "adviceRefs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "lastObservationId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lastActionReceipt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GameActionReceipt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "saveArtifact": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GameSaveArtifact"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "budgetUsed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "wallMs",
+            "frames",
+            "actions",
+            "starts",
+            "equivalentFailures",
+            "modelCalls",
+            "inputTokens",
+            "outputTokens",
+            "retries",
+            "checkpointBytes",
+            "memoryEpisodes"
+          ],
+          "properties": {
+            "wallMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "actions": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "starts": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "equivalentFailures": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "modelCalls": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "inputTokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "outputTokens": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "retries": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "checkpointBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "memoryEpisodes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            }
+          }
+        },
+        "recordedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "resumeDisposition": {
+          "enum": [
+            "requiresExplicitResume",
+            "requiresReconciliation",
+            "unavailable"
+          ]
+        },
+        "campaignJournalRef": {
+          "$ref": "#/$defs/CampaignJournalRef"
+        }
+      },
+      "description": "Durable host metadata (goals, outcomes, budgets, advice, policies, idempotency and optional ordinary SaveRAM reference) is not an emulator snapshot. Crash resume uses actual ordinary in-game load, accepts lost unsaved progress, observes/reconciles the new current state and never reconstructs/replays actions. Host memory tombstones, consumed authority and budgets never roll back. campaignJournalRef binds independently persisted compact campaign continuity across runs; write meaningful goal/story changes incrementally and before normal termination, under the same finite checkpoint storage budget and correction/forgetting fences."
+    },
+    "GameActivityState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "revision",
+        "lifecycle",
+        "reason",
+        "policy",
+        "bounds",
+        "pins",
+        "adapterConnected",
+        "inputOwnerLeaseId",
+        "inputOwnerLeaseExpiresAt",
+        "buttonsNeutralized",
+        "latestObservationId",
+        "checkpoint",
+        "presentation"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "gameActivityState"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "lifecycle": {
+          "enum": [
+            "unavailable",
+            "ready",
+            "starting",
+            "running",
+            "waitingForObservation",
+            "waitingForPlanning",
+            "waitingForHuman",
+            "paused",
+            "stopping",
+            "stopped",
+            "budgetExhausted",
+            "completed",
+            "failed",
+            "recoveryRequired"
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy": {
+          "$ref": "#/$defs/GamePolicy"
+        },
+        "bounds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GameBounds"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pins": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GameArtifactPins"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "adapterConnected": {
+          "type": "boolean"
+        },
+        "inputOwnerLeaseId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inputOwnerLeaseExpiresAt": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "buttonsNeutralized": {
+          "type": "boolean"
+        },
+        "latestObservationId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checkpoint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActivityCheckpoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "presentation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "renderingMode",
+            "windowRef",
+            "displayRef",
+            "windowPresent",
+            "watchable",
+            "viewerConnected",
+            "observedAt",
+            "reason"
+          ],
+          "properties": {
+            "renderingMode": {
+              "const": "graphical"
+            },
+            "windowRef": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "displayRef": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "windowPresent": {
+              "type": "boolean"
+            },
+            "watchable": {
+              "type": "boolean"
+            },
+            "viewerConnected": {
+              "type": "boolean"
+            },
+            "observedAt": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "description": "Both Linux and Windows require a running actual graphical BizHawk window on an accessible local or configured remote display, including away play. A human viewer need not be connected. GUI/display loss pauses or makes the activity unavailable; a headless core, screenshot replay or preview alone is not watchable game execution."
+        }
+      },
+      "description": "State is truthful configuration/lifecycle, not inferred from installed emulator or a screenshot. Running requires actual qualified pins, current policy/admission, exclusive input and shared scheduler capacity. Live waiting-for-observation/planning states retain the same pins, finite bounds, connected adapter, graphical watchability and exclusive finite input lease as running.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "lifecycle": {
+                "enum": [
+                  "ready",
+                  "running",
+                  "waitingForObservation",
+                  "waitingForPlanning"
+                ]
+              }
+            },
+            "required": [
+              "lifecycle"
+            ]
+          },
+          "then": {
+            "properties": {
+              "bounds": {
+                "$ref": "#/$defs/GameBounds"
+              },
+              "pins": {
+                "$ref": "#/$defs/GameArtifactPins"
+              },
+              "adapterConnected": {
+                "const": true
+              },
+              "presentation": {
+                "type": "object",
+                "required": [
+                  "windowRef",
+                  "displayRef",
+                  "windowPresent",
+                  "watchable",
+                  "observedAt"
+                ],
+                "properties": {
+                  "windowRef": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                  },
+                  "displayRef": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                  },
+                  "windowPresent": {
+                    "const": true
+                  },
+                  "watchable": {
+                    "const": true
+                  },
+                  "observedAt": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "lifecycle": {
+                "enum": [
+                  "running",
+                  "waitingForObservation",
+                  "waitingForPlanning"
+                ]
+              }
+            },
+            "required": [
+              "lifecycle"
+            ]
+          },
+          "then": {
+            "properties": {
+              "inputOwnerLeaseId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "inputOwnerLeaseExpiresAt": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "GameImageInterpretationInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "deadlineAt",
+        "cancellationId",
+        "executionMode",
+        "scope",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivityAdapter.imageInterpretation"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deadlineAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "cancellationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "providerConfigurationRef",
+            "egressPolicyRef",
+            "observationId",
+            "pinsDigest",
+            "screenshots",
+            "visibleState",
+            "maxInputTokens",
+            "maxOutputTokens",
+            "maxOutputBytes"
+          ],
+          "properties": {
+            "providerConfigurationRef": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            "egressPolicyRef": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            "observationId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "pinsDigest": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+            },
+            "screenshots": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 3,
+              "items": {
+                "$ref": "#/$defs/GameScreenshot"
+              }
+            },
+            "visibleState": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/PlayerVisibleStateValue"
+              }
+            },
+            "maxInputTokens": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "maxOutputTokens": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "maxOutputBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32768
+            }
+          },
+          "description": "Internal purpose-bound host-side observe-adapter DTO, not a fifth public port or Lua model call. Only this adapter step may resolve authorized transient game image bytes for a configured image-capable backend. Normal nine-section inference receives typed text only; camera leases/audience are forbidden. Egress, current scope, byte/digest/frame limits and shared optional-work admission remain mandatory."
+        }
+      }
+    },
+    "GameImageInterpretationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "providerRef",
+        "completedAt",
+        "outcome"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivityAdapter.imageInterpretation"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "completedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "payload",
+            "error"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "succeeded",
+                "rejected",
+                "retryableFailure",
+                "failed",
+                "cancelled",
+                "timedOut"
+              ]
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "observationId",
+                    "scope",
+                    "pinsDigest",
+                    "facts",
+                    "inputTokens",
+                    "outputTokens",
+                    "outputBytes"
+                  ],
+                  "properties": {
+                    "observationId": {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                    },
+                    "scope": {
+                      "$ref": "#/$defs/ActivityScope"
+                    },
+                    "pinsDigest": {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+                    },
+                    "facts": {
+                      "type": "array",
+                      "minItems": 0,
+                      "maxItems": 16,
+                      "items": {
+                        "$ref": "#/$defs/PlayerVisibleFact"
+                      }
+                    },
+                    "inputTokens": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    "outputTokens": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    "outputBytes": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 32768
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "succeeded"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "observationId",
+                      "scope",
+                      "pinsDigest",
+                      "facts",
+                      "inputTokens",
+                      "outputTokens",
+                      "outputBytes"
+                    ],
+                    "properties": {
+                      "observationId": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                      },
+                      "scope": {
+                        "$ref": "#/$defs/ActivityScope"
+                      },
+                      "pinsDigest": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+                      },
+                      "facts": {
+                        "type": "array",
+                        "minItems": 0,
+                        "maxItems": 16,
+                        "items": {
+                          "$ref": "#/$defs/PlayerVisibleFact"
+                        }
+                      },
+                      "inputTokens": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 2147483647
+                      },
+                      "outputTokens": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 2147483647
+                      },
+                      "outputBytes": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 32768
+                      }
+                    }
+                  },
+                  "error": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "payload": {
+                    "type": "null"
+                  },
+                  "error": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "GameStateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "deadlineAt",
+        "cancellationId",
+        "executionMode",
+        "scope",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivity.getState"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deadlineAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "cancellationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [],
+          "properties": {}
+        }
+      }
+    },
+    "GameStateResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "providerRef",
+        "completedAt",
+        "outcome"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivity.getState"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "completedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "payload",
+            "error"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "succeeded",
+                "rejected",
+                "retryableFailure",
+                "failed",
+                "cancelled",
+                "timedOut"
+              ]
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GameActivityState"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "succeeded"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "$ref": "#/$defs/GameActivityState"
+                  },
+                  "error": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "payload": {
+                    "type": "null"
+                  },
+                  "error": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "GameControlRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "deadlineAt",
+        "cancellationId",
+        "executionMode",
+        "scope",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivity.control"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deadlineAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "cancellationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "action",
+            "expectedRevision",
+            "targetRunId",
+            "reason"
+          ],
+          "properties": {
+            "action": {
+              "enum": [
+                "start",
+                "pause",
+                "resume",
+                "stop"
+              ]
+            },
+            "expectedRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+            },
+            "targetRunId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          }
+        }
+      }
+    },
+    "GameControlResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "providerRef",
+        "completedAt",
+        "outcome"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivity.control"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "completedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "payload",
+            "error"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "succeeded",
+                "rejected",
+                "retryableFailure",
+                "failed",
+                "cancelled",
+                "timedOut",
+                "outcomeUnknown"
+              ]
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GameActivityState"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "succeeded"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "$ref": "#/$defs/GameActivityState"
+                  },
+                  "error": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "payload": {
+                    "type": "null"
+                  },
+                  "error": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "GameObserveRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "deadlineAt",
+        "cancellationId",
+        "executionMode",
+        "scope",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivityAdapter.observe"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deadlineAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "cancellationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "expectedPinsDigest",
+            "afterActionId",
+            "maxScreenshots"
+          ],
+          "properties": {
+            "expectedPinsDigest": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+            },
+            "afterActionId": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "maxScreenshots": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            }
+          }
+        }
+      }
+    },
+    "GameObserveResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "providerRef",
+        "completedAt",
+        "outcome"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivityAdapter.observe"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "completedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "payload",
+            "error"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "succeeded",
+                "rejected",
+                "retryableFailure",
+                "failed",
+                "cancelled",
+                "timedOut"
+              ]
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "observation",
+                    "reconciledAction"
+                  ],
+                  "properties": {
+                    "observation": {
+                      "$ref": "#/$defs/GameObservation"
+                    },
+                    "reconciledAction": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/GameActionReceipt"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "succeeded"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "observation",
+                      "reconciledAction"
+                    ],
+                    "properties": {
+                      "observation": {
+                        "$ref": "#/$defs/GameObservation"
+                      },
+                      "reconciledAction": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/$defs/GameActionReceipt"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "error": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "payload": {
+                    "type": "null"
+                  },
+                  "error": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "GameActionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "deadlineAt",
+        "cancellationId",
+        "executionMode",
+        "scope",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivityAdapter.applyController"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deadlineAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "cancellationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "actionId",
+            "proposal",
+            "admission",
+            "inputOwnerLeaseId",
+            "buttonVector",
+            "protectedMenuOperation",
+            "expectedFrameNumber",
+            "expectedPinsDigest",
+            "dispatchValidation"
+          ],
+          "properties": {
+            "actionId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "proposal": {
+              "$ref": "#/$defs/GameActionProposal"
+            },
+            "admission": {
+              "$ref": "#/$defs/GameAdmission"
+            },
+            "inputOwnerLeaseId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "buttonVector": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "up",
+                "down",
+                "left",
+                "right",
+                "a",
+                "b",
+                "x",
+                "y",
+                "l",
+                "r",
+                "start",
+                "select"
+              ],
+              "properties": {
+                "up": {
+                  "type": "boolean"
+                },
+                "down": {
+                  "type": "boolean"
+                },
+                "left": {
+                  "type": "boolean"
+                },
+                "right": {
+                  "type": "boolean"
+                },
+                "a": {
+                  "type": "boolean"
+                },
+                "b": {
+                  "type": "boolean"
+                },
+                "x": {
+                  "type": "boolean"
+                },
+                "y": {
+                  "type": "boolean"
+                },
+                "l": {
+                  "type": "boolean"
+                },
+                "r": {
+                  "type": "boolean"
+                },
+                "start": {
+                  "type": "boolean"
+                },
+                "select": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "protectedMenuOperation": {
+              "enum": [
+                "none",
+                "inGameSave",
+                "inGameLoad",
+                "uncertain"
+              ]
+            },
+            "expectedFrameNumber": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "expectedPinsDigest": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+            },
+            "dispatchValidation": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "planningObservationId",
+                "dispatchObservationId",
+                "dispatchObservationRevision",
+                "checkedFrameNumber",
+                "checkedAt",
+                "validatorRef",
+                "predicateChecks",
+                "planningCapturedAt",
+                "planningFrameNumber",
+                "preparedContextFreshUntil"
+              ],
+              "properties": {
+                "planningObservationId": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                },
+                "dispatchObservationId": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                },
+                "dispatchObservationRevision": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+                },
+                "checkedFrameNumber": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "checkedAt": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                },
+                "validatorRef": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                },
+                "predicateChecks": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 8,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "predicateId",
+                      "fieldId",
+                      "observedValue",
+                      "matched",
+                      "sourceObservationId"
+                    ],
+                    "properties": {
+                      "predicateId": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                      },
+                      "fieldId": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                      },
+                      "observedValue": {
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 2000
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      },
+                      "matched": {
+                        "const": true
+                      },
+                      "sourceObservationId": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                      }
+                    }
+                  }
+                },
+                "planningCapturedAt": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                },
+                "planningFrameNumber": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "preparedContextFreshUntil": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                }
+              },
+              "description": "Trusted deterministic revalidation against the fresh live dispatch observation, never model self-certification. Exact current frame/epoch/timeline/input ownership is bound atomically at dispatch; the earlier planning frame may differ if every typed current precondition still holds. Source capture time/frame and prepared-context expiry must match stored host records; the host enforces configured maxPlanningAgeMs/maxPlanningFrameDelta and finite context freshness at dispatch. Values in this DTO cannot renew or self-certify their sources."
+            }
+          }
+        }
+      }
+    },
+    "GameActionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "providerRef",
+        "completedAt",
+        "outcome"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivityAdapter.applyController"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "completedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "payload",
+            "error"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "succeeded",
+                "rejected",
+                "retryableFailure",
+                "failed",
+                "cancelled",
+                "timedOut",
+                "outcomeUnknown"
+              ]
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GameActionReceipt"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "succeeded"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "$ref": "#/$defs/GameActionReceipt"
+                  },
+                  "error": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "payload": {
+                    "type": "null"
+                  },
+                  "error": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "GameReleaseRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "deadlineAt",
+        "cancellationId",
+        "executionMode",
+        "scope",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivityAdapter.releaseControls"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deadlineAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "cancellationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "targetInputOwnerLeaseId",
+            "reason",
+            "neutralButtons"
+          ],
+          "properties": {
+            "targetInputOwnerLeaseId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "reason": {
+              "enum": [
+                "pause",
+                "stop",
+                "leaseExpired",
+                "disconnect",
+                "deadline",
+                "foreground",
+                "recovery",
+                "policyChanged"
+              ]
+            },
+            "neutralButtons": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "up",
+                "down",
+                "left",
+                "right",
+                "a",
+                "b",
+                "x",
+                "y",
+                "l",
+                "r",
+                "start",
+                "select"
+              ],
+              "properties": {
+                "up": {
+                  "const": false
+                },
+                "down": {
+                  "const": false
+                },
+                "left": {
+                  "const": false
+                },
+                "right": {
+                  "const": false
+                },
+                "a": {
+                  "const": false
+                },
+                "b": {
+                  "const": false
+                },
+                "x": {
+                  "const": false
+                },
+                "y": {
+                  "const": false
+                },
+                "l": {
+                  "const": false
+                },
+                "r": {
+                  "const": false
+                },
+                "start": {
+                  "const": false
+                },
+                "select": {
+                  "const": false
+                }
+              }
+            }
+          },
+          "description": "Trusted ownership withdrawal. Under exclusive ownership send explicit false for every allowlisted button; joypad.set({}) merely removes overrides and is not proof of neutral input. Pause and neutralize before detaching; target an exact lease so stale release never affects a successor."
+        }
+      }
+    },
+    "GameReleaseResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "providerRef",
+        "completedAt",
+        "outcome"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivityAdapter.releaseControls"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "completedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "payload",
+            "error"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "succeeded",
+                "rejected",
+                "retryableFailure",
+                "failed",
+                "cancelled",
+                "timedOut",
+                "outcomeUnknown"
+              ]
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "targetInputOwnerLeaseId",
+                    "disposition",
+                    "confirmedAt",
+                    "emulatorPaused",
+                    "buttonsNeutralized",
+                    "pauseFrameNumber",
+                    "verifiedFrameNumber",
+                    "pauseConfirmedMonotonicMs",
+                    "verifiedMonotonicMs",
+                    "activityEpochAfterFence",
+                    "confirmationSource",
+                    "resumeRequiresFreshObservation"
+                  ],
+                  "properties": {
+                    "targetInputOwnerLeaseId": {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                    },
+                    "disposition": {
+                      "enum": [
+                        "neutralizedAndPaused",
+                        "successorPreserved",
+                        "outcomeUnknown"
+                      ]
+                    },
+                    "confirmedAt": {
+                      "anyOf": [
+                        {
+                          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "emulatorPaused": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "buttonsNeutralized": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "pauseFrameNumber": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 2147483647
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "verifiedFrameNumber": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 2147483647
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "pauseConfirmedMonotonicMs": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 2147483647
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "verifiedMonotonicMs": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 2147483647
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "activityEpochAfterFence": {
+                      "anyOf": [
+                        {
+                          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "confirmationSource": {
+                      "enum": [
+                        "adapterObserved",
+                        "unconfirmed",
+                        "notApplicable"
+                      ]
+                    },
+                    "resumeRequiresFreshObservation": {
+                      "const": true
+                    }
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "disposition": {
+                            "const": "neutralizedAndPaused"
+                          }
+                        },
+                        "required": [
+                          "disposition"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "confirmedAt": {
+                            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                          },
+                          "emulatorPaused": {
+                            "const": true
+                          },
+                          "buttonsNeutralized": {
+                            "const": true
+                          },
+                          "pauseFrameNumber": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "verifiedFrameNumber": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "pauseConfirmedMonotonicMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "verifiedMonotonicMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "activityEpochAfterFence": {
+                            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+                          },
+                          "confirmationSource": {
+                            "const": "adapterObserved"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "description": "Exact old-lease safety withdrawal uses trusted host shutdown intent, even after gameplay authority revocation. Confirm neutral controls AND actual BizHawk pause with equal two post-pause frame samples at increasing monotonic times, after cancelling/fencing the old epoch; lost/negative acknowledgement remains unknown/failure. Never act on a successor lease. Resume requires fresh observation/current authority and keeps budgets; queued actions are not replayed."
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "succeeded"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "targetInputOwnerLeaseId",
+                      "disposition",
+                      "confirmedAt",
+                      "emulatorPaused",
+                      "buttonsNeutralized",
+                      "pauseFrameNumber",
+                      "verifiedFrameNumber",
+                      "pauseConfirmedMonotonicMs",
+                      "verifiedMonotonicMs",
+                      "activityEpochAfterFence",
+                      "confirmationSource",
+                      "resumeRequiresFreshObservation"
+                    ],
+                    "properties": {
+                      "targetInputOwnerLeaseId": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                      },
+                      "disposition": {
+                        "enum": [
+                          "neutralizedAndPaused",
+                          "successorPreserved",
+                          "outcomeUnknown"
+                        ]
+                      },
+                      "confirmedAt": {
+                        "anyOf": [
+                          {
+                            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "emulatorPaused": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "buttonsNeutralized": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "pauseFrameNumber": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "verifiedFrameNumber": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "pauseConfirmedMonotonicMs": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "verifiedMonotonicMs": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "activityEpochAfterFence": {
+                        "anyOf": [
+                          {
+                            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "confirmationSource": {
+                        "enum": [
+                          "adapterObserved",
+                          "unconfirmed",
+                          "notApplicable"
+                        ]
+                      },
+                      "resumeRequiresFreshObservation": {
+                        "const": true
+                      }
+                    },
+                    "allOf": [
+                      {
+                        "if": {
+                          "properties": {
+                            "disposition": {
+                              "const": "neutralizedAndPaused"
+                            }
+                          },
+                          "required": [
+                            "disposition"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "confirmedAt": {
+                              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                            },
+                            "emulatorPaused": {
+                              "const": true
+                            },
+                            "buttonsNeutralized": {
+                              "const": true
+                            },
+                            "pauseFrameNumber": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 2147483647
+                            },
+                            "verifiedFrameNumber": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 2147483647
+                            },
+                            "pauseConfirmedMonotonicMs": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 2147483647
+                            },
+                            "verifiedMonotonicMs": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 2147483647
+                            },
+                            "activityEpochAfterFence": {
+                              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+                            },
+                            "confirmationSource": {
+                              "const": "adapterObserved"
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    "description": "Exact old-lease safety withdrawal uses trusted host shutdown intent, even after gameplay authority revocation. Confirm neutral controls AND actual BizHawk pause with equal two post-pause frame samples at increasing monotonic times, after cancelling/fencing the old epoch; lost/negative acknowledgement remains unknown/failure. Never act on a successor lease. Resume requires fresh observation/current authority and keeps budgets; queued actions are not replayed."
+                  },
+                  "error": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "payload": {
+                    "type": "null"
+                  },
+                  "error": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "GameSaveRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "deadlineAt",
+        "cancellationId",
+        "executionMode",
+        "scope",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivityAdapter.controlSave"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deadlineAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "cancellationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "action",
+            "purpose",
+            "expectedPinsDigest",
+            "saveArtifact",
+            "admission"
+          ],
+          "properties": {
+            "action": {
+              "enum": [
+                "flushSaveRam",
+                "verifyOrdinarySave"
+              ]
+            },
+            "purpose": {
+              "const": "ordinaryInGame"
+            },
+            "expectedPinsDigest": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+            },
+            "saveArtifact": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GameSaveArtifact"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "admission": {
+              "$ref": "#/$defs/GameAdmission"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "flushSaveRam"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "saveArtifact": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "saveArtifact": {
+                    "$ref": "#/$defs/GameSaveArtifact"
+                  }
+                }
+              }
+            }
+          ],
+          "description": "Only flush or verify bytes produced by ordinary game saves. Loading occurs through admitted normal game-menu controller actions. Never create/load an emulator savestate, rewind or reconstruct unsaved progress, including after a crash. The semantic flushSaveRam operation must map to an actually qualified persistence mechanism for the pinned BizHawk build; it does not assert any Lua function named flushsaveram or rely on automatic SaveRAM flushing. Verification requires actual persisted bytes/digest plus normal game restart/load qualification."
+        }
+      }
+    },
+    "GameSaveResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "providerRef",
+        "completedAt",
+        "outcome"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "GameActivityAdapter.controlSave"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "completedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "payload",
+            "error"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "succeeded",
+                "rejected",
+                "retryableFailure",
+                "failed",
+                "cancelled",
+                "timedOut",
+                "outcomeUnknown"
+              ]
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "action",
+                    "saveArtifact",
+                    "timelineId",
+                    "confirmedAt"
+                  ],
+                  "properties": {
+                    "action": {
+                      "enum": [
+                        "flushSaveRam",
+                        "verifyOrdinarySave"
+                      ]
+                    },
+                    "saveArtifact": {
+                      "$ref": "#/$defs/GameSaveArtifact"
+                    },
+                    "timelineId": {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                    },
+                    "confirmedAt": {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "succeeded"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "action",
+                      "saveArtifact",
+                      "timelineId",
+                      "confirmedAt"
+                    ],
+                    "properties": {
+                      "action": {
+                        "enum": [
+                          "flushSaveRam",
+                          "verifyOrdinarySave"
+                        ]
+                      },
+                      "saveArtifact": {
+                        "$ref": "#/$defs/GameSaveArtifact"
+                      },
+                      "timelineId": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                      },
+                      "confirmedAt": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                      }
+                    }
+                  },
+                  "error": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "payload": {
+                    "type": "null"
+                  },
+                  "error": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "GameDecisionInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "viewId",
+        "viewRevision",
+        "invalidationKey",
+        "observationId",
+        "observationRevision",
+        "selectedFactIds",
+        "selectedVisibleFieldIds",
+        "goalSummary",
+        "recentActionIds",
+        "adviceRefs",
+        "conversationSectionDigest",
+        "preparedMemorySectionDigest",
+        "inputTokens",
+        "selectedAt",
+        "freshUntil",
+        "campaignJournalRef",
+        "selectedCampaignGoalIds",
+        "selectedCurrentCampaignEntryIds"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "gameDecisionInput"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "viewId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "viewRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "invalidationKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "observationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "observationRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "selectedFactIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "selectedVisibleFieldIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "goalSummary": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 2000
+        },
+        "recentActionIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "adviceRefs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "conversationSectionDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "preparedMemorySectionDigest": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inputTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "selectedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "freshUntil": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "campaignJournalRef": {
+          "$ref": "#/$defs/CampaignJournalRef"
+        },
+        "selectedCampaignGoalIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 0,
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "selectedCurrentCampaignEntryIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true
+        }
+      },
+      "description": "Bounded sidecar materialized with the one normal prepared context, not a separate prompt builder or extra inference section. Game facts/advice occupy existing untrusted conversation and preparedMemory prompt sections within the unchanged nine-section inference input; only host capability/counter state is trusted. No human statement, physical audience or audio owner is fabricated. The exact journal summary and bounded relevant unfinished goals are selected atomically into the same existing conversation/preparedMemory sections before action; there is no extra journal prompt section. Current story/milestone selections require game-specific current-timeline reconciliation."
+    },
+    "GameExperienceEpisode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "episodeId",
+        "revision",
+        "pinsDigest",
+        "policyRevision",
+        "frameRange",
+        "occurredFrom",
+        "occurredTo",
+        "rawEvidenceAvailability",
+        "sourceAdmissionIds",
+        "summary",
+        "sourceObservationIds",
+        "sourceActionIds",
+        "independenceKey",
+        "sourceKind",
+        "uncertainty",
+        "adviceRefs",
+        "recordedAt",
+        "retentionPolicyRef",
+        "expiresAt",
+        "state",
+        "untrusted"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "gameExperienceEpisode"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "episodeId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "pinsDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "policyRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "frameRange": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from",
+            "to"
+          ],
+          "properties": {
+            "from": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "to": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            }
+          }
+        },
+        "occurredFrom": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "occurredTo": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "rawEvidenceAvailability": {
+          "enum": [
+            "notRetained",
+            "explicitlyRetainedArtifact"
+          ]
+        },
+        "sourceAdmissionIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "sourceObservationIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "sourceActionIds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          }
+        },
+        "independenceKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sourceKind": {
+          "const": "simulatedGameExperience"
+        },
+        "uncertainty": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "adviceRefs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          }
+        },
+        "recordedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "retentionPolicyRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "state": {
+          "enum": [
+            "retained",
+            "superseded",
+            "invalidated"
+          ]
+        },
+        "untrusted": {
+          "const": true
+        }
+      },
+      "description": "Selective existing-memory input with explicit simulated-game provenance and timeline. No owner statement, camera event, real-world fact or automatic skill/persona change. Reload/replay cannot multiply independent evidence; abandoned timelines remain qualified history, not current game truth."
+    },
+    "GameMemoryBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "observationDomain",
+        "sourceKind",
+        "episodeId",
+        "episodeRevision",
+        "activityId",
+        "runId",
+        "timelineId",
+        "pinsDigest",
+        "transformationConfidence",
+        "campaignId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "observationDomain": {
+          "const": "simulatedGame"
+        },
+        "sourceKind": {
+          "const": "simulatedGameExperience"
+        },
+        "episodeId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "episodeRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "activityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "runId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "timelineId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "pinsDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "transformationConfidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "value",
+            "basis",
+            "policyRef"
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "basis": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "policyRef": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            }
+          }
+        },
+        "campaignId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        }
+      },
+      "description": "Required lifestream.localGameActivity MemoryRecord extension. Validate exact episode/revision/activity/run/timeline/artifact binding and source lifecycle at write, recall/export/import. Transformation confidence is attributed, never fabricated perception certainty."
+    },
+    "GameMemoryProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "episode",
+        "memoryRecord"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "gameMemoryProjection"
+        },
+        "episode": {
+          "$ref": "#/$defs/GameExperienceEpisode"
+        },
+        "memoryRecord": {
+          "allOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/memory-record/2.0.0"
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "factuality",
+                "provenance",
+                "extensions"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "experiential"
+                },
+                "factuality": {
+                  "const": "unverified"
+                },
+                "provenance": {
+                  "type": "object",
+                  "required": [
+                    "sourceType"
+                  ],
+                  "properties": {
+                    "sourceType": {
+                      "const": "interaction"
+                    }
+                  }
+                },
+                "extensions": {
+                  "type": "object",
+                  "required": [
+                    "lifestream.localGameActivity"
+                  ],
+                  "properties": {
+                    "lifestream.localGameActivity": {
+                      "$ref": "#/$defs/GameMemoryBinding"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "description": "Direct simulated-game episode projection only. Actual human advice has separately attributed participantStatement provenance; game observations never become human statements, physical worldGrounded facts or authority."
+    },
+    "GameHelpScreenshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceDomain",
+        "captureRegion",
+        "screenshotId",
+        "observationId",
+        "activityId",
+        "runId",
+        "timelineId",
+        "frameNumber",
+        "capturedAt",
+        "sha256",
+        "byteLength",
+        "mediaType",
+        "width",
+        "height",
+        "attachmentArtifact",
+        "retentionPolicyRef",
+        "expiresAt",
+        "ageAtSendMs",
+        "captureTimeDisclosed"
+      ],
+      "properties": {
+        "sourceDomain": {
+          "const": "simulatedGame"
+        },
+        "captureRegion": {
+          "const": "gameFramebuffer"
+        },
+        "screenshotId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "observationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "activityId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "runId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "timelineId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "frameNumber": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "capturedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "sha256": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2097152
+        },
+        "mediaType": {
+          "const": "image/png"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1280
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1280
+        },
+        "attachmentArtifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "retentionPolicyRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "ageAtSendMs": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "captureTimeDisclosed": {
+          "type": "boolean"
+        }
+      },
+      "description": "Relevant actual game framebuffer capture attached to this question, never camera/unrelated desktop/debugger content. Binds the exact source observation/run/timeline/frame/time and verified existing attachment bytes/digest. Queued sending requires still-authorized bounded local attachment retention and an unexpired artifact; computed age/capture moment must be disclosed honestly. No new upload/hosting service or broader screenshot retention is granted. Resolve the source screenshotId inside the recorded GameObservation and compare frame, capture time, digest, byte length, media type and dimensions before using the attachment; a known observation ID alone is insufficient."
+    },
+    "GameHelpItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "helpId",
+        "question",
+        "attemptsSummary",
+        "attemptedActionIds",
+        "sourceObservationIds",
+        "channelRef",
+        "recipientRef",
+        "contactPolicyRevision",
+        "queuedAt",
+        "status",
+        "screenshotStatus",
+        "screenshot",
+        "imageTransportSupported",
+        "sentAt",
+        "messageSentEvidenceRef",
+        "attachmentSentEvidenceRef",
+        "deliveryEvidenceRef",
+        "replyAdviceRef",
+        "authenticatedReplyEvidenceRef",
+        "limitation",
+        "attachmentStatus",
+        "attachmentTransferredEvidenceRef",
+        "attachmentDeliveryEvidenceRef",
+        "screenshotUnavailableDisclosed"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "gameHelpItem"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "helpId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "attemptsSummary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "attemptedActionIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "maxItems": 16,
+          "minItems": 0
+        },
+        "sourceObservationIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "maxItems": 16,
+          "minItems": 1
+        },
+        "channelRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "recipientRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "contactPolicyRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "queuedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "deferred",
+            "sent",
+            "delivered",
+            "replied",
+            "failed"
+          ]
+        },
+        "screenshotStatus": {
+          "enum": [
+            "pending",
+            "ready",
+            "failed",
+            "unsupported"
+          ]
+        },
+        "screenshot": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GameHelpScreenshot"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "imageTransportSupported": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "messageSentEvidenceRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attachmentSentEvidenceRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "deliveryEvidenceRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replyAdviceRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "authenticatedReplyEvidenceRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limitation": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attachmentStatus": {
+          "enum": [
+            "queued",
+            "transferred",
+            "sent",
+            "delivered",
+            "failed",
+            "unknown",
+            "unsupported"
+          ]
+        },
+        "attachmentTransferredEvidenceRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attachmentDeliveryEvidenceRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "screenshotUnavailableDisclosed": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "screenshotStatus": {
+                "const": "ready"
+              }
+            },
+            "required": [
+              "screenshotStatus"
+            ]
+          },
+          "then": {
+            "properties": {
+              "screenshot": {
+                "$ref": "#/$defs/GameHelpScreenshot"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "sent",
+                  "delivered",
+                  "replied"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "sentAt": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+              },
+              "messageSentEvidenceRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "delivered"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "deliveryEvidenceRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "replied"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "replyAdviceRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              },
+              "authenticatedReplyEvidenceRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "attachmentStatus": {
+                "enum": [
+                  "sent",
+                  "delivered"
+                ]
+              }
+            },
+            "required": [
+              "attachmentStatus"
+            ]
+          },
+          "then": {
+            "properties": {
+              "screenshotStatus": {
+                "const": "ready"
+              },
+              "screenshot": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/GameHelpScreenshot"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "ageAtSendMs",
+                      "captureTimeDisclosed"
+                    ],
+                    "properties": {
+                      "ageAtSendMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 2147483647
+                      },
+                      "captureTimeDisclosed": {
+                        "const": true
+                      }
+                    }
+                  }
+                ]
+              },
+              "imageTransportSupported": {
+                "const": true
+              },
+              "attachmentSentEvidenceRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "attachmentStatus": {
+                "const": "transferred"
+              }
+            },
+            "required": [
+              "attachmentStatus"
+            ]
+          },
+          "then": {
+            "properties": {
+              "attachmentTransferredEvidenceRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              },
+              "screenshotStatus": {
+                "const": "ready"
+              },
+              "screenshot": {
+                "$ref": "#/$defs/GameHelpScreenshot"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "attachmentStatus": {
+                "const": "delivered"
+              }
+            },
+            "required": [
+              "attachmentStatus"
+            ]
+          },
+          "then": {
+            "properties": {
+              "attachmentDeliveryEvidenceRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "sent",
+                  "delivered",
+                  "replied"
+                ]
+              },
+              "attachmentStatus": {
+                "enum": [
+                  "queued",
+                  "transferred",
+                  "failed",
+                  "unknown",
+                  "unsupported"
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "attachmentStatus"
+            ]
+          },
+          "then": {
+            "properties": {
+              "screenshotUnavailableDisclosed": {
+                "const": true
+              },
+              "limitation": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              }
+            }
+          }
+        }
+      ],
+      "description": "Internal mapping onto existing initiative/message attachment machinery, not a new contact service or port. Actual attempts and one specific question accompany the relevant game screenshot. Channel/recipient/hours/privacy and attachment authority remain independent. Unsupported images, expiry or attachment failure defers/reports a limitation; no bare text is reported as screenshot delivery. Use only an already authorized image-capable route. Each sent/delivered/replied state requires its corresponding actual evidence; authenticated advice must enter a fresh plan. status tracks the message independently of attachmentStatus; uploaded/transferred evidence never proves image sent/delivered. Explicitly permitted text-only fallback may be sent/replied with a failed, unsupported or unknown attachment, but must disclose the missing screenshot and a limitation. Its permission comes from the existing delivery policy, never from this record. Attachment delivery requires separate actual receipt evidence."
+    },
+    "CampaignJournal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "campaignId",
+        "journalId",
+        "revision",
+        "accessRevision",
+        "summary",
+        "summaryEntryIds",
+        "entries",
+        "goals",
+        "updatedAt",
+        "retentionPolicyRef",
+        "lifecycle"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "campaignJournal"
+        },
+        "campaignId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "journalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "accessRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "summaryEntryIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "entryId",
+              "kind",
+              "epistemicKind",
+              "content",
+              "sourceRefs",
+              "sourceSessionRef",
+              "recordedAt",
+              "limitations"
+            ],
+            "properties": {
+              "entryId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "kind": {
+                "enum": [
+                  "milestone",
+                  "currentSituation",
+                  "storyFact",
+                  "npcClue",
+                  "placeClue",
+                  "causalHypothesis",
+                  "attemptOutcome",
+                  "humanAdvice",
+                  "unresolvedThread",
+                  "nextStep",
+                  "sessionSummary"
+                ]
+              },
+              "epistemicKind": {
+                "enum": [
+                  "observation",
+                  "inference",
+                  "humanAdvice",
+                  "priorKnowledge"
+                ]
+              },
+              "content": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "sourceRefs": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                },
+                "minItems": 1,
+                "maxItems": 8,
+                "uniqueItems": true
+              },
+              "sourceSessionRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              },
+              "recordedAt": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+              },
+              "limitations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "minItems": 0,
+                "maxItems": 8,
+                "uniqueItems": true
+              }
+            },
+            "description": "Compact sourced campaign knowledge. Observation means reported source evidence, not guaranteed truth. Inference, authenticated attributed advice and pretrained/prior knowledge remain distinct; no prior knowledge is relabeled as a discovery."
+          },
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "goals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "goalId",
+              "description",
+              "status",
+              "sourceEntryIds",
+              "supersedesGoalId",
+              "updatedAt",
+              "revision"
+            ],
+            "properties": {
+              "goalId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "status": {
+                "enum": [
+                  "proposed",
+                  "active",
+                  "deferred",
+                  "completed",
+                  "abandoned",
+                  "superseded"
+                ]
+              },
+              "sourceEntryIds": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                },
+                "minItems": 1,
+                "maxItems": 8,
+                "uniqueItems": true
+              },
+              "supersedesGoalId": {
+                "anyOf": [
+                  {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "updatedAt": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+              },
+              "revision": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+              }
+            },
+            "description": "Stable goal identity and explicit lifecycle survive sessions. An completed historical goal does not prove it remains completed after loading an older save."
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "updatedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "retentionPolicyRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "lifecycle": {
+          "enum": [
+            "active",
+            "retracted"
+          ]
+        }
+      },
+      "description": "Small activity-neutral durable journal core: sourced discoveries, story, unresolved threads, goals, advice and session summaries. It requires no emulator, game, save, platform or adapter. Existing checkpoint storage, privacy, correction/forgetting and context quotas govern it; this is not a new memory engine, agent, prompt history or general activity framework. Persist meaningful progress incrementally and before normal end; metadata durability never implies emulator-state capture."
+    },
+    "CampaignJournalRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "campaignId",
+        "journalId",
+        "revision",
+        "accessRevision"
+      ],
+      "properties": {
+        "campaignId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "journalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "accessRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        }
+      },
+      "description": "Exact host-stored journal revision/access binding selected atomically into existing prepared context and checkpoint. It is invalidated by source correction, privacy change or forgetting; a stale record cannot resurrect removed material."
+    },
+    "GameCampaignJournal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "journal",
+        "pinsDigest",
+        "ordinarySaveLineageRef",
+        "ordinarySaveArtifact",
+        "entryBindings",
+        "reconciliationState",
+        "reconciledObservationId",
+        "reconciledAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "gameCampaignJournal"
+        },
+        "scope": {
+          "$ref": "#/$defs/ActivityScope"
+        },
+        "journal": {
+          "$ref": "#/$defs/CampaignJournal"
+        },
+        "pinsDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "ordinarySaveLineageRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ordinarySaveArtifact": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GameSaveArtifact"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entryBindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "entryId",
+              "runId",
+              "timelineId",
+              "sourceObservationIds",
+              "sourceActionIds",
+              "sourceAdviceRefs",
+              "ordinarySaveDigest",
+              "currentDisposition"
+            ],
+            "properties": {
+              "entryId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "runId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "timelineId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "sourceObservationIds": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                },
+                "minItems": 0,
+                "maxItems": 8,
+                "uniqueItems": true
+              },
+              "sourceActionIds": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                },
+                "minItems": 0,
+                "maxItems": 8,
+                "uniqueItems": true
+              },
+              "sourceAdviceRefs": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                },
+                "minItems": 0,
+                "maxItems": 8,
+                "uniqueItems": true
+              },
+              "ordinarySaveDigest": {
+                "anyOf": [
+                  {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "currentDisposition": {
+                "enum": [
+                  "current",
+                  "historical",
+                  "invalidated"
+                ]
+              }
+            },
+            "description": "Game source binding; only qualified current entries may describe the current save/timeline. Historical learning can remain after older-save load without claiming lost milestones."
+          },
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "reconciliationState": {
+          "enum": [
+            "initialized",
+            "current",
+            "requiresReconciliation",
+            "conflicted"
+          ]
+        },
+        "reconciledObservationId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reconciledAt": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "description": "Concrete Chrono Trigger game binding around the activity-neutral journal. Campaign identity spans run/session changes but remains pinned to the selected game profile and ordinary-save lineage. New observed campaigns before the first ordinary save may have null save/lineage; restart without an ordinary save cannot reconstruct unsaved emulator state. Resume requires loaded journal summary/bounded unfinished goals, exact revision/access joins, fresh visible-state and actual ordinary-save reconciliation before action. Missing/stale/contradictory sources pause for reconciliation/help. Historical entries from progress lost by older-save loading remain dated history, never current milestone claims. Opaque saves are never decoded into cognition; all emulator snapshots remain forbidden."
+    }
+  }
+}

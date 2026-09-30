@@ -22,6 +22,10 @@
     "./visual-input": {
       "types": "./dist/visual-input.d.ts",
       "import": "./dist/visual-input.js"
+    },
+    "./visual-memory": {
+      "types": "./dist/visual-memory.d.ts",
+      "import": "./dist/visual-memory.js"
     }
   }
 }

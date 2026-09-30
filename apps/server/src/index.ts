@@ -841,6 +841,16 @@ export class LifestreamServer {
       const scope={principalId:context.principalId,assistantId:body.assistantId,relationshipId};
       if(method==="POST"){
         this.localAuth.csrf(context as LocalContext,String(request.headers["x-lifestream-csrf"]??""));
+        if(body.operation==='configureVisual'){
+          if(Object.keys(body).some(k=>!['assistantId','relationshipId','operation','enabled','expectedRevision','retentionMs'].includes(k))||typeof body.enabled!=='boolean'||!Number.isSafeInteger(body.expectedRevision)||!(body.retentionMs===null||Number.isSafeInteger(body.retentionMs)&&Number(body.retentionMs)>0))return json(response,422,{code:'invalid_visual_memory_policy'});
+          try{this.automaticMemory.configureVisual(scope,body.enabled,Number(body.expectedRevision),body.retentionMs===null?null:Number(body.retentionMs));}catch{return json(response,409,{code:'visual_memory_policy_unavailable',message:'Enable owned automatic memory and refresh the visual policy before applying.'});}
+          return json(response,200,this.automaticMemory.inspect(scope));
+        }
+        if(body.operation==='forgetVisual'){
+          if(Object.keys(body).some(k=>!['assistantId','relationshipId','operation','id','expectedRevision'].includes(k))||typeof body.id!=='string'||!Number.isSafeInteger(body.expectedRevision))return json(response,422,{code:'invalid_visual_memory_forget'});
+          try{this.automaticMemory.forgetVisual(scope,body.id,Number(body.expectedRevision));}catch{return json(response,409,{code:'visual_memory_forget_conflict',message:'Refresh the observation inventory before forgetting.'});}
+          return json(response,200,this.automaticMemory.inspect(scope));
+        }
         if(body.operation==='retry'){
           if(Object.keys(body).some(k=>!['assistantId','relationshipId','operation','id'].includes(k))||typeof body.id!=='string')return json(response,422,{code:'invalid_memory_retry'});
           try{this.automaticMemory.retry(scope,body.id);}catch{return json(response,409,{code:'memory_retry_unavailable'});}return json(response,200,this.automaticMemory.inspect(scope));
@@ -848,7 +858,7 @@ export class LifestreamServer {
         if(Object.keys(body).some(k=>!["assistantId","relationshipId","enabled","expectedRevision"].includes(k))||typeof body.enabled!=="boolean"||!Number.isInteger(body.expectedRevision))return json(response,422,{code:"invalid_memory_policy"});
         try{this.automaticMemory.configure(scope,body.enabled,Number(body.expectedRevision));}catch{return json(response,409,{code:"memory_policy_conflict"});}
       }else if(method!=="GET")return json(response,405,{code:"method_not_allowed"});
-      return json(response,200,{...this.automaticMemory.inspect(scope),limitations:["Only authenticated typed owner statements are admitted. Unverified speakers cannot create owner memory.","Queued or extracted does not mean saved. Unresolved conflicts require review."]});
+      return json(response,200,{...this.automaticMemory.inspect(scope),limitations:["Typed owner statements and explicitly permitted, host-attributed visual episodes use separate paths. Visual episodes remain unverified model observations.","Queued or extracted does not mean saved. Unresolved conflicts require review."]});
     }
     if (path.startsWith("/api/runtime/v1/presentation")) {
       const context=this.requestContext(request,false); if(!context)throw new AuthenticationError();

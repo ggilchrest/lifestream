@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import type {Database,MemoryRepository,MemoryRecord} from '@lifestream/storage-sqlite';
+import {VisualMemoryRepository,type VisualMemoryAdmission,type Database,type MemoryRepository,type MemoryRecord} from '@lifestream/storage-sqlite';
 import {buildCanonicalPrompt} from '@lifestream/runtime/inference/prompt';
 import type {InferenceProvider} from '@lifestream/runtime/inference';
 export type MemoryScope={principalId:string;assistantId:string;relationshipId:string};
@@ -59,18 +59,34 @@ async function* bounded<T>(source:AsyncIterable<T>,signal:AbortSignal):AsyncGene
  finally{signal.removeEventListener('abort',cancel);if(signal.aborted)void iterator.return?.().catch(()=>{});}
 }
 export class AutomaticMemory {
- private readonly database:Database;private readonly memories:MemoryRepository;
+ private readonly database:Database;private readonly memories:MemoryRepository;private readonly visual:VisualMemoryRepository;
  private readonly provider:()=>{provider:InferenceProvider;revision:string};private readonly idle:()=>boolean;
  private readonly scopeAllowed:(scope:MemoryScope)=>boolean;private readonly contentAllowed:(scope:MemoryScope,content:string)=>boolean;
  private readonly changed:()=>void;private timer:ReturnType<typeof setInterval>;private controller:AbortController|null=null;private activeWork:{id:string;expires:number}|null=null;private closed=false;
  constructor(options:{database:Database;memories:MemoryRepository;provider:()=>{provider:InferenceProvider;revision:string};idle:()=>boolean;changed:()=>void;scopeAllowed?:(scope:MemoryScope)=>boolean;contentAllowed?:(scope:MemoryScope,content:string)=>boolean}){
   this.scopeAllowed=options.scopeAllowed??(()=>true);this.contentAllowed=options.contentAllowed??(()=>true);this.database=options.database;this.memories=options.memories;this.provider=options.provider;this.idle=options.idle;this.changed=options.changed;
-  this.sweepExpired();this.database.exec("UPDATE automatic_memory_work SET state=CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END WHERE state='running'");
+  this.visual=new VisualMemoryRepository(this.database);this.sweepExpired();this.database.exec("UPDATE automatic_memory_work SET state=CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END WHERE state='running'");
   this.timer=setInterval(()=>void this.tick(),500);this.timer.unref();
  }
  policy(scope:MemoryScope){const row=this.database.connection.prepare('SELECT enabled,revision,approved_at AS approvedAt FROM automatic_memory_policies WHERE scope_key=?').get(key(scope)) as {enabled:number;revision:number;approvedAt:string}|undefined;return row?{...row,enabled:row.enabled===1}:{enabled:false,revision:0,approvedAt:null};}
+ configureVisual(scope:MemoryScope,enabled:boolean,expectedRevision:number,retentionMs:number|null){
+  if(enabled&&(!this.policy(scope).enabled||!this.scopeAllowed(scope)))throw Error('Visual memory requires current owned memory consent');
+  const policy=this.visual.configure(scope,enabled,expectedRevision,retentionMs);this.changed();return policy;
+ }
+ /** Canonical host-only intake. No synthetic user turn or inference-provider call. */
+ enqueueVisual(scope:MemoryScope,input:unknown,admission:VisualMemoryAdmission){
+  let copy:unknown;try{const raw=JSON.stringify(input);if(Buffer.byteLength(raw)>8192)return {state:'invalidEpisode' as const};copy=JSON.parse(raw);}catch{return {state:'invalidEpisode' as const};}
+  const memoryRevision=this.policy(scope).revision;
+  if(!this.policy(scope).enabled||!this.scopeAllowed(scope))return {state:'policyDenied' as const};
+  const value=copy as {summary?:unknown;observations?:unknown};
+  if(typeof value?.summary!=='string'||!Array.isArray(value.observations)||secret.test(value.summary)||!this.contentAllowed(scope,value.summary)||value.observations.some(o=>!o||typeof o.description!=='string'||secret.test(o.description)||!this.contentAllowed(scope,o.description)))return {state:'policyDenied' as const};
+  // Content/privacy hooks may revoke authority while checking the source.
+  if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==memoryRevision)return {state:'policyDenied' as const};
+  const result=this.visual.admit(scope,copy,admission);if(result.state==='retained')this.changed();return result;
+ }
+ forgetVisual(scope:MemoryScope,id:string,revision:number){if(!this.scopeAllowed(scope))throw Error('Visual memory scope unavailable');this.visual.forget(scope,id,revision);this.changed();}
  configure(scope:MemoryScope,enabled:boolean,expectedRevision:number){
-  this.database.transaction(tx=>{const current=this.policy(scope);if(current.revision!==expectedRevision)throw new Error('Memory policy revision conflict');tx.run('INSERT INTO automatic_memory_policies VALUES (?,?,?,?,?,?,?) ON CONFLICT(scope_key) DO UPDATE SET enabled=excluded.enabled,revision=excluded.revision,approved_at=excluded.approved_at',key(scope),scope.principalId,scope.assistantId,scope.relationshipId,enabled?1:0,expectedRevision+1,new Date().toISOString());tx.run("UPDATE automatic_memory_work SET state='cancelled',input_text='',prepared_json=NULL,reason='policy_changed' WHERE scope_key=? AND state IN ('queued','running','prepared')",key(scope));});
+  this.database.transaction(tx=>{const current=this.policy(scope);if(current.revision!==expectedRevision)throw new Error('Memory policy revision conflict');tx.run('INSERT INTO automatic_memory_policies VALUES (?,?,?,?,?,?,?) ON CONFLICT(scope_key) DO UPDATE SET enabled=excluded.enabled,revision=excluded.revision,approved_at=excluded.approved_at',key(scope),scope.principalId,scope.assistantId,scope.relationshipId,enabled?1:0,expectedRevision+1,new Date().toISOString());tx.run("UPDATE automatic_memory_work SET state='cancelled',input_text='',prepared_json=NULL,reason='policy_changed' WHERE scope_key=? AND state IN ('queued','running','prepared')",key(scope));if(!enabled){tx.run('UPDATE visual_memory_policies SET enabled=0,revision=revision+1 WHERE scope_key=? AND enabled=1',key(scope));tx.run("UPDATE visual_observation_episodes SET state='invalidated',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND state='retained'",key(scope));}});
   this.controller?.abort();return this.policy(scope);
  }
  enqueue(scope:MemoryScope,source:string,input:string,attribution:'authenticatedTypedOwner'|'unknownSpeaker'){
@@ -81,13 +97,13 @@ export class AutomaticMemory {
   const count=this.database.connection.prepare("SELECT count(*) AS n FROM automatic_memory_work WHERE state IN ('queued','running','prepared')").get() as {n:number};if(count.n>=128)return {state:'capacityExceeded'};
   const now=Date.now();this.database.connection.prepare("INSERT INTO automatic_memory_work (id,scope_key,source_turn,policy_revision,state,input_text,input_digest,created_at,expires_at) VALUES (?,?,?,?,'queued',?,?,?,?)").run(id,key(scope),source,policy.revision,input,hash(input),now,now+86400000);return {state:'queued'};
  }
- inspect(scope:MemoryScope){const jobs=this.database.connection.prepare('SELECT id,state,result_json AS result,reason,created_at AS createdAt FROM automatic_memory_work WHERE scope_key=? ORDER BY created_at DESC LIMIT 20').all(key(scope));return {policy:this.policy(scope),jobs};}
+ inspect(scope:MemoryScope){const jobs=this.database.connection.prepare('SELECT id,state,result_json AS result,reason,created_at AS createdAt FROM automatic_memory_work WHERE scope_key=? ORDER BY created_at DESC LIMIT 20').all(key(scope));const visual=this.visual.inspect(scope,this.scopeAllowed(scope));const allowedEpisodes=visual.episodes.filter(row=>!row.episode||this.contentAllowed(scope,row.episode.summary)&&row.episode.observations.every(o=>this.contentAllowed(scope,o.description)));const current=this.visual.policy(scope);const valid=this.scopeAllowed(scope)&&current.revision===visual.policy.revision;return {policy:this.policy(scope),jobs,visual:{...visual,policy:current,episodes:valid?allowedEpisodes:[],complete:valid&&visual.complete&&allowedEpisodes.length===visual.episodes.length}};}
  isIdle(){return !this.controller;}
  preempt(){this.controller?.abort('foreground');}
  retry(scope:MemoryScope,id:string){this.sweepExpired();const result=this.database.connection.prepare("UPDATE automatic_memory_work SET state=CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END,reason='retry_requested' WHERE id=? AND scope_key=? AND state='failed' AND attempts<6 AND expires_at>?").run(id,key(scope),Date.now());if(result.changes!==1)throw new Error('Memory retry is unavailable');}
  private expireWork(id:string){this.database.connection.prepare("UPDATE automatic_memory_work SET state='expired',input_text='',prepared_json=NULL,reason='retention_expired' WHERE id=? AND state IN ('queued','running','prepared','failed')").run(id);}
  private sweepExpired(){
-  const now=Date.now();
+  this.visual.sweep();const now=Date.now();
   // Source retention is independent of foreground scheduling. Preserve receipts
   // for completed admission; only pending work and retained payloads expire.
   this.database.connection.prepare("UPDATE automatic_memory_work SET state='expired',input_text='',prepared_json=NULL,reason='retention_expired' WHERE expires_at<=? AND (state IN ('queued','running','prepared','failed') OR input_text<>'' OR prepared_json IS NOT NULL)").run(now);

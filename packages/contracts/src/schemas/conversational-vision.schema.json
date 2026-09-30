@@ -1,0 +1,3099 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/conversational-vision/1.0.0",
+  "title": "Session-scoped conversational visual input",
+  "description": "Specified, not executed. Additive negotiated sidecar contract; does not widen frozen runtime-api, provider-messages, prepared-context or memory-record schemas. Normative semantics: docs/30-conversational-vision.md.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/VisionNegotiationRequest"
+    },
+    {
+      "$ref": "#/$defs/VisionNegotiationResult"
+    },
+    {
+      "$ref": "#/$defs/CameraSessionRequest"
+    },
+    {
+      "$ref": "#/$defs/CameraSessionState"
+    },
+    {
+      "$ref": "#/$defs/CameraSessionResult"
+    },
+    {
+      "$ref": "#/$defs/VisualBatchRequest"
+    },
+    {
+      "$ref": "#/$defs/VisualBatchReceipt"
+    },
+    {
+      "$ref": "#/$defs/VisualPerceptionRequest"
+    },
+    {
+      "$ref": "#/$defs/VisualPerceptionResult"
+    },
+    {
+      "$ref": "#/$defs/PreparedVisualContext"
+    },
+    {
+      "$ref": "#/$defs/VisualObservationEpisode"
+    },
+    {
+      "$ref": "#/$defs/VisualMemoryProjection"
+    },
+    {
+      "$ref": "#/$defs/VisualInvalidation"
+    }
+  ],
+  "$defs": {
+    "VisualScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assistantId",
+        "principalId",
+        "relationshipId",
+        "environmentId",
+        "conversationId",
+        "sessionId",
+        "endpointId",
+        "sessionRevision",
+        "audienceRevision",
+        "scopeGeneration",
+        "sourceBindingRef",
+        "captureConfigurationRevision"
+      ],
+      "properties": {
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "principalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "relationshipId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "environmentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "conversationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "endpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sessionRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "audienceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "scopeGeneration": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "sourceBindingRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "captureConfigurationRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        }
+      },
+      "description": "Trusted host rederives principal and all bindings. A client or model supplied scope confers no authority. Every asynchronous publication compares this entire tuple."
+    },
+    "NegotiationScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assistantId",
+        "principalId",
+        "relationshipId",
+        "environmentId",
+        "conversationId",
+        "sessionId",
+        "endpointId",
+        "sessionRevision",
+        "audienceRevision",
+        "scopeGeneration",
+        "sourceBindingRef",
+        "captureConfigurationRevision"
+      ],
+      "properties": {
+        "assistantId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "principalId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "relationshipId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "environmentId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "conversationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sessionId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "endpointId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sessionRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "audienceRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "scopeGeneration": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "sourceBindingRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "captureConfigurationRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        }
+      },
+      "description": "Read-only negotiation may have no camera binding or relationship. Unknown values are null; capture operations require a concrete physical source binding and never fabricate one."
+    },
+    "VisualBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxFramesPerBatch",
+        "maxCaptureFramesPerSecond",
+        "maxBatchSpanMs",
+        "maxFrameBytes",
+        "maxLongEdgePixels",
+        "minAdmissionIntervalMs",
+        "inFlightPerSession",
+        "pendingPerSession",
+        "maxHostSessions",
+        "maxRawBytesPerSession",
+        "maxDecodedBytesPerSession",
+        "leaseTtlMs",
+        "renewIntervalMs",
+        "deadlineMs",
+        "freshnessMs",
+        "audienceFreshnessMs",
+        "maxClockUncertaintyMs",
+        "maxSelectedObservations",
+        "maxSelectedTokens",
+        "maxSelectedTextBytes",
+        "transientRetentionMs",
+        "maxTransientObservations",
+        "maxTransientTextBytes"
+      ],
+      "properties": {
+        "maxFramesPerBatch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "maxCaptureFramesPerSecond": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "maxBatchSpanMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2000
+        },
+        "maxFrameBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2097152
+        },
+        "maxLongEdgePixels": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1280
+        },
+        "minAdmissionIntervalMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 60000
+        },
+        "inFlightPerSession": {
+          "const": 1
+        },
+        "pendingPerSession": {
+          "const": 1
+        },
+        "maxHostSessions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "maxRawBytesPerSession": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12582912
+        },
+        "maxDecodedBytesPerSession": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20971520
+        },
+        "leaseTtlMs": {
+          "const": 60000
+        },
+        "renewIntervalMs": {
+          "const": 20000
+        },
+        "deadlineMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "freshnessMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6000
+        },
+        "audienceFreshnessMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2000
+        },
+        "maxClockUncertaintyMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 250
+        },
+        "maxSelectedObservations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "maxSelectedTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2048
+        },
+        "maxSelectedTextBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8192
+        },
+        "transientRetentionMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        },
+        "maxTransientObservations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "maxTransientTextBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32768
+        }
+      },
+      "description": "Reference ceilings; effective configuration may tighten these bounds. Numeric values are qualification targets, not measured hardware achievements. UTF-8 byte, decoded-image and tokenizer limits require semantic validation."
+    },
+    "ClockChallenge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "challengeId",
+        "hostSentAt",
+        "hostSentMonotonicMs",
+        "expiresAt"
+      ],
+      "properties": {
+        "challengeId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "hostSentAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "hostSentMonotonicMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        }
+      },
+      "description": "Single-use authenticated challenge. Host retains send times and validates echo/current session; client-supplied host times are never authoritative."
+    },
+    "ClockEcho": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "challengeId",
+        "endpointReceivedMonotonicMs"
+      ],
+      "properties": {
+        "challengeId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "endpointReceivedMonotonicMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ClockMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clockMappingId",
+        "challengeId",
+        "offsetLowerMs",
+        "offsetUpperMs",
+        "hostAnchorMonotonicMs",
+        "hostAnchorAt",
+        "uncertaintyMs",
+        "expiresAt"
+      ],
+      "properties": {
+        "clockMappingId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "challengeId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "offsetLowerMs": {
+          "type": "number",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "offsetUpperMs": {
+          "type": "number",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "hostAnchorMonotonicMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "hostAnchorAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "uncertaintyMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 250
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        }
+      },
+      "description": "Host-calculated offset interval [send-endpointReceive, return-endpointReceive]. Conservative uncertainty is the full interval width plus elapsedSinceMappingMs * 0.0001 (100 ppm drift allowance), never half-width midpoint error. The host recomputes this bound for each frame at capture/admission and rejects values above 250 ms; elapsed time must be explicit and nonnegative. Captured endpoint monotonic time maps through the conservative interval and host UTC anchor; lower capture bounds control freshness. Mapping expires no later than its camera lease; discontinuities invalidate it."
+    },
+    "VisionNegotiationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "deadlineAt",
+        "cancellationId",
+        "executionMode",
+        "scope",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "Vision.negotiate"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deadlineAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "cancellationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "scope": {
+          "$ref": "#/$defs/NegotiationScope"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "supportedVersions",
+            "cameraAvailable",
+            "mediaTypes",
+            "requestedBounds"
+          ],
+          "properties": {
+            "supportedVersions": {
+              "type": "array",
+              "items": {
+                "const": "1.0.0"
+              },
+              "minItems": 1,
+              "maxItems": 1
+            },
+            "cameraAvailable": {
+              "type": "boolean"
+            },
+            "mediaTypes": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "image/jpeg",
+                  "image/png"
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 2
+            },
+            "requestedBounds": {
+              "$ref": "#/$defs/VisualBounds"
+            }
+          }
+        }
+      }
+    },
+    "VisionNegotiationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "providerRef",
+        "completedAt",
+        "outcome"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "Vision.negotiate"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "completedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "payload",
+            "error"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "succeeded",
+                "rejected",
+                "retryableFailure",
+                "failed",
+                "cancelled",
+                "timedOut"
+              ]
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "selectedVersion",
+                    "clockChallenge",
+                    "profile",
+                    "supportsTemporalInput",
+                    "supportsMultipleFrames",
+                    "implemented",
+                    "configured",
+                    "endpointConnected",
+                    "providerConnected",
+                    "supportsCancellation",
+                    "sharedProviderPriorityQualified",
+                    "dataEgressClass",
+                    "mediaTypes",
+                    "effectiveBounds",
+                    "reason"
+                  ],
+                  "properties": {
+                    "selectedVersion": {
+                      "anyOf": [
+                        {
+                          "const": "1.0.0"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "clockChallenge": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/ClockChallenge"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "profile": {
+                      "const": "lifestream.conversational-vision.v1"
+                    },
+                    "supportsTemporalInput": {
+                      "type": "boolean"
+                    },
+                    "supportsMultipleFrames": {
+                      "type": "boolean"
+                    },
+                    "implemented": {
+                      "type": "boolean"
+                    },
+                    "configured": {
+                      "type": "boolean"
+                    },
+                    "endpointConnected": {
+                      "type": "boolean"
+                    },
+                    "providerConnected": {
+                      "type": "boolean"
+                    },
+                    "supportsCancellation": {
+                      "type": "boolean"
+                    },
+                    "sharedProviderPriorityQualified": {
+                      "type": "boolean"
+                    },
+                    "dataEgressClass": {
+                      "enum": [
+                        "localOnly",
+                        "configuredRemote",
+                        "unavailable"
+                      ]
+                    },
+                    "mediaTypes": {
+                      "type": "array",
+                      "items": {
+                        "enum": [
+                          "image/jpeg",
+                          "image/png"
+                        ]
+                      },
+                      "minItems": 0,
+                      "maxItems": 2
+                    },
+                    "effectiveBounds": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/VisualBounds"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "reason": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 500
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "succeeded"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "selectedVersion",
+                      "clockChallenge",
+                      "profile",
+                      "supportsTemporalInput",
+                      "supportsMultipleFrames",
+                      "implemented",
+                      "configured",
+                      "endpointConnected",
+                      "providerConnected",
+                      "supportsCancellation",
+                      "sharedProviderPriorityQualified",
+                      "dataEgressClass",
+                      "mediaTypes",
+                      "effectiveBounds",
+                      "reason"
+                    ],
+                    "properties": {
+                      "selectedVersion": {
+                        "anyOf": [
+                          {
+                            "const": "1.0.0"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "clockChallenge": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/$defs/ClockChallenge"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "profile": {
+                        "const": "lifestream.conversational-vision.v1"
+                      },
+                      "supportsTemporalInput": {
+                        "type": "boolean"
+                      },
+                      "supportsMultipleFrames": {
+                        "type": "boolean"
+                      },
+                      "implemented": {
+                        "type": "boolean"
+                      },
+                      "configured": {
+                        "type": "boolean"
+                      },
+                      "endpointConnected": {
+                        "type": "boolean"
+                      },
+                      "providerConnected": {
+                        "type": "boolean"
+                      },
+                      "supportsCancellation": {
+                        "type": "boolean"
+                      },
+                      "sharedProviderPriorityQualified": {
+                        "type": "boolean"
+                      },
+                      "dataEgressClass": {
+                        "enum": [
+                          "localOnly",
+                          "configuredRemote",
+                          "unavailable"
+                        ]
+                      },
+                      "mediaTypes": {
+                        "type": "array",
+                        "items": {
+                          "enum": [
+                            "image/jpeg",
+                            "image/png"
+                          ]
+                        },
+                        "minItems": 0,
+                        "maxItems": 2
+                      },
+                      "effectiveBounds": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/$defs/VisualBounds"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 500
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "error": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "payload": {
+                    "type": "null"
+                  },
+                  "error": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CameraSessionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "deadlineAt",
+        "cancellationId",
+        "executionMode",
+        "scope",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "Vision.setCamera"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deadlineAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "cancellationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "scope": {
+          "$ref": "#/$defs/VisualScope"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "action",
+            "targetLeaseId",
+            "clockEcho",
+            "expectedCameraRevision",
+            "authorizationRef",
+            "negotiatedVersion"
+          ],
+          "properties": {
+            "action": {
+              "enum": [
+                "enable",
+                "renew",
+                "stop"
+              ]
+            },
+            "targetLeaseId": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "clockEcho": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ClockEcho"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expectedCameraRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "authorizationRef": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "negotiatedVersion": {
+              "const": "1.0.0"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "enable"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "targetLeaseId": {
+                    "type": "null"
+                  },
+                  "clockEcho": {
+                    "$ref": "#/$defs/ClockEcho"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "targetLeaseId": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "renew"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "clockEcho": {
+                    "$ref": "#/$defs/ClockEcho"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CameraSessionState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "cameraRevision",
+        "implemented",
+        "configured",
+        "hardwarePresent",
+        "endpointConnected",
+        "providerConnected",
+        "authorized",
+        "enabled",
+        "activeForSession",
+        "captureActive",
+        "devicePermission",
+        "perceptionState",
+        "currentObservationAvailable",
+        "captureIndicatorVisible",
+        "clockMapping",
+        "leaseExpiresMonotonicMs",
+        "leaseId",
+        "leaseExpiresAt",
+        "authorizationRef",
+        "effectiveBounds",
+        "reason"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "cameraSession"
+        },
+        "scope": {
+          "$ref": "#/$defs/VisualScope"
+        },
+        "cameraRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "implemented": {
+          "type": "boolean"
+        },
+        "configured": {
+          "type": "boolean"
+        },
+        "hardwarePresent": {
+          "type": "boolean"
+        },
+        "endpointConnected": {
+          "type": "boolean"
+        },
+        "providerConnected": {
+          "type": "boolean"
+        },
+        "authorized": {
+          "type": "boolean"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "activeForSession": {
+          "type": "boolean"
+        },
+        "captureActive": {
+          "type": "boolean"
+        },
+        "devicePermission": {
+          "enum": [
+            "granted",
+            "denied",
+            "unknown"
+          ]
+        },
+        "perceptionState": {
+          "enum": [
+            "unavailable",
+            "healthy",
+            "deferred",
+            "degraded"
+          ]
+        },
+        "currentObservationAvailable": {
+          "type": "boolean"
+        },
+        "captureIndicatorVisible": {
+          "type": "boolean"
+        },
+        "clockMapping": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClockMapping"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "leaseExpiresMonotonicMs": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "leaseId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "leaseExpiresAt": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "authorizationRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effectiveBounds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VisualBounds"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "activeForSession": {
+                "const": true
+              }
+            },
+            "required": [
+              "activeForSession"
+            ]
+          },
+          "then": {
+            "properties": {
+              "implemented": {
+                "const": true
+              },
+              "configured": {
+                "const": true
+              },
+              "hardwarePresent": {
+                "const": true
+              },
+              "endpointConnected": {
+                "const": true
+              },
+              "providerConnected": {
+                "const": true
+              },
+              "authorized": {
+                "const": true
+              },
+              "enabled": {
+                "const": true
+              },
+              "captureActive": {
+                "const": true
+              },
+              "captureIndicatorVisible": {
+                "const": true
+              },
+              "devicePermission": {
+                "const": "granted"
+              },
+              "perceptionState": {
+                "const": "healthy"
+              },
+              "clockMapping": {
+                "$ref": "#/$defs/ClockMapping"
+              },
+              "leaseExpiresMonotonicMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "leaseId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "leaseExpiresAt": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+              },
+              "authorizationRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              },
+              "effectiveBounds": {
+                "$ref": "#/$defs/VisualBounds"
+              },
+              "reason": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "captureActive": {
+                "const": true
+              }
+            },
+            "required": [
+              "captureActive"
+            ]
+          },
+          "then": {
+            "properties": {
+              "hardwarePresent": {
+                "const": true
+              },
+              "endpointConnected": {
+                "const": true
+              },
+              "authorized": {
+                "const": true
+              },
+              "enabled": {
+                "const": true
+              },
+              "captureIndicatorVisible": {
+                "const": true
+              },
+              "devicePermission": {
+                "const": "granted"
+              },
+              "leaseId": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+              },
+              "leaseExpiresAt": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+              },
+              "leaseExpiresMonotonicMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "authorizationRef": {
+                "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CameraSessionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "providerRef",
+        "completedAt",
+        "outcome"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "Vision.setCamera"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "completedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "payload",
+            "error"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "succeeded",
+                "rejected",
+                "retryableFailure",
+                "failed",
+                "cancelled",
+                "timedOut"
+              ]
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CameraSessionState"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "succeeded"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "$ref": "#/$defs/CameraSessionState"
+                  },
+                  "error": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "payload": {
+                    "type": "null"
+                  },
+                  "error": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "FrameDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frameId",
+        "sequence",
+        "capturedAt",
+        "captureMonotonicMs",
+        "clockMappingId",
+        "clockUncertaintyMs",
+        "mediaType",
+        "byteLength",
+        "sha256",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "frameId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "capturedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "captureMonotonicMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "clockMappingId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "clockUncertaintyMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 250
+        },
+        "mediaType": {
+          "enum": [
+            "image/jpeg",
+            "image/png"
+          ]
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2097152
+        },
+        "sha256": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1280
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1280
+        }
+      },
+      "description": "Metadata for a same-request multipart binary part named frameId. Decoder must verify dimensions, format, SHA-256 and exact length with decompression limits; no arbitrary URL or filesystem path is accepted."
+    },
+    "VisualBatchRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "deadlineAt",
+        "cancellationId",
+        "executionMode",
+        "scope",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "Vision.submitBatch"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deadlineAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "cancellationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "scope": {
+          "$ref": "#/$defs/VisualScope"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "batchId",
+            "leaseId",
+            "cameraRevision",
+            "sequence",
+            "frames"
+          ],
+          "properties": {
+            "batchId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "leaseId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "cameraRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "frames": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FrameDescriptor"
+              },
+              "minItems": 1,
+              "maxItems": 3
+            }
+          }
+        }
+      }
+    },
+    "VisualBatchReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "providerRef",
+        "completedAt",
+        "outcome"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "Vision.submitBatch"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "completedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "payload",
+            "error"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "succeeded",
+                "rejected",
+                "retryableFailure",
+                "failed",
+                "cancelled",
+                "timedOut"
+              ]
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "batchId",
+                    "disposition",
+                    "admittedAt",
+                    "deadlineAt",
+                    "replacedBatchId",
+                    "reason"
+                  ],
+                  "properties": {
+                    "batchId": {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                    },
+                    "disposition": {
+                      "enum": [
+                        "admitted",
+                        "pendingLatest",
+                        "coalesced",
+                        "dropped"
+                      ]
+                    },
+                    "admittedAt": {
+                      "anyOf": [
+                        {
+                          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "deadlineAt": {
+                      "anyOf": [
+                        {
+                          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "replacedBatchId": {
+                      "anyOf": [
+                        {
+                          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "reason": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 500
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "succeeded"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "batchId",
+                      "disposition",
+                      "admittedAt",
+                      "deadlineAt",
+                      "replacedBatchId",
+                      "reason"
+                    ],
+                    "properties": {
+                      "batchId": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                      },
+                      "disposition": {
+                        "enum": [
+                          "admitted",
+                          "pendingLatest",
+                          "coalesced",
+                          "dropped"
+                        ]
+                      },
+                      "admittedAt": {
+                        "anyOf": [
+                          {
+                            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "deadlineAt": {
+                        "anyOf": [
+                          {
+                            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "replacedBatchId": {
+                        "anyOf": [
+                          {
+                            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 500
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "error": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "payload": {
+                    "type": "null"
+                  },
+                  "error": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "VisualMediaRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frame",
+        "mediaRef",
+        "earliestCaptureAt",
+        "latestCaptureAt",
+        "expiresAt"
+      ],
+      "properties": {
+        "frame": {
+          "$ref": "#/$defs/FrameDescriptor"
+        },
+        "mediaRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "earliestCaptureAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "latestCaptureAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        }
+      },
+      "description": "Opaque volatile-buffer reference scoped to one request and current capture lease; not a durable artifact or permission to dereference. Earliest/latest capture bound the clock-aligned interval."
+    },
+    "VisualPerceptionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "deadlineAt",
+        "cancellationId",
+        "executionMode",
+        "scope",
+        "idempotencyKey",
+        "payload"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "VisualPerceptionProvider.interpret"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "deadlineAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "cancellationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "executionMode": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ExecutionMode"
+        },
+        "scope": {
+          "$ref": "#/$defs/VisualScope"
+        },
+        "idempotencyKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "batchId",
+            "leaseId",
+            "cameraRevision",
+            "providerConfigurationRef",
+            "frames",
+            "maxObservations",
+            "maxOutputTokens",
+            "maxOutputBytes"
+          ],
+          "properties": {
+            "batchId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "leaseId": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            "cameraRevision": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+            },
+            "providerConfigurationRef": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            "frames": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/VisualMediaRef"
+              },
+              "minItems": 1,
+              "maxItems": 3
+            },
+            "maxObservations": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8
+            },
+            "maxOutputTokens": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2048
+            },
+            "maxOutputBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8192
+            }
+          }
+        }
+      }
+    },
+    "SubjectAttribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subjectRef",
+        "binding",
+        "basisRefs",
+        "limitations"
+      ],
+      "properties": {
+        "subjectRef": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "binding": {
+          "enum": [
+            "authenticatedParticipant",
+            "userConfirmed",
+            "unidentified"
+          ]
+        },
+        "basisRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "minItems": 0,
+          "maxItems": 8
+        }
+      },
+      "description": "Authentication binds a participant, not a face. Visual identity requires a supported current binding or user confirmation; appearance alone never supplies authenticated identity."
+    },
+    "VisualObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "observationId",
+        "revision",
+        "batchId",
+        "sourceFrameIds",
+        "earliestCaptureAt",
+        "latestCaptureAt",
+        "receivedAt",
+        "interpretedAt",
+        "expiresAt",
+        "sourceKind",
+        "epistemicKind",
+        "description",
+        "subject",
+        "visibility",
+        "uncertainty",
+        "confidence",
+        "limitations",
+        "independenceKey",
+        "providerConfigurationRef",
+        "transformationVersion",
+        "untrusted"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "visualObservation"
+        },
+        "observationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "batchId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sourceFrameIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "earliestCaptureAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "latestCaptureAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "receivedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "interpretedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "sourceKind": {
+          "const": "modelVisualObservation"
+        },
+        "epistemicKind": {
+          "enum": [
+            "visibleFeature",
+            "inference"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "subject": {
+          "$ref": "#/$defs/SubjectAttribution"
+        },
+        "visibility": {
+          "enum": [
+            "inView",
+            "partlyOccluded",
+            "outOfView",
+            "uncertain"
+          ]
+        },
+        "uncertainty": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value",
+                "basis",
+                "calibrationRef"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "basis": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "calibrationRef": {
+                  "anyOf": [
+                    {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "independenceKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerConfigurationRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "transformationVersion": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Semver"
+        },
+        "untrusted": {
+          "const": true
+        }
+      }
+    },
+    "VisualAudienceEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidenceId",
+        "sourceFrameIds",
+        "sourceBindingRef",
+        "earliestCaptureAt",
+        "latestCaptureAt",
+        "receivedAt",
+        "interpretedAt",
+        "providerConfigurationRef",
+        "expiresAt",
+        "countClass",
+        "visiblePersonCount",
+        "fieldOfViewDescription",
+        "coverage",
+        "confidence",
+        "limitations",
+        "untrusted"
+      ],
+      "properties": {
+        "evidenceId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "sourceFrameIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "sourceBindingRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "earliestCaptureAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "latestCaptureAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "receivedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "interpretedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "providerConfigurationRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "countClass": {
+          "enum": [
+            "zero",
+            "one",
+            "multiple",
+            "uncertain"
+          ]
+        },
+        "visiblePersonCount": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fieldOfViewDescription": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "coverage": {
+          "enum": [
+            "partial",
+            "unknown",
+            "qualifiedConfiguredRegion"
+          ]
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value",
+                "basis",
+                "calibrationRef"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "basis": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "calibrationRef": {
+                  "anyOf": [
+                    {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "untrusted": {
+          "const": true
+        }
+      },
+      "description": "Camera-derived people-in-view evidence only. One visible person neither authenticates the owner nor proves full-room coverage. Host privacy policy consumes this evidence; it cannot clear unknown/shared by itself.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "countClass": {
+                "const": "zero"
+              }
+            },
+            "required": [
+              "countClass"
+            ]
+          },
+          "then": {
+            "properties": {
+              "visiblePersonCount": {
+                "const": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "countClass": {
+                "const": "one"
+              }
+            },
+            "required": [
+              "countClass"
+            ]
+          },
+          "then": {
+            "properties": {
+              "visiblePersonCount": {
+                "const": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "countClass": {
+                "const": "multiple"
+              }
+            },
+            "required": [
+              "countClass"
+            ]
+          },
+          "then": {
+            "properties": {
+              "visiblePersonCount": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 2,
+                    "maximum": 1000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "countClass": {
+                "const": "uncertain"
+              }
+            },
+            "required": [
+              "countClass"
+            ]
+          },
+          "then": {
+            "properties": {
+              "visiblePersonCount": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "VisualPerceptionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestId",
+        "correlationId",
+        "providerRef",
+        "completedAt",
+        "outcome"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operation": {
+          "const": "VisualPerceptionProvider.interpret"
+        },
+        "requestId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "correlationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "providerRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "completedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "payload",
+            "error"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "succeeded",
+                "rejected",
+                "retryableFailure",
+                "failed",
+                "cancelled",
+                "timedOut"
+              ]
+            },
+            "payload": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "batchId",
+                    "scope",
+                    "leaseId",
+                    "cameraRevision",
+                    "providerConfigurationRef",
+                    "observations",
+                    "audienceEvidence",
+                    "outcomeKind",
+                    "outputTokens",
+                    "outputBytes"
+                  ],
+                  "properties": {
+                    "batchId": {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                    },
+                    "scope": {
+                      "$ref": "#/$defs/VisualScope"
+                    },
+                    "leaseId": {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                    },
+                    "cameraRevision": {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+                    },
+                    "providerConfigurationRef": {
+                      "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                    },
+                    "observations": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "$ref": "#/$defs/VisualObservation"
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "subject"
+                            ],
+                            "properties": {
+                              "subject": {
+                                "type": "object",
+                                "required": [
+                                  "subjectRef",
+                                  "binding",
+                                  "basisRefs"
+                                ],
+                                "properties": {
+                                  "subjectRef": {
+                                    "type": "null"
+                                  },
+                                  "binding": {
+                                    "const": "unidentified"
+                                  },
+                                  "basisRefs": {
+                                    "type": "array",
+                                    "maxItems": 0
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "minItems": 0,
+                      "maxItems": 8
+                    },
+                    "audienceEvidence": {
+                      "$ref": "#/$defs/VisualAudienceEvidence"
+                    },
+                    "outcomeKind": {
+                      "enum": [
+                        "observations",
+                        "noUsefulChange",
+                        "insufficientView"
+                      ]
+                    },
+                    "outputTokens": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2048
+                    },
+                    "outputBytes": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 8192
+                    }
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "outcomeKind": {
+                            "enum": [
+                              "noUsefulChange",
+                              "insufficientView"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "outcomeKind"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "observations": {
+                            "type": "array",
+                            "maxItems": 0
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "succeeded"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "batchId",
+                      "scope",
+                      "leaseId",
+                      "cameraRevision",
+                      "providerConfigurationRef",
+                      "observations",
+                      "audienceEvidence",
+                      "outcomeKind",
+                      "outputTokens",
+                      "outputBytes"
+                    ],
+                    "properties": {
+                      "batchId": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                      },
+                      "scope": {
+                        "$ref": "#/$defs/VisualScope"
+                      },
+                      "leaseId": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+                      },
+                      "cameraRevision": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+                      },
+                      "providerConfigurationRef": {
+                        "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+                      },
+                      "observations": {
+                        "type": "array",
+                        "items": {
+                          "allOf": [
+                            {
+                              "$ref": "#/$defs/VisualObservation"
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "subject"
+                              ],
+                              "properties": {
+                                "subject": {
+                                  "type": "object",
+                                  "required": [
+                                    "subjectRef",
+                                    "binding",
+                                    "basisRefs"
+                                  ],
+                                  "properties": {
+                                    "subjectRef": {
+                                      "type": "null"
+                                    },
+                                    "binding": {
+                                      "const": "unidentified"
+                                    },
+                                    "basisRefs": {
+                                      "type": "array",
+                                      "maxItems": 0
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "minItems": 0,
+                        "maxItems": 8
+                      },
+                      "audienceEvidence": {
+                        "$ref": "#/$defs/VisualAudienceEvidence"
+                      },
+                      "outcomeKind": {
+                        "enum": [
+                          "observations",
+                          "noUsefulChange",
+                          "insufficientView"
+                        ]
+                      },
+                      "outputTokens": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 2048
+                      },
+                      "outputBytes": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 8192
+                      }
+                    },
+                    "allOf": [
+                      {
+                        "if": {
+                          "properties": {
+                            "outcomeKind": {
+                              "enum": [
+                                "noUsefulChange",
+                                "insufficientView"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "outcomeKind"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "observations": {
+                              "type": "array",
+                              "maxItems": 0
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "error": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "payload": {
+                    "type": "null"
+                  },
+                  "error": {
+                    "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Problem"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "PreparedVisualContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "viewId",
+        "viewRevision",
+        "invalidationKey",
+        "leaseId",
+        "cameraRevision",
+        "selectedAt",
+        "freshUntil",
+        "observations",
+        "audienceEvidence",
+        "effectiveAudienceState",
+        "independentAudiencePolicyRefs",
+        "historicalEpisodeRefs",
+        "conversationSectionDigest",
+        "selectedTokens",
+        "selectedTextBytes",
+        "omissions"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "preparedVisualContext"
+        },
+        "scope": {
+          "$ref": "#/$defs/VisualScope"
+        },
+        "viewId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "viewRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "invalidationKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "leaseId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "cameraRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "selectedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "freshUntil": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/VisualObservation"
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "audienceEvidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VisualAudienceEvidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effectiveAudienceState": {
+          "enum": [
+            "solo-supported",
+            "shared",
+            "unknown"
+          ]
+        },
+        "independentAudiencePolicyRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "historicalEpisodeRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        },
+        "conversationSectionDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "selectedTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2048
+        },
+        "selectedTextBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8192
+        },
+        "omissions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "minItems": 0,
+          "maxItems": 16
+        }
+      },
+      "description": "An internal preparation sidecar atomically selected into the existing conversation section of the one PreparedContextView. Never a second prompt/context fetch or tenth section. Its digest covers exact selected conversation section bytes; selection fences current scope, lease and source invalidation together."
+    },
+    "VisualObservationEpisode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "episodeId",
+        "revision",
+        "scope",
+        "sourceKind",
+        "observations",
+        "summary",
+        "sourceObservationIds",
+        "independenceKeys",
+        "sourceDigest",
+        "occurredAt",
+        "retainedAt",
+        "retentionPolicyRef",
+        "processingPolicyRevision",
+        "expiresAt",
+        "state",
+        "correctionRefs",
+        "memoryRecordId",
+        "rawMediaRetained",
+        "memoryFactuality",
+        "memorySourceType"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "visualObservationEpisode"
+        },
+        "episodeId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "scope": {
+          "$ref": "#/$defs/VisualScope"
+        },
+        "sourceKind": {
+          "const": "modelVisualObservation"
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/VisualObservation"
+          },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "sourceObservationIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "independenceKeys": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "sourceDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "occurredAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "retainedAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "retentionPolicyRef": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+        },
+        "processingPolicyRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "expiresAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "state": {
+          "enum": [
+            "candidate",
+            "retained",
+            "superseded",
+            "invalidated"
+          ]
+        },
+        "correctionRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        },
+        "memoryRecordId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rawMediaRetained": {
+          "const": false
+        },
+        "memoryFactuality": {
+          "const": "unverified"
+        },
+        "memorySourceType": {
+          "const": "interaction"
+        }
+      },
+      "description": "Typed observation input to existing automatic-memory intake, not an attributed owner statement. Finite existing relationship/source retention is required. MemoryRecord/2.0.0 projection uses sourceRefs and a namespaced extension binding this episode/revision; worldGrounded and participantStatement are forbidden for model-only observations."
+    },
+    "VisualMemoryBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "sourceKind",
+        "episodeId",
+        "episodeRevision",
+        "transformationConfidence",
+        "sourceDigest",
+        "rawMediaRetained"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "sourceKind": {
+          "const": "modelVisualObservation"
+        },
+        "episodeId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "episodeRevision": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        },
+        "transformationConfidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "value",
+            "basis",
+            "policyRef"
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "basis": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "policyRef": {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/OpaqueRef"
+            }
+          }
+        },
+        "sourceDigest": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Digest"
+        },
+        "rawMediaRetained": {
+          "const": false
+        }
+      },
+      "description": "Required lifestream.conversationalVision extension on an existing MemoryRecord; validated together with the source episode at write, recall, export and import."
+    },
+    "VisualMemoryProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "episode",
+        "memoryRecord"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "visualMemoryProjection"
+        },
+        "episode": {
+          "$ref": "#/$defs/VisualObservationEpisode"
+        },
+        "memoryRecord": {
+          "allOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/memory-record/2.0.0"
+            },
+            {
+              "type": "object",
+              "required": [
+                "factuality",
+                "provenance",
+                "extensions"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "experiential",
+                    "relational"
+                  ]
+                },
+                "factuality": {
+                  "const": "unverified"
+                },
+                "provenance": {
+                  "type": "object",
+                  "required": [
+                    "sourceType"
+                  ],
+                  "properties": {
+                    "sourceType": {
+                      "const": "interaction"
+                    }
+                  }
+                },
+                "extensions": {
+                  "type": "object",
+                  "required": [
+                    "lifestream.conversationalVision"
+                  ],
+                  "properties": {
+                    "lifestream.conversationalVision": {
+                      "$ref": "#/$defs/VisualMemoryBinding"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "description": "Additive source-preserving projection, not a new memory-provider port. Host checks episode ID/revision/digest, scope, retention, sourceRefs and lifecycle consistently; direct observation factuality is unverified. Separate explicit hypothesis derivatives follow existing inferred-memory transformations and are not this direct projection. A required memory confidence is an attributable transformation-policy assessment, not a substitute for unknown perception confidence."
+    },
+    "VisualInvalidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "scope",
+        "invalidationKey",
+        "occurredAt",
+        "reason",
+        "observationIds",
+        "episodeIds",
+        "newScopeGeneration"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "visualInvalidation"
+        },
+        "scope": {
+          "$ref": "#/$defs/VisualScope"
+        },
+        "invalidationKey": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "occurredAt": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Time"
+        },
+        "reason": {
+          "enum": [
+            "cameraDisabled",
+            "permissionRevoked",
+            "leaseExpired",
+            "endpointDisconnected",
+            "sessionStopped",
+            "handoff",
+            "audienceChanged",
+            "correction",
+            "forgotten",
+            "providerUnavailable",
+            "deadlineExceeded"
+          ]
+        },
+        "observationIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "episodeIds": {
+          "type": "array",
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        },
+        "newScopeGeneration": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
+        }
+      }
+    }
+  }
+}

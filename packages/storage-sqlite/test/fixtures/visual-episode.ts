@@ -1,0 +1,13 @@
+import {randomUUID} from 'node:crypto';
+import type {VisualObservationEpisode,VisualMemoryOwner} from '@lifestream/contracts/visual-memory';
+import {visualEpisodeSourceDigest,type VisualMemoryPolicy,type VisualMemoryAdmission} from '../../src/visual-memory.ts';
+export const visualOwner=():VisualMemoryOwner=>({principalId:randomUUID(),assistantId:randomUUID(),relationshipId:randomUUID()});
+export function visualEpisode(owner:VisualMemoryOwner,policy:VisualMemoryPolicy,now:number,sessionId=randomUUID(),subjectRef='synthetic-confirmed-subject'){
+ const family=randomUUID(),observationId=randomUUID(),time=new Date(now).toISOString();
+ const episode:VisualObservationEpisode={schemaVersion:'1.0.0',recordType:'visualObservationEpisode',episodeId:randomUUID(),revision:1,
+ scope:{...owner,environmentId:randomUUID(),conversationId:randomUUID(),sessionId,endpointId:randomUUID(),sessionRevision:1,audienceRevision:1,scopeGeneration:1,sourceBindingRef:'synthetic-camera-binding',captureConfigurationRevision:1},sourceKind:'modelVisualObservation',
+ observations:[{schemaVersion:'1.0.0',recordType:'visualObservation',observationId,revision:1,batchId:randomUUID(),sourceFrameIds:[randomUUID()],earliestCaptureAt:time,latestCaptureAt:time,receivedAt:time,interpretedAt:time,expiresAt:new Date(now+6000).toISOString(),sourceKind:'modelVisualObservation',epistemicKind:'visibleFeature',description:'The host-confirmed participant appears to wear a blue hat.',subject:{subjectRef,binding:'userConfirmed',basisRefs:['synthetic-explicit-visual-association'],limitations:['Authentication alone does not identify a face.']},visibility:'inView',uncertainty:'Uncalibrated model observation.',confidence:null,limitations:['No raw media retained.'],independenceKey:family,providerConfigurationRef:'synthetic-local-perception-v1',transformationVersion:'1.0.0',untrusted:true}],
+ summary:'Unverified model observation: the confirmed participant appears to wear a blue hat.',sourceObservationIds:[observationId],independenceKeys:[family],sourceDigest:'0'.repeat(64),occurredAt:time,retainedAt:time,retentionPolicyRef:policy.retentionPolicyRef!,processingPolicyRevision:policy.revision,expiresAt:new Date(now+policy.retentionMs!).toISOString(),state:'candidate',correctionRefs:[],memoryRecordId:null,rawMediaRetained:false,memoryFactuality:'unverified',memorySourceType:'interaction'};
+ episode.sourceDigest=visualEpisodeSourceDigest(episode);
+ const admission:VisualMemoryAdmission={scope:structuredClone(episode.scope),policyRevision:policy.revision,current:true,reason:'appearanceContinuity',verifiedSubjectRef:subjectRef};return {episode,admission};
+}

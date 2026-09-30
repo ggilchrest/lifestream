@@ -63,6 +63,38 @@
           "publicPath": "packages/contracts/src/schemas/experiential-learning.schema.json"
         }
       ]
+    },
+    {
+      "slices": [
+        "LS-S087",
+        "LS-S088",
+        "LS-S089",
+        "LS-S090",
+        "LS-S091",
+        "LS-S092",
+        "LS-S093",
+        "LS-S094"
+      ],
+      "owner": "ggilchrest/lifestream-specs",
+      "sourceRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+      "sourceState": "Existing working-tree artifacts identified by exact approved digests, not by private HEAD alone.",
+      "authorization": "Operator: both schemas are approved for export. 2026-09-29. Exact reviewed local ingestion and scoped local commits only; no push/publication or other private artifacts.",
+      "artifacts": [
+        {
+          "path": "contracts/conversational-vision.schema.json",
+          "publicPath": "packages/contracts/src/schemas/conversational-vision.schema.json",
+          "schemaId": "https://lifestream.dev/contracts/conversational-vision/1.0.0",
+          "bytes": 93535,
+          "sha256": "4f00aaf9b3ae40db636482cc2fc20ebb22b43d6131155dda2d4e32fc3ee80b7e"
+        },
+        {
+          "path": "contracts/local-game-activity.schema.json",
+          "publicPath": "packages/contracts/src/schemas/local-game-activity.schema.json",
+          "schemaId": "https://lifestream.dev/contracts/local-game-activity/1.0.0",
+          "bytes": 173293,
+          "sha256": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5"
+        }
+      ]
     }
   ]
 }
