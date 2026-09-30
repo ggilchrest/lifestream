@@ -162,3 +162,31 @@ SQLite reopen/forgetting and a scripted asynchronous provider. They do not prove
 selected-model planning, actual gameplay/save reconciliation or Human delivery.
 The runtime activity coordinator, durable lifecycle/checkpoint, native bridge and
 separate foreground history/help selection remain implementation work.
+
+
+`runGamePlanningTurn` now performs one bounded decision through the existing P2
+optional-work coordinator, using the exact cached canonical request (including its
+host-set output token limit). It creates no independent history, per-frame loop,
+run enrollment, effects or contact. The host supplies explicit finite planning
+bounds, pinned provider/tokenizer identity, measured provider preemption/slot release
+qualification and a durable once-only worst-case budget reservation before calls.
+Missing priority qualification suppresses work; a failed/cancelled call does not
+silently refund the host reservation. Tokenization uses the selected provider for
+input and completed output, with no estimated fallback. A hung port retains the
+existing single slot until it settles; foreground preemption fences late results.
+
+The exact source/view/journal selection produces a canonical `GameDecisionInput`
+sidecar with manifest digests and earlier planning/source expiry. Excessive complete
+selections are refused rather than silently pruning contradictory history. Model
+output is JSON null (no action) or an inert canonical `GameActionProposal`. Scope,
+epoch, timeline, observation/view revisions, current visible field predicates,
+advice lineage, unique controls and frame/wall bounds must match the prepared view.
+Hidden/previously revealed values cannot become current predicates; tool requests,
+arbitrary Lua/save operations, malformed/oversized output and missing terminal fail.
+Actual dispatch still requires a new observed frame, independent capability admission,
+input ownership and durable action identity through the governed adapter. Planning
+publication never dispatches. Source/provider/clock changes cancel pending publication.
+Tests use scripted provider/tokenizer/host reservations and do not prove durable
+reservation restart behavior, actual model competence, game outcomes or provider
+priority measurements. Durable run/checkpoint/admission, host lifecycle integration
+and native dispatch qualification remain required.

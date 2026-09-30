@@ -6,6 +6,7 @@ import {isDeepStrictEqual} from 'node:util';
 import {selectCampaignContext} from './journal.ts';
 import {isPreparedTurnBinding,type PreparedTurnBinding} from '../inference/prompt.ts';
 import {hasCanonicalContextScope} from '../context/prepared-view.ts';
+import type {InferenceRequest} from '../inference/port.ts';
 const validator=createContractValidator(),schema='https://lifestream.dev/contracts/local-game-activity/1.0.0#/$defs/';
 export type GameCampaignContextInput={binding:G.GameCampaignJournal;journal:G.CampaignJournal;observation:G.GameObservation;expectedScope:G.ActivityScope;pinsDigest:string;maximumObservationAgeMs:number;freshUntilMs:number;maximumBytes:number;nowMs:number};
 export type GameCampaignContextBoundary={
@@ -19,9 +20,10 @@ export type GameCampaignContextBoundary={
  now?:()=>number;
 };
 export type GameCampaignContextSelection=Readonly<{status:'selected'|'unavailable';reason:'selected'|'invalidInput'|'requiresReconciliation'|'sourceChanged'|'expired'|'budgetExceeded';content:string|null;digest:string|null;ref:Readonly<G.CampaignJournalRef>|null;currentEntryIds:readonly string[];historicalEntryIds:readonly string[];freshUntilMs:number|null;isCurrent:()=>boolean}>;
-const selections=new WeakMap<GameCampaignContextSelection,{scope:G.ActivityScope;sourceRevisions:Readonly<Record<string,string>>}>();
+const selections=new WeakMap<GameCampaignContextSelection,{scope:G.ActivityScope;input:GameCampaignContextInput;sourceRevisions:Readonly<Record<string,string>>}>();
 export type PreparedGameCampaignContext=Readonly<{viewId:string;revision:number;invalidationKey:string;baseConversationDigest:string;conversationContent:string;conversationSectionDigest:string;expiresAtMs:number;sourceRevisions:Readonly<Record<string,string>>}>;
 const preparedGames=new WeakMap<PreparedGameCampaignContext,{binding:PreparedTurnBinding;selection:GameCampaignContextSelection}>();
+const decisions=new WeakMap<G.GameDecisionInput,PreparedGameCampaignContext>();
 const sha=(text:string)=>createHash('sha256').update(text).digest('hex');
 const unavailable=()=>new Error('Prepared game context is unavailable or does not match its logical activity view');
 /** Bind one authentic selection to the existing host-created activity view. No
@@ -32,7 +34,7 @@ export function prepareGameCampaignContext(selection:GameCampaignContextSelectio
  if(!entry||!snapshot||selection.status!=='selected'||!selection.content||!selection.digest||selection.freshUntilMs===null||!selection.isCurrent())throw unavailable();
  const actor=entry.scope,context=actor.contextBinding,scope=snapshot.scope;
  if(!scope||scope.assistantId!==actor.assistantId||scope.principalId!==actor.principalId||scope.relationshipId!==actor.relationshipId||scope.conversationId!==context.conversationId||scope.sessionId!==context.sessionId||scope.endpointId!==context.endpointId||typeof snapshot.conversation!=='string'||snapshot.conversationDigest!==sha(snapshot.conversation))throw unavailable();
- const conversationContent=snapshot.conversation+'\nUntrusted logical activity context (not a Human statement or authority): '+selection.content;
+ const conversationContent=snapshot.conversation+'\nPlanning view references (identity only; no effect authority): '+JSON.stringify({viewId:snapshot.viewId,revision:snapshot.revision,invalidationKey:snapshot.invalidationKey})+'\nUntrusted logical activity context (not a Human statement or authority): '+selection.content;
  const view:PreparedGameCampaignContext=frozen({viewId:snapshot.viewId,revision:snapshot.revision,invalidationKey:snapshot.invalidationKey,baseConversationDigest:snapshot.conversationDigest,conversationContent,conversationSectionDigest:sha(conversationContent),expiresAtMs:selection.freshUntilMs,sourceRevisions:entry.sourceRevisions});
  if(!selection.isCurrent())throw unavailable();preparedGames.set(view,{binding,selection});return view;
 }
@@ -41,6 +43,24 @@ export function gameCampaignConversationContent(view:PreparedGameCampaignContext
  const entry=preparedGames.get(view);
  if(!entry||entry.binding!==binding||view.viewId!==binding.viewId||view.revision!==binding.revision||view.invalidationKey!==binding.invalidationKey||view.baseConversationDigest!==binding.conversationDigest||!entry.selection.isCurrent())throw unavailable();
  return view.conversationContent;
+}
+/** Typed decision evidence comes from this same prepared snapshot, not model
+ * labels or a second context read. Oversized selections are refused intact. */
+export function gameDecisionInput(view:PreparedGameCampaignContext,binding:PreparedTurnBinding,request:InferenceRequest,inputTokens:number,selectedAtMs:number,freshUntilMs:number):G.GameDecisionInput {
+ gameCampaignConversationContent(view,binding);const prepared=preparedGames.get(view)!,entry=selections.get(prepared.selection)!,{observation,journal}=entry.input;
+ const conversation=request.sections.find(s=>s.kind==='conversation'),memory=request.sections.find(s=>s.kind==='preparedMemory');
+ if(request.scope.assistantId!==binding.scope.assistantId||request.scope.sessionId!==binding.scope.sessionId||request.scope.endpointId!==binding.scope.endpointId||conversation?.content!==view.conversationContent||conversation.contentDigest!==view.conversationSectionDigest||!memory||sha(memory.content)!==memory.contentDigest||!Number.isSafeInteger(selectedAtMs)||selectedAtMs<entry.input.nowMs||!Number.isSafeInteger(freshUntilMs)||freshUntilMs<=selectedAtMs||freshUntilMs>view.expiresAtMs||freshUntilMs>Date.parse(request.deadlineAt))throw unavailable();
+ const currentBindings=entry.input.binding.entryBindings.filter(e=>e.currentDisposition==='current');
+ const result:G.GameDecisionInput={schemaVersion:'1.0.0',recordType:'gameDecisionInput',scope:entry.scope,viewId:binding.viewId,viewRevision:binding.revision,invalidationKey:binding.invalidationKey,observationId:observation.observationId,observationRevision:observation.revision,selectedFactIds:observation.facts.map(f=>f.factId),selectedVisibleFieldIds:observation.visibleState.map(f=>f.fieldId),goalSummary:journal.summary,recentActionIds:[...new Set(currentBindings.flatMap(e=>e.sourceActionIds))],adviceRefs:[...new Set(entry.input.binding.entryBindings.flatMap(e=>e.sourceAdviceRefs))],conversationSectionDigest:conversation.contentDigest,preparedMemorySectionDigest:memory.contentDigest,inputTokens,selectedAt:new Date(selectedAtMs).toISOString(),freshUntil:new Date(freshUntilMs).toISOString(),campaignJournalRef:structuredClone(prepared.selection.ref!),selectedCampaignGoalIds:journal.goals.filter(g=>['proposed','active','deferred'].includes(g.status)).map(g=>g.goalId),selectedCurrentCampaignEntryIds:[...prepared.selection.currentEntryIds]};
+ if(!validator.validate(schema+'GameDecisionInput',result).valid)throw unavailable();decisions.set(result,view);return frozen(result);
+}
+/** Proposal validation is a planning check only; a new dispatch observation
+ * and independently issued capability admission remain mandatory. */
+export function gameProposalMatchesPreparedContext(view:PreparedGameCampaignContext,binding:PreparedTurnBinding,decision:G.GameDecisionInput,proposal:G.GameActionProposal):boolean {
+ try{if(decisions.get(decision)!==view)return false;const copy=boundedGameDataSnapshot(proposal) as G.GameActionProposal|null;if(!copy)return false;proposal=copy;gameCampaignConversationContent(view,binding);const entry=selections.get(preparedGames.get(view)!.selection)!,o=entry.input.observation;
+  if(!validator.validate(schema+'GameActionProposal',proposal).valid||!isDeepStrictEqual(proposal.scope,entry.scope)||proposal.observationId!==decision.observationId||proposal.observationRevision!==decision.observationRevision||proposal.preparedViewId!==binding.viewId||proposal.preparedViewRevision!==binding.revision||proposal.invalidationKey!==binding.invalidationKey||proposal.adviceRefs.some(ref=>!decision.adviceRefs.includes(ref))||new Set(proposal.preconditions.map(p=>p.predicateId)).size!==proposal.preconditions.length||new Set(proposal.preconditions.map(p=>p.fieldId)).size!==proposal.preconditions.length||proposal.buttons.includes('up')&&proposal.buttons.includes('down')||proposal.buttons.includes('left')&&proposal.buttons.includes('right'))return false;
+  return proposal.preconditions.every(p=>{const field=o.visibleState.find(f=>f.fieldId===p.fieldId);return field?.visibility==='visibleNow'&&field.timelineId===entry.scope.timelineId&&field.lastObservedRef===o.observationId&&p.sourceObservationId===o.observationId&&isDeepStrictEqual(field.value,p.expectedValue);});
+ }catch{return false;}
 }
 function frozen<T>(value:T):T{if(value&&typeof value==='object'){for(const child of Object.values(value))frozen(child);Object.freeze(value);}return value;}
 /** Typed game wrapper around the same compact journal; this creates no action,
@@ -81,6 +101,6 @@ export function selectGameCampaignContext(value:GameCampaignContextInput,boundar
  const content=JSON.stringify({sourceKind:'gameCampaignJournal',observationDomain:'simulatedGame',untrusted:true,scope:expectedScope,pinsDigest:input.pinsDigest,observation:{observationId:observation.observationId,revision:observation.revision,frameNumber:observation.frameNumber,capturedAt:observation.capturedAt,receivedAt:observation.receivedAt,interpretedAt:observation.interpretedAt,providerConfigurationRef:observation.providerConfigurationRef,facts:observation.facts,visibleState:observation.visibleState},journal:JSON.parse(core.content!),entryBindings:binding.entryBindings,currentEntryIds,historicalEntryIds,ordinarySave:binding.ordinarySaveArtifact?{sha256:binding.ordinarySaveArtifact.artifact.sha256,sourceTimelineId:binding.ordinarySaveArtifact.sourceTimelineId,sourceFrameNumber:binding.ordinarySaveArtifact.sourceFrameNumber,verifiedAt:binding.ordinarySaveArtifact.verifiedAt}:null,limitations:['Simulated game history cannot establish physical audience, speaker identity or world truth.','Historical entries do not prove lost milestones remain current after an older ordinary-save load.','No save bytes, emulator snapshots or executable controls are included.','This selection is planning context; each effect still requires fresh dispatch validation and current authority.']});
  if(Buffer.byteLength(content)>input.maximumBytes)return no('budgetExceeded');if(!isCurrent())return no('sourceChanged');
  const selection:GameCampaignContextSelection=frozen({status:'selected',reason:'selected',content,digest:sha(content),ref:structuredClone(ref),currentEntryIds,historicalEntryIds,freshUntilMs:input.freshUntilMs,isCurrent});
- selections.set(selection,{scope:expectedScope,sourceRevisions:frozen({gameScope:`content-sha256:${sha(JSON.stringify(expectedScope))}`,gamePins:input.pinsDigest,gameObservation:`${observation.observationId}:${observation.revision}`,gameCampaign:`${ref.journalId}:${ref.revision}:${ref.accessRevision}`,gameReconciliation:`content-sha256:${sha(JSON.stringify(binding))}`,gameContext:`content-sha256:${selection.digest}`})});
+ selections.set(selection,{scope:expectedScope,input,sourceRevisions:frozen({gameScope:`content-sha256:${sha(JSON.stringify(expectedScope))}`,gamePins:input.pinsDigest,gameObservation:`${observation.observationId}:${observation.revision}`,gameCampaign:`${ref.journalId}:${ref.revision}:${ref.accessRevision}`,gameReconciliation:`content-sha256:${sha(JSON.stringify(binding))}`,gameContext:`content-sha256:${selection.digest}`})});
  return selection;
 }

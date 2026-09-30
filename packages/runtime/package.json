@@ -159,6 +159,10 @@
     "./activity/game-journal": {
       "types": "./dist/activity/game-journal.d.ts",
       "import": "./dist/activity/game-journal.js"
+    },
+    "./activity/coordinator": {
+      "types": "./dist/activity/coordinator.d.ts",
+      "import": "./dist/activity/coordinator.js"
     }
   },
   "scripts": {
