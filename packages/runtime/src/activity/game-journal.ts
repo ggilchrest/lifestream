@@ -44,6 +44,11 @@ export function gameCampaignConversationContent(view:PreparedGameCampaignContext
  if(!entry||entry.binding!==binding||view.viewId!==binding.viewId||view.revision!==binding.revision||view.invalidationKey!==binding.invalidationKey||view.baseConversationDigest!==binding.conversationDigest||!entry.selection.isCurrent())throw unavailable();
  return view.conversationContent;
 }
+/** Bind durable metadata to the same already selected game source. This reads
+ * no second journal/prompt history and supplies no live continuation authority. */
+export function gameCampaignCheckpointCurrent(view:PreparedGameCampaignContext,binding:PreparedTurnBinding,raw:G.ActivityCheckpoint):boolean {
+ try{gameCampaignConversationContent(view,binding);const checkpoint=boundedGameDataSnapshot(raw) as G.ActivityCheckpoint|null,selected=preparedGames.get(view)!,source=selections.get(selected.selection)!;return !!checkpoint&&validator.validate(schema+'ActivityCheckpoint',checkpoint).valid&&isDeepStrictEqual(checkpoint.scope,source.scope)&&checkpoint.pinsDigest===source.input.pinsDigest&&isDeepStrictEqual(checkpoint.campaignJournalRef,selected.selection.ref)&&selected.selection.isCurrent();}catch{return false;}
+}
 /** Typed decision evidence comes from this same prepared snapshot, not model
  * labels or a second context read. Oversized selections are refused intact. */
 export function gameDecisionInput(view:PreparedGameCampaignContext,binding:PreparedTurnBinding,request:InferenceRequest,inputTokens:number,selectedAtMs:number,freshUntilMs:number):G.GameDecisionInput {

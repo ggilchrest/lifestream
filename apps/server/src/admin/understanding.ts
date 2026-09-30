@@ -23,6 +23,7 @@ export class DiscoveryAdministration {
   readonly repository:UnderstandingRepository;
   private readonly coordinator=new UnderstandingWorkCoordinator({pressureAllowsWork:()=>process.memoryUsage().heapUsed<256*1024*1024});
   private readonly tasks=new Map<string,{relationshipId:string;scope:UnderstandingScope;promise:Promise<unknown>}>();
+  private readonly backgroundKeys=new Map<symbol,string>();
   private readonly retryQueue=new Map<string,{relationshipId:string;scope:UnderstandingScope;run:()=>Promise<void>;attempt:number}>();
   private closed=false;
   private readonly inputLab=new DiscoveryInputLab();
@@ -47,8 +48,13 @@ export class DiscoveryAdministration {
   }
   foregroundStarted():()=>void{return this.coordinator.foregroundStarted();}
   backgroundIdle(){return this.coordinator.isIdle();}
-  runBackground<T>(work:BackgroundWork<T>){return this.coordinator.run(work);}
-  close():void{if(this.closed)return;this.closed=true;this.inputLab.close();this.recent.clear();clearInterval(this.cleanupTimer);clearInterval(this.retryTimer);this.removeIdleListener();this.retryQueue.clear();for(const [key,task] of this.tasks){this.coordinator.cancel(key,"shutdown");this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
+  async runBackground<T>(work:BackgroundWork<T>){
+    if(this.closed)return {state:'suppressed' as const,reason:'runtimeClosed',completedSteps:0};
+    if(this.backgroundKeys.size>=8)return {state:'suppressed' as const,reason:'backgroundCapacity',completedSteps:0};
+    const token=Symbol();this.backgroundKeys.set(token,work.key);
+    try{return await this.coordinator.run({...work,current:()=>!this.closed&&work.current()});}finally{this.backgroundKeys.delete(token);}
+  }
+  close():void{if(this.closed)return;this.closed=true;for(const key of this.backgroundKeys.values())this.coordinator.cancel(key,'shutdown');this.inputLab.close();this.recent.clear();clearInterval(this.cleanupTimer);clearInterval(this.retryTimer);this.removeIdleListener();this.retryQueue.clear();for(const [key,task] of this.tasks){this.coordinator.cancel(key,"shutdown");this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
   invalidate(relationshipId:string):void{for(const [key,entry]of this.retryQueue)if(entry.relationshipId===relationshipId){this.retryQueue.delete(key);this.repository.finish(entry.scope,key,"cancelled","Current authorization or evidence changed; idle retry withheld.");}for(const [key,task]of this.tasks)if(task.relationshipId===relationshipId)this.coordinator.cancel(key,"scopeInvalidated");}
   private queueRetry(key:string,entry:{relationshipId:string;scope:UnderstandingScope;run:()=>Promise<void>;attempt:number},reason:string):void {
     if(this.closed)return;

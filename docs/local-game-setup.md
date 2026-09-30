@@ -264,3 +264,22 @@ enrollment/authority/limits are scripted in these tests. The new helper is a sou
 integration surface, not an enrolled scheduler or installed runtime. Existing
 runtime lifecycle/watchdog, checkpoints/planning integration, real emulator pause,
 fresh authorized resume and native save/platform qualification remain required.
+
+`runCheckpointedGamePlanning` now binds the same authentic prepared activity to a
+canonical durable checkpoint with exact scope, pins and campaign/access revision.
+It uses the existing `DiscoveryAdministration.runBackground` P2 coordinator, not a
+new optional-work slot. The selected request remains the same cached nine sections.
+Explicit live lifecycle/lease/window/source authority is required independently of
+metadata; restored records never enable planning by themselves. View/provider
+reservation identity persists before inference. Qualified terminal evidence settles
+actual usage once before current inert-decision publication; unknown/failed work
+keeps worst-case capacity held, while failed publication preserves actual charges.
+
+Foreground admission and runtime closure cancel this shared work and fence late
+results. Provider/priority/store/coordinator replacement, source/owner withdrawal
+and checkpoint/campaign changes prevent late publication. Closing the existing
+administration host now also cancels externally submitted background work; duplicate
+keys cannot untrack an earlier suspended job. Actual SQLite reopen and the real
+shared coordinator are tested with scripted provider/tokenizer/source/lifecycle and
+terminal predicates. No enrolled runtime, controller dispatch, actual model competence
+or native pause/save/GUI/performance/Human qualification follows from these passes.
