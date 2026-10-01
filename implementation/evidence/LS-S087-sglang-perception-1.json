@@ -1,0 +1,183 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S087",
+  "sliceStatus": "inProgress",
+  "component": "optional bounded existing-SGLang image transport under explicit host availability",
+  "componentStatus": "verified",
+  "recordedAt": "2026-10-01T01:29:10.514996Z",
+  "sourceRevision": "4d745fb4a3c0fea77c55489d1010eb4b8495888e",
+  "sourceFiles": [
+    "packages/providers-sglang/src/perception.ts",
+    "packages/providers-sglang/src/index.ts",
+    "packages/providers-sglang/test/perception.test.ts",
+    "docs/visual-conversation-acceptance.md"
+  ],
+  "ownedOperation": {
+    "operation": "S087 explicit-host-availability bounded SGLang image transport exact-revision full source suite",
+    "sourceRevision": "4d745fb4a3c0fea77c55489d1010eb4b8495888e",
+    "startedAt": "2026-10-01T01:25:41.152730+00:00",
+    "wrapperPid": 97327,
+    "log": "/tmp/tifa-s087-sglang-perception-full.log",
+    "status": "completed",
+    "childPid": 97332,
+    "exitCode": 0,
+    "completedAt": "2026-10-01T01:27:32.325591+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "4d745fb4a3c0fea77c55489d1010eb4b8495888e",
+      "pass": 2649,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 110981.184958
+    },
+    "focused": {
+      "pass": 54,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1098.146708
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 5766.071917
+    },
+    "packetAndBootstrap": {
+      "pass": 48,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 14930.456792
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "node --test --test-concurrency=4 --experimental-strip-types packages/providers-sglang/test/perception.test.ts packages/providers-sglang/test/provider.test.ts packages/runtime/test/perception.test.ts",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "node --test scripts/workspace.test.mjs scripts/qualify-visual-conversation.test.mjs",
+    "npm --prefix .private run validate",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual bounded HTTP serialization/result parsing and cancellation through isolated loopback transport, with production VisualAdmission lease/clock/foreground/scope/buffer controls. Frame wiping precedes eventual genuine adapter retirement; original model slot remains held until settlement.",
+    "scripted": "Image bytes are a synthetic neutral PNG, model outputs and provider availability/capabilities/data policy, owner and capture authority are fixture inputs. No actual selected backend image request, visual understanding, physical capture, service/model change, measured resource/speech latency or Human acceptance."
+  },
+  "semantics": [
+    "Existing text inference/tokenization unchanged. Separately exported optional perception implementation uses only configured endpoint/model; default unavailable, no root/provider-profile/installed-candidate activation. Availability is a host setup check, never proof of image capability, no raw logging/retention, actual resource setup, capture consent or authenticated identity.",
+    "Dedicated purpose-bound inline JPEG/PNG request, up to3frames/2MiB each, one in-flight HTTP call, no retries/redirects, request8450000bytes, response16384default/32768maximum, original deadline capped3000ms and cancellation. No owner history, user hint or private relationship/session/source/lease IDs transmitted. Multi-frame and temporal support explicitly configured, never inferred.",
+    "Structured output schema is independent implementation of existing public perception port, not copied private machine artifact or new export. Closed bounded result, actual frame indices mapped to original frames, host observation UUIDs, appearance vs inference, confidence unknown remainsnull, qualified frame-only Human count; no world truth, identity, authority or independent source family fabricated.",
+    "Wrong model, tools/refusal/private reasoning, length limit, malformed UTF8/JSON, unknown fields, excess outputs/confidence/frames and HTTP failure withhold result. Availability rechecked across transport/parse completion. Existing admission remains sole capture/scope/optional-priority owner and rejects late lease cancellation; ordinary speech never awaits this adapter.",
+    "Transient inline strings are JavaScript objects; immediate secure wiping or measured heap/model bounds not claimed. Actual provider caching/raw-retention/resources and setup must be qualified before availability. Relevant setup/policy change must retire current source epoch."
+  ],
+  "initialFailures": [
+    {
+      "log": "tifa-s087-sglang-perception-focused-initial-failed.log",
+      "reason": "New integration fixture omitted existing endpoint clock/correlation arguments; fixed fixture."
+    },
+    {
+      "log": "tifa-s087-sglang-perception-focused-second-failed.log",
+      "reason": "Existing foreground admission throws before allocating a job; new fixture corrected to assert original refusal."
+    },
+    {
+      "log": "tifa-s087-sglang-perception-focused-retirement-failed.log",
+      "reason": "Resource accounting retains zeroed buffer length until genuine adapter settlement. Assert immediate byte wiping then original retirement separately; production slot/cleanup unchanged."
+    },
+    {
+      "log": "tifa-s087-sglang-perception-workspace-initial-failed.log",
+      "reason": "Checkpoint timestamp used offset notation rather than required UTC Z; metadata formatting repaired."
+    }
+  ],
+  "limitations": [
+    "Loopback scripted model responses prove transport/plumbing only. Actual pinned provider image/structured-output support, no raw retention/logging, resource/egress setup, blind held-out quality, speech priority and paired measured performance remain unqualified; no new live request or provider/model selection made.",
+    "Full actual capture/perception/native lifecycle joins, erasure source projection, durable trace sink/retention, native game/build/save/Linux/Windows GUI, permitted screenshot-help/source/reply/outcome and final platform/model/Human gates remain.",
+    "S066/fullLS-TEST084, original24S083/S084 and iPhone Human acceptance, selected-model callback/causal failures and900msmedian/1500msp95onset targets retained. No unchanged failed studies rerun.",
+    "Installed candidate/ai5090/iPhone/Telegram/encrypted backup unchanged; no camera/game/save/outbound live effect, installation/deployment/publication/new private export. Generic memory-selection amendment remains separately proposed/unimplemented."
+  ],
+  "nextAction": "Continue S090 original-operation visual erasure source projection and isolated replay within existing bounded restricted diagnostics, without reconstructing erased relationship/context or inventing durable retention. Qualified actual SGLang image setup, native/game/save/platform bindings, permitted screenshot help and selected-model/performance/Human gates remain; generic memory-selection amendment separately proposed.",
+  "logDigests": {
+    "tifa-s087-sglang-perception-browser.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-browser.log",
+      "sha256": "d268f44a8c24b6260ada33f8a6e5851b9ec9bc0a4fe1872e7e4de2483cbb97f9",
+      "bytes": 23880
+    },
+    "tifa-s087-sglang-perception-build.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-build.log",
+      "sha256": "e50ff0e002cb10c9e1f29b492c92668e9757cd520b888d2656f9c44634c30ba0",
+      "bytes": 1074
+    },
+    "tifa-s087-sglang-perception-diff.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s087-sglang-perception-focused-initial-failed.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-focused-initial-failed.log",
+      "sha256": "3b626cf99db91b4677c0acd8f7dd9b2ab2b91d411eb4c20f53174723ef18ad9a",
+      "bytes": 6438
+    },
+    "tifa-s087-sglang-perception-focused-retirement-failed.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-focused-retirement-failed.log",
+      "sha256": "0c242e17847bfc46fc71f743d1873d2536717821c39eba206e1637ef66f97f68",
+      "bytes": 6650
+    },
+    "tifa-s087-sglang-perception-focused-second-failed.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-focused-second-failed.log",
+      "sha256": "b01da5d0bbfafe709703b1f6117bfeb5f1abf8f8694745c4e10965072e0f3a9c",
+      "bytes": 6441
+    },
+    "tifa-s087-sglang-perception-focused.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-focused.log",
+      "sha256": "0346d9b38ff7f9e0cfd74b4a7a9771c195f2019b04569f8d4af9fc99b845a0aa",
+      "bytes": 5858
+    },
+    "tifa-s087-sglang-perception-full.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-full.log",
+      "sha256": "d21b08deebf69ec59ab1561f6dec08a12aca9c43c8c2b4e012cfceac3b363bb7",
+      "bytes": 282175
+    },
+    "tifa-s087-sglang-perception-lint.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s087-sglang-perception-packet.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-packet.log",
+      "sha256": "2c92f7721d0ba964c6317643a14874f99d3c44d77c4281a548e6f876f067c2eb",
+      "bytes": 4528
+    },
+    "tifa-s087-sglang-perception-private.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-private.log",
+      "sha256": "0565a2a2cc296fc373537eba590db67a3f91a8828e75d64c77c936a46b47c3ce",
+      "bytes": 28880
+    },
+    "tifa-s087-sglang-perception-typecheck.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s087-sglang-perception-workspace-initial-failed.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-workspace-initial-failed.log",
+      "sha256": "ce8d9d4ad2cb00adb0cc0af21e4dbdb0992ebc62462692d5bffec47db584cf66",
+      "bytes": 66
+    },
+    "tifa-s087-sglang-perception-workspace.log": {
+      "path": "/tmp/tifa-s087-sglang-perception-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
