@@ -1,0 +1,5 @@
+# These public contracts and fixtures have byte-bound SHA-256 identities.
+# Preserve committed LF bytes on Windows instead of changing integrity checks.
+*.json text eol=lf
+packages/contracts/src/provider-messages.ts text eol=lf
+packages/contracts/src/game-activity.ts text eol=lf
