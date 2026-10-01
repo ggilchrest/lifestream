@@ -150,7 +150,21 @@ export class AutomaticMemory {
  private visualCurrent(item:{publication:VisualMemoryPublication;scope:MemoryScope;memoryRevision:number;visualRevision:number}){
   try{return item.publication.freshUntilMs>Date.now()&&this.policy(item.scope).enabled&&this.policy(item.scope).revision===item.memoryRevision&&this.visual.policy(item.scope).enabled&&this.visual.policy(item.scope).revision===item.visualRevision&&this.scopeAllowed(item.scope)&&item.publication.isCurrent();}catch{return false;}
  }
- forgetVisual(scope:MemoryScope,id:string,revision:number){if(!this.scopeAllowed(scope))throw Error('Visual memory scope unavailable');this.visual.forget(scope,id,revision);this.visualCandidateJournal.forgetOwner(scope);this.changed();}
+ /** Minimal successful-forget diagnostics under current owner/consent, never
+  * recalled content. The actual source is checked after final host hooks. */
+ visualErasureHistory(scope:MemoryScope){
+  try{
+   const memory=this.policy(scope),visual=this.visual.policy(scope);if(this.closed||!memory.enabled||!visual.enabled||!this.scopeAllowed(scope))return Object.freeze([]);
+   if(this.closed||!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==memory.revision||!this.visual.policy(scope).enabled||this.visual.policy(scope).revision!==visual.revision)return Object.freeze([]);
+   return this.visualCandidateJournal.erasureTraces(scope,source=>this.visual.erasureEvidenceCurrent(source));
+  }catch{this.visualCandidateJournal.forgetOwner(scope);return Object.freeze([]);}
+ }
+ forgetVisual(scope:MemoryScope,id:string,revision:number){
+  if(!this.scopeAllowed(scope))throw Error('Visual memory scope unavailable');
+  const result=this.visual.forgetWithEvidence(scope,id,revision,this.environmentId);this.visualCandidateJournal.forgetOwner(scope);
+  try{if(result.evidence&&!this.closed&&this.policy(scope).enabled&&this.visual.policy(scope).enabled&&this.scopeAllowed(scope)&&this.visual.erasureEvidenceCurrent(result.evidence))this.visualCandidateJournal.recordErasure(scope,result.evidence);}catch{/* Optional diagnostics cannot change committed forgetting. */}
+  this.changed();
+ }
  correctVisual(scope:MemoryScope,id:string,revision:number,content:string){
   const policy=this.policy(scope),visual=this.visual.inspect(scope,this.scopeAllowed(scope)),episode=visual.episodes.find(row=>row.episodeId===id)?.episode;
   if(!policy.enabled||!this.scopeAllowed(scope)||!episode||typeof content!=='string'||!content.trim()||content.length>1200||secret.test(content)||!this.contentAllowed(scope,content)||!this.contentAllowed(scope,episode.summary)||episode.observations.some(o=>!this.contentAllowed(scope,o.description)))throw Error('Visual correction scope unavailable');

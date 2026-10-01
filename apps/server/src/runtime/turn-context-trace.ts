@@ -3,7 +3,7 @@ import {types} from 'node:util';
 import {createContractValidator} from '@lifestream/contracts';
 import {isFinalizedTurnRequest,type FinalizedTurn} from '@lifestream/runtime/inference/prompt';
 import type {InferenceRequest} from '@lifestream/runtime/inference';
-import {isVisualMemoryCandidateTrace,isVisualMemoryLifecycleTrace,isVisualMemoryCorrectionTrace,visualMemoryTraceOwnersMatch,visualMemoryCorrectionOwnersMatch,type VisualMemoryCandidateTrace,type VisualMemoryLifecycleTrace,type VisualMemoryCorrectionTrace} from './visual-memory-candidate-evidence.ts';
+import {isVisualMemoryCandidateTrace,isVisualMemoryLifecycleTrace,isVisualMemoryCorrectionTrace,isVisualMemoryErasureTrace,visualMemoryTraceOwnersMatch,visualMemoryCorrectionOwnersMatch,visualMemoryErasureOwnersMatch,type VisualMemoryCandidateTrace,type VisualMemoryLifecycleTrace,type VisualMemoryCorrectionTrace,type VisualMemoryErasureTrace} from './visual-memory-candidate-evidence.ts';
 import type {VisualTurnReceipt} from './visual-turn-evidence.ts';
 
 const uuid=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(value);
@@ -170,5 +170,29 @@ export function replayVisualMemoryCorrection(candidate:VisualMemoryCandidateTrac
   const events=[candidate.event,correction.event].map((source,sequence)=>({...source,eventId:randomUUID(),backgroundJobId:producerId,correlationId:replayId,sequence,environmentId,executionMode:'replay',processingTime,monotonic:null,sourceEventIds:[source.eventId],causedByEventIds:[]}));
   const validator=createContractValidator();if(events.some(event=>!validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid))return null;
   return freeze({replayId,environmentId,executionMode:'replay' as const,events,candidateArtifact:candidate.artifact,correctionArtifact:correction.artifact,sourceReceipt:correction.sourceReceipt,join,sourceMonotonicClockAvailable:false as const,complete:false as const,rawMediaAvailable:false as const,perceptionReplayed:false as const,liveEffects:false as const,durableReinforcement:false as const,learningAuthority:false as const,effectAuthority:false as const});
+ }catch{return null;}
+}
+
+/** Original memory UUID/owner chronology only. Deleted episode/family/context
+ * stays missing, rather than being reconstructed to complete a diagnostic join. */
+export function correlateVisualMemoryErasure(candidate:VisualMemoryCandidateTrace,erasure:VisualMemoryErasureTrace){
+ try{
+  if(!visualMemoryErasureOwnersMatch(candidate,erasure))return null;
+  const source=erasure.sourceReceipt,payload=erasure.event.payload as {memoryId:string;lifecycleEventId:string;oldRevision:number;newRevision:number};
+  const proposed=JSON.parse(candidate.artifact.bytes),removed=JSON.parse(erasure.artifact.bytes);
+  if(source.memoryId!==proposed.memoryId||candidate.event.assistantId!==erasure.event.assistantId||payload.memoryId!==source.memoryId||payload.lifecycleEventId!==source.eventId||payload.oldRevision!==source.oldRevision||payload.newRevision!==source.newRevision||source.newRevision!==source.oldRevision+1||removed.contentRemoved!==true||removed.episodeMetadataAvailable!==false||Date.parse(candidate.event.eventTime as string)>Date.parse(erasure.event.eventTime as string))return null;
+  return freeze({state:'joined' as const,memoryId:source.memoryId,sourceCandidateEventId:candidate.event.eventId,traceErasureEventId:erasure.event.eventId,sourceMutationEventId:source.eventId,memorySourcesOwnerMatched:true as const,candidateArtifactDigest:candidate.artifact.reference.sha256,erasureArtifactDigest:erasure.artifact.reference.sha256,oldRevision:source.oldRevision,newRevision:source.newRevision,contentRemoved:true as const,episodeMetadataAvailable:false as const,sourceFamilyJoined:false as const,intermediateHistoryComplete:false as const,currentEligibilityProved:false as const,replyFencingProved:false as const,learningAuthority:false as const,effectAuthority:false as const});
+ }catch{return null;}
+}
+
+/** Pure historical metadata replay, with no source restoration or new normal
+ * operation provenance. Raw media and erased episode metadata remain absent. */
+export function replayVisualMemoryErasure(candidate:VisualMemoryCandidateTrace,erasure:VisualMemoryErasureTrace){
+ try{
+  const join=correlateVisualMemoryErasure(candidate,erasure);if(!join||!isVisualMemoryErasureTrace(erasure))return null;
+  const replayId=randomUUID(),environmentId=randomUUID(),producerId=randomUUID(),processingTime=new Date().toISOString();
+  const events=[candidate.event,erasure.event].map((source,sequence)=>({...source,eventId:randomUUID(),backgroundJobId:producerId,correlationId:replayId,sequence,environmentId,executionMode:'replay',processingTime,monotonic:null,sourceEventIds:[source.eventId],causedByEventIds:[]}));
+  const validator=createContractValidator();if(events.some(event=>!validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid))return null;
+  return freeze({replayId,environmentId,executionMode:'replay' as const,events,candidateArtifact:candidate.artifact,erasureArtifact:erasure.artifact,sourceReceipt:erasure.sourceReceipt,join,sourceMonotonicClockAvailable:false as const,complete:false as const,rawMediaAvailable:false as const,episodeMetadataAvailable:false as const,perceptionReplayed:false as const,liveEffects:false as const,durableReinforcement:false as const,learningAuthority:false as const,effectAuthority:false as const});
  }catch{return null;}
 }

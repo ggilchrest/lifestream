@@ -38,6 +38,11 @@ export function visualSourceMutationIdentity(kind:'correction'|'erasure',oldRevi
 }
 export type VisualActivationEvidence=Readonly<{schemaVersion:'1.0.0';recordType:'visualActivationEvidence';ownerDigest:string;scope:Readonly<Pick<VisualMemoryScope,'assistantId'|'environmentId'|'conversationId'|'sessionId'|'endpointId'>>;event:Readonly<Record<string,unknown>>;artifact:Readonly<{reference:Readonly<{reference:string;sha256:string;mediaType:'application/json';schemaRef:string;byteLength:number}>;bytes:string}>}>;
 export type VisualCorrectionEvidence=Readonly<{schemaVersion:'1.0.0';recordType:'visualCorrectionEvidence';ownerDigest:string;scope:Readonly<{assistantId:string;environmentId:string;conversationId:null;sessionId:null;endpointId:null}>;sourceReceipt:Readonly<{eventId:string;assistantId:string;memoryId:string;oldRevision:number;newRevision:number;occurredAt:string;humanEntryId:string;sourceRevision:Readonly<{providerRef:string;revision:string;highWaterMark:null}>}>;artifact:VisualActivationEvidence['artifact']}>;
+export type VisualErasureEvidence=Readonly<{schemaVersion:'1.0.0';recordType:'visualErasureEvidence';ownerDigest:string;scope:VisualCorrectionEvidence['scope'];sourceReceipt:Readonly<{eventId:string;assistantId:string;memoryId:string;oldRevision:number;newRevision:number;occurredAt:string;sourceRevision:Readonly<{providerRef:string;revision:string;highWaterMark:null}>}>;artifact:VisualActivationEvidence['artifact']}>;
+const visualErasureSources=new WeakMap<object,{repository:VisualMemoryRepository;createdMono:number;actorRef:string}>();
+/** Only a successfully committed original scoped forget operation donates this
+ * ephemeral provenance. No erased relationship/episode metadata is persisted. */
+export function isVisualErasureEvidence(value:unknown):value is VisualErasureEvidence{return !!value&&typeof value==='object'&&visualErasureSources.has(value);}
 const visualCorrectionSources=new WeakSet<object>();
 /** Original retained SQLite source read only; no currency or truth authority. */
 export function isVisualCorrectionEvidence(value:unknown):value is VisualCorrectionEvidence{return !!value&&typeof value==='object'&&visualCorrectionSources.has(value);}
@@ -65,13 +70,15 @@ function immutable<T>(value:T):T{if(value&&typeof value==='object'){for(const ch
 
 /** Run inside the source lifecycle transaction. Candidate content and historic
  * event payloads are erased; opaque lifecycle receipts remain. */
-export function retireVisualProjections(tx:Transaction,now:number){
+export function retireVisualProjections(tx:Transaction,now:number,onMutation?:(memoryId:string,mutation:ReturnType<typeof visualSourceMutationIdentity>)=>void){
  const rows=tx.all<{id:string;assistant_id:string;provenance_json:string;lifecycle_json:string}>("SELECT id,assistant_id,provenance_json,lifecycle_json FROM memories WHERE json_extract(provenance_json,'$.visualEpisodeId') IN (SELECT episode_id FROM visual_observation_episodes WHERE state<>'retained') AND json_extract(lifecycle_json,'$.contentRemoved') IS NOT 1");
  tx.run(`UPDATE memory_lifecycle_events SET payload_json=${visualLifecyclePayloadErasure} WHERE event_type='visualUserCorrection' AND json_extract(payload_json,'$.episodeId') IN (SELECT episode_id FROM visual_observation_episodes WHERE state<>'retained')`,JSON.stringify({payloadRemoved:true}));
  for(const row of rows){const provenance=JSON.parse(row.provenance_json) as {actor:string},lifecycle=JSON.parse(row.lifecycle_json) as {revision:number},revision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',row.id)!.n;
   tx.run("UPDATE memories SET content='',provenance_json=?,lifecycle_json=? WHERE id=?",JSON.stringify({actor:provenance.actor,payloadRemoved:true}),JSON.stringify({status:'invalidated',revision:lifecycle.revision+1,contentRemoved:true,reason:'visual source retired',changedBy:provenance.actor}),row.id);
   tx.run(`UPDATE memory_lifecycle_events SET payload_json=${visualLifecyclePayloadErasure} WHERE memory_id=?`,JSON.stringify({payloadRemoved:true}),row.id);
-  tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',row.id,row.assistant_id,revision,'forgotten',JSON.stringify({status:'invalidated',contentRemoved:true,reason:'visual source retired',visualMutation:visualSourceMutationIdentity('erasure',lifecycle.revision)}),new Date(now).toISOString());
+  const visualMutation=visualSourceMutationIdentity('erasure',lifecycle.revision);
+  tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',row.id,row.assistant_id,revision,'forgotten',JSON.stringify({status:'invalidated',contentRemoved:true,reason:'visual source retired',visualMutation}),new Date(now).toISOString());
+  try{onMutation?.(row.id,visualMutation);}catch{/* Optional original-operation diagnostics do not alter privacy erasure. */}
  }return rows.length;
 }
 
@@ -294,8 +301,58 @@ export class VisualMemoryRepository{
   }catch{guard.retired=true;return false;}finally{guard.checking=false;}
  }
  forget(owner:VisualMemoryOwner,id:string,expectedRevision:number):boolean{
-  this.sweep();return this.db.transaction(tx=>{tx.run("UPDATE visual_observation_episodes SET state='forgotten',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND episode_id=? AND revision=? AND state='retained'",key(owner),id,expectedRevision);
-   if(tx.get<{n:number}>('SELECT changes() AS n')!.n!==1)throw Error('Visual episode revision conflict');retireVisualProjections(tx,this.now());return true;});
+  return this.forgetWithEvidence(owner,id,expectedRevision).forgotten;
+ }
+ /** Same original erasure transaction, with optional minimal post-commit
+  * diagnostics. Unknown/corrupt source, revision or host environment cannot
+  * prevent forgetting and never receives fabricated metadata. */
+ forgetWithEvidence(owner:VisualMemoryOwner,id:string,expectedRevision:number,environmentId?:string):Readonly<{forgotten:true;evidence:VisualErasureEvidence|null}>{
+  this.sweep();const now=this.now();
+  const evidence=this.db.transaction(tx=>{
+   let original:{memoryId:string;oldRevision:number}|null=null;
+   try{
+    if(ownerValid(owner)&&typeof environmentId==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(environmentId)){
+     const row=tx.get<Row>('SELECT episode_id,revision,state,expires_at,payload_json FROM visual_observation_episodes WHERE scope_key=? AND episode_id=?',key(owner),id);
+     if(row?.state==='retained'&&row.revision===expectedRevision&&row.payload_json&&Buffer.byteLength(row.payload_json)<=8192){
+      const episode=JSON.parse(row.payload_json) as VisualObservationEpisode;
+      const stored=episode.memoryRecordId?tx.get<{id:string;provenance_json:string;lifecycle_json:string}>('SELECT id,provenance_json,lifecycle_json FROM memories WHERE id=? AND assistant_id=?',episode.memoryRecordId,owner.assistantId):null;
+      if(stored&&Buffer.byteLength(stored.provenance_json)<=32768&&Buffer.byteLength(stored.lifecycle_json)<=4096){
+       const provenance=JSON.parse(stored.provenance_json),lifecycle=JSON.parse(stored.lifecycle_json);
+       if(episode.episodeId===id&&episode.revision===expectedRevision&&episode.state==='retained'&&key(episode.scope)===key(owner)&&provenance.actor===owner.principalId&&provenance.relationshipId===owner.relationshipId&&provenance.visualEpisodeId===id&&provenance.canonical?.memoryId===stored.id&&provenance.canonical?.status===lifecycle.status&&['candidate','active','contradicted'].includes(lifecycle.status)&&Number.isSafeInteger(lifecycle.revision)&&lifecycle.revision>=1&&Number.isSafeInteger(lifecycle.revision+1)&&validateVisualMemoryProjection({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:provenance.canonical}).valid)original={memoryId:stored.id,oldRevision:lifecycle.revision};
+      }
+     }
+    }
+   }catch{/* Optional diagnostics cannot withhold privacy erasure. */}
+   tx.run("UPDATE visual_observation_episodes SET state='forgotten',payload_json=NULL,revision=revision+1 WHERE scope_key=? AND episode_id=? AND revision=? AND state='retained'",key(owner),id,expectedRevision);
+   if(tx.get<{n:number}>('SELECT changes() AS n')!.n!==1)throw Error('Visual episode revision conflict');
+   let committedMutationId:string|null=null;
+   retireVisualProjections(tx,now,(memoryId,mutation)=>{if(original&&memoryId===original.memoryId&&mutation.oldRevision===original.oldRevision&&mutation.newRevision===original.oldRevision+1)committedMutationId=mutation.eventId;});
+   try{
+    if(!original||!committedMutationId||typeof environmentId!=='string')return null;
+    const row=tx.get<{payload_json:string;occurred_at:string;event_type:string}>("SELECT payload_json,occurred_at,event_type FROM memory_lifecycle_events WHERE assistant_id=? AND memory_id=? ORDER BY revision DESC LIMIT 1",owner.assistantId,original.memoryId);
+    if(!row||row.event_type!=='forgotten'||Buffer.byteLength(row.payload_json)>4096)return null;
+    const mutation=JSON.parse(row.payload_json).visualMutation;
+    if(!mutation||!isDeepStrictEqual(Object.keys(mutation).sort(),['eventId','kind','newRevision','oldRevision','recordType'])||mutation.recordType!=='visualSourceMutationIdentity'||mutation.kind!=='erasure'||mutation.eventId!==committedMutationId||mutation.oldRevision!==original.oldRevision||mutation.newRevision!==original.oldRevision+1||row.occurred_at!==new Date(now).toISOString())return null;
+    const sourceReceipt={eventId:mutation.eventId as string,assistantId:owner.assistantId,memoryId:original.memoryId,oldRevision:original.oldRevision,newRevision:original.oldRevision+1,occurredAt:row.occurred_at,sourceRevision:{providerRef:'urn:lifestream:sqlite:visual-memory',revision:`erasure:${mutation.eventId}`,highWaterMark:null}};
+    const bytes=JSON.stringify({schemaVersion:'1.0.0',recordType:'redactedVisualErasureSource',...sourceReceipt,mutationEnvironmentId:environmentId,contentRemoved:true,episodeMetadataAvailable:false}),sha256=createHash('sha256').update(bytes).digest('hex');
+    return immutable({schemaVersion:'1.0.0',recordType:'visualErasureEvidence',ownerDigest:key(owner),scope:{assistantId:owner.assistantId,environmentId,conversationId:null,sessionId:null,endpointId:null},sourceReceipt,artifact:{reference:{reference:`urn:lifestream:visual-erasure-source:sha256:${sha256}`,sha256,mediaType:'application/json',schemaRef:'urn:lifestream:visual-erasure-source:1.0.0',byteLength:Buffer.byteLength(bytes)},bytes}} as VisualErasureEvidence);
+   }catch{return null;}
+  });
+  if(evidence){visualErasureSources.set(evidence,{repository:this,createdMono:performance.now(),actorRef:owner.principalId});if(!this.erasureEvidenceCurrent(evidence)){visualErasureSources.delete(evidence);return Object.freeze({forgotten:true,evidence:null});}}
+  return Object.freeze({forgotten:true,evidence});
+ }
+ /** Recheck only the minimal original operation/tombstone. Never read or rebuild
+  * the erased relationship, episode, source family or capture context. */
+ erasureEvidenceCurrent(source:VisualErasureEvidence):boolean{
+  try{
+   const guard=visualErasureSources.get(source);if(!guard||guard.repository!==this||performance.now()<guard.createdMono||performance.now()-guard.createdMono>=60000)return false;
+   const receipt=source.sourceReceipt,now=this.now();if(!Number.isFinite(now)||now<Date.parse(receipt.occurredAt)||now-Date.parse(receipt.occurredAt)>=60000)return false;
+   const memory=this.db.connection.prepare('SELECT content,provenance_json,lifecycle_json FROM memories WHERE id=? AND assistant_id=?').get(receipt.memoryId,receipt.assistantId);
+   const row=this.db.connection.prepare("SELECT payload_json,occurred_at,event_type FROM memory_lifecycle_events WHERE assistant_id=? AND memory_id=? ORDER BY revision DESC LIMIT 1").get(receipt.assistantId,receipt.memoryId);
+   if(!memory||memory.content!==''||typeof memory.provenance_json!=='string'||typeof memory.lifecycle_json!=='string'||Buffer.byteLength(memory.provenance_json)>4096||Buffer.byteLength(memory.lifecycle_json)>4096||!row||row.event_type!=='forgotten'||row.occurred_at!==receipt.occurredAt||typeof row.payload_json!=='string'||Buffer.byteLength(row.payload_json)>4096)return false;
+   const provenance=JSON.parse(memory.provenance_json),lifecycle=JSON.parse(memory.lifecycle_json),payload=JSON.parse(row.payload_json);
+   return isDeepStrictEqual(Object.keys(provenance).sort(),['actor','payloadRemoved'])&&provenance.actor===guard.actorRef&&provenance.payloadRemoved===true&&lifecycle.status==='invalidated'&&lifecycle.contentRemoved===true&&lifecycle.revision===receipt.newRevision&&isDeepStrictEqual(Object.keys(payload).sort(),['contentRemoved','reason','status','visualMutation'])&&payload.status==='invalidated'&&payload.reason==='visual source retired'&&payload.contentRemoved===true&&isDeepStrictEqual(payload.visualMutation,{recordType:'visualSourceMutationIdentity',eventId:receipt.eventId,kind:'erasure',oldRevision:receipt.oldRevision,newRevision:receipt.newRevision});
+  }catch{return false;}
  }
  /** Restore never carries visual consent or payload forward without current safety replay support. */
  quarantine():number{

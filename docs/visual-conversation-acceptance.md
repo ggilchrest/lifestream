@@ -1,5 +1,27 @@
 # Visual conversation qualification
 
+Successful scoped visual forgetting can donate a minimal original-operation
+receipt to the same bounded restricted diagnostic journal. The source captures
+the actual mutation UUID in the existing transaction and brands provenance only
+after commit and tombstone checks. It records memory/Assistant IDs, record
+revisions, UTC and actual forget-host environment; background conversation,
+session and endpoint are null. No erased episode, relationship, source family,
+scene prose or Human correction is reconstructed or persisted. Missing host
+environment, source-only episodes or corrupt projections still erase content
+without inventing evidence.
+
+Candidate/activation/correction diagnostics are retired before the asynchronous
+erasure projection. Inspection checks original operation provenance, the actual
+minimal tombstone/event after final host hooks, owner/consent, both clocks and
+the existing 60-second/128-row bounds. It supplies a published record-change
+trace, without relabeling destructive forgetting as the canonical source-
+preserving `invalidate` operation. Replay of genuine previously held diagnostics
+preserves opaque source identity in a new environment, with no source restore,
+provider/effect route or learning authority. Erased episode metadata, source-
+family joins, intermediate history and reply-fencing proof remain missing.
+Direct MemoryRecord forgetting, policy/expiry/restore erasure and post-restart
+source reconstruction do not gain this scoped live-operation provenance.
+
 `SglangVisualPerceptionProvider` is an optional image transport through the existing
 configured SGLang endpoint/model. It is exported separately from ordinary text
 inference and is unavailable unless its host explicitly supplies current
