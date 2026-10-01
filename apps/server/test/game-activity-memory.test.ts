@@ -1,3 +1,4 @@
+import {conversationFixtureProvider} from './fixtures/conversation-provider.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomBytes,randomUUID} from 'node:crypto';
@@ -29,7 +30,7 @@ async function setup(t:import('node:test').TestContext,retentionMs=60000){
  e.scope.principalId=identity.principalId;e.scope.assistantId=assistantId;e.scope.relationshipId=relationshipId;
  for(const record of [...sources.actions,...sources.observations])record.scope=structuredClone(e.scope);
  const internals=app as unknown as {database:Database;memories:MemoryRepository;providers:{inference:InferenceProvider};experience:ExperientialLearning;experienceSources:(scope:ExperienceScope)=>import('@lifestream/contracts/experience').Source[]};
- const requests:InferenceRequest[]=[];internals.providers.inference={async *generate(input){requests.push(input);yield {kind:'text',text:'Scripted historical reply.'};yield {kind:'done'};}};
+ const requests:InferenceRequest[]=[];internals.providers.inference=conversationFixtureProvider({async *generate(input){requests.push(input);yield {kind:'text',text:'Scripted historical reply.'};yield {kind:'done'};}});
  const owner={assistantId,relationshipId},path=`/api/admin/v1/assistants/${assistantId}/relationships/${relationshipId}`;
  return {app,e,source,sources,internals,requests,request,api,owner,path,identity,enable:()=>api('/api/runtime/v1/memory',{...owner,enabled:true,expectedRevision:0}),withdraw:()=>current=false,meaningless:()=>meaningful=false,advance:(ms:number)=>now+=ms,reply:()=>request('/api/runtime/v1/messages',{...owner,userInput:'Recall the gate in our past game.'})};
 }
@@ -50,7 +51,7 @@ test('trusted source publication reaches existing active memory and ordinary nin
 for(const cause of ['source','expiry','policy','forget','audience']as const)test('held ordinary reply is fenced by game '+cause,{timeout:15000},async t=>{
  const f=await setup(t);await f.enable();const published=f.app.publishGameEpisode(f.e);assert.ok(published.memoryId);
  let entered!:()=>void,release!:()=>void;const started=new Promise<void>(r=>entered=r),held=new Promise<void>(r=>release=r);t.after(()=>release());
- f.internals.providers.inference={async *generate(input){f.requests.push(input);entered();await held;yield {kind:'text',text:'LATE_GAME_MEMORY_REPLY'};yield {kind:'done'};}};
+ f.internals.providers.inference=conversationFixtureProvider({async *generate(input){f.requests.push(input);entered();await held;yield {kind:'text',text:'LATE_GAME_MEMORY_REPLY'};yield {kind:'done'};}});
  const pending=f.reply();await started;assert.match(f.requests[0]!.sections.find(s=>s.kind==='preparedMemory')!.content,/The gate stayed closed/);
  if(cause==='source')f.withdraw();if(cause==='expiry')f.advance(60000);if(cause==='policy')await f.api('/api/runtime/v1/memory',{...f.owner,enabled:false,expectedRevision:1});if(cause==='audience')await f.api('/api/runtime/v1/audience',{mode:'shared',seconds:300});
  if(cause==='forget'){
@@ -61,7 +62,7 @@ for(const cause of ['source','expiry','policy','forget','audience']as const)test
   assert.equal((await f.api(f.path+'/privacy',body)).receipt.operationId,forgotten.receipt.operationId);assert.deepEqual(f.app.publishGameEpisode(f.e),{state:'unavailable',memoryId:null});
  }
  release();assert.doesNotMatch(await(await pending).text(),/LATE_GAME_MEMORY_REPLY/);
- f.internals.providers.inference={async *generate(input){f.requests.push(input);yield {kind:'text',text:'Safe independent reply.'};yield {kind:'done'};}};
+ f.internals.providers.inference=conversationFixtureProvider({async *generate(input){f.requests.push(input);yield {kind:'text',text:'Safe independent reply.'};yield {kind:'done'};}});
  await(await f.reply()).text();assert.doesNotMatch(f.requests.at(-1)!.sections.find(s=>s.kind==='preparedMemory')!.content,/The gate stayed closed/);
 });
 
@@ -107,7 +108,7 @@ for(const cause of ['source','expiry','policy']as const)test('actual retained ga
 
 test('source-bound game reflection publishes an uncertain continuation into an ordinary private HTTP reply',{timeout:15000},async t=>{
  const f=await setup(t,3600000);await f.enable();assert.ok(f.app.publishGameEpisode(f.e).memoryId);const scope={...f.owner,principalId:f.identity.principalId},path=f.path+'/experience/v1';let view=await f.api(path);
- f.internals.providers.inference={tokenize:async()=>({count:40,identity:'scripted-tokenizer'}),async*generate(input){f.requests.push(input);if(input.scope.sessionId.startsWith('experience:')){const data=JSON.parse(input.sections.at(-1)!.content);yield {kind:'text',text:JSON.stringify({recordType:'reflectionResult',decision:'change',conclusion:'A past simulated attempt leaves an unresolved question.',items:[{id:'past-game-gate',expectedRevision:0,kind:'question',topic:'games',statement:'The recorded gate attempt did not cross; the cause is unknown.',nextStep:'Ask about the past game gate attempt.',uncertainty:'high',sourceRefs:data.sources.map((s:any)=>s.id),disposition:'open'}],changes:[]})};}else yield {kind:'text',text:'Scripted ordinary continuation.'};yield {kind:'done'};}};
+ f.internals.providers.inference=conversationFixtureProvider({tokenize:async()=>({count:40,identity:'scripted-tokenizer'}),async*generate(input){f.requests.push(input);if(input.scope.sessionId.startsWith('experience:')){const data=JSON.parse(input.sections.at(-1)!.content);yield {kind:'text',text:JSON.stringify({recordType:'reflectionResult',decision:'change',conclusion:'A past simulated attempt leaves an unresolved question.',items:[{id:'past-game-gate',expectedRevision:0,kind:'question',topic:'games',statement:'The recorded gate attempt did not cross; the cause is unknown.',nextStep:'Ask about the past game gate attempt.',uncertainty:'high',sourceRefs:data.sources.map((s:any)=>s.id),disposition:'open'}],changes:[]})};}else yield {kind:'text',text:'Scripted ordinary continuation.'};yield {kind:'done'};}});
  await f.api(path,{schemaVersion:'1.0.0',operation:'configure',expectedRevision:view.state.revision,enabled:true,frozen:false,retention:'sourceBound',topicPolicies:defaultTopics});await f.internals.experience.tick();f.advance(60001);await f.internals.experience.tick();
  view=await f.api(path);assert.equal(view.state.funnel.calls,1,JSON.stringify(view));assert.equal(view.state.funnel.published,1,JSON.stringify(view));assert.equal(view.state.items[0].uncertainty,'high');assert.equal(view.state.items[0].topic,'games');assert.ok(view.state.imprints.every((i:any)=>i.value===0));
  const response=await f.request('/api/runtime/v1/messages',{...f.owner,userInput:'What should we work on next?'});assert.match(await response.text(),/interaction.completed/);const prepared=f.requests.at(-1)!.sections.find(s=>s.kind==='preparedMemory')!.content;assert.match(prepared,/Ask about the past game gate attempt/);assert.equal(f.requests.at(-1)!.sections.length,9);
