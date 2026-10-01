@@ -1,0 +1,161 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "sliceStatus": "inProgress",
+  "component": "original SQLite correction and payload-erasure mutation identities",
+  "componentStatus": "verified",
+  "recordedAt": "2026-10-01T00:41:53.102356Z",
+  "sourceRevision": "6265211246fe136ff3c271cb794514132e939b97",
+  "sourceFiles": [
+    "packages/storage-sqlite/src/memory.ts",
+    "packages/storage-sqlite/src/visual-memory.ts",
+    "packages/storage-sqlite/test/visual-mutation-identities.test.ts",
+    "docs/visual-conversation-acceptance.md"
+  ],
+  "ownedOperation": {
+    "operation": "S090 original visual correction and erasure source mutation identities exact-revision full source suite",
+    "sourceRevision": "6265211246fe136ff3c271cb794514132e939b97",
+    "startedAt": "2026-10-01T00:31:45.327021+00:00",
+    "wrapperPid": 79097,
+    "log": "/tmp/tifa-s090-mutation-owner-full.log",
+    "status": "completed",
+    "childPid": 79100,
+    "exitCode": 0,
+    "completedAt": "2026-10-01T00:33:36.985056+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "6265211246fe136ff3c271cb794514132e939b97",
+      "pass": 2615,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 111461.381958
+    },
+    "focused": {
+      "pass": 72,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1006.51175
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 5850.459375
+    },
+    "packetAndBootstrap": {
+      "pass": 48,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 17046.052084
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "node --test --test-concurrency=4 --experimental-strip-types packages/storage-sqlite/test/visual-mutation-identities.test.ts packages/storage-sqlite/test/visual-activation-evidence.test.ts packages/storage-sqlite/test/visual-memory.test.ts",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "node --test scripts/workspace.test.mjs scripts/qualify-visual-conversation.test.mjs",
+    "npm --prefix .private run validate",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual original SQLite mutation and receipt writes in the same existing transactions, fault rollback, scoped/revision refusal, content/provenance erasure and real file database close/reopen. Distinct Human correction entry and memory mutation UUIDs; source retirement/direct forgetting/policy expiry/restore quarantine paths executed against real repositories.",
+    "scripted": "Visual observations and transformation estimates use synthetic fixtures. SQLite fault/corruption and clocks controlled for adversarial checks. No actual pixels/perception/provider/camera/game/save/control/channel/model/platform/performance/Human qualification."
+  },
+  "semantics": [
+    "Original projected correction commits visualSourceMutationIdentity in existing visualCorrectionApplied row, with its own UUID, actual record revisions and original row UTC; it returns correctionMutationEventId separately from correctionId. Source-only correction returns null and creates no projected memory or mutation.",
+    "Original source retirement and direct visual-memory forgetting commit their actual erasure identity with the existing memory/episode changes. This is an internal original-owner receipt, not a MemoryLifecycleEvent operation: Human correction UUID is not a MemoryRecord and payload erasure is not source-preserving canonical invalidate.",
+    "Existing erasure removes source/correction content, provenance and metadata from prior lifecycle payloads, preserving only original opaque activation/mutation UUIDs. Legacy/ordinary rows do not acquire historical IDs; repeated cleanup retains existing source IDs without minting another receipt.",
+    "Unknown/corrupt original revisions remain null in new diagnostic receipts; they cannot prevent privacy erasure or gain invented revision facts. Original actor/Assistant/minimal tombstones and existing source deduplication/deletion/privacy fences remain.",
+    "No new table, migration, memory engine, retention duration, inference call, camera/game/save effect, provider/configuration change, network or installed candidate modification. Factory/copy/supplied metadata does not establish original-owner custody or canonical trace authority."
+  ],
+  "initialFailures": [
+    {
+      "log": "tifa-s090-mutation-owner-focused-failed.log",
+      "reason": "New erasure test expected the record to disappear, but the existing repository intentionally retains a minimal empty invalidated tombstone. Corrected assertion checks content removal, actual revision and exclusion from prepared memory; erasure policy unchanged."
+    },
+    {
+      "log": "tifa-s090-mutation-owner-browser-sandbox-failed.log",
+      "reason": "Isolated browser review-host tests could not bind127.0.0.1 in sandbox (75pass/2fail/86skip). Reran with authorized localhost fixture permission, without source change or live effect."
+    }
+  ],
+  "limitations": [
+    "Internal correction/erasure mutation IDs do not supply complete canonical operation mapping, authenticated source-to-trace projection or complete lifecycle/replay. Existing activation canonical source projection remains separately verified.",
+    "Opaque tombstone identifiers are not consent, evidence of current source eligibility, independent reinforcement, perception truth, delivery, game/save effects or Human acceptance.",
+    "Full S090/S094 actual provider/native/resource/Human qualification and S066/fullLS-TEST084 remain incomplete. Original24S083/S084 and iPhone acceptance retained without broader inference.",
+    "Selected-model callback/causal failures and900msmedian/1500msp95onset targets unchanged; no unchanged failed studies rerun.",
+    "Generic memory-selection amendment remains proposed/unimplemented. Installed candidate, ai5090/iPhone services, Telegram binding and encrypted backup settings preserved. No publication/private export/deployment/live activation."
+  ],
+  "nextAction": "Continue dependency-ready S090 original-owner correction source reads and asynchronous restricted source-to-trace joins, preserving the distinct Human entry and actual memory mutation identity without inventing canonical MemoryRecord evidence or forgetting operations. Actual visual provider/endpoint and native Linux/Windows GUI/ordinary-save/source resolver, screenshot-help route/reply qualification, selected-model/performance and Human gates remain open. Generic memory-selection amendment remains separately proposed.",
+  "logDigests": {
+    "tifa-s090-mutation-owner-browser-sandbox-failed.log": {
+      "path": "/tmp/tifa-s090-mutation-owner-browser-sandbox-failed.log",
+      "sha256": "a46056b06db5ab648e1d7065036dddf7d95a3c879dd80d1d3f78e4a793072633",
+      "bytes": 25311
+    },
+    "tifa-s090-mutation-owner-browser.log": {
+      "path": "/tmp/tifa-s090-mutation-owner-browser.log",
+      "sha256": "d6a662834f612155f8c94a4c24c4140a3c8095787b7a4266922cb15c3c7d3853",
+      "bytes": 23889
+    },
+    "tifa-s090-mutation-owner-build.log": {
+      "path": "/tmp/tifa-s090-mutation-owner-build.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s090-mutation-owner-focused-failed.log": {
+      "path": "/tmp/tifa-s090-mutation-owner-focused-failed.log",
+      "sha256": "445242e8830d9cf77f7312aa02ef1380394c8d171570025db02ce1413d7adc94",
+      "bytes": 17105
+    },
+    "tifa-s090-mutation-owner-focused.log": {
+      "path": "/tmp/tifa-s090-mutation-owner-focused.log",
+      "sha256": "4b762cc1bab266dbc00be8713d4a26845c6d8e7d8b9c16a564db7a80ace88214",
+      "bytes": 6808
+    },
+    "tifa-s090-mutation-owner-full.log": {
+      "path": "/tmp/tifa-s090-mutation-owner-full.log",
+      "sha256": "f978b3e9719b5cc7f1f21f399190eebea620c3dce2f795750ac40d07ff479e9f",
+      "bytes": 279039
+    },
+    "tifa-s090-mutation-owner-lint.log": {
+      "path": "/tmp/tifa-s090-mutation-owner-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-mutation-owner-packet.log": {
+      "path": "/tmp/tifa-s090-mutation-owner-packet.log",
+      "sha256": "aaca767c2204fc7b89b611621b28fc5e12238efbe0322ad10edcb2f76d7e4bbc",
+      "bytes": 4523
+    },
+    "tifa-s090-mutation-owner-preflight.log": {
+      "path": "/tmp/tifa-s090-mutation-owner-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s090-mutation-owner-private.log": {
+      "path": "/tmp/tifa-s090-mutation-owner-private.log",
+      "sha256": "5bec07a76b084980a533c7a2fed65895c1787af39ea282bcaeabb2b9c00b2660",
+      "bytes": 28896
+    },
+    "tifa-s090-mutation-owner-typecheck.log": {
+      "path": "/tmp/tifa-s090-mutation-owner-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    }
+  }
+}
