@@ -297,11 +297,34 @@ class SidecarTests(unittest.TestCase):
         torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda:True,device_count=lambda:1,get_device_name=lambda _index:"NVIDIA GeForce RTX 3080"))
         modules = {"torch":torch,"voxcpm":SimpleNamespace(VoxCPM=SimpleNamespace(from_pretrained=construct)),
                    "voxcpm.model":SimpleNamespace(),"voxcpm.model.voxcpm":SimpleNamespace(LoRAConfig=lambda **kwargs:kwargs)}
+        checkpoint_root = self.root / "checkpoints"
+        for step in (21, 24):
+            directory = checkpoint_root / f"step_{step:07d}"
+            directory.mkdir(parents=True)
+            (directory / "lora_weights.safetensors").write_bytes(f"fixture weights {step}".encode())
+        latest = checkpoint_root / "latest"; latest.mkdir()
+        (latest / "lora_weights.safetensors").write_bytes(b"must not select latest")
+        weights21 = checkpoint_root / "step_0000021/lora_weights.safetensors"
+        weights24 = checkpoint_root / "step_0000024/lora_weights.safetensors"
+        manifest = self.root / "checkpoints.json"
+        manifest.write_text(json.dumps({
+            "base":{"kind":"base","label":"Fixture base","revision":"base","digest":DIGEST_BASE},
+            "step-00024":{"kind":"lora","label":"Fixture step24","revision":"step-00024","digest":sidecar.sha256_file(weights24),"path":str(weights24.parent)},
+        }))
+        reference_manifest = self.root / "references.json"
+        reference_manifest.write_text(json.dumps({"fixture-catalog":{"referenceKey":"ref-fixture-default","path":str(self.reference),"digest":sidecar.sha256_file(self.reference),"transcript":"Fixture","duration":2.0}}))
+        defaults_manifest = self.root / "defaults.json"
+        defaults_manifest.write_text(json.dumps({"checkpointKey":"step-00021","checkpointDigest":sidecar.sha256_file(weights21),"referenceVoiceId":"ref-fixture-default","referenceDigest":sidecar.sha256_file(self.reference)}))
         environment = {"VOXCPM_ARTIFACTS_STAGED":"1","VOXCPM_MODEL_PATH":str(self.root),
-                       "VOXCPM_CHECKPOINT_ROOT":str(self.root),"VOXCPM_EVALUATION_OUTPUT_DIR":str(self.root/"loader-output"),
+                       "VOXCPM_CHECKPOINT_ROOT":str(checkpoint_root),"VOXCPM_EVALUATION_OUTPUT_DIR":str(self.root/"loader-output"),
+                       "VOXCPM_CHECKPOINT_MANIFEST":str(manifest),"VOXCPM_REFERENCE_MANIFEST":str(reference_manifest),"VOXCPM_DEFAULTS_MANIFEST":str(defaults_manifest),
                        "VOXCPM_LORA_R":"32","VOXCPM_LORA_ALPHA":"32","VOXCPM_LORA_DROPOUT":"0"}
         with patch.dict(sys.modules,modules), patch.dict(sidecar.os.environ,environment,clear=True), patch.object(sidecar,"MODEL_REVISION","fixture-revision"), patch.object(sidecar,"MODEL",None), patch.object(sidecar,"EVALUATION",None):
             sidecar.load_once()
+            self.assertEqual(sidecar.EVALUATION.active.key,"step-00021")
+            self.assertEqual(sidecar.EVALUATION.default_identity()["referenceKey"],"ref-fixture-default")
+            self.assertEqual(self.model.loaded,[str(weights21)])
+            self.assertTrue(self.model.enabled)
         self.assertEqual(captured["lora_config"],{"enable_lm":True,"enable_dit":True,"enable_proj":False,"r":32,"alpha":32,"dropout":0.0})
 
     def test_pre_audio_reports_active_checkpoint(self):
