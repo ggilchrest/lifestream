@@ -6,8 +6,8 @@ import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {createRequire} from 'node:module';
 import {spawn} from 'node:child_process';
-test('native offline retry recovers the selected endpoint and preserves sandbox and origin guard',{skip:!process.env.PLAYWRIGHT_MODULE||process.platform!=='darwin',timeout:60000},async()=>{
- const {_electron}=await import(process.env.PLAYWRIGHT_MODULE),profile=await mkdtemp(join(tmpdir(),'lifestream-native-test-')),electron=createRequire(import.meta.url)('electron');
+test('native offline retry recovers the selected endpoint and preserves sandbox and origin guard',{skip:!process.env.PLAYWRIGHT_MODULE||!['darwin','win32'].includes(process.platform),timeout:60000},async()=>{
+ const {_electron}=await import(process.env.PLAYWRIGHT_MODULE),profile=await mkdtemp(join(tmpdir(),'lifestream-native-test-')),electron=process.env.LIFESTREAM_TEST_DESKTOP_EXECUTABLE??createRequire(import.meta.url)('electron');
  let deniedRequests=0;const denied=createServer((_req,res)=>{deniedRequests++;res.end('denied');});await new Promise(r=>denied.listen(0,'127.0.0.1',r));const deniedPort=denied.address().port;
  const server=createServer((_req,res)=>{res.setHeader('content-type','text/html');res.end('<!doctype html><h1>Synthetic local core</h1><p>No provider, microphone or camera.</p>');});await new Promise(r=>server.listen(0,'127.0.0.1',r));const port=server.address().port;await new Promise(r=>server.close(r));
  const endpoint=`http://127.0.0.1:${port}/control/#account`,executable=process.env.LIFESTREAM_TEST_DESKTOP_EXECUTABLE??electron,args=process.env.LIFESTREAM_TEST_DESKTOP_EXECUTABLE?[]:[resolve(import.meta.dirname,'../main.cjs')];
