@@ -1,0 +1,156 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "sliceStatus": "inProgress",
+  "component": "genuine retained SQLite correction source-to-trace projection and isolated historical replay",
+  "componentStatus": "verified",
+  "recordedAt": "2026-10-01T01:08:30.145190Z",
+  "sourceRevision": "eda84acd3d5d591dc5cd2086819fbf334da25aea",
+  "sourceFiles": [
+    "apps/server/src/index.ts",
+    "apps/server/src/runtime/automatic-memory.ts",
+    "apps/server/src/runtime/turn-context-trace.ts",
+    "apps/server/src/runtime/visual-memory-candidate-evidence.ts",
+    "apps/server/test/visual-memory-correction-evidence.test.ts",
+    "packages/storage-sqlite/src/visual-memory.ts",
+    "docs/visual-conversation-acceptance.md"
+  ],
+  "ownedOperation": {
+    "operation": "S090 original visual correction source-to-trace projection and isolated replay exact-revision full source suite",
+    "sourceRevision": "eda84acd3d5d591dc5cd2086819fbf334da25aea",
+    "startedAt": "2026-10-01T00:58:21.070242+00:00",
+    "wrapperPid": 85753,
+    "log": "/tmp/tifa-s090-correction-projection-full.log",
+    "status": "completed",
+    "childPid": 85756,
+    "exitCode": 0,
+    "completedAt": "2026-10-01T01:00:13.017620+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "eda84acd3d5d591dc5cd2086819fbf334da25aea",
+      "pass": 2638,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 111734.763875
+    },
+    "focused": {
+      "pass": 74,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 971.289083
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6365.449625
+    },
+    "packetAndBootstrap": {
+      "pass": 48,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 18252.207708
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "node --test --test-concurrency=4 --experimental-strip-types apps/server/test/visual-memory-correction-evidence.test.ts apps/server/test/visual-memory-candidate-evidence.test.ts apps/server/test/turn-context-trace.test.ts packages/storage-sqlite/test/visual-mutation-identities.test.ts",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "node --test scripts/workspace.test.mjs scripts/qualify-visual-conversation.test.mjs",
+    "npm --prefix .private run validate",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual existing SQLite correction/memory/source transactions and original stored Human entry/typed projection/revision/UTC reads, current consent and source custody; genuine branded-source rejection of copies/proxies, actual privacy erasure, second-correction retirement and source-row tampering checks. Existing asynchronous journal emits schema-valid trace envelopes; pure isolated replay leaves actual storage unchanged.",
+    "scripted": "Visual pixels/observations, transformation estimates, clock/fault/corruption and source/runtime configuration values synthetic. No actual visual interpretation, native game/save/control, message/image delivery, selected-model/performance/platform/Human proof."
+  },
+  "semantics": [
+    "Current original SQLite reader binds the actual internal mutation UUID and revisions to the original Human entry, typed contradicted MemoryRecord/episode, owner, consent, exact source digest and UTC. Unknown/legacy/corrupt/erased data remains missing; only original immutable reader objects receive provenance.",
+    "Actual correction-host environment UUID is recorded with the mutation in its original transaction; background conversation/session/endpoint are null rather than copied from old capture. Missing configured environment withholds trace source/projection without blocking correction. Original factory objects or schema-only copies supply no provenance.",
+    "Existing bounded asynchronous source journal projects published2.0 memory.lifecycleChanged using the actual internal mutation UUID/revision/source, separate redacted artifact and null unrecorded source monotonic clock. sourceReceipt stays distinct from canonical MemoryLifecycleEvent sourceMutation: no Human entry is fabricated as a MemoryRecord evidence ID or canonical contradict/correct operation.",
+    "Correction histories remain separate from candidate and activation histories; current owner/consent/source/revision, final host hook erasure, second correction, lazy60second dual-clock TTL, reset/close and existing128pending/retained bounds fence inspection. Contradicted memories remain excluded from prepared recall.",
+    "Genuine candidate and correction sources join exact actual owner/memory/episode/source digest and event chronology. Intermediate history, current eligibility, corrected truth and reply fencing remain unproved. Pure replay uses new event/producer/environment UUIDs, retains original entry/mutation/artifact/UTC, and has no storage/provider/media/effect/learning callback or normal-source provenance.",
+    "No new table/migration, memory engine, durable retention period, model/provider selection, inference call, live capture/game/save/outbound effect, installation/deployment/publication/private export. Generic memory-selection amendment unchanged."
+  ],
+  "initialFailures": [
+    {
+      "log": "tifa-s090-correction-projection-typecheck-failed.log",
+      "reason": "Explicit undefined optional environment failed exactOptionalPropertyTypes; pass the original configured environment only when present. No fabricated fallback."
+    }
+  ],
+  "limitations": [
+    "Correction trace records an actual internal source-owned record revision change, not a canonical operation/body or corrected factual truth. Erasure projection, full capture/perception/native lifecycle, durable trace sink/retention and real joined qualification remain incomplete.",
+    "Original source provenance is historical; copied retained/replayed artifacts do not become current admission, conversation fact, independent reinforcement, provider or effect authority.",
+    "Actual image-capable provider/endpoint/resources, reviewed native source/build/game/save/Linux/Windows GUI, permitted screenshot-help route/reply/outcome and selected-model/performance/Human gates remain open.",
+    "PrimaryS066/fullLS-TEST084, accepted original24S083/S084 and iPhone Human journeys, selected-model causal/callback failures and900msmedian/1500msp95onset targets retained. No unchanged failed studies rerun.",
+    "Installed candidate/services/Telegram/encrypted backup unchanged. Generic memory-selection amendment separately proposed and unimplemented."
+  ],
+  "nextAction": "Assess and implement dependency-ready S087 bounded image-perception transport against the existing configured SGLang provider contract, preserving selected endpoint/model and current image permission/resource/setup gates; actual provider/native/camera/game/help/model/platform/Human claims remain unqualified. Continue S090 original-operation erasure source joins without reconstructing erased relationship/context or inventing durable trace retention. Generic memory-selection amendment remains separately proposed.",
+  "logDigests": {
+    "tifa-s090-correction-projection-browser.log": {
+      "path": "/tmp/tifa-s090-correction-projection-browser.log",
+      "sha256": "ceb2ff48e5f91178d88ec2586270f5092bb6715fdd3847d8ac756147358b91b2",
+      "bytes": 23892
+    },
+    "tifa-s090-correction-projection-build.log": {
+      "path": "/tmp/tifa-s090-correction-projection-build.log",
+      "sha256": "a818c22d26760a7c5f6c120067d3e3200e9b276ee252b15b7037cc90e8398698",
+      "bytes": 1074
+    },
+    "tifa-s090-correction-projection-focused.log": {
+      "path": "/tmp/tifa-s090-correction-projection-focused.log",
+      "sha256": "5cd370c61a6709f5e934c0f94b850d8aafb167430b2d627bbf7c827058fe6012",
+      "bytes": 7333
+    },
+    "tifa-s090-correction-projection-full.log": {
+      "path": "/tmp/tifa-s090-correction-projection-full.log",
+      "sha256": "84aa5a55ef5d0c06336f542f819bf2e5ccb5702b307351874f36225ba6572785",
+      "bytes": 280963
+    },
+    "tifa-s090-correction-projection-lint.log": {
+      "path": "/tmp/tifa-s090-correction-projection-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-correction-projection-packet.log": {
+      "path": "/tmp/tifa-s090-correction-projection-packet.log",
+      "sha256": "2a84e559ca1dc7c77568d808d5c0d80f4f443e8c832fdb4b8980ef8c32fafe9a",
+      "bytes": 4524
+    },
+    "tifa-s090-correction-projection-preflight.log": {
+      "path": "/tmp/tifa-s090-correction-projection-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s090-correction-projection-private.log": {
+      "path": "/tmp/tifa-s090-correction-projection-private.log",
+      "sha256": "5c251dbdaea243b37305095d958537c0786692b67472ec204eda468b491f3f0d",
+      "bytes": 28911
+    },
+    "tifa-s090-correction-projection-typecheck-failed.log": {
+      "path": "/tmp/tifa-s090-correction-projection-typecheck-failed.log",
+      "sha256": "a75a4cb0e13ef9ae0799f048b2ed17fdb1d1ec9029e37f2b2ad5aa9b74e154bb",
+      "bytes": 1401
+    },
+    "tifa-s090-correction-projection-typecheck.log": {
+      "path": "/tmp/tifa-s090-correction-projection-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    }
+  }
+}
