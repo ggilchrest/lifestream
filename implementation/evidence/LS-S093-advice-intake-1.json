@@ -1,0 +1,350 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S093",
+  "sliceStatus": "inProgress",
+  "component": "explicit authenticated game-help Human answer intake into existing independent relationship memory",
+  "componentStatus": "verified",
+  "recordedAt": "2026-10-01T00:23:41.587645Z",
+  "sourceRevision": "a877d4c2f9c0a04b1c2eb2690ad3985900517b5b",
+  "sourceFiles": [
+    "apps/server/src/index.ts",
+    "apps/server/src/runtime/game-advice.ts",
+    "apps/server/src/runtime/game-memory.ts",
+    "apps/server/test/game-activity-help.test.ts",
+    "apps/server/test/game-advice-memory.test.ts",
+    "apps/server/test/experience.test.ts",
+    "packages/storage-sqlite/src/memory.ts",
+    "docs/local-game-acceptance.md",
+    "apps/server/test/fixtures/conversation-provider.ts",
+    "apps/server/test/visual-memory-publication.test.ts",
+    "packages/runtime/test/perception.test.ts",
+    "apps/server/test/game-activity-memory.test.ts",
+    "apps/server/test/game-help-context.test.ts",
+    "apps/server/test/telegram-notice-authority.test.ts"
+  ],
+  "ownedOperation": {
+    "operation": "S093 scoped authenticated game-help Human answer intake exact-revision full source suite",
+    "sourceRevision": "a877d4c2f9c0a04b1c2eb2690ad3985900517b5b",
+    "startedAt": "2026-10-01T00:20:51.384246+00:00",
+    "wrapperPid": 77927,
+    "log": "/tmp/tifa-s093-advice-intake-full.log",
+    "status": "completed",
+    "childPid": 77930,
+    "exitCode": 0,
+    "completedAt": "2026-10-01T00:23:01.087538+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "a877d4c2f9c0a04b1c2eb2690ad3985900517b5b",
+      "pass": 2603,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 128904.4935
+    },
+    "focused": {
+      "pass": 95,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 3131.4915
+    },
+    "integration": {
+      "pass": 220,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 13160.761
+    },
+    "isolatedHttpDiagnosis": {
+      "pass": 27,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 21487.495084
+    },
+    "experientialDeadlineAccounting": {
+      "pass": 8,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 9533.511709
+    },
+    "explicitTaskDispatchPrerequisites": {
+      "pass": 79,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 12575.622292
+    },
+    "controlledQueuedDeadline": {
+      "pass": 34,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1136.967667
+    },
+    "adjacentGameFixtures": {
+      "pass": 29,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 10113.806042
+    },
+    "authorityClockBoundary": {
+      "pass": 6,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 5615.343
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 14313.098625
+    },
+    "packetAndBootstrap": {
+      "bootstrap": {
+        "pass": 44,
+        "fail": 0,
+        "skip": 0,
+        "durationMs": 39157.436541
+      },
+      "gameQualifier": {
+        "pass": 4,
+        "fail": 0,
+        "skip": 0,
+        "durationMs": 5044.623334
+      }
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "node --test --experimental-strip-types apps/server/test/game-activity-help.test.ts",
+    "node --test --test-concurrency=4 --experimental-strip-types apps/server/test/game-activity-help.test.ts apps/server/test/game-advice-memory.test.ts apps/server/test/game-activity-memory.test.ts apps/server/test/game-help-context.test.ts apps/server/test/automatic-memory.test.ts packages/storage-sqlite/test/game-advice-custody.test.ts packages/storage-sqlite/test/game-help.test.ts",
+    "node --test --experimental-strip-types apps/server/test/experience.test.ts",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "pnpm lint",
+    "npm --prefix .private run validate",
+    "node --test scripts/workspace.test.mjs",
+    "node --test scripts/qualify-local-game.test.mjs",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "testOnlyPrerequisiteCommits": [
+    "d5a5c246df7ed77ca7c9a3d404dbf0c166b34940",
+    "b805a0d",
+    "0d6c5cd697b5a9fdf2eab3f5bf49e52b5912051f",
+    "1dfd9c854876fe39937ee885e5f7107e6c76e21f",
+    "a877d4c2f9c0a04b1c2eb2690ad3985900517b5b"
+  ],
+  "proofKinds": {
+    "real": "Actual existing SQLite memory transaction and source guard, exact source retries and original forgetting fences, independent answer retention after question erasure. Existing server trusted publication host now produces the Human record for ordinary authenticated HTTP advice-bearing game recall/privacy/correction/audience regressions. Deterministic unchanged10ms optional-selection refusal and explicit bounded fixture deadline accounting.",
+    "scripted": "Original Human input reader, delivery/authentication and explicit advice-selection predicates, confidence estimate, game observations/controller/action/outcome and inference providers are synthetic. No real channel reply/delivery/image, game/control/save, selected-model/performance/platform or Human acceptance."
+  },
+  "semantics": [
+    "One explicitly selected authenticated full help answer is retained in existing relationship memory. Current original input/source-session/quote identity, existing question/channel/recipient/revision/chronology, independent delivered-question/authenticated-answer qualification, reasoning-selected advice, attributed transformation estimate and current owned consent are mandatory. No lexical pronoun/worth/generalization rule or inference call introduced.",
+    "Existing MemoryRepository admission gains an optional strict synchronous source guard before and after writes in the same transaction. Late source/consent loss or fault rolls back memory and lifecycle rows; ordinary automatic extraction uses its existing unmodified path and rules. No new store/schema/migration/framework.",
+    "Human advice remains participant-statement exact quotation and unverified guidance with original qualifications; confidence is an attributed transformation estimate, not truth. No game/visual source marker, run-specific application/outcome, resume/send/play authority or tested-advice claim is fabricated.",
+    "Exact source identity preserves one record and no reinforcement across retries/repository restart; forgotten original row cannot be re-admitted. Independent Human answer survives question deletion; its dependent game episodes continue to use existing correction/forgetting custody.",
+    "Optional source-host method has no HTTP/model route/default reply owner and invalidates existing prepared context after retention. Fresh observation and existing advice selector still gate game use. Actual channel/source/reasoning adapters require separate qualification.",
+    "Prerequisite experiential integration fixture now accounts for documented10ms optional-selection omission with at most3 attempts. Every retry requires a newly recorded deadline skip and exact fallback; deterministic refusal at10ms retained. Runtime guard/thresholds and selected-model causal/callback failures unchanged; this is test accounting, not latency qualification. Scripted provider dispatch distinguishes automatic-memory-worker from foreground inference, responding with an explicit empty-candidate worker result; no production provider or generic extraction behavior changes. Queued100ms perception budget now uses controlled timers plus actual injected UTC/monotonic clocks, so scheduler lateness cannot masquerade as renewed admission. Adjacent grounded-game reflection preserves its semantic assertion with at most3 attempts, each missed selection requiring the actual new deadline skip."
+  ],
+  "initialFailures": [
+    {
+      "log": "tifa-s093-advice-intake-typecheck.log",
+      "reason": "ActivityOwner relationship nullable versus required authenticated relationship: narrowed advice owner type without widening source admission."
+    },
+    {
+      "log": "tifa-s093-advice-intake-focused-failed.log",
+      "reason": "Two new fixture assertions supplied full reply metadata to exact-key help owner APIs. Corrected to original three-field owner; no source guard weakened."
+    },
+    {
+      "log": "tifa-s093-advice-intake-integration-failed.log",
+      "reason": "Two existing optional prepared-source assertions failed during overlapping unbounded validation; unchanged source passed isolated27 and repository bounded220. Contention is an inference, not proven actual-model causality; all original failures retained."
+    },
+    {
+      "log": "tifa-s093-advice-intake-workspace-failed.log",
+      "reason": "Checkpoint timestamp used +00:00 rather than requiredZ; fixed owned bookkeeping."
+    },
+    {
+      "log": "tifa-s093-advice-intake-packet.log",
+      "reason": "Initial invocation included nonexistent game qualifier filename and therefore proved44bootstrap only; separately ran actual qualify-local-game4, preserving exact evidence."
+    },
+    {
+      "log": "tifa-s093-advice-intake-full-failed.log",
+      "reason": "Initial full source revision5ba3b7e had2601pass/1failure/1skip: existing experiential integration required continuation on every turn despite documented10ms optional-selection fallback. Scoped fixture repair explicitly accounts only for actual recorded deadline skips with finite retries and adds deterministic unchanged10ms refusal; source runtime criteria unchanged."
+    },
+    {
+      "log": "tifa-s093-advice-intake-full-second-failed.log",
+      "reason": "Full source d5a5c246 had2600pass/3fail/1skip: two scripted integration providers observed optional automatic-memory-worker calls as foreground inference, and one real-wall queue assertion exceeded170ms under load. Repairs dispatch by explicit existing task and prove the original100ms queue deadline with controlled timers; no production timing or inference criteria changed."
+    },
+    {
+      "log": "tifa-s093-advice-intake-task-dispatch-adjacent-failed.log",
+      "reason": "Adjacent game reflection fixture initially28pass/1fail because it required optional selection on every turn despite10msdeadline. Finite retries now require an actual new selection_deadline_exceeded skip, while original grounded semantic assertion remains mandatory."
+    },
+    {
+      "log": "tifa-s093-advice-intake-full-third-failed.log",
+      "reason": "Full source1dfd9c8 had2602pass/1fail/1skip: Telegram expired-input fixture mixed advancing wall time with frozen injected authority owner clock. Slow fixture setup left the wall-clock minus1second input future relative to owner time. Scoped fixture-only repair uses original injected clock and additionally checks denial at exact expiration. Production admission, authority, provider and live configuration unchanged."
+    }
+  ],
+  "limitations": [
+    "Whole S093 real channel screenshot-help/authenticated reply/fresh observed advice outcome and S094/native/platform/performance/Human qualification remain incomplete; scripted qualifiers are not actual delivery or gameplay.",
+    "Game help source and explicit advice selection adapters have no default/live enrollment. Ordinary Telegram pairing or chat does not authorize screenshots, alerts, recipients/contact hours or game start/resume.",
+    "Source lifecycle/trace/replay closure for other actual mutation/capture/native paths and durable trace sink remains partial; never fabricate missing source IDs or infer authority from metadata.",
+    "Generic memory-selection amendment remains proposed and unimplemented; no broader capture semantics or dedicated cross-game guidance acceptance claimed.",
+    "Primary S066/full LS-TEST084, original24S083/S084 and iPhone Human acceptance, selected-model callback/causal failures and900msmedian/1500msp95onset remain unchanged. Installed candidate/services/Telegram/backup preserved; no deployment/publication/private export/live effect."
+  ],
+  "nextAction": "Assess and continue dependency-ready S090 original-owner correction/forgetting lifecycle identities and trace/replay closure through existing published semantics. Actual image-provider/native Linux/Windows GUI/ordinary-save and separately permitted screenshot-help channel setup, selected-model performance and Human gates remain open. Generic memory-selection amendment remains proposed; no live effects, provider change, installation, export, publication or deployment.",
+  "logDigests": {
+    "tifa-s093-advice-intake-authority-clock.log": {
+      "path": "/tmp/tifa-s093-advice-intake-authority-clock.log",
+      "sha256": "a45c0f487cecc0c0da868f7bdfb525b96afc91bd5ecd7a632e1cef005823345a",
+      "bytes": 998
+    },
+    "tifa-s093-advice-intake-browser.log": {
+      "path": "/tmp/tifa-s093-advice-intake-browser.log",
+      "sha256": "cbbd8d53917974595f77d8a275d2740c0978b9fe9d6650e05bcf7c95874b79fd",
+      "bytes": 23888
+    },
+    "tifa-s093-advice-intake-build.log": {
+      "path": "/tmp/tifa-s093-advice-intake-build.log",
+      "sha256": "70d9b14e8ee2456fa94543f1a04fe8989f2db90b2f76905d6b24cc02cf2c08af",
+      "bytes": 1074
+    },
+    "tifa-s093-advice-intake-diff.log": {
+      "path": "/tmp/tifa-s093-advice-intake-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s093-advice-intake-experience-deadline-current.log": {
+      "path": "/tmp/tifa-s093-advice-intake-experience-deadline-current.log",
+      "sha256": "263deca4995d31a2c3f35e3a8aacc3f09804742c7b8bd7d524173a9dbb386480",
+      "bytes": 1121
+    },
+    "tifa-s093-advice-intake-experience-deadline.log": {
+      "path": "/tmp/tifa-s093-advice-intake-experience-deadline.log",
+      "sha256": "e30d7268c7c14cd130f4e9e87d82c69383c94459a50bcb8b01ae8bd78b13e9e1",
+      "bytes": 1010
+    },
+    "tifa-s093-advice-intake-focused-failed.log": {
+      "path": "/tmp/tifa-s093-advice-intake-focused-failed.log",
+      "sha256": "931ef50184f6a193a52c29bbfbd16347987e697c3cd4f3035ef6c4a666b4c5b0",
+      "bytes": 9984
+    },
+    "tifa-s093-advice-intake-focused.log": {
+      "path": "/tmp/tifa-s093-advice-intake-focused.log",
+      "sha256": "9af08c9fcb89429bc03b163bc3fa3619df2f58f238daf3b80e0e8bac6739e5f5",
+      "bytes": 7803
+    },
+    "tifa-s093-advice-intake-full-failed.log": {
+      "path": "/tmp/tifa-s093-advice-intake-full-failed.log",
+      "sha256": "5dd24911c2420df82f6849cd077e57becc4f881afbe661ec3ad7525272510114",
+      "bytes": 285144
+    },
+    "tifa-s093-advice-intake-full-second-failed.log": {
+      "path": "/tmp/tifa-s093-advice-intake-full-second-failed.log",
+      "sha256": "5e95c9d6cac95d5fc4bd9a7543370c6476341f8dc6f42cb8146dd93fa9b4181c",
+      "bytes": 280554
+    },
+    "tifa-s093-advice-intake-full-third-failed.log": {
+      "path": "/tmp/tifa-s093-advice-intake-full-third-failed.log",
+      "sha256": "aef6c8f0ded200ff950fa475d6a3b17746819c7080a2fd715ab13236cadbfd71",
+      "bytes": 279046
+    },
+    "tifa-s093-advice-intake-full.log": {
+      "path": "/tmp/tifa-s093-advice-intake-full.log",
+      "sha256": "ae7e9b3631a4b2815e6accf11fbdb2793f75b22fd5eb1492b4dea014a1614d8c",
+      "bytes": 277833
+    },
+    "tifa-s093-advice-intake-game-packet.log": {
+      "path": "/tmp/tifa-s093-advice-intake-game-packet.log",
+      "sha256": "f48b984b4eea7cf2a79ffe27bfce219335ff0dca7fe86fade28600f3459a6337",
+      "bytes": 559
+    },
+    "tifa-s093-advice-intake-http-diagnosis.log": {
+      "path": "/tmp/tifa-s093-advice-intake-http-diagnosis.log",
+      "sha256": "c8e41f3bdcf0ce5c16b866d0cc5ab59f1f16679c35b7644ad4eb3916407b7345",
+      "bytes": 2978
+    },
+    "tifa-s093-advice-intake-integration-bounded.log": {
+      "path": "/tmp/tifa-s093-advice-intake-integration-bounded.log",
+      "sha256": "e57df792b3fb4d1ce040d448982f6683f6e305399d73c74f3fca252d8a8e89a1",
+      "bytes": 19766
+    },
+    "tifa-s093-advice-intake-integration-failed.log": {
+      "path": "/tmp/tifa-s093-advice-intake-integration-failed.log",
+      "sha256": "f02ba11b514bc51bb07d25693c9ca83a153c49dcf7fd1ad8604d1a79af2792ba",
+      "bytes": 21748
+    },
+    "tifa-s093-advice-intake-integration.log": {
+      "path": "/tmp/tifa-s093-advice-intake-integration.log",
+      "sha256": "f02ba11b514bc51bb07d25693c9ca83a153c49dcf7fd1ad8604d1a79af2792ba",
+      "bytes": 21748
+    },
+    "tifa-s093-advice-intake-lint.log": {
+      "path": "/tmp/tifa-s093-advice-intake-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-advice-intake-packet.log": {
+      "path": "/tmp/tifa-s093-advice-intake-packet.log",
+      "sha256": "e02a9b0a76b0e024c4e52fed67bb34fdf629aec393f620d6122efeb307be71ad",
+      "bytes": 4102
+    },
+    "tifa-s093-advice-intake-perception-deadline.log": {
+      "path": "/tmp/tifa-s093-advice-intake-perception-deadline.log",
+      "sha256": "1f58792b9a03ad391a8f58868604a1f13cb7b83b96b273ea94e93e9387a81c79",
+      "bytes": 3777
+    },
+    "tifa-s093-advice-intake-preflight.log": {
+      "path": "/tmp/tifa-s093-advice-intake-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s093-advice-intake-private.log": {
+      "path": "/tmp/tifa-s093-advice-intake-private.log",
+      "sha256": "83a0a4e28050057eee585384ffae0cc8274e5904dfcd7e0d054e9ef48c03be98",
+      "bytes": 28889
+    },
+    "tifa-s093-advice-intake-task-dispatch-adjacent-failed.log": {
+      "path": "/tmp/tifa-s093-advice-intake-task-dispatch-adjacent-failed.log",
+      "sha256": "c36e837bdf6e88eea216e38ca341827153d08a2af2d566aa910a8a6cf9406102",
+      "bytes": 7547
+    },
+    "tifa-s093-advice-intake-task-dispatch-adjacent.log": {
+      "path": "/tmp/tifa-s093-advice-intake-task-dispatch-adjacent.log",
+      "sha256": "72b1d29476923a14161c215fd1f2ac44af99f567443758c5c7eba3bd48db4568",
+      "bytes": 3030
+    },
+    "tifa-s093-advice-intake-task-dispatch-repair.log": {
+      "path": "/tmp/tifa-s093-advice-intake-task-dispatch-repair.log",
+      "sha256": "15fcbaf3005ff87c1ad49b0fee44df33e0ee44fa84f91020c2c62a459b87c9df",
+      "bytes": 8025
+    },
+    "tifa-s093-advice-intake-typecheck-current.log": {
+      "path": "/tmp/tifa-s093-advice-intake-typecheck-current.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-advice-intake-typecheck.log": {
+      "path": "/tmp/tifa-s093-advice-intake-typecheck.log",
+      "sha256": "93954894f017528fdca1a0bd50ab9bd1e3f64ef84bd361b7e76437bf4ea05c7b",
+      "bytes": 923
+    },
+    "tifa-s093-advice-intake-workspace-failed.log": {
+      "path": "/tmp/tifa-s093-advice-intake-workspace-failed.log",
+      "sha256": "ce8d9d4ad2cb00adb0cc0af21e4dbdb0992ebc62462692d5bffec47db584cf66",
+      "bytes": 66
+    },
+    "tifa-s093-advice-intake-workspace.log": {
+      "path": "/tmp/tifa-s093-advice-intake-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
