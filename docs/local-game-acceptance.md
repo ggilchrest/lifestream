@@ -1,5 +1,52 @@
 # Local game qualification
 
+The optional `TelegramGameHelpAttachmentTransport` supplies bounded binary
+`sendPhoto` transport for an already governed help attempt. Construction does
+no I/O; a separate image-enabled host callback defaults unavailable. It is not
+selected in the runtime root, and existing text chat pairing/notice permission
+does not activate it. No new contact, recipient, grant, retry, durable screenshot
+store or public upload link is supplied.
+
+The trusted host must reserve the existing durable delivery attempt and qualify
+the current retained question/episode, actual game-only source observation,
+native pause, exact configured recipient/channel, contact hours/limits, privacy,
+separate attachment retention/access and image-transmission authority. A callback
+returning true or valid metadata is not independent proof of these facts. The
+existing text-only Telegram notice capability cannot carry an image without its
+separately reviewed image-capable binding. No such binding is inferred here.
+
+The adapter checks the existing closed help shape, scope/source/artifact joins,
+unexpired capture, actual byte length/SHA256 and bounded PNG structure/dimensions
+before building one multipart request. Raw frame bytes stay outside ordinary
+context. Text/EXIF/unknown PNG chunks are refused; structural validation does not
+decode pixels or establish viewport relevance/hidden-overlay exclusion. A plain
+caption contains the recorded attempts, complete question, original capture UTC
+and computed dispatch age; oversized captions defer without silent truncation.
+No recipient/relationship/run IDs, artifact paths, formatting, arbitrary URLs,
+paid broadcast or independent upload is added.
+
+Only a valid private-chat response containing the sent caption and photo can
+report server acceptance and attachment sent. Delivery remains unknown, and
+provider-resized photo bytes are not independently verified. Text success,
+foreign/invalid/oversized replies, failed/unknown upload, cancellation and late
+responses cannot prove Human image receipt. No help state, advice, resume or
+memory mutation follows from this low-level result.
+
+One in-flight request has an original deadline of at most 15 seconds; consent or
+source withdrawal aborts it. An abort-ignoring fetch stays quarantined until it
+actually settles. No retry occurs. A finite 128-entry per-instance attempted-help
+fence refuses capacity rather than evicting old topics; it is not restart
+idempotency, which remains the existing durable host's responsibility. Close
+aborts and prevents further calls. Owned mutable byte copies are cleared, while
+immutable Blob/network/JavaScript objects follow their actual host lifetime;
+secure memory erasure is not claimed. Foreground speech/resource qualification
+and actual image/contact setup remain required.
+
+Multipart, privacy and cancellation checks use synthetic PNGs and scripted Bot
+API responses. They do not establish live delivery, actual source/authority,
+native game behavior, selected model, platform or Human qualification. The wire
+operation follows the [Telegram Bot API](https://core.telegram.org/bots/api#sendphoto).
+
 Platform, native control/save recovery, selected-provider perception, speech
 performance and Human qualification are separate claims. Existing fixture passes
 and receipt shapes do not establish actual play or useful autonomous progress.
