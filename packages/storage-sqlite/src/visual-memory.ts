@@ -37,6 +37,10 @@ export function visualSourceMutationIdentity(kind:'correction'|'erasure',oldRevi
  return {recordType:'visualSourceMutationIdentity' as const,eventId:randomUUID(),kind,oldRevision:valid?oldRevision:null,newRevision:valid?oldRevision+1:null};
 }
 export type VisualActivationEvidence=Readonly<{schemaVersion:'1.0.0';recordType:'visualActivationEvidence';ownerDigest:string;scope:Readonly<Pick<VisualMemoryScope,'assistantId'|'environmentId'|'conversationId'|'sessionId'|'endpointId'>>;event:Readonly<Record<string,unknown>>;artifact:Readonly<{reference:Readonly<{reference:string;sha256:string;mediaType:'application/json';schemaRef:string;byteLength:number}>;bytes:string}>}>;
+export type VisualCorrectionEvidence=Readonly<{schemaVersion:'1.0.0';recordType:'visualCorrectionEvidence';ownerDigest:string;scope:Readonly<{assistantId:string;environmentId:string;conversationId:null;sessionId:null;endpointId:null}>;sourceReceipt:Readonly<{eventId:string;assistantId:string;memoryId:string;oldRevision:number;newRevision:number;occurredAt:string;humanEntryId:string;sourceRevision:Readonly<{providerRef:string;revision:string;highWaterMark:null}>}>;artifact:VisualActivationEvidence['artifact']}>;
+const visualCorrectionSources=new WeakSet<object>();
+/** Original retained SQLite source read only; no currency or truth authority. */
+export function isVisualCorrectionEvidence(value:unknown):value is VisualCorrectionEvidence{return !!value&&typeof value==='object'&&visualCorrectionSources.has(value);}
 const visualActivationSources=new WeakSet<object>();
 /** Genuine original-owner read provenance, not current eligibility or authority. */
 export function isVisualActivationEvidence(value:unknown):value is VisualActivationEvidence{return !!value&&typeof value==='object'&&visualActivationSources.has(value);}
@@ -159,6 +163,27 @@ export class VisualMemoryRepository{
    const result=immutable(evidence);visualActivationSources.add(result);return result;
   }catch{return null;}
  }
+ /** Project only an actual current correction source. A copied source entry,
+  * missing mutation UUID or erased scope cannot acquire source provenance. */
+ correctionEvidence(owner:VisualMemoryOwner,memoryId:string):VisualCorrectionEvidence|null {
+  try{
+   this.sweep();const now=this.now(),policy=this.policy(owner);if(!ownerValid(owner)||!policy.enabled||!this.db.connection.prepare('SELECT 1 FROM automatic_memory_policies WHERE principal_id=? AND assistant_id=? AND relationship_id=? AND enabled=1').get(owner.principalId,owner.assistantId,owner.relationshipId))return null;
+   const row=this.db.connection.prepare("SELECT payload_json,occurred_at FROM memory_lifecycle_events WHERE assistant_id=? AND memory_id=? AND event_type='visualCorrectionApplied' ORDER BY revision DESC LIMIT 1").get(owner.assistantId,memoryId);
+   const stored=this.db.connection.prepare('SELECT provenance_json,lifecycle_json FROM memories WHERE assistant_id=? AND id=?').get(owner.assistantId,memoryId);if(!row||!stored||Buffer.byteLength(String(row.payload_json))>4096||Buffer.byteLength(String(stored.provenance_json))>32768||Buffer.byteLength(String(stored.lifecycle_json))>4096)return null;
+   const payload=JSON.parse(String(row.payload_json)),mutation=payload.visualMutation,provenance=JSON.parse(String(stored.provenance_json)),lifecycle=JSON.parse(String(stored.lifecycle_json));
+   if(typeof payload.visualMutationEnvironmentId!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(payload.visualMutationEnvironmentId)||!mutation||!isDeepStrictEqual(Object.keys(mutation).sort(),['eventId','kind','newRevision','oldRevision','recordType'])||mutation.recordType!=='visualSourceMutationIdentity'||mutation.kind!=='correction'||typeof mutation.eventId!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(mutation.eventId)||!Number.isSafeInteger(mutation.oldRevision)||mutation.oldRevision<1||mutation.newRevision!==mutation.oldRevision+1||lifecycle.revision!==mutation.newRevision||lifecycle.status!=='contradicted'||lifecycle.needsReview!==true||payload.status!=='contradicted'||payload.actor!==owner.principalId||provenance.actor!==owner.principalId||provenance.relationshipId!==owner.relationshipId)return null;
+   const source=this.db.connection.prepare("SELECT payload_json,revision FROM visual_observation_episodes WHERE scope_key=? AND episode_id=? AND state='retained' AND expires_at>?").get(key(owner),provenance.visualEpisodeId,now);if(!source?.payload_json||Buffer.byteLength(String(source.payload_json))>8192)return null;
+   const episode=JSON.parse(String(source.payload_json)) as VisualObservationEpisode,canonical=provenance.canonical as VisualMemoryProjection['memoryRecord'];
+   if(episode.revision!==Number(source.revision)||episode.processingPolicyRevision!==policy.revision||episode.memoryRecordId!==memoryId||!['principalId','assistantId','relationshipId'].every(field=>episode.scope[field as keyof VisualMemoryOwner]===owner[field as keyof VisualMemoryOwner])||!validateVisualMemoryProjection({schemaVersion:'1.0.0',recordType:'visualMemoryProjection',episode,memoryRecord:canonical}).valid)return null;
+   const entry=this.db.connection.prepare("SELECT payload_json FROM memory_lifecycle_events WHERE assistant_id=? AND memory_id=? AND event_type='visualUserCorrection' ORDER BY revision DESC LIMIT 1").get(owner.assistantId,`visual-episode:${episode.episodeId}`);if(!entry||Buffer.byteLength(String(entry.payload_json))>8192)return null;
+   const correction=JSON.parse(String(entry.payload_json)) as VisualUserCorrection;
+   if(correction.recordType!=='visualUserCorrection'||correction.sourceType!=='humanEntry'||correction.untrusted!==true||typeof correction.content!=='string'||!correction.content.trim()||Buffer.byteLength(correction.content)>2400||correction.actor!==owner.principalId||correction.relationshipId!==owner.relationshipId||correction.episodeId!==episode.episodeId||correction.correctionId!==payload.correctionId||!episode.correctionRefs.includes(correction.correctionId)||correction.sourceEpisodeRevision!==payload.sourceEpisodeRevision||correction.sourceEpisodeRevision!==episode.revision-1||correction.sourceDigest!==episode.sourceDigest||!isDeepStrictEqual(correction.sourceObservationIds,episode.sourceObservationIds)||correction.occurredAt!==row.occurred_at||!Number.isFinite(Date.parse(correction.occurredAt))||!Number.isSafeInteger(now)||Date.parse(correction.occurredAt)>now||Date.parse(correction.occurredAt)<Date.parse(canonical.createdAt))return null;
+   const sourceReceipt={eventId:mutation.eventId,assistantId:owner.assistantId,memoryId,oldRevision:mutation.oldRevision as number,newRevision:mutation.newRevision as number,occurredAt:correction.occurredAt,humanEntryId:correction.correctionId,sourceRevision:{providerRef:'urn:lifestream:sqlite:visual-memory',revision:`correction:${mutation.eventId}`,highWaterMark:null}};
+   const bytes=JSON.stringify({schemaVersion:'1.0.0',recordType:'redactedVisualCorrectionSource',...sourceReceipt,mutationEnvironmentId:payload.visualMutationEnvironmentId,episodeId:episode.episodeId,episodeRevision:episode.revision,sourceDigest:episode.sourceDigest,status:'contradicted',needsReview:true,correctedFactProved:false}),sha256=createHash('sha256').update(bytes).digest('hex');
+   const scope={assistantId:owner.assistantId,environmentId:payload.visualMutationEnvironmentId as string,conversationId:null,sessionId:null,endpointId:null};
+   const evidence:VisualCorrectionEvidence=immutable({schemaVersion:'1.0.0',recordType:'visualCorrectionEvidence',ownerDigest:key(owner),scope,sourceReceipt,artifact:{reference:{reference:`urn:lifestream:visual-correction-source:sha256:${sha256}`,sha256,mediaType:'application/json',schemaRef:'urn:lifestream:visual-correction-source:1.0.0',byteLength:Buffer.byteLength(bytes)},bytes}});visualCorrectionSources.add(evidence);return evidence;
+  }catch{return null;}
+ }
  admit(owner:VisualMemoryOwner,input:unknown,admission:VisualMemoryAdmission):VisualMemoryReceipt{
   this.sweep();let bytes:string;
   try{bytes=JSON.stringify(input);if(Buffer.byteLength(bytes)>8192)return {state:'invalidEpisode'};}catch{return {state:'invalidEpisode'};}
@@ -201,7 +226,7 @@ export class VisualMemoryRepository{
  /** An authenticated Human entry qualifies the original interpretation; it is
   * not a rewritten observation or independently observed sensor opportunity.
   * No numeric transformation confidence or spoken turn is manufactured. */
- correct(owner:VisualMemoryOwner,id:string,expectedRevision:number,content:string){
+ correct(owner:VisualMemoryOwner,id:string,expectedRevision:number,content:string,environmentId?:string){
   this.sweep();const now=this.now(),policy=this.policy(owner);
   if(!ownerValid(owner)||!policy.enabled||typeof content!=='string'||!content.trim()||content.length>1200||Buffer.byteLength(content)>2400)throw Error('Visual correction unavailable');
   return this.db.transaction(tx=>{
@@ -223,7 +248,7 @@ export class VisualMemoryRepository{
     tx.run('UPDATE memories SET provenance_json=?,lifecycle_json=? WHERE id=?',JSON.stringify({...provenance,visualEpisodeRevision:episode.revision,canonical}),JSON.stringify(next),original.memoryRecordId);
     const revision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',original.memoryRecordId)!.n;
     const visualMutation=visualSourceMutationIdentity('correction',lifecycle.revision);correctionMutationEventId=visualMutation.eventId;
-    tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',original.memoryRecordId,owner.assistantId,revision,'visualCorrectionApplied',JSON.stringify({actor:owner.principalId,correctionId:correction.correctionId,status:'contradicted',sourceEpisodeRevision:expectedRevision,visualMutation}),correction.occurredAt);
+    tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',original.memoryRecordId,owner.assistantId,revision,'visualCorrectionApplied',JSON.stringify({actor:owner.principalId,correctionId:correction.correctionId,status:'contradicted',sourceEpisodeRevision:expectedRevision,visualMutation,visualMutationEnvironmentId:typeof environmentId==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(environmentId)?environmentId:null}),correction.occurredAt);
    }
    const eventKey=`visual-episode:${id}`,eventRevision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',eventKey)!.n;
    tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',eventKey,owner.assistantId,eventRevision,'visualUserCorrection',JSON.stringify(correction),correction.occurredAt);

@@ -1,7 +1,7 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {types} from 'node:util';
 import {createContractValidator} from '@lifestream/contracts';
-import {isVisualActivationEvidence,type VisualActivationEvidence} from '@lifestream/storage-sqlite';
+import {isVisualActivationEvidence,isVisualCorrectionEvidence,type VisualActivationEvidence,type VisualCorrectionEvidence} from '@lifestream/storage-sqlite';
 import {validateVisualMemoryProjection,type VisualMemoryOwner,type VisualMemoryProjection} from '@lifestream/contracts/visual-memory';
 
 const sha=(value:string)=>createHash('sha256').update(value).digest('hex');
@@ -29,14 +29,17 @@ export type VisualMemoryCandidateTrace=Readonly<{
  coverage:'bounded_best_effort';complete:false;durable:false;learningAuthority:false;effectAuthority:false;
 }>;
 export type VisualMemoryLifecycleTrace=VisualMemoryCandidateTrace & Readonly<{sourceMutation:VisualActivationEvidence['event']}>;
-const candidateTraces=new WeakSet<object>(),lifecycleTraces=new WeakSet<object>();
+export type VisualMemoryCorrectionTrace=VisualMemoryCandidateTrace & Readonly<{sourceReceipt:VisualCorrectionEvidence['sourceReceipt']}>;
+const candidateTraces=new WeakSet<object>(),lifecycleTraces=new WeakSet<object>(),correctionTraces=new WeakSet<object>();
 const traceOwners=new WeakMap<object,string>();
 /** Genuine journal provenance only; this is not a current-memory eligibility check. */
 export function isVisualMemoryCandidateTrace(value:VisualMemoryCandidateTrace):boolean{return !!value&&typeof value==='object'&&candidateTraces.has(value);}
 /** Genuine asynchronous projection of a recorded canonical mutation source. */
 export function isVisualMemoryLifecycleTrace(value:VisualMemoryCandidateTrace):value is VisualMemoryLifecycleTrace{return !!value&&typeof value==='object'&&lifecycleTraces.has(value);}
+export function isVisualMemoryCorrectionTrace(value:VisualMemoryCandidateTrace):value is VisualMemoryCorrectionTrace{return !!value&&typeof value==='object'&&correctionTraces.has(value);}
+export function visualMemoryCorrectionOwnersMatch(candidate:VisualMemoryCandidateTrace,correction:VisualMemoryCorrectionTrace):boolean{return isVisualMemoryCandidateTrace(candidate)&&isVisualMemoryCorrectionTrace(correction)&&traceOwners.get(candidate)!==undefined&&traceOwners.get(candidate)===traceOwners.get(correction);}
 export function visualMemoryTraceOwnersMatch(candidate:VisualMemoryCandidateTrace,lifecycle:VisualMemoryLifecycleTrace):boolean{return isVisualMemoryCandidateTrace(candidate)&&isVisualMemoryLifecycleTrace(lifecycle)&&traceOwners.get(candidate)!==undefined&&traceOwners.get(candidate)===traceOwners.get(lifecycle);}
-type Pending={ownerDigest:string;dedup:string;expiresUtc:number;expiresMono:number;sequence:number;scope:Pick<VisualMemoryProjection['episode']['scope'],'assistantId'|'conversationId'|'sessionId'|'endpointId'|'environmentId'>;memoryId:string;eventTime:string;eventType:'memory.candidateProposed'|'memory.lifecycleChanged';payload:Record<string,unknown>;sourceEventIds:string[];sourceMutation:VisualActivationEvidence['event']|null;artifact:VisualMemoryCandidateTrace['artifact']};
+type Pending={ownerDigest:string;dedup:string;expiresUtc:number;expiresMono:number;sequence:number;scope:{assistantId:string;environmentId:string;conversationId:string|null;sessionId:string|null;endpointId:string|null};memoryId:string;eventTime:string;eventType:'memory.candidateProposed'|'memory.lifecycleChanged';payload:Record<string,unknown>;sourceEventIds:string[];sourceMutation:VisualActivationEvidence['event']|null;sourceCorrection?:VisualCorrectionEvidence['sourceReceipt'];artifact:VisualMemoryCandidateTrace['artifact']};
 type Retained={ownerDigest:string;dedup:string;expiresUtc:number;expiresMono:number;trace:VisualMemoryCandidateTrace};
 
 /** Optional restricted diagnostics at the existing projection owner. The stored
@@ -78,6 +81,17 @@ export class VisualMemoryCandidateEvidence {
    this.enqueue({ownerDigest:key,dedup,scope:evidence.scope,memoryId,eventTime:event.occurredAt as string,eventType:'memory.lifecycleChanged',payload:{memoryId,lifecycleEventId:event.eventId,oldRevision:event.oldRevision,newRevision:event.newRevision,sourceRevision:event.sourceRevision},sourceEventIds:[event.eventId as string],sourceMutation:freeze(event),artifact:freeze(evidence.artifact)},at);
   }catch{/* Optional projection never changes mutation outcome or source custody. */}
  }
+ /** A trace projects the actual SQLite record change, without relabeling its
+  * Human entry as MemoryRecord evidence or inventing a canonical operation. */
+ recordCorrection(owner:VisualMemoryOwner,source:VisualCorrectionEvidence):void {
+  try{
+   if(this.closed||!isVisualCorrectionEvidence(source))return;
+   const key=ownerKey(owner),at=this.now(),evidence=snapshot<VisualCorrectionEvidence>(source);if(!key||!at||!evidence||evidence.ownerDigest!==key)return;
+   const receipt=evidence.sourceReceipt;if(receipt.assistantId!==data(owner,'assistantId')||Date.parse(receipt.occurredAt)>at.utc)return;
+   const dedup=sha(JSON.stringify([key,'correction',receipt.eventId]));if(this.pending.some(row=>row.dedup===dedup)||this.retained.some(row=>row.dedup===dedup))return;
+   this.enqueue({ownerDigest:key,dedup,scope:evidence.scope,memoryId:receipt.memoryId,eventTime:receipt.occurredAt,eventType:'memory.lifecycleChanged',payload:{memoryId:receipt.memoryId,lifecycleEventId:receipt.eventId,oldRevision:receipt.oldRevision,newRevision:receipt.newRevision,sourceRevision:receipt.sourceRevision},sourceEventIds:[receipt.eventId],sourceMutation:null,sourceCorrection:freeze(receipt),artifact:freeze(evidence.artifact)},at);
+  }catch{/* Optional diagnostic projection cannot admit, correct or erase memory. */}
+ }
  private enqueue(row:Omit<Pending,'sequence'|'expiresUtc'|'expiresMono'>,at:{utc:number;mono:number}){
   this.pending.push({...row,sequence:++this.sequence,expiresUtc:at.utc+60000,expiresMono:at.mono+60000});if(this.pending.length>128)this.pending.shift();
   if(!this.queued){this.queued=true;const epoch=this.epoch;queueMicrotask(()=>{if(epoch!==this.epoch)return;this.queued=false;this.drain();});}
@@ -87,14 +101,15 @@ export class VisualMemoryCandidateEvidence {
   for(const row of this.pending.splice(0)){
    const event={schemaVersion:'2.0.0',eventId:randomUUID(),traceScope:'background',interactionTraceId:null,backgroundJobId:this.producerId,correlationId:row.memoryId,sequence:row.sequence,eventType:row.eventType,eventVersion:'1.0.0',eventTime:row.eventTime,processingTime:new Date(at.utc).toISOString(),monotonic:null,assistantId:row.scope.assistantId,conversationId:row.scope.conversationId,sessionId:row.scope.sessionId,endpointId:row.scope.endpointId,environmentId:row.scope.environmentId,executionMode:'normal',privacyClass:'restricted',causedByEventIds:[],sourceEventIds:row.sourceEventIds,payload:row.payload,redactions:['memory source prose, media and transformation basis omitted; exact redacted metadata retained']};
    if(!validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid)continue;
-   const trace:VisualMemoryCandidateTrace=freeze({event,artifact:row.artifact,...(row.sourceMutation?{sourceMutation:row.sourceMutation}:{}),coverage:'bounded_best_effort',complete:false,durable:false,learningAuthority:false,effectAuthority:false});
-   if(row.sourceMutation)lifecycleTraces.add(trace);else candidateTraces.add(trace);traceOwners.set(trace,row.ownerDigest);
+   const trace:VisualMemoryCandidateTrace=freeze({event,artifact:row.artifact,...(row.sourceMutation?{sourceMutation:row.sourceMutation}:{}),...(row.sourceCorrection?{sourceReceipt:row.sourceCorrection}:{}),coverage:'bounded_best_effort',complete:false,durable:false,learningAuthority:false,effectAuthority:false});
+   if(row.sourceMutation)lifecycleTraces.add(trace);else if(row.sourceCorrection)correctionTraces.add(trace);else candidateTraces.add(trace);traceOwners.set(trace,row.ownerDigest);
    this.retained.push({ownerDigest:row.ownerDigest,dedup:row.dedup,expiresUtc:row.expiresUtc,expiresMono:row.expiresMono,trace});
   }
   if(this.retained.length>128)this.retained.splice(0,this.retained.length-128);
  }catch{/* A diagnostic sink failure is not a memory outcome. */}}
  traces(owner:VisualMemoryOwner):readonly VisualMemoryCandidateTrace[]{try{const key=ownerKey(owner);if(this.closed||!key||!this.now())return Object.freeze([]);return Object.freeze(this.retained.filter(row=>row.ownerDigest===key&&candidateTraces.has(row.trace)).map(row=>row.trace));}catch{return Object.freeze([]);}}
  lifecycleTraces(owner:VisualMemoryOwner):readonly VisualMemoryLifecycleTrace[]{try{const key=ownerKey(owner);if(this.closed||!key||!this.now())return Object.freeze([]);return Object.freeze(this.retained.filter(row=>row.ownerDigest===key).map(row=>row.trace).filter(isVisualMemoryLifecycleTrace));}catch{return Object.freeze([]);}}
+ correctionTraces(owner:VisualMemoryOwner):readonly VisualMemoryCorrectionTrace[]{try{const key=ownerKey(owner);if(this.closed||!key||!this.now())return Object.freeze([]);return Object.freeze(this.retained.filter(row=>row.ownerDigest===key).map(row=>row.trace).filter(isVisualMemoryCorrectionTrace));}catch{return Object.freeze([]);}}
  forgetOwner(owner:VisualMemoryOwner){const key=ownerKey(owner);if(!key)return;for(const rows of [this.pending,this.retained])for(let i=rows.length-1;i>=0;i--)if(rows[i]!.ownerDigest===key)rows.splice(i,1);}
  reset(){this.epoch++;this.pending.length=0;this.retained.length=0;this.queued=false;}
  close(){this.closed=true;this.reset();}

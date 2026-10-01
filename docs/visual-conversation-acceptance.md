@@ -182,3 +182,29 @@ The increment supplies actual source identifiers for later qualified joins; full
 canonical correction/privacy lifecycle mapping, durable trace retention and actual
 provider/native replay qualification remain incomplete. It adds no table,
 migration, durable retention period, capture, model call or external effect.
+
+The current original SQLite correction reader now validates its distinct mutation
+receipt against the actual retained Human entry, owner, consent, source episode,
+typed contradicted projection, revisions and UTC. Missing/legacy identities,
+erased or corrupt sources and copied objects cannot donate read provenance. The
+existing asynchronous restricted journal can project the actual record change as
+published `memory.lifecycleChanged`, with the original mutation UUID and UTC, a
+separate redacted source artifact and no invented source monotonic clock. The
+actual correction host deployment ID must be recorded in the original mutation
+transaction; background conversation/session/endpoint are null rather than
+borrowed from the old capture. Missing host identity leaves trace projection
+unavailable without blocking the Human correction. Its
+`sourceReceipt` remains explicitly internal; it is not relabeled as a canonical
+`MemoryLifecycleEvent` operation. Correction histories share current owner/consent,
+source, expiry, reset/close and 128-record bounds; they remain separate from
+candidate and activation histories and never make contradicted scenes eligible
+for recall.
+
+Genuine candidate and correction bundles can join by actual source/owner/episode
+identity and chronological events. A pure isolated replay keeps original entry
+and mutation identities, artifacts and UTC in a new environment without provider,
+storage, capture, learning or effect callbacks. Intermediate history, current
+eligibility, corrected truth and response fencing remain unproved. Replay cannot
+become a normal original source. Erasure projection, durable trace retention,
+remaining provider/native lifecycle joins and real integrated qualification stay
+incomplete.

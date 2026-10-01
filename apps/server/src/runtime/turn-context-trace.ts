@@ -3,7 +3,7 @@ import {types} from 'node:util';
 import {createContractValidator} from '@lifestream/contracts';
 import {isFinalizedTurnRequest,type FinalizedTurn} from '@lifestream/runtime/inference/prompt';
 import type {InferenceRequest} from '@lifestream/runtime/inference';
-import {isVisualMemoryCandidateTrace,isVisualMemoryLifecycleTrace,visualMemoryTraceOwnersMatch,type VisualMemoryCandidateTrace,type VisualMemoryLifecycleTrace} from './visual-memory-candidate-evidence.ts';
+import {isVisualMemoryCandidateTrace,isVisualMemoryLifecycleTrace,isVisualMemoryCorrectionTrace,visualMemoryTraceOwnersMatch,visualMemoryCorrectionOwnersMatch,type VisualMemoryCandidateTrace,type VisualMemoryLifecycleTrace,type VisualMemoryCorrectionTrace} from './visual-memory-candidate-evidence.ts';
 import type {VisualTurnReceipt} from './visual-turn-evidence.ts';
 
 const uuid=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(value);
@@ -146,5 +146,29 @@ export function replayVisualMemoryLifecycleJoin(candidate:VisualMemoryCandidateT
   const source=lifecycle.event,event={...source,eventId:randomUUID(),backgroundJobId:(replay.events[0]! as Readonly<Record<string,unknown>>).backgroundJobId,correlationId:replay.replayId,environmentId:replay.environmentId,executionMode:'replay',processingTime:new Date().toISOString(),monotonic:null,sourceEventIds:[source.eventId],causedByEventIds:[]};
   if(!createContractValidator().validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid)return null;
   return freeze({...replay,events:[replay.events[0]!,event,...replay.events.slice(1)],activationArtifact:lifecycle.artifact,sourceMutation:lifecycle.sourceMutation,sourceLifecycleMonotonicClockAvailable:false as const,join});
+ }catch{return null;}
+}
+
+/** Historical original-source linkage only. A correction retires the scene's
+ * eligibility; it does not establish a new verified fact or complete history. */
+export function correlateVisualMemoryCorrection(candidate:VisualMemoryCandidateTrace,correction:VisualMemoryCorrectionTrace){
+ try{
+  if(!visualMemoryCorrectionOwnersMatch(candidate,correction))return null;
+  const source=correction.sourceReceipt,payload=correction.event.payload as {memoryId:string;lifecycleEventId:string;oldRevision:number;newRevision:number};
+  const proposed=JSON.parse(candidate.artifact.bytes),changed=JSON.parse(correction.artifact.bytes);
+  if(source.memoryId!==proposed.memoryId||payload.memoryId!==source.memoryId||payload.lifecycleEventId!==source.eventId||payload.oldRevision!==source.oldRevision||payload.newRevision!==source.newRevision||source.newRevision!==source.oldRevision+1||candidate.event.assistantId!==correction.event.assistantId||proposed.sourceEpisodeId!==changed.episodeId||proposed.sourceDigest!==changed.sourceDigest||changed.episodeRevision<=proposed.sourceEpisodeRevision||Date.parse(candidate.event.eventTime as string)>Date.parse(correction.event.eventTime as string))return null;
+  return freeze({state:'joined' as const,memoryId:source.memoryId,sourceCandidateEventId:candidate.event.eventId,traceCorrectionEventId:correction.event.eventId,sourceMutationEventId:source.eventId,humanEntryId:source.humanEntryId,memorySourcesOwnerMatched:true as const,candidateArtifactDigest:candidate.artifact.reference.sha256,correctionArtifactDigest:correction.artifact.reference.sha256,oldRevision:source.oldRevision,newRevision:source.newRevision,intermediateHistoryComplete:false as const,currentEligibilityProved:false as const,correctedFactProved:false as const,replyFencingProved:false as const,learningAuthority:false as const,effectAuthority:false as const});
+ }catch{return null;}
+}
+
+/** Pure isolated replay of genuine retained diagnostic bundles. Original entry
+ * and mutation identity remain historical, without a canonical operation. */
+export function replayVisualMemoryCorrection(candidate:VisualMemoryCandidateTrace,correction:VisualMemoryCorrectionTrace){
+ try{
+  const join=correlateVisualMemoryCorrection(candidate,correction);if(!join||!isVisualMemoryCorrectionTrace(correction))return null;
+  const replayId=randomUUID(),environmentId=randomUUID(),producerId=randomUUID(),processingTime=new Date().toISOString();
+  const events=[candidate.event,correction.event].map((source,sequence)=>({...source,eventId:randomUUID(),backgroundJobId:producerId,correlationId:replayId,sequence,environmentId,executionMode:'replay',processingTime,monotonic:null,sourceEventIds:[source.eventId],causedByEventIds:[]}));
+  const validator=createContractValidator();if(events.some(event=>!validator.validate('https://lifestream.dev/contracts/interaction-trace-event/2.0.0',event).valid))return null;
+  return freeze({replayId,environmentId,executionMode:'replay' as const,events,candidateArtifact:candidate.artifact,correctionArtifact:correction.artifact,sourceReceipt:correction.sourceReceipt,join,sourceMonotonicClockAvailable:false as const,complete:false as const,rawMediaAvailable:false as const,perceptionReplayed:false as const,liveEffects:false as const,durableReinforcement:false as const,learningAuthority:false as const,effectAuthority:false as const});
  }catch{return null;}
 }

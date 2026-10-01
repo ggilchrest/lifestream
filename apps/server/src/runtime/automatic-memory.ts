@@ -63,6 +63,7 @@ async function* bounded<T>(source:AsyncIterable<T>,signal:AbortSignal):AsyncGene
  finally{signal.removeEventListener('abort',cancel);if(signal.aborted)void iterator.return?.().catch(()=>{});}
 }
 export class AutomaticMemory {
+ private readonly environmentId:string|undefined;
  private readonly database:Database;private readonly memories:MemoryRepository;private readonly visual:VisualMemoryRepository;
  private readonly provider:()=>{provider:InferenceProvider;revision:string};private readonly idle:()=>boolean;
  private readonly scopeAllowed:(scope:MemoryScope)=>boolean;private readonly contentAllowed:(scope:MemoryScope,content:string)=>boolean;
@@ -95,8 +96,19 @@ export class AutomaticMemory {
  visualLifecycleHistory(scope:MemoryScope){
   try{const memory=this.policy(scope),visual=this.visual.policy(scope);if(this.closed||!memory.enabled||!visual.enabled||!this.scopeAllowed(scope))return Object.freeze([]);return !this.closed&&this.scopeAllowed(scope)&&this.policy(scope).enabled&&this.policy(scope).revision===memory.revision&&this.visual.policy(scope).enabled&&this.visual.policy(scope).revision===visual.revision?this.readableVisualTraceSources(scope,this.visualCandidateJournal.lifecycleTraces(scope)):Object.freeze([]);}catch{return Object.freeze([]);}
  }
- constructor(options:{database:Database;memories:MemoryRepository;provider:()=>{provider:InferenceProvider;revision:string};idle:()=>boolean;changed:()=>void;scopeAllowed?:(scope:MemoryScope)=>boolean;contentAllowed?:(scope:MemoryScope,content:string)=>boolean}){
-  this.scopeAllowed=options.scopeAllowed??(()=>true);this.contentAllowed=options.contentAllowed??(()=>true);this.database=options.database;this.memories=options.memories;this.provider=options.provider;this.idle=options.idle;this.changed=options.changed;
+ /** Restricted correction diagnostics, distinct from eligible recall and from
+  * canonical activation operations. Read the actual source after host hooks. */
+ visualCorrectionHistory(scope:MemoryScope){
+  try{
+   const memory=this.policy(scope),visual=this.visual.policy(scope);if(this.closed||!memory.enabled||!visual.enabled||!this.scopeAllowed(scope))return Object.freeze([]);
+   const traces=this.visualCandidateJournal.correctionTraces(scope);
+   if(this.closed||!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==memory.revision||!this.visual.policy(scope).enabled||this.visual.policy(scope).revision!==visual.revision)return Object.freeze([]);
+   for(const trace of traces){const source=this.visual.correctionEvidence(scope,trace.sourceReceipt.memoryId);if(!source||source.sourceReceipt.eventId!==trace.sourceReceipt.eventId||source.artifact.reference.sha256!==trace.artifact.reference.sha256){this.visualCandidateJournal.forgetOwner(scope);return Object.freeze([]);}}
+   return traces;
+  }catch{this.visualCandidateJournal.forgetOwner(scope);return Object.freeze([]);}
+ }
+ constructor(options:{environmentId?:string;database:Database;memories:MemoryRepository;provider:()=>{provider:InferenceProvider;revision:string};idle:()=>boolean;changed:()=>void;scopeAllowed?:(scope:MemoryScope)=>boolean;contentAllowed?:(scope:MemoryScope,content:string)=>boolean}){
+  this.environmentId=typeof options.environmentId==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(options.environmentId)?options.environmentId:undefined;this.scopeAllowed=options.scopeAllowed??(()=>true);this.contentAllowed=options.contentAllowed??(()=>true);this.database=options.database;this.memories=options.memories;this.provider=options.provider;this.idle=options.idle;this.changed=options.changed;
   this.visual=new VisualMemoryRepository(this.database);this.sweepExpired();this.database.exec("UPDATE automatic_memory_work SET state=CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END WHERE state='running'");
   this.timer=setInterval(()=>void this.tick(),500);this.timer.unref();
  }
@@ -143,7 +155,9 @@ export class AutomaticMemory {
   const policy=this.policy(scope),visual=this.visual.inspect(scope,this.scopeAllowed(scope)),episode=visual.episodes.find(row=>row.episodeId===id)?.episode;
   if(!policy.enabled||!this.scopeAllowed(scope)||!episode||typeof content!=='string'||!content.trim()||content.length>1200||secret.test(content)||!this.contentAllowed(scope,content)||!this.contentAllowed(scope,episode.summary)||episode.observations.some(o=>!this.contentAllowed(scope,o.description)))throw Error('Visual correction scope unavailable');
   if(!this.scopeAllowed(scope)||!this.policy(scope).enabled||this.policy(scope).revision!==policy.revision||this.visual.policy(scope).revision!==visual.policy.revision)throw Error('Visual correction scope changed');
-  const result=this.visual.correct(scope,id,revision,content);this.visualCandidateJournal.forgetOwner(scope);this.changed();return result;
+  const result=this.visual.correct(scope,id,revision,content,this.environmentId);this.visualCandidateJournal.forgetOwner(scope);
+  if(episode.memoryRecordId){try{const source=this.visual.correctionEvidence(scope,episode.memoryRecordId);if(source)this.visualCandidateJournal.recordCorrection(scope,source);}catch{/* Source mutation remains committed if optional diagnostics fail. */}}
+  this.changed();return result;
  }
  projectVisual(scope:MemoryScope,id:string,revision:number,estimate:VisualTransformationConfidence|null){
   const policy=this.policy(scope),visual=this.visual.inspect(scope,this.scopeAllowed(scope)),episode=visual.episodes.find(row=>row.episodeId===id)?.episode;
