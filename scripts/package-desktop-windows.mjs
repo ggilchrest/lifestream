@@ -13,7 +13,9 @@ if(readFileSync(join(runtime,'version'),'utf8').trim()!==expected||!existsSync(j
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex'),git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8'}).trim();
 const revision=git('rev-parse','HEAD'),files=['apps/desktop/main.cjs','apps/desktop/preload.cjs','apps/desktop/connection-status.cjs','apps/desktop/package.json'];
 const inputs=[...files,'scripts/package-desktop-windows.mjs','package.json','pnpm-lock.yaml','LICENSE','THIRD_PARTY_NOTICES.md'];
-const sourceFiles=inputs.map(path=>{const bytes=readFileSync(join(root,path));if(!bytes.equals(execFileSync('git',['show',`HEAD:${path}`],{cwd:root})))throw Error('Commit the scoped packaging inputs before building: '+path);return {path,sha256:sha(bytes)};});
+// Git's clean conversion accounts for an ordinary Windows CRLF checkout. Record
+// the actual packaged bytes as well; no other uncommitted input is accepted.
+const sourceFiles=inputs.map(path=>{const bytes=readFileSync(join(root,path)),object=execFileSync('git',['hash-object','--path='+path,'--stdin'],{cwd:root,input:bytes,encoding:'utf8'}).trim();if(object!==git('rev-parse',`HEAD:${path}`))throw Error('Commit the scoped packaging inputs before building: '+path);return {path,sha256:sha(bytes),committedObject:object};});
 const runtimeFiles=[];
 function inspect(directory){for(const name of readdirSync(directory)){const path=join(directory,name),stat=lstatSync(path);if(stat.isSymbolicLink())throw Error('Runtime symlinks are unsupported');if(stat.isDirectory())inspect(path);else if(stat.isFile())runtimeFiles.push({path:path.slice(runtime.length+1),bytes:stat.size,sha256:sha(readFileSync(path))});else throw Error('Unsupported runtime entry');}}
 inspect(runtime);
