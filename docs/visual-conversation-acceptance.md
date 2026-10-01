@@ -158,3 +158,27 @@ joined replay preserves all three exact artifacts and canonical mutation/source
 IDs in an isolated environment, with no media/provider/storage/effect callback
 or reinforcement; erased history cannot become a normal source. Legacy and other
 mutation/capture/perception/native lifecycle coverage remains partial.
+
+New source-owner correction and payload-erasure rows now have distinct original
+mutation UUIDs committed with their actual memory revision changes in the existing
+SQLite transaction. A projected correction returns its mutation UUID separately
+from the Human entry UUID; a source-only correction returns no projected mutation
+identity. Source retirement, direct visual-memory forgetting, policy withdrawal,
+expiry and restore quarantine retain their actual erasure receipt. On subsequent
+payload erasure, only original opaque activation/mutation UUIDs survive; correction
+text, source/context references and revision detail in old event payloads are
+removed. Unknown or corrupt original revision metadata remains null in the new receipt;
+optional diagnostics cannot prevent privacy erasure. Legacy rows acquire no
+invented history identity. Write failure rolls
+back the mutation and receipt together, and real database restart preserves the
+committed receipt. Independent Human memory and existing forgetting fences remain
+separate.
+
+These internal source identities are not canonical `MemoryLifecycleEvent`
+operations or authenticated trace envelopes. A Human correction entry UUID is not
+a MemoryRecord evidence ID, and payload erasure is not canonical source-preserving
+`invalidate`. Supplied or copied metadata cannot establish original-owner custody.
+The increment supplies actual source identifiers for later qualified joins; full
+canonical correction/privacy lifecycle mapping, durable trace retention and actual
+provider/native replay qualification remain incomplete. It adds no table,
+migration, durable retention period, capture, model call or external effect.

@@ -20,10 +20,22 @@ const ownerValid=(owner:VisualMemoryOwner)=>[owner.principalId,owner.assistantId
 /** Source identity excludes retention, lifecycle and summary; recall or paraphrase is not new evidence. */
 export const visualEpisodeSourceDigest=(episode:Pick<VisualObservationEpisode,'scope'|'observations'>)=>digest({scope:episode.scope,observations:episode.observations});
 export type VisualUserCorrection={recordType:'visualUserCorrection';sourceType:'humanEntry';correctionId:string;actor:string;relationshipId:string;episodeId:string;sourceEpisodeRevision:number;sourceDigest:string;sourceObservationIds:string[];content:string;occurredAt:string;untrusted:true};
-/** Existing payload erasure keeps only the real opaque activation UUID. Legacy
- * rows remain exactly payloadRemoved; no new identity is minted by erasure. */
+/** Existing payload erasure keeps original opaque mutation UUIDs only. Legacy
+ * rows remain exactly payloadRemoved; no identity is minted by erasure. */
 const activationIdSql="CASE WHEN json_valid(payload_json) THEN coalesce(json_extract(payload_json,'$.visualActivationEvidence.event.eventId'),json_extract(payload_json,'$.visualActivationEventId')) ELSE NULL END";
-export const visualLifecyclePayloadErasure=`json_patch(?,CASE WHEN length(${activationIdSql})=36 AND ${activationIdSql} LIKE '________-____-____-____-____________' AND ${activationIdSql} NOT GLOB '*[^0-9a-f-]*' THEN json_object('visualActivationEventId',${activationIdSql}) ELSE '{}' END)`;
+const mutationIdSql="CASE WHEN json_valid(payload_json) THEN coalesce(CASE WHEN event_type IN ('visualCorrectionApplied','forgotten') AND json_extract(payload_json,'$.visualMutation.recordType')='visualSourceMutationIdentity' THEN json_extract(payload_json,'$.visualMutation.eventId') ELSE NULL END,json_extract(payload_json,'$.visualMutationEventId')) ELSE NULL END";
+const opaqueId=(expression:string,field:string)=>`CASE WHEN length(${expression})=36 AND ${expression} LIKE '________-____-____-____-____________' AND ${expression} NOT GLOB '*[^0-9a-f-]*' THEN json_object('${field}',${expression}) ELSE '{}' END`;
+export const visualLifecyclePayloadErasure=`json_patch(json_patch(?,${opaqueId(activationIdSql,'visualActivationEventId')}),${opaqueId(mutationIdSql,'visualMutationEventId')})`;
+/** Internal original-owner receipt, not a canonical MemoryLifecycleEvent.
+ * A Human correction entry is not a MemoryRecord; payload erasure is not the
+ * source-preserving canonical invalidate operation. Mint only in the actual
+ * SQLite mutation transaction, and retain only its opaque UUID after erasure. */
+export function visualSourceMutationIdentity(kind:'correction'|'erasure',oldRevision:unknown){
+ // Optional diagnostics cannot prevent privacy erasure of a corrupt row.
+ // Unknown historical revisions stay null rather than receiving a default.
+ const valid=typeof oldRevision==='number'&&Number.isSafeInteger(oldRevision)&&oldRevision>=1&&Number.isSafeInteger(oldRevision+1);
+ return {recordType:'visualSourceMutationIdentity' as const,eventId:randomUUID(),kind,oldRevision:valid?oldRevision:null,newRevision:valid?oldRevision+1:null};
+}
 export type VisualActivationEvidence=Readonly<{schemaVersion:'1.0.0';recordType:'visualActivationEvidence';ownerDigest:string;scope:Readonly<Pick<VisualMemoryScope,'assistantId'|'environmentId'|'conversationId'|'sessionId'|'endpointId'>>;event:Readonly<Record<string,unknown>>;artifact:Readonly<{reference:Readonly<{reference:string;sha256:string;mediaType:'application/json';schemaRef:string;byteLength:number}>;bytes:string}>}>;
 const visualActivationSources=new WeakSet<object>();
 /** Genuine original-owner read provenance, not current eligibility or authority. */
@@ -55,7 +67,7 @@ export function retireVisualProjections(tx:Transaction,now:number){
  for(const row of rows){const provenance=JSON.parse(row.provenance_json) as {actor:string},lifecycle=JSON.parse(row.lifecycle_json) as {revision:number},revision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',row.id)!.n;
   tx.run("UPDATE memories SET content='',provenance_json=?,lifecycle_json=? WHERE id=?",JSON.stringify({actor:provenance.actor,payloadRemoved:true}),JSON.stringify({status:'invalidated',revision:lifecycle.revision+1,contentRemoved:true,reason:'visual source retired',changedBy:provenance.actor}),row.id);
   tx.run(`UPDATE memory_lifecycle_events SET payload_json=${visualLifecyclePayloadErasure} WHERE memory_id=?`,JSON.stringify({payloadRemoved:true}),row.id);
-  tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',row.id,row.assistant_id,revision,'forgotten',JSON.stringify({status:'invalidated',contentRemoved:true,reason:'visual source retired'}),new Date(now).toISOString());
+  tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',row.id,row.assistant_id,revision,'forgotten',JSON.stringify({status:'invalidated',contentRemoved:true,reason:'visual source retired',visualMutation:visualSourceMutationIdentity('erasure',lifecycle.revision)}),new Date(now).toISOString());
  }return rows.length;
 }
 
@@ -200,6 +212,7 @@ export class VisualMemoryRepository{
    const correction:VisualUserCorrection={recordType:'visualUserCorrection',sourceType:'humanEntry',correctionId:randomUUID(),actor:owner.principalId,relationshipId:owner.relationshipId,episodeId:id,sourceEpisodeRevision:expectedRevision,sourceDigest:original.sourceDigest,sourceObservationIds:[...original.sourceObservationIds],content,occurredAt:new Date(now).toISOString(),untrusted:true};
    const episode:VisualObservationEpisode={...original,revision:row.revision+1,state:'superseded',correctionRefs:[...original.correctionRefs,correction.correctionId]};
    if(Buffer.byteLength(JSON.stringify(episode))>8192)throw Error('Visual correction capacity exceeded');
+   let correctionMutationEventId:string|null=null;
    if(original.memoryRecordId){
     const memory=tx.get<{provenance_json:string;lifecycle_json:string}>('SELECT provenance_json,lifecycle_json FROM memories WHERE id=? AND assistant_id=?',original.memoryRecordId,owner.assistantId);
     if(!memory)throw Error('Visual correction projection unavailable');
@@ -209,12 +222,13 @@ export class VisualMemoryRepository{
     const next={...lifecycle,status:'contradicted',revision:Number(lifecycle.revision)+1,changedBy:owner.principalId,needsReview:true};
     tx.run('UPDATE memories SET provenance_json=?,lifecycle_json=? WHERE id=?',JSON.stringify({...provenance,visualEpisodeRevision:episode.revision,canonical}),JSON.stringify(next),original.memoryRecordId);
     const revision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',original.memoryRecordId)!.n;
-    tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',original.memoryRecordId,owner.assistantId,revision,'visualCorrectionApplied',JSON.stringify({actor:owner.principalId,correctionId:correction.correctionId,status:'contradicted',sourceEpisodeRevision:expectedRevision}),correction.occurredAt);
+    const visualMutation=visualSourceMutationIdentity('correction',lifecycle.revision);correctionMutationEventId=visualMutation.eventId;
+    tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',original.memoryRecordId,owner.assistantId,revision,'visualCorrectionApplied',JSON.stringify({actor:owner.principalId,correctionId:correction.correctionId,status:'contradicted',sourceEpisodeRevision:expectedRevision,visualMutation}),correction.occurredAt);
    }
    const eventKey=`visual-episode:${id}`,eventRevision=tx.get<{n:number}>('SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?',eventKey)!.n;
    tx.run('INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)',eventKey,owner.assistantId,eventRevision,'visualUserCorrection',JSON.stringify(correction),correction.occurredAt);
    tx.run('UPDATE visual_observation_episodes SET revision=?,payload_json=? WHERE episode_id=?',episode.revision,JSON.stringify(episode),id);
-   return {episodeId:id,revision:episode.revision,sourceObservationIds:episode.sourceObservationIds,correctionId:correction.correctionId};
+   return {episodeId:id,revision:episode.revision,sourceObservationIds:episode.sourceObservationIds,correctionId:correction.correctionId,correctionMutationEventId};
   });
  }
  /** Complete bounded inventory with terminal receipts; fresh permission is supplied by the host. */

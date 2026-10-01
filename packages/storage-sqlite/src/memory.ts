@@ -4,7 +4,7 @@ import {retireGameExperienceSource} from './game-experience.ts';
 import {retireGameAdviceDependents} from './game-advice-custody.ts';
 import {boundedGameDataSnapshot} from '@lifestream/contracts/game-journal';
 import type {GameExperienceEpisode,GameMemoryBinding} from '@lifestream/contracts/game-activity';
-import {visualLifecyclePayloadErasure} from './visual-memory.ts';
+import {visualLifecyclePayloadErasure,visualSourceMutationIdentity} from './visual-memory.ts';
 import {validateVisualMemoryProjection} from '@lifestream/contracts/visual-memory';
 import type { Database } from "./database.js";
 
@@ -243,7 +243,7 @@ export class MemoryRepository {
       tx.run("UPDATE memories SET content='', provenance_json=?, lifecycle_json=? WHERE assistant_id=? AND id=? AND json_extract(lifecycle_json,'$.revision')=?",JSON.stringify(provenance),JSON.stringify(lifecycle),assistantId,id,previousRevision);
       if(tx.get<{changes:number}>("SELECT changes() AS changes")?.changes!==1)throw new Error("memory revision conflict");
       tx.run(`UPDATE memory_lifecycle_events SET payload_json=${visualLifecyclePayloadErasure} WHERE assistant_id=? AND memory_id=?`,JSON.stringify({payloadRemoved:true}),assistantId,id);
-      tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",id,assistantId,journalRevision,"forgotten",JSON.stringify(payload),occurredAt);
+      tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",id,assistantId,journalRevision,"forgotten",JSON.stringify({...payload,...(existing.provenance.visualEpisodeId?{visualMutation:visualSourceMutationIdentity('erasure',existing.lifecycle.revision)}:{})}),occurredAt);
       retireGameAdviceDependents(tx,'memory',id);
       if(existing.provenance.gameEpisodeId)retireGameExperienceSource(tx,String(existing.provenance.gameEpisodeId),{principalId:String(existing.provenance.actor),assistantId,relationshipId:existing.provenance.relationshipId as string|null},'forgotten');
       if(existing.provenance.visualEpisodeId){tx.run(`UPDATE memory_lifecycle_events SET payload_json=${visualLifecyclePayloadErasure} WHERE memory_id=? AND assistant_id=?`,JSON.stringify({payloadRemoved:true}),`visual-episode:${existing.provenance.visualEpisodeId}`,assistantId);tx.run("UPDATE visual_observation_episodes SET state='forgotten',payload_json=NULL,revision=revision+1 WHERE episode_id=? AND state='retained' AND json_extract(payload_json,'$.memoryRecordId')=?",existing.provenance.visualEpisodeId,id);}
