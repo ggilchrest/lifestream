@@ -1,0 +1,165 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S093",
+  "sliceStatus": "inProgress",
+  "component": "optional separately gated bounded Telegram game-help screenshot transport",
+  "componentStatus": "verified",
+  "recordedAt": "2026-10-01T02:36:15.310593Z",
+  "sourceRevision": "21fa2900f621f7ee46ae8774720878353f20cf92",
+  "sourceFiles": [
+    "apps/server/src/channels/telegram-game-help-attachment.ts",
+    "apps/server/test/telegram-game-help-attachment.test.ts",
+    "docs/local-game-acceptance.md"
+  ],
+  "ownedOperation": {
+    "operation": "S093 optional separately gated screenshot transport exact-revision full source suite",
+    "sourceRevision": "21fa2900f621f7ee46ae8774720878353f20cf92",
+    "startedAt": "2026-10-01T02:33:12.579274+00:00",
+    "wrapperPid": 19270,
+    "log": "/tmp/tifa-s093-image-transport-full.log",
+    "status": "completed",
+    "childPid": 19273,
+    "exitCode": 0,
+    "completedAt": "2026-10-01T02:35:14.334195+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "21fa2900f621f7ee46ae8774720878353f20cf92",
+      "pass": 2709,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 121547.143916
+    },
+    "focused": {
+      "pass": 39,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 767.137625
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 6198.753542
+    },
+    "packetAndBootstrap": {
+      "pass": 48,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 18120.512125
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "node --test --experimental-strip-types apps/server/test/telegram-game-help-attachment.test.ts apps/server/test/telegram-api.test.ts packages/runtime/test/activity-help.test.ts",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "node --test scripts/workspace.test.mjs scripts/qualify-local-game.test.mjs",
+    "npm --prefix .private run validate",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual immutable source/binary snapshot, SHA256/PNG structure checks, multipart byte transport through isolated loopback HTTP, original-deadline cancellation/quarantine and finite per-instance attempted-help fence. Existing text transport and inert help-source regressions remain passing.",
+    "scripted": "Synthetic1pixelPNG/game metadata/current-source/authority callbacks and Bot API acceptance/errors. No live Telegram call, actual game-only screenshot/source/grant, Human delivery, authenticated real help reply, native game/save/OS, selected model/performance or Human acceptance."
+  },
+  "semantics": [
+    "Separate image-enabled callback defaults unavailable; new adapter not selected/wired in running root. Existing text pairing/notice capability does not activate or authorize images. Trusted host still needs durable attempt reservation and actual current owner/source/native pause/recipient/contact hours/privacy/attachment/image grant. Callback/schema assertions are not independent evidence.",
+    "Existing closed help shape and screenshot scope/observation/artifact/capture/expiry are checked against actual bounded byte length/SHA256 and PNG structure/dimensions. At most2MiB/1280longedge, no raw URLs, paths, text/EXIF/unknown PNG metadata chunks. Structural check is not pixel decode or actual source/hidden-overlay qualification.",
+    "One multipart request carries original image bytes plus plain complete attempts/question/captureUTC/computed dispatch age, no private owner/run IDs/artifact paths, formatting or paid broadcast. Oversized caption defers rather than truncates; caption line-ending normalization is transport representation only, not memory transformation.",
+    "Valid private recipient/message/caption/photo response can prove provider acceptance and attachment sent only. Text/foreign/malformed/oversized/invalidUTF8 or changed caption responses stay unknown. Delivery always unknown; resized stored provider image not independently verified. No help/advice/resume/memory mutation.",
+    "Original15secondmax deadline, single in-flight slot, withdrawal/close/cancellation fence late replies and quarantine abort-ignoring work until actual settlement. No retries;128attemptedhelp IDs per instance refuse capacity without eviction. Host durable restart idempotency remains required. Mutable owned byte copies clear; secure Blob/network/JavaScript erasure not claimed."
+  ],
+  "initialFailures": [
+    {
+      "log": "tifa-s093-image-transport-focused-initial-failed.log",
+      "reason": "Actual multipart loopback test exposed CRLF encoding normalization; receipt comparison now permits only line-ending representation differences. Fixture reads actual wire caption rather than supplying expected caption."
+    }
+  ],
+  "preflight": {
+    "result": "scope-aid discrepancies retained",
+    "log": "tifa-s093-image-transport-preflight.log",
+    "explanation": "Primary public checkpoint remainsS066, tested source vs metadata commit differ, unrelated dirty work and cumulative files remain, and actual prerequisite qualification is incomplete. Scope aids do not withdraw effective bounded development authorization; no prerequisite acceptance inferred."
+  },
+  "limitations": [
+    "Optional transport software only. No actual image-bearing delivery authority/binding, durable delivery-attempt integration, message/help state transition or live authenticated reply routing was fabricated. Existing text-only capability cannot be widened from this source pass.",
+    "Reviewed native bridge/visible-field decoder, ordinary SaveRAM persistence/restart-load and actual source/controller/help runtime wiring remain incomplete pending actual pinned build/game/save/GUI/provider/contact setup. Full capture/perception/native trace and real joined qualification remain partial.",
+    "Primary S066/fullLS-TEST084, original24S083/S084/iPhone acceptance retained. Selected-model callback/causal failures and900msmedian/1500msp95onset targets not waived; no unchanged failed studies repeated.",
+    "Installed candidate/services/Telegram/encrypted backup unchanged. No activation/game/save/outbound effect, installation/provider change/deploy/push/publication/new private export. Generic memory-selection amendment stays proposed/unimplemented."
+  ],
+  "nextAction": "Waiting on exact reviewed runtime setup: pin legitimate game/ordinary save/BizHawk build/core and visible-field decoder, save sandbox and Linux/Windows watchable GUI; qualify current image provider/egress/raw-retention/resources; specify exact permitted image-help route/recipient/contact windows/finite limits/attachment policy and reviewed grant. Then finish native/controller/help host wiring and actual joined package/platform/performance/Human qualification. No currently identified independent causal source repair remains; generic memory-selection amendment is separately proposed. Do not install, activate, transmit, promote candidate, change provider, export or waive criteria without applicable authority.",
+  "logDigests": {
+    "tifa-s093-image-transport-browser.log": {
+      "path": "/tmp/tifa-s093-image-transport-browser.log",
+      "sha256": "51be24fa9c690082b7d1a0eb566cb3649aa3e4054e53f2bb8cd9ea19f98fbf86",
+      "bytes": 23879
+    },
+    "tifa-s093-image-transport-build.log": {
+      "path": "/tmp/tifa-s093-image-transport-build.log",
+      "sha256": "e5d1b571c090b2ddad3d33640c5b39050be72cdef48440763d0b603a88f1f827",
+      "bytes": 1074
+    },
+    "tifa-s093-image-transport-diff.log": {
+      "path": "/tmp/tifa-s093-image-transport-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s093-image-transport-focused-initial-failed.log": {
+      "path": "/tmp/tifa-s093-image-transport-focused-initial-failed.log",
+      "sha256": "7edc446f3983479592126f3a405e66a73cebeab806ea12ab7c9b3a1d459692eb",
+      "bytes": 4674
+    },
+    "tifa-s093-image-transport-focused.log": {
+      "path": "/tmp/tifa-s093-image-transport-focused.log",
+      "sha256": "0716dd4198eea6ebede5e12d94633127de8f2de9afca49f0cea09d2455ff0acd",
+      "bytes": 3821
+    },
+    "tifa-s093-image-transport-full.log": {
+      "path": "/tmp/tifa-s093-image-transport-full.log",
+      "sha256": "024d0322be74bebab15ff0aee93e27f39139bc106e08db18b024ecdb95220d1a",
+      "bytes": 288292
+    },
+    "tifa-s093-image-transport-lint.log": {
+      "path": "/tmp/tifa-s093-image-transport-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s093-image-transport-packet.log": {
+      "path": "/tmp/tifa-s093-image-transport-packet.log",
+      "sha256": "e20888f6fdc58ca3bf3af6f2fc5d2e2df48886589daba6df427c7a35348e94f3",
+      "bytes": 4529
+    },
+    "tifa-s093-image-transport-preflight.log": {
+      "path": "/tmp/tifa-s093-image-transport-preflight.log",
+      "sha256": "a0c31107bd31be7b66af6b0097908f8f51115f577e0567f89ffd665e132ac212",
+      "bytes": 284
+    },
+    "tifa-s093-image-transport-private.log": {
+      "path": "/tmp/tifa-s093-image-transport-private.log",
+      "sha256": "9f73c7c0f24eb13201b9d0cbd7680a9127e1bb754ffd3c5eff082e1f352d39d1",
+      "bytes": 28880
+    },
+    "tifa-s093-image-transport-typecheck.log": {
+      "path": "/tmp/tifa-s093-image-transport-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s093-image-transport-workspace.log": {
+      "path": "/tmp/tifa-s093-image-transport-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
