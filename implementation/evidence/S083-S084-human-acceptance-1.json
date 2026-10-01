@@ -1,0 +1,214 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "combined-human-acceptance",
+  "slices": [
+    "LS-S083",
+    "LS-S084"
+  ],
+  "status": "accepted",
+  "claimClass": "human-acceptance",
+  "recordedAt": "2026-09-20T03:16:29Z",
+  "recordedLocalDate": "2026-09-19",
+  "timezone": "America/Chicago",
+  "source": {
+    "kind": "explicit-operator-message",
+    "taskId": "01a0bc71-7795-7122-bc48-d74113694500",
+    "guide": "docs/s083-s084-acceptance-guide.html",
+    "guideVersion": "2026-09-19.v1",
+    "guideSha256": "00d6f6805e8384c76084aebf85747c6dbbe691b830a8c9ede9d1e99cc9a59e88",
+    "guideHashScope": "Guide with the acceptance banner and receipt reference added; journey content unchanged by this recording."
+  },
+  "operatorConfirmation": "all 24 user journeys pass validation and human acceptance.  record this decision",
+  "reviewer": "Workspace operator, through the explicit instruction in this task",
+  "validationResult": "pass",
+  "validationBasis": "Operator reports that all 24 guide journeys pass validation. Recording this decision does not represent a new automated test run.",
+  "journeyCount": 24,
+  "journeyResults": [
+    {
+      "journeyId": "B01",
+      "title": "Start a clean review and establish the session",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "B02",
+      "title": "Create and review synthetic context",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "I01",
+      "title": "Review every Initiative setting and its effective policy",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "I02",
+      "title": "Compare the Initiative gradient without activating",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "I03",
+      "title": "Configure the host and receive the first synthetic opening",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "I04",
+      "title": "Reply, stop, dismiss and check quiet behavior",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "I05",
+      "title": "Exercise temporary companionship and bounded timing adaptation",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "I06",
+      "title": "Test speech output, microphone controls and honest degradation",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "I07",
+      "title": "Invalidate readiness, stale events and duplicate delivery",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "D01",
+      "title": "Configure Discovery independently and verify rollback",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "D02",
+      "title": "Prepare an attributed source and inspect the resulting brief",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "D03",
+      "title": "Inspect and suppress optional candidates",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "D04",
+      "title": "Run analysis and review competing hypotheses",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "D05",
+      "title": "Test conversational relevance and immediate correction",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "D06",
+      "title": "Record every scoped feedback kind without erasing interests",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "D07",
+      "title": "Compare all Discovery input scenarios and variants",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "D08",
+      "title": "Exercise job cancellation, missing evidence and source rejection",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "D09",
+      "title": "Remove source/topic use and check derived-state invalidation",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "B03",
+      "title": "Check shared revisions and account/Assistant isolation",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "B04",
+      "title": "Retain the S081 controls and comparison baseline",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "B05",
+      "title": "Exercise record corrections and privacy controls",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "B06",
+      "title": "Finish cleanup and test the correct restart boundary",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "G01",
+      "title": "Make the Human quality judgment",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    },
+    {
+      "journeyId": "G02",
+      "title": "Reconcile all technical and external acceptance gates",
+      "validationResult": "pass",
+      "humanAcceptance": "accepted",
+      "basis": "explicit-operator-confirmation"
+    }
+  ],
+  "decision": "accepted",
+  "repositoryAcceptanceRecorded": true,
+  "observedPublicRevision": "0c3428de58bed1e3e94beabad0cdb681842a3ab4",
+  "observedPrivateRevision": "b2ceb903c8f85e9b65ef0d704f8d745c13a192d0",
+  "revisionAssociation": "Checkout revisions observed when recording this decision. The operator did not submit a separately pinned final test-runtime revision or a final provider/model/voice identity with the decision.",
+  "reviewHistory": {
+    "earlierFeedbackPreserved": [
+      "B02.6 omitted the per-record Details & actions prerequisite; the guide was corrected.",
+      "I04 reported a stage-conflict message immediately after Stop response & speech; that exact failure was not reproduced by the assistant.",
+      "The earlier review session used immediate fixture echo responses; the guide was clarified to distinguish fixture workflow from selected-provider evaluation."
+    ],
+    "disposition": "The latest operator instruction accepts all 24 journeys and states that validation passes. No exceptions were submitted to this decision. Earlier pending Human-review dispositions are superseded for these journeys; historical observations are retained and no unverified runtime repair is asserted."
+  },
+  "technicalQualification": {
+    "status": "unchanged",
+    "boundary": "This records the operator Human decision for all 24 guide journeys. It does not create new automated, selected-provider, performance, physical-device or production measurements, or rewrite historical evidence."
+  },
+  "executionBoundary": "Recording the decision does not start development, deploy, switch providers, train models, change runtime data, or grant acceptance to work beyond the 24 guide journeys."
+}

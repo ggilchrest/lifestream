@@ -1,5 +1,7 @@
 # Lifestream Product-Reality Audit
 
+Historical audit notice — 2026-09-18: this is the September 8 source snapshot, not current runtime status. Later real authentication, prepared relationship context, shared administration, PWCE runtime seams and S083/S084 component implementation are recorded in [the current checkpoint](checkpoint.json) and qualification selectors. Preserve the original findings and evidence below without treating them as instructions to rebuild completed components. No broader acceptance is inferred.
+
 Audit revision: public main at a7adeb28ddc438e3c31aaf2d2e7867c36660745e
 Observed: 2026-09-08
 Audit class: current-checkout implementation and executable-reality review

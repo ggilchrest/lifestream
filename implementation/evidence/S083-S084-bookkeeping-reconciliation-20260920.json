@@ -1,0 +1,215 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "bookkeeping-reconciliation",
+  "recordedAt": "2026-09-20T03:36:38Z",
+  "status": "verified",
+  "claimClass": "metadata-consistency",
+  "sourceRevision": "0c3428de58bed1e3e94beabad0cdb681842a3ab4",
+  "privateSpecificationRevision": "b2ceb903c8f85e9b65ef0d704f8d745c13a192d0",
+  "humanAcceptanceReceipt": "implementation/evidence/S083-S084-human-acceptance-1.json",
+  "priorCheckpoint": {
+    "baseRevision": "109d75656c78b276feef3802d3d892abdd6eef8e",
+    "currentRevision": "56227b914fe1735e6df782e896efc498a4e7a4e2",
+    "activeSlice": "LS-S084",
+    "sliceStatus": "implemented",
+    "changedFiles": [],
+    "blockers": [
+      "Protected external-authority, production, physical/perceptual output remain outside the recorded 24-journey Human decision; Human acceptance for additional scope still requires its own decision."
+    ],
+    "nextAction": "The operator Human acceptance of all 24 S083/S084 guide journeys is recorded. Retain the existing technical stopping point and historical qualification evidence; any further development or broader qualification follows its separately authorized scope.",
+    "notes": "S083 and S084 component paths are implemented and their dependency-ready regressions remain green. The recovered ai5090 service now passes read-only identity probes for inference, NeMo STT and VoxCPM TTS. Selected-provider successor observations for LS-S073, LS-S076, LS-S078 and LS-S080 pass; the S080 synthetic audio privacy route passes; and the joined LS-TEST-106 receipt records the completed application path with 19/19 exact identifier observations while retaining later provider deadline telemetry as nonblocking model-quality history. S084 priority qualification records 20/20 terminal cancellations with a 2.668 ms maximum cleanup measurement against the 10 ms/250 ms bounds. The runtime advertises those bounds only after the exact ai5090 health probe; fixture behavior remains isolated. Selected-provider bounded Discovery analysis completed 2/3 synthetic samples and rejected one oversized output before publication, so provider-output variance remains tracked as model-quality telemetry. Full source verification is 912/912, bundled browser verification is 49/49, and no new physical or production claim is made by this record. 2026-09-19: operator explicitly confirms all 24 S083/S084 guide journeys pass validation and Human acceptance. Accepted decision recorded in implementation/evidence/S083-S084-human-acceptance-1.json. Earlier Human-pending wording is superseded for these 24 journeys; historical technical/provider evidence remains unchanged."
+  },
+  "scopeRepair": {
+    "packetAddedPaths": [
+      "implementation/evidence/S083-TIMING-ADAPTATION-2.json",
+      "implementation/evidence/S083-CODE-ALIGNMENT-1.json",
+      "implementation/evidence/LS-S081-joined-selected-provider-observation-20260916-rerun-2.json",
+      "implementation/evidence/LS-S081-ai5090-health-20260916.json",
+      "scripts/qualify-s084-provider-priority.mjs",
+      "implementation/evidence/LS-S073-selected-provider-observation-20260917-rerun-1.json",
+      "implementation/evidence/LS-S076-selected-provider-observation-20260917-rerun-1.json",
+      "implementation/evidence/LS-S078-selected-provider-observation-20260917-rerun-1.json",
+      "implementation/evidence/LS-S080-selected-provider-observation-20260917-rerun-1.json",
+      "implementation/evidence/LS-S080-audio-selected-provider-observation-20260917-rerun-1.json",
+      "implementation/evidence/LS-S081-joined-selected-provider-observation-20260917-rerun-1.json",
+      "implementation/evidence/LS-S081-ai5090-health-20260917.json",
+      "implementation/evidence/S084-PROVIDER-PRIORITY-20260917.json",
+      "implementation/evidence/S084-SELECTED-PROVIDER-ANALYSIS-20260917.json",
+      "README.md",
+      "docs/s083-s084-acceptance-guide.html",
+      "implementation/PRODUCT-REALITY-AUDIT.md",
+      "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
+      "implementation/evidence/S083-S084-human-acceptance-1.json"
+    ],
+    "observedPublicChanges": [
+      "README.md",
+      "docs/s083-s084-acceptance-guide.html",
+      "implementation/PRODUCT-REALITY-AUDIT.md",
+      "implementation/checkpoint.json",
+      "implementation/evidence/S083-S084-bookkeeping-reconciliation-20260920.json",
+      "implementation/evidence/S083-S084-human-acceptance-1.json"
+    ],
+    "preservedPreexistingPublicFiles": {
+      "README.md": "ea111ece7364206e7311ba328ec91e37d2b74939713a5eaafc28cb79a2f9e7db",
+      "implementation/PRODUCT-REALITY-AUDIT.md": "abb04fbff14b81ff553b1dd09c2288c047b7d90f93a3952b9569aec27bf26be8"
+    }
+  },
+  "validation": [
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S084 (before repair)",
+      "result": "fail",
+      "details": "Four diagnostics: selected work disposition, revision, changedFiles and packet scope."
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S084 (maintenance active after scope repair)",
+      "result": "fail",
+      "details": "Revision, changedFiles and packet scope mismatches are resolved. Remaining diagnostics: LS-S073, LS-S076, LS-S078, LS-S080 effective inputs changed since selected qualification."
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "testsPassed": 43
+    },
+    {
+      "command": "npm --prefix .private run validate (after link and packet-manifest repair)",
+      "result": "pass",
+      "testsPassed": 53,
+      "normativeRequirements": 402,
+      "implementationSlices": 77
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass"
+    },
+    {
+      "command": "Final checkpoint revision/worktree/packet validation using preflightErrors and validatePacket",
+      "result": "pass",
+      "details": "Only the intentional implemented-slice execution-selection diagnostic remains in the checkpoint/scope layer. This does not claim full prerequisite preflight passes."
+    },
+    {
+      "command": "Added local-link, JSON, guide/receipt hash and unrelated-file preservation audit",
+      "result": "pass",
+      "localLinksChecked": 21,
+      "acceptedJourneyCount": 24
+    },
+    {
+      "command": "git diff --check -- <exact maintenance paths> in each affected repository",
+      "result": "pass"
+    }
+  ],
+  "exclusions": [
+    "No application/provider behavior changed.",
+    "No prior qualification, acceptance guide, Human receipt or compatibility lock rewritten.",
+    "No new whole-slice, physical, perceptual, performance or production acceptance.",
+    "Open-decision recommendations remain proposals."
+  ],
+  "remainingQualificationRefresh": [
+    {
+      "slice": "LS-S073",
+      "selectedQualification": "implementation/evidence/LS-S073-qualification-certification-6.json",
+      "testedRevision": "6c88331f6c4da43e29d90958cdd7f37d38a9ac63",
+      "changedPublicInputs": [
+        "apps/control-web/profile-builder.js",
+        "apps/control-web/test/relationship-acceptance.test.mjs",
+        "apps/server/src/admin/profile-builder.ts",
+        "apps/server/src/admin/relationship-records.ts",
+        "apps/server/src/composition/providers.ts",
+        "apps/server/src/index.ts",
+        "apps/server/test/profile-builder.test.ts",
+        "apps/server/test/relationship-administration.test.ts",
+        "apps/server/test/server.test.ts",
+        "packages/contracts/test/contract-validation.test.ts",
+        "packages/runtime/src/inference/fixture.ts",
+        "packages/runtime/test/inference.test.ts",
+        "packages/storage-sqlite/src/profile-builder.ts",
+        "packages/storage-sqlite/test/profile-builder.test.ts"
+      ],
+      "privateEffectiveInputDrift": true,
+      "disposition": "Refresh owning-slice checks and append-only qualification for current inputs before consuming as current LS-S084 prerequisite proof. Historical and Human evidence are unchanged."
+    },
+    {
+      "slice": "LS-S076",
+      "selectedQualification": "implementation/evidence/LS-S076-qualification-certification-5.json",
+      "testedRevision": "4992276de7d34a41c15c71f4f600911cd9b7d1ee",
+      "changedPublicInputs": [
+        "apps/control-web/profile-builder.js",
+        "apps/control-web/test/relationship-acceptance.test.mjs",
+        "apps/server/src/admin/profile-builder.ts",
+        "apps/server/src/admin/relationship-records.ts",
+        "apps/server/src/composition/providers.ts",
+        "apps/server/src/index.ts",
+        "apps/server/test/profile-builder.test.ts",
+        "apps/server/test/relationship-administration.test.ts",
+        "apps/server/test/relationship-insights.test.ts",
+        "apps/server/test/server.test.ts",
+        "packages/contracts/test/contract-validation.test.ts",
+        "packages/runtime/src/inference/fixture.ts",
+        "packages/runtime/test/inference.test.ts",
+        "packages/storage-sqlite/src/profile-builder.ts",
+        "packages/storage-sqlite/test/profile-builder.test.ts"
+      ],
+      "privateEffectiveInputDrift": true,
+      "disposition": "Refresh owning-slice checks and append-only qualification for current inputs before consuming as current LS-S084 prerequisite proof. Historical and Human evidence are unchanged."
+    },
+    {
+      "slice": "LS-S078",
+      "selectedQualification": "implementation/evidence/LS-S078-qualification-certification-4.json",
+      "testedRevision": "79c31e03dde17763a58c71137b168a9621ef9aba",
+      "changedPublicInputs": [
+        "apps/control-web/profile-builder.js",
+        "apps/control-web/test/relationship-acceptance.test.mjs",
+        "apps/server/src/admin/profile-builder.ts",
+        "apps/server/src/admin/relationship-lab.ts",
+        "apps/server/src/admin/relationship-records.ts",
+        "apps/server/src/composition/providers.ts",
+        "apps/server/src/index.ts",
+        "apps/server/test/profile-builder.test.ts",
+        "apps/server/test/relationship-administration.test.ts",
+        "apps/server/test/relationship-insights.test.ts",
+        "apps/server/test/relationship-lab.test.ts",
+        "apps/server/test/server.test.ts",
+        "packages/contracts/test/contract-validation.test.ts",
+        "packages/runtime/src/inference/fixture.ts",
+        "packages/runtime/test/inference.test.ts",
+        "packages/storage-sqlite/src/profile-builder.ts",
+        "packages/storage-sqlite/test/profile-builder.test.ts"
+      ],
+      "privateEffectiveInputDrift": true,
+      "disposition": "Refresh owning-slice checks and append-only qualification for current inputs before consuming as current LS-S084 prerequisite proof. Historical and Human evidence are unchanged."
+    },
+    {
+      "slice": "LS-S080",
+      "selectedQualification": "implementation/evidence/LS-S080-qualification-certification-4.json",
+      "testedRevision": "8c2f378009a7c534b440376fc99894bc9cb350d7",
+      "changedPublicInputs": [
+        "apps/control-web/profile-builder.js",
+        "apps/control-web/test/relationship-acceptance.test.mjs",
+        "apps/server/src/admin/profile-builder.ts",
+        "apps/server/src/admin/relationship-lab.ts",
+        "apps/server/src/admin/relationship-records.ts",
+        "apps/server/src/composition/providers.ts",
+        "apps/server/src/index.ts",
+        "apps/server/test/profile-builder.test.ts",
+        "apps/server/test/relationship-administration.test.ts",
+        "apps/server/test/relationship-insights.test.ts",
+        "apps/server/test/relationship-lab.test.ts",
+        "apps/server/test/server.test.ts",
+        "packages/contracts/test/contract-validation.test.ts",
+        "packages/runtime/src/inference/fixture.ts",
+        "packages/runtime/test/inference.test.ts",
+        "packages/storage-sqlite/src/profile-builder.ts",
+        "packages/storage-sqlite/test/profile-builder.test.ts"
+      ],
+      "privateEffectiveInputDrift": true,
+      "disposition": "Refresh owning-slice checks and append-only qualification for current inputs before consuming as current LS-S084 prerequisite proof. Historical and Human evidence are unchanged."
+    }
+  ],
+  "completedAt": "2026-09-20T03:43:24Z",
+  "completionDisposition": "Requested bookkeeping repair and decision review complete. S084 remains implemented with the separate 24-journey Human acceptance; current-input prerequisite requalification remains technical follow-up, not fabricated current proof.",
+  "relatedCompositionValidation": {
+    "command": "npm --prefix orchestration test",
+    "result": "pass",
+    "testsPassed": 97
+  },
+  "preservationNote": "The composition-wide whitespace check still reports three pre-existing Markdown hard-break lines in orchestration/lifestream_runtime_scope_adoption_and_continuation.md. That unrelated file remains unchanged; all exact maintenance paths pass."
+}

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "iphone-human-acceptance",
+  "status": "accepted",
+  "claimClass": "human-acceptance",
+  "recordedAt": "2026-09-28T23:40:22.118134Z",
+  "recordedLocalDate": "2026-09-28",
+  "timezone": "America/Chicago",
+  "source": {
+    "kind": "explicit-operator-message",
+    "taskId": "01a0bc71-7795-7122-bc48-d74113694500"
+  },
+  "operatorConfirmation": "consider iphone acceptance as completed.",
+  "decision": "iPhone Human acceptance completed; earlier pending iPhone acceptance dispositions are superseded.",
+  "candidate": {
+    "build": 8,
+    "bundleIdentifier": "org.lifestream.assistant",
+    "appSourceRevision": "91d6a25939b41bddc024be03da1216d1f3128f92",
+    "serverSourceRevision": "76c6c01128a7fd2cb90668f70a8b4647909ba02c",
+    "specificationRevision": "2026f2f0988a9d56f3ecd12e07cf0749ea14cce8",
+    "revisionAssociation": "Latest installed and delivered candidate recorded before the operator decision. The operator did not supply a separate build identifier or new per-journey measurements."
+  },
+  "scope": "The delivered iOS v0.1 experience, including saved connection/account restoration, native conversation controls, app-lifecycle audience lifetime and enabled bundled animations.",
+  "basis": "Explicit operator signoff. No new automated run or assistant-observed physical test is claimed by recording this decision.",
+  "historicalEvidence": "Prior software, physical observations and reported failures remain retained; they are not rewritten as new passing measurements.",
+  "technicalQualification": {
+    "status": "unchanged",
+    "boundary": "This acceptance does not waive selected-model callback/experiential reliability, integrated onset targets, current-input qualification, actual audience/camera/incident qualification, live Telegram delivery, recovery-key custody or final whole-product release criteria.",
+    "iosLimitations": "Existing conservative behavior for late/absent public iOS lock evidence and possible locked-idle suspension remains an implementation limitation, not a pending iPhone Human decision."
+  },
+  "executionBoundary": "Recording acceptance does not resume the goal, activate a microphone/camera, change providers, publish or deploy anything."
+}
