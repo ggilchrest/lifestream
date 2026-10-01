@@ -1,3 +1,4 @@
+import {conversationFixtureProvider} from './fixtures/conversation-provider.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomBytes,randomUUID} from 'node:crypto';
@@ -29,7 +30,7 @@ async function setup(t:import('node:test').TestContext,retentionMs=60000){
  e.scope.principalId=identity.principalId;e.scope.assistantId=assistantId;e.scope.relationshipId=relationshipId;
  for(const record of [...sources.actions,...sources.observations])record.scope=structuredClone(e.scope);
  const internals=app as unknown as {gameHelp:GameHelpRepository;database:Database;memories:MemoryRepository;providers:{inference:InferenceProvider};};
- const requests:InferenceRequest[]=[];internals.providers.inference={async *generate(input){requests.push(input);yield {kind:'text',text:'Scripted historical reply.'};yield {kind:'done'};}};
+ const requests:InferenceRequest[]=[];internals.providers.inference=conversationFixtureProvider({async *generate(input){requests.push(input);yield {kind:'text',text:'Scripted historical reply.'};yield {kind:'done'};}});
  const owner={assistantId,relationshipId},path=`/api/admin/v1/assistants/${assistantId}/relationships/${relationshipId}`;
  await api('/api/runtime/v1/memory',{...owner,enabled:true,expectedRevision:0});
  const original=app.publishGameEpisode(e);assert.ok(original.memoryId);
@@ -55,7 +56,7 @@ test('advice-bearing historical game memory reaches ordinary authenticated HTTP 
 
 for(const cause of ['humanPrivacyForget','humanCorrection','humanInvalidation','helpForget','originalPrivacyForget','authWithdrawal','expiry','memoryConsent','sharedAudience']as const)test('held advice-bearing ordinary HTTP reply is fenced after '+cause,{timeout:15000},async t=>{
  const f=await setup(t);let entered!:()=>void,release!:()=>void;const started=new Promise<void>(r=>entered=r),held=new Promise<void>(r=>release=r);t.after(()=>release());
- f.internals.providers.inference={async*generate(input){f.requests.push(input);entered();await held;yield {kind:'text',text:'LATE_ADVICE_MEMORY_PROSE'};yield {kind:'done'};}};
+ f.internals.providers.inference=conversationFixtureProvider({async*generate(input){f.requests.push(input);entered();await held;yield {kind:'text',text:'LATE_ADVICE_MEMORY_PROSE'};yield {kind:'done'};}});
  const pending=f.reply();await started;assert.match(f.requests[0]!.sections.find(s=>s.kind==='preparedMemory')!.content,/The advised gate attempt remained unresolved/);
  if(cause==='humanPrivacyForget'||cause==='originalPrivacyForget'){
   const relationship=(await f.api(f.path)).relationship,body={action:'forget-derived-information',expectedRevision:relationship.revision,idempotencyKey:randomUUID(),targets:[{kind:'memory',id:cause==='humanPrivacyForget'?f.human.id:f.original.memoryId,revision:2}]};
@@ -69,7 +70,7 @@ for(const cause of ['humanPrivacyForget','humanCorrection','humanInvalidation','
  if(cause==='memoryConsent')await f.api('/api/runtime/v1/memory',{...f.owner,enabled:false,expectedRevision:1});
  if(cause==='sharedAudience')await f.api('/api/runtime/v1/audience',{mode:'shared',seconds:300});
  release();assert.doesNotMatch(await(await pending).text(),/LATE_ADVICE_MEMORY_PROSE/);
- f.internals.providers.inference={async*generate(input){f.requests.push(input);yield {kind:'text',text:'Safe new reply'};yield {kind:'done'};}};await(await f.reply()).text();assert.doesNotMatch(f.requests.at(-1)!.sections.find(s=>s.kind==='preparedMemory')!.content,/The advised gate attempt remained unresolved/);
+ f.internals.providers.inference=conversationFixtureProvider({async*generate(input){f.requests.push(input);yield {kind:'text',text:'Safe new reply'};yield {kind:'done'};}});await(await f.reply()).text();assert.doesNotMatch(f.requests.at(-1)!.sections.find(s=>s.kind==='preparedMemory')!.content,/The advised gate attempt remained unresolved/);
  if(['humanPrivacyForget','humanCorrection','humanInvalidation','helpForget','originalPrivacyForget'].includes(cause)){
   assert.equal(f.internals.database.connection.prepare('SELECT content FROM memories WHERE id=?').get(f.published.memoryId!)!.content,'');assert.equal(f.internals.database.connection.prepare('SELECT payload_json FROM game_experience_episodes WHERE episode_id=?').get(f.derived.episodeId)!.payload_json,null);assert.equal(f.internals.database.connection.prepare('SELECT source_json FROM game_episode_advice_sources WHERE episode_id=?').get(f.derived.episodeId)!.source_json,null);assert.deepEqual(f.app.publishGameEpisode(f.derived),{state:'unavailable',memoryId:null});
  }

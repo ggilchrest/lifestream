@@ -569,19 +569,24 @@ test('effective resource limits tighten sampling and count ingress plus replacem
   h.visual.close();
 });
 
-test('queued deadlines include waiting and dispose without waiting for an unresponsive model', async () => {
+test('queued deadlines include waiting and dispose without waiting for an unresponsive model', async t => {
+  t.mock.timers.enable({apis:['setTimeout']});
   let calls=0;
   const never:VisualPerceptionProvider={...provider,interpret:()=>{calls++;return new Promise(()=>{});}};
   const h=harness(never,()=>true,{deadlineMs:100}), first=h.begin(scope('first-deadline'));
   h.advance(20);
   const running=h.visual.submit(first.target,first.leaseId,'endpoint-clock',[h.frame(first.mappingId,0)],'first');
-  await new Promise(resolve=>setTimeout(resolve,20));
+  t.mock.timers.tick(20);await Promise.resolve();
   const next=h.begin(scope('queued-deadline'));
   h.advance(20);
-  const started=performance.now();
   const queued=h.visual.submit(next.target,next.leaseId,'endpoint-clock',[h.frame(next.mappingId,0)],'queued');
+  let settled=false;void queued.completion.then(()=>{settled=true;});
+  // Control timer delivery and the already injected owner clock together:
+  // contention cannot turn scheduler lateness into a second queue budget.
+  h.advance(99);t.mock.timers.tick(99);await Promise.resolve();
+  assert.equal(settled,false,'queued work keeps its original 100ms deadline');
+  h.advance(1);t.mock.timers.tick(1);
   assert.equal((await queued.completion).reason,'deadline');
-  assert.ok(performance.now()-started < 170,'queue wait cannot gain a second deadline budget');
   assert.equal(h.visual.resourceUsage().sessions.find(item=>item.sessionId===next.target.sessionId)?.rawBytes,0);
   assert.equal(calls,1);
   await running.completion;
