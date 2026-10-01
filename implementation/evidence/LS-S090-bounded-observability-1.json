@@ -1,0 +1,166 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "sliceStatus": "inProgress",
+  "component": "bounded in-memory trace outbox/exporter lifetime and truthful acknowledgment",
+  "componentStatus": "verified",
+  "recordedAt": "2026-10-01T02:19:21.320567Z",
+  "sourceRevision": "27795da9cd9e86617c21bede23a7b6b01b506a91",
+  "sourceFiles": [
+    "packages/runtime/src/observability/outbox.ts",
+    "packages/runtime/src/observability/exporter.ts",
+    "packages/runtime/test/observability.test.ts",
+    "packages/runtime/test/observability-exporter.test.ts",
+    "docs/visual-conversation-acceptance.md"
+  ],
+  "ownedOperation": {
+    "operation": "S090 inherited bounded trace queue/exporter repair exact-revision full source suite",
+    "sourceRevision": "27795da9cd9e86617c21bede23a7b6b01b506a91",
+    "startedAt": "2026-10-01T02:16:37.158412+00:00",
+    "wrapperPid": 11537,
+    "log": "/tmp/tifa-s090-bounded-observability-full.log",
+    "status": "completed",
+    "childPid": 11540,
+    "exitCode": 0,
+    "completedAt": "2026-10-01T02:18:27.948050+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "27795da9cd9e86617c21bede23a7b6b01b506a91",
+      "pass": 2693,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 110589.793875
+    },
+    "focused": {
+      "pass": 21,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 183.17525
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 5949.982208
+    },
+    "packetAndBootstrap": {
+      "pass": 48,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 16921.566959
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "node --test --experimental-strip-types packages/runtime/test/observability.test.ts packages/runtime/test/observability-exporter.test.ts packages/runtime/test/voice-pipeline.test.ts",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "node --test scripts/workspace.test.mjs scripts/qualify-visual-conversation.test.mjs",
+    "npm --prefix .private run validate",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual bounded in-memory queue snapshots, limits, duplicate/overflow statuses, exporter fencing/cancellation and deterministic receipt validation; existing speech pipeline callback tests remain passing.",
+    "scripted": "Scripted sinks, fake acknowledgments and injected failures. No actual PWCE export, durable trace retention, live native/capture/model/platform/Human or measured speech latency proof."
+  },
+  "semantics": [
+    "Reference outbox128events/1MiB/32KiB per event; bounded plain data snapshot rejects accessors/proxies/code/cycles/nonfinite or oversized data before queueing. Full queue refuses new events without displacing existing; close clears private queue. Status never claims durable/complete history.",
+    "Exporter defaults1024pending/1MiB/32KiB, bounded1024 recent completed IDs and original deadline maximum3seconds. Coarse existing key redaction applied at enqueue and bytes rechecked after expansion; no semantic privacy certification or schema/source authority granted.",
+    "Single-flight fence precedes synchronous sink entry, including reentrant flush. Deadline aborts and returns deferred, quarantines replacement fanout until original sink settles, fences late acknowledgments. Close clears/aborts; explicit retry after settlement keeps exact redacted-batch SHA256 identity.",
+    "Closed bounded receipt validates UTC, actual batch membership and accepted/rejected disjointness. Omitted IDs remain pending and partial; wrong IDs/duplicates/invalid receipts cannot advance high-water. High-water is maximum accepted sequence, not contiguous whole-history proof.",
+    "Optional AbortSignal second sink parameter does not change existing batch envelope. No transport enabled, durable store/retention introduced or authority changed. JavaScript Promise assimilation and trusted sink execution are outside data snapshot certification."
+  ],
+  "initialFailures": [
+    {
+      "log": "tifa-s090-bounded-observability-focused-initial-failed.log",
+      "reason": "Regression from microtask sink entry; restored existing synchronous entry while installing fence first."
+    },
+    {
+      "log": "tifa-s090-bounded-observability-focused-promise-probe-failed.log",
+      "reason": "Malicious proxy trapped Promise then assimilation before receipt validation; fixture distinguishes trusted Promise boundary from field-free proxy data rejection."
+    }
+  ],
+  "limitations": [
+    "In-memory bounded queue and recent dedup only, not durable custody, eventual delivery, canonical trace/source validation, semantic privacy proof or complete source history. Actual capture/perception/native lifecycle joins, durable trace policy binding and real joined qualification remain partial.",
+    "S093 image/question route, actual configured image-capable model/data/resources, reviewed game/build/save/Linux/Windows GUI and final package/recovery/model/performance/Human remain open.",
+    "Primary S066/fullLS-TEST084 and original24S083/S084/iPhone acceptance retained. Selected-model callback/causal failures and900msmedian/1500msp95onset targets not waived; no unchanged failed studies rerun.",
+    "Installed candidate/services/Telegram/backup unchanged. No activation/game/save/outbound effect, installation/provider change/deploy/push/publication/new private export; generic memory amendment proposed/unimplemented."
+  ],
+  "nextAction": "Continue existing S093 screenshot-help source completion: add bounded optional existing-channel image transport with default-off separate image setup, truthful acceptance versus delivery and no root activation; inspect existing delivery/attachment authority before any source binding. Actual recipient/contact-hours/privacy/native/model/platform/Human setup remain separately required. Generic memory-selection amendment stays proposed.",
+  "logDigests": {
+    "tifa-s090-bounded-observability-browser.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-browser.log",
+      "sha256": "f478d89d62435ffdda7df88c69b7e769ed089a36274defa19d4cc10e07ead028",
+      "bytes": 23871
+    },
+    "tifa-s090-bounded-observability-build.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-build.log",
+      "sha256": "a818c22d26760a7c5f6c120067d3e3200e9b276ee252b15b7037cc90e8398698",
+      "bytes": 1074
+    },
+    "tifa-s090-bounded-observability-diff.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-bounded-observability-focused-initial-failed.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-focused-initial-failed.log",
+      "sha256": "84e2e7005362fd8fad856b4cb8e8df51829ece657b1095f7607d5809a730eaf8",
+      "bytes": 1558
+    },
+    "tifa-s090-bounded-observability-focused-promise-probe-failed.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-focused-promise-probe-failed.log",
+      "sha256": "9ec0e439e1ca253601e5d609c1f9e25e8ae9821a5c8b102288d473a453bedda0",
+      "bytes": 3185
+    },
+    "tifa-s090-bounded-observability-focused.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-focused.log",
+      "sha256": "d120a2567b5c5d4b58b3a793317dba4a9d0ebb180d770cade04360553c93f0f0",
+      "bytes": 2292
+    },
+    "tifa-s090-bounded-observability-full.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-full.log",
+      "sha256": "a3b35cf88f4909e16d682864128a939f82b0dc9b0000a06222cb7172cd2f2a35",
+      "bytes": 286245
+    },
+    "tifa-s090-bounded-observability-lint.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-bounded-observability-packet.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-packet.log",
+      "sha256": "481d5486a02d73b34aefc808ef2d33df1440732abe7203f2a2fac42f9dc3b167",
+      "bytes": 4521
+    },
+    "tifa-s090-bounded-observability-private.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-private.log",
+      "sha256": "16c06844888ea0f1e8056e93b6e158c7b5508a475a24765957607134b62b8c13",
+      "bytes": 28899
+    },
+    "tifa-s090-bounded-observability-typecheck.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-bounded-observability-workspace.log": {
+      "path": "/tmp/tifa-s090-bounded-observability-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
