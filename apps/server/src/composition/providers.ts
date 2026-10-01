@@ -1,5 +1,6 @@
 import type { RuntimeConfig } from "../config/schema.js";
 import type { InferenceProvider } from "@lifestream/runtime/inference";
+import {buildCanonicalPrompt} from "@lifestream/runtime/inference/prompt";
 import { FixtureInferenceProvider } from "@lifestream/runtime/inference/fixture";
 import type { SpeechToTextProvider } from "@lifestream/runtime/voice";
 import { MoonshineSpeechProvider } from "@lifestream/providers-moonshine";
@@ -58,6 +59,7 @@ const descriptors: Record<string, ProviderDescriptor> = {
   unavailable: { implementation: "none", revision: "none", status: "unavailable", fixture: false, reason: "provider is explicitly unavailable in the selected profile" },
   "nemo-speech": { implementation: "@lifestream/providers-nemo-speech", revision: "workspace", status: "unavailable", fixture: false, reason: "provider is not configured for this runtime profile" },
   "moonshine-mlx": { implementation: "@lifestream/providers-moonshine", revision: "390624ed33d594443aa4aa221f5b9f283b545b5a", status: "unavailable", fixture: false, reason: "local Moonshine model has not been probed" },
+  "llama-cpp-local": { implementation: "@lifestream/providers-sglang:llama.cpp", revision: "operator-pinned", status: "unavailable", fixture: false, reason: "local llama.cpp service has not been probed" },
   "ai5090-development": { implementation: "@lifestream/providers-sglang", revision: "319f741cce68d7914884900c138a1fbb70a42f30", status: "unavailable", fixture: false, reason: "ai5090 development service has not been probed" },
   "ollama-mac-local": { implementation: "@lifestream/providers-ollama", revision: "sha256:124a03c347777e8e4e5955c33610ae01d9d90d8c2a718bfba069c498d5c7f3c9", status: "unavailable", fixture: false, reason: "local Ollama model has not been probed" },
   voxcpm: { implementation: "@lifestream/providers-voxcpm", revision: "workspace", status: "unavailable", fixture: false, reason: "provider is not configured for this runtime profile" },
@@ -92,6 +94,7 @@ export class ProviderRegistry {
     }
     if (config.providers.inference === "fixture") this.inference = new FixtureInferenceProvider();
     if (config.providers.inference === "ai5090-development" && config.inferenceProfile) this.inference = new SglangInferenceProvider({ endpoint: config.inferenceProfile.endpoint, model: config.inferenceProfile.servedModelName, ...(process.env.LIFESTREAM_INFERENCE_API_KEY ? { apiKey: process.env.LIFESTREAM_INFERENCE_API_KEY } : {}) });
+    if (config.providers.inference === "llama-cpp-local" && config.inferenceProfile) this.inference = new SglangInferenceProvider({ endpoint: config.inferenceProfile.endpoint, model: config.inferenceProfile.servedModelName, protocol: "llama.cpp", ...(process.env.LIFESTREAM_INFERENCE_API_KEY ? { apiKey: process.env.LIFESTREAM_INFERENCE_API_KEY } : {}) });
     if (config.providers.inference === "ollama-mac-local" && config.inferenceProfile) this.inference = new OllamaInferenceProvider({ endpoint: config.inferenceProfile.endpoint, model: config.inferenceProfile.servedModelName, contextLength: config.inferenceProfile.contextLength });
     if (config.providers.stt === "moonshine-mlx" && config.sttProfile) this.stt = new MoonshineSpeechProvider({ baseUrl: config.sttProfile.endpoint, runtimeRevision: config.sttProfile.runtimeVersion, modelRevision: config.sttProfile.modelRevision, modelArtifactDigest: config.sttProfile.modelArtifactDigest, mappingRevision: config.sttProfile.mappingRevision });
     if (config.providers.stt === "nemo-speech" && config.sttProfile) this.stt = new NemoSpeechProvider({ baseUrl: config.sttProfile.endpoint, model: config.sttProfile.model, language: config.sttProfile.language, webSocketFactory: createNemoSocket });
@@ -131,13 +134,13 @@ if (config.providers.tts === "voxcpm" && config.ttsProfile) this.tts = new VoxCp
   }
   private async probeInference(timeoutMs: number): Promise<void> {
     const current = this.providers.inference;
-    if (!current || current.id !== "inference" || !this.config.inferenceProfile || !["ai5090-development", "ollama-mac-local"].includes(this.config.providers.inference)) return;
+    if (!current || current.id !== "inference" || !this.config.inferenceProfile || !["ai5090-development", "llama-cpp-local", "ollama-mac-local"].includes(this.config.providers.inference)) return;
     const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const ollama = this.config.providers.inference === "ollama-mac-local";
       const apiKey = process.env.LIFESTREAM_INFERENCE_API_KEY;
-      if (!ollama && !apiKey) { this.providers.inference = Object.freeze({ ...current, status: "unavailable", reason: "Inference credential is not loaded; start the conversation connection launcher." }); return; }
-      const response = await fetch(`${this.config.inferenceProfile.endpoint.replace(/\/$/u, "")}${ollama ? "/api/tags" : "/v1/models"}`, { signal: controller.signal, ...(!ollama ? { headers: { authorization: `Bearer ${apiKey}` } } : {}) });
+      if (this.config.providers.inference === "ai5090-development" && !apiKey) { this.providers.inference = Object.freeze({ ...current, status: "unavailable", reason: "Inference credential is not loaded; start the conversation connection launcher." }); return; }
+      const response = await fetch(`${this.config.inferenceProfile.endpoint.replace(/\/$/u, "")}${ollama ? "/api/tags" : "/v1/models"}`, { signal: controller.signal, ...(!ollama && apiKey ? { headers: { authorization: `Bearer ${apiKey}` } } : {}) });
       let healthy = response.ok;
       if (healthy && ollama) {
         const payload = await response.json() as { models?: Array<{ name?: string; model?: string; digest?: string }> };
@@ -147,6 +150,11 @@ if (config.providers.tts === "voxcpm" && config.ttsProfile) this.tts = new VoxCp
       if (healthy && !ollama) {
         const payload = await response.json() as { data?: Array<{ id?: string }> };
         healthy = payload.data?.some(model => model.id === this.config.inferenceProfile?.servedModelName) === true;
+      }
+      if (healthy && this.config.providers.inference === "llama-cpp-local") {
+        const canonical = buildCanonicalPrompt({assistantId:"readiness-fixture",sessionId:"readiness-fixture",interactionId:"readiness-fixture",endpointId:null,userInput:"readiness",deadlineAt:new Date(Date.now()+timeoutMs).toISOString()});
+        const measured = await this.inference!.tokenize!(canonical, { signal: controller.signal });
+        healthy = measured.identity === "selected-model-tokenizer:" + this.config.inferenceProfile.servedModelName;
       }
       const { reason: _previousReason, ...base } = current;
       this.providers.inference = Object.freeze({ ...base, status: healthy ? "healthy" : "unavailable", ...(healthy ? {} : { reason: response.ok ? "configured inference model identity changed or is not installed" : `inference authentication/readiness returned HTTP ${response.status}` }) });

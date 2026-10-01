@@ -17,20 +17,28 @@ const validCanonicalRequest = (request: InferenceRequest): boolean => {
 const messagesFor=(request:InferenceRequest)=>[{role:'system',content:request.sections.slice(0,4).map(s=>`[${s.kind}; trusted]\n${s.content}`).join('\n\n')},{role:'user',content:request.sections.slice(4).map(s=>`[${s.kind}; untrusted]\n${s.content}`).join('\n\n')}];
 const directRequest=(request:InferenceRequest)=>request.sections.some(s=>s.kind==='policy'&&s.trusted&&['policy:v1','policy:spoken-v1'].includes(s.sourceRef));
 
-export type SglangConfig = { endpoint: string; model: string; apiKey?: string; maxResponseBytes?: number };
+export type SglangConfig = { endpoint: string; model: string; protocol?: "sglang" | "llama.cpp"; apiKey?: string; maxResponseBytes?: number };
 
 export class SglangInferenceProvider implements InferenceProvider {
   private readonly config: SglangConfig;
   constructor(config: SglangConfig) { this.config = config; }
   async tokenize(input:InferenceRequest|string,context:ProviderCallContext):Promise<{count:number;identity:string}>{
     if(typeof input!=='string'&&(!validCanonicalRequest(input)||input.executionMode==='replay'))throw Error('Invalid tokenization request.');
-    const body=typeof input==='string'?{model:this.config.model,prompt:input,add_special_tokens:false}:{model:this.config.model,messages:messagesFor(input),...(directRequest(input)?{chat_template_kwargs:{enable_thinking:false}}:{})};
+    const llama=this.config.protocol==='llama.cpp';
+    const path=llama?(typeof input==='string'?'/tokenize':'/v1/chat/completions/input_tokens'):'/v1/tokenize';
+    const body=llama?(typeof input==='string'?{content:input,add_special:false,parse_special:false}:this.chatBody(input)):typeof input==='string'?{model:this.config.model,prompt:input,add_special_tokens:false}:{model:this.config.model,messages:messagesFor(input),...(directRequest(input)?{chat_template_kwargs:{enable_thinking:false}}:{})};
     if(Buffer.byteLength(JSON.stringify(body))>131072)throw Error('Tokenization input bound exceeded.');
-    const signal=AbortSignal.any([context.signal,AbortSignal.timeout(10000)]),response=await fetch(this.config.endpoint.replace(/\/$/u,'')+'/v1/tokenize',{method:'POST',headers:{'content-type':'application/json',...(this.config.apiKey?{authorization:`Bearer ${this.config.apiKey}`}:{})},body:JSON.stringify(body),signal});
+    const signal=AbortSignal.any([context.signal,AbortSignal.timeout(10000)]),response=await fetch(this.config.endpoint.replace(/\/$/u,'')+path,{method:'POST',headers:{'content-type':'application/json',...(this.config.apiKey?{authorization:`Bearer ${this.config.apiKey}`}:{})},body:JSON.stringify(body),signal});
     if(!response.ok||!response.body)throw Error('Selected tokenizer unavailable.');const chunks:Uint8Array[]=[];let size=0;for await(const chunk of response.body){size+=chunk.length;if(size>262144)throw Error('Tokenizer response bound exceeded.');chunks.push(chunk);}const parsed=JSON.parse(Buffer.concat(chunks).toString());
+    if(llama){
+      const count=typeof input==='string'?(Array.isArray(parsed.tokens)&&parsed.tokens.every((x:unknown)=>Number.isInteger(x)&&Number(x)>=0)?parsed.tokens.length:undefined):parsed.input_tokens;
+      if(!Number.isSafeInteger(count)||count<0||count>131072||(typeof input!=='string'&&parsed.object!=='response.input_tokens'))throw Error('Invalid selected token count.');
+      return {count,identity:'selected-model-tokenizer:'+this.config.model};
+    }
     if(!Number.isInteger(parsed.count)||parsed.count<0||!Array.isArray(parsed.tokens)||parsed.count!==parsed.tokens.length||!parsed.tokens.every((x:unknown)=>Number.isInteger(x)))throw Error('Invalid selected token count.');
     return {count:parsed.count,identity:'selected-model-tokenizer:'+this.config.model};
   }
+  private chatBody(request:InferenceRequest){return {model:this.config.model,stream:true,...(request.maximumOutputTokens===undefined?{}:{max_tokens:request.maximumOutputTokens}),...(directRequest(request)?{chat_template_kwargs:{enable_thinking:false}}:{}),messages:messagesFor(request)};}
   async *generate(request: InferenceRequest, context: ProviderCallContext): AsyncIterable<InferenceChunk> {
     if (request.executionMode === "replay") { yield { kind: "error", error: { code: "replay_live_provider_forbidden", message: "live inference is unavailable during replay" } }; return; }
     if (!validCanonicalRequest(request)) { yield { kind: "error", error: { code: "invalid_canonical_request", message: "inference requires the ordered canonical sections and matching trusted-source manifest" } }; return; }
@@ -44,8 +52,7 @@ export class SglangInferenceProvider implements InferenceProvider {
     try {
       // Runtime-owned typed and spoken prompts select the supported direct-answer mode.
       // This is a per-request mapping; untrusted text cannot change decoding or deadlines.
-      const direct=directRequest(request),messages=messagesFor(request);
-      const response = await fetch(`${this.config.endpoint.replace(/\/$/u, "")}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json", ...(this.config.apiKey ? { authorization: `Bearer ${this.config.apiKey}` } : {}) }, body: JSON.stringify({ model: this.config.model, stream: true, ...(request.maximumOutputTokens===undefined?{}:{max_tokens:request.maximumOutputTokens}), ...(direct?{chat_template_kwargs:{enable_thinking:false}}:{}), messages }), signal: controller.signal });
+      const response = await fetch(`${this.config.endpoint.replace(/\/$/u, "")}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json", ...(this.config.apiKey ? { authorization: `Bearer ${this.config.apiKey}` } : {}) }, body: JSON.stringify(this.chatBody(request)), signal: controller.signal });
       if (!response.ok || !response.body) { yield { kind: "error", error: { code: "inference_unavailable", message: `inference service returned HTTP ${response.status}` } }; return; }
       reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = ""; let emitted = 0; const max = this.config.maxResponseBytes ?? 64_000;
       for (;;) {
