@@ -1,5 +1,32 @@
 # Visual conversation qualification
 
+The existing generic trace outbox/exporter now bounds retained event count,
+encoded bytes, individual snapshots and recent completion IDs. Overflow refuses
+the new event and reports incomplete coverage while retaining earlier queued
+evidence; queue admission does not call a sink. Default outbox limits are 128
+events/1 MiB; exporter limits are 1024 pending events/1 MiB, 32 KiB per event,
+1024 recent completion IDs and at most 500 events per batch. These are finite
+software limits, not a new durable retention policy or measured heap/latency
+qualification. A bounded recent dedup ledger is not perpetual source history.
+
+Exporter publication remains single-flight, including reentrant sinks. Its
+three-second maximum deadline supplies cancellation and quarantines an
+unsettled sink; no replacement/retry can accumulate abandoned calls. A late
+receipt cannot consume queued sources. Explicit retry after actual settlement
+uses an idempotency key for the exact redacted batch, rather than a possibly
+colliding sequence range. Receipt validation matches distinct acknowledged or
+rejected IDs to that batch; omitted IDs remain pending and cannot establish
+whole-batch acceptance. Shutdown clears queued data and fences late receipts.
+
+Plain-data snapshots do not invoke data getters or custom serialization hooks.
+The sink and its Promise execution remain trusted code, subject to adapter
+isolation where needed. Existing key-based redaction is applied at actual enqueue
+as well as mapping; it does not certify semantic privacy, current permission or
+source truth. Source owners still supply qualified redacted data. Sink acceptance
+is telemetry receipt, never perception, evidence custody, world truth or effect
+authority. No export route, durable store or installed configuration is enabled
+by this repair; full joined source/platform qualification remains separate.
+
 Successful scoped visual forgetting can donate a minimal original-operation
 receipt to the same bounded restricted diagnostic journal. The source captures
 the actual mutation UUID in the existing transaction and brands provenance only
