@@ -1,0 +1,158 @@
+{
+  "schemaVersion": "1.0.0",
+  "slice": "LS-S090",
+  "sliceStatus": "inProgress",
+  "component": "original successful scoped visual forget-to-minimal erasure projection and isolated historical replay",
+  "componentStatus": "verified",
+  "recordedAt": "2026-10-01T01:47:06.291812Z",
+  "sourceRevision": "ae9d021c5633ed244547f2b19520b59205125728",
+  "sourceFiles": [
+    "apps/server/src/runtime/automatic-memory.ts",
+    "apps/server/src/runtime/turn-context-trace.ts",
+    "apps/server/src/runtime/visual-memory-candidate-evidence.ts",
+    "apps/server/test/visual-memory-erasure-evidence.test.ts",
+    "packages/storage-sqlite/src/visual-memory.ts",
+    "docs/visual-conversation-acceptance.md"
+  ],
+  "ownedOperation": {
+    "operation": "S090 original scoped forget-to-minimal erasure projection and isolated replay exact-revision full source suite",
+    "sourceRevision": "ae9d021c5633ed244547f2b19520b59205125728",
+    "startedAt": "2026-10-01T01:42:55.052164+00:00",
+    "wrapperPid": 4168,
+    "log": "/tmp/tifa-s090-erasure-projection-full.log",
+    "status": "completed",
+    "childPid": 4172,
+    "exitCode": 0,
+    "completedAt": "2026-10-01T01:44:46.657599+00:00"
+  },
+  "verification": {
+    "fullSource": {
+      "revision": "ae9d021c5633ed244547f2b19520b59205125728",
+      "pass": 2680,
+      "fail": 0,
+      "skip": 1,
+      "durationMs": 111408.928709
+    },
+    "focused": {
+      "pass": 105,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1566.663
+    },
+    "browserSource": {
+      "pass": 77,
+      "fail": 0,
+      "skip": 86,
+      "durationMs": 5849.553083
+    },
+    "packetAndBootstrap": {
+      "pass": 48,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 14489.121917
+    },
+    "privateValidation": {
+      "pass": 365,
+      "fail": 0,
+      "structuralCheck": "pass"
+    },
+    "typecheck": "pass",
+    "build": "pass",
+    "lint": "pass",
+    "workspace": "pass",
+    "diffCheck": "pass"
+  },
+  "commands": [
+    "pnpm typecheck",
+    "pnpm build",
+    "pnpm lint",
+    "node --test --test-concurrency=4 --experimental-strip-types apps/server/test/visual-memory-erasure-evidence.test.ts apps/server/test/visual-memory-correction-evidence.test.ts apps/server/test/visual-memory-candidate-evidence.test.ts apps/server/test/turn-context-trace.test.ts packages/storage-sqlite/test/visual-mutation-identities.test.ts",
+    "pnpm test",
+    "pnpm test:browser-surface",
+    "node --test scripts/workspace.test.mjs scripts/qualify-visual-conversation.test.mjs",
+    "npm --prefix .private run validate",
+    "node scripts/workspace.mjs check",
+    "git diff --check"
+  ],
+  "proofKinds": {
+    "real": "Actual existing SQLite scoped source/memory erasure transaction and minted original mutation UUID, successful commit vs rollback, exact tombstone/event checks, privacy removal and owner/consent/source/clock corruption fences. Asynchronous published record-change envelope and pure replay leave actual storage unchanged.",
+    "scripted": "Image observations, transformation estimates, host environment and authenticated owner/setup values synthetic. No actual visual model, native game/control/save, message/image delivery, live hardware, selected-model/performance or Human proof."
+  },
+  "semantics": [
+    "Original forget method delegates to the same transaction. Optional original source reader validates actual typed projection/owner/revision before erasure, captures the UUID minted inside retireVisualProjections, brands only after successful commit and actual tombstone checks. Failed transaction, foreign/stale scope, pseudo trigger UUID and factory/copied/proxy/legacy data produce no provenance.",
+    "Unknown/corrupt projection or revision, source-only episodes and missing actual host environment never block original privacy erasure or receive fabricated values. Erasure source remains original-operation-only; a different repository handle or later post-restart reader cannot reconstruct it.",
+    "Minimal receipt keeps actual opaque memory/mutation/Assistant IDs, revisions/time/source revision and host environment. Background conversation/session/endpoint null. No erased relationship/episode/family/scene/Human-entry data or new durable store/retention. Ephemeral WeakMap original actor binding checks existing minimal tombstone; it never reconstructs erased relationship identity.",
+    "Prior candidate/activation/correction diagnostics retire before new asynchronous erasure projection. Existing128pending/128retained and60second dual-clock bounds remain; original event time caps erasure lifetime, reset/close/revocation/source corruption fence inspection. Actual minimal source reread after final host scope callbacks. No recall, independent reinforcement or effect permission.",
+    "Published2.0 memory.lifecycleChanged projects actual record change; destructive forgetting is not relabeled as canonical source-preserving invalidate. Genuine memoryUUID/owner chronology join is explicitly partial: deleted episode/family/context, intermediate history and reply-fencing proof remain missing. Pure isolated replay retains opaque original identity/time/artifacts in a new environment, no source restoration/provider/effect/storage/learning or normal-source provenance."
+  ],
+  "initialFailures": [
+    {
+      "log": "tifa-s090-erasure-projection-focused-initial-failed.log",
+      "reason": "New changed-callback fixture recursively invoked its own policy revocation; fixed one-shot callback, production policy/callback behavior unchanged."
+    }
+  ],
+  "limitations": [
+    "Scoped live forget projection only. Direct MemoryRecord forgetting, policy/expiry/restore erasure and post-restart source reconstruction do not gain original scoped-operation provenance. Full capture/perception/native joins, durable trace integration and real joined qualification remain partial.",
+    "No actual compatible image provider/data policy/resources, camera setup, reviewed native game/build/save/Linux/Windows GUI, permitted screenshot-help route/reply/outcome, measured model/speech/performance or Human qualification follows from source tests.",
+    "Primary S066/fullLS-TEST084, original24S083/S084 and iPhone Human acceptance, selected-model callback/causal failures and900msmedian/1500msp95onset targets retained; no unchanged failed studies rerun.",
+    "Installed candidate/services/Telegram/encrypted backup unchanged. No live activation/control/save/outbound effect, installation/provider selection/deployment/push/publication/new private export. Generic memory-selection amendment separately proposed/unimplemented."
+  ],
+  "nextAction": "Reconcile the finite must-have integration remainder against actual existing trace/native/provider owners; continue concrete eligible source bindings using existing permission/retention policies. Do not invent missing physical/native/provider setup, capture/game/help authority, durable trace retention or unqualified original histories. Generic memory-selection amendment remains separately proposed.",
+  "logDigests": {
+    "tifa-s090-erasure-projection-browser.log": {
+      "path": "/tmp/tifa-s090-erasure-projection-browser.log",
+      "sha256": "c0bd2d850cd7f1f834408e9226f0095c8abc69d9eb9c9fc8310c12cd45a24d97",
+      "bytes": 23842
+    },
+    "tifa-s090-erasure-projection-build.log": {
+      "path": "/tmp/tifa-s090-erasure-projection-build.log",
+      "sha256": "14b2de3ae2388bd403a73838e989c793b470a54b69d927582de20898379a42aa",
+      "bytes": 1074
+    },
+    "tifa-s090-erasure-projection-diff.log": {
+      "path": "/tmp/tifa-s090-erasure-projection-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "tifa-s090-erasure-projection-focused-initial-failed.log": {
+      "path": "/tmp/tifa-s090-erasure-projection-focused-initial-failed.log",
+      "sha256": "704c3b48b522f962afebf7f8b376f5d6095df7a5e2c7deb28847683e843c0a96",
+      "bytes": 10028
+    },
+    "tifa-s090-erasure-projection-focused.log": {
+      "path": "/tmp/tifa-s090-erasure-projection-focused.log",
+      "sha256": "e893902126e2ecfbb264ed80bbbd0b3be481ee0ce4c08d3cc1173a6f9c5e9c25",
+      "bytes": 9970
+    },
+    "tifa-s090-erasure-projection-full.log": {
+      "path": "/tmp/tifa-s090-erasure-projection-full.log",
+      "sha256": "53c79c4eefec06fd3959199367c948dc46a22b487e499703813fd11fabc48443",
+      "bytes": 284682
+    },
+    "tifa-s090-erasure-projection-lint.log": {
+      "path": "/tmp/tifa-s090-erasure-projection-lint.log",
+      "sha256": "184cb2bdb6a4f79a5be6eda53f537e7f835697e6ea14e745547982259a6d0d65",
+      "bytes": 78
+    },
+    "tifa-s090-erasure-projection-packet.log": {
+      "path": "/tmp/tifa-s090-erasure-projection-packet.log",
+      "sha256": "f4f4adaddc2cdd3043701665616b446eb416e5a7395481f884e54adecf4bce88",
+      "bytes": 4532
+    },
+    "tifa-s090-erasure-projection-private.log": {
+      "path": "/tmp/tifa-s090-erasure-projection-private.log",
+      "sha256": "127fae6659c13aaf3ff694131f272a72083c8f0ac62bddad53627ca49f8449c3",
+      "bytes": 28873
+    },
+    "tifa-s090-erasure-projection-typecheck.log": {
+      "path": "/tmp/tifa-s090-erasure-projection-typecheck.log",
+      "sha256": "652cdd9c08c2005cfdfe8b57b837c1bbf9ad337e4961a19ec0d47873d7762f37",
+      "bytes": 384
+    },
+    "tifa-s090-erasure-projection-workspace.log": {
+      "path": "/tmp/tifa-s090-erasure-projection-workspace.log",
+      "sha256": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+      "bytes": 98
+    }
+  }
+}
