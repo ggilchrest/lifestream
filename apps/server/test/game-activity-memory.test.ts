@@ -111,7 +111,16 @@ test('source-bound game reflection publishes an uncertain continuation into an o
  f.internals.providers.inference=conversationFixtureProvider({tokenize:async()=>({count:40,identity:'scripted-tokenizer'}),async*generate(input){f.requests.push(input);if(input.scope.sessionId.startsWith('experience:')){const data=JSON.parse(input.sections.at(-1)!.content);yield {kind:'text',text:JSON.stringify({recordType:'reflectionResult',decision:'change',conclusion:'A past simulated attempt leaves an unresolved question.',items:[{id:'past-game-gate',expectedRevision:0,kind:'question',topic:'games',statement:'The recorded gate attempt did not cross; the cause is unknown.',nextStep:'Ask about the past game gate attempt.',uncertainty:'high',sourceRefs:data.sources.map((s:any)=>s.id),disposition:'open'}],changes:[]})};}else yield {kind:'text',text:'Scripted ordinary continuation.'};yield {kind:'done'};}});
  await f.api(path,{schemaVersion:'1.0.0',operation:'configure',expectedRevision:view.state.revision,enabled:true,frozen:false,retention:'sourceBound',topicPolicies:defaultTopics});await f.internals.experience.tick();f.advance(60001);await f.internals.experience.tick();
  view=await f.api(path);assert.equal(view.state.funnel.calls,1,JSON.stringify(view));assert.equal(view.state.funnel.published,1,JSON.stringify(view));assert.equal(view.state.items[0].uncertainty,'high');assert.equal(view.state.items[0].topic,'games');assert.ok(view.state.imprints.every((i:any)=>i.value===0));
- const response=await f.request('/api/runtime/v1/messages',{...f.owner,userInput:'What should we work on next?'});assert.match(await response.text(),/interaction.completed/);const prepared=f.requests.at(-1)!.sections.find(s=>s.kind==='preparedMemory')!.content;assert.match(prepared,/Ask about the past game gate attempt/);assert.equal(f.requests.at(-1)!.sections.length,9);
+ let prepared='';const attempts:{selected:boolean;reason:string;skips:number}[]=[];
+ for(let attempt=0;attempt<3;attempt++){
+  const before=f.internals.experience.repository.read(scope),response=await f.request('/api/runtime/v1/messages',{...f.owner,userInput:'What should we work on next?'});assert.match(await response.text(),/interaction.completed/);
+  prepared=f.requests.at(-1)!.sections.find(s=>s.kind==='preparedMemory')!.content;const state=f.internals.experience.repository.read(scope),selected=prepared.includes('Ask about the past game gate attempt');attempts.push({selected,reason:state.lastReason,skips:state.funnel.skips});
+  if(selected)break;
+  // A documented optional 10ms deadline miss is not a semantic reflection
+  // failure. Require its actual receipt before any finite retry.
+  assert.equal(state.lastReason,'selection_deadline_exceeded',JSON.stringify(attempts));assert.ok(state.funnel.skips>before.funnel.skips,JSON.stringify(attempts));
+ }
+ assert.match(prepared,/Ask about the past game gate attempt/,JSON.stringify(attempts));assert.equal(f.requests.at(-1)!.sections.length,9);
  await f.api('/api/runtime/v1/audience',{mode:'shared',seconds:300});await(await f.request('/api/runtime/v1/messages',{...f.owner,userInput:'What should we work on next?'})).text();assert.doesNotMatch(f.requests.at(-1)!.sections.find(s=>s.kind==='preparedMemory')!.content,/Ask about the past game gate attempt/);
  assert.equal(f.internals.database.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,0);
 });
