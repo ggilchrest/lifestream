@@ -1,5 +1,41 @@
 # Visual conversation qualification
 
+`SglangVisualPerceptionProvider` is an optional image transport through the existing
+configured SGLang endpoint/model. It is exported separately from ordinary text
+inference and is unavailable unless its host explicitly supplies current
+availability. That host must qualify actual image/structured-output support,
+provider-side raw logging/retention, data egress and bounded resource setup;
+a callback returning true or a model name supplies no such proof. Source/session
+permission, audience, capture leases and optional-work priority remain with the
+existing admission owner. The installed candidate and provider profiles are not
+changed or automatically enabled by this adapter.
+
+At most three admitted JPEG/PNG frames of 2 MiB each become purpose-bound inline
+image inputs, without owner history, user hints, hosted media URLs or normal
+conversation sections. The adapter permits one in-flight HTTP call, no retries
+or redirects, an 8,450,000-byte request and at most 32 KiB response (16 KiB default).
+It uses the original deadline, capped at three seconds, and cancellation; later
+availability loss withholds a result. Multiple/temporal input requires explicit
+configured support; unsupported temporal interpretation is reported in the
+request, never inferred from the model name.
+
+Closed, bounded model data maps frame indices to original host frame identifiers;
+the model cannot supply identity, leases or observation identifiers. Descriptions
+and tentative inferences remain untrusted, unknown confidence remains null, and
+visible-human counts retain field-of-view limitations without authentication or
+complete audience coverage. Wrong-model, tool-bearing, malformed UTF-8, excessive
+or truncated output is unusable. Structured output does not establish truth.
+
+Loopback scripted transport and real admission checks prove request/result
+mapping, refusal, cancellation and raw-buffer disposal only. They do not prove
+blind visual understanding, motion quality, actual provider raw-retention policy,
+heap/model workspace, physical capture, speech contention or latency. Inline
+transport strings are transient JavaScript objects; immediate secure erasure is
+not claimed. Qualify the actual configured backend and its caches/resources before
+providing availability, and retire the current source epoch on relevant setup or
+policy changes. Existing speech-onset targets and paired visual-performance gates
+remain open; ordinary replies never await this transport.
+
 The visual publication, turn observer and retained memory source provide distinct
 diagnostic receipts. `scripts/qualify-visual-conversation.mjs` correlates an already
 collected local snapshot and replays its redacted metadata in isolation:
