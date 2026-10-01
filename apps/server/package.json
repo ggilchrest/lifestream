@@ -17,7 +17,7 @@
     "@lifestream/providers-pwce": "workspace:*"
   },
   "scripts": {
-    "build": "../../node_modules/.bin/tsc -b && esbuild ../control-web/vad-source.js --bundle --format=esm --outfile=../control-web/vad-bundle.js",
+    "build": "node ../../scripts/build-server.mjs",
     "typecheck": "tsc -b --pretty false",
     "start": "node dist/index.js"
   },

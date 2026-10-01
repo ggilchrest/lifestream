@@ -6,7 +6,7 @@ test("workspace package exports remain explicit", async () => {
   const paths = ["packages/contracts/src/index.ts", "packages/runtime/src/index.ts", "packages/providers-fixture/src/index.ts", "packages/storage-sqlite/src/index.ts"];
   const sources = await Promise.all(paths.map((path) => readFile(path, "utf8")));
   assert.equal(sources[0]?.includes("createContractValidator"), true);
-  assert.deepEqual(sources.slice(1, 3), ["export {};\n", "export {};\n"]);
+  assert.deepEqual(sources.slice(1, 3).map(source => source.replace(/\r\n/g, "\n")), ["export {};\n", "export {};\n"]);
   assert.match(sources[3] ?? "", /export \{ Database \}/);
   assert.match(sources[3] ?? "", /export \{ MemoryRepository \}/);
 });
