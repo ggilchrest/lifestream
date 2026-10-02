@@ -52,18 +52,18 @@ class DesktopGameHostSessionBroker{
   const checked=this.#message('attach',attach),expiry=Date.parse(expiresAt);
   if(!checked||!Number.isFinite(expiry)||expiry>this.#now()+MAX_SESSION_MS||expiry<=this.#now()||!binding||!Number.isSafeInteger(binding.revision)||!/^([a-f0-9]{64})$/.test(binding.runtimeSourceRevision)||binding.endpoint?.endpointId!==checked.scope.contextBinding.endpointId||binding.endpoint?.ownership!=='personal'||binding.endpoint?.privacyClass!=='personal'||binding.endpoint?.health!=='healthy')throw fail();
   // Clone trusted nonsecret metadata; later caller mutation cannot broaden it.
-  this.#setup=JSON.parse(JSON.stringify({attach:checked,binding,expiresAt:expiry}));this.#state='starting';this.#emit();
+  this.#setup=JSON.parse(JSON.stringify({attach:checked,binding,expiresAt:expiry}));const startingGeneration=++this.#generation;this.#state='starting';this.#emit();
   const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),5000);timeout.unref?.();
   try{
    const authentication=await this.#get('/api/auth/v1/session',abort.signal);
    if(authentication.principalId!==checked.scope.principalId||authentication.sessionId!==checked.scope.contextBinding.sessionId||authentication.owner!==true||Date.parse(authentication.adminExpiresAt)<=this.#now()||typeof authentication.csrfToken!=='string'||authentication.csrfToken.length<32||authentication.csrfToken.length>256)throw fail();
-   const context=await this.#get('/api/runtime/v1/session-context',abort.signal);if(!this.#bindingMatches(context)||abort.signal.aborted||expiry<=this.#now())throw fail();
+   const context=await this.#get('/api/runtime/v1/session-context',abort.signal);if(!this.#bindingMatches(context)||abort.signal.aborted||expiry<=this.#now()||this.#state!=='starting'||this.#generation!==startingGeneration)throw fail();
    // Only trusted main retains this value; status and transport responses never
    // include it. Runtime polling uses ordinary auth and does not extend admin.
    this.#csrf=authentication.csrfToken;this.#state='active';const generation=++this.#generation;
    this.#timer=setTimeout(()=>void this.stop('deadline'),Math.max(1,expiry-this.#now()));this.#timer.unref?.();
-   this.#driver=await driverFactory(Object.freeze({attach:checked,fetchAuthenticated:(input,init)=>this.#fetch(input,init,generation),isScopeCurrent:()=>this.#current(generation)}));
-   if(typeof this.#driver?.fence!=='function')throw fail();if(!this.#current(generation)){await this.#driver.fence('scopeChanged');throw fail();}this.#emit();return this.status();
+   const driver=await driverFactory(Object.freeze({attach:checked,fetchAuthenticated:(input,init)=>this.#fetch(input,init,generation),isScopeCurrent:()=>this.#current(generation)}));
+   if(typeof driver?.fence!=='function')throw fail();if(!this.#current(generation)){await driver.fence('scopeChanged');throw fail();}this.#driver=driver;this.#emit();return this.status();
   }catch{await this.stop('unavailable');throw fail();}finally{clearTimeout(timeout);}
  }
  async #fetch(input,init,generation){

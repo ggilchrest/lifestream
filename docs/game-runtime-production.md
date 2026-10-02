@@ -131,3 +131,57 @@ episode, and a nonblank `retentionPolicyRef` at most2048 UTF-8 bytes. There is n
 automatic TTL default. Existing consent is reused; a policy reference is not
 fabricated. Source predicates, meaningful episode grounding, privacy, correction,
 forgetting and ordinary-save qualification retain their original owners.
+
+The Windows desktop launcher now creates and binds one trusted-main broker at
+startup on its fixed loopback origin. `Game → Check game host connection` and
+the read-only `lifestreamDesktop.gameHostReadiness()` API use the actual desktop
+partition's ordinary authenticated GETs. They return allowlisted session and
+endpoint metadata; neither starts an emulator, refreshes Human administration,
+exports a credential nor grants gameplay. `ready` describes authenticated owner
+session/context readiness. Native connection and typed backend attachment are
+reported separately. The renderer still receives no start/setup/filesystem API.
+
+The Windows package includes the public compiled contracts/native SDK, fixed
+vendor dependencies and reviewed Lua. Packaging verifies committed source
+inputs, builds the two dependency-related TypeScript projects, and inventories
+the copied SDK bytes. No owner configuration, private assets, ROM or save is
+bundled. macOS remains the generic endpoint shell; native game composition is
+Windows-only. The launcher explicitly shows its real window after loading.
+
+Starting requires explicit trusted launch arguments `--game-host-setup` and
+`--game-host-setup-sha256`, pointing to an operator-reviewed bounded JSON file
+outside the public package. `Game → Start approved game session` is disabled
+without that setup and never auto-starts. The closed descriptor has exactly:
+`schemaVersion` (`lifestream.desktop-game-host-setup.v1`), package `sourceRevision`,
+`approvalRef`, typed `attach`, exact session `binding`, UTC `expiresAt`, `paths`,
+`evidence`, and `native`. `paths` contains absolute `emulator`, `configFile`,
+`romFile`, and `frameDirectory`. `evidence` contains a fresh absolute `directory`
+and reviewed `sourceFiles` pins. `native` supplies explicit `port`,
+`connectionTimeoutMs`, `authenticationTimeoutMs`, `sessionDurationMs`, `bounds`,
+and `romSha1`. The Lua entry is fixed to this package's native directory, whose
+entry/peer/UTC files must be included in the approved pins. Setup must use an
+isolated ordinary-save copy and the already-qualified ordinary-speed config;
+the preserved original save is never the writable run directory.
+
+No consent or source/inference qualification is inferred from this file or its
+hash. Existing independent backend approval, source qualification and final
+capability entry remain required. Readiness must match the exact selected
+principal/session/endpoint/revision/runtime source before pairing or custody is
+created. Session duration is clipped to the finite descriptor expiry; at most
+ten minutes is accepted. Pairing is fresh, process-scoped and erased after
+authentication/attachment or failure. A changed setup fences the run. One
+composition consumes one start; failed/ended sessions are not silently retried.
+
+Composition startup waits for the real client's native authentication and typed
+backend attachment. Stop during pending authentication cannot reactivate the
+broker; stop during native startup fences the owned client. Driver termination,
+including a fulfilled termination promise, stops the broker. Exact-old-lease
+neutralization remains owned by the native driver; disabled status alone is not
+pause proof, save evidence or game progress.
+
+Replacing the currently running launcher requires a coordinated close/relaunch.
+The server cookie is deliberately session-only, so G must sign in again in the
+new native window and the new session's exact binding must be supplied to the
+approved finite setup. Candidate preparation and disposable-profile qualification
+do not alter the current desktop process/login. A successful fixture-authenticated
+packaged/native qualification is distinct from G's live joined acceptance.

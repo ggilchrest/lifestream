@@ -55,7 +55,10 @@ export class WindowsGameHostClient{
  private started=false;private failure:GameHostClientFailure|undefined;private shutdown:Promise<void>|undefined;
  private attachmentDeadline=0;private attachmentMono=0;private attachmentTimer:ReturnType<typeof setTimeout>|undefined;
  private accepted=0;private admissions=0;private detachAttempted=false;
+ private resolveReady!:()=>void;private rejectReady!:(error:Error)=>void;
+ readonly ready=new Promise<void>((resolve,reject)=>{this.resolveReady=resolve;this.rejectReady=reject;});
  constructor(input?:WindowsGameHostClientOptions){
+  void this.ready.catch(()=>{});
   if(!input)return;
   const attach=gameHostMessage('attach',input.attach),b=input.nativeBoundary;
   if(!attach||!b||b.providerRef!==attach.providerRef||!finite(b.maxDurationMs,1,120000)||
@@ -64,10 +67,10 @@ export class WindowsGameHostClient{
    !finite(input.httpTimeoutMs,1000,5000)||!finite(input.sessionDurationMs,1,600000)||!finite(input.shutdownTimeoutMs,1,5000))throw new GameHostClientError('unconfigured');
   this.options=Object.freeze({...input,attach,nativeBoundary:Object.freeze({...b})});
  }
- get snapshot(){return Object.freeze({configured:!!this.options,started:this.started,fenced:!!this.failure,reason:this.failure??null,backendUrl:WINDOWS_HOST_BACKEND_URL,admissionAttempts:this.admissions,acceptedIngress:this.accepted,activeCommandId:this.active?.command.commandId??null,pauseConfirmation:'unconfirmed',gameplayReady:false});}
+ get snapshot(){return Object.freeze({configured:!!this.options,started:this.started,fenced:!!this.failure,reason:this.failure??null,nativeConnected:!!this.native&&!this.failure,attached:!!this.attachment&&!this.failure,backendUrl:WINDOWS_HOST_BACKEND_URL,admissionAttempts:this.admissions,acceptedIngress:this.accepted,activeCommandId:this.active?.command.commandId??null,pauseConfirmation:'unconfirmed',gameplayReady:false});}
  close(){this.fence('closed');}
  private fence(reason:GameHostClientFailure){
-  if(this.failure)return;this.failure=reason;
+  if(this.failure)return;this.failure=reason;this.rejectReady(new GameHostClientError(reason));
   const context=Object.freeze({reason,activeCommand:this.active?.command??null,lastEnteredAction:this.lastEnteredAction});
   this.active?.controller.abort(new GameHostClientError(reason));this.controller.abort(new GameHostClientError(reason));
   if(this.attachmentTimer)clearTimeout(this.attachmentTimer);
@@ -164,7 +167,7 @@ export class WindowsGameHostClient{
    void opening.then(value=>{if(this.failure)try{value.close();}catch{}},()=>{});
    const connectionTimer=setTimeout(()=>this.fence('transportLost'),this.options.httpTimeoutMs);
    try{this.native=await bounded(opening,this.controller.signal);}finally{clearTimeout(connectionTimer);}this.check();
-   const attachment=await this.post('attach','attach',this.options.attach,'attachment',this.controller.signal);this.check();this.lease(attachment.expiresAt);this.attachment=attachment;
+   const attachment=await this.post('attach','attach',this.options.attach,'attachment',this.controller.signal);this.check();this.lease(attachment.expiresAt);this.attachment=attachment;this.resolveReady();
    for(;;){
     this.check();const started=performance.now(),event=await this.post('next','next',{protocol,attachmentId:this.attachment.attachmentId},'event',this.controller.signal);this.check();
     if(event.attachmentId!==this.attachment.attachmentId)throw new GameHostClientError('invalidMessage');

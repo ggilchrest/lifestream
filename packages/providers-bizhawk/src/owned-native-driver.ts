@@ -57,5 +57,5 @@ export function createOwnedWindowsGameHostDriver(options:OwnedWindowsGameHostDri
   }
  });
  const done=client.run();void done.catch(()=>{});
- return {fence:async()=>{client.close();await done.catch(()=>{});},done,evidence,get snapshot(){return Object.freeze({...client.snapshot,pauseConfirmed});}};
+ return {fence:async()=>{client.close();await done.catch(()=>{});},done,ready:client.ready,evidence,get snapshot(){return Object.freeze({...client.snapshot,pauseConfirmed});}};
 }

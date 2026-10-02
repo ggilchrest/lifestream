@@ -56,6 +56,12 @@ test('readiness checks the supplied partition and never exports credentials or s
 test('renderer IPC accepts only the exact main frame, contents and origin',()=>{
  const frame={url:origin+'/control/'},contents={mainFrame:frame},window={webContents:contents,isDestroyed:()=>false};assert.equal(trustedGameHostSender({sender:contents,senderFrame:frame},window,origin),true);assert.equal(trustedGameHostSender({sender:contents,senderFrame:{url:frame.url}},window,origin),false);assert.equal(trustedGameHostSender({sender:{},senderFrame:frame},window,origin),false);frame.url='https://example.org';assert.equal(trustedGameHostSender({sender:contents,senderFrame:frame},window,origin),false);
 });
+test('stop during pending authentication cannot reactivate the broker or create a driver',async()=>{
+ const f=fixture(),fetch=f.partition.fetch;let resume;
+ f.partition.fetch=async(url,init)=>{if(url.endsWith('/api/auth/v1/session'))await new Promise(resolve=>{resume=resolve;});return fetch(url,init);};
+ const started=f.start();await new Promise(resolve=>setImmediate(resolve));await f.broker.stop('stop');resume();
+ await assert.rejects(started);assert.equal(f.transport,undefined);assert.equal(f.broker.status().enabled,false);assert.equal(f.broker.status().authenticated,false);
+});
 
 test('only the current attachment can use the privileged transport',async()=>{
  const f=fixture();await f.start();try{await f.transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/attach',{method:'POST',body:JSON.stringify(f.attach)});const calls=f.calls.length;await assert.rejects(f.transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/next',{method:'POST',body:JSON.stringify({protocol,attachmentId:randomUUID()})}));await assert.rejects(f.transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/attach',{method:'POST',body:JSON.stringify(f.attach)}));assert.equal(f.calls.length,calls);}finally{await f.broker.stop();}
