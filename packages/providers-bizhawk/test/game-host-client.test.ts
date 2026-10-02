@@ -55,6 +55,24 @@ test('actual native readiness is established before attach without an early effe
  const unavailable=harness();unavailable.options.nativeBoundary.sourceAvailable=()=>false;
  await run(unavailable);assert.equal(unavailable.calls.length,0);assert.equal(unavailable.nativeCalls,0);
 });
+test('native startup can exceed HTTP deadline without extending HTTP requests',async()=>{
+ const h=harness(),open=h.options.openNative;h.options.nativeStartupTimeoutMs=2000;
+ h.options.openNative=async(...args)=>{await new Promise(r=>setTimeout(r,1100));return open(...args);};
+ const client=new WindowsGameHostClient(h.options),running=client.run();void running.catch(()=>{});
+ await client.ready;assert.equal(client.snapshot.nativeConnected,true);assert.equal(client.snapshot.attached,true);
+ client.close();await assert.rejects(running);
+ const stalled=harness();stalled.options.nativeStartupTimeoutMs=2000;stalled.handlers.attach=()=>new Promise(()=>{});
+ const timed=new WindowsGameHostClient(stalled.options);await assert.rejects(timed.run());assert.equal(timed.snapshot.reason,'transportLost');assert.equal(stalled.calls.length,1);
+});
+
+test('native startup deadline fences and closes a late connection before backend attach',async()=>{
+ const h=harness(),open=h.options.openNative;h.options.nativeStartupTimeoutMs=20;
+ h.options.openNative=async(...args)=>{await new Promise(r=>setTimeout(r,80));return open(...args);};
+ const client=new WindowsGameHostClient(h.options);await assert.rejects(client.run());await assert.rejects(client.ready);
+ await new Promise(r=>setTimeout(r,90));assert.equal(client.snapshot.reason,'transportLost');assert.equal(h.calls.length,0);assert.equal(h.closeCount,1);
+ for(const value of [0,22001,Infinity])assert.throws(()=>new WindowsGameHostClient({...h.options,nativeStartupTimeoutMs:value}));
+});
+
 for(const kind of ['observe','action']as const)test(kind+' admits exactly once before native I/O and validates original completion',async()=>{
  const h=harness(kind==='action'?action():observe()),client=await run(h);assert.deepEqual(h.order,['admit','native','result']);assert.equal(h.maxPolls,1);assert.equal(h.nativeCalls,1);assert.equal(h.closeCount,1);assert.equal(client.snapshot.acceptedIngress,1);assert.equal(client.snapshot.pauseConfirmation,'unconfirmed');assert.equal(h.calls.filter(x=>x.route==='admit').length,1);assert.equal(h.calls.filter(x=>x.route==='detach').length,1);
  const completion=h.calls.find(x=>x.route==='result')!.body;assert.deepEqual(h.calls.find(x=>x.route==='admit')!.body,{protocol,attachmentId:h.command.attachmentId,commandId:h.command.commandId,requestDigest:h.command.requestDigest});assert.equal(completion.requestDigest,gameHostDigest(h.request));assert.equal(completion.resultDigest,gameHostDigest(completion.result));assert.equal(completion.result.requestId,h.request.requestId);

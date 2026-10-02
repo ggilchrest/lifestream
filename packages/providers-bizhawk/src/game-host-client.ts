@@ -35,6 +35,9 @@ export interface WindowsGameHostClientOptions{
   * Completing this notification is not pause/neutralization evidence. */
  shutdownExactOldLease:(context:GameHostFenceContext)=>Promise<void>;
  httpTimeoutMs:number;
+ /** Local emulator boot, mutual authentication and GUI proof have their own
+  * finite budget. HTTP request deadlines remain independent. */
+ nativeStartupTimeoutMs?:number;
  sessionDurationMs:number;
  shutdownTimeoutMs:number;
 }
@@ -64,7 +67,7 @@ export class WindowsGameHostClient{
   if(!attach||!b||b.providerRef!==attach.providerRef||!finite(b.maxDurationMs,1,120000)||
    !['fetchAuthenticated','isScopeCurrent','sourceIsQualified','openNative','shutdownExactOldLease'].every(k=>typeof input[k as keyof WindowsGameHostClientOptions]==='function')||
    !['sourceAvailable','acceptObservation','acceptAction','reconcileEffect','admitRelease'].every(k=>typeof b[k as keyof GameAdapterBoundaryOptions]==='function')||
-   !finite(input.httpTimeoutMs,1000,5000)||!finite(input.sessionDurationMs,1,600000)||!finite(input.shutdownTimeoutMs,1,5000))throw new GameHostClientError('unconfigured');
+   !finite(input.httpTimeoutMs,1000,5000)||input.nativeStartupTimeoutMs!==undefined&&!finite(input.nativeStartupTimeoutMs,1,22000)||!finite(input.sessionDurationMs,1,600000)||!finite(input.shutdownTimeoutMs,1,5000))throw new GameHostClientError('unconfigured');
   this.options=Object.freeze({...input,attach,nativeBoundary:Object.freeze({...b})});
  }
  get snapshot(){return Object.freeze({configured:!!this.options,started:this.started,fenced:!!this.failure,reason:this.failure??null,nativeConnected:!!this.native&&!this.failure,attached:!!this.attachment&&!this.failure,backendUrl:WINDOWS_HOST_BACKEND_URL,admissionAttempts:this.admissions,acceptedIngress:this.accepted,activeCommandId:this.active?.command.commandId??null,pauseConfirmation:'unconfirmed',gameplayReady:false});}
@@ -165,7 +168,7 @@ export class WindowsGameHostClient{
    this.check(this.options.attach.scope,false);
    const opening=Promise.resolve().then(()=>this.options!.openNative(this.boundary(),{signal:this.controller.signal,isCurrent:scope=>{try{this.check(scope,false);return true;}catch{return false;}}}));
    void opening.then(value=>{if(this.failure)try{value.close();}catch{}},()=>{});
-   const connectionTimer=setTimeout(()=>this.fence('transportLost'),this.options.httpTimeoutMs);
+   const connectionTimer=setTimeout(()=>this.fence('transportLost'),this.options.nativeStartupTimeoutMs??this.options.httpTimeoutMs);
    try{this.native=await bounded(opening,this.controller.signal);}finally{clearTimeout(connectionTimer);}this.check();
    const attachment=await this.post('attach','attach',this.options.attach,'attachment',this.controller.signal);this.check();this.lease(attachment.expiresAt);this.attachment=attachment;this.resolveReady();
    for(;;){

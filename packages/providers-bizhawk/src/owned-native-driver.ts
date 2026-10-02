@@ -33,7 +33,7 @@ export function createOwnedWindowsGameHostDriver(options:OwnedWindowsGameHostDri
  let pauseConfirmed=false;
  let nativeStage='validated',nativeStartupFailure:string|null=null;
  const boundary:GameAdapterBoundaryOptions={providerRef:options.attach.providerRef,maxDurationMs:5000,sourceAvailable:evidence.sourceAvailable,acceptObservation:evidence.acceptObservation,acceptAction:evidence.acceptAction,reconcileEffect:evidence.reconcileEffect,admitRelease:evidence.admitRelease};
- const client=new WindowsGameHostClient({attach:options.attach,fetchAuthenticated:options.fetchAuthenticated,isScopeCurrent:options.isScopeCurrent,sourceIsQualified:attach=>evidence.installationAvailable(attach.scope,attach.pinsDigest),nativeBoundary:boundary,httpTimeoutMs:5000,sessionDurationMs:options.native.sessionDurationMs,shutdownTimeoutMs:5000,
+ const client=new WindowsGameHostClient({attach:options.attach,fetchAuthenticated:options.fetchAuthenticated,isScopeCurrent:options.isScopeCurrent,sourceIsQualified:attach=>evidence.installationAvailable(attach.scope,attach.pinsDigest),nativeBoundary:boundary,httpTimeoutMs:5000,nativeStartupTimeoutMs:Math.min(options.native.sessionDurationMs,options.native.connectionTimeoutMs+options.native.authenticationTimeoutMs+2000),sessionDurationMs:options.native.sessionDurationMs,shutdownTimeoutMs:5000,
   openNative:async(finalBoundary,context)=>{
    nativeStage='checkingSource';
    if(context.signal.aborted||!context.isCurrent(options.attach.scope))throw Error('Native launch fenced');
