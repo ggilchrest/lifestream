@@ -79,3 +79,23 @@ The native shutdown implementation must itself have qualified finite transport
 and readback limits. This orchestration source is not evidence of live gameplay,
 native qualification, journal grounding, retained experiences or ordinary
 conversation readback.
+
+On Windows, `createOwnedWindowsGameHostDriver` composes the actual owned
+BizHawk child, mutual native authentication, `NativeGameEvidence` readback and
+`WindowsGameHostClient`. Trusted desktop main supplies approved paths, file
+pins, finite pairing, the selected scope, custody and the existing broker's
+authenticated transport/currentness. Install it as the broker's `driverFactory`
+and stop the broker if `driver.done` rejects. It creates no login, campaign,
+retention consent or visible-state decoder. The fresh evidence directory rejects
+previous-run records; source admission checks the owned process, source hashes,
+actual native heartbeat and screenshot custody. Closed/stale records refuse
+gameplay. Native preparation/authentication precedes backend attachment, and
+every effect still requires the backend's one-time final admission.
+
+Its separate `safetyRelease` port admits only a native-owned exact old lease.
+Shutdown remains bounded after gameplay admission is fenced and confirms the
+actual paused, stationary frame and neutral input. `usageFor` provides measured
+native action time locally. This is not a new usage field in the closed HTTP
+completion contract; Linux composition must not invent monotonic measurements
+from a synthetic callback. The ordinary save API remains disabled: isolated
+native flush/cold-load qualification does not establish in-game menu saving.

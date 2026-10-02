@@ -43,6 +43,18 @@ test('missing trusted ports stays inert and creates no attachment/native channel
  const h=harness();for(const key of ['fetchAuthenticated','isScopeCurrent','sourceIsQualified','openNative','shutdownExactOldLease'])assert.throws(()=>new WindowsGameHostClient({...h.options,[key]:undefined}as any));
  for(const key of ['sourceAvailable','acceptObservation','acceptAction','reconcileEffect','admitRelease'])assert.throws(()=>new WindowsGameHostClient({...h.options,nativeBoundary:{...h.options.nativeBoundary,[key]:undefined}}as any));assert.equal(h.calls.length,0);
 });
+test('actual native readiness is established before attach without an early effect claim',async()=>{
+ const h=harness();let ready=false;
+ h.options.nativeBoundary.sourceAvailable=()=>ready;
+ h.options.openNative=async(boundary,context)=>{
+  assert.equal(context.isCurrent(h.request.scope),true);assert.equal(h.calls.length,0);
+  await assert.rejects(boundary.claimEffect!(action(),context));
+  ready=true;return {adapter:guardGameActivityAdapter(h.raw,boundary),close:()=>{}};
+ };
+ const client=await run(h);assert.equal(client.snapshot.acceptedIngress,1);assert.equal(h.calls[0]?.route,'attach');
+ const unavailable=harness();unavailable.options.nativeBoundary.sourceAvailable=()=>false;
+ await run(unavailable);assert.equal(unavailable.calls.length,0);assert.equal(unavailable.nativeCalls,0);
+});
 for(const kind of ['observe','action']as const)test(kind+' admits exactly once before native I/O and validates original completion',async()=>{
  const h=harness(kind==='action'?action():observe()),client=await run(h);assert.deepEqual(h.order,['admit','native','result']);assert.equal(h.maxPolls,1);assert.equal(h.nativeCalls,1);assert.equal(h.closeCount,1);assert.equal(client.snapshot.acceptedIngress,1);assert.equal(client.snapshot.pauseConfirmation,'unconfirmed');assert.equal(h.calls.filter(x=>x.route==='admit').length,1);assert.equal(h.calls.filter(x=>x.route==='detach').length,1);
  const completion=h.calls.find(x=>x.route==='result')!.body;assert.deepEqual(h.calls.find(x=>x.route==='admit')!.body,{protocol,attachmentId:h.command.attachmentId,commandId:h.command.commandId,requestDigest:h.command.requestDigest});assert.equal(completion.requestDigest,gameHostDigest(h.request));assert.equal(completion.resultDigest,gameHostDigest(completion.result));assert.equal(completion.result.requestId,h.request.requestId);
@@ -79,11 +91,11 @@ for(const mode of ['mismatchedAdmission','mismatchedResultAck','unqualifiedObser
  const c=await run(h);assert.equal(c.snapshot.acceptedIngress,0);assert.equal(h.calls.filter(x=>x.route==='result').length,mode==='mismatchedResultAck'?1:0);
 });
 for(const status of [400,401,403,404,409,410,413,503])test('HTTP '+status+' fences without retry',async()=>{
- const h=harness();h.handlers.attach=()=>response({error:'synthetic_denial'},status);const c=await run(h);assert.equal(c.snapshot.reason,'denied');assert.equal(h.calls.length,1);assert.equal(h.closeCount,0);
+ const h=harness();h.handlers.attach=()=>response({error:'synthetic_denial'},status);const c=await run(h);assert.equal(c.snapshot.reason,'denied');assert.equal(h.calls.length,1);assert.equal(h.closeCount,1);assert.equal(h.nativeCalls,0);
 });
-for(const mode of ['length','stream','utf8','redirect','extra','contentType']as const)test('response '+mode+' is bounded/refused before native opening',async()=>{
+for(const mode of ['length','stream','utf8','redirect','extra','contentType']as const)test('response '+mode+' is bounded/refused before native dispatch',async()=>{
  const h=harness();let cancelled=false;
- h.handlers.attach=()=>{if(mode==='length')return new Response('{}',{headers:{'content-type':'application/json','content-length':'131073'}});if(mode==='stream')return new Response(new ReadableStream({start(c){c.enqueue(new Uint8Array(70000));c.enqueue(new Uint8Array(70000));},cancel(){cancelled=true;}}),{headers:{'content-type':'application/json'}});if(mode==='utf8')return new Response(new Uint8Array([0xff]),{headers:{'content-type':'application/json'}});if(mode==='redirect'){const r=response({});Object.defineProperty(r,'redirected',{value:true});return r;}if(mode==='extra')return response({protocol,attachmentId:h.command.attachmentId,expiresAt:future(),pollMs:1000,maxMessageBytes:131072,token:'synthetic-forbidden'});return new Response('{}',{headers:{'content-type':'text/html'}});};await run(h);assert.equal(h.nativeCalls,0);assert.equal(h.closeCount,0);if(mode==='stream')assert.equal(cancelled,true);
+ h.handlers.attach=()=>{if(mode==='length')return new Response('{}',{headers:{'content-type':'application/json','content-length':'131073'}});if(mode==='stream')return new Response(new ReadableStream({start(c){c.enqueue(new Uint8Array(70000));c.enqueue(new Uint8Array(70000));},cancel(){cancelled=true;}}),{headers:{'content-type':'application/json'}});if(mode==='utf8')return new Response(new Uint8Array([0xff]),{headers:{'content-type':'application/json'}});if(mode==='redirect'){const r=response({});Object.defineProperty(r,'redirected',{value:true});return r;}if(mode==='extra')return response({protocol,attachmentId:h.command.attachmentId,expiresAt:future(),pollMs:1000,maxMessageBytes:131072,token:'synthetic-forbidden'});return new Response('{}',{headers:{'content-type':'text/html'}});};await run(h);assert.equal(h.nativeCalls,0);assert.equal(h.closeCount,1);if(mode==='stream')assert.equal(cancelled,true);
 });
 test('rejected exact-old-lease shutdown intent blocks release admission',async()=>{
  const r=observe();const request={...r,operation:'GameActivityAdapter.releaseControls' as const,payload:{targetInputOwnerLeaseId:randomUUID(),reason:'policyChanged' as const,neutralButtons:{up:false,down:false,left:false,right:false,a:false,b:false,x:false,y:false,l:false,r:false,start:false,select:false}}};const h=harness(request as any);h.options.nativeBoundary.admitRelease=async()=>false;await run(h);assert.equal(h.calls.filter(x=>x.route==='admit').length,0);

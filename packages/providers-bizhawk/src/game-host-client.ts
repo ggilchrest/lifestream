@@ -74,9 +74,9 @@ export class WindowsGameHostClient{
   if(this.options){const c=new AbortController(),timer=setTimeout(()=>c.abort(),this.options.shutdownTimeoutMs);
    this.shutdown=bounded(Promise.resolve().then(()=>this.options!.shutdownExactOldLease(context)),c.signal).catch(()=>{}).finally(()=>clearTimeout(timer));}
  }
- private check(scope=this.options!.attach.scope){
+ private check(scope=this.options!.attach.scope,requireNative=true){
   if(this.controller.signal.aborted)throw new GameHostClientError(this.failure??'cancelled');
-  let current=false;try{const o=this.options!;current=isDeepStrictEqual(scope,o.attach.scope)&&o.isScopeCurrent(scope)===true&&o.sourceIsQualified(o.attach)===true&&o.nativeBoundary.sourceAvailable(scope,o.attach.pinsDigest)===true;}catch{}
+  let current=false;try{const o=this.options!;current=isDeepStrictEqual(scope,o.attach.scope)&&o.isScopeCurrent(scope)===true&&o.sourceIsQualified(o.attach)===true&&(!requireNative||o.nativeBoundary.sourceAvailable(scope,o.attach.pinsDigest)===true);}catch{}
   if(!current)throw new GameHostClientError('scopeChanged');
   if(this.attachment&&(Date.now()>=this.attachmentDeadline||performance.now()>=this.attachmentMono))throw new GameHostClientError('expired');
  }
@@ -157,11 +157,14 @@ export class WindowsGameHostClient{
   const onAbort=()=>this.fence('cancelled');parentSignal.addEventListener('abort',onAbort,{once:true});if(parentSignal.aborted)onAbort();
   const sessionTimer=setTimeout(()=>this.fence('expired'),this.options.sessionDurationMs);
   try{
-   this.check();const attachment=await this.post('attach','attach',this.options.attach,'attachment',this.controller.signal);this.check();this.lease(attachment.expiresAt);this.attachment=attachment;
-   const opening=Promise.resolve().then(()=>this.options!.openNative(this.boundary(),{signal:this.controller.signal,isCurrent:scope=>{try{this.check(scope);return true;}catch{return false;}}}));
+   // Prepare only the independently qualified owned installation. No command
+   // or effect can enter before actual native authentication and backend attach.
+   this.check(this.options.attach.scope,false);
+   const opening=Promise.resolve().then(()=>this.options!.openNative(this.boundary(),{signal:this.controller.signal,isCurrent:scope=>{try{this.check(scope,false);return true;}catch{return false;}}}));
    void opening.then(value=>{if(this.failure)try{value.close();}catch{}},()=>{});
    const connectionTimer=setTimeout(()=>this.fence('transportLost'),this.options.httpTimeoutMs);
    try{this.native=await bounded(opening,this.controller.signal);}finally{clearTimeout(connectionTimer);}this.check();
+   const attachment=await this.post('attach','attach',this.options.attach,'attachment',this.controller.signal);this.check();this.lease(attachment.expiresAt);this.attachment=attachment;
    for(;;){
     this.check();const started=performance.now(),event=await this.post('next','next',{protocol,attachmentId:this.attachment.attachmentId},'event',this.controller.signal);this.check();
     if(event.attachmentId!==this.attachment.attachmentId)throw new GameHostClientError('invalidMessage');

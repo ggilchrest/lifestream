@@ -8,6 +8,7 @@ return function(config, deps)
   local seen, receipts, requestCount = {}, {}, 0
   local began, runBegan, runFrame, actions = clock.ms(), nil, nil, 0
   local protocol='lifestream-game-control/1'
+  local evidence=deps.evidence or function()end
   local function same(a,b) return json.encode(a)==json.encode(b) end
   local function live() return ready and not retired and clock.ms()-began<config.sessionDurationMs and channel.connected() end
   local function available()
@@ -26,7 +27,11 @@ return function(config, deps)
   local function send(request,status,payload,code)
     local error=json.null
     if status~='succeeded' then error={code=code or 'native.unavailable',message='Native game operation unavailable.',retryable=false,correlationId=request.correlationId,details=json.array({})} end
-    channel.send(json.encode({schemaVersion='1.0.0',operation=request.operation,requestId=request.requestId,correlationId=request.correlationId,providerRef=config.providerRef,completedAt=clock.utc(),outcome={status=status,payload=payload or json.null,error=error}}))
+    local result={schemaVersion='1.0.0',operation=request.operation,requestId=request.requestId,correlationId=request.correlationId,providerRef=config.providerRef,completedAt=clock.utc(),outcome={status=status,payload=payload or json.null,error=error}}
+    if request.operation=='GameActivityAdapter.observe'then evidence('observation',result)
+    elseif request.operation=='GameActivityAdapter.applyController'then evidence('actionResult',result)
+    elseif request.operation=='GameActivityAdapter.releaseControls'then evidence('release',result)end
+    channel.send(json.encode(result))
   end
   local function fresh(request)
     return type(request)=='table' and request.schemaVersion=='1.0.0' and same(request.scope,config.scope) and clock.before(request.deadlineAt) and request.executionMode==config.executionMode
@@ -61,7 +66,9 @@ return function(config, deps)
     if not runBegan then runBegan=clock.ms();runFrame=api.frame() end
     actions=actions+1;lease=p.inputOwnerLeaseId
     local before=api.frame();local started=clock.utc();local startMs=clock.ms();local deadlineMs=startMs+math.min(proposal.maxWallMs,config.bounds.maxInputLeaseMs)
+    evidence('actionStarted',{requestId=request.requestId,actionId=p.actionId,inputOwnerLeaseId=p.inputOwnerLeaseId,beforeFrame=before,startedMonotonicMs=startMs,requestedButtons=p.buttonVector})
     currentAction={cancelled=false};local disposition='completed'
+    local verifiedInputs=0
     api.speedOne();api.resume()
     for _=1,proposal.durationFrames do
       if not live() or not budgetAvailable() or not clock.before(request.deadlineAt) or not clock.before(admission.expiresAt) or clock.ms()>=deadlineMs then disposition='cancelled';break end
@@ -72,12 +79,17 @@ return function(config, deps)
         elseif fresh(other)then send(other,'rejected',nil,'native.busy') end
       end
       if currentAction.cancelled then disposition='cancelled';break end
-      api.set(vector);local prior=api.frame();api.advance();if api.frame()~=prior+1 then disposition='failed';break end
+      api.set(vector);local actual=api.immediate();local matched=true
+      for _,name in pairs(names)do if actual[name]~=vector[name]then matched=false end end
+      if not matched then disposition='failed';break end
+      verifiedInputs=verifiedInputs+1
+      local prior=api.frame();api.advance();if api.frame()~=prior+1 then disposition='failed';break end
     end
     local after=api.frame();local completed=clock.utc();local cleared=neutralize()
     if not cleared then disposition='outcomeUnknown';retired=true;api.pause() end
     if disposition~='completed' then retired=true;halt() end
     local receipt={schemaVersion='1.0.0',recordType='gameActionReceipt',scope=config.scope,actionId=p.actionId,proposalId=proposal.proposalId,idempotencyKey=request.idempotencyKey,inputDigest=admission.inputDigest,admissionId=admission.admissionId,disposition=disposition,beforeFrame=before,afterFrame=after,framesApplied=after-before,buttonsNeutralized=cleared,startedAt=started,completedAt=completed,resultingObservationIds=json.array({}),recordedAt=clock.utc(),reason='Native frame and effective-controller readback; no gameplay competence claim.'}
+    evidence('action',{requestId=request.requestId,correlationId=request.correlationId,inputOwnerLeaseId=p.inputOwnerLeaseId,startedMonotonicMs=startMs,completedMonotonicMs=clock.ms(),verifiedInputFrames=verifiedInputs,requestedButtons=p.buttonVector,receipt=receipt})
     receipts[p.actionId]=receipt;currentAction=nil;send(request,'succeeded',receipt)
   end
   local function observe(request)
@@ -109,9 +121,11 @@ return function(config, deps)
     assert(confirmed.type=='authenticated'and confirmed.protocol==protocol and confirmed.sessionId==challenge.sessionId and crypto.equal(confirmed.proof,crypto.hmac(protocol..' host '..raw)),'Native host authentication unavailable')
     ready=true;began=clock.ms()
   end
+  local lastEvidenceHeartbeat=0
   local function idle()
     if not live() or not budgetAvailable()then retired=true;halt();return false end
     if runBegan then neutralize();api.advance() else api.pause();api.yield() end
+    if clock.ms()-lastEvidenceHeartbeat>=1000 then evidence('idle',{});lastEvidenceHeartbeat=clock.ms() end
     return true
   end
   return {authenticate=authenticate,handle=handle,idle=idle,halt=function()retired=true;halt()end}

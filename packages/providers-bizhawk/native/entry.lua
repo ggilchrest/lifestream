@@ -3,6 +3,7 @@
 local api
 local peer
 local closeChannel
+local evidence
 local function main()
   client.pause()
   local source=debug.getinfo(1,'S').source:sub(2);local directory=source:match('^(.*[/\\])')or ''
@@ -21,6 +22,7 @@ local function main()
   local Array=clr.import_type('System.Array')
   local Guid=clr.import_type('System.Guid')
   local DateTime=clr.import_type('System.DateTime')
+  local Environment=clr.import_type('System.Environment')
   local Stopwatch=clr.import_type('System.Diagnostics.Stopwatch')
   local File=clr.import_type('System.IO.File')
   local FileInfo=clr.import_type('System.IO.FileInfo')
@@ -64,6 +66,7 @@ local function main()
   local config=json.decode(assert(os.getenv('LIFESTREAM_BIZHAWK_OPTIONS'),'Native options required'))
   assert(config.protocol=='lifestream-game-control/1'and config.emulatorVersion=='2.11.1'and type(config.frameDirectory)=='string'and config.sessionDurationMs>=1 and config.sessionDurationMs<=600000 and config.authenticationTimeoutMs>=1 and config.authenticationTimeoutMs<=10000 and config.bounds.maxActionFrames>=1 and config.bounds.maxActionFrames<=120 and config.bounds.maxActionWallMs>=1 and config.bounds.maxActionWallMs<=5000 and config.bounds.renderedSpeedFactor==1 and config.bounds.fastForwardEnabled==false and config.bounds.rewindEnabled==false and config.bounds.planningClockPolicy=='continuesNormally','Native configuration unavailable')
   local key=Convert.FromBase64String((assert(os.getenv('LIFESTREAM_BIZHAWK_PAIRING_SECRET'),'Explicit pairing required')))
+  Environment.SetEnvironmentVariable('LIFESTREAM_BIZHAWK_PAIRING_SECRET',nil)
   assert(type(key)=='string'and #key>=32 and #key<=128,'Native pairing unavailable')
   local mac=HMAC(key);key=nil -- NLua marshals byte[] as binary Lua strings; dispose the HMAC after pairing.
   local function hex(bytes)return BitConverter.ToString(bytes):gsub('-',''):lower()end
@@ -75,6 +78,30 @@ local function main()
   local watch=Stopwatch.StartNew()
   local clock={ms=function()return watch.Elapsed.TotalMilliseconds end,utc=function()return DateTime.UtcNow:ToString('o')end,before=function(time)return DateTime.Parse(time):ToUniversalTime().Ticks>DateTime.UtcNow.Ticks end,issued=function(time)return DateTime.Parse(time):ToUniversalTime().Ticks<=DateTime.UtcNow.Ticks end}
   api={version=function()return client.getversion()end,system=function()return emu.getsystemid()end,romHash=function()return gameinfo.getromhash()end,frame=function()return emu.framecount()end,set=function(v)joypad.set(v,1)end,immediate=function()return joypad.getimmediate(1)end,pause=function()client.pause()end,paused=function()return client.ispaused()end,resume=function()client.unpause()end,speedOne=function()client.speedmode(100)end,advance=function()emu.frameadvance()end,yield=function()emu.yield()end}
+  -- Optional owned-session evidence file, supplied only by the trusted launcher.
+  -- It contains native readbacks and typed results, never pairing/auth traffic,
+  -- screenshot bytes, SaveRAM contents, arbitrary RAM or model reasoning.
+  local evidencePath=os.getenv('LIFESTREAM_BIZHAWK_EVIDENCE_FILE')
+  local evidenceState={schemaVersion='1.0.0',recordType='nativeGameEvidence',scope=config.scope,pinsDigest=config.pinsDigest,providerRef=config.providerRef,sequence=0}
+  evidence=function(event,data)
+    if not evidencePath then return end
+    assert(#evidencePath>0 and #evidencePath<=1024,'Native evidence path unavailable')
+    evidenceState.sequence=evidenceState.sequence+1;evidenceState.event=event
+    evidenceState.version=api.version();evidenceState.system=api.system();evidenceState.romSha1=api.romHash():lower()
+    evidenceState.frameNumber=api.frame();evidenceState.monotonicMs=clock.ms();evidenceState.checkedAt=clock.utc();evidenceState.paused=api.paused()
+    local immediate=api.immediate();local buttons={};local available=true
+    for _,name in ipairs({'Up','Down','Left','Right','A','B','X','Y','L','R','Start','Select'})do if type(immediate[name])~='boolean'then available=false end;buttons[name]=immediate[name]==true end
+    evidenceState.buttons=buttons;evidenceState.buttonsAvailable=available
+    if event=='actionStarted'then evidenceState.actionStarted=data
+    elseif event=='action'then evidenceState.lastAction=data
+    elseif event=='actionResult'then evidenceState.lastActionResult=data
+    elseif event=='observation'then evidenceState.lastObservation=data
+    elseif event=='release'then evidenceState.lastRelease=data end
+    local text=json.encode(evidenceState);assert(#text<=65536,'Native evidence bounds exceeded')
+    local nextPath=evidencePath..'.next';File.WriteAllText(nextPath,text)
+    if File.Exists(evidencePath)then File.Replace(nextPath,evidencePath,nil)else File.Move(nextPath,evidencePath)end
+  end
+  evidence('boot',{})
   -- The bundled comm receive loop loses partial headers on timeout and does
   -- not check header EOF. Use ordinary .NET sockets with bounded incremental
   -- framing instead; no LuaSocket, unbounded allocation or reconnect.
@@ -142,16 +169,18 @@ local function main()
     return {screenshotId=id,mediaRef=id,sha256=digest,byteLength=size,mediaType='image/png',width=width,height=height,capturedAt=captured,frameNumber=frame,expiresAt=utcExpiry(captured,config.frameTtlMs)}
   end
   local factory=assert(loadfile(directory..'peer.lua'))()
-  peer=factory(config,{json=json,api=api,clock=clock,crypto=crypto,channel=channel,store=store})
+  peer=factory(config,{json=json,api=api,clock=clock,crypto=crypto,channel=channel,store=store,evidence=evidence})
   config.executionMode='normal'
   api.pause();peer.authenticate();mac:Dispose();os.setlocale('C','numeric')
   while true do local raw=channel.receive();if raw then peer.handle(raw)end;if not peer.idle()then break end end
   peer.halt()
+  evidence('closed',{})
 end
 local ok=pcall(main)
 if peer then pcall(peer.halt)end
 if closeChannel then pcall(closeChannel)end
 client.pause()
+if evidence then pcall(evidence,'closed',{})end
 if not ok then console.log('Native game bridge stopped; configuration, pairing or operation unavailable. No automatic retry.')end
 -- Probe exits only an empty emulator. A real game remains paused and watchable.
 if os.getenv('LIFESTREAM_BIZHAWK_ROM_FREE_PROBE')=='1'and emu.getsystemid()=='NULL'then client.exit()end

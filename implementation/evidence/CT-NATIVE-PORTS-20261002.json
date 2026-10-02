@@ -1,0 +1,148 @@
+{
+  "utc": "2026-10-02T16:30:17.632738+00:00",
+  "workingBaseRevision": "37e3230fad4226a35c2bdd831c1d98ca19803b6b",
+  "scope": "actual owned native ports plus isolated ordinary-save qualification; no Tifa progress",
+  "runDisposition": "waiting",
+  "sourceFiles": [
+    {
+      "path": "docs/game-runtime-production.md",
+      "sha256": "934df015187f695a1ac1463d1211b5582318af7e411c37a21177752b548dac81"
+    },
+    {
+      "path": "packages/providers-bizhawk/native/entry.lua",
+      "sha256": "39d39ef39f8f2e6b182a7d03c254fe42f82395be1dc65a1bebc452b1c1ba0944"
+    },
+    {
+      "path": "packages/providers-bizhawk/native/peer.lua",
+      "sha256": "dbd6bbf76ddd330b772dd6971075b6ea858ffec077401ca57b76b77016e6a256"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/game-host-client.ts",
+      "sha256": "535da297a4f00640a37cd8117d20a28a478a1f77c97e3de6f6d9e356a11c0182"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/index.ts",
+      "sha256": "5db37934066d81956a512486b03e0505bde9cf5b447fc443475f28937f63de01"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/transport.ts",
+      "sha256": "aa18af186477a1c17087250ca76a31d644a2cc91862c993a0819bd2277bf7cc0"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/native-evidence.ts",
+      "sha256": "47fa91d7c47c17825454df2ce999a08d18d1d05327aad47384852e7028494fba"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/owned-native-driver.ts",
+      "sha256": "de3db346be9b01ec15b47090a7ad56c4eb9a6f6efce147084e29aa9c38685954"
+    },
+    {
+      "path": "packages/providers-bizhawk/test/game-host-client.test.ts",
+      "sha256": "d48aa43ebd68f28ba115a3c4ec9527e4aebb53a51ef530ccc1f73fb3a84f130f"
+    },
+    {
+      "path": "packages/providers-bizhawk/test/transport.test.ts",
+      "sha256": "3eadc2ac15a491654d637fae03e1a5f2e10a10f7584d39ea379586540671ab28"
+    },
+    {
+      "path": "scripts/package-game-adapter-windows.mjs",
+      "sha256": "79a8a5ecb38f4cf4cc7aac33aaccd5afa0d29690b135c7a55c8821a84c3724f8"
+    }
+  ],
+  "mechanicalNative": {
+    "scope": "synthetic admission, actual native input/readback",
+    "appliedFrames": 2,
+    "verifiedInputFrames": 2,
+    "measuredActionWallMs": 54,
+    "exactLeaseShutdownAfterGameplayFence": true,
+    "independentSafetyTransport": true,
+    "wrongLeaseRejectedBeforeNativeEntry": true,
+    "neutralFramesIncludingShutdown": 13,
+    "pauseFrame": 15,
+    "nativeClosedPausedNeutral": true,
+    "originalSaveUnchanged": true,
+    "workingSaveUnchanged": true,
+    "nativeEntrySha256DuringMechanicalRun": "6a8250249152901d3e9ee9c7cf493ca8a1d995729a0d80e1cfc2ec9d438934a0",
+    "nativePeerSha256DuringMechanicalRun": "4f6967ef5b1e0685baa412dd0fd157b8185aed1536d13ea3743738a439f6bce3",
+    "legacyRunnerReceipt": "failed_or_unverified retained; legacy separate final-file injection did not match CRLF source. Independent atomic native closed record validated without replacing that receipt."
+  },
+  "ownedGraphicalDriver": {
+    "actualNative": true,
+    "backend": "synthetic HTTP fixture only",
+    "acceptedObservations": 1,
+    "frameNumber": 0,
+    "nativeMutualAuthentication": true,
+    "graphicalProcessChecked": true,
+    "closedSourceRefused": true,
+    "nativeClosedPausedNeutral": true,
+    "originalSaveUnchanged": true,
+    "workingSaveUnchanged": true,
+    "sourcePins": [
+      {
+        "artifactKind": "emulatorExecutable",
+        "sha256": "f8cdb93551a544f680bf3876d9d8d72643859e7a44a23b04e1a25b92e48f80cd"
+      },
+      {
+        "artifactKind": "legitimateRomArchive",
+        "sha256": "cdb2d7c6ee20d303285c262cc2c3e7454130a7b0e97ae5d93e136ec57ec29f6c"
+      },
+      {
+        "artifactKind": "nativeEntry",
+        "sha256": "39d39ef39f8f2e6b182a7d03c254fe42f82395be1dc65a1bebc452b1c1ba0944"
+      },
+      {
+        "artifactKind": "isolatedConfiguration",
+        "sha256": "e8e989d51235016c852a1d2ce44dcc374d1dafaf154553324ef01f0481e1e36c"
+      },
+      {
+        "artifactKind": "nativePeer",
+        "sha256": "dbd6bbf76ddd330b772dd6971075b6ea858ffec077401ca57b76b77016e6a256"
+      },
+      {
+        "artifactKind": "utcHelper",
+        "sha256": "69ee0a827956107cc9de694ab791c0d3ef5cbc9f6d3a0841aecfa062d5ea2934"
+      }
+    ]
+  },
+  "ordinarySave": {
+    "qualified": "native client.saveram flush and fresh-process cold load of preserved opaque bytes only",
+    "phases": 2,
+    "frameNumber": 0,
+    "controllerActions": 0,
+    "originalSaveUnchanged": true,
+    "workingFileActuallyRecreated": true,
+    "saveStatesUsed": false,
+    "inGameMenuSaveQualified": false,
+    "controlSaveEnabled": false
+  },
+  "checks": [
+    {
+      "command": "Node24 tsc -b packages/providers-bizhawk --pretty false",
+      "result": "pass"
+    },
+    {
+      "command": "Node24 --test --experimental-strip-types game-host-client.test.ts transport.test.ts native-host.test.ts game-host-session-broker.test.mjs game-host-session-request.test.mjs",
+      "result": "pass",
+      "tests": 102
+    },
+    {
+      "command": "Node24 scripts/workspace.mjs check",
+      "result": "pass; structure only"
+    }
+  ],
+  "liveGates": {
+    "actualDesktopAuthentication": "last actual trusted partition check at 2026-10-02T15:41:53.647Z had no usable authenticated session; later sign-in not yet verified",
+    "gameVisibleState": "current actual tests paused at boot, no moving gameplay decoder qualification",
+    "campaignRetentionImageJoin": "Linux-owned pending qualification; no invented consent or usage wire extension",
+    "ordinaryMenuSave": "unqualified",
+    "tifaProgress": false,
+    "journalWrites": 0,
+    "memoryWrites": 0
+  },
+  "limitations": [
+    "Read-only driver source includes later native heartbeat/EOF-close/pairing-environment erasure changes; mechanical receipt retains its exact earlier pins.",
+    "No gameplay, campaign, retention, P2, full LS-S091/S066 or Human acceptance claim.",
+    "Locally measured monotonic usage remains local; closed HTTP completion schema unchanged.",
+    "First generated save probe hit a Lua syntax error and deadline; failed receipt retained, exact owned process terminated after normal closure failed, original hash reverified."
+  ]
+}

@@ -52,8 +52,11 @@ export interface GameTransportOptions{
  /** Host must fence input ownership and pursue actual pause on channel loss.
   * Calling this notification does not prove pause or effect resolution. */
  onDisconnect:(code:GameTransportError['code'])=>void;
+ /** Independent exact old lease readback admission, supplied only by trusted
+  * native ownership code. Never uses a successor scope or creates a game grant. */
+ shutdownAdmission?:(request:G.GameReleaseRequest)=>Promise<boolean>;
 }
-export interface AuthenticatedGameTransport{adapter:GameActivityAdapter;ready:Promise<void>;close:()=>void;}
+export interface AuthenticatedGameTransport{adapter:GameActivityAdapter;ready:Promise<void>;close:()=>void;safetyRelease?:GameActivityAdapter['releaseControls'];}
 /** Operates only an already connected stream supplied by an authorized host.
  * No listener, launch, reconnect, automatic retry or native effect is created.
  * The peer still needs a reviewed Lua bridge and installed-build qualification. */
@@ -135,5 +138,6 @@ export function createAuthenticatedGameTransport(stream:Duplex,options:GameTrans
  };
  const wire:GameActivityAdapter={observe,applyController:(r,c)=>call(r,c) as Promise<G.GameActionResult>,releaseControls:(r,c)=>call(r,c) as Promise<G.GameReleaseResult>,controlSave:(r,c)=>call(r,c) as Promise<G.GameSaveResult>};
  let adapter:GameActivityAdapter;try{adapter=guardGameActivityAdapter(wire,options.boundary);send(JSON.stringify(challenge));}catch(error){fail('authenticationFailed');throw error;}
- return {adapter,ready,close:()=>fail('closed')};
+ const safety=options.shutdownAdmission?guardGameActivityAdapter(wire,{providerRef,maxDurationMs:5000,sourceAvailable:()=>false,admitRelease:options.shutdownAdmission}):undefined;
+ return {adapter,ready,close:()=>fail('closed'),...(safety?{safetyRelease:safety.releaseControls}:{})};
 }
