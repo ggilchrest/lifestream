@@ -4,7 +4,7 @@ const {readFileSync,existsSync}=require('node:fs');
 const {resolve}=require('node:path');
 const {endpointFromArguments,connectionPage}=require('./connection-status.cjs');
 const {installGameHostControls}=require('./game-host-controls.cjs');
-const {createDesktopGameHostComposition}=require('./game-host-composition.cjs');
+const {createDesktopGameHostComposition,gameHostSetupFromArguments}=require('./game-host-composition.cjs');
 let endpoint,args,gameHostControls;
 // This binding is a trusted-main module hook, never a renderer IPC channel.
 module.exports.bindGameHostBroker=broker=>{if(!gameHostControls)throw Error('game_host_session_unavailable');gameHostControls.bindBroker(broker);};
@@ -22,9 +22,7 @@ app.whenReady().then(async()=>{
  gameHostControls=installGameHostControls({ipcMain,window,origin:endpoint.origin});
  let gameHost;
  if(process.platform==='win32'&&endpoint.origin==='http://127.0.0.1:43182'){
-  const flag='--game-host-setup',pin='--game-host-setup-sha256',pathAt=args.indexOf(flag),pinAt=args.indexOf(pin);
-  if(args.filter(x=>x===flag).length>1||args.filter(x=>x===pin).length>1||(pathAt>=0)!==(pinAt>=0))throw Error('game_host_setup_unavailable');
-  const setupSource=pathAt>=0?{path:args[pathAt+1],sha256:args[pinAt+1]}:null;
+  const setupSource=gameHostSetupFromArguments(args);
   const [nativeSdk,contracts]=await Promise.all([import('@lifestream/providers-bizhawk'),import('@lifestream/contracts/game-host')]);
   const buildFile=resolve(__dirname,'build.json'),sourceRevision=existsSync(buildFile)?JSON.parse(readFileSync(buildFile,'utf8')).sourceRevision:null;
   const nativeDirectory=app.isPackaged?resolve(__dirname,'native'):resolve(__dirname,'../../packages/providers-bizhawk/native');

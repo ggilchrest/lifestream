@@ -33,7 +33,7 @@ test('actual Electron composition authenticates owned graphical BizHawk, accepts
  const profile=join(fixture.directory,'desktop-profile');mkdirSync(profile);
  let app,proof={qualification:'Actual packaged Electron composition and owned graphical/native peer; synthetic auth/backend fixture; zero controller inputs; not live G/Tifa acceptance'};
  try{
-  app=await _electron.launch({executablePath:executable,args:['--url','http://127.0.0.1:43182/control/#account','--user-data-dir='+profile,'--game-host-setup',setupFile,'--game-host-setup-sha256',hash(setupFile)]});
+  app=await _electron.launch({executablePath:executable,args:['--url','http://127.0.0.1:43182/control/#account','--user-data-dir='+profile,'--game-host-setup='+setupFile,'--game-host-setup-sha256='+hash(setupFile)]});
   await app.firstWindow();
   await app.evaluate(({net},data)=>{
    const {EventEmitter}=require('node:events');globalThis.nativeCompositionProbe={routes:[],observations:0};let sent=false;

@@ -5,14 +5,20 @@ import {createRequire} from 'node:module';
 import {randomUUID,createHash} from 'node:crypto';
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {join,resolve} from 'node:path';
 import {gameHostMessage,GAME_HOST_PROTOCOL as protocol} from '../../../packages/contracts/src/game-host.ts';
 import {WindowsGameHostClient} from '../../../packages/providers-bizhawk/src/game-host-client.ts';
 import {GameFrameCustody} from '../../../packages/providers-bizhawk/src/frame-custody.ts';
-import {createDesktopGameHostComposition} from '../game-host-composition.cjs';
+import {createDesktopGameHostComposition,gameHostSetupFromArguments} from '../game-host-composition.cjs';
 import {observe} from '../../../packages/providers-bizhawk/test/game-host-fixtures.ts';
 const {installGameHostControls}=createRequire(import.meta.url)('../game-host-controls.cjs');
 const origin='http://127.0.0.1:43182',json=value=>new Response(JSON.stringify(value),{headers:{'content-type':'application/json'}});
+test('setup switches support Windows-safe equals syntax and reject ambiguous or incomplete pins',()=>{
+ const path=resolve(tmpdir(),'setup.json'),pin='a'.repeat(64);
+ assert.deepEqual(gameHostSetupFromArguments(['--game-host-setup='+path,'--game-host-setup-sha256='+pin]),{path,sha256:pin});
+ assert.equal(gameHostSetupFromArguments([]),null);
+ for(const args of [['--game-host-setup='+path],['--game-host-setup='+path,'--game-host-setup='+path,'--game-host-setup-sha256='+pin],['--game-host-setup=relative','--game-host-setup-sha256='+pin]])assert.throws(()=>gameHostSetupFromArguments(args));
+});
 function fixture(resolveDone=false){
  const directory=mkdtempSync(join(tmpdir(),'desktop-game-composition-')),frames=join(directory,'frames');mkdirSync(frames);
  const scope=observe().scope,endpoint={endpointId:scope.contextBinding.endpointId,ownership:'personal',privacyClass:'personal',health:'healthy'},sourceRevision='b'.repeat(64),runtimeSourceRevision='c'.repeat(64);

@@ -7,6 +7,13 @@ const {DesktopGameHostSessionBroker}=require('./game-host-session-broker.cjs');
 const fail=()=>Error('game_host_setup_unavailable');
 const closed=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key));
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+function gameHostSetupFromArguments(args){
+ const value=flag=>{const matches=args.filter(arg=>arg===flag||arg.startsWith(flag+'='));if(matches.length>1)throw fail();if(!matches.length)return null;return matches[0].startsWith(flag+'=')?matches[0].slice(flag.length+1):args[args.indexOf(flag)+1];};
+ const path=value('--game-host-setup'),sha256=value('--game-host-setup-sha256');
+ if(path===null&&sha256===null)return null;
+ if(typeof path!=='string'||!isAbsolute(path)||typeof sha256!=='string'||!/^[a-f0-9]{64}$/.test(sha256))throw fail();
+ return Object.freeze({path,sha256});
+}
 
 /** One trusted-main composition. The descriptor is an explicitly selected,
  * pinned operator setup, not a renderer/model message or a new authority grant.
@@ -53,4 +60,4 @@ function createDesktopGameHostComposition({controls,net,partition,sdk,sourceRevi
  };
  return Object.freeze({readiness,status,startApprovedSession,stop,configured:!!selected});
 }
-module.exports={createDesktopGameHostComposition};
+module.exports={createDesktopGameHostComposition,gameHostSetupFromArguments};

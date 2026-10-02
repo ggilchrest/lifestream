@@ -148,8 +148,8 @@ the copied SDK bytes. No owner configuration, private assets, ROM or save is
 bundled. macOS remains the generic endpoint shell; native game composition is
 Windows-only. The launcher explicitly shows its real window after loading.
 
-Starting requires explicit trusted launch arguments `--game-host-setup` and
-`--game-host-setup-sha256`, pointing to an operator-reviewed bounded JSON file
+Starting requires explicit trusted launch arguments `--game-host-setup=<path>`
+and `--game-host-setup-sha256=<digest>`, pointing to an operator-reviewed bounded JSON file
 outside the public package. `Game → Start approved game session` is disabled
 without that setup and never auto-starts. The closed descriptor has exactly:
 `schemaVersion` (`lifestream.desktop-game-host-setup.v1`), package `sourceRevision`,
