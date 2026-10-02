@@ -12,6 +12,7 @@
     { "path": "../../packages/providers-sglang" },
     { "path": "../../packages/providers-voxcpm" },
     { "path": "../../packages/storage-sqlite" },
-    { "path": "../../packages/providers-pwce" }
+    { "path": "../../packages/providers-pwce" },
+    { "path": "../../packages/providers-bizhawk" }
   ]
 }

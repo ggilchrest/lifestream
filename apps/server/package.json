@@ -14,7 +14,8 @@
     "@lifestream/storage-sqlite": "workspace:*",
     "ws": "^8.21.3",
     "@lifestream/contracts": "workspace:*",
-    "@lifestream/providers-pwce": "workspace:*"
+    "@lifestream/providers-pwce": "workspace:*",
+    "@lifestream/providers-bizhawk": "workspace:*"
   },
   "scripts": {
     "build": "node ../../scripts/build-server.mjs",

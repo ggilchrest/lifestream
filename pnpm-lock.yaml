@@ -38,6 +38,9 @@ importers:
       '@lifestream/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@lifestream/providers-bizhawk':
+        specifier: workspace:*
+        version: link:../../packages/providers-bizhawk
       '@lifestream/providers-moonshine':
         specifier: workspace:*
         version: link:../../packages/providers-moonshine

@@ -45,3 +45,5 @@ export * from './game-experience.ts';
 export * from './game-help.ts';
 
 export type {GameEpisodeAdviceSource} from './game-advice-custody.ts';
+
+export {GameHostDispatchRepository,type GameHostDispatchIdentity} from './game-host-dispatch.ts';

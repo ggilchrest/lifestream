@@ -53,6 +53,20 @@ export class Database {
     });
   }
   transaction<T>(operation: (transaction: Transaction) => T): T { return withTransaction(this.connection, operation); }
+  /** Commit a synchronous native dispatch CAS with WAL fsync before I/O.
+   * Scoped to this transaction; legacy connection defaults are restored. */
+  durableTransaction<T>(operation: (transaction: Transaction) => T): T {
+    const previous = this.connection.prepare("PRAGMA synchronous").get()!.synchronous as number;
+    this.connection.exec("PRAGMA synchronous = FULL");
+    try {
+      if ((this.connection.prepare("PRAGMA synchronous").get()!.synchronous as number) < 2) throw new Error("durable_transaction_unavailable");
+      return withTransaction(this.connection, tx => {
+        const value = operation(tx);
+        if (value instanceof Promise) throw new Error("durable_transaction_requires_synchronous_operation");
+        return value;
+      });
+    } finally { this.connection.exec(`PRAGMA synchronous = ${previous}`); }
+  }
   exec(sql: string): void { this.connection.exec(sql); }
   close(): void { this.connection.close(); }
   async backup(destination: string): Promise<number> { return backup(this.connection, destination); }

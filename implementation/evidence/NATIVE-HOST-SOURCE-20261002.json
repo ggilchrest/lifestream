@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "sourceOnlyFixtureEvidence.v1",
+  "task": "Disabled Windows native host backend integration",
+  "baseRevision": "002c1a6e058eafe98f3c35d70be6bac9b9f474e1",
+  "testedRevision": "WORKTREE",
+  "recordedAt": "2026-10-02T02:16:52.082Z",
+  "runDisposition": "complete",
+  "sourceStatus": "implementedAndFixtureVerified",
+  "effectiveSourceFiles": [
+    {
+      "path": "apps/server/package.json",
+      "sha256": "a6153345ce861b258040768a3736dc31aa883c978f18465750ae5f00ddcf80d0"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "5102baae142a47d720bc1bc443386f297bcbb79e68c980cbde9d1b2518049f7f"
+    },
+    {
+      "path": "apps/server/src/runtime/game-host-http.ts",
+      "sha256": "e3ebef5eebdb97fcdf00c192dd8952a95727c5db06e40dbf895ebd35cb2050e0"
+    },
+    {
+      "path": "apps/server/src/runtime/game-host-port.ts",
+      "sha256": "047f4b96f6ec9ba93ee3cc930a0fc2887fc82453bae37be9f92c9a63d65a8988"
+    },
+    {
+      "path": "apps/server/test/fixtures/game-host.ts",
+      "sha256": "4825131eb266762ed4c2e61feb8f87fa5d477503c38209e2205c051b958da581"
+    },
+    {
+      "path": "apps/server/test/game-host-http.test.ts",
+      "sha256": "812175ee56ee1dd0a1c0c5f68aed8cf2688a7f1493b68228c46441cbf7ec64d8"
+    },
+    {
+      "path": "apps/server/test/game-host-port.test.ts",
+      "sha256": "fb7512c11f20cfd179249b0416e2fe9c0b41204715de85e979507de55aeacbbe"
+    },
+    {
+      "path": "apps/server/tsconfig.json",
+      "sha256": "ef85c959d37e8b018adf9ac8742b0bbf10dd346b87260e73bdaed979c7a710bf"
+    },
+    {
+      "path": "docs/game-host-backend-source.md",
+      "sha256": "a853942ea294bd272f5306404a55c28a42f26d297c1540a5c913489f346f9dc2"
+    },
+    {
+      "path": "docs/game-host-rpc-v1.txt",
+      "sha256": "dd6da146d74cc9f7a6d82e0fe034105edaaad5004e11fe39325fcc8fd8314eaa"
+    },
+    {
+      "path": "packages/contracts/package.json",
+      "sha256": "5a8eec46aad06be31f089b5edd1e3b1244f2cd33c7a57aa712c2935d5dc3e449"
+    },
+    {
+      "path": "packages/contracts/src/game-host.ts",
+      "sha256": "45094337a317d9acb9815e71357b85d85660532f6fb8c725ae2968f2c4243262"
+    },
+    {
+      "path": "packages/contracts/test/game-host-contract.test.ts",
+      "sha256": "cc4741e2c504df9c1437857ee6d7caf78fdf7ee3364e5ebb0bd6a75f3d3a4733"
+    },
+    {
+      "path": "packages/storage-sqlite/src/database.ts",
+      "sha256": "3244760b5174669454156c0e3851d31ec062ff4c73060f6ddcd9c73ac353acb9"
+    },
+    {
+      "path": "packages/storage-sqlite/src/game-host-dispatch.ts",
+      "sha256": "7086c79d75f1a98b335b5880c801261d9ef037e38352a4dd0a0cfcdefdc4da0c"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "fe76d8be93eb41f62ddc6c2f8dbc6a2c552b402f4713df27ef4b6f2b8d08578e"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0068_game_host_dispatch.sql",
+      "sha256": "12ebca07d1cd87179abc81acc283ccb1c651d5b8495676f2bda9d5bf08529886"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "def1e64b000527260382ee608151b9a5189cc6e38a009cf480d55071776bc0fb"
+    },
+    {
+      "path": "packages/storage-sqlite/test/controller-reservations.test.ts",
+      "sha256": "dc7ca79e021e74f767a0f220fd153f837afe8cd43300162138ad843d8aeda420"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "2079b94d366346b088b35f1d43b9b52c88ecdf0b0a53511a16dab002dd6e1c58"
+    }
+  ],
+  "effectiveSourceDigest": "e41abfb9bc92aaf71494606ab5138ffbe03c8b391860c00c7ad59a7686b0e87d",
+  "checks": [
+    {
+      "command": "pnpm install --frozen-lockfile --offline --ignore-scripts",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm build",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "pass"
+    },
+    {
+      "command": "node --test --test-concurrency=2 --experimental-strip-types apps/server/test/game-host-http.test.ts apps/server/test/game-host-port.test.ts apps/server/test/game-activity-controller.test.ts apps/server/test/local-auth-http.test.ts packages/contracts/test/game-host-contract.test.ts packages/providers-bizhawk/test/*.test.ts packages/storage-sqlite/test/database.test.ts packages/storage-sqlite/test/controller-reservations.test.ts packages/storage-sqlite/test/activity-checkpoints.test.ts",
+      "result": "pass",
+      "testsPassed": 286,
+      "testsFailed": 0
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "testsPassed": 44,
+      "testsFailed": 0
+    }
+  ],
+  "initialStorageCheck": "Predecessor migration test assumed migration 67 was terminal; updated the additive expectation to 67,68 while retaining original fingerprint/clock checks. Final affected suite passed.",
+  "sharedContractPatchSha256": "3f19a57e5d6651259188b5d8c9011e0bc6abe3b3e34555f462255edc5c711aa3",
+  "ownership": {
+    "sharedContractAndBackend": "Linux source worker",
+    "nativeClientAndPackaging": "Windows worker",
+    "publication": "sole Windows publisher"
+  },
+  "liveHostEnabled": false,
+  "liveGameQualified": false,
+  "credentialsCreatedOrTransferred": false,
+  "pairingActivated": false,
+  "sharedP2Qualified": false,
+  "runtimeConfigurationChanged": false,
+  "limits": "Fixtures do not qualify a real emulator, ROM, shutdown, authority channel or live game session."
+}

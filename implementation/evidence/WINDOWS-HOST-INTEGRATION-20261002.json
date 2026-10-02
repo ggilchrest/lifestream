@@ -1,0 +1,280 @@
+{
+  "schemaVersion": "sourceOnlyFixtureEvidence.v1",
+  "task": "Windows typed host client and Linux backend source integration",
+  "recordedAt": "2026-10-02T02:28:30.932699+00:00",
+  "clientSourceCommit": "32db797abc6fae2dffc6d9847ce2162a16cf3883",
+  "linuxPatchBase": "002c1a6e058eafe98f3c35d70be6bac9b9f474e1",
+  "testedRevision": "client commit plus supplied backend patch and joined test WORKTREE",
+  "sharedContractPatchSha256": "3f19a57e5d6651259188b5d8c9011e0bc6abe3b3e34555f462255edc5c711aa3",
+  "backendPatchSha256": "fa5ada09758a6c877b1f16659e01af16b7fb1e5cb2332b1fecd3751557f750d6",
+  "suppliedLinuxSourceFilesVerified": [
+    {
+      "path": "apps/server/package.json",
+      "sha256": "a6153345ce861b258040768a3736dc31aa883c978f18465750ae5f00ddcf80d0",
+      "rawSha256": "a6153345ce861b258040768a3736dc31aa883c978f18465750ae5f00ddcf80d0",
+      "verification": "exactBytes"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "sha256": "5102baae142a47d720bc1bc443386f297bcbb79e68c980cbde9d1b2518049f7f",
+      "rawSha256": "e86f2d2e344addbf4094f12abb0d89b9bac1b72dd91345faee1f469d57810db4",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "apps/server/src/runtime/game-host-http.ts",
+      "sha256": "e3ebef5eebdb97fcdf00c192dd8952a95727c5db06e40dbf895ebd35cb2050e0",
+      "rawSha256": "b4396c93fd84222d96d5db092653bb3c3d11f56339a83f28a4aeebee70fb232d",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "apps/server/src/runtime/game-host-port.ts",
+      "sha256": "047f4b96f6ec9ba93ee3cc930a0fc2887fc82453bae37be9f92c9a63d65a8988",
+      "rawSha256": "43f6ea67c92f02e284cc3b70ebd311270fdc30e59a6b86db1b70fae33baeb105",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "apps/server/test/fixtures/game-host.ts",
+      "sha256": "4825131eb266762ed4c2e61feb8f87fa5d477503c38209e2205c051b958da581",
+      "rawSha256": "c942b4a6ac444f08bce8e8d4895c49d86da2b1f82c18857a566b9b5887893864",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "apps/server/test/game-host-http.test.ts",
+      "sha256": "812175ee56ee1dd0a1c0c5f68aed8cf2688a7f1493b68228c46441cbf7ec64d8",
+      "rawSha256": "6e46e60168cd306bca01a7d9661347a95ac8a6d0d1e76b2f567f60b0031f4f61",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "apps/server/test/game-host-port.test.ts",
+      "sha256": "fb7512c11f20cfd179249b0416e2fe9c0b41204715de85e979507de55aeacbbe",
+      "rawSha256": "b63041ba39896d0a5e49cbe875a6cb9a39a6ae0f82c84676cafe9606d80719d5",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "apps/server/tsconfig.json",
+      "sha256": "ef85c959d37e8b018adf9ac8742b0bbf10dd346b87260e73bdaed979c7a710bf",
+      "rawSha256": "ef85c959d37e8b018adf9ac8742b0bbf10dd346b87260e73bdaed979c7a710bf",
+      "verification": "exactBytes"
+    },
+    {
+      "path": "docs/game-host-backend-source.md",
+      "sha256": "a853942ea294bd272f5306404a55c28a42f26d297c1540a5c913489f346f9dc2",
+      "rawSha256": "151fd8b0499ec5cc8cd1f2d4ff64657a4ee392d56163a333e0e721776a7599d9",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "docs/game-host-rpc-v1.txt",
+      "sha256": "dd6da146d74cc9f7a6d82e0fe034105edaaad5004e11fe39325fcc8fd8314eaa",
+      "rawSha256": "91bc9e0d889c0209114af541fb1c5731315b3f3856031926415bfc976b02fbb7",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "packages/contracts/package.json",
+      "sha256": "5a8eec46aad06be31f089b5edd1e3b1244f2cd33c7a57aa712c2935d5dc3e449",
+      "rawSha256": "5a8eec46aad06be31f089b5edd1e3b1244f2cd33c7a57aa712c2935d5dc3e449",
+      "verification": "exactBytes"
+    },
+    {
+      "path": "packages/contracts/src/game-host.ts",
+      "sha256": "45094337a317d9acb9815e71357b85d85660532f6fb8c725ae2968f2c4243262",
+      "rawSha256": "f926853028ea72ec13233d9439a2bb3ff9918cf0783e7be877b5da1fd5bc7c2f",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "packages/contracts/test/game-host-contract.test.ts",
+      "sha256": "cc4741e2c504df9c1437857ee6d7caf78fdf7ee3364e5ebb0bd6a75f3d3a4733",
+      "rawSha256": "c7b2bc9f69af5388eff3c73c34ac9085b977258f99eb72af9b72c9000ede5bac",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "packages/storage-sqlite/src/database.ts",
+      "sha256": "3244760b5174669454156c0e3851d31ec062ff4c73060f6ddcd9c73ac353acb9",
+      "rawSha256": "e967cc60894baea060c964b40beba3e26fbc527e2dc50dcfa3629c9f90864ada",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "packages/storage-sqlite/src/game-host-dispatch.ts",
+      "sha256": "7086c79d75f1a98b335b5880c801261d9ef037e38352a4dd0a0cfcdefdc4da0c",
+      "rawSha256": "0bb9c1733f44788167b95d75bf009c760f44ff84e27dcadc049e148050d79a51",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "packages/storage-sqlite/src/index.ts",
+      "sha256": "fe76d8be93eb41f62ddc6c2f8dbc6a2c552b402f4713df27ef4b6f2b8d08578e",
+      "rawSha256": "6000ca49b376a44fa75ce8da04ba5ba68c87f2d5539af38329d2ceb32d2afa54",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/0068_game_host_dispatch.sql",
+      "sha256": "12ebca07d1cd87179abc81acc283ccb1c651d5b8495676f2bda9d5bf08529886",
+      "rawSha256": "a26558a03ba6ca5673e9b2630058a56081c93bb777f635ebceab02faac978cae",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "packages/storage-sqlite/src/migrations/index.ts",
+      "sha256": "def1e64b000527260382ee608151b9a5189cc6e38a009cf480d55071776bc0fb",
+      "rawSha256": "f340ea9d22f3faa66ec02d708f969622c51b275f9af906589623bf88d10f0527",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "packages/storage-sqlite/test/controller-reservations.test.ts",
+      "sha256": "dc7ca79e021e74f767a0f220fd153f837afe8cd43300162138ad843d8aeda420",
+      "rawSha256": "494ae1526e111bf5a4e472d22f50638bfe4ae8a561be73ad9e6b98389cde7791",
+      "verification": "Windows CRLF normalized to LF"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "2079b94d366346b088b35f1d43b9b52c88ecdf0b0a53511a16dab002dd6e1c58",
+      "rawSha256": "34ad8dd9ce8913ef69fbc9d728942ed631eefe6429f1ee8cf0645976dc0a3a72",
+      "verification": "Windows CRLF normalized to LF"
+    }
+  ],
+  "windowsSourceFiles": [
+    {
+      "path": "docs/windows-game-adapter.md",
+      "sha256": "cb567ecdb0f3ebe4a15afc39693d08f3d5407c2e7c513b24c8e79023fd6447bc"
+    },
+    {
+      "path": "packages/providers-bizhawk/native/entry.lua",
+      "sha256": "14612bc7e3ceb752bd5f233af746c5028b1f06c360f3c0bf60fca783fca5ce43"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/index.ts",
+      "sha256": "200082928b15155a4fec42d0270fa2baba25385a1c50864fae72a3c2040fdbca"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/provider.ts",
+      "sha256": "6c8b6172a7e0da06e58ea5756e76b45ac3587aea704e0075239e13376041f797"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/windows-host-lifecycle.ts",
+      "sha256": "eccf61624b9192c63c7fabede492c178ead6203efd6dbd052ea947f8b565ab95"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/game-host-client.ts",
+      "sha256": "9726ecafbd7b5c0bdde89897a33091ea4a7f19cae65e5c0b089681a7fb70e4d4"
+    },
+    {
+      "path": "packages/providers-bizhawk/test/windows-host-lifecycle.test.ts",
+      "sha256": "edfb17573af018de4c16a87374cf08110910d2de1d200b16530c0e73d101eb59"
+    },
+    {
+      "path": "packages/providers-bizhawk/test/game-host-fixtures.ts",
+      "sha256": "1ed9dd655c5bdc5b6d5359aa7f401fc2f7ce4a2964f16eb1192bd80699eb8ba8"
+    },
+    {
+      "path": "packages/providers-bizhawk/test/game-host-client.test.ts",
+      "sha256": "4b83dfc612b91e2e75df39c089051d34e703f92de27b03483b7f5dd9d139626b"
+    },
+    {
+      "path": "scripts/game-adapter-cli.mjs",
+      "sha256": "f5676bd92b872d1fdac4cefb2e39d03260f86a56b22743821e6037a19cbcf797"
+    },
+    {
+      "path": "scripts/package-game-adapter-windows.mjs",
+      "sha256": "98837ff5079f94539460bdfa1d0e2dfc65f4a48a4676b5eef3e5734612329d6f"
+    },
+    {
+      "path": "apps/server/test/game-host-client-join.test.ts",
+      "sha256": "a282c576cdce04838d2c862d23810b1bf44abd879cfad8249fa66e51120fe799"
+    }
+  ],
+  "checks": [
+    {
+      "command": "node scripts/build.mjs",
+      "platform": "Windows Node24.21.0",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm typecheck",
+      "platform": "Windows Node24.21.0",
+      "result": "pass"
+    },
+    {
+      "command": "pnpm install --frozen-lockfile --offline --ignore-scripts",
+      "platform": "Windows",
+      "result": "pass"
+    },
+    {
+      "command": "node --test packages/providers-bizhawk/test/*.test.ts packages/contracts/test/game-host-contract.test.ts",
+      "platform": "Windows",
+      "result": "pass",
+      "testsPassed": 195
+    },
+    {
+      "command": "node --test apps/server/test/game-host-client-join.test.ts",
+      "platform": "Windows",
+      "result": "pass",
+      "testsPassed": 4
+    },
+    {
+      "command": "node --test --test-concurrency=2 --experimental-strip-types apps/server/test/game-host-http.test.ts apps/server/test/game-host-port.test.ts apps/server/test/game-activity-controller.test.ts apps/server/test/local-auth-http.test.ts packages/contracts/test/game-host-contract.test.ts packages/providers-bizhawk/test/*.test.ts packages/storage-sqlite/test/database.test.ts packages/storage-sqlite/test/controller-reservations.test.ts packages/storage-sqlite/test/activity-checkpoints.test.ts",
+      "platform": "Linux; supplied worker evidence, not rerun on this host",
+      "result": "pass",
+      "testsPassed": 286
+    },
+    {
+      "command": "Same supplied focused command, with integrated Windows client fixtures",
+      "platform": "Windows",
+      "result": "fail",
+      "testsPassed": 326,
+      "testsFailed": 16,
+      "categories": [
+        "Windows directory fsync EPERM",
+        "Windows open-file cleanup EPERM/EBUSY"
+      ],
+      "completeLogSha256": "9a8d7d347128333c2a4a37ed9cd5ca29111aea296c1ef25f2eb81ddf26e57535"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "platform": "Linux; supplied worker evidence, not rerun here",
+      "result": "pass",
+      "testsPassed": 44
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "platform": "Windows",
+      "result": "fail",
+      "testsPassed": 37,
+      "testsFailed": 7,
+      "category": "Windows owner-path handling in historical temporary-repository fixtures; missing/prerequisite evidence escapes owner repository",
+      "completeLogSha256": "56e80f903dc9ad0fc257307c7ea4d7e90dc9f8e1cda99095eba7a50e04486f77"
+    },
+    {
+      "command": "pnpm lint",
+      "platform": "Windows",
+      "result": "pass"
+    }
+  ],
+  "nativeProbe": {
+    "installedBizHawkVersion": "2.11.1",
+    "actualEmptyEmulatorMutualAuthentication": "pass; source and committed client-only package",
+    "simulatedControllerAssertions": 27,
+    "emulatorRomLoaded": false,
+    "gameplayQualified": false
+  },
+  "portableClientOnlyPackage": {
+    "qualifiedRevision": "32db797abc6fae2dffc6d9847ce2162a16cf3883",
+    "inventoryFilesVerified": 696,
+    "loader": "unconfigured",
+    "inheritedPrivateIpc": "mechanism present, authority false, no host messages or credentials",
+    "coherentIntegratedPackage": "rebuild after integrated commit; never relabel older package"
+  },
+  "joinedBoundary": "Actual HTTP envelopes, prepared coordinator and in-memory SQLite CAS. Synthetic auth/source/native qualifiers only. Lost admission holds reservation; qualified original receipt/usage may settle historical accounting even if result ACK is lost. Neither ACK nor local fence is pause/gameplay authority.",
+  "liveHostEnabled": false,
+  "liveGameQualified": false,
+  "credentialsCreatedOrTransferred": false,
+  "pairingActivated": false,
+  "sharedP2Qualified": false,
+  "runtimeConfigurationChanged": false,
+  "fullWindowsBackendQualified": false,
+  "remainingGates": [
+    "G-only secret-bearing owner-state handoff and fresh sign-in",
+    "parent-owned migrated Linux backend readiness and exact integrated-source qualification",
+    "approved Windows administrator HTTPS cutover",
+    "explicit trusted host composition/current installation and visible-state/native receipt qualification",
+    "specific pairing and finite controller/image/journal/memory authorization",
+    "shared-P2 server-slot release: 2834/5697ms exceeds250ms; remains suppressed",
+    "ordinarySave control RPC deliberately unavailable; existing genuine game save preserved"
+  ]
+}
