@@ -23,11 +23,11 @@ export type SupervisedGameNative={
 export type SupervisedGameCampaign={
  selectPlanning:(join:GameHostJoin,repository:ActivityCheckpointRepository,signal:AbortSignal)=>Promise<{selection:GameCampaignContextSelection;bounds:GamePlanningBounds}|null>;
  planningCurrent:HostGamePlanningPublication['current'];
- terminalRef:HostGamePlanningPublication['terminalRef'];
- publishDecision:HostGamePlanningPublication['publishDecision'];
+ terminalRef:(result:Parameters<HostGamePlanningPublication['terminalRef']>[0],step?:PreparedHostGameStep)=>string|null;
+ publishDecision:(result:Parameters<HostGamePlanningPublication['publishDecision']>[0],step?:PreparedHostGameStep)=>boolean;
  prepareController:(join:GameHostJoin,step:PreparedHostGameStep,outcome:BackgroundResult,repository:ActivityCheckpointRepository,signal:AbortSignal)=>Promise<Parameters<GameHostJoin['runController']>[0]|null>;
  controllerCurrent:GameHostOptions['controllerCurrent'];
- recordSettledStep:(join:GameHostJoin,controller:Parameters<GameHostJoin['runController']>[0],result:Awaited<ReturnType<GameHostJoin['runController']>>,repository:ActivityCheckpointRepository)=>Promise<{journalCommitted:true;episode?:GameExperienceEpisode}|null>;
+ recordSettledStep:(join:GameHostJoin,controller:Parameters<GameHostJoin['runController']>[0],result:Awaited<ReturnType<GameHostJoin['runController']>>,repository:ActivityCheckpointRepository,signal?:AbortSignal)=>Promise<{journalCommitted:true;episode?:GameExperienceEpisode}|null>;
 };
 export function createSupervisedGameRuntime(options:{
  native:SupervisedGameNative;campaign:SupervisedGameCampaign;

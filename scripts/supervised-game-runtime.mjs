@@ -53,7 +53,7 @@ export function createSupervisedGameRuntime({native,campaign,createRepository,re
       const selected=await campaignPins.selectPlanning(join,repository,abort.signal);
       if(!selected||!current())break;
       const step=join.runtime.preparePlanning(selected.selection,selected.bounds);
-      const outcome=await join.runtime.runPlanning(step,{current:(scope,checkpoint)=>current()&&safe(()=>campaignPins.planningCurrent(scope,checkpoint)),terminalRef:campaignPins.terminalRef,publishDecision:result=>current()&&safe(()=>campaignPins.publishDecision(result))});
+      const outcome=await join.runtime.runPlanning(step,{current:(scope,checkpoint)=>current()&&safe(()=>campaignPins.planningCurrent(scope,checkpoint)),terminalRef:result=>campaignPins.terminalRef(result,step),publishDecision:result=>current()&&safe(()=>campaignPins.publishDecision(result,step))});
       if(outcome.state!=='published'||!current()){report({state:'suppressed',reason:outcome.reason??outcome.state,index});break;}
       const controller=await campaignPins.prepareController(join,step,outcome,repository,abort.signal);
       if(controller===null){report({state:'modelNoAction',index});break;}
@@ -62,7 +62,7 @@ export function createSupervisedGameRuntime({native,campaign,createRepository,re
       if(result.state!=='settled'){report({state:'requiresReconciliation',index});break;}
       // The campaign owner supplies actual committed journal/source evidence.
       // Memory publication remains subject to independent production consent.
-      const recorded=await campaignPins.recordSettledStep(join,controller,result,repository);
+      const recorded=await campaignPins.recordSettledStep(join,controller,result,repository,abort.signal);
       if(!recorded||recorded.journalCommitted!==true)throw Error('Durable campaign journal unavailable');
       if(recorded.episode&&current()){
        const memoryResult=join.runtime.publishEpisode(recorded.episode);

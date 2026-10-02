@@ -1,0 +1,130 @@
+{
+  "utc": "2026-10-02T16:58:39.945156+00:00",
+  "workingBaseRevision": "3751762c04b41cdb7115e8d0bb195daf8742efb3",
+  "sourceInputArchiveSha256": "a554f4de1282ed0bfe15b0ca657b28006f2263136da53ec62e4f280aa42e11c8",
+  "mergedDeltaSha256": "f933576d0870ea62cdf571a22ed4a6cec2ac863cd7b465507c6142f46a5867d2",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/runtime/game-campaign-owner.ts",
+      "sha256": "79d5daddec0dc025c1c6719c5c895a77b91c810b68815450f6416acf876c274d"
+    },
+    {
+      "path": "apps/server/src/runtime/game-frame-interpretation.ts",
+      "sha256": "bffbdcc97d632947c51d2fe6c008b7a2207e6d412579fc42d0d97ae1703f8cde"
+    },
+    {
+      "path": "apps/server/test/game-campaign-owner.test.ts",
+      "sha256": "9c6219e83cfb6b069d094565f11d1e8f44c3ba16e83540c6599bdca7169fc402"
+    },
+    {
+      "path": "apps/server/test/game-frame-interpretation.test.ts",
+      "sha256": "9d4c7c6eb930b3b51a27f91ae2fd442a059c2e4dddce9f68e5d93ba860aa9a17"
+    },
+    {
+      "path": "scripts/supervised-game-runtime.mjs",
+      "sha256": "1702df227644370d26d44f7e56b9eb4c3bdbba4a32f24c265d9ba4fd83f66ff8"
+    },
+    {
+      "path": "scripts/supervised-game-runtime.d.mts",
+      "sha256": "ba3d8a79770c80892b07c84253694361d7c22135cadcc9d2d9c43d572b995655"
+    },
+    {
+      "path": "docs/game-runtime-production.md",
+      "sha256": "cb41130db281f15872202ccf9afd5fb706dae7956df0a4a564819d68e19923f2"
+    }
+  ],
+  "scope": "Reviewed actual SQLite campaign owner, purpose-bound PNG reader and supervision argument plumbing; no live runtime or policy activation",
+  "reviewChanges": [
+    "Preserved both Windows native driver and Linux campaign/interpretation documentation appends.",
+    "Unknown capability kinds and non-boolean vision flags refuse before observation or PNG retrieval; regression cases added.",
+    "Updated only closely related checkpoint writable-scope aid for five new public paths; historical S066 evidence/status retained."
+  ],
+  "checks": [
+    {
+      "platform": "Windows Node24.21.0",
+      "command": "tsc -b --pretty false apps/server plus11 provider/runtime/storage/contracts workspaces",
+      "result": "pass"
+    },
+    {
+      "platform": "Windows Node24.21.0",
+      "command": "node --test --experimental-strip-types apps/server/test/game-campaign-owner.test.ts apps/server/test/game-frame-interpretation.test.ts scripts/supervised-game-runtime.test.mjs apps/server/test/supervised-game-runtime.test.ts apps/server/test/game-activity-controller.test.ts apps/server/test/game-activity-planning.test.ts apps/server/test/game-host-runtime.test.ts",
+      "result": "pass",
+      "tests": 83,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "platform": "Windows Node24.21.0",
+      "command": "eslint scripts/supervised-game-runtime.mjs scripts/supervised-game-runtime.test.mjs",
+      "result": "pass"
+    },
+    {
+      "platform": "Windows Node24.21.0",
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass; structure only"
+    },
+    {
+      "platform": "Linux exact merged isolated source",
+      "command": [
+        "/home/gg/.local/share/lifestream/toolchains/node-v24.21.0-linux-x64/bin/node",
+        "scripts/build.mjs"
+      ],
+      "result": "pass",
+      "seconds": 7.53
+    },
+    {
+      "platform": "Linux exact merged isolated source",
+      "command": [
+        "/home/gg/.local/share/lifestream/toolchains/node-v24.21.0-linux-x64/bin/node",
+        "--test",
+        "--experimental-strip-types",
+        "apps/server/test/game-campaign-owner.test.ts",
+        "apps/server/test/game-frame-interpretation.test.ts",
+        "scripts/supervised-game-runtime.test.mjs",
+        "apps/server/test/supervised-game-runtime.test.ts",
+        "apps/server/test/game-activity-controller.test.ts",
+        "apps/server/test/game-activity-planning.test.ts",
+        "apps/server/test/game-host-runtime.test.ts"
+      ],
+      "result": "pass",
+      "seconds": 2.37
+    },
+    {
+      "platform": "Linux exact merged isolated source",
+      "command": [
+        "/home/gg/.local/share/lifestream/toolchains/node-v24.21.0-linux-x64/bin/node",
+        "node_modules/eslint/bin/eslint.js",
+        "scripts/supervised-game-runtime.mjs",
+        "scripts/supervised-game-runtime.test.mjs"
+      ],
+      "result": "pass",
+      "seconds": 0.16
+    }
+  ],
+  "existingFullSuiteLimit": "Nine independently reproduced unchanged migration68 assertion failures remain historical; no new full-suite pass claimed.",
+  "interpretationFindings": {
+    "installedUsableProjectorFoundInLifestreamTrees": false,
+    "pinnedGgufArchitecture": "qwen35",
+    "visionMetadataKeys": [],
+    "visionTensorPrefixCount": 0,
+    "reportedServingVision": false,
+    "projectorCompatibilityQualified": false,
+    "minimalCandidate": "Existing Windows pixels-only LiveFrameDecoder calibrated against literal actual CT UI, with guarded observation provenance over current JSON contract; no scene cue qualified from generic blackness/RGB digests."
+  },
+  "userDependentGates": [
+    "Actual normal signed-in desktop/personal Tifa binding, pending G",
+    "Explicit episode/journal retention policy pending G answer; proposed4episodes8192bytes1hour remains unselected",
+    "Actual meaningful game UI/scene interpretation and finite joined turn",
+    "Meaningful campaign episode and ordinary conversation readback",
+    "In-game save/menu qualification"
+  ],
+  "sourcePublication": "requested; no source activation implied",
+  "runDisposition": "waiting",
+  "gameRuntimeActivated": false,
+  "modelProjectorDownloaded": false,
+  "inferenceOrSpeechServiceChanged": false,
+  "liveP2Enabled": false,
+  "tifaTurnPerformed": false,
+  "campaignJournalWrites": 0,
+  "personalMemoryWrites": 0
+}

@@ -99,3 +99,35 @@ native action time locally. This is not a new usage field in the closed HTTP
 completion contract; Linux composition must not invent monotonic measurements
 from a synthetic callback. The ordinary save API remains disabled: isolated
 native flush/cold-load qualification does not establish in-game menu saving.
+
+`createGameCampaignOwner` in `apps/server/src/runtime/game-campaign-owner.ts`
+implements the campaign callbacks against the same server SQLite database.
+It consumes a genuine configured-window start claim before initialization,
+selects the actual retained journal, accepts only the minted prepared planning
+identity, waits for durable planning settlement before publishing the decision,
+and mints fresh dispatch validation against a second observation. Controller
+journaling requires a matching settled SQLite reservation and a fresh resulting
+observation linked to that exact action. It reads the committed journal and
+checkpoint back, advances their references and preserves actual usage floors.
+It does not turn accounting or frame identities into game-progress/save claims.
+
+Use `createGameObservationReader` from
+`apps/server/src/runtime/game-frame-interpretation.ts` as the campaign source's
+`observe` callback. It invokes the existing authenticated adapter, verifies the
+purpose-bound owned PNG, digest, size, freshness and observation/timeline scope,
+then invokes the reviewed pixels-only decoder. Only manifest-allowed visible
+fields and screenshot-attributed untrusted facts survive. Decode and frame
+retrieval share a finite deadline; owned image bytes are zeroed after success,
+failure and late arrival. No decoder means unavailable before native capture.
+The native peer currently returns empty facts and visible fields, so supplying
+this hook alone does not qualify CT scene interpretation. A game-vision decoder
+requires actual vision capability and a pinned loaded projector digest; a chat
+template containing image markers supplies neither.
+
+The campaign retention join checks the existing scoped enabled automatic-memory
+revision and active account. It additionally needs explicit episode policy:
+`retentionMs` 1-2147483647, `maximumEpisodes` 1-128, `maximumBytes` 1-16384 per
+episode, and a nonblank `retentionPolicyRef` at most2048 UTF-8 bytes. There is no
+automatic TTL default. Existing consent is reused; a policy reference is not
+fabricated. Source predicates, meaningful episode grounding, privacy, correction,
+forgetting and ordinary-save qualification retain their original owners.
