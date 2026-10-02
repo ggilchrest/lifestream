@@ -5,6 +5,8 @@ local peer
 local closeChannel
 local function main()
   client.pause()
+  local source=debug.getinfo(1,'S').source:sub(2);local directory=source:match('^(.*[/\\])')or ''
+  local utcExpiry=assert(loadfile(directory..'utc-expiry.lua'))()
   local clr=luanet or require('luanet');clr.load_assembly('System');clr.load_assembly('Newtonsoft.Json')
   local JSON=clr.import_type('Newtonsoft.Json.JsonConvert')
   local Reader=clr.import_type('Newtonsoft.Json.JsonTextReader')
@@ -137,9 +139,8 @@ local function main()
     if math.max(width,height)>config.bounds.maxScreenshotLongEdge then File.Delete(path);error('Native frame dimensions exceeded')end
     local sha=SHA.Create();local digest=hex(sha:ComputeHash(bytes));sha:Dispose();bytes=nil
     files[id]={path=path,bytes=size,expires=now+config.frameTtlMs};bytesHeld=bytesHeld+size
-    return {screenshotId=id,mediaRef=id,sha256=digest,byteLength=size,mediaType='image/png',width=width,height=height,capturedAt=captured,frameNumber=frame,expiresAt=DateTime.Parse(captured):AddMilliseconds(config.frameTtlMs):ToString('o')}
+    return {screenshotId=id,mediaRef=id,sha256=digest,byteLength=size,mediaType='image/png',width=width,height=height,capturedAt=captured,frameNumber=frame,expiresAt=utcExpiry(captured,config.frameTtlMs)}
   end
-  local source=debug.getinfo(1,'S').source:sub(2);local directory=source:match('^(.*[/\\])')or ''
   local factory=assert(loadfile(directory..'peer.lua'))()
   peer=factory(config,{json=json,api=api,clock=clock,crypto=crypto,channel=channel,store=store})
   config.executionMode='normal'

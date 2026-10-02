@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "task": "CT Windows native UTC expiry repair",
+  "baseRevision": "677aa4929135314e793b670a24f7ae449d218523",
+  "utc": "2026-10-02T07:27:27.834Z",
+  "scope": "public source repair and bounded real native qualification; not Tifa gameplay",
+  "failureBefore": {
+    "utcOffsetTimestamp": "rejected by Z-only screenshot contract",
+    "secondCall": "NLua DateTime.AddMilliseconds instance-method call fails on second observation; explicit float and reflection alternatives also failed",
+    "evidence": "local native operation results and bounded CLR failure trace; no auth traffic captured"
+  },
+  "correction": "strict canonical UTC Lua calendar addition with integer TTL 1..30000ms, preserves 100ns precision; no local-time conversion or repeated DateTime instance invocation",
+  "sourceSha256": {
+    "packages\\providers-bizhawk\\native\\entry.lua": "e8d3fd885ea52419621c18548ec12ca3c032e4279468b59c9e02ddc9c8310a98",
+    "packages\\providers-bizhawk\\native\\utc-expiry.lua": "71c47f9ba0406b072905e7491e47901d3b837fa225a3ccd778e3d22bc32e3b47",
+    "packages\\providers-bizhawk\\test\\utc-expiry-regression.lua": "76e93c88cc8fe414e7fbcab7195f709f34da235cd08f732d27a72ae401bcf486"
+  },
+  "nativeRegression": {
+    "vendorBizHawkVersion": "2.11.1",
+    "emulatorSha256": "f8cdb93551a544f680bf3876d9d8d72643859e7a44a23b04e1a25b92e48f80cd",
+    "core": "Snes9x",
+    "utcExpiryAssertions": 166,
+    "consecutiveGuardedObservations": 3,
+    "pngDimensions": [
+      256,
+      224
+    ],
+    "samePausedFrameAndPng": true,
+    "mutualAuthentication": true,
+    "pauseAndNeutralReadback": true,
+    "originalSaveUnchanged": true,
+    "isolatedSaveUnchanged": true,
+    "gameplayActions": 0,
+    "backendAttachment": false,
+    "modelCalls": 0,
+    "journalWrites": 0,
+    "memoryWrites": 0
+  },
+  "notQualified": [
+    "Tifa coordinator/authenticated attachment",
+    "controller/usage/reconciliation/exact lease shutdown",
+    "reviewed semantic visible-state decoder",
+    "shared P2 model cancellation",
+    "ordinary-save progress under Tifa",
+    "whole Windows backend"
+  ]
+}
