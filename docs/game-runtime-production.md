@@ -159,8 +159,10 @@ without that setup and never auto-starts. The closed descriptor has exactly:
 and reviewed `sourceFiles` pins. `native` supplies explicit `port`,
 `connectionTimeoutMs`, `authenticationTimeoutMs`, `sessionDurationMs`, `bounds`,
 and `romSha1`. The Lua entry is fixed to this package's native directory, whose
-entry/peer/UTC files must be included in the approved pins. Setup must use an
-isolated ordinary-save copy and the already-qualified ordinary-speed config;
+entry/peer/UTC files must be included in the approved pins. The descriptor's
+package revision is a Git commit; the typed attachment's `sourceRevision` remains
+its independently reviewed 64-character source digest. Setup must use an isolated
+ordinary-save copy and the already-qualified ordinary-speed config;
 the preserved original save is never the writable run directory.
 
 No consent or source/inference qualification is inferred from this file or its

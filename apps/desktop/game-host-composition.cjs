@@ -26,7 +26,7 @@ function createDesktopGameHostComposition({controls,net,partition,sdk,sourceRevi
  const broker=new DesktopGameHostSessionBroker({net,partition,gameHostMessage:sdk.gameHostMessage,now});
  controls.bindBroker(broker);
  let consumed=false,driver=null,custody=null,secret=null,watch=null,stopping=null;
- const status=()=>Object.freeze({...broker.status(),nativeConfigured:!!selected,nativeConnected:driver?.snapshot?.nativeConnected===true,attached:driver?.snapshot?.attached===true});
+ const status=()=>Object.freeze({...broker.status(),nativeConfigured:!!selected,nativeConnected:driver?.snapshot?.nativeConnected===true,attached:driver?.snapshot?.attached===true,nativeStage:driver?.snapshot?.nativeStage??null,nativeStartupFailure:driver?.snapshot?.nativeStartupFailure??null,driverFailure:driver?.snapshot?.reason??null});
  const sourceCurrent=()=>{try{const s=lstatSync(selected.path);return s.isFile()&&!s.isSymbolicLink()&&s.size<=131072&&sha(readFileSync(selected.path))===selected.sha256;}catch{return false;}};
  const cleanup=()=>{clearInterval(watch);watch=null;secret?.fill(0);secret=null;custody?.dispose();custody=null;};
  const stop=(reason='stop')=>{consumed=true;if(stopping)return stopping;const fenced=broker.stop(reason);void driver?.fence(reason).catch(()=>{});stopping=fenced.finally(cleanup);return stopping;};

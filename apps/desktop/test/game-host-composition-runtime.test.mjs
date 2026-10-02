@@ -26,7 +26,7 @@ test('actual Electron composition authenticates owned graphical BizHawk, accepts
  // model, gameplay, ordinary save menus, journal or memory.
  const executable=process.env.LIFESTREAM_TEST_DESKTOP_EXECUTABLE,application=join(dirname(executable),'resources','app'),build=JSON.parse(readFileSync(join(application,'build.json'),'utf8'));
  const request=observe(),scope=request.scope,endpoint={endpointId:scope.contextBinding.endpointId,ownership:'personal',privacyClass:'personal',health:'healthy'},runtimeSourceRevision='c'.repeat(64),pinsDigest=createHash('sha256').update(JSON.stringify(fixture.sourceFiles)).digest('hex');
- const attach={protocol,hostId:randomUUID(),scope,pinsDigest,providerRef:'synthetic-desktop-composition',sourceRevision:build.sourceRevision};
+ const attach={protocol,hostId:randomUUID(),scope,pinsDigest,providerRef:'synthetic-desktop-composition',sourceRevision:pinsDigest};
  const setup={schemaVersion:'lifestream.desktop-game-host-setup.v1',sourceRevision:build.sourceRevision,approvalRef:'synthetic-readonly-composition-qualification',attach,binding:{revision:1,endpoint,runtimeSourceRevision},expiresAt:new Date(Date.now()+30000).toISOString(),paths:fixture.paths,evidence:{directory:fixture.directory,sourceFiles:fixture.sourceFiles},native:fixture.native};
  const setupFile=join(fixture.directory,'setup.json');writeFileSync(setupFile,JSON.stringify(setup));
  request.scope=scope;request.payload.expectedPinsDigest=pinsDigest;
@@ -36,7 +36,7 @@ test('actual Electron composition authenticates owned graphical BizHawk, accepts
   app=await _electron.launch({executablePath:executable,args:['--url','http://127.0.0.1:43182/control/#account','--user-data-dir='+profile,'--game-host-setup='+setupFile,'--game-host-setup-sha256='+hash(setupFile)]});
   await app.firstWindow();
   await app.evaluate(({net},data)=>{
-   const {EventEmitter}=require('node:events');globalThis.nativeCompositionProbe={routes:[],observations:0};let sent=false;
+   const {EventEmitter}=process.getBuiltinModule('events');const fixtureRequire=process.getBuiltinModule('module').createRequire(data.contractModule);globalThis.nativeCompositionProbe={routes:[],observations:0};let sent=false;
    // Patch net only in this disposable qualification process. Production main
    // and Chromium credentials/session storage are never read or imported.
    net.request=options=>{
@@ -48,7 +48,7 @@ test('actual Electron composition authenticates owned graphical BizHawk, accepts
      if(route==='/api/auth/v1/session')value={principalId:data.attach.scope.principalId,sessionId:data.attach.scope.contextBinding.sessionId,owner:true,adminExpiresAt:new Date(Date.now()+30000).toISOString(),csrfToken:'SYNTHETIC_COMPOSITION_ONLY_NO_REAL_CREDENTIAL_123456'};
      else if(route==='/api/runtime/v1/session-context')value={ended:false,revision:1,endpoint:data.endpoint,runtimeSelfContext:{sourceRevision:data.runtimeSourceRevision}};
      else if(route.endsWith('/attach'))value={protocol:data.protocol,attachmentId:data.attachmentId,expiresAt:new Date(Date.now()+10000).toISOString(),pollMs:1000,maxMessageBytes:131072};
-     else if(route.endsWith('/next')){if(sent)return;sent=true;data.request.deadlineAt=new Date(Date.now()+4500).toISOString();value={protocol:data.protocol,kind:'command',attachmentId:data.attachmentId,commandId:data.commandId,requestDigest:require(data.contractModule).gameHostDigest(data.request),expiresAt:data.request.deadlineAt,request:data.request};data.commandExpiry=data.request.deadlineAt;}
+     else if(route.endsWith('/next')){if(sent)return;sent=true;data.request.deadlineAt=new Date(Date.now()+4500).toISOString();value={protocol:data.protocol,kind:'command',attachmentId:data.attachmentId,commandId:data.commandId,requestDigest:fixtureRequire(data.contractModule).gameHostDigest(data.request),expiresAt:data.request.deadlineAt,request:data.request};data.commandExpiry=data.request.deadlineAt;}
      else if(route.endsWith('/admit'))value={...JSON.parse(body),admitted:true,expiresAt:data.commandExpiry};
      else if(route.endsWith('/result')){const message=JSON.parse(body);probe.observations++;probe.frameNumber=message.result.outcome.payload?.observation?.frameNumber;value={protocol:data.protocol,attachmentId:data.attachmentId,commandId:message.commandId,resultDigest:message.resultDigest,accepted:true};}
      else if(route.endsWith('/detach'))value={protocol:data.protocol,attachmentId:data.attachmentId,fenced:true};else throw Error('Unexpected synthetic route');
@@ -57,19 +57,19 @@ test('actual Electron composition authenticates owned graphical BizHawk, accepts
    };
   },{attach,endpoint,runtimeSourceRevision,protocol,attachmentId:randomUUID(),commandId:randomUUID(),request,contractModule:join(application,'node_modules','@lifestream','contracts','dist','game-host.js')});
   const mainModule=join(application,'main.cjs');
-  const before=await app.evaluate(async(_electron,path)=>require(path).gameHostComposition.readiness(),mainModule);assert.equal(before.ready,true);assert.equal(before.attached,false);
-  const connected=await app.evaluate(async(_electron,path)=>require(path).gameHostComposition.startApprovedSession(),mainModule);assert.equal(connected.attached,true);assert.equal(connected.nativeConnected,true);
+  const before=await app.evaluate(async(_electron,path)=>process.getBuiltinModule('module').createRequire(path)(path).gameHostComposition.readiness(),mainModule);assert.equal(before.ready,true);assert.equal(before.attached,false);
+  const connected=await app.evaluate(async(_electron,path)=>process.getBuiltinModule('module').createRequire(path)(path).gameHostComposition.startApprovedSession(),mainModule);assert.equal(connected.attached,true);assert.equal(connected.nativeConnected,true);
   const deadline=Date.now()+5000;let observed;
   do{observed=await app.evaluate(()=>globalThis.nativeCompositionProbe);if(observed.observations===1)break;await new Promise(r=>setTimeout(r,25));}while(Date.now()<deadline);
   assert.equal(observed.observations,1);assert.equal(observed.frameNumber,0);assert.equal(observed.routes.some(path=>path.endsWith('/admit')),true);
-  await app.evaluate(async(_electron,path)=>require(path).gameHostComposition.stop('qualificationComplete'),mainModule);
-  const after=await app.evaluate((_electron,path)=>require(path).gameHostComposition.status(),mainModule);assert.equal(after.enabled,false);assert.equal(after.attached,false);
+  await app.evaluate(async(_electron,path)=>process.getBuiltinModule('module').createRequire(path)(path).gameHostComposition.stop('qualificationComplete'),mainModule);
+  const after=await app.evaluate((_electron,path)=>process.getBuiltinModule('module').createRequire(path)(path).gameHostComposition.status(),mainModule);assert.equal(after.enabled,false);assert.equal(after.attached,false);
   const closedDeadline=Date.now()+3000;let native;
   do{try{native=JSON.parse(readFileSync(join(fixture.directory,'native-evidence.json'),'utf8'));}catch{}if(native?.event==='closed')break;await new Promise(r=>setTimeout(r,25));}while(Date.now()<closedDeadline);
   assert.equal(native?.event,'closed');assert.equal(native.paused,true);assert.equal(native.frameNumber,0);assert.equal(Object.values(native.buttons).every(value=>value===false),true);
   assert.equal(hash(fixture.originalSave),fixture.saveSha256);assert.equal(hash(fixture.workingSave),fixture.saveSha256);
   proof={...proof,status:'passed',sourceRevision:build.sourceRevision,acceptedObservations:1,frameNumber:0,nativeClosedPausedNeutral:true,sourceFiles:fixture.sourceFiles,originalSaveUnchanged:true,workingSaveUnchanged:true,routes:observed.routes};
- }catch(error){proof={...proof,status:'failed_or_unverified',error:error.message};throw error;}
+ }catch(error){let startup;try{startup=await app?.evaluate((_electron,path)=>process.getBuiltinModule('module').createRequire(path)(path).gameHostComposition.status(),join(application,'main.cjs'));}catch{}proof={...proof,status:'failed_or_unverified',error:error.message,startup};throw error;}
  finally{
   await app?.close();
   // Close only the exact qualification child/config, through its ordinary GUI.

@@ -31,22 +31,27 @@ export function createOwnedWindowsGameHostDriver(options:OwnedWindowsGameHostDri
  const evidence=new NativeGameEvidence(options.evidence);
  let host:Awaited<ReturnType<typeof listenForNativeBizHawk>>|undefined,transport:AuthenticatedGameTransport|undefined;
  let pauseConfirmed=false;
+ let nativeStage='validated',nativeStartupFailure:string|null=null;
  const boundary:GameAdapterBoundaryOptions={providerRef:options.attach.providerRef,maxDurationMs:5000,sourceAvailable:evidence.sourceAvailable,acceptObservation:evidence.acceptObservation,acceptAction:evidence.acceptAction,reconcileEffect:evidence.reconcileEffect,admitRelease:evidence.admitRelease};
  const client=new WindowsGameHostClient({attach:options.attach,fetchAuthenticated:options.fetchAuthenticated,isScopeCurrent:options.isScopeCurrent,sourceIsQualified:attach=>evidence.installationAvailable(attach.scope,attach.pinsDigest),nativeBoundary:boundary,httpTimeoutMs:5000,sessionDurationMs:options.native.sessionDurationMs,shutdownTimeoutMs:5000,
   openNative:async(finalBoundary,context)=>{
+   nativeStage='checkingSource';
    if(context.signal.aborted||!context.isCurrent(options.attach.scope))throw Error('Native launch fenced');
    const native={...options.native,scope:options.attach.scope,pinsDigest:options.attach.pinsDigest,boundary:finalBoundary,shutdownAdmission:evidence.admitRelease,onDisconnect:()=>client.close()};
-   host=await listenForNativeBizHawk(native);
+   nativeStage='listening';host=await listenForNativeBizHawk(native);
    if(context.signal.aborted||!context.isCurrent(options.attach.scope)){await host.close();throw Error('Native launch fenced');}
+   nativeStage='spawning';
    const child=spawn(emulator,['--config='+configFile,'--lua='+entryFile,romFile],{cwd:dirname(emulator),env:{...process.env,...nativeBridgeEnvironment(native),LIFESTREAM_BIZHAWK_EVIDENCE_FILE:evidence.evidenceFile},stdio:'ignore',windowsHide:false});
-   evidence.bindOwnedProcess(child);child.once('error',()=>client.close());child.once('exit',()=>client.close());child.unref();
+   evidence.bindOwnedProcess(child);child.once('error',()=>{nativeStartupFailure='spawnFailed';client.close();});child.once('exit',()=>{nativeStartupFailure??='childExited';client.close();});child.unref();
    try{
+    nativeStage='pairing';
     transport=await host.connected;await transport.ready;
     // Native authentication is not proof that the GUI is actually watchable.
+    nativeStage='graphicalProof';
     const {stdout}=await promisify(execFile)('powershell.exe',['-NoProfile','-NonInteractive','-Command',`$p=Get-Process -Id ${child.pid}; [pscustomobject]@{pid=$p.Id;path=$p.Path;window=($p.MainWindowHandle -ne 0);session=$p.SessionId}|ConvertTo-Json -Compress`],{windowsHide:true,timeout:2000,maxBuffer:4096});
     const gui=JSON.parse(stdout);if(gui.pid!==child.pid||realpathSync(gui.path)!==emulator||gui.window!==true||gui.session<1||!evidence.sourceAvailable(options.attach.scope,options.attach.pinsDigest))throw Error('Native graphical source unavailable');
-    return {adapter:transport.adapter,close:()=>{void host?.close();}};
-   }catch(error){await host.close();throw error;}
+    nativeStage='connected';return {adapter:transport.adapter,close:()=>{void host?.close();}};
+   }catch(error){nativeStartupFailure??='connectionFailed';await host.close();throw error;}
   },
   shutdownExactOldLease:async context=>{
    const release=transport?.safetyRelease;
@@ -57,5 +62,5 @@ export function createOwnedWindowsGameHostDriver(options:OwnedWindowsGameHostDri
   }
  });
  const done=client.run();void done.catch(()=>{});
- return {fence:async()=>{client.close();await done.catch(()=>{});},done,ready:client.ready,evidence,get snapshot(){return Object.freeze({...client.snapshot,pauseConfirmed});}};
+ return {fence:async()=>{client.close();await done.catch(()=>{});},done,ready:client.ready,evidence,get snapshot(){return Object.freeze({...client.snapshot,pauseConfirmed,nativeStage,nativeStartupFailure});}};
 }
