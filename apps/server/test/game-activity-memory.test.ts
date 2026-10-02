@@ -12,13 +12,22 @@ import {createLifestreamServer} from '../src/index.ts';
 import {loadProfile} from '../src/config/loader.ts';
 import {defaultTopics,type ExperienceScope} from '@lifestream/contracts/experience';
 import type {ExperientialLearning} from '../src/runtime/experience.ts';
+import {ActivityCheckpointRepository} from '../../../packages/storage-sqlite/src/game-activity.ts';
+import {scriptedGameBounds} from '../../../packages/runtime/test/fixtures/game-policy.ts';
+import {GAME_HOST_PROTOCOL as protocol} from '@lifestream/contracts/game-host';
+import type {GameHostJoin,GameHostOptions} from '../src/runtime/game-host-port.ts';
+import {isDeepStrictEqual} from 'node:util';
 
-async function setup(t:import('node:test').TestContext,retentionMs=60000){
- const root=await mkdtemp(join(tmpdir(),'ls-game-memory-http-')),config=loadProfile('test');config.authority.authentication='local-password';config.storage={databasePath:join(root,'state.sqlite'),artifactDirectory:join(root,'artifacts')};
+async function setup(t:import('node:test').TestContext,retentionMs=60000,production=false){
+ const root=await mkdtemp(join(tmpdir(),'ls-game-memory-http-')),config=loadProfile('test');if(production)config.profile='ai5090';config.authority.authentication='local-password';config.storage={databasePath:join(root,'state.sqlite'),artifactDirectory:join(root,'artifacts')};
  let now=Date.now(),current=true,meaningful=true;const e=fixtureEpisode(now);e.expiresAt=new Date(now+retentionMs).toISOString();e.summary='The gate stayed closed.';e.uncertainty='Hidden cause unknown.';const sources=fixtureGameEpisodeSources(e);
  const installerToken=randomBytes(32).toString('hex'),password=randomBytes(32).toString('hex');
  const source:GameEpisodeOptions={maximumFences:8,scopeCurrent:o=>o.principalId===e.scope.principalId&&o.assistantId===e.scope.assistantId&&o.relationshipId===e.scope.relationshipId,quarantined:()=>false,retentionFor:()=>({retentionMs:86400000,retentionPolicyRef:e.retentionPolicyRef,maximumEpisodes:4,maximumBytes:8192}),sourceRecordsFor:()=>sources,meaningfulGroundingCurrent:()=>meaningful,publicationCurrent:()=>current,retainedSourceCurrent:()=>current,now:()=>now};
- const app=createLifestreamServer({config,experienceTestClock:()=>now,localAuth:{stateDirectory:join(root,'auth'),installerToken},audiencePrivacy:{sourceIds:[]},gameMemory:{source,maximumCandidates:4,estimate:()=>({value:.6,basis:'Scripted summary fidelity only, not perception truth.',policyRef:'test-only:game-transform:1'})}});
+ const memory={source,maximumCandidates:4,estimate:()=>({value:.6,basis:'Scripted summary fidelity only, not perception truth.',policyRef:'test-only:game-transform:1'})};
+ let hostJoin:GameHostJoin|undefined;
+ const approvedUntil=new Date(Date.now()+60000).toISOString();
+ const gameHost:GameHostOptions={maxAttachments:1,maxDurationMs:5000,createRepository:database=>new ActivityCheckpointRepository(database,{maxRuns:4,maxReservations:8,maxControllerReservations:8,maxCheckpointBytes:32768,scopeCurrent:()=>current,quarantined:()=>false,policyFor:()=>({enabled:true,revision:1,retentionMs:3600000,bounds:structuredClone(scriptedGameBounds)}),allowCreate:()=>false,checkpointCurrent:()=>current,transitionCurrent:()=>true,planningCurrent:()=>current,usageCurrent:()=>current,controllerCurrent:()=>current,controllerUsageCurrent:()=>current}),resolveAttachment:(_actor,metadata)=>{const {protocol:_,...binding}=metadata;return current?binding:null;},bindingCurrent:()=>current,controllerCurrent:()=>false,boundary:{sourceAvailable:()=>current,acceptObservation:()=>current,acceptAction:()=>false},onAttached:join=>hostJoin=join};
+ const app=createLifestreamServer({config,sessionEnvironmentId:e.scope.environmentId,localAuth:{stateDirectory:join(root,'auth'),installerToken},audiencePrivacy:{sourceIds:[]},...(production?{gameHost,gameRuntime:{resolveApproval:scope=>isDeepStrictEqual(scope,e.scope)?{scope:structuredClone(e.scope),approvedUntil,maximumRunMs:30000,maximumPlanningSteps:1,observations:true,campaignJournal:true,controllerInput:false,memoryEpisodes:true}:null,sourceCurrent:()=>current,memory:{options:memory,retentionConsentRefFor:owner=>source.scopeCurrent(owner)?e.retentionPolicyRef:null}}}:{experienceTestClock:()=>now,gameMemory:memory})});
  t.after(async()=>{await app.shutdown();await rm(root,{recursive:true,force:true});});await app.start();
  const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={origin:base,'content-type':'application/json'};
  const request=(path:string,body?:unknown,extra:Record<string,string>={})=>fetch(base+path,{method:body===undefined?'GET':'POST',headers:{...headers,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
@@ -28,11 +37,12 @@ async function setup(t:import('node:test').TestContext,retentionMs=60000){
  const relationship=(await api(`/api/admin/v1/assistants/${assistantId}/relationships`,{})).relationship,relationshipId=relationship.relationshipId as string;
  await api('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession',bindingKey:randomUUID()});await api('/api/runtime/v1/audience',{mode:'solo',seconds:300});
  e.scope.principalId=identity.principalId;e.scope.assistantId=assistantId;e.scope.relationshipId=relationshipId;
+ if(production){const stored=app.database.connection.prepare('SELECT conversation_id,endpoint_id FROM sessions WHERE id=?').get(identity.sessionId)!;e.scope.contextBinding={...e.scope.contextBinding,conversationId:String(stored.conversation_id),endpointId:String(stored.endpoint_id),sessionId:identity.sessionId};}
  for(const record of [...sources.actions,...sources.observations])record.scope=structuredClone(e.scope);
  const internals=app as unknown as {database:Database;memories:MemoryRepository;providers:{inference:InferenceProvider};experience:ExperientialLearning;experienceSources:(scope:ExperienceScope)=>import('@lifestream/contracts/experience').Source[]};
  const requests:InferenceRequest[]=[];internals.providers.inference=conversationFixtureProvider({async *generate(input){requests.push(input);yield {kind:'text',text:'Scripted historical reply.'};yield {kind:'done'};}});
  const owner={assistantId,relationshipId},path=`/api/admin/v1/assistants/${assistantId}/relationships/${relationshipId}`;
- return {app,e,source,sources,internals,requests,request,api,owner,path,identity,enable:()=>api('/api/runtime/v1/memory',{...owner,enabled:true,expectedRevision:0}),withdraw:()=>current=false,meaningless:()=>meaningful=false,advance:(ms:number)=>now+=ms,reply:()=>request('/api/runtime/v1/messages',{...owner,userInput:'Recall the gate in our past game.'})};
+ return {app,e,source,sources,internals,requests,request,api,owner,path,identity,join:()=>hostJoin!,attach:()=>api('/api/runtime/v1/game-host/attach',{protocol,hostId:randomUUID(),scope:e.scope,pinsDigest:e.pinsDigest,providerRef:'scripted:source',sourceRevision:'b'.repeat(64)}),enable:()=>api('/api/runtime/v1/memory',{...owner,enabled:true,expectedRevision:0}),withdraw:()=>current=false,meaningless:()=>meaningful=false,advance:(ms:number)=>now+=ms,reply:()=>request('/api/runtime/v1/messages',{...owner,userInput:'Recall the gate in our past game.'})};
 }
 
 test('trusted source publication reaches existing active memory and ordinary nine-section HTTP replies',{timeout:15000},async t=>{
@@ -123,4 +133,23 @@ test('source-bound game reflection publishes an uncertain continuation into an o
  assert.match(prepared,/Ask about the past game gate attempt/,JSON.stringify(attempts));assert.equal(f.requests.at(-1)!.sections.length,9);
  await f.api('/api/runtime/v1/audience',{mode:'shared',seconds:300});await(await f.request('/api/runtime/v1/messages',{...f.owner,userInput:'What should we work on next?'})).text();assert.doesNotMatch(f.requests.at(-1)!.sections.find(s=>s.kind==='preparedMemory')!.content,/Ask about the past game gate attempt/);
  assert.equal(f.internals.database.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,0);
+});
+
+test('source-qualified production game memory requires authenticated attachment and existing policy, then remains historical after prepared attachment fencing',{timeout:15000},async t=>{
+ const f=await setup(t,60000,true);assert.deepEqual(f.app.publishGameEpisode(f.e),{state:'unavailable',memoryId:null});
+ const attachment=await f.attach(),runtime=f.join().runtime!;assert.ok(runtime);assert.deepEqual(runtime.publishEpisode(f.e),{state:'unavailable',memoryId:null});await f.enable();
+ const retained=runtime.publishEpisode(f.e);assert.equal(retained.state,'retained');assert.ok(retained.memoryId);
+ const response=await f.request('/api/runtime/v1/game-host/detach',{protocol,attachmentId:attachment.attachmentId});assert.ok([200,410].includes(response.status));assert.equal(runtime.isCurrent(),false);
+ assert.deepEqual(runtime.publishEpisode({...f.e,episodeId:randomUUID()}),{state:'unavailable',memoryId:null});
+ assert.equal(f.internals.database.connection.prepare('SELECT count(*) AS n FROM experience_turns').get()!.n,0,'game publication cannot manufacture Human turns');
+ assert.match(await(await f.reply()).text(),/interaction.completed/);const memory=f.requests.at(-1)!.sections.find(s=>s.kind==='preparedMemory')!.content;assert.match(memory,/Past simulated game experience/);assert.match(memory,/The gate stayed closed/);assert.equal(f.requests.at(-1)!.sections.length,9);
+});
+test('production game episode publication is fenced immediately by logout and independent source loss',{timeout:15000},async t=>{
+ const f=await setup(t,60000,true);await f.attach();await f.enable();assert.equal((await f.request('/api/auth/v1/sign-out',{})).status,200);
+ assert.deepEqual(f.app.publishGameEpisode(f.e),{state:'unavailable',memoryId:null});assert.equal(f.internals.database.connection.prepare('SELECT count(*) AS n FROM game_experience_episodes').get()!.n,0);
+});
+test('test-only memory injection remains rejected for a production profile even with local authentication',()=>{
+ const config=loadProfile('test');config.profile='ai5090';config.authority.authentication='local-password';
+ assert.throws(()=>createLifestreamServer({config,localAuth:{stateDirectory:'/tmp/test-only-no-create',installerToken:'synthetic-never-read'},gameMemory:{} as never}),/isolated loopback local-auth tests/);
+ assert.throws(()=>createLifestreamServer({config,localAuth:{stateDirectory:'/tmp/test-only-no-create',installerToken:'synthetic-never-read'},gameRuntime:{resolveApproval:()=>null,sourceCurrent:()=>false}}),/separate authenticated loopback host composition/);
 });

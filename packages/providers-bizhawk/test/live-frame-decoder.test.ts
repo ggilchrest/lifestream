@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createHash,randomUUID} from 'node:crypto';
+import {crc32,deflateSync} from 'node:zlib';
+import {LiveFrameDecoder,gameFramePixels,gamePixelRegionDigest} from '../src/live-frame-decoder.ts';
+import type {ActivityScope,GameObservation} from '@lifestream/contracts/game-activity';
+const time=Date.parse('2026-10-02T08:00:00Z'),expected=Buffer.from([10,20,30,40,50,60,70,80,90,100,110,120]);
+function png(rows:Buffer,color=2){const chunk=(name:string,data:Buffer)=>{const b=Buffer.alloc(data.length+12);b.writeUInt32BE(data.length);b.write(name,4);data.copy(b,8);b.writeUInt32BE(crc32(b.subarray(4,data.length+8)),data.length+8);return b;};const h=Buffer.alloc(13);h.writeUInt32BE(2);h.writeUInt32BE(2,4);h[8]=8;h[9]=color;return Buffer.concat([Buffer.from('89504e470d0a1a0a','hex'),chunk('IHDR',h),chunk('IDAT',deflateSync(rows)),chunk('IEND',Buffer.alloc(0))]);}
+function source(bytes:Buffer){const id=()=>randomUUID();const scope:ActivityScope={assistantId:id(),principalId:id(),relationshipId:id(),environmentId:id(),activityId:id(),runId:id(),activityEpoch:1,timelineId:id(),timelineRevision:1,campaignId:id(),observationDomain:'simulatedGame',contextBinding:{conversationId:id(),sessionId:id(),endpointId:id(),participationKind:'logicalActivity',humanSpeakerRef:null,audioOwnerEndpointId:null,ownerPermissionRef:'live-pixel-fixture'}};const observation:GameObservation={schemaVersion:'1.0.0',recordType:'gameObservation',scope,observationId:id(),revision:1,pinsDigest:'a'.repeat(64),frameNumber:2,capturedAt:new Date(time).toISOString(),receivedAt:new Date(time).toISOString(),interpretedAt:null,providerConfigurationRef:null,screenshots:[{screenshotId:id(),mediaRef:id(),sha256:createHash('sha256').update(bytes).digest('hex'),byteLength:bytes.length,mediaType:'image/png',width:2,height:2,capturedAt:new Date(time).toISOString(),frameNumber:2,expiresAt:new Date(time+1000).toISOString()}],facts:[],visibleState:[],previousActionId:null,untrusted:true};return {scope,observation,bytes,now:time+1};}
+test('actual RGB unfilter handles all five PNG filters and rejects transparent pixels',()=>{
+ const rows=[[0,10,20,30,40,50,60,0,70,80,90,100,110,120],[1,10,20,30,30,30,30,1,70,80,90,30,30,30],[2,10,20,30,40,50,60,2,60,60,60,60,60,60],[3,10,20,30,35,40,45,3,65,70,75,45,45,45],[4,10,20,30,30,30,30,4,60,60,60,30,30,30]];
+ for(const row of rows){const image=gameFramePixels(png(Buffer.from(row)));assert.deepEqual(image.rgb,expected);image.rgb.fill(0);}
+ const alpha=Buffer.from([0,10,20,30,255,40,50,60,255,0,70,80,90,255,100,110,120,255]);const image=gameFramePixels(png(alpha,6));assert.deepEqual(image.rgb,expected);image.rgb.fill(0);alpha[4]=0;assert.throws(()=>gameFramePixels(png(alpha,6)));
+});
+test('reviewed local pixel cue survives unrelated changes but never claims absent UI',()=>{
+ const rows=Buffer.from([0,10,20,30,40,50,60,0,70,80,90,100,110,120]),region={x:0,y:0,width:1,height:1},rgbSha256=gamePixelRegionDigest(expected,2,2,region);
+ const decoder=new LiveFrameDecoder({revision:'1.0.0',cues:[{fieldId:'ct.ui.syntheticLiteral',value:'reviewed pixel patch',regions:[{...region,rgbSha256}]}]});
+ const original=decoder.decode(source(png(rows)));assert.equal(original.find(f=>f.fieldId==='ct.ui.syntheticLiteral')?.value,'reviewed pixel patch');rows[12]=111;assert.equal(decoder.decode(source(png(rows))).find(f=>f.fieldId==='ct.ui.syntheticLiteral')?.value,'reviewed pixel patch');rows[1]=11;const changed=decoder.decode(source(png(rows)));assert.equal(changed.some(f=>f.fieldId==='ct.ui.syntheticLiteral'),false);assert.equal(changed.length,2);
+});
+test('current arbitrary PNG yields actual pixels with source lineage and fails closed after expiry or scope change',()=>{
+ const f=source(png(Buffer.alloc(14))),decoder=new LiveFrameDecoder({revision:'1.0.0',cues:[]}),fields=decoder.decode(f);assert.equal(fields.length,2);assert.equal(fields[0]?.value,true);assert.equal(fields[0]?.lastObservedRef,f.observation.observationId);assert.equal(fields[0]?.timelineId,f.scope.timelineId);assert.equal(fields[0]?.manifestDigest,decoder.manifestDigest);assert.deepEqual(decoder.decode({...f,now:time+1000}),[]);assert.deepEqual(decoder.decode({...f,scope:{...f.scope,timelineId:randomUUID()}}),[]);const corrupted=Buffer.from(f.bytes);corrupted[40]^=1;assert.deepEqual(decoder.decode({...f,bytes:corrupted}),[]);
+});

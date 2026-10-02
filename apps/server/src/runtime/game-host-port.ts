@@ -10,9 +10,10 @@ import {GameHostDispatchRepository} from '@lifestream/storage-sqlite';
 import type {Database,ActivityCheckpointRepository} from '@lifestream/storage-sqlite';
 import {runCheckpointedGameController} from './game-activity.ts';
 import type {CheckpointedGameControllerPorts} from './game-activity.ts';
+import type {AuthenticatedGameRuntime} from './game-host-runtime.ts';
 
 export class GameHostError extends Error{readonly status:number;readonly code:string;constructor(status:number,code:string){super(code);this.status=status;this.code=code;}}
-export type GameHostActor={principalId:string;sessionId:string;isCurrent:(scope:G.ActivityScope)=>boolean};
+export type GameHostActor={principalId:string;sessionId:string;isCurrent:(scope:G.ActivityScope)=>boolean;runtimeFor?:(scope:G.ActivityScope,repository:ActivityCheckpointRepository)=>AuthenticatedGameRuntime|null};
 export type GameHostBinding=Omit<H.GameHostAttach,'protocol'>;
 export type GameHostOptions={
  maxAttachments:number;maxDurationMs:number;createRepository:(database:Database)=>ActivityCheckpointRepository;
@@ -24,12 +25,12 @@ export type GameHostOptions={
  onAttached?:(join:GameHostJoin)=>void;
 };
 type Pending={command:H.GameHostCommand;context:GameCallContext;identity:H.GameHostAdmit&{hostId:string;sourceRevision:string};resolve:(result:H.GameHostResult)=>void;reject:(error:Error)=>void;timer:NodeJS.Timeout;abort:()=>void;deadline:number;delivered:boolean;entered:boolean};
-type Attachment={id:string;actor:GameHostActor;binding:Readonly<GameHostBinding>;expires:number;monotonicExpiry:number;lastPoll:number;pending:Pending|null;poll:(()=>void)|null;cancel:H.GameHostCancel|null;closed:boolean;effectUnresolved:boolean;controller:AbortController;adapter:GameActivityAdapter};
+type Attachment={id:string;actor:GameHostActor;binding:Readonly<GameHostBinding>;expires:number;monotonicExpiry:number;lastPoll:number;pending:Pending|null;poll:(()=>void)|null;cancel:H.GameHostCancel|null;closed:boolean;effectUnresolved:boolean;controller:AbortController;adapter:GameActivityAdapter;runtime?:AuthenticatedGameRuntime};
 const owner=(scope:G.ActivityScope)=>({assistantId:scope.assistantId,principalId:scope.principalId,relationshipId:scope.relationshipId});
 function fail(status:number,code:string):never{throw new GameHostError(status,code);}
 const safe=(check:()=>boolean)=>{try{return check()===true;}catch{return false;}};
 /** A trusted source-only handle; attachment never starts an activity or grants authority. */
-export type GameHostJoin={attachmentId:string;scope:Readonly<G.ActivityScope>;adapter:GameActivityAdapter;
+export type GameHostJoin={attachmentId:string;scope:Readonly<G.ActivityScope>;adapter:GameActivityAdapter;runtime?:AuthenticatedGameRuntime;
  runController:(input:Parameters<typeof runCheckpointedGameController>[0],ports:Pick<CheckpointedGameControllerPorts,'signal'|'current'|'usageFor'>)=>ReturnType<typeof runCheckpointedGameController>};
 
 export class GameHostPort{
@@ -46,7 +47,7 @@ export class GameHostPort{
   this.sweepTimer=setInterval(()=>this.sweep(),250);this.sweepTimer.unref();
  }
  private current(a:Attachment,scope=a.binding.scope){
-  return !this.closed&&!a.closed&&Date.now()<a.expires&&performance.now()<a.monotonicExpiry&&performance.now()-a.lastPoll<GAME_HOST_LIMITS.idleMs&&isDeepStrictEqual(scope,a.binding.scope)&&a.actor.principalId===scope.principalId&&a.actor.sessionId===scope.contextBinding.sessionId&&safe(()=>a.actor.isCurrent(scope))&&safe(()=>this.options.bindingCurrent(a.actor,a.binding))&&safe(()=>this.options.boundary.sourceAvailable(scope,a.binding.pinsDigest));
+  return !this.closed&&!a.closed&&(!a.runtime||safe(a.runtime.isCurrent))&&Date.now()<a.expires&&performance.now()<a.monotonicExpiry&&performance.now()-a.lastPoll<GAME_HOST_LIMITS.idleMs&&isDeepStrictEqual(scope,a.binding.scope)&&a.actor.principalId===scope.principalId&&a.actor.sessionId===scope.contextBinding.sessionId&&safe(()=>a.actor.isCurrent(scope))&&safe(()=>this.options.bindingCurrent(a.actor,a.binding))&&safe(()=>this.options.boundary.sourceAvailable(scope,a.binding.pinsDigest));
  }
  private attachment(actor:GameHostActor,id:string):Attachment{
   const a=this.attachments.get(id);if(!a)fail(410,'game_host_expired');
@@ -63,7 +64,7 @@ export class GameHostPort{
   for(const a of this.attachments.values())if(a.binding.hostId===metadata.hostId||a.binding.scope.runId===metadata.scope.runId)fail(409,'game_host_conflict');
   if(this.attachments.size>=this.options.maxAttachments)fail(503,'game_host_unavailable');
   const {protocol:_,...binding}=checked,id=randomUUID(),expires=Date.now()+GAME_HOST_LIMITS.attachmentMs;
-  const actorSnapshot=Object.freeze({principalId:actor.principalId,sessionId:actor.sessionId,isCurrent:actor.isCurrent});
+  const actorSnapshot=Object.freeze({principalId:actor.principalId,sessionId:actor.sessionId,isCurrent:actor.isCurrent,...(actor.runtimeFor?{runtimeFor:actor.runtimeFor}:{})});
   const a={id,actor:actorSnapshot,binding:Object.freeze(binding),expires,monotonicExpiry:performance.now()+GAME_HOST_LIMITS.attachmentMs,lastPoll:performance.now(),pending:null,poll:null,cancel:null,closed:false,effectUnresolved:false,controller:new AbortController()} as Attachment;
   const invoke=<R extends H.GameHostResult>(request:H.GameHostRequest,context:GameCallContext)=>this.invoke(a,request,context) as Promise<R>;
   const rawAdapter:GameActivityAdapter={observe:(r,c)=>invoke<G.GameObserveResult>(r,c),applyController:(r,c)=>invoke<G.GameActionResult>(r,c),releaseControls:(r,c)=>invoke<G.GameReleaseResult>(r,c),controlSave:async()=>fail(503,'game_host_unavailable')};
@@ -76,18 +77,19 @@ export class GameHostPort{
    ...(boundary.reconcileEffect?{reconcileEffect:async(r:G.GameActionRequest|G.GameSaveRequest,c:GameCallContext)=>this.current(a,r.scope)&&await boundary.reconcileEffect!(r,c)===true}:{}),
    ...(boundary.admitRelease?{admitRelease:async(r:G.GameReleaseRequest,c:GameCallContext)=>this.current(a,r.scope)&&await boundary.admitRelease!(r,c)===true}:{}),
   }));
+  if(actorSnapshot.runtimeFor){const runtime=actorSnapshot.runtimeFor(a.binding.scope,this.repository);if(!runtime)fail(503,'game_host_unavailable');a.runtime=runtime;}
   if(!this.current(a))fail(503,'game_host_unavailable');this.attachments.set(id,a);
   const adapter=a.adapter,repository=this.repository;
-  const join:GameHostJoin=Object.freeze({attachmentId:id,scope:a.binding.scope,adapter,runController:(input,ports)=>{
+  const join:GameHostJoin=Object.freeze({attachmentId:id,scope:a.binding.scope,adapter,...(a.runtime?{runtime:a.runtime}:{}),runController:(input,ports)=>{
    const {signal,current,usageFor}=ports;
-   return runCheckpointedGameController(input,{repository,adapter,signal:AbortSignal.any([signal,a.controller.signal]),usageFor,current:(cp,r)=>ports.signal===signal&&ports.current===current&&ports.usageFor===usageFor&&this.current(a,r.scope)&&safe(()=>this.options.controllerCurrent(cp,r))&&safe(()=>current(cp,r))});
+   return runCheckpointedGameController(input,{repository,adapter,signal:AbortSignal.any([signal,a.controller.signal]),usageFor,current:(cp,r)=>ports.signal===signal&&ports.current===current&&ports.usageFor===usageFor&&this.current(a,r.scope)&&(!a.runtime||safe(a.runtime.controllerCurrent))&&safe(()=>this.options.controllerCurrent(cp,r))&&safe(()=>current(cp,r))});
   }});
   try{this.options.onAttached?.(join);}catch{this.fence(a,'detached');fail(503,'game_host_unavailable');}
   return {protocol,attachmentId:id,expiresAt:new Date(expires).toISOString(),pollMs:1000,maxMessageBytes:131072};
  }
  private claims=new WeakMap<Attachment,{requestDigest:string;identity:Pending['identity']}>();
  private claim(a:Attachment,r:G.GameActionRequest,c:GameCallContext):boolean{
-  if(a.effectUnresolved||a.pending||this.claims.has(a)||c.signal.aborted||!this.current(a,r.scope)||!safe(()=>c.isCurrent(r.scope)))return false;
+  if(a.effectUnresolved||a.pending||this.claims.has(a)||c.signal.aborted||a.runtime&&!safe(a.runtime.controllerCurrent)||!this.current(a,r.scope)||!safe(()=>c.isCurrent(r.scope)))return false;
   const identity={protocol,attachmentId:a.id,hostId:a.binding.hostId,sourceRevision:a.binding.sourceRevision,commandId:randomUUID(),requestDigest:gameHostDigest(r)};
   const {protocol:_,...durableIdentity}=identity;
   if(!this.dispatch.claim(owner(r.scope),r,durableIdentity,(cp,request)=>this.current(a,request.scope)&&!c.signal.aborted&&safe(()=>c.isCurrent(request.scope))&&safe(()=>this.options.controllerCurrent(cp,request))))return false;
@@ -151,7 +153,7 @@ export class GameHostPort{
   a.cancel={protocol,kind:'cancel',attachmentId:a.id,commandId:p.command.commandId,requestDigest:p.command.requestDigest,cancellationId:p.command.request.cancellationId,reason};p.reject(new GameHostError(410,'game_host_expired'));a.poll?.();
  }
  private fence(a:Attachment,reason:H.GameHostCancel['reason']){
-  if(a.closed)return;a.closed=true;this.cancel(a,reason);a.controller.abort();const claim=this.claims.get(a);if(claim){try{this.dispatch.unresolved(claim.identity);}catch{}this.claims.delete(a);}this.attachments.delete(a.id);a.poll?.();
+  if(a.closed)return;a.closed=true;a.runtime?.close();this.cancel(a,reason);a.controller.abort();const claim=this.claims.get(a);if(claim){try{this.dispatch.unresolved(claim.identity);}catch{}this.claims.delete(a);}this.attachments.delete(a.id);a.poll?.();
  }
  private sweep(){for(const a of this.attachments.values())if(!this.current(a))this.fence(a,'scopeChanged');}
  close(){if(this.closed)return;this.closed=true;clearInterval(this.sweepTimer);for(const a of this.attachments.values())this.fence(a,'shutdown');}

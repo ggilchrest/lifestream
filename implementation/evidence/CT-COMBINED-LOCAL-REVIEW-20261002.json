@@ -1,0 +1,173 @@
+{
+  "utc": "2026-10-02T09:15:11Z",
+  "baseRevision": "677aa4929135314e793b670a24f7ae449d218523",
+  "disposition": "waiting",
+  "scope": "isolated local source/fixture review only",
+  "sourceCommitted": false,
+  "sourcePublished": false,
+  "candidateDeployed": false,
+  "controllerInput": false,
+  "modelCalls": 0,
+  "ownerSessionAccessed": false,
+  "privateSourceOrGameAssetsIncluded": false,
+  "inputArchives": {
+    "windows": {
+      "sha256": "932242063b117897572cc6b99b411e0b17f8f156481f059ad8bd9480f14e0b3e",
+      "sourceFiles": 26
+    },
+    "linux": {
+      "sha256": "f219c0e4dec8c054761fc2c1eb244d89e743a0e64ee27d65a5c4dc1e9fde3b4f",
+      "sourceFiles": 9
+    },
+    "overlappingSourcePaths": []
+  },
+  "portContractSha256": "a9a015932d71a39fbda4d112b8b2e8730b86aff40c1d59d62db977db19f9b9ce",
+  "sourceHashVerification": "All 26 Windows source files and all nine Linux source files matched supplied inventories before review metadata changes.",
+  "combinedTypecheck": {
+    "command": "node node_modules/typescript/bin/tsc -b --pretty false apps/server packages/providers-bizhawk packages/providers-sglang",
+    "exitCode": 0,
+    "result": "passed",
+    "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "combinedFocusedTests": {
+    "command": "node --test --experimental-strip-types apps/server/test/game-host-http.test.ts apps/server/test/game-host-runtime.test.ts apps/server/test/game-activity-memory.test.ts packages/providers-sglang/test/caller-cleanup.test.ts packages/providers-sglang/test/provider.test.ts packages/providers-sglang/test/llama-protocol.test.ts apps/desktop/test/game-host-session-broker.test.mjs apps/desktop/test/game-host-session-request.test.mjs packages/providers-bizhawk/test/live-frame-decoder.test.ts packages/providers-bizhawk/test/reviewed-frame-decoder.test.ts packages/providers-bizhawk/test/transport.test.ts",
+    "pass": 75,
+    "fail": 30,
+    "total": 105,
+    "exitCode": 1,
+    "failure": "All thirty failed at existing RecoveryJournal.write directory fsync with EPERM before server-fixture setup completed.",
+    "logSha256": "1e3536e5d513f36cba84da9913c32ae4730cd637906ee822643598d53f0d9b38",
+    "baselineReproduction": "Representative pre-existing game-memory test reproduced identical EPERM stack on baseline. RecoveryJournal source is exactly the exported Git base; baseline worktree normalized source is identical.",
+    "baselineLogSha256": "0f523dc21119146f65fe8816af5b9beb45deae53f70ca911661529886b08dd92",
+    "noDurabilityBypass": true
+  },
+  "linuxSuppliedEvidence": {
+    "focusedTests": 61,
+    "build": "passed",
+    "typecheck": "passed",
+    "broaderRegression": {
+      "pass": 2492,
+      "fail": 9,
+      "skip": 1,
+      "failureDisposition": "All nine reproduced on unchanged Linux base; old assertions omit existing migration68."
+    },
+    "nativeCases": 12,
+    "sharedCoordinatorSettlementMs": [
+      0.273,
+      2.518
+    ],
+    "sharedCoordinatorNativeReleaseMs": [
+      25.815,
+      146.949
+    ],
+    "limitsMs": {
+      "caller": 10,
+      "nativeSlotRelease": 250
+    },
+    "passingSamplesAreNotUniversalHardBounds": true,
+    "liveP2Enabled": false,
+    "originalServicesRestored": true,
+    "source": "Supplied Linux receipts; no native inference run was repeated on Windows."
+  },
+  "composition": {
+    "currentAPI": "GameHostJoin.runtime.preparePlanning(selection,bounds), runPlanning(step,publication), publishEpisode(episode), isCurrent(), controllerCurrent(), close()",
+    "earlierHelper": "ct-supervised-composition.mjs predates the opaque join and is retained only as historical inert review input, not an executable launch recipe.",
+    "requiredWindowsPorts": [
+      "resolveAttachment",
+      "bindingCurrent",
+      "controllerCurrent",
+      "sourceAvailable",
+      "acceptObservation",
+      "acceptAction",
+      "reconcileEffect",
+      "admitRelease",
+      "usageFor",
+      "shutdownExactOldLease"
+    ],
+    "noTrueDefaults": true
+  },
+  "blockers": [
+    "Controller and publication rejected twice by automatic approval review; both remain stopped pending recognized direct user approval. No alternate route or retry.",
+    "Actual owner desktop session/bootstrap and exact nonsecret attach/binding metadata remain unverified; candidate is not installed into the running desktop.",
+    "General gameplay/protected-menu decoder and purpose-bound model image-byte delivery remain unqualified; current native proof is three paused black startup PNGs.",
+    "Actual action receipt, monotonic usage, reconciliation and exact-old-lease shutdown have not been qualified; prepared controller fixture was not executed.",
+    "Native/server controlSave remains unavailable; ordinary menu SaveRAM flush/readback/cold-load integration is missing.",
+    "Linux candidate timing samples qualify the tested text/model envelope only; no live promotion or exact deployed selection qualification is configured.",
+    "Thirty server fixtures cannot complete on Windows because existing recovery-journal directory fsync returns EPERM; identical representative failure reproduced on unchanged base, durability checks were preserved."
+  ],
+  "resumeDocument": "docs/ct-combined-resume-20261002.md",
+  "deadlineUtc": "2026-10-02T14:00:00Z",
+  "deadlineExtensionImplied": false,
+  "recoveryFollowup": {
+    "checkedAt": "2026-10-02T15:21:08Z",
+    "baseRevision": "7309d344200687b40d1eb5ce5c2b802b66b373f7",
+    "sourceReconciliation": "Reviewed candidate paths individually, four already published UTC paths retained and adapter packaging inputs merged; preservation roots unchanged.",
+    "desktopExpiry": "Historical 14:00 hard cutoff removed; ten-minute finite session cap retained and regression tested.",
+    "windows": {
+      "build": "passed",
+      "focused": {
+        "tests": 229,
+        "pass": 228,
+        "fail": 0,
+        "skip": 1
+      },
+      "supervision": {
+        "tests": 7,
+        "pass": 7,
+        "fail": 0
+      },
+      "workspaceStructure": "passed",
+      "workspaceFixtures": {
+        "tests": 51,
+        "pass": 44,
+        "fail": 7,
+        "skipped": 0
+      },
+      "workspaceFixtureFailure": "Pre-existing Windows path/owner-boundary fixture failures; scripts/workspace.mjs and its tests unchanged. No qualification bypass."
+    },
+    "linux": {
+      "build": "passed",
+      "focused": {
+        "tests": 129,
+        "pass": 129,
+        "fail": 0
+      },
+      "browser": {
+        "tests": 163,
+        "pass": 77,
+        "fail": 0,
+        "skip": 86
+      },
+      "lint": "passed",
+      "fullRegression": {
+        "tests": 2843,
+        "pass": 2833,
+        "fail": 9,
+        "skip": 1,
+        "failure": "All nine are stale migration-history assertions omitting existing migration68; unchanged baseline reproductions retained.",
+        "baselineReproduction": {
+          "unchangedRelease": "677aa4929135314e793b670a24f7ae449d218523",
+          "matchingFailures": 9,
+          "allOmitMigration68": true
+        }
+      },
+      "finalSupervisionAndBootstrap": {
+        "tests": 52,
+        "pass": 52,
+        "fail": 0
+      }
+    },
+    "supervisionArchiveSha256": "f7e9bb12dc92f8de01fcd5337281e552de354437c0c913da0491ee75e764dee7",
+    "newLiveGameplay": false,
+    "gameJournalOrMemoryVerified": false,
+    "sourcePublicationAuthorized": true,
+    "remainingLiveDependencies": [
+      "Normal owner desktop authentication and actual context binding",
+      "Independently qualified native production callbacks and campaign repository selection",
+      "Purpose-bound actual game image interpretation",
+      "Protected ordinary-save flush/readback/cold-load",
+      "Existing independent memory retention consent and ordinary conversation readback"
+    ],
+    "primarySlicePreserved": "LS-S066 implementationCompleteVerificationPending"
+  }
+}

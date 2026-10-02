@@ -11,7 +11,7 @@ if(parent===root||parent.startsWith(root+sep)||existsSync(destination))throw Err
 const expected=JSON.parse(readFileSync(join(root,'package.json'))).devDependencies.electron;
 if(readFileSync(join(runtime,'version'),'utf8').trim()!==expected||!existsSync(join(runtime,'electron.exe')))throw Error('The runtime must match the exact project Electron pin. Obtain and verify the official vendor archive before packaging.');
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex'),git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8'}).trim();
-const revision=git('rev-parse','HEAD'),files=['apps/desktop/main.cjs','apps/desktop/preload.cjs','apps/desktop/connection-status.cjs','apps/desktop/package.json'];
+const revision=git('rev-parse','HEAD'),files=['apps/desktop/main.cjs','apps/desktop/game-host-controls.cjs','apps/desktop/game-host-session-broker.cjs','apps/desktop/game-host-session-request.cjs','apps/desktop/preload.cjs','apps/desktop/connection-status.cjs','apps/desktop/package.json'];
 const inputs=[...files,'scripts/package-desktop-windows.mjs','package.json','pnpm-lock.yaml','LICENSE','THIRD_PARTY_NOTICES.md'];
 // Git's clean conversion accounts for an ordinary Windows CRLF checkout. Record
 // the actual packaged bytes as well; no other uncommitted input is accepted.

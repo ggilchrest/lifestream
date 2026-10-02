@@ -21,6 +21,21 @@ export type SglangConfig = { endpoint: string; model: string; protocol?: "sglang
 
 export class SglangInferenceProvider implements InferenceProvider {
   private readonly config: SglangConfig;
+  // Transport cleanup remains owned after caller cancellation. Native GPU slot
+  // release is independently qualified; this set is not a native release proof.
+  private transportReservations = 0;
+  private readonly transportCleanups = new Set<Promise<void>>();
+  get pendingTransportCleanupCount(): number { return this.transportCleanups.size; }
+  async drainTransportCleanups(): Promise<void> {
+    await Promise.all([...this.transportCleanups]);
+  }
+  private deferTransportCleanup(cleanup: () => Promise<void>): void {
+    const pending = new Promise<void>((resolve) => {
+      setImmediate(() => { cleanup().then(resolve, resolve); });
+    });
+    this.transportCleanups.add(pending);
+    pending.then(() => { this.transportCleanups.delete(pending); });
+  }
   constructor(config: SglangConfig) { this.config = config; }
   async tokenize(input:InferenceRequest|string,context:ProviderCallContext):Promise<{count:number;identity:string}>{
     if(typeof input!=='string'&&(!validCanonicalRequest(input)||input.executionMode==='replay'))throw Error('Invalid tokenization request.');
@@ -44,6 +59,10 @@ export class SglangInferenceProvider implements InferenceProvider {
     if (!validCanonicalRequest(request)) { yield { kind: "error", error: { code: "invalid_canonical_request", message: "inference requires the ordered canonical sections and matching trusted-source manifest" } }; return; }
     const remainingMs = Date.parse(request.deadlineAt) - Date.now();
     if (remainingMs <= 0) { yield { kind: "error", error: { code: "deadline_exceeded", message: "inference deadline exceeded" } }; return; }
+    if (this.transportReservations >= 64) {
+      yield { kind: "error", error: { code: "inference_unavailable", message: "inference transport cleanup capacity unavailable" } }; return;
+    }
+    this.transportReservations++;
     const controller = new AbortController(); const abort = () => controller.abort(context.signal.reason); context.signal.addEventListener("abort", abort, { once: true });
     if(context.signal.aborted)controller.abort(context.signal.reason);
     let deadlineExceeded = false;
@@ -53,14 +72,17 @@ export class SglangInferenceProvider implements InferenceProvider {
       // Runtime-owned typed and spoken prompts select the supported direct-answer mode.
       // This is a per-request mapping; untrusted text cannot change decoding or deadlines.
       const response = await fetch(`${this.config.endpoint.replace(/\/$/u, "")}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json", ...(this.config.apiKey ? { authorization: `Bearer ${this.config.apiKey}` } : {}) }, body: JSON.stringify(this.chatBody(request)), signal: controller.signal });
-      if (!response.ok || !response.body) { yield { kind: "error", error: { code: "inference_unavailable", message: `inference service returned HTTP ${response.status}` } }; return; }
-      reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = ""; let emitted = 0; const max = this.config.maxResponseBytes ?? 64_000;
+      reader = response.body?.getReader();
+      controller.signal.throwIfAborted();
+      if (!response.ok || !response.body || !reader) { yield { kind: "error", error: { code: "inference_unavailable", message: `inference service returned HTTP ${response.status}` } }; return; }
+      const decoder = new TextDecoder(); let buffer = ""; let emitted = 0; const max = this.config.maxResponseBytes ?? 64_000;
       for (;;) {
-        const next = await reader.read(); if (next.done) break;
+        const next = await reader.read(); controller.signal.throwIfAborted(); if (next.done) break;
         buffer += decoder.decode(next.value, { stream: true });
         const lines=buffer.split('\n');buffer=lines.pop()??'';
         if(Buffer.byteLength(buffer)>max){yield {kind:'error',error:{code:'response_limit',message:'inference stream frame limit exceeded'}};return;}
         for (const line of lines) {
+          controller.signal.throwIfAborted();
           if (!line.startsWith("data: ")) continue;
           const data = line.slice(6).trim();
           if (data === "[DONE]") { yield { kind: "done" }; return; }
@@ -72,8 +94,24 @@ export class SglangInferenceProvider implements InferenceProvider {
           } catch { yield { kind: "error", error: { code: "malformed_provider_event", message: "inference provider returned malformed stream data" } }; return; }
         }
       }
+      controller.signal.throwIfAborted();
       yield { kind: "error", error:{code:'malformed_provider_event',message:'inference stream ended without a terminal event'} };
     } catch (error) { if (deadlineExceeded) { yield { kind: "error", error: { code: "deadline_exceeded", message: "inference deadline exceeded" } }; return; } if (context.signal.aborted) { yield { kind: "error", error: { code: "cancelled", message: "inference cancelled" } }; return; } yield { kind: "error", error: { code: "inference_unavailable", message: error instanceof Error ? error.message.replace(/https?:\/\/\S+/gu, "[redacted-endpoint]") : "inference unavailable" } }; }
-    finally { clearTimeout(deadlineTimer); context.signal.removeEventListener("abort", abort);controller.abort();await reader?.cancel().catch(()=>{});reader?.releaseLock(); }
+    finally {
+      const cancelled = context.signal.aborted || deadlineExceeded;
+      clearTimeout(deadlineTimer); context.signal.removeEventListener("abort", abort); controller.abort();
+      const cleanup = async (): Promise<void> => {
+        try { await reader?.cancel().catch(() => {}); }
+        finally {
+          try { reader?.releaseLock(); } catch { /* Aborted or already released reader. */ }
+          this.transportReservations--;
+        }
+      };
+      // Abort notification and output fencing happen before this point. A slow
+      // reader cancellation/lock cleanup must not hold the caller's P2 lease.
+      // The bounded provider-owned reservation stays charged until cleanup ends.
+      if (cancelled && reader) this.deferTransportCleanup(cleanup);
+      else await cleanup();
+    }
   }
 }

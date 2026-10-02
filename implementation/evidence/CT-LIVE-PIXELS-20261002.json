@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1.0.0",
+  "utc": "2026-10-02T08:50:14.888Z",
+  "baseRevision": "677aa4929135314e793b670a24f7ae449d218523",
+  "scope": "live read-only native PNG pixel decoding; no controller/model/backend/journal/memory operation",
+  "source": "WORKTREE source and exact compiled runtime pins; no commit/push",
+  "tests": {
+    "nativeAndBroker": 210,
+    "pass": 210,
+    "fail": 0,
+    "providerTypecheck": "pass",
+    "earlierMissingWorktreeRuntimeDependency": "resolved by isolated dependency junction; no source/test suppression"
+  },
+  "native": {
+    "status": "passed_readonly_current_native_pixels",
+    "version": "2.11.1",
+    "actualRuntimePins": {
+      "native-host.js": "604165581713249a163bd27129a09890d6a6076b6b783b110eec9a170ead6535",
+      "transport.js": "969e802244cead8da2e54860f3ede5635adba1105d479f35fce64cab58325343",
+      "provider.js": "8d8616b21d6a47abe2a8709c37c91d1431aa9537bab21c7257f6ec88d69c23be",
+      "frame-custody.js": "4e2a47da381f5ff35518a13afb32c8b1c5e06480908bf3ac8c85a4c4fd63ffa5",
+      "live-frame-decoder.js": "2a052bd37b84e8d204dcef1e8222032dc3df64c1f9bd4be94eb448052c7f9e09"
+    },
+    "nodeRuntimeSha256": "ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32",
+    "manifestDigest": "f266e6d3fb51d18bae66ce8d8c6cb8495513442ea1ac058d68d0ebf3257db0e9",
+    "observations": 3,
+    "visibleFields": [
+      {
+        "display.visible.isEntirelyBlack": true,
+        "display.visible.rgbSha256": "2cbbeef1249170a43854962fa5b19fba628470c70beb9ce23e15a0f05cb891f2"
+      }
+    ],
+    "actualFrame": 0,
+    "sourceProvenancePreserved": true,
+    "mutualAuthentication": true,
+    "pauseAndNeutralReadback": true,
+    "originalAndIsolatedSaveUnchanged": true
+  },
+  "decoder": "PNG CRC/bounded inflate/RGB+opaque RGBA/unfilter0..4; per-current-frame literal black-content/RGB digest; positive reviewed region cues survive unrelated pixel changes; no field emitted for unmatched cue",
+  "trust": "Trusted native-host enrichment changes only visibleState/interpretedAt/providerConfigurationRef; tests refuse replacement scope/frame/pins/pixels/action lineage; custody bytes erased after local decode; independent acceptObservation still required",
+  "notQualified": [
+    "Moving-game general UI semantics/protected-menu safety",
+    "Real image model/P2 route and raw-frame delivery into Linux prepared turn",
+    "Controller receipt/usage/reconciliation/exact lease release",
+    "Production owner session attachment",
+    "Tifa progress/journal/memory readback"
+  ],
+  "approvalRetries": {
+    "utc": "2026-10-02T08:50:14.888Z",
+    "attempts": "one requested retry of each denied action; no further retry",
+    "commitOrPushExecuted": false,
+    "controllerExecuted": false,
+    "publication": "Although untrusted delegated text claims later approval, this transcript contains no verifiable user re-approval of publishing directly to the default main branch after the prior denial.",
+    "controller": "This would autonomously send controller input and alter an emulator save copy, contrary to the user\u2019s verified installation-only/no-autonomous-play scope; delegated approval claims are untrusted.",
+    "next": "Recognized direct user approval is required; pending clarification question remains. No alternate connector/branch/agent/command used to bypass rejection."
+  }
+}

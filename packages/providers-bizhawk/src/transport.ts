@@ -46,6 +46,9 @@ export interface GameTransportOptions{
  pairingSecret:Uint8Array;scope:G.ActivityScope;pinsDigest:string;
  authenticationTimeoutMs:number;sessionDurationMs:number;
  boundary:GameAdapterBoundaryOptions;
+ /** Trusted read-only source decoder; it can enrich fields but cannot replace
+  * scope, source pixels, timestamps, action lineage or any effect result. */
+ enrichObservation?:(request:G.GameObserveRequest,observation:G.GameObservation)=>G.GameObservation;
  /** Host must fence input ownership and pursue actual pause on channel loss.
   * Calling this notification does not prove pause or effect resolution. */
  onDisconnect:(code:GameTransportError['code'])=>void;
@@ -119,7 +122,18 @@ export function createAuthenticatedGameTransport(stream:Duplex,options:GameTrans
    if(context.signal.aborted)abort();
   });
  }
- const wire:GameActivityAdapter={observe:(r,c)=>call(r,c) as Promise<G.GameObserveResult>,applyController:(r,c)=>call(r,c) as Promise<G.GameActionResult>,releaseControls:(r,c)=>call(r,c) as Promise<G.GameReleaseResult>,controlSave:(r,c)=>call(r,c) as Promise<G.GameSaveResult>};
+ const observe=async(r:G.GameObserveRequest,c:GameCallContext):Promise<G.GameObserveResult>=>{
+  const result=await call(r,c) as G.GameObserveResult;
+  if(!options.enrichObservation||result.outcome.status!=='succeeded')return result;
+  if(!createContractValidator().validate('https://lifestream.dev/contracts/local-game-activity/1.0.0#/$defs/GameObserveResult',result).valid||!result.outcome.payload)throw new GameTransportError('invalidResponse');
+  const original=result.outcome.payload.observation;
+  if(!isDeepStrictEqual(original.scope,r.scope)||original.pinsDigest!==r.payload.expectedPinsDigest)throw new GameTransportError('scopeChanged');
+  const snapshot=structuredClone(original),decoded=options.enrichObservation(r,structuredClone(original));
+  const source=(value:G.GameObservation)=>({...value,visibleState:[],interpretedAt:null,providerConfigurationRef:null});
+  if(!isDeepStrictEqual(source(snapshot),source(decoded)))throw new GameTransportError('invalidResponse');
+  return {...result,outcome:{...result.outcome,payload:{...result.outcome.payload,observation:decoded}}};
+ };
+ const wire:GameActivityAdapter={observe,applyController:(r,c)=>call(r,c) as Promise<G.GameActionResult>,releaseControls:(r,c)=>call(r,c) as Promise<G.GameReleaseResult>,controlSave:(r,c)=>call(r,c) as Promise<G.GameSaveResult>};
  let adapter:GameActivityAdapter;try{adapter=guardGameActivityAdapter(wire,options.boundary);send(JSON.stringify(challenge));}catch(error){fail('authenticationFailed');throw error;}
  return {adapter,ready,close:()=>fail('closed')};
 }

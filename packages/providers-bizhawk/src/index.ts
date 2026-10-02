@@ -5,3 +5,5 @@ export {GameFrameCustody,GameFrameCustodyError,inspectGamePng} from './frame-cus
 export {listenForNativeBizHawk,nativeBridgeEnvironment,DEFAULT_BIZHAWK_NATIVE_PORT,type NativeGameHostOptions} from './native-host.js';
 export {WindowsHostLifecycle,WindowsHostLifecycleError,WINDOWS_HOST_BACKEND_URL,inheritedHostIpcAvailable,type WindowsHostContext,type WindowsHostLifecycleOptions,type OwnedHostConnection,type WindowsHostFenceReason} from './windows-host-lifecycle.js';
 export {WindowsGameHostClient,GameHostClientError,type WindowsGameHostClientOptions,type GameHostFenceContext,type GameHostClientFailure} from './game-host-client.js';
+export {ReviewedFrameDecoder,type ReviewedFrameManifest} from './reviewed-frame-decoder.js';
+export {LiveFrameDecoder,gameFramePixels,gamePixelRegionDigest,type LiveFrameManifest,type ReviewedPixelCue,type PixelRegion} from './live-frame-decoder.js';

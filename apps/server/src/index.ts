@@ -1,4 +1,7 @@
 import {GameHostPort,type GameHostOptions,type GameHostActor} from './runtime/game-host-port.ts';
+import {captureGameRuntimeOptions,productionGameMemory,createAuthenticatedGameRuntime,qualifiedGameInferenceBounds,type GameRuntimeOptions,type AuthenticatedGameRuntime} from './runtime/game-host-runtime.ts';
+import {runCheckpointedGamePlanning} from './runtime/game-activity.ts';
+import {isDeepStrictEqual} from 'node:util';
 import {handleGameHostHttp,isGameHostPath} from './runtime/game-host-http.ts';
 import type {ActivityScope} from '@lifestream/contracts/game-activity';
 import {boundedGameDataSnapshot} from '@lifestream/contracts/game-journal';
@@ -101,7 +104,7 @@ import {retainGameHelpAdvice,type GameHelpAdviceInput} from './runtime/game-advi
 import {projectGameEpisode} from '@lifestream/runtime/activity/memory';
 import {gameEpisodeDigest,gameEpisodeSnapshot} from '@lifestream/contracts/game-memory';
 import type {GameExperienceEpisode} from '@lifestream/contracts/game-activity';
-export type ServerOptions = { gameHost?:GameHostOptions; gameMemory?:GameMemoryHostOptions; telegram?:TelegramHostOptions; urgentAway?:UrgentAwayHostOptions; urgentConditions?:UrgentAttentionOptions; sessionEnvironmentId?:string; experienceTestClock?:()=>number; visualInput?:VisualInputOptions; acknowledgmentAlignment?:()=>AcknowledgmentAlignment|undefined; acknowledgmentRequiresSync?:()=>boolean; incidentReview?:PwceIncidentOptions; audiencePrivacy?: AudienceOptions; presentationPackages?: { directory: string; ownerPrincipalId?: string; catalogOnly?: boolean }; pwceActionJournal?: { create?: boolean }; initiativeSimulation?:InitiativeSimulation; config: RuntimeConfig; host?: string; port?: number; shutdownDeadlineMs?: number; controlUiDirectory?: string; profileLoader?: (profile: Profile) => RuntimeConfig; localAuth?: LocalAuthOptions; capabilityProvider?: CapabilityProvider; capabilitySchemas?:CapabilitySchemaStore; capabilityProviderIdentity?: string; canonicalAuthority?: CanonicalAuthorityHost; canonicalCapabilities?: CanonicalCapabilityComposition | null };
+export type ServerOptions = { gameRuntime?:GameRuntimeOptions; gameHost?:GameHostOptions; gameMemory?:GameMemoryHostOptions; telegram?:TelegramHostOptions; urgentAway?:UrgentAwayHostOptions; urgentConditions?:UrgentAttentionOptions; sessionEnvironmentId?:string; experienceTestClock?:()=>number; visualInput?:VisualInputOptions; acknowledgmentAlignment?:()=>AcknowledgmentAlignment|undefined; acknowledgmentRequiresSync?:()=>boolean; incidentReview?:PwceIncidentOptions; audiencePrivacy?: AudienceOptions; presentationPackages?: { directory: string; ownerPrincipalId?: string; catalogOnly?: boolean }; pwceActionJournal?: { create?: boolean }; initiativeSimulation?:InitiativeSimulation; config: RuntimeConfig; host?: string; port?: number; shutdownDeadlineMs?: number; controlUiDirectory?: string; profileLoader?: (profile: Profile) => RuntimeConfig; localAuth?: LocalAuthOptions; capabilityProvider?: CapabilityProvider; capabilitySchemas?:CapabilitySchemaStore; capabilityProviderIdentity?: string; canonicalAuthority?: CanonicalAuthorityHost; canonicalCapabilities?: CanonicalCapabilityComposition | null };
 type Json = Record<string, unknown>;
 type AuthContext = { principalId: string; sessionId: string; expiresAt: string; origin: string };
 const validUuid = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(value);
@@ -662,6 +665,8 @@ export class LifestreamServer {
   private gameHelp:GameHelpRepository|undefined;
   private gameExperience:GameExperienceRepository|undefined;
   private readonly gameMemoryOptions:GameMemoryHostOptions|undefined;
+  private readonly gameRuntimeOptions:Readonly<GameRuntimeOptions>|undefined;
+  private readonly activeGameRuntimes=new Map<string,AuthenticatedGameRuntime>();
   private automaticMemory: AutomaticMemory;
   private presentationSelection: PresentationSelection;
   private readonly audioSessions = new Set<AudioSession>();
@@ -684,8 +689,12 @@ export class LifestreamServer {
   private readonly acknowledgmentAlignment:(()=>AcknowledgmentAlignment|undefined)|undefined;
   private readonly acknowledgmentRequiresSync:(()=>boolean)|undefined;
   constructor(options: ServerOptions) {
+    if(options.gameRuntime&&(options.config.profile==='test'||!options.gameHost||options.gameMemory||options.config.authority.authentication!=='local-password'||!options.localAuth||!['127.0.0.1','localhost','::1'].includes(options.host??'127.0.0.1')))throw Error('Production game runtime requires separate authenticated loopback host composition');
+    this.gameRuntimeOptions=options.gameRuntime?captureGameRuntimeOptions(options.gameRuntime):undefined;
     if(options.gameMemory&&(options.config.profile!=='test'||options.config.authority.authentication!=='local-password'||!options.localAuth||!['127.0.0.1','localhost','::1'].includes(options.host??'127.0.0.1')))throw Error('Game memory source injection requires isolated loopback local-auth tests');
-    const gameMemory=options.gameMemory?Object.freeze({...options.gameMemory,source:Object.freeze({...options.gameMemory.source}),...(options.gameMemory.help?{help:Object.freeze({...options.gameMemory.help,options:Object.freeze({...options.gameMemory.help.options}),...(options.gameMemory.help.reply?{reply:Object.freeze({...options.gameMemory.help.reply})}:{})})}:{})}):undefined;
+    const selectedGameMemory=options.gameMemory??(this.gameRuntimeOptions?productionGameMemory(this.gameRuntimeOptions):undefined);
+    const qualifiedGameMemory=selectedGameMemory&&this.gameRuntimeOptions?{...selectedGameMemory,source:{...selectedGameMemory.source,publicationCurrent:(episode:GameExperienceEpisode)=>{const runtime=this.activeGameRuntimes.get(episode.scope.runId);return !!runtime&&isDeepStrictEqual(runtime.scope,episode.scope)&&runtime.isCurrent()&&selectedGameMemory.source.publicationCurrent(episode);}}}:selectedGameMemory;
+    const gameMemory=qualifiedGameMemory?Object.freeze({...qualifiedGameMemory,source:Object.freeze({...qualifiedGameMemory.source}),...(qualifiedGameMemory.help?{help:Object.freeze({...qualifiedGameMemory.help,options:Object.freeze({...qualifiedGameMemory.help.options}),...(qualifiedGameMemory.help.reply?{reply:Object.freeze({...qualifiedGameMemory.help.reply})}:{})})}:{})}):undefined;
     if(gameMemory?.help&&(!Number.isSafeInteger(gameMemory.help.maximumCandidates)||gameMemory.help.maximumCandidates<1||gameMemory.help.maximumCandidates>4))throw Error("Bounded pending help allocation required");
     this.gameMemoryOptions=gameMemory;
     if(options.sessionEnvironmentId!==undefined&&!validUuid(options.sessionEnvironmentId))throw Error("A valid composition-supplied session environment ID is required");this.sessionEnvironmentId=options.sessionEnvironmentId;
@@ -724,7 +733,7 @@ export class LifestreamServer {
     if(!context)throw new AuthenticationError();
     const csrf=request.headers['x-lifestream-csrf'];if(typeof csrf!=='string')throw new AuthenticationError(403,'csrf_rejected');auth.csrf(context,csrf,administration);
     let pinned:string|undefined;
-    return Object.freeze({principalId:context.principalId,sessionId:context.sessionId,isCurrent:(scope:ActivityScope)=>{
+    const current=(scope:ActivityScope)=>{
       try{
         auth.assertCurrent(context,false);
         if(this.restoreQuarantine||!this.audiencePermits(context)||scope.principalId!==context.principalId||scope.contextBinding.sessionId!==context.sessionId||!scope.relationshipId||scope.environmentId!==this.sessionEnvironmentId||!this.personalContextAllowed(scope.assistantId,scope.principalId))return false;
@@ -736,7 +745,23 @@ export class LifestreamServer {
         const current=JSON.stringify([session,endpoint,relationship.payload_json,this.admin.contextBoundary(scope.assistantId,scope.relationshipId,context.principalId)]);
         pinned??=current;return pinned===current;
       }catch{return false;}
-    }});
+    };
+    return Object.freeze({principalId:context.principalId,sessionId:context.sessionId,isCurrent:current,...(this.gameRuntimeOptions?{runtimeFor:(scope:ActivityScope,repository:import('@lifestream/storage-sqlite').ActivityCheckpointRepository)=>{
+      const options=this.gameRuntimeOptions!,registry=this.providers,admin=this.admin,provider=registry.inference;
+      if(this.activeGameRuntimes.size>=32||this.activeGameRuntimes.has(scope.runId)||!provider||registry.providers.inference?.status!=='healthy'||!current(scope))return null;
+      const authorized=()=>this.state==='ready'&&!this.profileSwitching&&this.providers===registry&&this.admin===admin&&registry.inference===provider&&registry.providers.inference?.status==='healthy'&&current(scope);
+      const runtime=createAuthenticatedGameRuntime(scope,options,repository,{current:authorized,
+        prepare:()=>this.prepareRuntimeInput({assistantId:scope.assistantId,relationshipId:scope.relationshipId,userInput:''},context,'inactive','sessionEndpoint',authorized,'activityStep'),
+        cancel:key=>{admin.discovery.cancelBackground(key,'scopeInvalidated');},
+        publishEpisode:episode=>this.publishGameEpisode(episode),
+        run:(step,repo,publication,runCurrent)=>{
+          const health=registry.providers.inference!,revision=health.revision;
+          const selected={configurationDigest:redactedDigest(this.config),providerRef:health.implementation,providerRevision:revision,model:this.config.inferenceProfile?.servedModelName??'unavailable',modelArtifactDigest:this.config.inferenceProfile?.modelArtifactDigest??null,healthy:health.status==='healthy',fixture:health.fixture};
+          const defaultBounds=providerPriorityBounds(this.config,health),qualification=defaultBounds?null:qualifiedGameInferenceBounds(options,selected),bounds=defaultBounds??qualification;
+          return runCheckpointedGamePlanning({...step,scope:structuredClone(step.scope),provider},{repository:repo,background:admin.discovery,providerRevision:revision,tokenizerIdentity:'selected-model-tokenizer:'+(this.config.inferenceProfile?.servedModelName??'unavailable'),...(bounds?{providerPreemptionBoundMs:bounds.preemptionBoundMs,providerSlotReleaseBoundMs:bounds.slotReleaseBoundMs}:{}),current:(scope,checkpoint)=>authorized()&&runCurrent()&&(!qualification||qualification.current())&&publication.current(scope,checkpoint),terminalRef:publication.terminalRef,publishDecision:result=>authorized()&&runCurrent()&&publication.publishDecision(result)});
+        }});
+      if(runtime)this.activeGameRuntimes.set(scope.runId,runtime);return runtime;
+    }}:{})});
   }
   private runtimeAuthorized(request: IncomingMessage, assistantId: unknown): boolean {
     const context = this.requestContext(request, false);
@@ -1668,8 +1693,8 @@ export class LifestreamServer {
     const dialogue=this.conversationHistory.bind({principalId:context.principalId,sessionId:context.sessionId,conversationId,assistantId,relationshipId},current,Date.parse(context.expiresAt));
     return {read:dialogue.read,remember:turn=>{if(current()&&turn.text)this.database.connection.prepare("INSERT OR IGNORE INTO session_handoff_usage VALUES(?,?)").run(context.sessionId,new Date().toISOString());dialogue.remember(turn);if(turn.role==='user'&&relationshipId&&current()&&this.audiencePermits(context))try{this.automaticMemory.enqueue({principalId:context.principalId,assistantId,relationshipId},turn.interactionId,turn.text,typedOwner?'authenticatedTypedOwner':'unknownSpeaker');}catch{/* Durable memory failure must not interrupt conversation. Queue status remains independently inspectable. */}}};
   }
-  private prepareRuntimeInput(body: Record<string, unknown>, context: AuthContext, microphone: RuntimeSelfContext["inputModalities"]["microphone"], endpoint: RuntimeSelfContext["endpointScope"], authorizationCurrent?: () => boolean): HostRuntimeInput {
-    this.automaticMemory.preempt();this.experiential?.foreground();
+  private prepareRuntimeInput(body: Record<string, unknown>, context: AuthContext, microphone: RuntimeSelfContext["inputModalities"]["microphone"], endpoint: RuntimeSelfContext["endpointScope"], authorizationCurrent?: () => boolean,origin:'userTurn'|'activityStep'='userTurn'): HostRuntimeInput {
+    if(origin==='userTurn'){this.automaticMemory.preempt();this.experiential?.foreground();}
     const assistantId = typeof body.assistantId === "string" && body.assistantId ? body.assistantId : "assistant-neutral";
     const relationshipId = typeof body.relationshipId === "string" && body.relationshipId ? body.relationshipId : undefined;
     const asOf = new Date().toISOString();

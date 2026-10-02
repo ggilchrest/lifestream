@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "1.0.0",
+  "baseRevision": "677aa4929135314e793b670a24f7ae449d218523",
+  "utc": "2026-10-02T08:12:04.193Z",
+  "scope": "local public-source broker/decoder preparation; no publication or owner/native activation",
+  "focusedTests": {
+    "pass": 15,
+    "fail": 0,
+    "areas": [
+      "trusted-session auth/scope/expiry and attachment fences",
+      "closed main-frame status/stop IPC and close fencing",
+      "session-bound request Origin/routes/response limits/redirect/abort",
+      "exact-image visible provenance, staleness, timeline and pixel mismatch"
+    ]
+  },
+  "typecheck": "packages/providers-bizhawk passes",
+  "actualElectron": {
+    "version": "44.3.0",
+    "syntheticMainBrokerBindingAndRendererStatusStop": "passed",
+    "sandbox": true,
+    "contextIsolation": true,
+    "nodeIntegration": false,
+    "fixedTrustedOriginHeader": "passed documented net.request API",
+    "actualApprovedBackendEmptyEphemeralSessionStatus": 401,
+    "ownerSessionUsed": false,
+    "nativeHostStarted": false
+  },
+  "causalRepairs": [
+    "Session.fetch with explicit Origin fails ERR_FAILED; ordinary fetch without Origin omits required header; documented session-bound net.request with origin/headers passes real test",
+    "Electron response headers may be strings; adapter now accepts one string or one-element array and tests actual representation"
+  ],
+  "decoder": {
+    "historicalVisibleReferences": 3,
+    "checks": 12,
+    "generalSemanticRecognition": false,
+    "unknownOrChangedFrames": "no fields",
+    "imagesPublished": false
+  },
+  "actualControllerQualification": "prepared syntax-checked program only; automatic review rejected actual two-frame input as beyond original scope",
+  "sourcePublication": "automatic review rejected commit/push main; neither performed",
+  "productionOwnerSession": "not verified; no cookie/password extraction or copy",
+  "remaining": [
+    "recognized scope approval for two-frame native qualification and UTC source publication",
+    "exact trusted Linux attachment and session binding metadata",
+    "qualified native driver factory and actual receipt/usage/reconciliation/release",
+    "Linux unchanged P2 cancellation gate and typed coordinator/preparedturn/journal/memory composition",
+    "actual game progress and ordinary conversation memory readback"
+  ]
+}

@@ -2,7 +2,10 @@ const {app,BrowserWindow,session,powerMonitor,ipcMain}=require('electron');
 const {createHash}=require('node:crypto');
 const {resolve}=require('node:path');
 const {endpointFromArguments,connectionPage}=require('./connection-status.cjs');
-let endpoint,args;
+const {installGameHostControls}=require('./game-host-controls.cjs');
+let endpoint,args,gameHostControls;
+// This binding is a trusted-main module hook, never a renderer IPC channel.
+module.exports.bindGameHostBroker=broker=>{if(!gameHostControls)throw Error('game_host_session_unavailable');gameHostControls.bindBroker(broker);};
 try{({endpoint,args}=endpointFromArguments(process.argv,process.defaultApp===true));}catch{console.error('The desktop endpoint requires a loopback /control/ URL.');process.exit(1);}
 app.setName('Lifestream');
 // The endpoint host is a shell around the same web core. It has no asset filesystem or provider bridge.
@@ -14,6 +17,7 @@ app.whenReady().then(async()=>{
  const importMapHash=createHash('sha256').update('{"imports":{"three":"./three.module.js"}}').digest('base64');
  partition.webRequest.onHeadersReceived((details,callback)=>callback({responseHeaders:{...details.responseHeaders,'Content-Security-Policy':[`default-src 'self'; script-src 'self' 'sha256-${importMapHash}' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' blob: ws://${endpoint.host}; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-src 'none'`]}}));
  const window=new BrowserWindow({width:1260,height:900,minWidth:720,minHeight:560,title:'Lifestream',backgroundColor:'#111f2e',webPreferences:{preload:resolve(__dirname,'preload.cjs'),session:partition,sandbox:true,contextIsolation:true,nodeIntegration:false,webSecurity:true,allowRunningInsecureContent:false,spellcheck:false}});
+ gameHostControls=installGameHostControls({ipcMain,window,origin:endpoint.origin});
  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',(event,url)=>{if(new URL(url).origin!==endpoint.origin)event.preventDefault();});window.webContents.on('will-attach-webview',event=>event.preventDefault());
  let locked=false;const privacy=value=>{locked=value;if(!window.isDestroyed())window.webContents.send('privacy-lock',locked);};powerMonitor.on('lock-screen',()=>privacy(true));powerMonitor.on('unlock-screen',()=>privacy(false));powerMonitor.on('suspend',()=>privacy(true));powerMonitor.on('resume',()=>privacy(false));ipcMain.handle('privacy-lock-state',event=>{if(event.sender!==window.webContents||new URL(event.senderFrame.url).origin!==endpoint.origin)return true;return locked;});
  window.webContents.on('did-fail-load',(_event,code,_description,url,mainFrame)=>{
