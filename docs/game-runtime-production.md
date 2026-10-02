@@ -187,3 +187,12 @@ new native window and the new session's exact binding must be supplied to the
 approved finite setup. Candidate preparation and disposable-profile qualification
 do not alter the current desktop process/login. A successful fixture-authenticated
 packaged/native qualification is distinct from G's live joined acceptance.
+
+The owned native startup deadline is independent of the five-second HTTP request
+deadline. It covers the configured connection and authentication windows plus
+the two-second GUI proof, clipped to the finite session duration (at most
+22 seconds). This avoids fencing a normally starting graphical emulator while
+keeping HTTP, session and command deadlines unchanged. Source `fe255298` passed
+an actual packaged Electron/native frame-zero lifecycle with a synthetic backend
+and isolated save; live owner authentication, inference, gameplay and memory
+remain separate acceptance requirements.

@@ -4,14 +4,84 @@
   "scope": "Windows trusted-main broker/owned-driver composition, on-demand read-only readiness, actual connection lifecycle and public SDK packaging",
   "workingBase": "d8d005eb6c492dd40385c2b5af7d5f53c7c2e22f",
   "completedChecks": [
-    {"command":"node --test apps/desktop/test/game-host-composition.test.mjs apps/desktop/test/game-host-session-broker.test.mjs packages/providers-bizhawk/test/game-host-client.test.ts","node":"24.21.0","pass":69,"fail":0,"skip":0},
-    {"command":"node node_modules/typescript/bin/tsc -b --pretty false packages/providers-bizhawk","result":"pass"},
-    {"command":"node node_modules/eslint/bin/eslint.js <eight changed desktop/packaging CJS/MJS files>","result":"pass"}
+    {
+      "command": "node --test apps/desktop/test/game-host-composition.test.mjs apps/desktop/test/game-host-session-broker.test.mjs packages/providers-bizhawk/test/game-host-client.test.ts",
+      "node": "24.21.0",
+      "pass": 69,
+      "fail": 0,
+      "skip": 0
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -b --pretty false packages/providers-bizhawk",
+      "result": "pass"
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js <eight changed desktop/packaging CJS/MJS files>",
+      "result": "pass"
+    },
+    {
+      "command": "node --test --test-name-pattern=\"native startup\" packages/providers-bizhawk/test/game-host-client.test.ts",
+      "node": "24.21.0",
+      "pass": 2,
+      "fail": 0,
+      "skip": 0,
+      "revision": "fe255298b0b46ef1a7422f3f281be2f4e8da1763"
+    },
+    {
+      "command": "node --test apps/desktop/test/game-host-composition.test.mjs apps/desktop/test/game-host-session-broker.test.mjs packages/providers-bizhawk/test/game-host-client.test.ts",
+      "node": "24.21.0",
+      "pass": 72,
+      "fail": 0,
+      "skip": 0,
+      "revision": "fe255298b0b46ef1a7422f3f281be2f4e8da1763"
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -b --pretty false packages/providers-bizhawk",
+      "result": "pass",
+      "revision": "fe255298b0b46ef1a7422f3f281be2f4e8da1763"
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js apps/desktop/game-host-composition.cjs apps/desktop/test/game-host-composition-runtime.test.mjs apps/desktop/main.cjs",
+      "result": "pass",
+      "revision": "fe255298b0b46ef1a7422f3f281be2f4e8da1763",
+      "limitations": "Repository ESLint does not configure TypeScript; TypeScript was checked by its compiler."
+    },
+    {
+      "command": "node scripts/package-desktop-windows.mjs <new-r4-output> <verified-Electron-runtime>",
+      "result": "pass",
+      "revision": "fe255298b0b46ef1a7422f3f281be2f4e8da1763",
+      "electronVersion": "44.3.0",
+      "executableSha256": "e048632e03fabc96de5e10afbebc0aa31f4e1674155ea3d270597fe7523f9d80"
+    },
+    {
+      "command": "node --test --test-concurrency=1 --test-name-pattern=\"actual Electron composition\" apps/desktop/test/game-host-composition-runtime.test.mjs",
+      "node": "24.21.0",
+      "pass": 1,
+      "fail": 0,
+      "skip": 0,
+      "revision": "fe255298b0b46ef1a7422f3f281be2f4e8da1763",
+      "qualification": "Real packaged main/SDK, owned graphical BizHawk, mutual native authentication, synthetic HTTP owner/backend fixture, one frame-zero observation, native closed/paused/neutral, unchanged original and isolated save."
+    }
   ],
-  "remainingChecks": ["Packaged Electron/native lifecycle qualification", "Final focused checks and workspace validation"],
-  "actualCurrentDesktop": "Existing process/login retained; no replacement/restart performed",
-  "rollout": "Deferred; server uses session-only cookie, so a coordinated replacement requires fresh native sign-in and exact approved session binding",
+  "remainingChecks": [
+    "Coordinated native candidate rollout and fresh G sign-in/exact finite session binding",
+    "Qualified live inference and actual gameplay/journal/memory acceptance"
+  ],
+  "actualCurrentDesktop": "Original PID73948 retained; account/access window present. Current authentication unverified.",
+  "rollout": "Candidate built and qualified separately. Original G process PID73948 retained, visible in Windows session1. No replacement; server uses session-only cookie, so cutover requires fresh G sign-in and exact approved finite scope binding.",
   "liveGameplay": "not started; qualified inference remains required",
   "privateStateAssetsCredentialsPublished": false,
-  "primaryS066": "implementationCompleteVerificationPending preserved"
+  "primaryS066": "implementationCompleteVerificationPending preserved",
+  "sourceRevision": "fe255298b0b46ef1a7422f3f281be2f4e8da1763",
+  "desktopCompositionStatus": "verifiedWithSyntheticBackendAndIsolatedNativeSave",
+  "startupFailure": {
+    "diagnosticRevision": "9679d45f0888f186b7f7a43fcd87e747470138d9",
+    "nativeStage": "pairing",
+    "driverFailure": "transportLost",
+    "cause": "Native startup reused the five-second HTTP budget; process trace showed game window after about 3.5 seconds and Lua console at about five seconds.",
+    "repair": "Independent native startup budget: min(finite session duration, configured connection timeout + authentication timeout + 2000ms GUI proof). Maximum 22000ms; HTTP remains 5000ms. Actual packaged native test passed after repair."
+  },
+  "runDisposition": "waiting",
+  "waitingFor": "Coordinator resolution of native cutover/sign-in timing and Linux inference qualification; no live gameplay.",
+  "ordinarySaveSha256": "d23e03839adb694e9bc60f1440792f0b511055c7dc73eeaa622da4d0ce1fa580"
 }
