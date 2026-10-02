@@ -1,4 +1,4 @@
-const {app,BrowserWindow,session,powerMonitor,ipcMain}=require('electron');
+const {app,BrowserWindow,session,powerMonitor,ipcMain,net}=require('electron');
 const {createHash}=require('node:crypto');
 const {resolve}=require('node:path');
 const {endpointFromArguments,connectionPage}=require('./connection-status.cjs');
@@ -26,6 +26,15 @@ app.whenReady().then(async()=>{
   void window.loadURL(connectionPage(endpoint)).catch(()=>{});
  });
  await window.loadURL(endpoint.href).catch(()=>{});
+ // Optional trusted launch diagnostic. It uses this real window's partition,
+ // never a disposable profile, cookie getter or renderer-supplied request.
+ if(args.includes('--game-host-readiness')){
+  const {DesktopGameHostSessionBroker}=require('./game-host-session-broker.cjs');
+  const inspector=new DesktopGameHostSessionBroker({net,partition,gameHostMessage:()=>null});
+  const deadline=Date.now()+120000;let previous=null,busy=false;
+  const inspect=async()=>{if(busy||window.isDestroyed()||Date.now()>=deadline)return;busy=true;try{const value=await inspector.readiness(),text=JSON.stringify(value);if(text!==previous){previous=text;console.log(JSON.stringify({kind:'actualDesktopGameHostReadiness',checkedAt:new Date().toISOString(),...value}));}}finally{busy=false;}};
+  await inspect();const timer=setInterval(()=>{if(window.isDestroyed()||Date.now()>=deadline)clearInterval(timer);else void inspect();},5000);timer.unref();window.once('closed',()=>clearInterval(timer));
+ }
  if(args.includes('--diagnostic'))console.log(JSON.stringify({host:'Electron',version:process.versions.electron,packaged:app.isPackaged,sandbox:true,contextIsolation:true,nodeIntegration:false,origin:endpoint.origin}));
 });
 app.on('window-all-closed',()=>app.quit());

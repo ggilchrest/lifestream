@@ -43,6 +43,16 @@ test('reopened action windows retain finite sessions and exact expiry fencing',a
  const long=fixture(Date.parse('2026-10-02T15:00:00Z'));
  await assert.rejects(long.broker.start({attach:long.attach,binding:long.binding,expiresAt:'2026-10-02T15:10:00.001Z',driverFactory:async()=>({fence:async()=>{}})}));assert.equal(long.calls.length,0);
 });
+
+test('readiness checks the supplied partition and never exports credentials or starts a driver',async()=>{
+ const f=fixture();const result=await f.broker.readiness();
+ assert.equal(result.ready,true);assert.equal(result.sessionId,f.authentication.sessionId);assert.equal(result.endpointId,f.attach.scope.contextBinding.endpointId);
+ assert.equal(JSON.stringify(result).includes(f.authentication.csrfToken),false);assert.equal(f.broker.status().enabled,false);assert.equal(f.transport,undefined);
+ assert.deepEqual(f.calls.map(call=>new URL(call.url).pathname),['/api/auth/v1/session','/api/runtime/v1/session-context']);
+ f.failed=true;assert.equal((await f.broker.readiness()).authenticated,false);
+ const expired=fixture();expired.authentication.adminExpiresAt=new Date(time-1).toISOString();assert.equal((await expired.broker.readiness()).ready,false);
+ const changed=fixture();changed.changed=true;assert.equal((await changed.broker.readiness()).contextCurrent,false);
+});
 test('renderer IPC accepts only the exact main frame, contents and origin',()=>{
  const frame={url:origin+'/control/'},contents={mainFrame:frame},window={webContents:contents,isDestroyed:()=>false};assert.equal(trustedGameHostSender({sender:contents,senderFrame:frame},window,origin),true);assert.equal(trustedGameHostSender({sender:contents,senderFrame:{url:frame.url}},window,origin),false);assert.equal(trustedGameHostSender({sender:{},senderFrame:frame},window,origin),false);frame.url='https://example.org';assert.equal(trustedGameHostSender({sender:contents,senderFrame:frame},window,origin),false);
 });

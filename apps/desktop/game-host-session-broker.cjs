@@ -28,6 +28,21 @@ class DesktopGameHostSessionBroker{
  async #get(path,signal){
   return boundedJson(await this.#partition.fetch(ORIGIN+path,{method:'GET',credentials:'include',redirect:'error',cache:'no-store',signal}));
  }
+ /** Read the actual desktop partition through its ordinary authenticated GETs.
+  * Return only allowlisted nonsecret metadata; no token/cookie or game grant. */
+ async readiness(){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);timer.unref?.();
+  const unavailable=Object.freeze({authenticated:false,owner:false,administrationCurrent:false,contextCurrent:false,ready:false});
+  try{
+   const authentication=await this.#get('/api/auth/v1/session',controller.signal);
+   const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
+   if(!uuid(authentication.principalId)||!uuid(authentication.sessionId)||authentication.owner!==true)return unavailable;
+   const context=await this.#get('/api/runtime/v1/session-context',controller.signal),endpoint=context.endpoint;
+   const administrationCurrent=Number.isFinite(Date.parse(authentication.adminExpiresAt))&&Date.parse(authentication.adminExpiresAt)>this.#now();
+   const contextCurrent=context.ended===false&&Number.isSafeInteger(context.revision)&&context.revision>0&&uuid(endpoint?.endpointId)&&endpoint.ownership==='personal'&&endpoint.privacyClass==='personal'&&endpoint.health==='healthy'&&/^[a-f0-9]{64}$/.test(context.runtimeSelfContext?.sourceRevision??'');
+   return Object.freeze({authenticated:true,owner:true,administrationCurrent,contextCurrent,ready:administrationCurrent&&contextCurrent,principalId:authentication.principalId,sessionId:authentication.sessionId,adminExpiresAt:authentication.adminExpiresAt,...(contextCurrent?{revision:context.revision,endpointId:endpoint.endpointId,runtimeSourceRevision:context.runtimeSelfContext.sourceRevision}:{})});
+  }catch{return unavailable;}finally{clearTimeout(timer);}
+ }
  #bindingMatches(context){
   const binding=this.#setup.binding;
   return context?.ended===false&&context.revision===binding.revision&&isDeepStrictEqual(context.endpoint,binding.endpoint)&&context.runtimeSelfContext?.sourceRevision===binding.runtimeSourceRevision;
