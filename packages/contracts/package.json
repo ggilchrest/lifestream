@@ -38,6 +38,10 @@
     "./game-memory": {
       "types": "./dist/game-memory.d.ts",
       "import": "./dist/game-memory.js"
+    },
+    "./game-host": {
+      "types": "./dist/game-host.d.ts",
+      "import": "./dist/game-host.js"
     }
   }
 }

@@ -1,0 +1,135 @@
+Lifestream Windows host RPC v1 — source handoff for parent/Windows publisher
+Base: 002c1a6e058eafe98f3c35d70be6bac9b9f474e1
+Shared owner: Linux backend worker. Windows must not independently edit the
+shared module or contracts package export. Backend implementation is pending.
+
+Typed source: packages/contracts/src/game-host.ts
+Import: @lifestream/contracts/game-host
+Transport: authenticated HTTP POST JSON to /api/runtime/v1/game-host/{attach,next,
+admit,result,detach}. This is bounded long polling, not WebSocket. JSON bodies
+are the exact closed types in game-host.ts; unsupported/extra fields fail closed.
+The result route accepts GameHostCompletion. All success replies use HTTP 200.
+
+Authentication injection
+Use an explicitly supplied existing local-auth transport, never discover/read
+cookies, key files, passwords or tokens. Caller-owned authenticated fetch injects
+Cookie and x-lifestream-csrf for each POST and uses exactly the backend local
+origin for Host and Origin. The authorized Windows SSH forward preserves port
+43182: http://127.0.0.1:43182. Do not follow redirects or switch origins. An HTTPS
+proxy must already preserve the backend's exact local-origin checks; do not
+weaken them. No pairing key or new account is introduced. Attach needs current
+administrative freshness; ongoing POSTs recheck current session/account epoch,
+CSRF, assistant permission and pinned actor/scope without extending admin idle.
+Authenticated session identity is checked against the existing active session,
+conversation, personal endpoint and owned relationship. Never substitute an
+attachment UUID for authentication. Existing fixture authentication is refused.
+
+Messages and sequencing
+1. POST attach: GameHostAttach {protocol,hostId,scope,pinsDigest,providerRef,
+   sourceRevision}. Protocol is exactly "lifestream.game-host.v1". hostId is an
+   explicit UUID installation identity; sourceRevision is a 64-lowercase-hex
+   digest of the independently reviewed source binding. These are metadata,
+   never client-granted qualification. Server must match all fields to a trusted
+   independently current binding. No binding => unavailable. No auto gameplay.
+   Reply GameHostAttachment {protocol,attachmentId,expiresAt,pollMs:1000,
+   maxMessageBytes:131072}. attachmentId is new process-lifetime metadata, not a
+   resume token. No client-side reconnect/reattach loop.
+2. POST next: GameHostNext {protocol,attachmentId}. At most one concurrent poll,
+   held at most 1000ms, returns one GameHostEvent:
+   idle {protocol,kind:"idle",attachmentId,expiresAt};
+   command {protocol,kind:"command",attachmentId,commandId,requestDigest,
+            expiresAt,request};
+   cancel {protocol,kind:"cancel",attachmentId,commandId,requestDigest,
+           cancellationId,reason}.
+   reason: cancelled | deadline | scopeChanged | detached | shutdown.
+   A poll renews the metadata attachment lease only while all current server
+   checks succeed: at most 60000ms from current time, idle limit 10000ms.
+   Continue polling while the native operation runs so cancellation can arrive.
+   One in-flight command maximum; commands are consumed once, never replayed.
+3. Validate/freeze command with gameHostMessage('event', value), match exact
+   attachment, qualified scope/pins/provider and local installed artifacts. Only
+   observe, applyController, releaseControls are supported. controlSave is
+   deliberately absent and unqualified. No scripts, file paths, replay, ROM
+   bytes, image bytes, credential fields or arbitrary commands on this channel.
+   Existing Game schema screenshot opaque metadata is data, not proof/access.
+4. For EVERY command perform POST admit with GameHostAdmit {protocol,
+   attachmentId,commandId,requestDigest} in the final trusted native admission
+   callback immediately before native I/O. Reply GameHostAdmission adds
+   admitted:true and expiresAt; it must match all identities/digest and remain
+   current. applyController uses this callback as the SDK claimEffect. observe
+   and release require equivalent current entry checks; release also needs the
+   separately supplied trusted shutdown callback for the exact old lease.
+   Never replace the SDK's source, observation, action or shutdown qualifiers
+   with true defaults. Endpoint admission is not artifact/evidence qualification.
+   Linux durably claims an existing controller reservation before publishing
+   the command. /admit performs a second durable claimed->entered CAS exactly
+   once. Duplicate/expired/stale admission refuses native I/O. A lost admission
+   reply is unresolved; DO NOT retry /admit or invoke the native operation.
+5. Native operation uses the command's original Game*Request unchanged and an
+   AbortSignal combining cancel, local expiry and transport failure. Enforce the
+   earlier of command expiresAt, request deadlineAt and action admission
+   expiresAt using wall time plus a local monotonic deadline. No successor is
+   started until this operation settles/fences; late callbacks stay fenced.
+6. POST result with GameHostCompletion {protocol,attachmentId,commandId,
+   requestDigest,resultDigest,result}. Result is the original typed Game*Result.
+   Validate result schema plus operation/requestId/correlationId with
+   gameHostCompletionMatches. Receipt scope/action/admission/input lease,
+   pins/neutralization, frames and actual native provenance need independent
+   existing SDK/backend qualifiers; authenticated JSON alone is not proof.
+   Reply GameHostAccepted {protocol,attachmentId,commandId,resultDigest,
+   accepted:true} confirms ingress only, not coordinator settlement, successful
+   gameplay, resumed authority or a safely paused emulator.
+   Never retry a result automatically after any missing/invalid reply. No
+   automatic redispatch, budget refund, save/load, control start/resume or P2.
+7. POST detach with GameHostDetach {protocol,attachmentId}. Reply adds
+   fenced:true (GameHostDetached). Fencing only: no neutralization claim.
+
+Cancellation, failure and durable uncertainty
+Cancel events must match attachmentId, commandId, requestDigest and the original
+cancellationId. Abort that exact local operation. Local expiry/poll failure/
+401/403/disconnect also fence it immediately. Abort does not establish native
+neutralization. Only an independently supplied exact-old-lease shutdown path
+can produce that evidence, and must never touch a successor lease. Server
+claims/reservations survive timeout, lost acknowledgement, detach and restart
+as unresolved until separately qualified reconciliation. Never regenerate or
+reuse an action, admission, invocation, idempotency or command identity to try
+the original operation again. Automatic retry is forbidden even for statuses
+named retryableFailure. Late/duplicate results cannot settle another action.
+
+Wire bounds and digests
+All request and response JSON: <=131072 UTF-8 bytes. Decode stream with a byte
+cap before JSON.parse. Use gameHostMessage for bounded lossless plain JSON,
+closed envelope, schema, hash and deep-freeze checks. HTTP transport must also
+enforce response bytes before allocation/parsing. One poll, one command, finite
+lease; no buffering queue growth. HTTP response timeout: poll 1000ms plus a
+bounded caller transport allowance, <=5000ms. No infinite retry/backoff loops.
+Outer expiry timestamps: canonical UTC Date.toISOString() with three fractional
+digits. Requests must use executionMode "normal"; replay/simulation is refused.
+UUIDs: lowercase 8-4-4-4-12 hexadecimal. Digests: lowercase 64-hex SHA-256,
+without "sha256:". gameHostDigest sorts object keys recursively by JS string
+code-unit order, preserves array order, serializes plain lossless JSON scalars
+with JSON.stringify, hashes UTF-8. It rejects nonfinite, getters, prototypes,
+proxies, cycles and oversize input. requestDigest covers ONLY the complete
+original Game*Request; resultDigest covers ONLY the complete original result.
+Outer metadata is separately correlated and authenticated; not in that hash.
+The command expiry can only tighten, never extend the original deadline.
+
+Stable fail-closed HTTP handling
+400 invalid_game_host_message; 401 authentication_required; 403 origin_rejected,
+csrf_rejected or game_host_scope_denied; 404 game_host_disabled; 409
+game_host_conflict (duplicate poll/attachment/admission/completion or unresolved
+effect); 410 game_host_expired; 413 game_host_message_too_large; 503
+game_host_unavailable. Error body is {error:<code>}; no sensitive payload echo.
+Existing local-auth may supply more specific existing auth codes. Treat every
+non-200 as fenced failure; never infer permission or native safety from a code.
+
+Windows ownership and required fixture tests
+Windows owns a new client module in providers-bizhawk/native packaging and its
+fixtures; avoid backend/storage/shared-contract edits. Inject transport and
+qualified native options explicitly; absent any required port remains disabled.
+Test exact type/digest correlation, one-time final claim before native I/O,
+cancel during active operation with a parallel poll, expiry/auth failure fencing,
+lost admission/result acknowledgements with NO retries/redispatch, duplicate and
+late replies, source qualifier withdrawal, shutdown exact old lease, body bounds
+and unsupported controlSave. All credentials/evidence synthetic. Production
+channel/credentials/pairing/gameplay and shared P2 remain disabled.

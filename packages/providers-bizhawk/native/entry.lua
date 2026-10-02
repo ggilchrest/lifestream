@@ -142,7 +142,7 @@ local function main()
   local source=debug.getinfo(1,'S').source:sub(2);local directory=source:match('^(.*[/\\])')or ''
   local factory=assert(loadfile(directory..'peer.lua'))()
   peer=factory(config,{json=json,api=api,clock=clock,crypto=crypto,channel=channel,store=store})
-  config.executionMode='live'
+  config.executionMode='normal'
   api.pause();peer.authenticate();mac:Dispose();os.setlocale('C','numeric')
   while true do local raw=channel.receive();if raw then peer.handle(raw)end;if not peer.idle()then break end end
   peer.halt()

@@ -44,3 +44,30 @@ Do not expose the native control listener or invent a new credential/authority
 scheme to work around that dependency. No route, firewall or forwarding is created
 by this package. An optional Windows HTTPS/iOS ingress remains a separate approved
 parent operation; the native adapter does not require broader Windows exposure.
+
+The inert `WindowsGameHostClient` implements the shared
+`@lifestream/contracts/game-host` authenticated HTTP contract (see
+`game-host-rpc-v1.txt`) over the existing Windows-loopback43182 forward. Its
+caller supplies an existing authenticated fetch, immutable installation/scope
+metadata, independently current source qualification, a trusted native factory,
+and exact-old-lease shutdown. The factory must install the supplied boundary at
+the SDK's final native entry and resolve only after `await transport.ready`
+confirms mutual authentication. Admission must not precede a handshake wait.
+Never double-wrap an already guarded adapter.
+`/admit` runs once in the final observation/action/release callback before I/O;
+release additionally requires independently trusted shutdown intent. Shared JSON,
+attachment metadata and accepted ingress never qualify native evidence or
+coordinator settlement. A lost admission/result reply fences without retry.
+
+One bounded poll continues alongside one operation. Closed schemas, canonical
+digests, exact correlation, response stream byte limits, original deadlines and
+local monotonic limits fence replay, expiry, cancellation, revocation and denied
+transport. The client pursues the captured original input lease through its
+separate shutdown port; abort alone never proves pause or neutralization. No
+save RPC is supported. `WindowsHostLifecycle` remains an optional generic finite
+in-process lifecycle utility. Neither class creates a channel without trusted
+ports, reconnects, starts an emulator or supplies live authority.
+An inherited Node IPC channel proves a mechanism only. Cookies/session authority
+must stay in trusted desktop/main code; separate-host messages use private
+inherited IPC. CLI arguments, renderer messages and IPC presence do not authorize
+attachment, pairing or gameplay. The CLI remains a loader/readiness check only.

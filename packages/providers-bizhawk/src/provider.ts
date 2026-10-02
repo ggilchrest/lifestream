@@ -31,6 +31,10 @@ export interface GameAdapterBoundaryOptions{
  sourceAvailable:(scope:G.ActivityScope,pinsDigest:string)=>boolean;
  /** Reviewed per-revision visibility/decoder/media provenance, not a model assertion. */
  acceptObservation?:(request:G.GameObserveRequest,observation:G.GameObservation)=>boolean;
+ /** Optional final entry hook for an authenticated remote host. When supplied,
+  * it must admit this exact observation immediately before native I/O. It does
+  * not replace source or observation provenance qualification. */
+ admitObservation?:(request:G.GameObserveRequest,context:GameCallContext)=>Promise<boolean>;
  /** Resolve actual native result/input-lease/neutralization evidence for this
   * exact action, including rejected outcomes. Required before entry; captured
   * once and strict true after receipt. Never supplies capability authority. */
@@ -70,6 +74,7 @@ export function guardGameActivityAdapter(adapter:GameActivityAdapter,options:Gam
    // Safety release can preempt an effect and must not wait for model/transport
    // completion. Exact lease fencing belongs to the trusted shutdown callback.
    if(method==='releaseControls'){requireTrue(options.admitRelease,'admissionRequired');requireTrue(await wait(()=>options.admitRelease!(request as G.GameReleaseRequest,bound)),'admissionRequired');}
+   else if(method==='observe'&&options.admitObservation!==undefined){requireTrue(typeof options.admitObservation==='function','admissionRequired');requireTrue(await wait(()=>options.admitObservation!(request as G.GameObserveRequest,bound)),'admissionRequired');}
    else if(effect){const previous=effects.get(run);if(previous){requireTrue(previous.phase==='unresolved'&&options.reconcileEffect,'concurrentEffect');previous.phase='pending';try{requireTrue(await wait(()=>options.reconcileEffect!(previous.request,bound)),'concurrentEffect');check();effects.delete(run);}catch(error){previous.phase='unresolved';throw error;}}requireTrue(effects.size<64,'concurrentEffect');effects.set(run,{request:request as G.GameActionRequest|G.GameSaveRequest,phase:'pending'});locked=true;requireTrue(options.claimEffect,'admissionRequired');if(method==='applyController')requireTrue(typeof acceptAction==='function','unavailable');if(method==='controlSave')requireTrue(typeof options.acceptSave==='function','unavailable');requireTrue(await wait(()=>options.claimEffect!(request as G.GameActionRequest|G.GameSaveRequest,bound)),'admissionRequired');}
    check();if(method!=='releaseControls')requireTrue(options.sourceAvailable(request.scope,(request as Exclude<Request,G.GameReleaseRequest>).payload.expectedPinsDigest),'unavailable');check();
    const raw=await wait(()=>{check();entered=true;return (adapter[method] as (r:Request,c:GameCallContext)=>Promise<Result>).call(adapter,request,bound);});check();const result=message(raw,definitions[method][1]);requireTrue(result.operation===request.operation&&result.requestId===request.requestId&&result.correlationId===request.correlationId&&result.providerRef===options.providerRef&&Date.parse(result.completedAt)<=Date.now()&&Date.parse(result.completedAt)<=deadline);
