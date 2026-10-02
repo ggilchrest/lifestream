@@ -60,12 +60,13 @@ export function createAuthenticatedGameTransport(stream:Duplex,options:GameTrans
  const scope=structuredClone(options.scope),pinsDigest=options.pinsDigest,secret=Buffer.from(options.pairingSecret),providerRef=options.boundary.providerRef;
  const challenge={type:'challenge',protocol,sessionId:randomUUID(),nonce:randomBytes(32).toString('hex'),providerRef,pinsDigest,scopeDigest:createHash('sha256').update(JSON.stringify(scope)).digest('hex'),expiresAt:new Date(Date.now()+options.authenticationTimeoutMs).toISOString()};
  const expected=createHmac('sha256',secret).update(JSON.stringify(challenge)).digest();secret.fill(0);
+ const hostProof=createHmac('sha256',options.pairingSecret).update(protocol+' host '+JSON.stringify(challenge)).digest();
  let state:'authenticating'|'ready'|'closed'='authenticating',readyResolve!:()=>void,readyReject!:(e:Error)=>void,authTimer:ReturnType<typeof setTimeout>|undefined,sessionTimer:ReturnType<typeof setTimeout>|undefined;
  const ready=new Promise<void>((resolve,reject)=>{readyResolve=resolve;readyReject=reject;});void ready.catch(()=>{});
  type Entry={operation:Request['operation'];correlationId:string;phase:'pending'|'abandoned'|'delivered';resolve:(r:Result)=>void;reject:(e:Error)=>void;cleanup:()=>void};
  const entries=new Map<string,Entry>();
  const fail=(code:GameTransportError['code'])=>{
-  if(state==='closed')return;state='closed';clearTimeout(authTimer);clearTimeout(sessionTimer);expected.fill(0);decoder.dispose();
+  if(state==='closed')return;state='closed';clearTimeout(authTimer);clearTimeout(sessionTimer);expected.fill(0);hostProof.fill(0);decoder.dispose();
   stream.off('data',onData);stream.off('end',onEnd);stream.off('close',onClose);stream.off('error',onError);stream.on('error',()=>{});
   const error=new GameTransportError(code);readyReject(error);for(const entry of entries.values()){entry.cleanup();if(entry.phase==='pending')entry.reject(error);}entries.clear();stream.destroy();try{options.onDisconnect(code);}catch{}
  };
@@ -78,7 +79,7 @@ export function createAuthenticatedGameTransport(stream:Duplex,options:GameTrans
   if(state==='authenticating'){
    const exact=message&&typeof message==='object'&&!Array.isArray(message)&&Object.keys(message).length===2&&message.type==='authenticate'&&typeof message.proof==='string'&&/^[a-f0-9]{64}$/.test(message.proof)&&text===JSON.stringify({type:'authenticate',proof:message.proof});
    if(!exact||Date.now()>=Date.parse(challenge.expiresAt)||!timingSafeEqual(Buffer.from(message.proof,'hex'),expected)){fail('authenticationFailed');return;}
-   expected.fill(0);clearTimeout(authTimer);state='ready';send(JSON.stringify({type:'authenticated',protocol,sessionId:challenge.sessionId}));readyResolve();return;
+   expected.fill(0);clearTimeout(authTimer);state='ready';send(JSON.stringify({type:'authenticated',protocol,sessionId:challenge.sessionId,proof:hostProof.toString('hex')}));hostProof.fill(0);readyResolve();return;
   }
   if(state==='closed')return;
   const entry=message&&typeof message==='object'&&!Array.isArray(message)&&typeof message.requestId==='string'?entries.get(message.requestId):undefined;

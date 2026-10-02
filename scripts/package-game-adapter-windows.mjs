@@ -1,0 +1,22 @@
+import {cpSync,existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,realpathSync,writeFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {createRequire} from 'node:module';
+import {dirname,isAbsolute,join,resolve,sep} from 'node:path';
+const root=resolve(import.meta.dirname,'..'),output=process.argv[2];
+if(process.platform!=='win32'||process.argv.length!==3||!output||!isAbsolute(output)||Number(process.versions.node.split('.')[0])<24)throw Error('Use Node24+ on Windows: node scripts/package-game-adapter-windows.mjs C:\\new-output');
+const parent=realpathSync(dirname(output));if(existsSync(output)||parent===root||parent.startsWith(root+sep))throw Error('Use a fresh output outside the checkout.');
+const hash=bytes=>createHash('sha256').update(bytes).digest('hex'),git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8'}).trim();
+const inputs=['scripts/game-adapter-cli.mjs','scripts/package-game-adapter-windows.mjs','packages/providers-bizhawk/native/entry.lua','packages/providers-bizhawk/native/peer.lua','packages/providers-bizhawk/src/index.ts','packages/providers-bizhawk/src/native-host.ts','packages/providers-bizhawk/src/frame-custody.ts','packages/providers-bizhawk/src/transport.ts','packages/providers-bizhawk/src/provider.ts','packages/providers-bizhawk/src/native-saves.ts','packages/providers-bizhawk/src/port.ts','packages/providers-bizhawk/package.json','packages/contracts/package.json','pnpm-lock.yaml'];
+const sourceFiles=inputs.map(path=>{const bytes=readFileSync(join(root,path)),object=execFileSync('git',['hash-object','--path='+path,'--stdin'],{cwd:root,input:bytes,encoding:'utf8'}).trim();if(object!==git('rev-parse','HEAD:'+path))throw Error('Commit packaging input: '+path);return {path,sha256:hash(bytes),committedObject:object};});
+// Require a fresh successful build; source and dist are packaged separately.
+const revision=git('rev-parse','HEAD');mkdirSync(output);cpSync(process.execPath,join(output,'LifestreamGameAdapter.exe'));cpSync(join(root,'scripts/game-adapter-cli.mjs'),join(output,'adapter-cli.mjs'));
+const packages=join(output,'node_modules');mkdirSync(packages);const require=createRequire(join(root,'packages/contracts/package.json')),copied=new Map();
+function dependency(name,resolver){const manifest=resolver.resolve(name+'/package.json'),data=JSON.parse(readFileSync(manifest));if(copied.has(name)){if(copied.get(name)!==data.version)throw Error('Dependency version conflict');return;}copied.set(name,data.version);cpSync(dirname(manifest),join(packages,name),{recursive:true,dereference:false});const local=createRequire(manifest);for(const child of Object.keys(data.dependencies??{}))dependency(child,local);}
+dependency('ajv',require);dependency('ajv-formats',require);
+for(const name of ['contracts','providers-bizhawk']){const target=join(packages,'@lifestream',name);mkdirSync(target,{recursive:true});cpSync(join(root,'packages',name,'package.json'),join(target,'package.json'));cpSync(join(root,'packages',name,'dist'),join(target,'dist'),{recursive:true});}
+cpSync(join(root,'packages/providers-bizhawk/native'),join(output,'native'),{recursive:true});
+for(const name of ['LICENSE','THIRD_PARTY_NOTICES.md'])cpSync(join(root,name),join(output,name));
+cpSync(join(dirname(process.execPath),'LICENSE'),join(output,'NODE-LICENSE.txt'));
+const files=[];function inventory(dir){for(const name of readdirSync(dir)){const path=join(dir,name),stat=lstatSync(path);if(stat.isSymbolicLink())throw Error('Portable runtime must not depend on external symlinks');if(stat.isDirectory())inventory(path);else files.push({path:path.slice(output.length+1),bytes:stat.size,sha256:hash(readFileSync(path))});}}inventory(output);
+const receipt={schemaVersion:'1.0.0',sourceRevision:revision,nodeVersion:process.version,sourceFiles,dependencies:Object.fromEntries(copied),files,bind:'127.0.0.1',nativePort:43183,backendPort:43182,activation:'unconfigured; trusted host API required',scope:'Native SDK and Lua peer only; no backend, private assets, ROM, save, credentials, state, auto-start or network forwarding.',vendorNodeProvenance:'Verify the invoking Node vendor distribution separately; exact copied executable hash is recorded.',verification:'pending packaged loader check'};writeFileSync(join(output,'receipt.json'),JSON.stringify(receipt,null,2)+'\n');console.log(JSON.stringify({directory:output,sourceRevision:revision,nodeVersion:process.version,files:files.length}));
