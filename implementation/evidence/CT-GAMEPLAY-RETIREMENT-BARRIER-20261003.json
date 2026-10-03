@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-10-03T10:19:39Z",
+  "status": "sourceRepairSyntheticVerifiedAwaitIndependentReview",
+  "defect": "CT-STARTUP-QA-001",
+  "baseRevision": "fa459da401e4e223f603d8b48bb7496aed8a9591",
+  "testedCodeRevision": "5980776af7261ddbc1c76d215a8cbecbb37b6da3",
+  "branch": "codex/ct-retirement-barrier-20261003",
+  "runDisposition": "complete",
+  "liveReadiness": "waitingForActualOwnersAndCoordinatedQualification",
+  "changes": [
+    "Explicit immutable retirement outcome and native proof, with null only before attachment",
+    "Five-second bounded owner-work drainage alongside exact native shutdown",
+    "Sticky uncertainty for unconfirmed shutdown, undrained work, unsettled controller and failed close",
+    "Profile replacement and shutdown preserve original database and draining quarantine on uncertainty",
+    "Signal handler reports failed retirement without a successful process exit",
+    "Existing unattached HTTP fixture now uses explicit null native proof; no positive native acknowledgement invented"
+  ],
+  "validation": {
+    "linuxAffected": {
+      "passed": 61,
+      "failed": 0,
+      "skipped": 0,
+      "command": "node --experimental-strip-types --test --test-concurrency=1 --test-timeout=30000 --test-reporter=tap scripts/supervised-game-runtime.test.mjs apps/server/test/gameplay-server-joined.test.ts apps/server/test/gameplay-composition.test.ts apps/server/test/gameplay-native-http.test.ts apps/server/test/game-host-http.test.ts scripts/candidate-gameplay-owners.test.mjs"
+    },
+    "unchangedIndependentOracleReplay": {
+      "passed": 16,
+      "failed": 0,
+      "freshIndependentReview": false,
+      "embeddedOracleRevision": "fa459da",
+      "changedOracleOrAssertions": false
+    },
+    "windowsFocused": {
+      "passed": 29,
+      "failed": 0,
+      "command": "node --test --experimental-strip-types --test-reporter=tap scripts/supervised-game-runtime.test.mjs apps/server/test/gameplay-composition.test.ts apps/server/test/gameplay-native-http.test.ts scripts/candidate-gameplay-owners.test.mjs"
+    },
+    "windowsAdditionalCompositionReturnAssertions": {
+      "passed": 2,
+      "overlapsFocusedCases": true
+    },
+    "sourceBuild": "pass",
+    "strictFixturesTypecheck": "pass",
+    "scopedMjsLint": "pass",
+    "workspaceStructure": "pass",
+    "diffCheck": "pass",
+    "nodeVersion": "24.21.0",
+    "requestedNodeVersion": "24.14.1",
+    "fullSuiteRerun": false
+  },
+  "pairedWindows": {
+    "reusePinnedPackageRevision": "fa459da401e4e223f603d8b48bb7496aed8a9591",
+    "unchangedCommittedPackagingInputs": 82,
+    "newPackageOrLaunch": false
+  },
+  "evidence": {
+    "successfulLinuxReceiptSha256": "fc265bbe8309a96158dafbf82c50a48c49dded92c558b77a053c83586a601616",
+    "failedLinuxReceiptSha256": "0206e1ff80eb5812ca28d28e66d501bd7d174ef0abeaf5e8665e6cff4bc2d457",
+    "windowsFocusedLogSha256": "b33287b7326995a62629386fe75da6e76f886c7654afe1deb5599eb6f7780a66"
+  },
+  "limits": [
+    "Native/provider/decoder/admission/save callbacks and qualification outputs remain synthetic",
+    "Caller negative fixtures inject explicit failure outcomes into an actual authenticated server without creating a native attachment; original unattached owner is restored for fixture teardown with null proof",
+    "No live deployment, provider/native/control/save/journal/memory effect or production database access",
+    "Windows full-server fsync limitation and prior primary S066 pending acceptance unchanged",
+    "Actual reconciliation/recovery still required before a quarantined owner can release storage; no force-close override added",
+    "Existing one-hour journal/episode ceiling and full-server cross-restart recall qualification remain gates"
+  ]
+}
