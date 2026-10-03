@@ -16,19 +16,32 @@ export function createSupervisedGameRuntime({native,campaign,createRepository,re
  const campaignPins=Object.fromEntries(campaignNames.map(name=>[name,campaign[name]]));
  const unchanged=()=>nativeNames.every(name=>native[name]===nativePins[name])&&campaignNames.every(name=>campaign[name]===campaignPins[name]);
  const abort=new AbortController();
- let repository,join,joinedUsage,joinedShutdown,used=false,stopped=false,running,timer,expires=0,lastWall=0,shutdownPromise;
- const report=value=>{try{onStatus(Object.freeze(value));}catch{}};
+ let repository,join,joinedUsage,joinedShutdown,used=false,stopped=false,running,timer,expires=0,lastWall=0,shutdownPromise,stopPromise,reconciliationRequired=false;
+ const report=value=>{if(value.state==='requiresReconciliation')reconciliationRequired=true;try{onStatus(Object.freeze(value));}catch{}};
  const envelopeCurrent=()=>{
   if(stopped||abort.signal.aborted||!unchanged()||requireJoinedNativeEvidence&&join&&(join.nativeUsageFor!==joinedUsage||join.shutdownExactOldLease!==joinedShutdown))return false;
   if(!join)return true;
   const now=Date.now();if(now<lastWall||performance.now()>=expires)return false;lastWall=now;return true;
  };
  const shutdown=()=>{
-  if(!join)return Promise.resolve();
-  if(!shutdownPromise)shutdownPromise=(async()=>{let confirmed=false,deadline;try{confirmed=await Promise.race([requireJoinedNativeEvidence?joinedShutdown.call(join):nativePins.shutdownExactOldLease(join),new Promise(resolve=>{deadline=setTimeout(()=>resolve(false),5000);})])===true;}catch{}finally{clearTimeout(deadline);}report({state:confirmed?'stopped':'requiresReconciliation',nativeShutdownConfirmed:confirmed});})();
+  if(!join)return Promise.resolve(null);
+  if(!shutdownPromise)shutdownPromise=(async()=>{let confirmed=false,deadline;try{confirmed=await Promise.race([requireJoinedNativeEvidence?joinedShutdown.call(join):nativePins.shutdownExactOldLease(join),new Promise(resolve=>{deadline=setTimeout(()=>resolve(false),5000);})])===true;}catch{}finally{clearTimeout(deadline);}report({state:confirmed?'stopped':'requiresReconciliation',nativeShutdownConfirmed:confirmed});return confirmed;})();
   return shutdownPromise;
  };
- const retire=()=>{if(!stopped){stopped=true;abort.abort();clearTimeout(timer);join?.runtime.close();}return shutdown();};
+ const retire=()=>{if(!stopped){stopped=true;abort.abort();clearTimeout(timer);try{join?.runtime.close();}catch{reconciliationRequired=true;}}return shutdown();};
+ // Fencing new work does not drain already-entered owner callbacks. On a bounded
+ // uncertain outcome their original storage must retain reconciliation custody.
+ // Cache the first outcome; late completion cannot manufacture reconciliation.
+ const stop=()=>stopPromise??=(async()=>{
+  const nativeShutdown=retire();let deadline;
+  try{
+   const drain=running?Promise.race([running.then(()=>true,()=>{reconciliationRequired=true;return true;}),new Promise(resolve=>{deadline=setTimeout(()=>resolve(false),5000);})]):Promise.resolve(true);
+   const [nativeShutdownConfirmed,workDrained]=await Promise.all([nativeShutdown,drain]);
+   const retired=workDrained===true&&nativeShutdownConfirmed!==false&&!reconciliationRequired;
+   if(!retired)report({state:'requiresReconciliation',nativeShutdownConfirmed,workDrained});
+   return Object.freeze({state:retired?'retired':'requiresReconciliation',nativeShutdownConfirmed,workDrained});
+  }finally{clearTimeout(deadline);}
+ })();
  const current=()=>{if(!envelopeCurrent()||join&&!safe(join.runtime.isCurrent)){void retire();return false;}return true;};
  // The runtime itself invokes sourceCurrent while checking isCurrent. Keep the
  // outer lease/source predicate separate so that those checks cannot recurse.
@@ -50,6 +63,7 @@ export function createSupervisedGameRuntime({native,campaign,createRepository,re
    used=true;join=value;joinedUsage=value.nativeUsageFor;joinedShutdown=value.shutdownExactOldLease;lastWall=Date.now();expires=performance.now()+maximumRunMs;
    timer=setTimeout(retire,maximumRunMs);timer.unref();
    running=(async()=>{
+    let controllerEntered=false;
     try{
      for(let index=0;index<maximumSteps&&current();index++){
       const selected=await campaignPins.selectPlanning(join,repository,abort.signal);
@@ -60,8 +74,10 @@ export function createSupervisedGameRuntime({native,campaign,createRepository,re
       const controller=await campaignPins.prepareController(join,step,outcome,repository,abort.signal);
       if(controller===null){report({state:'modelNoAction',index});break;}
       if(!controller||!current()||!safe(join.runtime.controllerCurrent))throw Error('Current controller selection unavailable');
+      controllerEntered=true;
       const result=await join.runController(controller,{signal:abort.signal,current:(checkpoint,request)=>current()&&safe(()=>campaignPins.controllerCurrent(checkpoint,request)),usageFor:requireJoinedNativeEvidence?(request,result)=>current()?joinedUsage.call(join,request,result):null:nativePins.usageFor});
       if(result.state!=='settled'){report({state:'requiresReconciliation',index});break;}
+      controllerEntered=false;
       // The campaign owner supplies actual committed journal/source evidence.
       // Memory publication remains subject to independent production consent.
       const recorded=await campaignPins.recordSettledStep(join,controller,result,repository,abort.signal);
@@ -74,10 +90,10 @@ export function createSupervisedGameRuntime({native,campaign,createRepository,re
       }
       report({state:'settled',index});
      }
-    }catch{report({state:'suppressed',reason:'qualifiedCurrentPortsUnavailable'});}
+    }catch{if(controllerEntered)reconciliationRequired=true;report({state:'suppressed',reason:'qualifiedCurrentPortsUnavailable'});}
     finally{await retire();}
    })();
   }
  });
- return Object.freeze({gameHost,gameRuntime,current,stop:async()=>{await retire();},completion:()=>running??Promise.resolve()});
+ return Object.freeze({gameHost,gameRuntime,current,stop,completion:()=>running??Promise.resolve()});
 }

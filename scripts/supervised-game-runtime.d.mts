@@ -29,6 +29,9 @@ export type SupervisedGameCampaign={
  controllerCurrent:GameHostOptions['controllerCurrent'];
  recordSettledStep:(join:GameHostJoin,controller:Parameters<GameHostJoin['runController']>[0],result:Awaited<ReturnType<GameHostJoin['runController']>>,repository:ActivityCheckpointRepository,signal?:AbortSignal)=>Promise<{journalCommitted:true;episode?:GameExperienceEpisode}|null>;
 };
+/** null native proof means no attachment ever existed, never a fabricated ack.
+ * An uncertain outcome is sticky; callers must retain reconciliation custody. */
+export type GameRetirementOutcome=Readonly<{state:'retired'|'requiresReconciliation';nativeShutdownConfirmed:boolean|null;workDrained:boolean}>;
 export function createSupervisedGameRuntime(options:{
  native:SupervisedGameNative;campaign:SupervisedGameCampaign;
  createRepository:GameHostOptions['createRepository'];resolveApproval:GameRuntimeOptions['resolveApproval'];
@@ -36,4 +39,4 @@ export function createSupervisedGameRuntime(options:{
  maximumSteps:number;maximumRunMs:number;maximumCommandMs:number;
  requireJoinedNativeEvidence?:boolean;
  onStatus?:(status:Readonly<Record<string,unknown>>)=>void;
-}):Readonly<{gameHost:GameHostOptions;gameRuntime:GameRuntimeOptions;current:()=>boolean;stop:()=>Promise<void>;completion:()=>Promise<void>}>;
+}):Readonly<{gameHost:GameHostOptions;gameRuntime:GameRuntimeOptions;current:()=>boolean;stop:()=>Promise<GameRetirementOutcome>;completion:()=>Promise<void>}>;

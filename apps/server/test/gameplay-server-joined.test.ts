@@ -56,7 +56,7 @@ async function fixture(t:import('node:test').TestContext,projection=true){
  (globalThis as any)[registryKey]=owners;let loaded:GameplayRunOwners;try{await writeFile(modulePath,moduleCode);loaded=await loadCandidateGameplayOwners(modulePath,createHash('sha256').update(moduleCode).digest('hex'));}finally{delete (globalThis as any)[registryKey];}
  const app=createLifestreamServer({config,gameplayOwners:loaded,sessionEnvironmentId:scope.environmentId,localAuth:{stateDirectory:join(root,'auth'),installerToken},audiencePrivacy:{sourceIds:[]},profileLoader:profile=>{const next=loadProfile('test');next.profile=profile;next.authority.authentication='local-password';next.storage={databasePath:process.platform==='win32'?':memory:':join(root,'next.sqlite'),artifactDirectory:join(root,'next-artifacts')};return next;}});
  t.after(async()=>{await app.shutdown();client?.close();await clientDone;native?.close();f.db.close();await rm(root,{recursive:true,force:true});});await app.start();
- const internals=app as unknown as {database:Database;memories:MemoryRepository;providers:{inference:InferenceProvider;providers:Record<string,any>};gameplay:{completion:()=>Promise<void>;stop:()=>Promise<void>};gameCompositionRetired:boolean};
+ const internals=app as unknown as {database:Database;memories:MemoryRepository;providers:{inference:InferenceProvider;providers:Record<string,any>};gameplay:{completion:()=>Promise<void>;stop:()=>Promise<import('../../../scripts/supervised-game-runtime.mjs').GameRetirementOutcome>};gameCompositionRetired:boolean};
  const base='http://127.0.0.1:'+app.address().port,headers:Record<string,string>={origin:base,'content-type':'application/json'};
  const request=(path:string,body:unknown)=>fetch(base+path,{method:'POST',headers,body:JSON.stringify(body)});
  const api=async(path:string,body:unknown)=>{const response=await request(path,body),value=await response.json();assert.ok(response.ok,JSON.stringify({path,status:response.status,value}));return value;};
@@ -113,6 +113,26 @@ test('full server episode retention without projection is not reported as active
 test('profile replacement awaits owned gameplay retirement with original database open and leaves old composition unavailable',{timeout:30000},async t=>{
  const f=await fixture(t),original=f.internals.database,stop=f.internals.gameplay.stop;
  let release!:()=>void,entered!:()=>void;const enteredPromise=new Promise<void>(resolve=>entered=resolve),gate=new Promise<void>(resolve=>release=resolve);
- f.internals.gameplay={...f.internals.gameplay,stop:async()=>{assert.equal(f.internals.database,original);assert.ok(original.connection.prepare('SELECT 1').get());entered();await gate;await stop();assert.ok(original.connection.prepare('SELECT 1').get());}};
+ f.internals.gameplay={...f.internals.gameplay,stop:async()=>{assert.equal(f.internals.database,original);assert.ok(original.connection.prepare('SELECT 1').get());entered();await gate;const result=await stop();assert.ok(original.connection.prepare('SELECT 1').get());return result;}};
  let timer:ReturnType<typeof setTimeout>|undefined;try{const publicResponse=await f.request('/api/runtime/v1/profile',{profile:'mac-local'});assert.equal(publicResponse.status,409,await publicResponse.clone().text());const switched=f.replaceProfile();await Promise.race([enteredPromise,switched.then(response=>{throw Error('Replacement did not enter gameplay retirement: '+JSON.stringify(response));}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Retirement entry deadline')),3000);})]);assert.equal(f.internals.database,original);release();const response=await switched;assert.equal(response.status,200,response.body);}finally{release();clearTimeout(timer);f.internals.gameplay={...f.internals.gameplay,stop};}assert.notEqual(f.internals.database,original);assert.equal(f.internals.gameCompositionRetired,true);assert.throws(()=>(f.app as any).gameHost.attach({principalId:f.scope.principalId,sessionId:f.scope.contextBinding.sessionId,isCurrent:()=>true},f.metadata),/game_host_unavailable/);
+});
+
+for(const outcome of [
+ {state:'requiresReconciliation' as const,nativeShutdownConfirmed:false,workDrained:true},
+ {state:'requiresReconciliation' as const,nativeShutdownConfirmed:true,workDrained:false}
+])test(`profile replacement and shutdown preserve original storage on ${outcome.nativeShutdownConfirmed?'undrained work':'unconfirmed native retirement'}`,{timeout:30000},async t=>{
+ const f=await fixture(t),original=f.internals.database,gameplay=f.internals.gameplay;let calls=0;
+ // This caller fault injection has no attachment or entered lease. Runtime
+ // tests independently produce both negative outcomes from real orchestration.
+ f.internals.gameplay={...gameplay,stop:async()=>{calls++;return outcome;}};
+ try{
+  const response=await f.replaceProfile();assert.equal(response.status,423,response.body);assert.equal(JSON.parse(response.body).code,'game_retirement_requires_reconciliation');
+  assert.equal(f.internals.database,original);assert.ok(original.connection.prepare('SELECT 1').get());assert.equal(f.app.config.profile,'ai5090');assert.equal(f.internals.gameCompositionRetired,true);assert.equal(f.app.health.acceptingInteractions,false);
+  const repeated=await f.replaceProfile();assert.equal(repeated.status,423,repeated.body);assert.equal(calls,1,'Quarantine must not retry native retirement');
+  await assert.rejects(f.app.shutdown(),/game_retirement_requires_reconciliation/);assert.equal(f.internals.database,original);assert.ok(original.connection.prepare('SELECT 1').get());assert.equal(calls,1);
+ }finally{
+  // Restore the original unattached owner only for isolated fixture teardown:
+  // its own retirement has null native proof, never a fabricated true ack.
+  f.internals.gameplay=gameplay;(f.app as any).gameplayRetirementFailed=false;
+ }
 });

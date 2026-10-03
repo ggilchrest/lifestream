@@ -674,6 +674,7 @@ export class LifestreamServer {
   private readonly gameRuntimeOptions:Readonly<GameRuntimeOptions>|undefined;
   private readonly activeGameRuntimes=new Map<string,AuthenticatedGameRuntime>();
   private gameCompositionRetired=false;
+  private gameplayRetirementFailed=false;
   private automaticMemory: AutomaticMemory;
   private presentationSelection: PresentationSelection;
   private readonly audioSessions = new Set<AudioSession>();
@@ -736,7 +737,21 @@ export class LifestreamServer {
   async start(): Promise<void> { if (this.listening) return; await ensureStorage(this.config); this.migrationRecords = this.database.migrate(); this.storageReady = true; await new Promise<void>((resolveStart, reject) => { const onError = (error: Error) => { this.server.off("listening", onListening); reject(error); }; const onListening = () => { this.server.off("error", onError); resolveStart(); }; this.server.once("error", onError); this.server.once("listening", onListening); this.server.listen(this.port, this.host); }); this.listening = true; await this.providers.probe(); this.state = this.providers.ready ? "ready" : "degraded"; this.urgentAway?.start(); this.telegram?.start();this.telegramAlerts?.start(); if(this.state==="ready"){this.acknowledgments.start();this.experience.start();} }
   async runBoundedWork<T>(work: Promise<T>): Promise<T> { if (this.state !== "ready") throw new Error("server is not accepting work"); const tracked = work.finally(() => this.activeWork.delete(tracked)); this.activeWork.add(tracked); return tracked as Promise<T>; }
   admitRelationalOpportunity(opportunity: Parameters<RelationalInitiativeCoordinator["admit"]>[0], eligibility: Parameters<RelationalInitiativeCoordinator["admit"]>[1]) { if (this.state !== "ready") return { admitted: false as const, reason: "endpointUnavailable" as const }; return this.initiative.admit(opportunity, eligibility); }
-  async shutdown(deadlineMs = this.shutdownDeadlineMs): Promise<void> { if (this.state === "stopped") return; this.state = "draining"; await this.gameplay?.stop(); this.gameObservation?.stop(); this.gameHost?.close(); this.telegramAlerts?.close();this.telegramAlerts=undefined;this.telegramNoticeAuthority=undefined;this.telegramAudience?.close();this.telegramAudience=undefined;await this.telegram?.close();this.telegram=undefined; this.urgentAway?.close(); this.urgentAttention.close(); this.sessionHandoff?.close(); this.acknowledgmentService?.close();this.acknowledgmentService=undefined; await this.experiential?.close();this.experiential=undefined; await this.automaticMemory.close(); this.audience?.close(); this.providers.world?.close(); this.providers.pwceCapabilities?.close(); this.invalidateRuntimeInputs('shutdown'); this.listening = false; for (const session of this.audioSessions) session.close(); this.audioSessions.clear(); this.audioServer.close(); const close = new Promise<void>((resolveClose) => this.server.close(() => resolveClose())); const bounded = Promise.allSettled([...this.activeWork]).then(() => undefined); await Promise.race([Promise.all([close, bounded]), new Promise<void>((resolveDeadline) => setTimeout(resolveDeadline, deadlineMs))]); this.server.closeAllConnections(); this.activeWork.clear();this.conversationHistory.clear(); this.initiativeHost.close(); this.admin.close(); this.pwceJournal?.close(); this.database.close(); this.state = "stopped"; }
+  async shutdown(deadlineMs = this.shutdownDeadlineMs): Promise<void> { if (this.state === "stopped") return; this.state = "draining"; await this.retireGameplay(); this.gameObservation?.stop(); this.gameHost?.close(); this.telegramAlerts?.close();this.telegramAlerts=undefined;this.telegramNoticeAuthority=undefined;this.telegramAudience?.close();this.telegramAudience=undefined;await this.telegram?.close();this.telegram=undefined; this.urgentAway?.close(); this.urgentAttention.close(); this.sessionHandoff?.close(); this.acknowledgmentService?.close();this.acknowledgmentService=undefined; await this.experiential?.close();this.experiential=undefined; await this.automaticMemory.close(); this.audience?.close(); this.providers.world?.close(); this.providers.pwceCapabilities?.close(); this.invalidateRuntimeInputs('shutdown'); this.listening = false; for (const session of this.audioSessions) session.close(); this.audioSessions.clear(); this.audioServer.close(); const close = new Promise<void>((resolveClose) => this.server.close(() => resolveClose())); const bounded = Promise.allSettled([...this.activeWork]).then(() => undefined); await Promise.race([Promise.all([close, bounded]), new Promise<void>((resolveDeadline) => setTimeout(resolveDeadline, deadlineMs))]); this.server.closeAllConnections(); this.activeWork.clear();this.conversationHistory.clear(); this.initiativeHost.close(); this.admin.close(); this.pwceJournal?.close(); this.database.close(); this.state = "stopped"; }
+  private async retireGameplay():Promise<void>{
+    if(this.gameplayRetirementFailed)throw Error('game_retirement_requires_reconciliation');
+    if(!this.gameplay)return;
+    try{
+      const outcome=await this.gameplay.stop();
+      if(!outcome||outcome.state!=='retired'||outcome.workDrained!==true||outcome.nativeShutdownConfirmed===false)throw Error('Unconfirmed retirement');
+    }catch{
+      // Keep the original database and receipt/owner custody. A later health
+      // probe, profile attempt or shutdown must not turn uncertainty into an ack.
+      this.gameplayRetirementFailed=true;this.gameCompositionRetired=true;this.state='draining';
+      this.invalidateRuntimeInputs('gameRetirementUnconfirmed');
+      throw Error('game_retirement_requires_reconciliation');
+    }
+  }
   address(): { host: string; port: number } { const address = this.server.address(); if (!address || typeof address === "string") throw new Error("server is not listening"); return { host: address.address, port: address.port }; }
   private get localOrigin(): string { return `http://${this.host}:${this.address().port}`; }
   private get cookieName(): string { return `lifestream_${this.address().port}`; }
@@ -1596,6 +1611,7 @@ export class LifestreamServer {
     if (requested !== "mac-local" && requested !== "ai5090") return json(response, 422, { code: "invalid_profile", message: "profile must be mac-local or ai5090" });
     if (body?.action !== undefined && body.action !== "check") return json(response, 422, { code: "invalid_profile_action", message: "Only the check action is supported" });
     if (requested === this.config.profile && body?.action !== "check") return json(response, 200, { ...this.health, switched: false });
+    if(this.gameplayRetirementFailed)return json(response,423,{code:"game_retirement_requires_reconciliation",activeProfile:this.config.profile});
     if (this.profileSwitching) return json(response, 409, { code: "profile_switch_in_progress", message: "another profile switch is in progress" });
     this.profileSwitching = true;
     let candidateDatabase: Database | undefined;
@@ -1610,13 +1626,14 @@ export class LifestreamServer {
       // Keep the original database/session and historical shutdown ingress alive
       // until the exact owned game lease has retired. A new profile must obtain
       // a fresh operator composition; never reuse captured old repositories.
-      await this.gameplay?.stop();this.gameObservation?.stop();this.gameHost?.close();
+      await this.retireGameplay();this.gameObservation?.stop();this.gameHost?.close();
       for(const runtime of this.activeGameRuntimes.values())runtime.close();this.activeGameRuntimes.clear();this.gameCompositionRetired=true;
       for (const session of this.audioSessions) session.close(); this.audioSessions.clear();
       this.telegramAlerts?.close();this.telegramAlerts=undefined;this.telegramNoticeAuthority=undefined;this.telegramAudience?.close();this.telegramAudience=undefined;await this.telegram?.close();this.telegram=undefined; const previousDatabase = this.database; this.acknowledgmentService?.close();this.acknowledgmentService=undefined; await this.experiential?.close();this.experiential=undefined; await this.automaticMemory.close(); this.providers.world?.close(); this.providers.pwceCapabilities?.close(); this.initiativeHost.close(); this.initiativeHost=new InitiativeHost(candidateDatabase); this.urgentAway?.close(); this.urgentAway=undefined; this.awayDestinations=[]; this.urgentAttention.close(); this.urgentAttention=new UrgentAttentionHost(candidateDatabase); this.admin.close(); this.gameHelp=undefined;this.gameExperience=undefined;this.config = candidateConfig; this.providers = candidateProviders; this.database = candidateDatabase; this.presentationSelection=new PresentationSelection(candidateDatabase); this.memories = candidateMemories; this.automaticMemory=this.createAutomaticMemory(); this.initiative = candidateInitiative; this.admin = candidateAdmin; this.migrationRecords = candidateMigrations; candidateDatabase = undefined; previousDatabase.close(); this.state = "ready"; this.profileSwitching = false;this.acknowledgments.start();this.experience.start();
       return json(response, 200, { ...this.health, switched: true });
     } catch (error) {
       candidateDatabase?.close();
+      if(this.gameplayRetirementFailed)return json(response,423,{code:"game_retirement_requires_reconciliation",activeProfile:this.config.profile});
       return json(response, 500, { code: "profile_switch_failed", message: error instanceof Error ? error.message : "profile switch failed", activeProfile: this.config.profile });
     } finally { if (candidateProviders !== this.providers) { candidateProviders?.world?.close(); candidateProviders?.pwceCapabilities?.close(); } this.profileSwitching = false; this.invalidateRuntimeInputs('profileChanged'); }
   }

@@ -39,8 +39,9 @@ test('explicit stop during source selection prevents planning and awaits exact n
  // deferred callback in place to exercise stop after an actual attachment.
  const options={native:f.native,campaign:f.campaign,createRepository:()=>({}),resolveApproval:()=>null,maximumSteps:1,maximumRunMs:1000,maximumCommandMs:100};
  const c=createSupervisedGameRuntime(options);c.gameHost.createRepository({});c.gameHost.onAttached(f.join);
- await c.stop();assert.equal(f.events.filter(e=>e[0]==='shutdown').length,1);
- release({selection:{},bounds:{}});await c.completion();await c.stop();
+ let resolved=false;const pending=c.stop().then(outcome=>{resolved=true;return outcome;});await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(resolved,false,'Native acknowledgement alone must not release owner storage');assert.equal(f.events.filter(e=>e[0]==='shutdown').length,1);
+ release({selection:{},bounds:{}});assert.deepEqual(await pending,{state:'retired',nativeShutdownConfirmed:true,workDrained:true});await c.completion();await c.stop();
  assert.equal(f.events.some(e=>e[0]==='plan'),false);assert.equal(f.events.filter(e=>e[0]==='shutdown').length,1);
 });
 
@@ -55,6 +56,38 @@ test('runtime source currency callback cannot recursively invoke runtime currenc
 test('unconfirmed native shutdown remains reconciliation, even after a settled controller',async()=>{
  const f=fixture({shutdown:false,retireMemory:true});f.composition.gameHost.onAttached(f.join);await f.composition.completion();
  const final=f.events.filter(e=>e[0]==='status').at(-1)[1];assert.deepEqual(final,{state:'requiresReconciliation',nativeShutdownConfirmed:false});
+ const outcome=await f.composition.stop();assert.deepEqual(outcome,{state:'requiresReconciliation',nativeShutdownConfirmed:false,workDrained:true});
+ assert.equal(await f.composition.stop(),outcome);assert.equal(f.events.filter(e=>e[0]==='shutdown').length,1);
+});
+
+test('unattached retirement reports no native acknowledgement and needs no shutdown',async()=>{
+ const f=fixture();assert.deepEqual(await f.composition.stop(),{state:'retired',nativeShutdownConfirmed:null,workDrained:true});assert.equal(f.events.some(e=>e[0]==='shutdown'),false);
+});
+
+test('unconfirmed stop drains late source selection without planning and never upgrades its outcome',async()=>{
+ const f=fixture({shutdown:false});let release;
+ f.campaign.selectPlanning=()=>new Promise(resolve=>release=resolve);
+ const c=createSupervisedGameRuntime({native:f.native,campaign:f.campaign,createRepository:()=>({}),resolveApproval:()=>null,maximumSteps:1,maximumRunMs:1000,maximumCommandMs:100});c.gameHost.createRepository({});c.gameHost.onAttached(f.join);
+ let resolved=false;const stopped=c.stop().then(value=>{resolved=true;return value;});await new Promise(resolve=>setImmediate(resolve));assert.equal(resolved,false);
+ release({selection:{},bounds:{}});const outcome=await stopped;assert.deepEqual(outcome,{state:'requiresReconciliation',nativeShutdownConfirmed:false,workDrained:true});assert.equal(await c.stop(),outcome);assert.equal(f.events.some(e=>e[0]==='plan'),false);assert.equal(f.events.filter(e=>e[0]==='shutdown').length,1);
+});
+
+test('ignored cancellation has a bounded undrained retirement and late completion cannot erase uncertainty',async t=>{
+ t.mock.timers.enable({apis:['setTimeout']});const f=fixture();let release;
+ f.campaign.selectPlanning=()=>new Promise(resolve=>release=resolve);
+ const c=createSupervisedGameRuntime({native:f.native,campaign:f.campaign,createRepository:()=>({}),resolveApproval:()=>null,maximumSteps:1,maximumRunMs:1000,maximumCommandMs:100});c.gameHost.createRepository({});c.gameHost.onAttached(f.join);
+ const stopped=c.stop();await new Promise(resolve=>setImmediate(resolve));t.mock.timers.tick(5000);
+ const outcome=await stopped;assert.deepEqual(outcome,{state:'requiresReconciliation',nativeShutdownConfirmed:true,workDrained:false});release(null);await c.completion();assert.equal(await c.stop(),outcome);assert.equal(c.current(),false);assert.equal(f.events.filter(e=>e[0]==='shutdown').length,1);
+});
+
+test('unsettled controller state retains reconciliation even with confirmed native stop',async()=>{
+ const f=fixture();f.join.runController=async()=>({state:'requiresReconciliation'});f.composition.gameHost.onAttached(f.join);await f.composition.completion();
+ assert.deepEqual(await f.composition.stop(),{state:'requiresReconciliation',nativeShutdownConfirmed:true,workDrained:true});assert.equal(f.events.some(e=>e[0]==='memory'),false);
+});
+
+test('runtime close failure does not skip native shutdown or confirm retirement',async()=>{
+ const f=fixture();f.join.runtime.close=()=>{throw Error('Synthetic close failure');};f.composition.gameHost.onAttached(f.join);await f.composition.completion();
+ assert.deepEqual(await f.composition.stop(),{state:'requiresReconciliation',nativeShutdownConfirmed:true,workDrained:true});assert.equal(f.events.filter(e=>e[0]==='shutdown').length,1);
 });
 
 test('source-port replacement fences attachment and production source admission',()=>{

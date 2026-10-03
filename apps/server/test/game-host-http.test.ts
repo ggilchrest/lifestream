@@ -43,7 +43,7 @@ test('server draining admits only bounded authenticated historical shutdown ingr
  const s=await setup(t);let finish!:()=>void;
  // Hold the source stop to exercise the actual HTTP dispatch/auth layer during
  // draining, without activating gameplay or making a native effect.
- (s.app as unknown as {gameplay:{stop:()=>Promise<void>}}).gameplay={stop:()=>new Promise<void>(resolve=>{finish=resolve;})};
+ (s.app as unknown as {gameplay:{stop:()=>Promise<import('../../../scripts/supervised-game-runtime.mjs').GameRetirementOutcome>}}).gameplay={stop:()=>new Promise(resolve=>{finish=()=>resolve({state:'retired',nativeShutdownConfirmed:null,workDrained:true});})};
  const stopped=s.app.shutdown();await new Promise(resolve=>setImmediate(resolve));
  try{
   assert.equal((await s.request(s.path+'shutdown',{})).status,400);

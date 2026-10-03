@@ -94,6 +94,7 @@ test('synthetic prepared planning -> measured controller settlement -> actual fr
 
 test('missing native usage preserves held reservation and cannot record a journal outcome or memory',async t=>{
  const f=fixture('noUsage');t.after(()=>f.close());f.start();await f.composition.completion();assert.equal(f.controls(),1);assert.equal(f.episodes.length,0);assert.equal(f.repository.get(f.o,f.scope.runId)!.used.actions,0);assert.equal(f.db.connection.prepare('SELECT state FROM activity_controller_reservations').get()!.state,'reserved');assert.equal(f.repository.get(f.o,f.scope.runId)!.checkpoint.campaignJournalRef.revision,1);assert.equal(f.statuses.some(s=>s.state==='requiresReconciliation'),true);
+ assert.deepEqual(await f.composition.stop(),{state:'requiresReconciliation',nativeShutdownConfirmed:true,workDrained:true},'The composition must preserve controller reconciliation at its caller boundary');
 });
 
 test('composition requires explicit trusted native evidence ports and finite frame capacity before allocating repositories',async t=>{
@@ -107,6 +108,7 @@ test('missing consent or meaningful visual facts still records truthful controll
 test('wrong selected model refuses inference; unconfirmed native shutdown never reports confirmed stop',async t=>{
  const f=fixture('wrongModel');t.after(()=>f.close());f.start();await f.composition.completion();assert.equal(f.requests.length,0);assert.equal(f.controls(),0);assert.equal(f.episodes.length,0);
  const g=fixture('noShutdown');t.after(()=>g.close());g.start();await g.composition.completion();assert.equal(g.shutdowns(),1);assert.equal(g.statuses.find(s=>s.nativeShutdownConfirmed===false)?.state,'requiresReconciliation');assert.equal(g.statuses.some(s=>s.nativeShutdownConfirmed===true),false);
+ assert.deepEqual(await g.composition.stop(),{state:'requiresReconciliation',nativeShutdownConfirmed:false,workDrained:true},'The composition must propagate the negative native barrier rather than discard it');
 });
 
 test('actual SQLite reopen preserves historical episode/journal and consumed budget without restoring live play authority',async t=>{
