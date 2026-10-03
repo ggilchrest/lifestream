@@ -37,6 +37,20 @@ export class CampaignJournalRepository{
   tx.run('UPDATE campaign_journal_sources SET fenced=1 WHERE (owner_key,source_hash) IN (SELECT owner_key,source_hash FROM campaign_journal_entry_sources WHERE journal_id=?)',id);
   tx.run("UPDATE campaign_journal_entries SET payload_json=NULL,state='fenced' WHERE journal_id=?",id);tx.run('UPDATE campaign_journal_goal_versions SET fenced=1 WHERE journal_id=?',id);tx.run('UPDATE campaign_journals SET state=?,revision=revision+1,access_revision=access_revision+1,header_json=NULL,goals_json=NULL WHERE journal_id=?',state,id);
  }
+ /** Read-only custody qualification, safe inside another repository's SQLite
+  * transaction. Expired/revoked/fenced sources are unavailable immediately;
+  * regular inspect/get/sweep still own cleanup. No nested transaction or clock
+  * mutation is permitted from an admission/retrieval currency predicate. */
+ peekCurrent(owner:CampaignOwner,id:string):CampaignJournal|null{
+  try{
+   const now=this.now(),floor=this.database.connection.prepare('SELECT observed_at FROM campaign_journal_clock WHERE singleton=1').get()!.observed_at as number,policy=this.policy(owner),row=this.row(owner,id);
+   if(!Number.isSafeInteger(now)||now<floor||!policy||!row||row.state!=='active'||row.expires_at<=now||row.policy_digest!==digest(policy)||!row.header_json||!row.goals_json)return null;
+   const journal=campaignJournalSnapshot({...JSON.parse(row.header_json),revision:row.revision,accessRevision:row.access_revision,entries:this.entries(id),goals:JSON.parse(row.goals_json)},now,this.options.maxJournalBytes);
+   if(!journal||journal.entries.some(e=>this.fenced(owner,e)||!this.source(owner,e))||!this.derivation(owner,journal)||!this.current(owner,policy))return null;
+   const after=this.now(),latest=this.row(owner,id);
+   return Number.isSafeInteger(after)&&after>=now&&after<row.expires_at&&latest?.state==='active'&&latest.revision===row.revision&&latest.access_revision===row.access_revision&&!journal.entries.some(e=>this.fenced(owner,e))?journal:null;
+  }catch{return null;}
+ }
  sweep(){const now=this.time();this.database.transaction(tx=>{for(const row of tx.all<{journal_id:string}>("SELECT journal_id FROM campaign_journals WHERE state IN ('active','needsReview') AND expires_at<=?",now))this.retire(tx,row.journal_id,'expired');});}
  /** Explicit owner policy withdrawal/revision invalidates old custody. This
   * runs independently of source selection; quarantine still permits no reuse. */

@@ -45,7 +45,7 @@ export async function handleGameHostHttp(port:GameHostPort|undefined,request:Inc
    try{bytes=await pngBody(request);port.finishOwnedFrameUpload(actor,parts[1]!,parts[2]!,bytes);reply(response,200,{accepted:true});}
    catch(error){port.abortOwnedFrameUpload(parts[1]!,parts[2]!);throw error;}finally{bytes?.fill(0);}return;
   }
-  if(request.method!=='POST'||!['attach','next','admit','result','detach'].includes(operation)||request.url?.includes('?'))throw new GameHostError(400,'invalid_game_host_message');
+  if(request.method!=='POST'||!['attach','next','admit','result','detach','shutdown'].includes(operation)||request.url?.includes('?'))throw new GameHostError(400,'invalid_game_host_message');
   const actor=authenticate(operation==='attach'),input=await body(request);
   let result:unknown;
   switch(operation){
@@ -53,6 +53,7 @@ export async function handleGameHostHttp(port:GameHostPort|undefined,request:Inc
    case 'admit':result=port.admit(actor,input);break;
    case 'result':result=port.complete(actor,input);break;
    case 'detach':result=port.detach(actor,input);break;
+   case 'shutdown':result=port.shutdownReceipt(actor,input);break;
    case 'next':{
     const controller=new AbortController(),closed=()=>{if(!response.writableEnded)controller.abort();};response.once('close',closed);
     try{result=await port.next(actor,input,controller.signal);}finally{response.removeListener('close',closed);}break;

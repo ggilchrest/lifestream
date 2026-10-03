@@ -5,7 +5,7 @@ import {createServer,connect} from 'node:net';
 import {once} from 'node:events';
 import {createAuthenticatedGameTransport,GameControlFrameDecoder,encodeGameControlFrame} from '../src/transport.ts';
 import {GAME_HOST_PROTOCOL as protocol,GAME_HOST_BASE_PATH,gameHostDigest,parseGameHostFramePath} from '@lifestream/contracts/game-host';
-import type {GameHostCommand} from '@lifestream/contracts/game-host';
+import type {GameHostCommand,GameHostRequest} from '@lifestream/contracts/game-host';
 import type {GameActivityAdapter} from '../src/port.ts';
 import {guardGameActivityAdapter} from '../src/provider.ts';
 import {WindowsGameHostClient,GameHostClientError,type WindowsGameHostClientOptions,type GameHostFenceContext} from '../src/game-host-client.ts';
@@ -14,7 +14,7 @@ import {framePng,frameResult} from './game-host-frame-fixtures.ts';
 const response=(value:unknown,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json'}});
 const future=(ms=5000)=>new Date(Date.now()+ms).toISOString();
 type Handler=(body:any,signal:AbortSignal)=>Promise<Response>|Response;
-function harness(request=observe()){
+function harness(request:GameHostRequest=observe()){
  const attachmentId=randomUUID(),calls:{route:string;body:any}[]=[],order:string[]=[],fences:GameHostFenceContext[]=[],queue:Response[]=[];
  let pending:((r:Response)=>void)|undefined,polls=0,maxPolls=0,closeCount=0,current=true,qualified=true,nativeCalls=0;
  const command:GameHostCommand={protocol,kind:'command',attachmentId,commandId:randomUUID(),requestDigest:gameHostDigest(request),expiresAt:request.deadlineAt,request};
@@ -43,6 +43,19 @@ test('missing trusted ports stays inert and creates no attachment/native channel
  const client=new WindowsGameHostClient();assert.equal(client.snapshot.configured,false);await assert.rejects(client.run(),e=>e instanceof GameHostClientError&&e.code==='unconfigured');
  const h=harness();for(const key of ['fetchAuthenticated','isScopeCurrent','sourceIsQualified','openNative','shutdownExactOldLease'])assert.throws(()=>new WindowsGameHostClient({...h.options,[key]:undefined}as any));
  for(const key of ['sourceAvailable','acceptObservation','acceptAction','reconcileEffect','admitRelease'])assert.throws(()=>new WindowsGameHostClient({...h.options,nativeBoundary:{...h.options.nativeBoundary,[key]:undefined}}as any));assert.equal(h.calls.length,0);
+});
+
+test('next command waits for the previous submitted result acknowledgement without overlapping native entry',async()=>{
+ const h=harness(),second=observe();second.scope=structuredClone(h.request.scope);
+ const event={...h.command,commandId:randomUUID(),request:second,requestDigest:gameHostDigest(second),expiresAt:second.deadlineAt};
+ let results=0;
+ h.handlers.result=async body=>{
+  results++;
+  if(results===1){h.send(event);await new Promise(resolve=>setTimeout(resolve,50));assert.equal(h.nativeCalls,1);}
+  else setTimeout(()=>h.send({},401),5);
+  return response({protocol,attachmentId:h.command.attachmentId,commandId:body.commandId,resultDigest:body.resultDigest,accepted:true});
+ };
+ const client=await run(h);assert.equal(h.nativeCalls,2);assert.equal(client.snapshot.acceptedIngress,2);assert.equal(h.maxPolls,1);assert.equal(h.calls.filter(c=>c.route==='admit').length,2);
 });
 test('actual native readiness is established before attach without an early effect claim',async()=>{
  const h=harness();let ready=false;
@@ -144,7 +157,7 @@ test('composed boundary admits after mutual native authentication and returns a 
   let challenge='';const decoder=new GameControlFrameDecoder(text=>{const value=JSON.parse(text);
    if(value.type==='challenge'){challenge=text;peer!.write(encodeGameControlFrame(JSON.stringify({type:'authenticate',proof:createHmac('sha256',secret).update(text).digest('hex')})));}
    else if(value.type==='authenticated'){assert.equal(value.proof,createHmac('sha256',secret).update('lifestream-game-control/1 host '+challenge).digest('hex'));h.order.push('authenticated');verified();}
-   else{h.order.push('native');assert.deepEqual(value,h.request);peer!.write(encodeGameControlFrame(JSON.stringify(observed(value))));}
+   else{h.order.push('native');assert.deepEqual(value,h.request);if(value.operation!=='GameActivityAdapter.observe')throw Error('This synthetic transport fixture expects an observation');peer!.write(encodeGameControlFrame(JSON.stringify(observed(value))));}
   });peer.on('data',data=>decoder.push(data));const owned=await nativeJoined;await owned.ready;await peerVerified;
   return {adapter:owned.adapter,close:()=>{owned.close();peer!.destroy();}};
  };

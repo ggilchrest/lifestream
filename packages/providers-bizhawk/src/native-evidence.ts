@@ -4,6 +4,7 @@ import {resolve,isAbsolute} from 'node:path';
 import {isDeepStrictEqual} from 'node:util';
 import type {ChildProcess} from 'node:child_process';
 import type * as G from '@lifestream/contracts/game-activity';
+import {gameHostDigest,type NativeControllerUsageEvidence,type NativeShutdownEvidence} from '@lifestream/contracts/game-host';
 import type {GameActivityAdapter} from './port.js';
 import type {GameFrameCustody} from './frame-custody.js';
 import type {LiveFrameDecoder} from './live-frame-decoder.js';
@@ -103,6 +104,14 @@ export class NativeGameEvidence{
    if(!recorded||!isDeepStrictEqual(recorded.action,action)||!this.ownedScope(action.scope)||!proof||proof.actionStarted?.inputOwnerLeaseId!==action.payload.inputOwnerLeaseId||!isDeepStrictEqual(proof.lastRelease,recorded.release)||!proof.paused||Object.values(proof.buttons).some(value=>value!==false)||proof.frameNumber!==recorded.release.outcome.payload?.verifiedFrameNumber)return null;
    return immutable(structuredClone(recorded));
   }catch{return null;}
+ };
+ controllerUsageEvidenceFor=(request:G.GameActionRequest,result:G.GameActionResult):NativeControllerUsageEvidence|null=>{
+  const captured=this.captureControllerReadback(request,result);if(!captured)return null;
+  return immutable({schemaVersion:'1.0.0',recordType:'nativeControllerUsageEvidence',scope:captured.scope,pinsDigest:captured.pinsDigest,providerRef:captured.providerRef,requestDigest:gameHostDigest(request),resultDigest:gameHostDigest(result),inputOwnerLeaseId:captured.action.inputOwnerLeaseId,startedMonotonicMs:captured.action.startedMonotonicMs,completedMonotonicMs:captured.action.completedMonotonicMs,verifiedInputFrames:captured.action.verifiedInputFrames,nativeActionDigest:gameHostDigest(captured.action)});
+ };
+ shutdownEvidenceFor=(action:G.GameActionRequest):NativeShutdownEvidence|null=>{
+  const captured=this.captureShutdownReadback(action);if(!captured)return null;
+  return immutable({schemaVersion:'1.0.0',recordType:'nativeShutdownEvidence',scope:captured.scope,pinsDigest:captured.pinsDigest,providerRef:captured.providerRef,actionRequestDigest:gameHostDigest(captured.action),targetInputOwnerLeaseId:captured.action.payload.inputOwnerLeaseId,release:captured.release});
  };
  reconcileEffect=async(request:G.GameActionRequest|G.GameSaveRequest):Promise<boolean>=>{
   if(request.operation!=='GameActivityAdapter.applyController'||!this.ownedScope(request.scope))return false;

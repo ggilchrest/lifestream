@@ -20,18 +20,24 @@ function sessionProjection(authentication,context,now){
  const blockingReason=!authenticated?'session_unavailable':!owner?'owner_required':!administrationCurrent?'administration_expired':!contextCurrent?'context_unavailable':!conversationCurrent?'conversation_unavailable':!audienceCurrent?'audience_unavailable':null;
  return Object.freeze({authenticated,owner,administrationCurrent,contextCurrent,conversationCurrent,audienceCurrent,ready:blockingReason===null,blockingReason,...(authenticated?{principalId:authentication.principalId,sessionId:authentication.sessionId,adminExpiresAt:authentication.adminExpiresAt}:{}),...(contextCurrent?{revision:context.revision,endpointId:endpoint.endpointId,runtimeSourceRevision:context.runtimeSelfContext.sourceRevision}:{}),...(conversationCurrent?{conversationId:context.conversationId}:{})});
 }
-async function boundedJson(response){
+async function boundedBySignal(promise,signal,late=()=>{}){
+ if(signal.aborted){void promise.then(late,()=>{});throw fail();}
+ let abort;const cancelled=new Promise((_,reject)=>{abort=()=>reject(fail());signal.addEventListener('abort',abort,{once:true});});
+ void promise.then(value=>{if(signal.aborted)late(value);},()=>{});
+ try{return await Promise.race([promise,cancelled]);}finally{signal.removeEventListener('abort',abort);}
+}
+async function boundedJson(response,signal){
  if(!response.ok||response.redirected||!/^application\/json(?:;|$)/i.test(response.headers.get('content-type')??''))throw fail();
  const declared=response.headers.get('content-length');if(declared&&(!/^\d+$/.test(declared)||Number(declared)>MAX_BYTES))throw fail();
  const reader=response.body?.getReader();if(!reader)throw fail();let size=0,chunks=[];
- try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>MAX_BYTES)throw fail();chunks.push(Buffer.from(value));}return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks,size)));}
- finally{await reader.cancel().catch(()=>{});reader.releaseLock();chunks=[];}
+ try{while(true){const reading=reader.read(),{done,value}=signal?await boundedBySignal(reading,signal):await reading;if(done)break;size+=value.byteLength;if(size>MAX_BYTES)throw fail();chunks.push(Buffer.from(value));}return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks,size)));}
+ finally{if(signal){void reader.cancel().catch(()=>{});try{reader.releaseLock();}catch{}}else{await reader.cancel().catch(()=>{});reader.releaseLock();}chunks=[];}
 }
 /** Trusted-main transport only. The renderer cannot supply a URL, body, scope,
  * token, setup or driver. Production callers supply Electron net and the existing partition for ordinary auth;
  * this module never inspects cookies or refreshes human administrative activity. */
 class DesktopGameHostSessionBroker{
- #partition;#message;#framePath;#inspectPng;#now;#csrf=null;#attachmentId=null;#setup=null;#driver=null;#state='disabled';#timer=null;#pending=new Set();#generation=0;#notify;#listeners=new Set();#frameCommand=null;#frameAttempts=0;
+ #partition;#message;#framePath;#inspectPng;#now;#csrf=null;#attachmentId=null;#setup=null;#driver=null;#state='disabled';#timer=null;#pending=new Set();#generation=0;#notify;#listeners=new Set();#frameCommand=null;#frameAttempts=0;#shutdownReceipt=null;
  constructor({partition,net,gameHostMessage,parseGameHostFramePath,inspectGamePng,now=Date.now,onStatus=()=>{}}){
   if((!net&&typeof partition?.fetch!=='function')||typeof gameHostMessage!=='function')throw fail();
   this.#partition=net?{fetch:createSessionBoundGameHostFetch(net,partition)}:partition;this.#message=gameHostMessage;this.#framePath=parseGameHostFramePath;this.#inspectPng=inspectGamePng;this.#now=now;this.#notify=onStatus;
@@ -92,6 +98,7 @@ class DesktopGameHostSessionBroker{
   }catch(error){await this.stop('unavailable');throw gameHostFailure(gameHostBlockingReason(error));}finally{clearTimeout(timeout);}
  }
  async #fetch(input,init,generation){
+  if(input===ORIGIN+BASE+'shutdown')return this.#fetchShutdown(init,generation);
   if(!this.#current(generation)){void this.stop('deadline');throw fail();}
   if(typeof input!=='string'||!init||init.method!=='POST')throw fail();
   const url=new URL(input);if(url.origin!==ORIGIN||url.search||url.hash||url.username||url.password||!url.pathname.startsWith(BASE))throw fail();
@@ -129,13 +136,35 @@ class DesktopGameHostSessionBroker{
    return new Response(JSON.stringify(response),{status:200,headers:{'content-type':'application/json','cache-control':'no-store'}});
   }catch{void this.stop('scopeChanged');throw fail();}finally{owned?.fill(0);clearTimeout(timeout);this.#pending.delete(controller);}
  }
+ #prepareShutdownReceipt(generation){
+  if(this.#shutdownReceipt||!this.#csrf||!this.#attachmentId||!this.#setup?.attach.nativeEvidenceVersion)return;
+  const slot={generation,csrf:this.#csrf,attachmentId:this.#attachmentId,attach:this.#setup.attach,expires:this.#now()+5000,attempted:false,timer:null};
+  slot.timer=setTimeout(()=>{if(this.#shutdownReceipt===slot)this.#shutdownReceipt=null;},5000);slot.timer.unref?.();this.#shutdownReceipt=slot;
+ }
+ async #fetchShutdown(init,generation){
+  if(this.#current(generation))this.#prepareShutdownReceipt(generation);
+  const slot=this.#shutdownReceipt;
+  if(!slot||slot.generation!==generation||slot.attempted||this.#now()>=slot.expires||!init||init.method!=='POST'||typeof init.body!=='string'||Buffer.byteLength(init.body)>MAX_BYTES)throw fail();
+  let message;try{message=this.#message('shutdown',JSON.parse(init.body));}catch{throw fail();}
+  if(!message||message.attachmentId!==slot.attachmentId||message.nativeEvidenceVersion!==slot.attach.nativeEvidenceVersion||message.evidence&&(!isDeepStrictEqual(message.evidence.scope,slot.attach.scope)||message.evidence.pinsDigest!==slot.attach.pinsDigest||message.evidence.providerRef!==slot.attach.providerRef))throw fail();
+  slot.attempted=true;const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),Math.max(1,slot.expires-this.#now()));timeout.unref?.();
+  const signal=init.signal?AbortSignal.any([controller.signal,init.signal]):controller.signal;
+  try{
+   // This fixed lane can only report history. It does not require a current
+   // gameplay audience, dispatch a command, or acquire/refresh authentication.
+   const raw=await boundedBySignal(this.#partition.fetch(ORIGIN+BASE+'shutdown',{method:'POST',body:JSON.stringify(message),headers:{'content-type':'application/json','origin':ORIGIN,'x-lifestream-csrf':slot.csrf},credentials:'include',redirect:'error',cache:'no-store',signal}),signal,late=>{void late.body?.cancel().catch(()=>{});});
+   const response=this.#message('shutdownAccepted',await boundedJson(raw,signal));
+   if(signal.aborted||this.#shutdownReceipt!==slot||this.#now()>=slot.expires||!response||response.attachmentId!==slot.attachmentId)throw fail();
+   return new Response(JSON.stringify(response),{status:200,headers:{'content-type':'application/json','cache-control':'no-store'}});
+  }finally{clearTimeout(timeout);clearTimeout(slot.timer);slot.csrf=null;if(this.#shutdownReceipt===slot)this.#shutdownReceipt=null;}
+ }
  async stop(reason='stop'){
   if(this.#state==='disabled'||this.#state==='stopped')return this.status();
-  this.#state='stopped';++this.#generation;clearTimeout(this.#timer);this.#timer=null;this.#csrf=null;this.#frameCommand=null;
+  this.#prepareShutdownReceipt(this.#generation);this.#state='stopped';++this.#generation;clearTimeout(this.#timer);this.#timer=null;this.#csrf=null;this.#frameCommand=null;
   for(const controller of this.#pending)controller.abort();this.#pending.clear();this.#emit();
   // Fencing is not pause proof. The driver owns its captured exact-old-lease
   // shutdown and must retain unresolved reservations if evidence is lost.
-  const driver=this.#driver;this.#driver=null;if(driver){let timer;try{await Promise.race([Promise.resolve().then(()=>driver.fence(reason)),new Promise(resolve=>{timer=setTimeout(resolve,5000);timer.unref?.();})]);}catch{}finally{clearTimeout(timer);}}return this.status();
+  const driver=this.#driver;this.#driver=null;if(driver){let timer;try{await Promise.race([Promise.resolve().then(()=>driver.fence(reason)),new Promise(resolve=>{timer=setTimeout(resolve,5000);timer.unref?.();})]);}catch{}finally{clearTimeout(timer);}}if(this.#shutdownReceipt){clearTimeout(this.#shutdownReceipt.timer);this.#shutdownReceipt=null;}return this.status();
  }
 }
 function trustedGameHostSender(event,window,origin){

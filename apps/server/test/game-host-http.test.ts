@@ -38,6 +38,22 @@ async function setup(t:import('node:test').TestContext,enabled=true,runtimeEnabl
  return {app,headers,request,metadata,path,f,session,hostJoin:()=>hostJoin!,now:(value:number)=>now=value,advance:(ms:number)=>now+=ms,withdraw:()=>qualified=false,withdrawApproval:()=>approved=false};
 }
 test('host HTTP is disabled by default even for an existing authenticated owner',async t=>{const s=await setup(t,false),response=await s.request(s.path+'attach',s.metadata);assert.equal(response.status,404);assert.deepEqual(await response.json(),{error:'game_host_disabled'});assert.equal(s.app.database.connection.prepare('SELECT count(*) AS n FROM game_host_dispatch').get()!.n,0);});
+
+test('server draining admits only bounded authenticated historical shutdown ingress while supervised stop waits',async t=>{
+ const s=await setup(t);let finish!:()=>void;
+ // Hold the source stop to exercise the actual HTTP dispatch/auth layer during
+ // draining, without activating gameplay or making a native effect.
+ (s.app as unknown as {gameplay:{stop:()=>Promise<void>}}).gameplay={stop:()=>new Promise<void>(resolve=>{finish=resolve;})};
+ const stopped=s.app.shutdown();await new Promise(resolve=>setImmediate(resolve));
+ try{
+  assert.equal((await s.request(s.path+'shutdown',{})).status,400);
+  assert.equal((await s.request(s.path+'shutdown',{}, {'x-lifestream-csrf':'synthetic-wrong'})).status,403);
+  assert.equal((await s.request(s.path+'shutdown',{}, {cookie:''})).status,401);
+  assert.equal((await s.request(s.path+'next',{})).status,503);
+  assert.equal((await fetch(`http://127.0.0.1:${s.app.address().port}${s.path}shutdown`,{headers:s.headers})).status,503);
+  assert.equal(s.app.database.connection.prepare('SELECT count(*) AS n FROM game_host_dispatch').get()!.n,0);
+ }finally{finish();await stopped;}
+});
 test('chunked HTTP ingress applies the byte cap before JSON parsing and remains usable',async t=>{
  const s=await setup(t),url=`http://127.0.0.1:${s.app.address().port}${s.path}attach`;
  const status=await new Promise<number>((resolve,reject)=>{const req=httpRequest(url,{method:'POST',headers:s.headers},response=>{response.resume();response.once('end',()=>resolve(response.statusCode!));});req.once('error',reject);req.write('x'.repeat(70000));req.end('x'.repeat(70000));});assert.equal(status,413);assert.equal((await s.request(s.path+'attach',s.metadata)).status,200);assert.equal(s.app.database.connection.prepare('SELECT count(*) AS n FROM game_host_dispatch').get()!.n,0);

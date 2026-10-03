@@ -37,6 +37,7 @@ export function createOwnedWindowsGameHostDriver(options:OwnedWindowsGameHostDri
  let nativeStage='validated',nativeStartupFailure:string|null=null;
  const boundary:GameAdapterBoundaryOptions={providerRef:options.attach.providerRef,maxDurationMs:5000,sourceAvailable:evidence.sourceAvailable,acceptObservation:evidence.acceptObservation,acceptAction:evidence.acceptAction,reconcileEffect:evidence.reconcileEffect,admitRelease:evidence.admitRelease};
  const client=new WindowsGameHostClient({attach:options.attach,fetchAuthenticated:options.fetchAuthenticated,isScopeCurrent:options.isScopeCurrent,sourceIsQualified:attach=>evidence.installationAvailable(attach.scope,attach.pinsDigest),nativeBoundary:boundary,httpTimeoutMs:5000,nativeStartupTimeoutMs:Math.min(options.native.sessionDurationMs,options.native.connectionTimeoutMs+options.native.authenticationTimeoutMs+2000),sessionDurationMs:options.native.sessionDurationMs,shutdownTimeoutMs:5000,
+  ...(options.attach.nativeEvidenceVersion?{nativeEvidence:{usageFor:evidence.controllerUsageEvidenceFor}}:{}),
   ...(options.frameTransfer?{frameTransfer:{...options.frameTransfer,readOwnedFrame:async(request,observation,context)=>{
    if(context.signal.aborted||!context.isCurrent(request.scope)||!evidence.acceptObservation(request,observation))return null;
    const frame=frameCustody.read(observation.screenshots[0]!.mediaRef,request.scope);
@@ -67,6 +68,7 @@ export function createOwnedWindowsGameHostDriver(options:OwnedWindowsGameHostDri
    if(release&&context.lastEnteredAction){
     const unavailable=async()=>{throw Error('Safety channel only');};
     pauseConfirmed=await evidence.shutdownExactOldLease(context.lastEnteredAction,{observe:unavailable,applyController:unavailable,controlSave:unavailable,releaseControls:release},3000);
+    if(options.attach.nativeEvidenceVersion&&pauseConfirmed)return evidence.shutdownEvidenceFor(context.lastEnteredAction);
    }
   }
  });

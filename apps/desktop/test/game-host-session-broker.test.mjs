@@ -8,6 +8,7 @@ const {DesktopGameHostSessionBroker,trustedGameHostSender}=createRequire(import.
 import {inspectGamePng} from '../../../packages/providers-bizhawk/src/frame-custody.ts';
 import {frameFixture} from '../../../packages/providers-bizhawk/test/game-host-frame-fixtures.ts';
 const origin='http://127.0.0.1:43182',protocol='lifestream.game-host.v1',time=Date.parse('2026-10-02T08:00:00Z');
+const nativeEvidenceVersion='lifestream.native-game-evidence.v1';
 function fixture(baseTime=time){
  const time=baseTime;
  const id=()=>randomUUID(),scope={assistantId:id(),principalId:id(),relationshipId:id(),environmentId:id(),activityId:id(),runId:id(),activityEpoch:1,timelineId:id(),timelineRevision:1,campaignId:id(),observationDomain:'simulatedGame',contextBinding:{conversationId:id(),sessionId:id(),endpointId:id(),participationKind:'logicalActivity',humanSpeakerRef:null,audioOwnerEndpointId:null,ownerPermissionRef:'synthetic-broker-fixture'}};
@@ -26,6 +27,56 @@ function fixture(baseTime=time){
 }
 test('trusted main uses existing session, caches CSRF, and returns only typed JSON',async()=>{
  const f=fixture();try{await f.start();f.now=time+40000;const response=await f.transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/attach',{method:'POST',body:JSON.stringify(f.attach),headers:{cookie:'IGNORED',authorization:'IGNORED'}});assert.equal(response.headers.get('set-cookie'),null);assert.equal(response.url,'');assert.equal((await response.json()).attachmentId,f.attachmentId);assert.equal(f.calls.filter(x=>x.url.endsWith('/api/auth/v1/session')).length,1);const post=f.calls.at(-1);assert.deepEqual(Object.keys(post.init.headers).sort(),['content-type','origin','x-lifestream-csrf']);assert.equal(post.init.headers.origin,origin);assert.equal(post.init.redirect,'error');assert.equal(post.init.credentials,'include');assert.equal(JSON.stringify(f.broker.status()).includes(f.authentication.csrfToken),false);assert.equal(JSON.stringify(f.broker.status()).includes(f.attach.scope.principalId),false);}finally{await f.broker.stop();}assert.equal(f.fences,1);assert.equal(f.broker.status().pauseConfirmed,false);
+});
+
+test('opted-in stop preserves one bounded historical receipt through the same partition without rechecking audience',async()=>{
+ const f=fixture();f.attach.nativeEvidenceVersion=nativeEvidenceVersion;
+ const fetch=f.partition.fetch;let transport,receipt,callsAtFence;
+ f.partition.fetch=async(url,init)=>{
+  if(url===origin+'/api/runtime/v1/game-host/shutdown'){f.calls.push({url,init});return new Response(JSON.stringify({protocol,attachmentId:f.attachmentId,recorded:true,nativeShutdownConfirmed:false}),{headers:{'content-type':'application/json'}});}
+  return fetch(url,init);
+ };
+ await f.broker.start({attach:f.attach,binding:f.binding,expiresAt:new Date(time+60000).toISOString(),driverFactory:async options=>{
+  transport=options;return {async fence(){
+   callsAtFence=f.calls.length;f.context.runtimeSelfContext.audienceScope='unknown';
+   await assert.rejects(transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/next',{method:'POST',body:JSON.stringify({protocol,attachmentId:f.attachmentId})}));
+   const message={protocol,attachmentId:f.attachmentId,nativeEvidenceVersion,evidence:null};
+   receipt=await (await transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/shutdown',{method:'POST',body:JSON.stringify(message)})).json();
+   await assert.rejects(transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/shutdown',{method:'POST',body:JSON.stringify(message)}));
+  }};
+ }});
+ await transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/attach',{method:'POST',body:JSON.stringify(f.attach)});
+ await f.broker.stop();assert.equal(receipt.nativeShutdownConfirmed,false);assert.equal(f.calls.length,callsAtFence+1);
+ const post=f.calls.at(-1);assert.equal(post.init.credentials,'include');assert.equal(post.init.headers['x-lifestream-csrf'],f.authentication.csrfToken);assert.equal(post.init.headers.origin,origin);assert.equal(f.broker.status().authenticated,false);
+});
+
+for(const mode of ['legacy','wrongAttachment','expired'] )test('historical broker receipt refuses '+mode+' before partition ingress',async()=>{
+ const f=fixture();if(mode!=='legacy')f.attach.nativeEvidenceVersion=nativeEvidenceVersion;
+ let transport,callsAtFence;
+ await f.broker.start({attach:f.attach,binding:f.binding,expiresAt:new Date(time+60000).toISOString(),driverFactory:async options=>{
+  transport=options;return {async fence(){
+   callsAtFence=f.calls.length;if(mode==='expired')f.now=time+5001;
+   const message={protocol,attachmentId:mode==='wrongAttachment'?randomUUID():f.attachmentId,nativeEvidenceVersion,evidence:null};
+   await assert.rejects(transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/shutdown',{method:'POST',body:JSON.stringify(message)}));
+  }};
+ }});
+ await transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/attach',{method:'POST',body:JSON.stringify(f.attach)});
+ await f.broker.stop();assert.equal(f.calls.length,callsAtFence);assert.equal(f.broker.status().enabled,false);
+});
+
+for(const mode of ['fetch','body'])test('historical receipt abort bounds a stalled '+mode+' without retry',{timeout:2000},async()=>{
+ const f=fixture();f.attach.nativeEvidenceVersion=nativeEvidenceVersion;const fetch=f.partition.fetch;let entered;
+ const started=new Promise(resolve=>{entered=resolve;});
+ f.partition.fetch=async(url,init)=>{
+  if(url.endsWith('/shutdown')){f.calls.push({url,init});entered();return mode==='fetch'?new Promise(()=>{}):new Response(new ReadableStream({start(){}}),{headers:{'content-type':'application/json'}});}
+  return fetch(url,init);
+ };
+ await f.start();try{
+  await f.transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/attach',{method:'POST',body:JSON.stringify(f.attach)});
+  const controller=new AbortController(),pending=f.transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/shutdown',{method:'POST',body:JSON.stringify({protocol,attachmentId:f.attachmentId,nativeEvidenceVersion,evidence:null}),signal:controller.signal});
+  await started;controller.abort();await assert.rejects(pending);
+  assert.equal(f.calls.filter(c=>c.url.endsWith('/shutdown')).length,1);
+ }finally{await f.broker.stop();}
 });
 test('transport rejects arbitrary origins, paths, query, schemas and mutated attach',async()=>{
  const f=fixture();await f.start();try{for(const url of ['http://example.org/api/runtime/v1/game-host/next',origin+'/api/auth/v1/accounts',origin+'/api/runtime/v1/game-host/next?x=1','file:///C:/secret',origin+'/api/runtime/v1/game-host/next#x'])await assert.rejects(f.transport.fetchAuthenticated(url,{method:'POST',body:'{}'}));await assert.rejects(f.transport.fetchAuthenticated(origin+'/api/runtime/v1/game-host/attach',{method:'POST',body:JSON.stringify({...f.attach,providerRef:'other'})}));assert.equal(f.calls.length,2);}finally{await f.broker.stop();}

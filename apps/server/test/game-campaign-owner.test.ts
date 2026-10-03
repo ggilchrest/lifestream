@@ -1,32 +1,18 @@
+import {campaignFixtureData} from './fixtures/gameplay.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import type * as G from '@lifestream/contracts/game-activity';
-import {Database,GameStartRepository,CampaignJournalRepository,type ActivityMetadataOptions,type CampaignJournalOptions} from '@lifestream/storage-sqlite';
-import {selectGameWindow} from '@lifestream/runtime/activity/policy';
+import {CampaignJournalRepository} from '@lifestream/storage-sqlite';
 import {prepareGameCampaignContext,gameDecisionInput} from '@lifestream/runtime/activity/game-journal';
 import {createPreparedTurnBinding,finalizePreparedTurn,requestForFinalizedTurn} from '@lifestream/runtime/inference/prompt';
-import {gameCampaignFixture} from '../../../packages/runtime/test/fixtures/game-campaign.ts';
-import {scriptedGameBounds,scriptedGamePolicy} from '../../../packages/runtime/test/fixtures/game-policy.ts';
-import {createGameCampaignOwner,type GameCampaignOwnerSource} from '../src/runtime/game-campaign-owner.ts';
+import {createGameCampaignOwner} from '../src/runtime/game-campaign-owner.ts';
 import type {GameHostJoin} from '../src/runtime/game-host-port.ts';
 import type {PreparedHostGameStep} from '../src/runtime/game-host-runtime.ts';
 
 function fixture(){
- const f=gameCampaignFixture(),scope=f.input.expectedScope,o={principalId:scope.principalId,assistantId:scope.assistantId,relationshipId:scope.relationshipId!};
- let current=true,retention:{policyRevision:number;retention:{retentionMs:number;maximumEpisodes:number;maximumBytes:number;retentionPolicyRef:string}}|null=null;
- const bounds=structuredClone(scriptedGameBounds),policy=scriptedGamePolicy(Date.now());
- const metadata:ActivityMetadataOptions={maxRuns:4,maxReservations:8,maxControllerReservations:8,maxCheckpointBytes:32768,scopeCurrent:()=>current,quarantined:()=>false,policyFor:()=>({enabled:true,revision:1,retentionMs:3600000,bounds}),allowCreate:()=>current,checkpointCurrent:()=>current,transitionCurrent:()=>current,planningCurrent:()=>current,usageCurrent:()=>current,controllerCurrent:()=>current,controllerUsageCurrent:()=>current};
- const journalOptions:CampaignJournalOptions={maxJournals:4,maxEntryIdentities:32,maxSourceFences:64,maxJournalBytes:32768,scopeCurrent:()=>current,quarantined:()=>false,policyFor:()=>({enabled:true,revision:1,retentionMs:3600000,retentionPolicyRef:f.input.journal.retentionPolicyRef}),allowCreate:()=>current,sourceCurrent:()=>current,journalCurrent:()=>current};
- const checkpoint:G.ActivityCheckpoint={schemaVersion:'1.0.0',recordType:'activityCheckpoint',scope,checkpointId:randomUUID(),revision:1,stateRevision:1,policyRevision:1,pinsDigest:f.input.pinsDigest,goalSummary:'Deterministic fixture only; no CT progress.',recentObservationIds:[f.input.observation.observationId],adviceRefs:[],lastObservationId:f.input.observation.observationId,lastActionReceipt:null,saveArtifact:null,budgetUsed:{wallMs:0,frames:0,actions:0,starts:1,equivalentFailures:0,modelCalls:0,inputTokens:0,outputTokens:0,retries:0,checkpointBytes:0,memoryEpisodes:0},recordedAt:new Date().toISOString(),resumeDisposition:'requiresReconciliation',campaignJournalRef:{campaignId:scope.campaignId,journalId:f.input.journal.journalId,revision:1,accessRevision:1}};
- const planningBounds={deadlineMs:3000,maximumInputTokens:8192,maximumOutputTokens:1024,maximumOutputBytes:16384,maximumChunks:256};
- const observation=structuredClone(f.input.observation);
- observation.visibleState=[{fieldId:'fixture:visible-menu',value:'open',visibility:'visibleNow',firstObservedRef:observation.observationId,lastObservedRef:observation.observationId,timelineId:scope.timelineId,observedAt:observation.receivedAt,freshUntil:new Date(Date.now()+5000).toISOString(),decoderRevision:'1.0.0',manifestDigest:f.input.pinsDigest,limitations:['Scripted field; no native decoder qualification.']}];
- const source:GameCampaignOwnerSource={current:()=>current,startFor:()=>({policy,bounds,window:selectGameWindow({scope,policy,bounds,purpose:'play',nowMs:Date.now()},{policyCurrent:()=>current}),checkpoint,journal:f.input.journal}),observe:async(_join,_signal,afterActionId)=>{const observed=structuredClone(observation);if(afterActionId){observed.observationId=randomUUID();observed.previousActionId=afterActionId;observed.frameNumber+=2;observed.capturedAt=new Date().toISOString();observed.receivedAt=observed.capturedAt;observed.screenshots=observed.screenshots.map(s=>({...s,frameNumber:observed.frameNumber,capturedAt:observed.capturedAt}));}return observed;},bindingFor:(_scope,journal,obs)=>({...f.input.binding,journal,reconciledObservationId:obs.observationId}),campaignBoundary:{...f.boundary,now:Date.now},dispatchBoundary:{maxPlanningAgeMs:30000,maxPlanningFrameDelta:120,maximumObservationAgeMs:10000,validatorRef:'fixture:dispatch',observationCurrent:()=>current,now:Date.now},planningTerminalCurrent:()=>current,settledSourceCurrent:()=>current,retentionFor:()=>retention,requestFor:async(_join,result,dispatch,obs)=>({schemaVersion:'1.0.0',operation:'GameActivityAdapter.applyController',requestId:randomUUID(),correlationId:randomUUID(),deadlineAt:new Date(Date.now()+3000).toISOString(),cancellationId:randomUUID(),executionMode:'simulation',scope,idempotencyKey:randomUUID(),payload:{actionId:randomUUID(),proposal:result.proposal!,admission:{admissionId:randomUUID(),capabilityInvocationId:randomUUID(),authorityContextRef:{providerRef:'fixture:authority',contextId:randomUUID(),revision:1},dispatchReceipt:{reference:'fixture:receipt',sha256:'a'.repeat(64),mediaType:'application/json',schemaRef:'fixture:receipt',byteLength:1},scopeDigest:'a'.repeat(64),inputDigest:'a'.repeat(64),policyRevision:1,issuedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3000).toISOString()},inputOwnerLeaseId:randomUUID(),buttonVector:{up:false,down:false,left:false,right:false,a:true,b:false,x:false,y:false,l:false,r:false,start:false,select:false},protectedMenuOperation:'none',expectedFrameNumber:obs.frameNumber,expectedPinsDigest:f.input.pinsDigest,dispatchValidation:dispatch}})};
- const host=createGameCampaignOwner({metadata,journal:journalOptions,startsFor:db=>new GameStartRepository(db,{maxClaims:8,maxAssistantSlots:4,limitsFor:()=>({enabled:true,revision:1,rollingPeriodMs:3600000,rollingStartLimit:2,startsPerWindow:1}),quarantined:()=>false,admissionCurrent:()=>current,inspectionCurrent:()=>current,dispositionCurrent:()=>current}),source,planningBounds,maximumObservationAgeMs:10000,maximumContextBytes:16384});
- const db=new Database({path:':memory:'});db.migrate();const repository=host.createRepository(db);
- const join={scope,runtime:{isCurrent:()=>current,controllerCurrent:()=>current}} as GameHostJoin;
- return {f,scope,o,db,host,repository,join,source,checkpoint,journalOptions,observation,planningBounds,setRetention:(value:typeof retention)=>{retention=value;},withdraw:()=>{current=false;}};
+ const data=campaignFixtureData(),host=createGameCampaignOwner(data.ownerOptions),repository=host.createRepository(data.db);
+ return {...data,host,repository};
 }
 
 test('actual SQLite start claim and selected campaign context are owned once, never re-created by missing runtime authority',async t=>{

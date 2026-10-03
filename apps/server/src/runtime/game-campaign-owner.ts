@@ -11,6 +11,7 @@ import type {GameHostJoin} from './game-host-port.ts';
 import type {PreparedHostGameStep} from './game-host-runtime.ts';
 import type {SupervisedGameCampaign} from '../../../../scripts/supervised-game-runtime.mjs';
 import {claimConfiguredGameStart} from './game-activity.ts';
+import {gameObservationJournalEntries} from './gameplay-grounding.ts';
 
 type Owner={principalId:string;assistantId:string;relationshipId:string};
 type MemoryOwner={principalId:string;assistantId:string;relationshipId:string|null};
@@ -43,6 +44,10 @@ export function createGameCampaignOwner(options:{metadata:ActivityMetadataOption
  let database:Database|undefined,checkpoints:ActivityCheckpointRepository|undefined,journals:CampaignJournalRepository|undefined,starts:GameStartRepository|undefined;
  const completed=new WeakMap<PreparedHostGameStep,{result:GamePlanningResult;ref:string;ledgerRevision:number}>(),published=new WeakSet<PreparedHostGameStep>();
  const current=(scope:G.ActivityScope)=>sourcePinned()&&safe(()=>source.current(scope));
+ const campaignBoundary:GameCampaignContextBoundary={...source.campaignBoundary,coreCurrent:(ref,journal)=>{
+  const row=database?.connection.prepare('SELECT owner_key FROM campaign_journals WHERE journal_id=?').get(ref.journalId);if(!row||typeof row.owner_key!=='string'||!journals)return false;
+  try{const ids=JSON.parse(row.owner_key);if(!Array.isArray(ids)||ids.length!==3||!ids.every(id=>typeof id==='string'))return false;const o={principalId:ids[0] as string,assistantId:ids[1] as string,relationshipId:ids[2] as string},actual=journals.peekCurrent(o,ref.journalId);return !!actual&&sourcePinned()&&actual.revision===ref.revision&&actual.accessRevision===ref.accessRevision&&isDeepStrictEqual(actual,journal)&&source.campaignBoundary.coreCurrent(ref,journal)===true;}catch{return false;}
+ }};
  const createRepository=(db:Database)=>{if(database)throw Error('Second campaign owner refused');database=db;checkpoints=new ActivityCheckpointRepository(db,options.metadata);journals=new CampaignJournalRepository(db,options.journal);starts=options.startsFor(db);return checkpoints;};
  const retentionConsentRefFor=(o:Readonly<MemoryOwner>,activityId:string):string|null=>{
   if(!database||!o.relationshipId||!sourcePinned()||!source.retentionFor)return null;
@@ -67,7 +72,7 @@ export function createGameCampaignOwner(options:{metadata:ActivityMetadataOption
    if(!journal)return null;const observation=await source.observe(join,signal,record.checkpoint.lastActionReceipt?.actionId??null);
    if(!observation||signal.aborted||!join.runtime.isCurrent()||!current(join.scope))return null;
    const binding=source.bindingFor(join.scope,journal,observation);if(!binding)return null;
-   const now=Date.now(),selection=selectGameCampaignContext({binding,journal,observation,expectedScope:join.scope,pinsDigest:record.checkpoint.pinsDigest,maximumObservationAgeMs:options.maximumObservationAgeMs,freshUntilMs:Math.min(now+planningBounds.deadlineMs,Date.parse(observation.capturedAt)+options.maximumObservationAgeMs),maximumBytes:options.maximumContextBytes,nowMs:now},source.campaignBoundary);
+   const now=Date.now(),selection=selectGameCampaignContext({binding,journal,observation,expectedScope:join.scope,pinsDigest:record.checkpoint.pinsDigest,maximumObservationAgeMs:options.maximumObservationAgeMs,freshUntilMs:Math.min(now+planningBounds.deadlineMs,Date.parse(observation.capturedAt)+options.maximumObservationAgeMs),maximumBytes:options.maximumContextBytes,nowMs:now},campaignBoundary);
    return selection.status==='selected'&&current(join.scope)?{selection,bounds:planningBounds}:null;
   },
   planningCurrent:(scope,checkpoint)=>current(scope)&&isDeepStrictEqual(scope,checkpoint.scope),
@@ -104,12 +109,19 @@ export function createGameCampaignOwner(options:{metadata:ActivityMetadataOption
    const record=checkpoints!.get(o,join.scope.runId);if(!record)return null;
    const previous=journals.get(o,record.checkpoint.campaignJournalRef.journalId);if(!previous||previous.entries.some(entry=>entry.sourceRefs.includes('game-action:'+receipt.actionId)))return null;
    const time=new Date().toISOString(),entry={entryId:randomUUID(),kind:'attemptOutcome' as const,epistemicKind:'observation' as const,content:`Recorded controller receipt ${receipt.actionId}: ${receipt.disposition}; ${receipt.framesApplied??'unknown'} frames; controls ${receipt.buttonsNeutralized?'neutralized':'unconfirmed'}. Qualified resulting observation ${resultingObservation.observationId} was captured at frame ${resultingObservation.frameNumber}.`,sourceRefs:['game-action:'+receipt.actionId,...new Set([...receipt.resultingObservationIds,resultingObservation.observationId].map(id=>'game-observation:'+id))],sourceSessionRef:'game-run:'+join.scope.runId,recordedAt:time,limitations:['Controller accounting and resulting observation identity alone do not establish game progress or save persistence.']};
-   const journal=journals.put(o,{...previous,revision:previous.revision+1,entries:[...previous.entries,entry],updatedAt:time},previous.revision);
-   const readback=journals.get(o,journal.journalId);if(!readback||readback.revision!==journal.revision||!readback.entries.some(e=>e.entryId===entry.entryId))return null;
+   let journal=journals.put(o,{...previous,revision:previous.revision+1,entries:[...previous.entries,entry,...gameObservationJournalEntries(resultingObservation,receipt,time)],updatedAt:time},previous.revision);
+   let readback=journals.get(o,journal.journalId);if(!readback||readback.revision!==journal.revision||!readback.entries.some(e=>e.entryId===entry.entryId))return null;
+   const episode=boundedGameDataSnapshot(source.episodeFor?.(join,readback,input.request,result,resultingObservation)??null,16384) as G.GameExperienceEpisode|null;
+   if(episode){
+    if(!validator.validate(schema+'GameExperienceEpisode',episode).valid||!isDeepStrictEqual(episode.scope,join.scope)||episode.pinsDigest!==resultingObservation.pinsDigest||episode.sourceActionIds.length!==1||episode.sourceActionIds[0]!==receipt.actionId||episode.sourceAdmissionIds.length!==1||episode.sourceAdmissionIds[0]!==receipt.admissionId||episode.sourceObservationIds.length!==1||episode.sourceObservationIds[0]!==resultingObservation.observationId||!current(join.scope))return null;
+    const factRefs=[...new Set(readback.entries.filter(e=>e.sourceRefs.includes('game-action:'+receipt.actionId)&&e.sourceRefs.includes('game-observation:'+resultingObservation.observationId)).flatMap(e=>e.sourceRefs.filter(ref=>ref.startsWith('game-fact:'))))];
+    const summaryEntry={entryId:randomUUID(),kind:'sessionSummary' as const,epistemicKind:'inference' as const,content:episode.summary,sourceRefs:['game-episode:'+episode.episodeId,'game-action:'+receipt.actionId,'game-observation:'+resultingObservation.observationId,...factRefs],sourceSessionRef:'game-run:'+join.scope.runId,recordedAt:time,limitations:[episode.uncertainty,'Recorded simulated-game history; no save persistence or current-progress claim.']};
+    journal=journals.put(o,{...readback,revision:readback.revision+1,entries:[...readback.entries,summaryEntry],updatedAt:time},readback.revision);
+    readback=journals.get(o,journal.journalId);if(!readback||readback.revision!==journal.revision||!readback.entries.some(e=>e.entryId===summaryEntry.entryId))return null;
+   }
    const next=checkpoints!.put(o,{...record.checkpoint,revision:record.checkpoint.revision+1,stateRevision:record.checkpoint.stateRevision+1,budgetUsed:record.used,lastActionReceipt:receipt,lastObservationId:resultingObservation.observationId,recentObservationIds:[...new Set([...record.checkpoint.recentObservationIds,...receipt.resultingObservationIds,resultingObservation.observationId])].slice(-16),recordedAt:time,campaignJournalRef:{campaignId:journal.campaignId,journalId:journal.journalId,revision:journal.revision,accessRevision:journal.accessRevision}},record.checkpoint.revision);
    const checkpointReadback=checkpoints!.get(o,join.scope.runId);
    if(!checkpointReadback||checkpointReadback.checkpoint.revision!==next.revision||!isDeepStrictEqual(checkpointReadback.checkpoint.campaignJournalRef,next.campaignJournalRef)||!current(join.scope))return null;
-   const episode=source.episodeFor?.(join,readback,input.request,result,resultingObservation)??null;
    return {journalCommitted:true as const,...(episode?{episode}:{})};
   }
  };

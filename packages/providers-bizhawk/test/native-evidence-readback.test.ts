@@ -10,6 +10,7 @@ import {NativeGameEvidence} from '../src/native-evidence.ts';
 import {GameFrameCustody} from '../src/frame-custody.ts';
 import type {GameActivityAdapter} from '../src/port.ts';
 import {action,applied} from './game-host-fixtures.ts';
+import {GAME_HOST_PROTOCOL as protocol,GAME_HOST_NATIVE_EVIDENCE_VERSION,gameHostDigest,gameHostMessage,gameHostUsageMatches,gameHostShutdownMatches} from '@lifestream/contracts/game-host';
 
 // Actual bounded file readback and source hashes; the owned child and the native
 // file producer are explicitly synthetic. No emulator, input or live source.
@@ -46,6 +47,31 @@ test('controller capture requires accepted exact owned readback and preserves me
   f.nativeAction.completedMonotonicMs=150;f.write();
   assert.equal(captured.action.completedMonotonicMs,112.75);
   assert.equal(f.evidence.acceptAction(f.r,f.result),false,'An accepted action cannot be overwritten with a different native measurement');
+ }finally{f.dispose();}
+});
+
+test('wire usage retains owned measurement and closed correlation; shape and hashes alone cannot replace it',()=>{
+ const f=fixture();try{
+  assert.equal(f.evidence.acceptAction(f.r,f.result),true);const evidence=f.evidence.controllerUsageEvidenceFor(f.r,f.result)!;
+  assert.equal(gameHostUsageMatches(f.r,f.result,evidence),true);
+  const completion={protocol,attachmentId:randomUUID(),commandId:randomUUID(),requestDigest:gameHostDigest(f.r),resultDigest:gameHostDigest(f.result),result:f.result,nativeUsage:evidence};
+  assert.ok(gameHostMessage('completion',completion));
+  for(const patch of [{extra:true},{verifiedInputFrames:1.5},{startedMonotonicMs:-1},{completedMonotonicMs:99}])assert.equal(gameHostMessage('completion',{...completion,nativeUsage:{...evidence,...patch}}),null);
+  for(const patch of [{inputOwnerLeaseId:randomUUID()},{resultDigest:'f'.repeat(64)},{completedMonotonicMs:113},{verifiedInputFrames:1}])assert.equal(gameHostUsageMatches(f.r,f.result,{...evidence,...patch}),false);
+  const wrong={...f.result,requestId:randomUUID()};assert.equal(gameHostUsageMatches(f.r,wrong,{...evidence,resultDigest:gameHostDigest(wrong)}),false);
+ }finally{f.dispose();}
+});
+
+test('wire shutdown preserves original action lease and stationary native readback in a closed evidence-only message',async()=>{
+ const f=fixture();try{
+  assert.equal(f.evidence.acceptAction(f.r,f.result),true);assert.equal(await f.evidence.shutdownExactOldLease(f.r,f.release(),1000),true);
+  const evidence=f.evidence.shutdownEvidenceFor(f.r)!,binding={hostId:randomUUID(),scope:f.r.scope,pinsDigest:f.r.payload.expectedPinsDigest,providerRef:f.result.providerRef,sourceRevision:'b'.repeat(64)};
+  const message={protocol,attachmentId:randomUUID(),nativeEvidenceVersion:GAME_HOST_NATIVE_EVIDENCE_VERSION,evidence};
+  assert.ok(gameHostMessage('shutdown',message));assert.equal(gameHostShutdownMatches(binding,f.r,evidence),true);
+  assert.equal(gameHostMessage('shutdown',{...message,nativeEvidenceVersion:'future'}),null);assert.equal(gameHostMessage('shutdown',{...message,evidence:{...evidence,extra:true}}),null);
+  const moved=structuredClone(evidence);moved.release.outcome.payload!.verifiedFrameNumber!++;assert.equal(gameHostMessage('shutdown',{...message,evidence:moved}),null);
+  assert.equal(gameHostShutdownMatches(binding,f.r,{...evidence,actionRequestDigest:'c'.repeat(64)}),false);
+  assert.equal(gameHostShutdownMatches(binding,{...f.r,payload:{...f.r.payload,inputOwnerLeaseId:randomUUID()}},evidence),false);
  }finally{f.dispose();}
 });
 

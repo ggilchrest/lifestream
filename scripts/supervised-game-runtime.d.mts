@@ -34,5 +34,6 @@ export function createSupervisedGameRuntime(options:{
  createRepository:GameHostOptions['createRepository'];resolveApproval:GameRuntimeOptions['resolveApproval'];
  memory?:GameRuntimeOptions['memory'];inferenceQualificationFor?:GameRuntimeOptions['inferenceQualificationFor'];
  maximumSteps:number;maximumRunMs:number;maximumCommandMs:number;
+ requireJoinedNativeEvidence?:boolean;
  onStatus?:(status:Readonly<Record<string,unknown>>)=>void;
 }):Readonly<{gameHost:GameHostOptions;gameRuntime:GameRuntimeOptions;current:()=>boolean;stop:()=>Promise<void>;completion:()=>Promise<void>}>;
