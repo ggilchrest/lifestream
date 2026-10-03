@@ -1,0 +1,280 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-10-03T07:14:42.038961Z",
+  "task": "CT joined native evidence, campaign journal and governed memory source fixture",
+  "runDisposition": "continue",
+  "status": "pairedSourceImplementedSyntheticVerified",
+  "baseRevision": "6555c2adc96e420baec884d9e8a987cb05a31817",
+  "testedRevision": "ba2792634a342646ba167822ec2a085a16be8129",
+  "branch": "codex/ct-gameplay-native-evidence-20261003",
+  "nativeEvidenceVersion": "lifestream.native-game-evidence.v1",
+  "liveActivation": false,
+  "checks": [
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/gameplay-composition.test.ts apps/server/test/gameplay-qualification.test.ts apps/server/test/game-campaign-owner.test.ts apps/server/test/game-host-native-evidence.test.ts apps/server/test/gameplay-native-http.test.ts packages/providers-bizhawk/test/native-evidence-readback.test.ts apps/desktop/test/game-host-session-broker.test.mjs",
+      "result": "pass",
+      "tests": 74,
+      "pass": 74,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test --experimental-strip-types packages/providers-bizhawk/test/game-host-client.test.ts apps/server/test/gameplay-native-http.test.ts apps/server/test/gameplay-composition.test.ts apps/server/test/game-host-native-evidence.test.ts apps/desktop/test/game-host-session-broker.test.mjs",
+      "result": "pass",
+      "tests": 103,
+      "pass": 103,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test --experimental-strip-types apps/server/test/gameplay-composition.test.ts apps/server/test/gameplay-native-http.test.ts",
+      "result": "pass",
+      "tests": 15,
+      "pass": 15,
+      "fail": 0,
+      "skipped": 0,
+      "note": "Final explicit evidence/frame capacity guard included. Counts overlap other runs."
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -b --pretty false apps/server packages/contracts packages/runtime packages/providers-fixture packages/providers-voxcpm packages/providers-nemo-speech packages/providers-moonshine packages/providers-ollama packages/providers-pwce packages/providers-sglang packages/storage-sqlite packages/providers-bizhawk",
+      "result": "pass",
+      "projects": 12
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -p C:/AI-Stack/ct-native-live-20261002/gameplay-fixtures-tsconfig-20261003.json --pretty false",
+      "result": "pass",
+      "note": "Strict no-emit fixture check, explicit Node type root and shared source storage aliases to avoid source/dist nominal-class duplication. Temporary config retained with the local handoff."
+    },
+    {
+      "command": "node scripts/build.mjs",
+      "result": "pass",
+      "note": "Existing recovered dependency links read through normal approval review; source build only."
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js apps/desktop/game-host-session-broker.cjs apps/desktop/test/game-host-session-broker.test.mjs scripts/supervised-game-runtime.mjs scripts/supervised-game-runtime.test.mjs",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check; git diff --cached --check",
+      "result": "pass"
+    },
+    {
+      "command": "node --test --test-concurrency=4 --experimental-strip-types apps/server/test/game-host-client-join.test.ts apps/server/test/game-host-http.test.ts apps/server/test/game-host-port.test.ts apps/server/test/game-host-runtime.test.ts apps/server/test/game-activity-controller.test.ts apps/server/test/game-activity-memory.test.ts apps/server/test/game-frame-interpretation.test.ts apps/server/test/gameplay-composition.test.ts apps/server/test/gameplay-qualification.test.ts apps/server/test/game-campaign-owner.test.ts apps/server/test/game-host-native-evidence.test.ts apps/server/test/gameplay-native-http.test.ts apps/server/test/supervised-game-runtime.test.ts packages/contracts/test/game-host-contract.test.ts packages/contracts/test/game-host-frame-contract.test.ts packages/providers-bizhawk/test/game-host-client.test.ts packages/providers-bizhawk/test/native-evidence-readback.test.ts packages/providers-bizhawk/test/native-host.test.ts packages/providers-bizhawk/test/provider.test.ts packages/providers-bizhawk/test/transport.test.ts packages/providers-bizhawk/test/frame-custody.test.ts packages/providers-bizhawk/test/windows-host-lifecycle.test.ts apps/desktop/test/game-host-session-broker.test.mjs apps/desktop/test/game-host-session-request.test.mjs apps/desktop/test/game-host-composition.test.mjs scripts/supervised-game-runtime.test.mjs",
+      "result": "fail",
+      "tests": 400,
+      "pass": 356,
+      "fail": 44,
+      "skipped": 0,
+      "failures": {
+        "directoryFsyncEPERM": 43,
+        "sqliteFileCleanupEBUSY": 1
+      },
+      "note": "All output retained in local handoff logs; two unchanged-base representative fixtures reproduce these failure classes."
+    },
+    {
+      "command": "node --test --experimental-strip-types --test-name-pattern=\"server draining admits\" apps/server/test/game-host-http.test.ts",
+      "result": "fail",
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "note": "Existing RecoveryJournal directory fsync EPERM prevents fixture setup; no draining assertion executed."
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "fail",
+      "tests": 44,
+      "pass": 37,
+      "fail": 7,
+      "note": "Inherited Windows path qualification reports evidence escapes owner repository. Representative unchanged-base fixture reproduced; workspace scripts unchanged."
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "note": "Structure only."
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S066",
+      "result": "fail",
+      "note": "Primary S066 prepared packet differs from the supplemental CT scope. Stale operational metadata updated; no private packet edit or whole-slice acceptance."
+    }
+  ],
+  "limitations": [
+    "Synthetic native child/producer, actor/source qualifiers, provider and PNG interpretation. File hashing, custody, HTTP/client/port, prepared planning/coordinator and SQLite journal/memory paths are actual source fixtures.",
+    "Full server local-auth/draining and ordinary conversation HTTP memory checks are unqualified on Windows due directory fsync EPERM. New draining regression is recorded as blocked at setup, not passed.",
+    "Independent Linux exact-source qualification is pending; Windows full server/backend qualification is not claimed.",
+    "Actual enrolled Windows endpoint/source qualification, controller admission, moving-frame interpretation, provider cancellation/slot bounds, ordinary saves and live joined gameplay/ordinary Tifa memory discussion remain gates.",
+    "No application restart, native emulator/input, provider/model activation, save mutation, production P2 activation or auth component merge.",
+    "Legacy LS-S066 implementationCompleteVerificationPending and immutable observation candidate are unchanged."
+  ],
+  "files": [
+    {
+      "path": "apps/desktop/game-host-session-broker.cjs",
+      "gitBlobSha256": "6ace89f075fa957753db899de471c832f0ad94da58cb525399e3402dc0c6e403",
+      "localFileSha256": "aa7415fd41ae3285a9a9513b1a3190ef83b50e1021e0e26797df32018dfa9ff2"
+    },
+    {
+      "path": "apps/desktop/test/game-host-session-broker.test.mjs",
+      "gitBlobSha256": "f9fd6d8e9d2e33031188faa00b7c7af1c0690b3da7c1926204b351d6b0e1e1fa",
+      "localFileSha256": "38c43feca0f831fb4e0804d262a1b0ccecd132c5339df92fe099fe745277bb77"
+    },
+    {
+      "path": "apps/server/src/index.ts",
+      "gitBlobSha256": "ae11269d088ab5c770293f3fb7d60e9f61dc061cb3b50fa6449e009d33a6473b",
+      "localFileSha256": "a819af41830268b47f82bc7c144bd93cffed8aba4e93717faf60b31a36e4c659"
+    },
+    {
+      "path": "apps/server/src/runtime/game-campaign-owner.ts",
+      "gitBlobSha256": "ffa4682a91d0a6a8763a6b1113bac5c1fa1ceaadafc4e5900559d408b61d4fdf",
+      "localFileSha256": "49d609abb805797e39c52e3c16af1a1838024e4843b38b8e7901c3b43087cbcd"
+    },
+    {
+      "path": "apps/server/src/runtime/game-host-http.ts",
+      "gitBlobSha256": "0f3c6460f4aaffbb093ef6c86911eaa3dd96a6cad25e5c997b3fc846d59561df",
+      "localFileSha256": "3532a068f12f45c1df9a97d0ffef938980a3f9e08dbca2fd9b1c8116c8af5cb3"
+    },
+    {
+      "path": "apps/server/src/runtime/game-host-port.ts",
+      "gitBlobSha256": "1f70228ca023777bdc906291ac280828376147582eb94b53bf1e22be4f46bb53",
+      "localFileSha256": "1f70228ca023777bdc906291ac280828376147582eb94b53bf1e22be4f46bb53"
+    },
+    {
+      "path": "apps/server/src/runtime/gameplay-composition.ts",
+      "gitBlobSha256": "4683284de40728a112c8cdd2f1fb87289ccf1f4590dd212867c5c597b1d03efa",
+      "localFileSha256": "5531e540135da9b3987c9f60d632cf7a3b746ab7aecc390290e6b244e2096101"
+    },
+    {
+      "path": "apps/server/src/runtime/gameplay-grounding.ts",
+      "gitBlobSha256": "1816c4ccc7015f0a7741f2fafa5b87696f0bde679fec4a5a606fe9b95d21cff9",
+      "localFileSha256": "20e09bb9379800a6d2c48c24e09f15aebe14fd95e0ddea58f39e5cc00294c129"
+    },
+    {
+      "path": "apps/server/src/runtime/gameplay-qualification.ts",
+      "gitBlobSha256": "add9e69ead74ce891aaacc07fb6155b1f43268247dd2cc13625d85964a0bffea",
+      "localFileSha256": "a613477ba2da254cc481ab56c10f081b895f9244d5d004847fd9d1fb067d50ef"
+    },
+    {
+      "path": "apps/server/test/fixtures/gameplay-http.ts",
+      "gitBlobSha256": "56d2fa34b8f89e1115df4954bbde9c44124eb4db19548aed087a46f10d60223e",
+      "localFileSha256": "56d2fa34b8f89e1115df4954bbde9c44124eb4db19548aed087a46f10d60223e"
+    },
+    {
+      "path": "apps/server/test/fixtures/gameplay.ts",
+      "gitBlobSha256": "418fbd540cc04b503771496f3b7e713bc31d9cd19752fbbf3379f74aa034446f",
+      "localFileSha256": "418fbd540cc04b503771496f3b7e713bc31d9cd19752fbbf3379f74aa034446f"
+    },
+    {
+      "path": "apps/server/test/fixtures/native-gameplay.ts",
+      "gitBlobSha256": "a6f986e517e09033a9bdbcb928c9d56bdf18d3bde1aafc8da03d20b238aab7f2",
+      "localFileSha256": "a6f986e517e09033a9bdbcb928c9d56bdf18d3bde1aafc8da03d20b238aab7f2"
+    },
+    {
+      "path": "apps/server/test/game-campaign-owner.test.ts",
+      "gitBlobSha256": "efe03a6ff8a1b0232674dc1cab491cd0af607aa541237cafef755f29f7d392ce",
+      "localFileSha256": "2e43d6c9c2ceefd5bb5c01b369e4063b90b0b722d1b871edbf77db51de11bdc9"
+    },
+    {
+      "path": "apps/server/test/game-host-http.test.ts",
+      "gitBlobSha256": "fc71eb2c3b50ba8b6f7f5ec79731505973278e6fb03a06be46938742fba52186",
+      "localFileSha256": "f1b0f20f37eb9192762a7aec8dcf96f0e3a6a8859b5fedb267d11403c56c8a69"
+    },
+    {
+      "path": "apps/server/test/game-host-native-evidence.test.ts",
+      "gitBlobSha256": "b0970ac4c606c287f8528aa8913baef47c34c430ea0611b4568d85521d7bce0b",
+      "localFileSha256": "b0970ac4c606c287f8528aa8913baef47c34c430ea0611b4568d85521d7bce0b"
+    },
+    {
+      "path": "apps/server/test/gameplay-composition.test.ts",
+      "gitBlobSha256": "71451d8b1e1302fb053ca818983ae4dd23418017730dc1ab97db35722e8d992d",
+      "localFileSha256": "71451d8b1e1302fb053ca818983ae4dd23418017730dc1ab97db35722e8d992d"
+    },
+    {
+      "path": "apps/server/test/gameplay-native-http.test.ts",
+      "gitBlobSha256": "d9046c15d03fe9b4d2d8414e028b5eded84561ea7fdc9f5994cd8cb1ca2ecd11",
+      "localFileSha256": "d9046c15d03fe9b4d2d8414e028b5eded84561ea7fdc9f5994cd8cb1ca2ecd11"
+    },
+    {
+      "path": "apps/server/test/gameplay-qualification.test.ts",
+      "gitBlobSha256": "e8d08a31980ccb233454b9c67ac169b93767e7a4e495b10214068a19c083c247",
+      "localFileSha256": "3e4c212dfd37840fb0c4f2d9c7e545302e8a540d5f55c35d0176e89b49a8eeb3"
+    },
+    {
+      "path": "docs/gameplay-composition.md",
+      "gitBlobSha256": "01c29cbe540bab6870b993153cb20fc38b8ac6e733e5a34264c57ca6c2d466b6",
+      "localFileSha256": "ad29ec00a73b4c8f32907cbe553238be28d38afda23fc7118d06fa6cfd27929d"
+    },
+    {
+      "path": "packages/contracts/src/game-host.ts",
+      "gitBlobSha256": "2211a43dd686006c95afa68daf9ab1c5864cb56f5c427d0b28d0954222aab459",
+      "localFileSha256": "2211a43dd686006c95afa68daf9ab1c5864cb56f5c427d0b28d0954222aab459"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/game-host-client.ts",
+      "gitBlobSha256": "a00a03809822ff186ae3b9b892ec8c9e9a8b5164f0a1e67f73fe709a7cb10bd9",
+      "localFileSha256": "0998c31821389e0595bbbdbce8f335c32261301b2136f3f0e936a8c5f40ba79e"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/index.ts",
+      "gitBlobSha256": "55cb11aa5b3178bbae8d92b8916f80d84cab3f2b6dcdfde9c80dd828f8611b62",
+      "localFileSha256": "9e9df040d5f964618a3ec11643dfafa6c5c640b4123bc3d50e07c4dad3efbee9"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/native-evidence.ts",
+      "gitBlobSha256": "fb6d68c10c715db01b8e6a2400d555c92149a79469fca0f8e996880bd841dfa9",
+      "localFileSha256": "f6c7aa9f3e0eb241d32b65dcc64b0abb1200621956ea62e81c6a7ecee3f54e53"
+    },
+    {
+      "path": "packages/providers-bizhawk/src/owned-native-driver.ts",
+      "gitBlobSha256": "44e98c7aaf4777ac3633c1b77e18691f81b6d9c23e7d602d541f58fe8d228c7c",
+      "localFileSha256": "c0d16eda1ea21e682ac25fad225ae889001accc5f5e259a778173eb533d15224"
+    },
+    {
+      "path": "packages/providers-bizhawk/test/game-host-client.test.ts",
+      "gitBlobSha256": "eb5a83e8acaecee01688df78710d0b3d7111001eb9ff5f95afa610bbd9091d2a",
+      "localFileSha256": "d6cb42ba03855ce9f70ac562c5a3386f2c862bc99e260608543d0fac2b08d30a"
+    },
+    {
+      "path": "packages/providers-bizhawk/test/native-evidence-readback.test.ts",
+      "gitBlobSha256": "abfd88fb40d763d4cca01aa8d5eeec112669f987498805805e3ced830dcd9aa4",
+      "localFileSha256": "abfd88fb40d763d4cca01aa8d5eeec112669f987498805805e3ced830dcd9aa4"
+    },
+    {
+      "path": "packages/storage-sqlite/src/campaign-journal.ts",
+      "gitBlobSha256": "79396b6226808f5adeae60ff9575a6aaff230c2aef2ece093fa97398b7ac6bee",
+      "localFileSha256": "f4d3f5f2783666251734e8db7e44315877c50b8bd23308b846dc9fa02ce62ca3"
+    },
+    {
+      "path": "scripts/supervised-game-runtime.d.mts",
+      "gitBlobSha256": "c97eb83fb51367aaa53fe44f5a703dbcc8567635ed60180c77aa0f4d6c49e750",
+      "localFileSha256": "21c1e674c10d22a1cb21e99015d92b191c9ed1d86176a9ca1b9de389adf9af06"
+    },
+    {
+      "path": "scripts/supervised-game-runtime.mjs",
+      "gitBlobSha256": "1b283a42b840f8bedd58ddd6ed75d70160d5136ec46c9493712a7d6514474d31",
+      "localFileSha256": "3768e3f633c1da38a80a63c2c3efe6640ef9b67777502179b74a3f31b13fb928"
+    }
+  ],
+  "jointOutcome": {
+    "modelCalls": 1,
+    "controllerInputs": 1,
+    "observations": 3,
+    "nativeUsageFrames": 2,
+    "nativeElapsedMs": 12.75,
+    "chargedNativeWallMs": 13,
+    "journalRevision": 3,
+    "goalsCompleted": false,
+    "saveArtifact": null,
+    "episodeCount": 1,
+    "rawEvidenceAvailability": "notRetained",
+    "historicalMemoryContextReadback": true,
+    "ordinaryConversationHttpRecallQualified": false,
+    "nativeShutdownConfirmedInSyntheticJointFixture": true
+  },
+  "failedAttemptsPreserved": [
+    "Initial missing copied contract schemas repaired by source build.",
+    "Fixture command budget1000ms rejected requested3000ms observations; corrected configured synthetic budget5000ms.",
+    "Frozen observation DTO was mutated; fixture now clones before synthetic interpretation.",
+    "Synthetic release timestamps were fractional; corrected to the existing integer release contract.",
+    "Acknowledgement sequencing regression failed before the client serialization repair, then passed.",
+    "Initial bootstrap/baseline attempts used unavailable default temporary path; reruns use a writable isolated TEMP/TMP and retain remaining baseline failures."
+  ]
+}
