@@ -5,7 +5,8 @@ import type {InferenceProvider} from '@lifestream/runtime/inference';
 export function conversationFixtureProvider(provider:InferenceProvider):InferenceProvider{
  return {...provider,async *generate(request,context){
   if(request.scope.sessionId==='automatic-memory-worker'){
-   yield {kind:'text',text:'{"items":[]}'};yield {kind:'done'};return;
+   const data=JSON.parse(request.sections.find(section=>section.kind==='userInput')!.content);
+   yield {kind:'text',text:JSON.stringify({version:2,source:data.sourceIdentity,items:[]})};yield {kind:'done'};return;
   }
   yield* provider.generate(request,context);
  }};

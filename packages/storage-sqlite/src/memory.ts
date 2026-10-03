@@ -12,7 +12,17 @@ export type MemoryRecord = { id: string; assistantId: string; content: string; p
 type MemoryRow = { id: string; assistantId: string; content: string; provenance: string; lifecycle: string; createdAt: string };
 export type MemoryLifecycleEvent = { memoryId: string; assistantId: string; revision: number; eventType: string; payload: Record<string, unknown>; occurredAt: string };
 export type ForgetResult = { memoryId: string; assistantId: string; status: "forgotten"; contentRemoved: true; lifecycleRetained: true; externalCopies: "not-controlled"; revision: number };
-const fromRow = (row: MemoryRow): MemoryRecord => ({ ...row, provenance: JSON.parse(row.provenance), lifecycle: JSON.parse(row.lifecycle) });
+/** A reviewed replacement does not inherit the old model interpretation. The
+ * original record and correction events preserve audit/source custody. This
+ * also fences corrected rows created before this projection repair. */
+const currentProvenance = (value: Record<string,unknown>): Record<string,unknown> => {
+  const copy={...value};
+  if(copy.proposalVersion===2&&copy.correctionOf){
+    for(const key of ['proposedMeaning','attribution','uncertainty','epistemicStatus'])delete copy[key];
+  }
+  return copy;
+};
+const fromRow = (row: MemoryRow): MemoryRecord => ({ ...row, provenance: currentProvenance(JSON.parse(row.provenance)), lifecycle: JSON.parse(row.lifecycle) });
 
 export type GameMemorySourceOptions={
  maximumCandidates:number;
@@ -37,6 +47,17 @@ export class MemoryRepository {
     this.database = database;
     if(gameSources&&(!Number.isSafeInteger(gameSources.maximumCandidates)||gameSources.maximumCandidates<1||gameSources.maximumCandidates>128))throw new Error('Game memory candidate bound unavailable');
     this.gameSources=gameSources?Object.freeze({...gameSources}):undefined;
+  }
+  private proposalSourceAvailable(record:MemoryRecord):boolean{
+    if(record.provenance.proposalVersion!==2)return true;
+    if(!this.database)return false;
+    const p=record.provenance;
+    const policy=this.database.connection.prepare('SELECT enabled,revision,scope_key FROM automatic_memory_policies WHERE principal_id=? AND assistant_id=? AND relationship_id=?').get(String(p.actor),record.assistantId,String(p.relationshipId));
+    if(!policy||policy.enabled!==1||policy.revision!==p.policyRevision)return false;
+    const source=this.database.connection.prepare('SELECT input_digest,proposal_digest,source_context_json,reason FROM automatic_memory_work WHERE scope_key=? AND source_turn=?').get(String(policy.scope_key),String(p.sourceTurnRef));
+    // Completed extraction erases its raw source copy but preserves exact custody.
+    if(!source||source.reason==='source_removed'||source.input_digest!==p.sourceRevision||source.proposal_digest!==p.proposalDigest)return false;
+    try{const context=source.source_context_json?JSON.parse(String(source.source_context_json)):{sessionRef:null,messageRef:null};return context.sessionRef===p.sourceSessionRef&&context.messageRef===p.sourceMessageRef;}catch{return false;}
   }
   private gameSourceAvailable(record:MemoryRecord):boolean{
     if(!gameMarked(record))return true;
@@ -108,14 +129,14 @@ export class MemoryRepository {
     return this.database.transaction(tx=>{if(current&&current()!==true)throw new Error('Memory source changed');const admitted=records.map(record=>{
       if(gameMarked(record))throw new Error("Game sources require typed memory admission");
       if(record.provenance.actor!==actor||typeof record.provenance.automaticMemoryKey!=="string"||!record.content||record.content.length>1200)throw new Error("Invalid automatic memory provenance");
-      const existing=tx.get<{id:string}>("SELECT id FROM memories WHERE id=? AND assistant_id=?",record.id,record.assistantId);if(existing)return existing.id;
+      const existing=tx.get<{id:string;content:string;provenance:string}>("SELECT id,content,provenance_json AS provenance FROM memories WHERE id=? AND assistant_id=?",record.id,record.assistantId);if(existing){if(record.provenance.proposalVersion===2&&(existing.content!==record.content||JSON.parse(existing.provenance).proposalDigest!==record.provenance.proposalDigest))throw Error('Memory proposal identity conflict');return existing.id;}
       if(tx.get("SELECT memory_key FROM automatic_memory_exclusions WHERE principal_id=? AND assistant_id=? AND memory_key=?",actor,record.assistantId,record.provenance.automaticMemoryKey))return "excluded";
-      const priors=tx.all<MemoryRow>("SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(provenance_json,'$.automaticMemoryKey')=? AND json_extract(lifecycle_json,'$.status') IN ('active','candidate','contradicted') ORDER BY created_at DESC LIMIT 32",record.assistantId,actor,record.provenance.automaticMemoryKey),prior=priors[0];
+      const priors=tx.all<MemoryRow>("SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(provenance_json,'$.automaticMemoryKey')=? AND json_extract(lifecycle_json,'$.status') IN ('active','candidate','contradicted') ORDER BY created_at DESC LIMIT 32",record.assistantId,actor,record.provenance.automaticMemoryKey).filter(row=>this.proposalSourceAvailable(fromRow(row))),prior=priors[0];
       if(prior?.content===record.content)return prior.id;
       const count=tx.get<{n:number}>("SELECT count(*) AS n FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(lifecycle_json,'$.status')='active'",record.assistantId,actor)!.n;if(count>=240&&!prior)throw new Error("Automatic memory scope capacity exceeded");
       const conflict=!!prior&&!directCorrection;
       const lifecycle={...record.lifecycle,status:conflict?"candidate":"active",revision:2,lastReinforcedAt:null,contradictedBy:conflict?priors.map(p=>p.id):[],...(conflict?{needsReview:true}:{})};
-      for(const prior of priors){const old=JSON.parse(prior.lifecycle),next={...old,status:directCorrection?"superseded":"contradicted",revision:Number(old.revision)+1,changedBy:actor,...(directCorrection?{supersededBy:record.id}:{contradictedBy:[...new Set([...(old.contradictedBy??[]),record.id])],needsReview:true})};
+      for(const prior of priors){retireGameAdviceDependents(tx,'memory',prior.id);const old=JSON.parse(prior.lifecycle),next={...old,status:directCorrection?"superseded":"contradicted",revision:Number(old.revision)+1,changedBy:actor,...(directCorrection?{supersededBy:record.id}:{contradictedBy:[...new Set([...(old.contradictedBy??[]),record.id])],needsReview:true})};
         tx.run("UPDATE memories SET lifecycle_json=? WHERE id=?",JSON.stringify(next),prior.id);
         const revision=tx.get<{n:number}>("SELECT COALESCE(MAX(revision),0)+1 AS n FROM memory_lifecycle_events WHERE memory_id=?",prior.id)!.n;
         tx.run("INSERT INTO memory_lifecycle_events (memory_id,assistant_id,revision,event_type,payload_json,occurred_at) VALUES (?,?,?,?,?,?)",prior.id,record.assistantId,revision,directCorrection?"correctionApplied":"contradictionObserved",JSON.stringify({actor,correctionId:directCorrection?record.id:null,contradictedBy:directCorrection?[]:[record.id],sourceTurnRef:record.provenance.sourceTurnRef}),record.createdAt);
@@ -140,33 +161,69 @@ export class MemoryRepository {
     if(this.database){const row=this.database.connection.prepare('SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND id=?').get(assistantId,id) as MemoryRow|undefined;const record=row?fromRow(row):undefined;return record?.provenance.actor===actor?record:undefined;}
     const record=this.records.get(id);return record?.assistantId===assistantId&&record.provenance.actor===actor?structuredClone(record):undefined;
   }
+  /** Authenticated owner administration is distinct from permission to use
+   * retained content for inference. Host callers must check session/audience;
+   * this exact-owner read never grants learning, recall or another owner scope. */
+  listForOwnerAdministration(assistantId:string,actor:string,relationshipId?:string):MemoryRecord[]{
+    const records=this.database?(this.database.connection.prepare("SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND (? IS NULL OR json_extract(provenance_json,'$.relationshipId')=?) AND coalesce(json_extract(lifecycle_json,'$.contentRemoved'),0)=0 ORDER BY id LIMIT 1001").all(assistantId,actor,relationshipId??null,relationshipId??null) as MemoryRow[]).map(fromRow):[...this.records.values()].filter(r=>r.assistantId===assistantId&&r.provenance.actor===actor&&(relationshipId===undefined||r.provenance.relationshipId===relationshipId)&&!r.lifecycle.contentRemoved).map(r=>structuredClone(r));
+    if(records.length>1000)throw Error('Owner memory inspection capacity exceeded');return records;
+  }
   get(assistantId: string, id: string): MemoryRecord | undefined {
-    if (this.database) { const row = this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? AND id = ?").get(assistantId, id) as MemoryRow | undefined;const record=row?fromRow(row):undefined;return record&&this.visualSourceAvailable(record)&&this.gameSourceAvailable(record)?record:undefined; }
-    const record = this.records.get(id); return record?.assistantId === assistantId&&this.visualSourceAvailable(record)&&this.gameSourceAvailable(record) ? structuredClone(record) : undefined;
+    if (this.database) { const row = this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? AND id = ?").get(assistantId, id) as MemoryRow | undefined;const record=row?fromRow(row):undefined;return record&&this.proposalSourceAvailable(record)&&this.visualSourceAvailable(record)&&this.gameSourceAvailable(record)?record:undefined; }
+    const record = this.records.get(id); return record?.assistantId === assistantId&&this.proposalSourceAvailable(record)&&this.visualSourceAvailable(record)&&this.gameSourceAvailable(record) ? structuredClone(record) : undefined;
   }
   list(assistantId: string): MemoryRecord[] {
-    if (this.database) return (this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? ORDER BY id").all(assistantId) as MemoryRow[]).map(fromRow).filter(record=>this.visualSourceAvailable(record)&&this.gameSourceAvailable(record));
-    return [...this.records.values()].filter((record) => record.assistantId === assistantId&&this.visualSourceAvailable(record)&&this.gameSourceAvailable(record)).map((record) => structuredClone(record));
+    if (this.database) return (this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id = ? ORDER BY id").all(assistantId) as MemoryRow[]).map(fromRow).filter(record=>this.proposalSourceAvailable(record)&&this.visualSourceAvailable(record)&&this.gameSourceAvailable(record));
+    return [...this.records.values()].filter((record) => record.assistantId === assistantId&&this.proposalSourceAvailable(record)&&this.visualSourceAvailable(record)&&this.gameSourceAvailable(record)).map((record) => structuredClone(record));
   }
   /** Same bounded relationship cache boundary; visual payload/policy changes and
    * expiry alter its fingerprint before a prepared view or reply is reused. */
   contextBoundaryRows(assistantId:string,actor:string){
     if(!this.database)return this.contextRecords(assistantId,actor).map(r=>({id:r.id,revision:r.lifecycle.revision}));
     const game=(this.database.connection.prepare("SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(provenance_json,'$.gameEpisodeId') IS NOT NULL AND json_extract(lifecycle_json,'$.status')='active' ORDER BY id LIMIT 129").all(assistantId,actor) as MemoryRow[]).map(fromRow).map(record=>({id:record.id,revision:record.lifecycle.revision,gameDigest:record.provenance.gameEpisodeDigest,expiresAt:record.provenance.gameExpiresAt,current:this.gameSourceAvailable(record)}));
-    const rows=this.database.connection.prepare("SELECT m.id,json_extract(m.lifecycle_json,'$.revision') AS revision,v.revision AS visualRevision,v.expires_at AS visualExpiry,v.payload_json AS visualSource,CASE WHEN v.episode_id IS NOT NULL THEN m.provenance_json ELSE NULL END AS memorySource FROM memories m LEFT JOIN visual_observation_episodes v ON v.episode_id=json_extract(m.provenance_json,'$.visualEpisodeId') WHERE m.assistant_id=? AND json_extract(m.provenance_json,'$.actor')=? AND json_extract(m.lifecycle_json,'$.status')='active' AND (json_extract(m.provenance_json,'$.visualEpisodeId') IS NULL OR (v.state='retained' AND v.expires_at>? AND EXISTS (SELECT 1 FROM visual_memory_policies p WHERE p.scope_key=v.scope_key AND p.enabled=1 AND p.revision=json_extract(v.payload_json,'$.processingPolicyRevision')) AND EXISTS (SELECT 1 FROM automatic_memory_policies p WHERE p.principal_id=json_extract(m.provenance_json,'$.actor') AND p.assistant_id=m.assistant_id AND p.relationship_id=json_extract(m.provenance_json,'$.relationshipId') AND p.enabled=1))) ORDER BY m.id LIMIT 257").all(assistantId,actor,this.visualNow());return game.length?[...rows,...game]:rows;
+    const rows=this.database.connection.prepare("SELECT m.id,json_extract(m.lifecycle_json,'$.revision') AS revision,v.revision AS visualRevision,v.expires_at AS visualExpiry,v.payload_json AS visualSource,CASE WHEN v.episode_id IS NOT NULL THEN m.provenance_json ELSE NULL END AS memorySource,CASE WHEN json_extract(m.provenance_json,'$.proposalVersion')=2 THEN json_object('policyEnabled',p.enabled,'policyRevision',p.revision,'sourceDigest',w.input_digest,'proposalDigest',w.proposal_digest,'sourceContext',w.source_context_json,'sourceReason',w.reason) ELSE NULL END AS proposalCustody FROM memories m LEFT JOIN visual_observation_episodes v ON v.episode_id=json_extract(m.provenance_json,'$.visualEpisodeId') LEFT JOIN automatic_memory_policies p ON p.principal_id=json_extract(m.provenance_json,'$.actor') AND p.assistant_id=m.assistant_id AND p.relationship_id=json_extract(m.provenance_json,'$.relationshipId') LEFT JOIN automatic_memory_work w ON w.scope_key=p.scope_key AND w.source_turn=json_extract(m.provenance_json,'$.sourceTurnRef') WHERE m.assistant_id=? AND json_extract(m.provenance_json,'$.actor')=? AND json_extract(m.lifecycle_json,'$.status')='active' AND (json_extract(m.provenance_json,'$.visualEpisodeId') IS NULL OR (v.state='retained' AND v.expires_at>? AND EXISTS (SELECT 1 FROM visual_memory_policies p WHERE p.scope_key=v.scope_key AND p.enabled=1 AND p.revision=json_extract(v.payload_json,'$.processingPolicyRevision')) AND EXISTS (SELECT 1 FROM automatic_memory_policies p WHERE p.principal_id=json_extract(m.provenance_json,'$.actor') AND p.assistant_id=m.assistant_id AND p.relationship_id=json_extract(m.provenance_json,'$.relationshipId') AND p.enabled=1))) ORDER BY m.id LIMIT 257").all(assistantId,actor,this.visualNow());const bound=rows.map(({proposalCustody,...row})=>proposalCustody===null?row:{...row,proposalCustody});return game.length?[...bound,...game]:bound;
   }
-  contextRecords(assistantId: string, actor: string): MemoryRecord[] {
-    if (this.database) return (this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND json_extract(lifecycle_json,'$.status')='active' AND (EXISTS (SELECT 1 FROM memory_lifecycle_events e WHERE e.assistant_id=memories.assistant_id AND e.memory_id=memories.id AND e.event_type='lifecycleChanged' AND json_extract(e.payload_json,'$.status')='active') OR EXISTS (SELECT 1 FROM memory_lifecycle_events e WHERE e.assistant_id=memories.assistant_id AND e.event_type='correctionApplied' AND json_extract(e.payload_json,'$.correctionId')=memories.id)) ORDER BY id LIMIT 257").all(assistantId, actor) as MemoryRow[]).map(fromRow).filter(record=>this.visualSourceAvailable(record)&&this.gameSourceAvailable(record));
-    return this.list(assistantId).filter(record => record.provenance.actor === actor && record.lifecycle.status === "active" && (this.history(assistantId,record.id).some(event=>event.eventType==="lifecycleChanged"&&event.payload.status==="active") || [...this.events.values()].some(events=>events.some(event=>event.assistantId===assistantId&&event.eventType==="correctionApplied"&&event.payload.correctionId===record.id)))).slice(0,257);
+  contextRecords(assistantId: string, actor: string, relationshipId?:string): MemoryRecord[] {
+    if (this.database) return (this.database.connection.prepare("SELECT id, assistant_id AS assistantId, content, provenance_json AS provenance, lifecycle_json AS lifecycle, created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? AND (? IS NULL OR json_extract(provenance_json,'$.relationshipId')=?) AND json_extract(lifecycle_json,'$.status')='active' AND (EXISTS (SELECT 1 FROM memory_lifecycle_events e WHERE e.assistant_id=memories.assistant_id AND e.memory_id=memories.id AND e.event_type='lifecycleChanged' AND json_extract(e.payload_json,'$.status')='active') OR EXISTS (SELECT 1 FROM memory_lifecycle_events e WHERE e.assistant_id=memories.assistant_id AND e.event_type='correctionApplied' AND json_extract(e.payload_json,'$.correctionId')=memories.id)) ORDER BY id LIMIT 257").all(assistantId, actor,relationshipId??null,relationshipId??null) as MemoryRow[]).map(fromRow).filter(record=>this.proposalSourceAvailable(record)&&this.visualSourceAvailable(record)&&this.gameSourceAvailable(record));
+    return this.list(assistantId).filter(record => record.provenance.actor === actor && (relationshipId===undefined||record.provenance.relationshipId===relationshipId) && record.lifecycle.status === "active" && (this.history(assistantId,record.id).some(event=>event.eventType==="lifecycleChanged"&&event.payload.status==="active") || [...this.events.values()].some(events=>events.some(event=>event.assistantId===assistantId&&event.eventType==="correctionApplied"&&event.payload.correctionId===record.id)))).slice(0,257);
   }
   contextRecordIds(assistantId: string, actor: string): string[] {
     if (this.database) return this.contextRecords(assistantId,actor).map(record=>record.id);
     return this.list(assistantId).filter(record => record.provenance.actor === actor && record.lifecycle.status === "active" && (this.history(assistantId,record.id).some(event=>event.eventType==="lifecycleChanged"&&event.payload.status==="active") || [...this.events.values()].some(events=>events.some(event=>event.assistantId===assistantId&&event.eventType==="correctionApplied"&&event.payload.correctionId===record.id)))).slice(0,257).map(record => record.id);
   }
-  search(assistantId: string, query: string, limit = 20): MemoryRecord[] {
+  search(assistantId:string,query:string,limit=20,actor?:string):MemoryRecord[]{
+    const normalized=query.trim().toLocaleLowerCase();if(!normalized)return [];
+    return this.list(assistantId).filter(record=>(actor===undefined||!record.provenance.actor||record.provenance.actor===actor)&&!record.lifecycle.contentRemoved&&!['superseded','invalidated','contradicted'].includes(String(record.lifecycle.status))&&(record.provenance.proposalVersion!==2||record.lifecycle.status==='active')&&record.content.toLocaleLowerCase().includes(normalized)).slice(0,Math.max(1,Math.min(100,limit)));
+  }
+  /** Bounded acquisition only. Production semantic search uses the optional
+   * worker's closed provider selection, never this query-independent reserve. */
+  searchCandidates(assistantId: string, query: string, limit = 20, actor?:string): MemoryRecord[] {
     const normalized = query.trim().toLocaleLowerCase();
     if (!normalized) return [];
-    return this.list(assistantId).filter((record) => record.content.toLocaleLowerCase().includes(normalized)).slice(0, Math.max(1, Math.min(100, limit)));
+    const maximum=Math.max(1,Math.min(100,Number.isFinite(limit)?Math.trunc(limit):20));
+    const records=this.list(assistantId).filter(record=>(actor===undefined||!record.provenance.actor||record.provenance.actor===actor)&&!record.lifecycle.contentRemoved&&!['superseded','invalidated','contradicted'].includes(String(record.lifecycle.status))&&(record.provenance.proposalVersion!==2||record.lifecycle.status==='active'));
+    const literal=records.filter(record=>record.content.toLocaleLowerCase().includes(normalized));
+    // Candidate coverage, not a semantic relevance or truth score. Reserve
+    // bounded room outside exact phrase matches so existing reasoning can see
+    // qualified paraphrases. Round-robin source families prevents one source's
+    // multiple topics from filling the candidate reserve. No query vocabulary
+    // rules, additional inference, retention or reinforcement are introduced.
+    const families=new Map<string,MemoryRecord[]>(),literalIds=new Set(literal.map(record=>record.id));
+    for(const record of records.filter(record=>record.provenance.proposalVersion===2&&!literalIds.has(record.id))){
+      const family=String(record.provenance.sourceFamily??record.id);
+      const group=families.get(family)??[];group.push(record);families.set(family,group);
+    }
+    const coverage:MemoryRecord[]=[];
+    while(coverage.length<maximum&&families.size){
+      for(const [family,group] of families){coverage.push(group.shift()!);if(!group.length)families.delete(family);if(coverage.length===maximum)break;}
+    }
+    const selected:MemoryRecord[]=[],seen=new Set<string>();
+    const take=(record:MemoryRecord)=>{if(selected.length<maximum&&!seen.has(record.id)){seen.add(record.id);selected.push(record);}};
+    // Keep both channels observable. Even a corpus full of literal matches
+    // cannot consume every slot when there is room for a coverage candidate.
+    literal.slice(0,Math.max(1,Math.ceil(maximum/2))).forEach(take);
+    coverage.forEach(take);literal.forEach(take);
+    return selected;
   }
   history(assistantId: string, id: string): MemoryLifecycleEvent[] {
     if (this.database) {
@@ -175,7 +232,7 @@ export class MemoryRepository {
     const record = this.records.get(id); return record?.assistantId === assistantId ? structuredClone(this.events.get(id) ?? []) : [];
   }
   proposeCorrection(assistantId: string, id: string, proposedContent: string, actor: string): MemoryLifecycleEvent | undefined {
-    const existing = this.get(assistantId, id); if (!existing || existing.lifecycle.contentRemoved || !["active","candidate"].includes(String(existing.lifecycle.status))) return undefined;
+    const existing = this.get(assistantId, id)??this.getForPrivacy(assistantId,id,actor); if (!existing || existing.lifecycle.contentRemoved || !["active","candidate"].includes(String(existing.lifecycle.status))) return undefined;
     if(gameMarked(existing))throw new Error('Game episodes require source-aware correction and lifecycle');
     if(existing.provenance.visualEpisodeId)throw new Error('Visual observations require typed source correction');
     const occurredAt = new Date().toISOString(); const payload = { proposedContent, status: "needsReview", actor };
@@ -184,12 +241,13 @@ export class MemoryRepository {
     return { memoryId: id, assistantId, revision, eventType: "correctionProposed", payload, occurredAt };
   }
   applyCorrection(assistantId: string, id: string, proposalRevision: number, expectedRevision: number, actor: string): MemoryRecord {
-    const existing = this.get(assistantId, id), history = this.history(assistantId, id);
+    const existing = this.get(assistantId, id)??this.getForPrivacy(assistantId,id,actor), history = this.history(assistantId, id);
     if(existing&&gameMarked(existing))throw new Error('Game episodes require source-aware correction and lifecycle');
+    if(existing?.provenance.visualEpisodeId)throw new Error('Visual observations require typed source correction');
     const proposal = history.filter(event => event.eventType === "correctionProposed").at(-1);
     if (!existing || existing.lifecycle.revision !== expectedRevision || !["active", "candidate"].includes(String(existing.lifecycle.status)) || proposal?.revision !== proposalRevision || typeof proposal.payload.proposedContent !== "string") throw new Error("correction revision conflict");
     const now = new Date().toISOString(), nextId = randomUUID();
-    const corrected: MemoryRecord = { ...structuredClone(existing), id: nextId, content: proposal.payload.proposedContent, provenance: { ...existing.provenance, actor, correctionOf: id, correctionProposalRevision: proposalRevision, sourceRevision: expectedRevision }, lifecycle: { ...existing.lifecycle, status: existing.lifecycle.status, revision: 1, changedBy: actor, supersedes: id }, createdAt: now };
+    const corrected: MemoryRecord = { ...structuredClone(existing), id: nextId, content: proposal.payload.proposedContent, provenance: currentProvenance({ ...existing.provenance, actor, correctionOf: id, correctionProposalRevision: proposalRevision, ...(existing.provenance.proposalVersion===2?{correctionSourceRevision:expectedRevision}:{sourceRevision:expectedRevision}) }), lifecycle: { ...existing.lifecycle, status: existing.lifecycle.status, revision: 1, changedBy: actor, supersedes: id }, createdAt: now };
     const retired = { ...existing.lifecycle, status: "superseded", revision: expectedRevision + 1, supersededBy: nextId, changedBy: actor };
     const event: MemoryLifecycleEvent = { memoryId: id, assistantId, revision: (history.at(-1)?.revision ?? 0) + 1, eventType: "correctionApplied", payload: { correctionId: nextId, proposalRevision, actor }, occurredAt: now };
     if (this.database) this.database.transaction(tx => {
@@ -228,7 +286,7 @@ export class MemoryRepository {
     let existing = this.get(assistantId, id);
     // Forgetting must still erase private retained payload after policy/source
     // withdrawal; that withdrawal is never permission to retain a hidden copy.
-    if(!existing&&this.database){const raw=this.database.connection.prepare('SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND id=?').get(assistantId,id) as MemoryRow|undefined;const record=raw?fromRow(raw):undefined;if(record&&gameMarked(record)&&record.provenance.actor===actor)existing=record;}
+    if(!existing&&this.database){const raw=this.database.connection.prepare('SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND id=?').get(assistantId,id) as MemoryRow|undefined;const record=raw?fromRow(raw):undefined;if(record&&(gameMarked(record)||record.provenance.proposalVersion===2)&&record.provenance.actor===actor)existing=record;}
     if (!existing) return undefined;
     if(gameMarked(existing)&&existing.provenance.actor!==actor)throw new Error('Game memory owner unavailable');
     const previousRevision = typeof existing.lifecycle.revision === "number" ? existing.lifecycle.revision : 1;
