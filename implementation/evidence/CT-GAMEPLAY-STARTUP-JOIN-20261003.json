@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedAt": "2026-10-03T08:29:51.172142+00:00",
+  "task": "Concrete gameplay startup, active memory status, profile retirement and full-server ordinary recall",
+  "status": "sourceImplementedSyntheticQualified",
+  "runDisposition": "complete",
+  "liveReadiness": "waitingForActualOwnerQualifications",
+  "baselineRevision": "7f18e8a151e4fe98ebba5ecc100d832efc3fb219",
+  "testedCodeRevision": "ea12b144f727aea6db7d3d616e30983a5f2a4fea",
+  "branch": "codex/ct-gameplay-startup-20261003",
+  "changes": [
+    "Actual candidate launcher loads digest-pinned outside-Git trusted owner module and supplies production ServerOptions.gameplayOwners.",
+    "Concrete adapter builds existing start/checkpoint/journal owners with exact actor/native binding, current configured hours, qualified observation/reconciliation, canonical admission and independent historical custody.",
+    "Episode retention and active-memory status are separate.",
+    "Profile replacement awaits gameplay retirement with original database available, closes host/runtimes and retires captured composition.",
+    "Activity UUID identity mismatch repaired without changing fingerprint/source currency; compact grounded historical context fits the existing joined optional recall allocation."
+  ],
+  "checks": [
+    {
+      "command": "node --experimental-strip-types --test --test-concurrency=1 --test-timeout=30000 --test-reporter=tap apps/server/test/gameplay-server-joined.test.ts scripts/candidate-gameplay-owners.test.mjs scripts/supervised-game-runtime.test.mjs apps/server/test/gameplay-native-http.test.ts apps/server/test/gameplay-composition.test.ts apps/server/test/game-host-http.test.ts apps/server/test/game-host-runtime.test.ts apps/server/test/game-activity-memory.test.ts",
+      "environment": "isolated resource-bounded Linux source staging, actual file databases, synthetic providers/native actors/owners",
+      "result": "pass",
+      "tests": 76,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "command": "same selected files with --test-name-pattern=full server|profile replacement|launcher",
+      "result": "pass",
+      "functionalCases": 5,
+      "harnessTests": 11,
+      "emptyFilteredFileWrappers": 6,
+      "note": "Only five named functional cases are counted as acceptance. Final added native accounting assertions included; other 6 wrappers execute no selected cases."
+    },
+    {
+      "command": "node --experimental-strip-types --test scripts/candidate-gameplay-owners.test.mjs scripts/supervised-game-runtime.test.mjs apps/server/test/gameplay-native-http.test.ts apps/server/test/gameplay-composition.test.ts",
+      "environment": "Windows",
+      "result": "pass",
+      "tests": 24,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node scripts/build.mjs",
+      "environment": "Windows and isolated Linux",
+      "result": "pass",
+      "note": "Windows default-sandbox recovered dependency read failed; reviewed read-only dependency access then build passed."
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -b apps/server --pretty false; strict no-emit joined fixture check",
+      "environment": "Windows",
+      "result": "pass"
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js scripts/candidate-gameplay-owners.mjs scripts/candidate-gameplay-owners.test.mjs scripts/start-candidate.mjs scripts/supervised-game-runtime.mjs",
+      "result": "pass"
+    },
+    {
+      "command": "node scripts/workspace.mjs check; git diff --check",
+      "result": "pass",
+      "note": "Structure only."
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S066",
+      "result": "scopeAidMismatch",
+      "note": "Existing primary S066 prepared packet differs from the supplemental authorized CT startup scope. Branch, revision and changed-file metadata repaired; private packet and whole-slice pending state preserved."
+    }
+  ],
+  "jointSyntheticOutcome": {
+    "actualFullServer": true,
+    "pinnedLauncherModuleLoader": true,
+    "realLocalAuthSessionEndpointRelationshipAndPolicy": true,
+    "modelCalls": 1,
+    "controllerInputs": 1,
+    "ownedObservations": 3,
+    "measuredNativeFrames": 2,
+    "chargedNativeWallMs": 13,
+    "journalRevision": 3,
+    "controllerSqlState": "settled",
+    "activeMemoryIdReadback": true,
+    "ordinaryConversationHttpSections": 9,
+    "historicalRecallAfterNativeSourceWithdrawal": true,
+    "audienceAndHistoricalSourceWithdrawalFences": true,
+    "episodeRetainedWithoutProjectionStaysInactive": true,
+    "retireBeforeOriginalDatabaseClose": true,
+    "publicLocalAuthProfileSwitchRemainsRejected": true,
+    "goalsCompleted": false,
+    "saveArtifact": null,
+    "nativeShutdownConfirmedInSyntheticFixture": true
+  },
+  "limitations": [
+    "All native child, decoder, canonical admission source, save reconciliation, qualification receipt and provider output remain explicitly synthetic.",
+    "No actual CT progress, ordinary save/reload, installed enrollment qualification, current selected-model/perception performance, production P2 activation or live Tifa memory discussion.",
+    "Windows full-server setup remains unqualified: inherited recovery/local-auth directory fsync limitation. No source bypass introduced; Linux actual file-database witness supplies joined source acceptance.",
+    "Profile replacement regression exercises the existing internal handler and finite synthetic retirement gate; no new public profile-switch route or actual moving-game switch accepted.",
+    "Larger historical memory records remain subject to existing byte/relevance bounds.",
+    "Native, save, canonical admission and provider owner evidence must be independently current; startup module selection supplies no authority fallback."
+  ],
+  "productionServicesUnchangedDuringQualification": true,
+  "authComponentMerged": false,
+  "liveActivation": false,
+  "primaryS066Status": "implementationCompleteVerificationPending",
+  "sourceFiles": [
+    {
+      "path": "apps/server/src/index.ts",
+      "gitBlobSha256": "975e6db6ec4df749eff0d167fc1654df8f66977ca790fc3e898d0b5dd81e5b34"
+    },
+    {
+      "path": "apps/server/src/runtime/game-memory.ts",
+      "gitBlobSha256": "881019820df2c8e04df60a4edd59d8195d703047cc04a15fa2952957319c7a7b"
+    },
+    {
+      "path": "apps/server/src/runtime/gameplay-grounding.ts",
+      "gitBlobSha256": "c81b552dc557891164e513ab3ce5466fb9850ea20978a4331bbaea143c640b95"
+    },
+    {
+      "path": "apps/server/src/runtime/gameplay-run-owner.ts",
+      "gitBlobSha256": "9ac269c843300ff00093bf5a237a59302c7e599938ae453ede093260fbad7ce8"
+    },
+    {
+      "path": "apps/server/test/gameplay-server-joined.test.ts",
+      "gitBlobSha256": "7d642aab280adddacb514ea410e85962ea83b2d733cc39b6e99d00349feef346"
+    },
+    {
+      "path": "docs/gameplay-composition.md",
+      "gitBlobSha256": "9b0038084b6b6d5265578684d39f02fbe1be35a7404394fc0d2f6b902e35db3d"
+    },
+    {
+      "path": "scripts/candidate-gameplay-owners.d.mts",
+      "gitBlobSha256": "e2384b7c1c715ba0e6597f08a95b662c3a286a24820e932b151069738dd9c169"
+    },
+    {
+      "path": "scripts/candidate-gameplay-owners.mjs",
+      "gitBlobSha256": "5a824a6820aef01dfc377c70b6040011dd8747bf5afeaa5d279328b67f8f2395"
+    },
+    {
+      "path": "scripts/candidate-gameplay-owners.test.mjs",
+      "gitBlobSha256": "4dfac103a2378200bc5908b48cd4f5371e61a06db7a3dbb15df610524eb1f2a8"
+    },
+    {
+      "path": "scripts/start-candidate.mjs",
+      "gitBlobSha256": "e81282fd89905c204290efcafd575dec89efd5a90e313cf98d72384e8c118742"
+    },
+    {
+      "path": "scripts/supervised-game-runtime.mjs",
+      "gitBlobSha256": "1e5fcad2685f8be2f08452bc4fc5b432c7022c04b33ca43eb6d70048a0fd5c29"
+    }
+  ]
+}
