@@ -2,8 +2,8 @@
   "schemaVersion": "1.0.0",
   "status": "localSourceAndPackagedMainQualifiedLiveAcceptancePending",
   "disposition": "waiting",
-  "baseRevision": "b7af9e9bac022a2ffe07a5935e18ce25830b61ed",
-  "sourceRevision": "a43be6cc9ed9b1413bc524aeb628449dd2fa177a",
+  "baseRevision": "b51b5f5e7a4a49bde193a22ed5716809d9723e8a",
+  "sourceRevision": "dfff29e302cfef67d57bff3c4dc9569706a7d716",
   "scope": "Current CT desktop readiness/Start alignment and closed rejection diagnostics. Separate from persistent authentication, unattended access, deployment, controller use and game memory acceptance.",
   "behavior": [
     "Readiness, session binding and initial broker admission share current owner, finite administration, conversation, endpoint and effective audience predicates.",
@@ -73,10 +73,427 @@
     "wholeSliceAccepted": false
   },
   "candidate": {
-    "sourceRevision": "a43be6cc9ed9b1413bc524aeb628449dd2fa177a",
+    "sourceRevision": "dfff29e302cfef67d57bff3c4dc9569706a7d716",
     "electronVersion": "44.3.0",
     "executableSha256": "e048632e03fabc96de5e10afbebc0aa31f4e1674155ea3d270597fe7523f9d80",
-    "deployed": false
+    "deployed": false,
+    "packagedMainProofSha256": "21092ba9f385e85ae2abfb72a8d1257ffee948f92ce881c6137b604dc0d9bcfa",
+    "sourceFiles": [
+      {
+        "path": "apps/desktop/main.cjs",
+        "sha256": "be545b520e19f2e2d6b155a0ed0d3ed7f0a803157dc40be166431e2589968425",
+        "committedObject": "59b0a58539f670f2b006439235ad51dd705a5a18"
+      },
+      {
+        "path": "apps/desktop/game-host-composition.cjs",
+        "sha256": "61bba17e6aee214af476c07815f7d99d817f771b97fbc92d7a0b05ce13b8f9a2",
+        "committedObject": "fc310bc5280247761ad99a67441659a68f69e9c9"
+      },
+      {
+        "path": "apps/desktop/game-host-controls.cjs",
+        "sha256": "890722ac45f4ffb8c58891a58640e3caa04579e35784c9f14cab7906d14966e4",
+        "committedObject": "74c2565471d5f740189a0b019f9c554865cc464e"
+      },
+      {
+        "path": "apps/desktop/game-host-session-broker.cjs",
+        "sha256": "91dc98345c55c56e9588fb8b587d63d3f7f01c6ed033d640ea631fe19ba33843",
+        "committedObject": "6f19f90d01f9780f9aaea0e6a1d824511a51ef74"
+      },
+      {
+        "path": "apps/desktop/game-host-session-request.cjs",
+        "sha256": "4961046d26085b2a9b4008f34949785a266c91e2470d462ccb61a0d050b793d8",
+        "committedObject": "c5ae3be650c480cc92245e338d8d7b3f5a0616bd"
+      },
+      {
+        "path": "apps/desktop/game-host-diagnostics.cjs",
+        "sha256": "3929fc8b45d0ca4991766176f7dc7d055f8773aaacb9d1b4e17297889a8fa971",
+        "committedObject": "140dd5182a3375b28259fbb56079a06ac51e5edf"
+      },
+      {
+        "path": "apps/desktop/game-host-menu.cjs",
+        "sha256": "88479373e415a91eaf8ac1e66daba0826358c54b2dde2526a539a76d60dd533e",
+        "committedObject": "b3db0f4f16ac18b31fa623da3f7b7d57d9ae3948"
+      },
+      {
+        "path": "apps/desktop/preload.cjs",
+        "sha256": "b087a0af2437fb75231051552b21eb4c0b8d4a59aa013c7c8d57b2c03aae75c5",
+        "committedObject": "28c63678edc154ecf62cd64482583b1af6dce07c"
+      },
+      {
+        "path": "apps/desktop/connection-status.cjs",
+        "sha256": "6f785c2f95d1a0e15178f79572fa915a6f1de65967ab6ff6d6563a51b046363f",
+        "committedObject": "d9ce702e26aaf1d11ade4adcef9b9cbe05085100"
+      },
+      {
+        "path": "apps/desktop/package.json",
+        "sha256": "a100b9746491259cbcbe9c1b3d12b8213e2547dfedec754371d1a89986e69995",
+        "committedObject": "d02585a29ffed97a26bf1ecb6bd98b6a4a8420c1"
+      },
+      {
+        "path": "scripts/package-desktop-windows.mjs",
+        "sha256": "4764bd018dd2563deb38165a9236dbacb5967f74e0f80f7040d9c69016a8b38b",
+        "committedObject": "3fe8134ab66c295763a77b7ba4bb7a6ba1c7a537"
+      },
+      {
+        "path": "package.json",
+        "sha256": "a6125e25386de910b30fa849e101a6690245ded182d0cd46fbdcdeb478d6a8b8",
+        "committedObject": "546042fcb2f54b7ae3d2a1b8935024cbf2154923"
+      },
+      {
+        "path": "pnpm-lock.yaml",
+        "sha256": "34ad8dd9ce8913ef69fbc9d728942ed631eefe6429f1ee8cf0645976dc0a3a72",
+        "committedObject": "643a18097e56afc9b9806d5787b089748e089cbc"
+      },
+      {
+        "path": "LICENSE",
+        "sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6",
+        "committedObject": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+      },
+      {
+        "path": "THIRD_PARTY_NOTICES.md",
+        "sha256": "e3119f42f2f1853103393893dbcb5d2bb1959c870f9d94634bf30da484c6168c",
+        "committedObject": "32b0f5edb4339bebbc7a6b1024256b9e98148530"
+      },
+      {
+        "path": "packages/contracts/package.json",
+        "sha256": "5a8eec46aad06be31f089b5edd1e3b1244f2cd33c7a57aa712c2935d5dc3e449",
+        "committedObject": "7aa8d15f69a6e8051f3efa5177e387b889f00393"
+      },
+      {
+        "path": "packages/contracts/src/errors.ts",
+        "sha256": "15532b466b97431fc88371c03b3e8a8c30d7647e9d763015f75068d53f3c823a",
+        "committedObject": "a0ee2c8418fee05d6fe5a4d889a706dd0b6dd32c"
+      },
+      {
+        "path": "packages/contracts/src/experience.ts",
+        "sha256": "fe7cca4484c6c58bca2b87c50ab8364efecfe3655a79dd73d1c6a8f6b5d0b61f",
+        "committedObject": "dbe248c02eeeecdc867d2f217f57ce5ce847bcc9"
+      },
+      {
+        "path": "packages/contracts/src/game-activity.ts",
+        "sha256": "bfc8205db54b870271e376e2cf204ee1caa0c39db2f90154efd5175d3d29e30c",
+        "committedObject": "2a71ae742bafe0eaaf1c8af211feb18b91abf8d3"
+      },
+      {
+        "path": "packages/contracts/src/game-host.ts",
+        "sha256": "ba5da9a331fcc59c7be44f274087d2a0b32110066f146fc8031e6cab26b25161",
+        "committedObject": "5361cd9ef532268d4023d76ebb12b8256f44d2be"
+      },
+      {
+        "path": "packages/contracts/src/game-journal.ts",
+        "sha256": "35879145cfa2847de8ebc59ec349463fc1b58cca8518299fb832b50ef4d1cd3c",
+        "committedObject": "b5fd100a107e3cd52c63cd05d90f639fd4e3030f"
+      },
+      {
+        "path": "packages/contracts/src/game-memory.ts",
+        "sha256": "7503f712a28fe94036fb800fa3feb07c3226c5587f20fd61482f80e7f28ae5b5",
+        "committedObject": "77d9deee8b330f77b4c1a2c435c81946e9eed6c6"
+      },
+      {
+        "path": "packages/contracts/src/index.ts",
+        "sha256": "11f83fa94b339c35c67451013c3799c734f02916f8ad13b9c937889b43ba57c7",
+        "committedObject": "1e1a454520bcf385737d92f4efeb1caf9c73cfef"
+      },
+      {
+        "path": "packages/contracts/src/primitives/clock.ts",
+        "sha256": "917e54f09f1ced214cfa1412da5ed73e9b49420cb196dceae84e7fc7627a68c8",
+        "committedObject": "e647f7bdabdfb299b1fc46042cfeb7cecaaeed32"
+      },
+      {
+        "path": "packages/contracts/src/primitives/deadline.ts",
+        "sha256": "222c3314a5c77c81a0aef3ed1484a40120c98290823c3622e68abc4038cc3667",
+        "committedObject": "973ab2ec49350e2ce3392d96b8668fb92e5097f1"
+      },
+      {
+        "path": "packages/contracts/src/primitives/error.ts",
+        "sha256": "27eecca2e98ce0bd3a7ef2caf8a681b6a66bc1f05d4bc5863597cbea6b0de98b",
+        "committedObject": "8e9784efbb6404734d0f4c734ce648485571c32e"
+      },
+      {
+        "path": "packages/contracts/src/primitives/identity.ts",
+        "sha256": "7bd6f178358b24391d6c4df3dcfc4eed12f5102a2b8efc96c37816188bc655c6",
+        "committedObject": "9570eb838cfc1ba0acf2891ac0cd5977f90781f5"
+      },
+      {
+        "path": "packages/contracts/src/primitives/index.ts",
+        "sha256": "e680b761c7f4a0304430fb190ada7b57e0dbc10764df3675e83cb7e1508013f0",
+        "committedObject": "a5f8bd349e088a76814916c5bb04d40741510d05"
+      },
+      {
+        "path": "packages/contracts/src/provider-messages.ts",
+        "sha256": "d7a67dbc3d53bd51c6a91683040ed662fc913c5f606bffd8adc028a99640222b",
+        "committedObject": "1547b60520dfcd96c773a0c3eaead21aa6aeae48"
+      },
+      {
+        "path": "packages/contracts/src/pwce/compatibility-lock.ts",
+        "sha256": "4664ee2fff2b15d65d1bcef16e4e087d885aa2fe6d3d6f5e8358a8b7268bef10",
+        "committedObject": "54da69981579c19b4e5c00cda6a1539689d1f787"
+      },
+      {
+        "path": "packages/contracts/src/schemas/assistant-profile.schema.json",
+        "sha256": "ccaa756d700492c18385f736aec41d775aa81a9eda8b0019c444e912ed38b77f",
+        "committedObject": "ecd8bc586e385e1ee2d40103ec2c4e3ffbeffe7f"
+      },
+      {
+        "path": "packages/contracts/src/schemas/capability-snapshot.schema.json",
+        "sha256": "3f12f36f3d0b9a97032d1939b77eb6aac6c0477591d20674158fa1de1cd94123",
+        "committedObject": "3cadeed4a6f6a2d3f40f014d008398a87082cabe"
+      },
+      {
+        "path": "packages/contracts/src/schemas/contract-catalog.json",
+        "sha256": "849966261f115d545e0980fd8df471e4399ecac7a71cb68328e012a867b375c8",
+        "committedObject": "620219e29ccad2f52294f393c7927d5e97cecc79"
+      },
+      {
+        "path": "packages/contracts/src/schemas/contract-manifest.json",
+        "sha256": "e21c59d41174964397838000138a8b397bfb6b81a94a9038bc110f4936e83ac4",
+        "committedObject": "27c75aef48185d854f753900bdc1804aa1bca589"
+      },
+      {
+        "path": "packages/contracts/src/schemas/conversational-vision.schema.json",
+        "sha256": "4f00aaf9b3ae40db636482cc2fc20ebb22b43d6131155dda2d4e32fc3ee80b7e",
+        "committedObject": "79e80bdea1658fa4dd43de03c664fa6d4dd447f3"
+      },
+      {
+        "path": "packages/contracts/src/schemas/dreaming.schema.json",
+        "sha256": "1c1c9f478531d714dca962ccfa77d12923031d38d5ae4b7c78f07a49e0a1d1cf",
+        "committedObject": "28d8aa0f727b0a676a0000c391855ee93d263ced"
+      },
+      {
+        "path": "packages/contracts/src/schemas/embodiment-state.schema.json",
+        "sha256": "be08a9043716cd54966a920b030d8c7cbc5fa41e62458bee37d82aa512791523",
+        "committedObject": "f3ba2b300e8224c9a6db623b66bd3c8e0afc7da6"
+      },
+      {
+        "path": "packages/contracts/src/schemas/experiential-learning.schema.json",
+        "sha256": "b03c315f202d455a79173508824724c6ed9d3bbc791e569f3f93701000b15eb6",
+        "committedObject": "3d6eebf3663b5a02545f23c8c514dcd7018438cb"
+      },
+      {
+        "path": "packages/contracts/src/schemas/human-authority-decision.schema.json",
+        "sha256": "1311ee5b75fa6ef98bf79324ced3d04d7f68c22919058249d62e13ca63810631",
+        "committedObject": "e1d8ad076ce91635968fa3e8dabac68f888d1458"
+      },
+      {
+        "path": "packages/contracts/src/schemas/human-authority-grant.schema.json",
+        "sha256": "deaf40c152ad5c64d1b77444c1c4fa23821544afe452045a09671d4443abd546",
+        "committedObject": "c3e6878350452545fee4c225abd0d4103d827810"
+      },
+      {
+        "path": "packages/contracts/src/schemas/initiative-api.schema.json",
+        "sha256": "e98e0dfccde369800b25b023101563223879634285fc0fb71169c706745be979",
+        "committedObject": "105fb62296e7aeea3a9c79f96dc3f31ba3564e29"
+      },
+      {
+        "path": "packages/contracts/src/schemas/interaction-trace-event.schema.json",
+        "sha256": "135c611137e2f69b6d164d0313116de1d67bc7494538491da40103ea30938f3c",
+        "committedObject": "e5dc39c773fb73dfdf4640c65a2a1a92ad6800c4"
+      },
+      {
+        "path": "packages/contracts/src/schemas/lifecycle-transitions.json",
+        "sha256": "7d28bc9c6b938c747279877c4346e505d7535a56e99d26541f4e37e0a4db7462",
+        "committedObject": "b1c8eee3387ed3cd0efb409baf594e419b529b13"
+      },
+      {
+        "path": "packages/contracts/src/schemas/local-game-activity.schema.json",
+        "sha256": "7f4748fb17e9b689c04e079054ab79b3655791fc588d084d3c62e86762bda6b5",
+        "committedObject": "5853505d44fe1b2dc8b2b3206e21f926ba735d88"
+      },
+      {
+        "path": "packages/contracts/src/schemas/memory-operations.schema.json",
+        "sha256": "eed46e60b5691f2ad8adac58ec1a7f9fce2d8017b21253825d07c095039da316",
+        "committedObject": "50118814557c6df639a54340b117839e5179f015"
+      },
+      {
+        "path": "packages/contracts/src/schemas/memory-record.schema.json",
+        "sha256": "1d5ba67e9c3c89fdda0e2233b3f1afb8b49af4ff443c81ceaeb4a41fd37b6317",
+        "committedObject": "480d004c46111e75c4862f44c7a3d5ea862ab3cd"
+      },
+      {
+        "path": "packages/contracts/src/schemas/personal-understanding.schema.json",
+        "sha256": "78396cc87a7a3290c806806c98ba43a65517f366e00b093cec91b81e5a90c484",
+        "committedObject": "88a8327d9586a13be9086180d4f6ff5183b7f3c6"
+      },
+      {
+        "path": "packages/contracts/src/schemas/prepared-context-2.0.0.schema.json",
+        "sha256": "427c61df6800246775fb5e6e5b443eb67c3aec4be5bbfe75aba54fa580a48024",
+        "committedObject": "2def06b08a2861a56f6f2c3010f571426cb86b4a"
+      },
+      {
+        "path": "packages/contracts/src/schemas/prepared-context.schema.json",
+        "sha256": "8daa8430d96db08631f950a86a757b5e49cbdec635db5a604a141100afd9998d",
+        "committedObject": "ea1be137d8f9fe3bf52ddaa9bf9c9e61aa72bd17"
+      },
+      {
+        "path": "packages/contracts/src/schemas/progress-checkpoint.schema.json",
+        "sha256": "5c2084374e81f56855333efe3ca41039c235103c5dd1c7b93044f7478f205510",
+        "committedObject": "d5a54860240d485651022e3c3dcb8fe4d82aa007"
+      },
+      {
+        "path": "packages/contracts/src/schemas/protocol-common.schema.json",
+        "sha256": "d7bdc15c51875828b6b72dbbdf7b849856afdc9b2b66c0fbff479e84ba60b0d6",
+        "committedObject": "53e863fa7e57de2789df838600f89cff9d7178e5"
+      },
+      {
+        "path": "packages/contracts/src/schemas/provider-messages.schema.json",
+        "sha256": "f73a90a63d5e70d3e366516b2628f4bac84a0fa690fb9b4a4ba883fde870cf8b",
+        "committedObject": "dd0b514dd4c25497cf3d00083c354a7be9a836bb"
+      },
+      {
+        "path": "packages/contracts/src/schemas/relational-initiative.schema.json",
+        "sha256": "09c6de6ac082f3262e65ce1a67cde12b0dcc1ccdff62b269747a6074b838a3af",
+        "committedObject": "b391c73d21c9960c002372159afd75e532888aa5"
+      },
+      {
+        "path": "packages/contracts/src/schemas/relationship-administration.schema.json",
+        "sha256": "507ec9020ebd0cd9ab02c238cff658317c866cc5f3e769bd0b652277a6f875bb",
+        "committedObject": "0c2dffbfbba9c61d79333d8b363cbcd5e4b48d41"
+      },
+      {
+        "path": "packages/contracts/src/schemas/relationship.schema.json",
+        "sha256": "6bbcad685c176fc5926ada52eced6c9f777570f903444945b6700e4b5d692e9a",
+        "committedObject": "9f4d20d7c61e39c4fffdc785e8bb0a3b1654c7ac"
+      },
+      {
+        "path": "packages/contracts/src/schemas/requirement-traceability.schema.json",
+        "sha256": "9822c3a46f77fdc70764db547d8bae3679da77a5d9c2eed600ea7b59bf197239",
+        "committedObject": "fe101c00ae87f701b720b5df961cabab2c716b97"
+      },
+      {
+        "path": "packages/contracts/src/schemas/runtime-api.schema.json",
+        "sha256": "5984353eebf678a7fe19f6042b8fa7b003b3bf18e90f77ef18c1216949aca949",
+        "committedObject": "63f6685e14da5fc235692834873d1dd4592ff009"
+      },
+      {
+        "path": "packages/contracts/src/schemas/skill.schema.json",
+        "sha256": "6e0c65dd30557b7a842f7057ffaa7b26604e0949e15160054ccd99c83966b5d9",
+        "committedObject": "8f9697dc73b0b5049d7a5f9f35787b869b683fae"
+      },
+      {
+        "path": "packages/contracts/src/schemas/understanding-api.schema.json",
+        "sha256": "cc8bfc499782fc4cfb7104900c2b95f8c1c13d51690ce143a4d4e78a88684450",
+        "committedObject": "a3fa1f65e7446c5bbb202d3459f3931618452121"
+      },
+      {
+        "path": "packages/contracts/src/schemas/user-profile.schema.json",
+        "sha256": "5ac0acc2877cc7d7e44aa2903e597a69548704ee781e846d3054aa974da5c313",
+        "committedObject": "c948c45872fcfeae78594c5125ec628d0f652855"
+      },
+      {
+        "path": "packages/contracts/src/schemas/visual-input-http.schema.json",
+        "sha256": "16cc97ee6c2b8bfbb420283b5b10dfd650f67521d71f0e8907c0246c22e19362",
+        "committedObject": "d4d00fad4a76507b34699a487954a6b88559c0a0"
+      },
+      {
+        "path": "packages/contracts/src/validator.ts",
+        "sha256": "a378286e5839d32ddded2dec8f08e736437e3196b21e13039406e5412146c5a0",
+        "committedObject": "67a999e061c0b14a2f6aa9d086006455bd0e6383"
+      },
+      {
+        "path": "packages/contracts/src/visual-input.ts",
+        "sha256": "062d99e3223fe568ac0aaeafd9fccf0fcd197f84964dbce70c0b721f20ec96cd",
+        "committedObject": "6a42059abde558974412144765c703628f01a9b9"
+      },
+      {
+        "path": "packages/contracts/src/visual-memory.ts",
+        "sha256": "be65b0f0ee0e77dae689d9a89507260622176b6675b3f51b270008299daba6a0",
+        "committedObject": "4b911005aa1eabbb2484394aeb536baf74ef2447"
+      },
+      {
+        "path": "packages/providers-bizhawk/native/entry.lua",
+        "sha256": "658d170991e8718313727b41966229930bd18f57bcbb5cc059c67a3e77d11ce0",
+        "committedObject": "0e01b0b632e22da773e2f8b759024fc298db4ad2"
+      },
+      {
+        "path": "packages/providers-bizhawk/native/peer.lua",
+        "sha256": "66a2b255e79dec43c6157427f2f7cfc72d83da7a98cb774511b5d4469b2c089c",
+        "committedObject": "bb7076024ce680ba59f699b2025b4927f9608d61"
+      },
+      {
+        "path": "packages/providers-bizhawk/native/utc-expiry.lua",
+        "sha256": "69ee0a827956107cc9de694ab791c0d3ef5cbc9f6d3a0841aecfa062d5ea2934",
+        "committedObject": "4272a7d3a396c286758e53e89bc4fe871e2cd5d2"
+      },
+      {
+        "path": "packages/providers-bizhawk/package.json",
+        "sha256": "12a8cb0d48cad0fe25a51f23097786689126d1ba992b7ef89a7a6c413e380db4",
+        "committedObject": "93d584da5fecf36e393ea5b0224d639d5121c3e9"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/frame-custody.ts",
+        "sha256": "41320922abaa2df1cf5efd16ff5dc48101543357cb8ebe413e72cfd880262346",
+        "committedObject": "b38e5aefb85d1cfddc1ccc81cf808e00c1067995"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/game-host-client.ts",
+        "sha256": "4fd42a152b39f1fbeaeeddd2709a0efd5385d6454895fde8bba299dbc8b063fc",
+        "committedObject": "3f8d3f48287d1f9e9beb041552b6becdfd549b42"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/index.ts",
+        "sha256": "0e7b65b84e68d2af0e5a47dcb96d7d4646e1791d9d3d751beefc202f45c4939f",
+        "committedObject": "c8e507b34711a3ab736cf07abf0c8b35edfd545b"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/live-frame-decoder.ts",
+        "sha256": "24e3fe2f43c37aff69f5ef199d65f64c3b71955aa27a8d1102762a30bfc1b493",
+        "committedObject": "a3f3c25177ee5de1d76d6cbe85a8656b327ecd3e"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/native-evidence.ts",
+        "sha256": "8142b63e397cc3739349888f8226bea8c61a53d2e5945e3b8fee5aed74ecac8a",
+        "committedObject": "811c682d1e7c9f195f105f8966dcfc9b938653d4"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/native-host.ts",
+        "sha256": "d619afb8dd44b8811786e0979dc8bb01f2f8fc22fde8ffaabb1fc65cf57ceda0",
+        "committedObject": "d7f45a628233df28edcd6141814ebd341a7e1caf"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/native-saves.ts",
+        "sha256": "1f2c3948ae3ed77b0c0de728091b306ed1262cf1f8ce2795e99a3999e6bacbc5",
+        "committedObject": "f388ed450efad3370249a716c71019ccf4ed39d1"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/owned-native-driver.ts",
+        "sha256": "9c980bbea20054c6fff5cec474cab06f1bb42ae13658ffc09b608056be43153f",
+        "committedObject": "b51e20fefd93467aacd900712eaa578f69f324cc"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/port.ts",
+        "sha256": "ce423b1e2aa1049a888cf53cf87d4e3b9e9be59ecf5efe5febc5ec6e8ec2beae",
+        "committedObject": "9b6bbcd40db77cbc79840ab96fad1f47478d4cad"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/provider.ts",
+        "sha256": "a40ae94fcf7b5aaff5d1b917a4c1af1e516d465c2920bc314b406dc6bbb2a42f",
+        "committedObject": "6df54353c247f555b28816671e3612a46477c115"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/reviewed-frame-decoder.ts",
+        "sha256": "c5f8a5aac644049625219346da062e24fad471e40d3e0e91ddcec93250060e41",
+        "committedObject": "a9d1cefb7ebb4a7bfe3968270714831d4f206e09"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/transport.ts",
+        "sha256": "c6fd11004d32ba061ea89dc3f7a19919ca4f6862ed541229f93a97b9a9928e40",
+        "committedObject": "237c98852a5588cfedeb3958ce409c042d556942"
+      },
+      {
+        "path": "packages/providers-bizhawk/src/windows-host-lifecycle.ts",
+        "sha256": "04b8bcf02db1ecc10dc0641b6942d808a3a662a73743042fa3fd40c1a0857b9b",
+        "committedObject": "a6298f8acd9372b27aebed97306b1ea724cfd382"
+      },
+      {
+        "path": "scripts/package-desktop-game-sdk.mjs",
+        "sha256": "ad21c72bd10d26153a06ea46b895c4db3a553d67c891e8d3c1d45b260d358804",
+        "committedObject": "caaee0d85580295ee81d16250e1e479c21c6342f"
+      }
+    ]
   },
-  "remainingQualification": "Coordinated final backend cutover, actual current owner auth and fresh audience choice, finite native attachment and observation. No live retry was performed."
+  "remainingQualification": "Coordinated final backend cutover, actual current owner auth and fresh audience choice, finite native attachment and observation. No live retry was performed.",
+  "publicationBranch": "codex/ct-readiness-start-alignment-public-20261003",
+  "publicationScope": "Clean source lineage from the existing published baseline. Includes required earlier CT binding/frame/vision dependencies and current readiness repair; excludes inherited owner-state checkpoint/operational records, private specs, assets and credentials.",
+  "initialLocalQualificationRevision": "a43be6cc9ed9b1413bc524aeb628449dd2fa177a",
+  "publicWorktreeValidation": "Repeated137 focused regressions and both packaged-main/window tests at this public source revision passed; full12-project TypeScript and workspace structure passed. Initial missing local ws dependency resolved through the existing server dependency directory; no dependency or lockfile change."
 }
