@@ -284,8 +284,11 @@ Audience declarations and process leases are transient. A backend restart clears
 them; a saved personal endpoint, an earlier sign-in or test approval does not
 recreate a declaration. Stage source, packages and inert finite setup prerequisites
 first. After the final backend cutover, check the actual desktop session. If
-administration expired, the owner signs in again in that window. If audience is
-unknown and the owner is actually alone, the owner chooses **Only me — 5 minutes**
+administration expired, the owner signs in again in that window. A new sign-in
+chooses its own disclosure: select **My authenticated session — allow approved
+context** and **Apply Session Disclosure** if that new session is unbound or
+withholding private context. If audience is unknown and the owner is actually
+alone, the owner chooses **Only me — 5 minutes**
 in Audience privacy. Check readiness again before one bounded Start. Another
 backend restart invalidates that declaration again; do not ask the owner to
 declare before the final restart, infer their physical audience, auto-declare, or

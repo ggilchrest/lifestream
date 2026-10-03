@@ -59,7 +59,7 @@
   ],
   "firstValidationFailure": "The new endpoint agreement test first observed a generic rejection at the prevalidated binding gate. That gate now records context_unavailable; the subsequent complete focused run passed.",
   "preflight": "LS-S066 preflight retains historical packet/scope/current-change mismatches. The public bounded CT aid was refreshed; private specification and pending whole-slice acceptance were preserved.",
-  "ownerActionAfterCutover": "After the final backend restart, sign in in the native window only if administration is expired. If audience is unknown and the owner is actually alone, choose Only me \u2014 5 minutes, then obtain fresh ordinary readiness before one bounded Start. Stored Session disclosure can be retained if still current. No automatic declaration or expired-evidence restoration.",
+  "ownerActionAfterCutover": "After the final backend restart: sign in in the native window if administration expired; for a new/unbound or protected session select My authenticated session - allow approved context and Apply Session Disclosure; if actually alone choose Only me - 5 minutes in Audience privacy. Keep already-current disclosure. Obtain fresh ordinary readiness before one bounded Start. No automatic assertion, persisted audience evidence or administration renewal.",
   "stagingOrder": "Prepare and validate all source, packages, native pins and inert runtime prerequisites first. A single owner interaction can follow the final backend cutover. Declaring before a later restart cannot qualify that restarted backend; rollback or another restart invalidates it again.",
   "claims": {
     "liveDeployment": false,
