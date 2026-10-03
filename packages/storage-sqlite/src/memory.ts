@@ -161,6 +161,13 @@ export class MemoryRepository {
     if(this.database){const row=this.database.connection.prepare('SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND id=?').get(assistantId,id) as MemoryRow|undefined;const record=row?fromRow(row):undefined;return record?.provenance.actor===actor?record:undefined;}
     const record=this.records.get(id);return record?.assistantId===assistantId&&record.provenance.actor===actor?structuredClone(record):undefined;
   }
+  /** Raw exact-owner inventory for bounded destructive privacy planning.
+   * Withdrawal must not hide retained descendants from dependency erasure.
+   * Includes tombstones for custody; never use this for inference admission. */
+  listForPrivacy(assistantId:string,actor:string):MemoryRecord[]{
+    const records=this.database?(this.database.connection.prepare("SELECT id,assistant_id AS assistantId,content,provenance_json AS provenance,lifecycle_json AS lifecycle,created_at AS createdAt FROM memories WHERE assistant_id=? AND json_extract(provenance_json,'$.actor')=? ORDER BY id LIMIT 4097").all(assistantId,actor) as MemoryRow[]).map(fromRow):[...this.records.values()].filter(r=>r.assistantId===assistantId&&r.provenance.actor===actor).map(r=>structuredClone(r));
+    if(records.length>4096)throw Error('Privacy dependency inventory capacity exceeded');return records;
+  }
   /** Authenticated owner administration is distinct from permission to use
    * retained content for inference. Host callers must check session/audience;
    * this exact-owner read never grants learning, recall or another owner scope. */
