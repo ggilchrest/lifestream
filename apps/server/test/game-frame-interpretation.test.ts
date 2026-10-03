@@ -35,3 +35,10 @@ test('withdrawn source and decoder callback replacement discard interpretation a
 test('finite interpretation deadline also zeros owned frame bytes that arrive after cancellation',async()=>{
  const f=fixture();f.options.maximumDurationMs=10;let late:Buffer|undefined;f.options.readFrame=async()=>{await new Promise(resolve=>setTimeout(resolve,30));late=Buffer.from(f.bytes);return late;};assert.equal(await createGameObservationReader(f.options)(f.join,new AbortController().signal),null);await new Promise(resolve=>setTimeout(resolve,40));assert.ok(late);assert.ok(late.every(byte=>byte===0));
 });
+
+test('tentative vision adds no controller fields and preserves only still-current independently admitted native fields',async()=>{
+ const f=fixture();f.decoder.capability={kind:'gameVision',vision:true,loadedProjectorSha256:'b'.repeat(64)};f.decoder.allowedVisibleFieldIds=[];
+ const field=f.decoded().visibleState[0]!;field.fieldId='fixture:native-only';f.observation.visibleState=[field,{...field,fieldId:'fixture:expired',freshUntil:new Date(0).toISOString()}];
+ f.decoder.decode=async()=>({facts:f.decoded().facts,visibleState:[]});
+ const result=await createGameObservationReader(f.options)(f.join,new AbortController().signal);assert.ok(result);assert.deepEqual(result.visibleState.map(item=>item.fieldId),['fixture:native-only']);assert.ok(result.facts.every(fact=>fact.untrusted));
+});

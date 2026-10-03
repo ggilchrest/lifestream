@@ -4,12 +4,13 @@ import {randomUUID,createHmac} from 'node:crypto';
 import {createServer,connect} from 'node:net';
 import {once} from 'node:events';
 import {createAuthenticatedGameTransport,GameControlFrameDecoder,encodeGameControlFrame} from '../src/transport.ts';
-import {GAME_HOST_PROTOCOL as protocol,GAME_HOST_BASE_PATH,gameHostDigest} from '@lifestream/contracts/game-host';
+import {GAME_HOST_PROTOCOL as protocol,GAME_HOST_BASE_PATH,gameHostDigest,parseGameHostFramePath} from '@lifestream/contracts/game-host';
 import type {GameHostCommand} from '@lifestream/contracts/game-host';
 import type {GameActivityAdapter} from '../src/port.ts';
 import {guardGameActivityAdapter} from '../src/provider.ts';
 import {WindowsGameHostClient,GameHostClientError,type WindowsGameHostClientOptions,type GameHostFenceContext} from '../src/game-host-client.ts';
 import {observe,action,observed,applied} from './game-host-fixtures.ts';
+import {framePng,frameResult} from './game-host-frame-fixtures.ts';
 const response=(value:unknown,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json'}});
 const future=(ms=5000)=>new Date(Date.now()+ms).toISOString();
 type Handler=(body:any,signal:AbortSignal)=>Promise<Response>|Response;
@@ -28,7 +29,7 @@ function harness(request=observe()){
  const unavailable=async()=>{throw Error('Unimplemented fixture');};
  const raw:GameActivityAdapter={observe:async r=>{nativeCalls++;order.push('native');return observed(r);},applyController:async r=>{nativeCalls++;order.push('native');return applied(r);},releaseControls:unavailable,controlSave:unavailable};
  const options:WindowsGameHostClientOptions={attach:{protocol,hostId:randomUUID(),scope:request.scope,pinsDigest:'a'.repeat(64),providerRef:'synthetic-bridge',sourceRevision:'b'.repeat(64)},
-  fetchAuthenticated:async(url,init)=>{assert.equal(url.startsWith('http://127.0.0.1:43182'+GAME_HOST_BASE_PATH+'/'),true);assert.equal(init.method,'POST');assert.equal(init.redirect,'error');assert.equal(init.cache,'no-store');assert.equal(Object.keys(init.headers!).length,1);const route=url.split('/').at(-1)!;const body=JSON.parse(init.body as string);calls.push({route,body});return handlers[route]!(body,init.signal!);},
+  fetchAuthenticated:async(url,init)=>{assert.equal(url.startsWith('http://127.0.0.1:43182'+GAME_HOST_BASE_PATH+'/'),true);assert.equal(init.method,'POST');assert.equal(init.redirect,'error');assert.equal(init.cache,'no-store');assert.equal(Object.keys(init.headers!).length,1);const route=url.slice(('http://127.0.0.1:43182'+GAME_HOST_BASE_PATH+'/').length).split('/')[0]!;const body=route==='frame'?Buffer.from(init.body as Uint8Array):JSON.parse(init.body as string);calls.push({route,body});return handlers[route]!(body,init.signal!);},
   isScopeCurrent:()=>current,sourceIsQualified:()=>qualified,
   nativeBoundary:{providerRef:'synthetic-bridge',maxDurationMs:10000,sourceAvailable:()=>qualified,acceptObservation:()=>qualified,acceptAction:()=>qualified,reconcileEffect:async()=>false,admitRelease:async()=>true},
   openNative:async boundary=>({adapter:guardGameActivityAdapter(raw,boundary),close:()=>{closeCount++;}}),
@@ -149,4 +150,34 @@ test('composed boundary admits after mutual native authentication and returns a 
  };
  try{const c=await run(h);assert.deepEqual(h.order,['authenticated','admit','native','result']);assert.equal(c.snapshot.acceptedIngress,1);assert.equal(h.calls.filter(x=>x.route==='admit').length,1);assert.deepEqual(secret,Buffer.alloc(32,23));}
  finally{transport?.close();peer?.destroy();await new Promise<void>(resolve=>server.listening?server.close(()=>resolve()):resolve());secret.fill(0);}
+});
+
+function pixelHarness(){
+ const h=harness(),png=framePng();let owned:Buffer|undefined;
+ h.raw.observe=async request=>{h.order.push('native');return frameResult(request,png);};
+ h.options.frameTransfer={maximumFrames:1,maximumBytes:2097152,maximumLongEdge:1024,maximumAgeMs:30000,readOwnedFrame:async()=>{owned=Buffer.from(png);return owned;}};
+ h.handlers.frame=body=>{h.order.push('frame');assert.deepEqual(body,png);body.fill(0);return response({accepted:true});};
+ return {h,png,owned:()=>owned};
+}
+test('explicit custody transfer follows admission/native proof and precedes ordinary result with erased bytes',async()=>{
+ const f=pixelHarness(),client=await run(f.h);assert.deepEqual(f.h.order,['admit','native','frame','result']);assert.equal(client.snapshot.acceptedIngress,1);assert.ok(f.owned()!.every(byte=>byte===0));assert.equal(f.h.calls.filter(call=>call.route==='frame').length,1);assert.equal(f.h.fences[0]!.lastEnteredAction,null);
+});
+test('withdrawn source, wrong PNG/hash, lost or miscorrelated frame acknowledgment cannot publish or retry',async()=>{
+ for(const mode of ['withdraw','badBytes','ackLost','ackWrong']){const f=pixelHarness(),h=f.h;let owned:Buffer|undefined;
+  if(mode==='withdraw'||mode==='badBytes')h.options.frameTransfer={...h.options.frameTransfer!,readOwnedFrame:async()=>{owned=mode==='badBytes'?Buffer.alloc(69):Buffer.from(f.png);if(mode==='withdraw')h.qualified=false;return owned;}};
+  if(mode==='ackLost')h.handlers.frame=()=>{throw Error('Lost frame ack');};
+  if(mode==='ackWrong'){const correct=h.handlers.frame!;h.handlers.frame=async(...args)=>{const reply=await correct(...args),body=await reply.json();return response({...body,extra:'unbound'});};}
+  const client=await run(h);assert.equal(client.snapshot.acceptedIngress,0,mode);assert.equal(h.calls.some(call=>call.route==='result'),false,mode);assert.ok(h.calls.filter(call=>call.route==='frame').length<=1);assert.ok((owned??f.owned())!.every(byte=>byte===0),mode);
+ }
+});
+test('cancel while custody read is pending discards and zeros the late owned frame',async()=>{
+ const f=pixelHarness(),h=f.h;let release!:(bytes:Buffer)=>void,entered!:()=>void;const reading=new Promise<void>(resolve=>entered=resolve);
+ h.options.frameTransfer={...h.options.frameTransfer!,readOwnedFrame:()=>{entered();return new Promise(resolve=>release=resolve);}};
+ const client=new WindowsGameHostClient(h.options);h.send(h.command);const running=client.run();await reading;
+ h.send({protocol,kind:'cancel',attachmentId:h.command.attachmentId,commandId:h.command.commandId,requestDigest:h.command.requestDigest,cancellationId:h.request.cancellationId,reason:'cancelled'});await assert.rejects(running);const late=Buffer.from(f.png);release(late);await new Promise(resolve=>setImmediate(resolve));assert.ok(late.every(byte=>byte===0));assert.equal(h.calls.some(call=>call.route==='frame'||call.route==='result'),false);
+});
+test('finite one-frame count prevents a second native entry and invalid opt-in stays inert',async()=>{
+ const f=pixelHarness(),h=f.h;h.handlers.result=body=>{const request=observe();request.scope=h.request.scope;const second={...h.command,commandId:randomUUID(),requestDigest:gameHostDigest(request),request,expiresAt:request.deadlineAt};setTimeout(()=>h.send(second),5);return response({protocol,attachmentId:body.attachmentId,commandId:body.commandId,resultDigest:body.resultDigest,accepted:true});};
+ await run(h);assert.equal(h.order.filter(x=>x==='native').length,1);assert.equal(h.calls.filter(x=>x.route==='frame').length,1);
+ for(const maximumFrames of [0,65])assert.throws(()=>new WindowsGameHostClient({...h.options,frameTransfer:{...h.options.frameTransfer!,maximumFrames}}));
 });

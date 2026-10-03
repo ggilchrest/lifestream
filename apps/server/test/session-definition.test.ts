@@ -8,6 +8,24 @@ import {createLifestreamServer} from '../src/index.ts';
 import {loadProfile} from '../src/config/loader.ts';
 import {FixtureInferenceProvider} from '@lifestream/runtime/inference/fixture';
 
+test('authenticated session context projects only its own active conversation for native binding',{timeout:15000},async t=>{
+ const root=await mkdtemp(join(tmpdir(),'ls-session-binding-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const config=loadProfile('test');config.storage={databasePath:join(root,'state.sqlite'),artifactDirectory:join(root,'artifacts')};config.authority.authentication='local-password';
+ const password=randomBytes(24).toString('hex'),installerToken=randomBytes(32).toString('hex'),app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'auth'),installerToken}});
+ await app.start();t.after(()=>app.shutdown());const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={origin:base,'content-type':'application/json'};
+ const request=(path:string,body?:unknown)=>fetch(base+path,{method:body===undefined?'GET':'POST',headers,...(body===undefined?{}:{body:JSON.stringify(body)})});
+ assert.equal((await request('/api/runtime/v1/session-context')).status,401);
+ const setup=await request('/api/auth/v1/setup',{username:'owner',password,installerToken});headers.cookie=setup.headers.get('set-cookie')!.split(';')[0]!;headers['x-lifestream-csrf']=(await setup.json()).session.csrfToken;
+ assert.equal((await(await request('/api/runtime/v1/session-context')).json()).conversationId,null);
+ const bindingKey=randomUUID();await request('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession',bindingKey});
+ const first=await(await request('/api/runtime/v1/session-context')).json();assert.match(first.conversationId,/^[a-f0-9-]{36}$/);const oldCookie=headers.cookie;
+ const signIn=await request('/api/auth/v1/sign-in',{username:'owner',password});headers.cookie=signIn.headers.get('set-cookie')!.split(';')[0]!;headers['x-lifestream-csrf']=(await signIn.json()).session.csrfToken;
+ await request('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession',bindingKey});
+ const second=await(await request('/api/runtime/v1/session-context')).json();assert.notEqual(second.conversationId,first.conversationId);assert.equal(second.endpoint.endpointId,first.endpoint.endpointId);
+ const unchanged=await(await fetch(base+'/api/runtime/v1/session-context',{headers:{...headers,cookie:oldCookie}})).json();assert.equal(unchanged.conversationId,first.conversationId);
+ await request('/api/auth/v1/sign-out',{});assert.equal((await request('/api/runtime/v1/session-context')).status,401);
+});
+
 test('structured session settings preview without mutation and apply only current authenticated revisions',{timeout:15000},async t=>{
  const root=await mkdtemp(join(tmpdir(),'ls-session-definition-'));t.after(()=>rm(root,{recursive:true,force:true}));const config=loadProfile('test');config.storage={databasePath:join(root,'state.sqlite'),artifactDirectory:join(root,'artifacts')};config.authority.authentication='local-password';const password=randomBytes(24).toString('hex'),installerToken=randomBytes(32).toString('hex');let app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,'auth'),installerToken},audiencePrivacy:{sourceIds:[]}});await app.start();t.after(()=>app.shutdown());const port=app.address().port,base=`http://127.0.0.1:${port}`,headers:Record<string,string>={origin:base,'content-type':'application/json'};
  const request=(path:string,body?:unknown,extra={})=>fetch(base+path,{method:body===undefined?'GET':'POST',headers:{...headers,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});const path='/api/runtime/v1/session-definition';assert.equal((await request(path)).status,401);const setup=await request('/api/auth/v1/setup',{username:'owner',password,installerToken});headers.cookie=setup.headers.get('set-cookie')!.split(';')[0]!;headers['x-lifestream-csrf']=(await setup.json()).session.csrfToken;assert.equal((await request(path)).status,403);

@@ -1,0 +1,23 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {createRequire} from 'node:module';
+import {AudienceCoordinator} from '../src/runtime/audience.ts';
+import {gameHostMessage} from '../../../packages/contracts/src/game-host.ts';
+const {DesktopGameHostSessionBroker}=createRequire(import.meta.url)('../../desktop/game-host-session-broker.cjs');
+test('backend restart invalidates a temporary declaration despite unchanged stored disclosure and authentication',async t=>{
+ const now=Date.parse('2026-10-03T04:00:00Z'),identity={principalId:randomUUID(),sessionId:randomUUID(),endpointId:randomUUID()};
+ let audience=new AudienceCoordinator({now:()=>now});t.after(()=>audience.close());
+ const authentication={principalId:identity.principalId,sessionId:identity.sessionId,owner:true,adminExpiresAt:new Date(now+60000).toISOString(),csrfToken:'SYNTHETIC_RESTART_FIXTURE_NO_REAL_CREDENTIAL_123456'};
+ const endpoint={endpointId:identity.endpointId,ownership:'personal',privacyClass:'personal',health:'healthy'},conversationId=randomUUID(),calls:string[]=[];
+ const projection=()=>({ended:false,conversationId,revision:1,endpoint,runtimeSelfContext:{audienceScope:audience.snapshot(identity).privateAllowed?'authenticatedSession':'unknown',sourceRevision:'c'.repeat(64)}});
+ const broker=new DesktopGameHostSessionBroker({now:()=>now,gameHostMessage,partition:{async fetch(url:string,init:{method:string}){calls.push(init.method+' '+new URL(url).pathname);return new Response(JSON.stringify(url.endsWith('/api/auth/v1/session')?authentication:projection()),{headers:{'content-type':'application/json'}});}}});t.after(()=>broker.stop());
+ assert.equal((await broker.readiness()).blockingReason,'audience_unavailable');
+ audience.declare(identity,'solo',300);assert.equal((await broker.readiness()).ready,true);
+ const binding=await broker.sessionBinding();assert.equal(binding.sessionId,identity.sessionId);
+ audience.close();audience=new AudienceCoordinator({now:()=>now});
+ assert.equal(projection().endpoint.privacyClass,'personal','stored Session disclosure survives restart');
+ const readiness=await broker.readiness();assert.equal(readiness.authenticated,true);assert.equal(readiness.administrationCurrent,true);assert.equal(readiness.contextCurrent,true);assert.equal(readiness.audienceCurrent,false);assert.equal(readiness.ready,false);assert.equal(readiness.blockingReason,'audience_unavailable');
+ await assert.rejects(broker.sessionBinding(),error=>error.code==='audience_unavailable');assert.ok(calls.every(call=>call.startsWith('GET ')),'readiness never recreates a declaration or refreshes administration');
+ audience.declare(identity,'solo',300);assert.equal((await broker.readiness()).ready,true,'only a fresh synthetic owner declaration restores this fixture');
+});

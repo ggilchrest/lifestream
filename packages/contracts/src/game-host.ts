@@ -81,3 +81,22 @@ export function gameHostMessage<N extends GameHostMessageName>(name:N,input:unkn
 export function gameHostCompletionMatches(command:GameHostCommand,completion:GameHostCompletion):boolean{
  return completion.attachmentId===command.attachmentId&&completion.commandId===command.commandId&&completion.requestDigest===command.requestDigest&&completion.result.operation===command.request.operation&&completion.result.requestId===command.request.requestId&&completion.result.correlationId===command.request.correlationId&&gameHostDigest(completion.result)===completion.resultDigest;
 }
+
+/** Dedicated owned-PNG lane. Ordinary control messages retain their original
+ * bound. This path supplies no source, actor, disclosure or controller grant. */
+export const GAME_HOST_FRAME_LIMITS=Object.freeze({pngBytes:2097152,longEdge:1024,ageMs:30000});
+export function parseGameHostFramePath(input:unknown):Readonly<{attachmentId:string;commandId:string;requestDigest:string;mediaRef:string}>|null{
+ if(typeof input!=='string'||!input.startsWith(GAME_HOST_BASE_PATH+'/frame/'))return null;
+ const parts=input.slice((GAME_HOST_BASE_PATH+'/frame/').length).split('/');
+ if(parts.length!==4||!uuid(parts[0])||!uuid(parts[1])||!digest(parts[2])||!uuid(parts[3]))return null;
+ return Object.freeze({attachmentId:parts[0]!,commandId:parts[1]!,requestDigest:parts[2]!,mediaRef:parts[3]!});
+}
+export function gameHostFramePath(command:GameHostCommand,mediaRef:string):string{
+ const checked=gameHostMessage('event',command);
+ if(!checked||checked.kind!=='command'||checked.request.operation!=='GameActivityAdapter.observe'||!uuid(mediaRef))throw Error('invalid_game_host_frame');
+ return GAME_HOST_BASE_PATH+'/frame/'+[checked.attachmentId,checked.commandId,checked.requestDigest,mediaRef].join('/');
+}
+export function gameHostFrameAccepted(input:unknown):boolean{
+ const value=boundedGameDataSnapshot(input,GAME_HOST_LIMITS.messageBytes);
+ return !!value&&typeof value==='object'&&!Array.isArray(value)&&closed(value as Record<string,unknown>,['accepted'])&&(value as Record<string,unknown>).accepted===true;
+}

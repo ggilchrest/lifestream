@@ -1,26 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {randomBytes,randomUUID} from 'node:crypto';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {randomBytes,randomUUID,createHash} from 'node:crypto';
+import {crc32,deflateSync} from 'node:zlib';
+import {mkdtemp,rm,readdir,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {request as httpRequest} from 'node:http';
+import {createReviewedGameObservationComposition,validateReviewedGameObservationRun,qualifiedCtVisionCurrent,type ReviewedGameObservationRun} from '../src/runtime/reviewed-game-observation.ts';
+import {UnderstandingWorkCoordinator} from '@lifestream/runtime/understanding/coordinator';
 import {GAME_HOST_PROTOCOL as protocol,gameHostDigest} from '@lifestream/contracts/game-host';
 import {ActivityCheckpointRepository} from '../../../packages/storage-sqlite/src/game-activity.ts';
 import {scriptedGameBounds} from '../../../packages/runtime/test/fixtures/game-policy.ts';
 import {createLifestreamServer} from '../src/index.ts';
 import {loadProfile} from '../src/config/loader.ts';
 import {fixture} from './fixtures/game-host.ts';
-import type {GameHostOptions,GameHostJoin} from '../src/runtime/game-host-port.ts';
+import type {GameHostOptions,GameHostJoin,GameHostPort} from '../src/runtime/game-host-port.ts';
 import {isDeepStrictEqual} from 'node:util';
 import {selectGameCampaignContext} from '@lifestream/runtime/activity/game-journal';
 import {requestForFinalizedTurn} from '@lifestream/runtime/inference/prompt';
 import type {ActivityScope} from '@lifestream/contracts/game-activity';
 const secret=()=>`synthetic-${randomBytes(24).toString('hex')}`;
-async function setup(t:import('node:test').TestContext,enabled=true,runtimeEnabled=false){
+async function setup(t:import('node:test').TestContext,enabled=true,runtimeEnabled=false,ownedFrames=false){
  const root=await mkdtemp(join(tmpdir(),'ls-host-http-'));t.after(()=>rm(root,{recursive:true,force:true}));let now=Date.now(),qualified=true,approved=true,hostJoin:GameHostJoin|undefined,approvedScope:ActivityScope|undefined;const environmentId=randomUUID(),installerToken=secret(),approvedUntil=new Date(Date.now()+60000).toISOString();
  const config=loadProfile('test');if(runtimeEnabled)config.profile='ai5090';config.authority.authentication='local-password';config.storage={databasePath:join(root,'db.sqlite'),artifactDirectory:join(root,'artifacts')};
- const gameHost:GameHostOptions={maxAttachments:2,maxDurationMs:10000,createRepository:database=>new ActivityCheckpointRepository(database,{maxRuns:4,maxReservations:8,maxControllerReservations:8,maxCheckpointBytes:32768,scopeCurrent:()=>qualified,quarantined:()=>false,policyFor:()=>({enabled:true,revision:1,retentionMs:3600000,bounds:structuredClone(scriptedGameBounds)}),allowCreate:()=>true,checkpointCurrent:()=>qualified,transitionCurrent:()=>true,planningCurrent:()=>qualified,usageCurrent:()=>qualified,controllerCurrent:()=>qualified,controllerUsageCurrent:()=>qualified}),resolveAttachment:(_actor,metadata)=>{const {protocol:_,...binding}=metadata;return qualified?binding:null;},bindingCurrent:()=>qualified,controllerCurrent:()=>qualified,boundary:{sourceAvailable:()=>qualified,acceptAction:()=>qualified,acceptObservation:()=>qualified}};
+ const gameHost:GameHostOptions={...(ownedFrames?{ownedFrames:true as const}:{}),maxAttachments:2,maxDurationMs:10000,createRepository:database=>new ActivityCheckpointRepository(database,{maxRuns:4,maxReservations:8,maxControllerReservations:8,maxCheckpointBytes:32768,scopeCurrent:()=>qualified,quarantined:()=>false,policyFor:()=>({enabled:true,revision:1,retentionMs:3600000,bounds:structuredClone(scriptedGameBounds)}),allowCreate:()=>true,checkpointCurrent:()=>qualified,transitionCurrent:()=>true,planningCurrent:()=>qualified,usageCurrent:()=>qualified,controllerCurrent:()=>qualified,controllerUsageCurrent:()=>qualified}),resolveAttachment:(_actor,metadata)=>{const {protocol:_,...binding}=metadata;return qualified?binding:null;},bindingCurrent:()=>qualified,controllerCurrent:()=>qualified,boundary:{sourceAvailable:()=>qualified,acceptAction:()=>qualified,acceptObservation:()=>qualified}};
  gameHost.onAttached=value=>hostJoin=value;
  const app=createLifestreamServer({config,sessionEnvironmentId:environmentId,localAuth:{stateDirectory:join(root,'auth'),installerToken,now:()=>now},audiencePrivacy:{sourceIds:[]},...(enabled?{gameHost}:{}),...(runtimeEnabled?{gameRuntime:{resolveApproval:scope=>approved&&approvedScope&&isDeepStrictEqual(scope,approvedScope)?{scope:structuredClone(approvedScope),approvedUntil,maximumRunMs:30000,maximumPlanningSteps:2,observations:true,campaignJournal:true,controllerInput:false,memoryEpisodes:false}:null,sourceCurrent:()=>qualified}}:{})});await app.start();t.after(()=>app.shutdown());
  const base=`http://127.0.0.1:${app.address().port}`,headers:Record<string,string>={origin:base,'content-type':'application/json'};
@@ -80,4 +83,101 @@ for(const cause of ['logout','approval','source']as const)test('scoped productio
  const s=await setup(t,true,true),response=await s.request(s.path+'attach',s.metadata);assert.equal(response.status,200);const runtime=s.hostJoin().runtime!;
  if(cause==='logout')assert.equal((await s.request('/api/auth/v1/sign-out',{})).status,200);if(cause==='approval')s.withdrawApproval();if(cause==='source')s.withdraw();
  assert.equal(runtime.isCurrent(),false);assert.throws(()=>runtime.preparePlanning(selectGameCampaignContext(s.f.f.input,s.f.f.boundary),{maximumInputTokens:4096,maximumOutputTokens:32,maximumOutputBytes:8192,maximumChunks:128,deadlineMs:10000}),/unavailable/);assert.equal(s.f.calls(),0);
+});
+
+function ownedPng(){
+ const chunk=(type:string,data:Buffer)=>{const head=Buffer.alloc(8),tail=Buffer.alloc(4);head.writeUInt32BE(data.length);head.write(type,4);tail.writeUInt32BE(crc32(Buffer.concat([head.subarray(4),data])));return Buffer.concat([head,data,tail]);},header=Buffer.alloc(13);
+ header.writeUInt32BE(1,0);header.writeUInt32BE(1,4);header[8]=8;header[9]=2;
+ return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(Buffer.from([0,255,0,0]))),chunk('IEND',Buffer.alloc(0))]);
+}
+async function ownedFrameSetup(t:import('node:test').TestContext){
+ const s=await setup(t,true,false,true),attached=await s.request(s.path+'attach',s.metadata);assert.equal(attached.status,200);
+ const attachment=await attached.json() as {attachmentId:string},controller=new AbortController();t.after(()=>controller.abort());
+ const scope=s.metadata.scope,request:import('@lifestream/contracts/game-activity').GameObserveRequest={schemaVersion:'1.0.0',operation:'GameActivityAdapter.observe',requestId:randomUUID(),correlationId:randomUUID(),deadlineAt:new Date(Date.now()+5000).toISOString(),cancellationId:randomUUID(),executionMode:'normal',scope,idempotencyKey:randomUUID(),payload:{expectedPinsDigest:s.metadata.pinsDigest,afterActionId:null,maxScreenshots:1}};
+ const pending=s.hostJoin().adapter.observe(request,{signal:controller.signal,isCurrent:()=>true}).then(result=>({result,error:null}),error=>({result:null,error}));
+ const next=await s.request(s.path+'next',{protocol,attachmentId:attachment.attachmentId});assert.equal(next.status,200);
+ const event=await next.json() as import('@lifestream/contracts/game-host').GameHostCommand;assert.equal(event.kind,'command');
+ const admission={protocol,attachmentId:event.attachmentId,commandId:event.commandId,requestDigest:event.requestDigest},bytes=ownedPng(),mediaRef=randomUUID(),time=new Date().toISOString();
+ const observation=structuredClone(s.f.f.input.observation);observation.scope=structuredClone(scope);observation.facts=[];observation.visibleState=[];observation.capturedAt=time;observation.receivedAt=time;
+ const shot={screenshotId:mediaRef,mediaRef,sha256:createHash('sha256').update(bytes).digest('hex'),byteLength:bytes.length,mediaType:'image/png' as const,width:1,height:1,capturedAt:time,frameNumber:observation.frameNumber,expiresAt:new Date(Date.now()+10000).toISOString()};observation.screenshots=[shot];
+ const result:import('@lifestream/contracts/game-activity').GameObserveResult={schemaVersion:'1.0.0',operation:request.operation,requestId:request.requestId,correlationId:request.correlationId,providerRef:s.metadata.providerRef,completedAt:time,outcome:{status:'succeeded',error:null,payload:{observation,reconciledAction:null}}};
+ const port=(s.app as unknown as {gameHost:GameHostPort}).gameHost;
+ const upload=(data:Buffer=bytes,extra:Record<string,string>={},digest=event.requestDigest)=>fetch(`http://127.0.0.1:${s.app.address().port}${s.path}frame/${event.attachmentId}/${event.commandId}/${digest}/${mediaRef}`,{method:'POST',headers:{...s.headers,'content-type':'image/png',...extra},body:data});
+ const complete=()=>s.request(s.path+'result',{...admission,result,resultDigest:gameHostDigest(result)});
+ return {s,port,controller,pending,event,admission,bytes,observation,shot,upload,complete};
+}
+test('owned PNG HTTP uses real auth, admitted observe identity and single-use exact metadata consumption',async t=>{
+ const f=await ownedFrameSetup(t);
+ assert.equal((await f.upload(f.bytes,{cookie:''})).status,401);
+ assert.equal((await f.upload(f.bytes,{origin:'https://fixture.invalid'})).status,403);
+ assert.equal((await f.upload(f.bytes,{'x-lifestream-csrf':'wrong'})).status,403);
+ assert.equal((await f.upload()).status,409); // no native admission yet
+ assert.equal((await f.s.request(f.s.path+'admit',f.admission)).status,200);
+ assert.equal((await f.upload(f.bytes,{},'f'.repeat(64))).status,409);
+ assert.equal((await f.upload()).status,200);assert.equal((await f.upload()).status,409);
+ assert.equal((await f.complete()).status,200);assert.equal((await f.pending).result!.outcome.status,'succeeded');
+ assert.equal(f.port.consumeOwnedFrame({...f.observation.scope,runId:randomUUID()},f.observation,f.shot),null);
+ assert.equal(f.port.consumeOwnedFrame(f.observation.scope,f.observation,{...f.shot,sha256:'f'.repeat(64)}),null);
+ const owned=f.port.consumeOwnedFrame(f.observation.scope,f.observation,f.shot);assert.deepEqual(owned,f.bytes);
+ assert.equal(f.port.consumeOwnedFrame(f.observation.scope,f.observation,f.shot),null);owned!.fill(0);
+ assert.equal(f.s.app.database.connection.prepare('SELECT count(*) AS n FROM game_host_dispatch').get()!.n,0);
+});
+for(const mode of ['corrupt','oversize','mediaType'] as const)test('owned PNG HTTP rejects '+mode+' and cancels the one charged upload',async t=>{
+ const f=await ownedFrameSetup(t);assert.equal((await f.s.request(f.s.path+'admit',f.admission)).status,200);
+ const bytes=mode==='corrupt'?Buffer.from(f.bytes):mode==='oversize'?Buffer.alloc(2097153):f.bytes;if(mode==='corrupt')bytes[bytes.length-1]^=1;
+ const response=await f.upload(bytes,mode==='mediaType'?{'content-type':'application/octet-stream'}:{});assert.notEqual(response.status,200);
+ assert.ok((await f.pending).error instanceof Error);assert.equal((await f.upload()).status,409);
+ assert.equal(f.port.consumeOwnedFrame(f.observation.scope,f.observation,f.shot),null);
+});
+for(const reason of ['cancellation','source','logout','metadata'] as const)test('owned PNG '+reason+' discards and zeros bytes before use',async t=>{
+ const f=await ownedFrameSetup(t);assert.equal((await f.s.request(f.s.path+'admit',f.admission)).status,200);assert.equal((await f.upload()).status,200);
+ const held=(f.port as unknown as {frame:{bytes:Buffer}}).frame.bytes;
+ if(reason==='metadata'){f.shot.sha256='f'.repeat(64);assert.equal((await f.complete()).status,409);f.controller.abort();}
+ if(reason==='cancellation')f.controller.abort();
+ if(reason==='source'){f.s.withdraw();await f.s.request(f.s.path+'next',{protocol,attachmentId:f.event.attachmentId});}
+ if(reason==='logout')assert.equal((await f.s.request('/api/auth/v1/sign-out',{})).status,200);
+ assert.ok((await f.pending).error instanceof Error);assert.ok(held.every(byte=>byte===0));
+ assert.equal(f.port.consumeOwnedFrame(f.observation.scope,f.observation,f.shot),null);
+});
+
+test('owned PNG expiry zeros retained bytes and forbids late consumption',async t=>{
+ const f=await ownedFrameSetup(t);assert.equal((await f.s.request(f.s.path+'admit',f.admission)).status,200);assert.equal((await f.upload()).status,200);
+ f.shot.expiresAt=new Date(Date.now()+150).toISOString();assert.equal((await f.complete()).status,200);assert.ok((await f.pending).result);
+ const held=(f.port as unknown as {frame:{bytes:Buffer}}).frame.bytes;await new Promise(resolve=>setTimeout(resolve,180));
+ assert.ok(held.every(byte=>byte===0));assert.equal(f.port.consumeOwnedFrame(f.observation.scope,f.observation,f.shot),null);
+});
+async function compositionFixture(t:import('node:test').TestContext){
+ const s=await setup(t),attachment=structuredClone(s.metadata),root=await mkdtemp(join(tmpdir(),'ls-observation-composition-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ // Synthetic trusted host ports exercise composition mechanics, never native qualification.
+ attachment.scope.contextBinding.sessionId=null as unknown as string;attachment.scope.contextBinding.conversationId=null as unknown as string;
+ const configuration:ReviewedGameObservationRun={schemaVersion:'1.0.0',recordType:'reviewedGameObservationRun',approvedUntil:new Date(Date.now()+60000).toISOString(),attachment,vision:{pid:1,processStartTicks:'1',configurationDigest:'e'.repeat(64),qualificationRef:'fixture:synthetic-not-native-qualification',qualificationReceiptSha256:'f'.repeat(64),binarySha256:'7c1f73825337d8839d21debc4340ebdbca1da508a538cec50fe42f86e486d66f',projectorSha256:'a2c009ea5ab5479383729820f49163e067ee4e46817e8d875f0cead17ffd2c46',modelSha256:'66bb238d41de38b11dd406d932d8fb97433d529022cef60f2f422b9221cae743'}};
+ let current=true,calls=0,observes=0,closed=0;let owned:Buffer|undefined;
+ const coordinator=new UnderstandingWorkCoordinator({pressureAllowsWork:()=>true}),bytes=ownedPng(),observation=structuredClone(s.f.f.input.observation),time=new Date().toISOString(),mediaRef=randomUUID();
+ observation.scope=structuredClone(s.metadata.scope);observation.facts=[];observation.visibleState=[];observation.capturedAt=observation.receivedAt=time;observation.screenshots=[{screenshotId:mediaRef,mediaRef,sha256:createHash('sha256').update(bytes).digest('hex'),byteLength:bytes.length,mediaType:'image/png',width:1,height:1,capturedAt:time,frameNumber:observation.frameNumber,expiresAt:new Date(Date.now()+10000).toISOString()}];
+ const provider={async *generateGameFrame(){calls++;yield {kind:'text',text:JSON.stringify({kind:'unknown',scene:'One synthetic red pixel.',text:[],uncertainty:'Synthetic fixture; no native game.'})};yield {kind:'done'};}};
+ const ports={database:()=>s.app.database,provider:()=>provider as unknown as import('@lifestream/providers-sglang').SglangInferenceProvider,runBackground:<T>(work:import('@lifestream/runtime/understanding/coordinator').BackgroundWork<T>)=>coordinator.run(work),runtimeCurrent:()=>current,visionCurrent:()=>current,configurationDigest:()=>'e'.repeat(64),artifactDirectory:()=>root,readFrame:()=>owned=Buffer.from(bytes),closeAttachment:()=>{closed++;}};
+ const composition=createReviewedGameObservationComposition(configuration,ports);t.after(()=>composition.stop());
+ const actor={principalId:s.session.principalId,sessionId:s.session.sessionId,isCurrent:()=>true};
+ const hostJoin={attachmentId:randomUUID(),scope:s.metadata.scope,runtime:{isCurrent:()=>current},adapter:{observe:async(request:import('@lifestream/contracts/game-activity').GameObserveRequest)=>{observes++;return {schemaVersion:'1.0.0',operation:request.operation,requestId:request.requestId,correlationId:request.correlationId,providerRef:s.metadata.providerRef,completedAt:time,outcome:{status:'succeeded',error:null,payload:{observation:structuredClone(observation),reconciledAction:null}}};}}} as unknown as GameHostJoin;
+ const receipt=async()=>{for(let i=0;i<100;i++){const files=await readdir(root);if(files.length)return JSON.parse(await readFile(join(root,files[0]!),'utf8'));await new Promise(resolve=>setTimeout(resolve,5));}throw Error('Synthetic composition receipt missing');};
+ return {s,configuration,composition,actor,hostJoin,provider,receipt,coordinator,counts:()=>({calls,observes,closed}),owned:()=>owned,withdraw:()=>current=false};
+}
+test('reviewed composition fixture derives only actual transport IDs, observes once through existing coordinator and writes one metadata receipt',async t=>{
+ const f=await compositionFixture(t);
+ assert.equal(f.composition.gameHost.resolveAttachment(f.actor,{...f.s.metadata,sourceRevision:'c'.repeat(64)}),null);
+ assert.equal(f.composition.gameHost.resolveAttachment(f.actor,{...f.s.metadata,scope:{...f.s.metadata.scope,contextBinding:{...f.s.metadata.scope.contextBinding,conversationId:randomUUID()}}}),null);
+ assert.ok(f.composition.gameHost.resolveAttachment(f.actor,f.s.metadata));assert.equal(f.composition.gameHost.resolveAttachment(f.actor,f.s.metadata),null);
+ assert.equal(f.composition.gameRuntime.resolveApproval(f.s.metadata.scope)!.controllerInput,false);assert.equal(f.composition.gameRuntime.resolveApproval(f.s.metadata.scope)!.memoryEpisodes,false);
+ f.composition.gameHost.onAttached!(f.hostJoin);const receipt=await f.receipt();assert.equal(receipt.state,'observed');assert.deepEqual(f.counts(),{calls:1,observes:1,closed:1});assert.ok(f.owned()!.every(b=>b===0));assert.equal(f.coordinator.isIdle(),true);
+ assert.equal(receipt.planningCalls,0);assert.equal(receipt.controllerCalls,0);assert.equal(receipt.memoryWrites,0);assert.equal(receipt.visionCalls,1);assert.equal(receipt.rawFramesRetained,false);assert.equal(receipt.meaningfulGameplayAccepted,false);assert.deepEqual(receipt.observation.visibleState,[]);assert.ok(receipt.observation.facts.every((fact:{untrusted:boolean;epistemicKind:string})=>fact.untrusted&&fact.epistemicKind==='inference'));
+ assert.throws(()=>f.composition.gameHost.onAttached!(f.hostJoin));
+});
+for(const changed of ['configuration','providerWithdrawal'] as const)test('reviewed composition fixture discards '+changed+' during selected provider inference',async t=>{
+ const f=await compositionFixture(t);assert.ok(f.composition.gameHost.resolveAttachment(f.actor,f.s.metadata));
+ f.provider.generateGameFrame=async function*(){if(changed==='configuration')f.configuration.vision.configurationDigest='a'.repeat(64);else f.withdraw();yield {kind:'text',text:JSON.stringify({kind:'unknown',scene:'Synthetic pixel.',text:[],uncertainty:'Fixture only.'})};yield {kind:'done'};};
+ f.composition.gameHost.onAttached!(f.hostJoin);const receipt=await f.receipt();assert.equal(receipt.state,'unavailable');assert.equal(receipt.observation,null);assert.equal(f.counts().closed,1);assert.ok(f.owned()!.every(b=>b===0));assert.equal(f.coordinator.isIdle(),true);
+});
+test('reviewed configuration rejects guessed transport IDs, extended expiry and artifact mismatch; synthetic PID never qualifies production',async t=>{
+ const f=await compositionFixture(t);assert.equal(qualifiedCtVisionCurrent(f.configuration,'e'.repeat(64)),false);
+ for(const mode of ['session','expiry','projector','extra']as const){const c=structuredClone(f.configuration);if(mode==='session')(c.attachment as typeof f.s.metadata).scope.contextBinding.sessionId=randomUUID();if(mode==='expiry')c.approvedUntil=new Date(Date.now()+120001).toISOString();if(mode==='projector')c.vision.projectorSha256='a'.repeat(64);if(mode==='extra')Object.assign(c.vision,{controllerInput:true});assert.throws(()=>validateReviewedGameObservationRun(c),mode);}
 });

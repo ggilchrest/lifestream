@@ -61,7 +61,12 @@ export function createGameObservationReader(options:{
    const data=boundedGameDataSnapshot(await bounded(pinned.decode({purpose:pinned.purpose,observation,screenshot:shot,bytes},signal)),32768) as {facts:G.PlayerVisibleFact[];visibleState:G.PlayerVisibleStateValue[]}|null;
    if(!data||Object.keys(data).sort().join(',')!=='facts,visibleState'||!current()||createHash('sha256').update(bytes).digest('hex')!==shot.sha256||Date.parse(shot.expiresAt)<=Date.now()||Date.now()-captured>maximumObservationAgeMs||!safe(()=>pinned.current(observation)))return null;
    if(!Array.isArray(data.facts)||!Array.isArray(data.visibleState)||data.facts.some(fact=>fact.untrusted!==true||fact.sourceKind!=='playerVisibleGameObservation'||fact.sourceScreenshotIds.length!==1||fact.sourceScreenshotIds[0]!==shot.screenshotId||fact.extractionKind==='visibleUiExtractor'&&fact.extractorRef!==pinned.configurationRef)||data.visibleState.some(field=>!pinned.allowedVisibleFieldIds.includes(field.fieldId)||field.visibility!=='visibleNow'||field.lastObservedRef!==observation.observationId||field.timelineId!==observation.scope.timelineId||field.decoderRevision!==pinned.decoderRevision||field.manifestDigest!==pinned.manifestDigest||Date.parse(field.observedAt)<captured||Date.parse(field.observedAt)>Date.now()||Date.parse(field.freshUntil)<=Date.now()||Date.parse(field.freshUntil)>Date.parse(shot.expiresAt)))return null;
-   const interpreted={...observation,...data,interpretedAt:new Date().toISOString(),providerConfigurationRef:pinned.configurationRef};
+   // A tentative vision-only decoder cannot replace independently qualified
+   // native UI fields. Only still-fresh fields from this exact observation are
+   // retained; the vision decoder contributes no controller-visible values.
+   const visionOnly=pinned.capability.kind==='gameVision'&&pinned.allowedVisibleFieldIds.length===0&&data.visibleState.length===0;
+   const nativeFields=visionOnly?observation.visibleState.filter(field=>field.visibility==='visibleNow'&&field.lastObservedRef===observation.observationId&&field.timelineId===observation.scope.timelineId&&Date.parse(field.observedAt)>=captured&&Date.parse(field.observedAt)<=Date.now()&&Date.parse(field.freshUntil)>Date.now()&&Date.parse(field.freshUntil)<=Date.parse(shot.expiresAt)):[];
+   const interpreted={...observation,...data,...(visionOnly?{facts:[...observation.facts,...data.facts],visibleState:nativeFields}:{}),interpretedAt:new Date().toISOString(),providerConfigurationRef:pinned.configurationRef};
    return validator.validate(schema+'GameObservation',interpreted).valid&&current()?interpreted:null;
   }catch{return null;}finally{bytes?.fill(0);clearTimeout(timer);controller.abort();}
  };

@@ -1,5 +1,7 @@
+import {createHash} from 'node:crypto';
+import {inspectGamePng} from './frame-custody.ts';
 import {isDeepStrictEqual} from 'node:util';
-import {GAME_HOST_PROTOCOL as protocol,GAME_HOST_BASE_PATH,GAME_HOST_LIMITS,gameHostMessage,gameHostDigest,gameHostCompletionMatches} from '@lifestream/contracts/game-host';
+import {GAME_HOST_PROTOCOL as protocol,GAME_HOST_BASE_PATH,GAME_HOST_LIMITS,GAME_HOST_FRAME_LIMITS,gameHostFramePath,gameHostFrameAccepted,gameHostMessage,gameHostDigest,gameHostCompletionMatches} from '@lifestream/contracts/game-host';
 import type {GameHostAttach,GameHostAttachment,GameHostCommand,GameHostRequest,GameHostResult,GameHostMessages,GameHostMessageName} from '@lifestream/contracts/game-host';
 import type * as G from '@lifestream/contracts/game-activity';
 import type {GameActivityAdapter,GameCallContext} from './port.js';
@@ -34,6 +36,9 @@ export interface WindowsGameHostClientOptions{
  /** Independently qualified safety path for the captured exact old input lease.
   * Completing this notification is not pause/neutralization evidence. */
  shutdownExactOldLease:(context:GameHostFenceContext)=>Promise<void>;
+ /** Explicit finite trusted-main opt-in. Must read the same already-qualified
+  * native custody; no URL/path or credential can come from a wire request. */
+ frameTransfer?:Readonly<{maximumFrames:number;maximumBytes:number;maximumLongEdge:number;maximumAgeMs:number;readOwnedFrame:(request:G.GameObserveRequest,observation:G.GameObservation,context:GameCallContext)=>Promise<Buffer|null>}>;
  httpTimeoutMs:number;
  /** Local emulator boot, mutual authentication and GUI proof have their own
   * finite budget. HTTP request deadlines remain independent. */
@@ -42,10 +47,11 @@ export interface WindowsGameHostClientOptions{
  shutdownTimeoutMs:number;
 }
 type Active={command:GameHostCommand;controller:AbortController;entryAttempted:boolean;entered:boolean;wallDeadline:number;monoDeadline:number;timer:ReturnType<typeof setTimeout>;done:Promise<void>};
-function bounded<T>(promise:Promise<T>,signal:AbortSignal):Promise<T>{return new Promise((resolve,reject)=>{
- const abort=()=>{signal.removeEventListener('abort',abort);reject(signal.reason??new GameHostClientError('cancelled'));};
- if(signal.aborted){void promise.catch(()=>{});abort();return;}signal.addEventListener('abort',abort,{once:true});
- promise.then(value=>{signal.removeEventListener('abort',abort);resolve(value);},error=>{signal.removeEventListener('abort',abort);reject(error);});
+function bounded<T>(promise:Promise<T>,signal:AbortSignal,dispose?:(value:T)=>void):Promise<T>{return new Promise((resolve,reject)=>{
+ let cancelled=false;
+ const abort=()=>{cancelled=true;signal.removeEventListener('abort',abort);reject(signal.reason??new GameHostClientError('cancelled'));};
+ if(signal.aborted)abort();else signal.addEventListener('abort',abort,{once:true});
+ promise.then(value=>{signal.removeEventListener('abort',abort);if(cancelled){dispose?.(value);return;}resolve(value);},error=>{signal.removeEventListener('abort',abort);reject(error);});
 });}
 function finite(value:number,min:number,max:number){return Number.isSafeInteger(value)&&value>=min&&value<=max;}
 /** Inert until every trusted port is supplied. One finite attachment, one poll,
@@ -57,7 +63,7 @@ export class WindowsGameHostClient{
  private active:Active|undefined;private lastEnteredAction:G.GameActionRequest|null=null;
  private started=false;private failure:GameHostClientFailure|undefined;private shutdown:Promise<void>|undefined;
  private attachmentDeadline=0;private attachmentMono=0;private attachmentTimer:ReturnType<typeof setTimeout>|undefined;
- private accepted=0;private admissions=0;private detachAttempted=false;
+ private accepted=0;private admissions=0;private detachAttempted=false;private frameAttempts=0;
  private resolveReady!:()=>void;private rejectReady!:(error:Error)=>void;
  readonly ready=new Promise<void>((resolve,reject)=>{this.resolveReady=resolve;this.rejectReady=reject;});
  constructor(input?:WindowsGameHostClientOptions){
@@ -68,7 +74,9 @@ export class WindowsGameHostClient{
    !['fetchAuthenticated','isScopeCurrent','sourceIsQualified','openNative','shutdownExactOldLease'].every(k=>typeof input[k as keyof WindowsGameHostClientOptions]==='function')||
    !['sourceAvailable','acceptObservation','acceptAction','reconcileEffect','admitRelease'].every(k=>typeof b[k as keyof GameAdapterBoundaryOptions]==='function')||
    !finite(input.httpTimeoutMs,1000,5000)||input.nativeStartupTimeoutMs!==undefined&&!finite(input.nativeStartupTimeoutMs,1,22000)||!finite(input.sessionDurationMs,1,600000)||!finite(input.shutdownTimeoutMs,1,5000))throw new GameHostClientError('unconfigured');
-  this.options=Object.freeze({...input,attach,nativeBoundary:Object.freeze({...b})});
+  const f=input.frameTransfer;
+  if(f&&(!finite(f.maximumFrames,1,64)||!finite(f.maximumBytes,1,GAME_HOST_FRAME_LIMITS.pngBytes)||!finite(f.maximumLongEdge,1,GAME_HOST_FRAME_LIMITS.longEdge)||!finite(f.maximumAgeMs,1,GAME_HOST_FRAME_LIMITS.ageMs)||typeof f.readOwnedFrame!=='function'))throw new GameHostClientError('unconfigured');
+  this.options=Object.freeze({...input,attach,nativeBoundary:Object.freeze({...b}),...(f?{frameTransfer:Object.freeze({...f})}:{})});
  }
  get snapshot(){return Object.freeze({configured:!!this.options,started:this.started,fenced:!!this.failure,reason:this.failure??null,nativeConnected:!!this.native&&!this.failure,attached:!!this.attachment&&!this.failure,backendUrl:WINDOWS_HOST_BACKEND_URL,admissionAttempts:this.admissions,acceptedIngress:this.accepted,activeCommandId:this.active?.command.commandId??null,pauseConfirmation:'unconfirmed',gameplayReady:false});}
  close(){this.fence('closed');}
@@ -137,6 +145,7 @@ export class WindowsGameHostClient{
  }
  private command(command:GameHostCommand){
   this.check(command.request.scope);const r=command.request,o=this.options!;
+  if(r.operation==='GameActivityAdapter.observe'&&o.frameTransfer){if(this.frameAttempts>=o.frameTransfer.maximumFrames)throw new GameHostClientError('expired');++this.frameAttempts;}
   if(this.active||command.attachmentId!==this.attachment!.attachmentId||r.operation!=='GameActivityAdapter.releaseControls'&&r.payload.expectedPinsDigest!==o.attach.pinsDigest)throw new GameHostClientError('invalidMessage');
   const keys=['command:'+command.commandId,'request:'+r.requestId,'idempotency:'+r.idempotencyKey,'cancel:'+r.cancellationId];
   if(r.operation==='GameActivityAdapter.applyController')keys.push('action:'+r.payload.actionId,'admission:'+r.payload.admission.admissionId,'invocation:'+r.payload.admission.capabilityInvocationId);
@@ -155,8 +164,29 @@ export class WindowsGameHostClient{
   if(!a.entered||result.providerRef!==this.options!.attach.providerRef)throw new GameHostClientError('invalidMessage');
   const completion=gameHostMessage('completion',{protocol,attachmentId:a.command.attachmentId,commandId:a.command.commandId,requestDigest:a.command.requestDigest,resultDigest:gameHostDigest(result),result});
   if(!completion||!gameHostCompletionMatches(a.command,completion))throw new GameHostClientError('invalidMessage');
+  if(r.operation==='GameActivityAdapter.observe'&&result.operation==='GameActivityAdapter.observe'&&result.outcome.status==='succeeded'&&this.options!.frameTransfer)await this.transferFrame(a,r,result,context);
   const reply=await this.post('result','completion',completion,'accepted',context.signal);this.checkActive(a);
   if(reply.attachmentId!==completion.attachmentId||reply.commandId!==completion.commandId||reply.resultDigest!==completion.resultDigest)throw new GameHostClientError('invalidMessage');this.accepted++;
+ }
+ private async transferFrame(a:Active,request:G.GameObserveRequest,result:G.GameObserveResult,context:GameCallContext){
+  const o=this.options!,f=o.frameTransfer!,observation=result.outcome.payload!.observation,shot=observation.screenshots[0];
+  let owned:Buffer|null=null,reader:ReadableStreamDefaultReader<Uint8Array>|undefined,responseBody:ReadableStream<Uint8Array>|null=null;
+  const current=()=>{this.checkActive(a);const now=Date.now();if(!shot||observation.screenshots.length!==1||shot.mediaRef!==shot.screenshotId||Date.parse(shot.capturedAt)>now||now-Date.parse(shot.capturedAt)>f.maximumAgeMs||Date.parse(shot.expiresAt)<=now||shot.byteLength>f.maximumBytes||Math.max(shot.width,shot.height)>f.maximumLongEdge||o.nativeBoundary.acceptObservation!(request,observation)!==true||owned&&(owned.length!==shot.byteLength||createHash('sha256').update(owned).digest('hex')!==shot.sha256))throw new GameHostClientError('scopeChanged');};
+  current();
+  const deadline=new AbortController(),timer=setTimeout(()=>deadline.abort(new GameHostClientError('transportLost')),o.httpTimeoutMs),signal=AbortSignal.any([context.signal,deadline.signal]);
+  try{
+   const reading=Promise.resolve().then(()=>f.readOwnedFrame(request,observation,{...context,signal}));
+   owned=await bounded(reading,signal,bytes=>bytes?.fill(0));
+   if(!Buffer.isBuffer(owned)||!(owned.buffer instanceof ArrayBuffer))throw new GameHostClientError('invalidMessage');current();
+   const size=inspectGamePng(owned,f.maximumLongEdge);if(size.width!==shot!.width||size.height!==shot!.height)throw new GameHostClientError('invalidMessage');
+   const url=WINDOWS_HOST_BACKEND_URL+gameHostFramePath(a.command,shot!.mediaRef);
+   const response=await bounded(Promise.resolve().then(()=>o.fetchAuthenticated(url,{method:'POST',headers:{'content-type':'image/png'},body:owned as Buffer<ArrayBuffer>,redirect:'error',cache:'no-store',signal})),signal,late=>{void late.body?.cancel().catch(()=>{});});responseBody=response.body;current();
+   if(response.status!==200||response.redirected||response.url&&response.url!==url||!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type')??'')||!response.body)throw new GameHostClientError('denied');
+   const length=response.headers.get('content-length');if(length!==null&&(!/^\d+$/.test(length)||Number(length)>GAME_HOST_LIMITS.messageBytes))throw new GameHostClientError('invalidMessage');
+   reader=response.body.getReader();const chunks:Uint8Array[]=[];let sizeBytes=0;
+   for(;;){const chunk=await bounded(reader.read(),signal);if(chunk.done)break;sizeBytes+=chunk.value.byteLength;if(sizeBytes>GAME_HOST_LIMITS.messageBytes)throw new GameHostClientError('invalidMessage');chunks.push(chunk.value);}
+   if(!gameHostFrameAccepted(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks,sizeBytes)))))throw new GameHostClientError('invalidMessage');current();
+  }finally{clearTimeout(timer);deadline.abort();owned?.fill(0);if(reader){void reader.cancel().catch(()=>{});try{reader.releaseLock();}catch{}}else if(responseBody)void responseBody.cancel().catch(()=>{});}
  }
  async run(parentSignal=new AbortController().signal):Promise<void>{
   if(!this.options)throw new GameHostClientError('unconfigured');if(this.started||this.failure)throw new GameHostClientError('closed');this.started=true;

@@ -1,10 +1,11 @@
 const {app,BrowserWindow,session,powerMonitor,ipcMain,net,Menu,dialog}=require('electron');
 const {createHash}=require('node:crypto');
-const {readFileSync,existsSync}=require('node:fs');
+const {readFileSync,existsSync,lstatSync}=require('node:fs');
 const {resolve}=require('node:path');
 const {endpointFromArguments,connectionPage}=require('./connection-status.cjs');
 const {installGameHostControls}=require('./game-host-controls.cjs');
 const {createDesktopGameHostComposition,gameHostSetupFromArguments}=require('./game-host-composition.cjs');
+const {createGameHostMenuActions}=require('./game-host-menu.cjs');
 let endpoint,args,gameHostControls;
 // This binding is a trusted-main module hook, never a renderer IPC channel.
 module.exports.bindGameHostBroker=broker=>{if(!gameHostControls)throw Error('game_host_session_unavailable');gameHostControls.bindBroker(broker);};
@@ -30,11 +31,16 @@ app.whenReady().then(async()=>{
   // Trusted-main callable API; never exposed through renderer IPC.
   module.exports.gameHostComposition=gameHost;
  }
- const report=async()=>{const value=gameHost?await gameHost.readiness():{ready:false,authenticated:false,nativeConfigured:false};
-  console.log(JSON.stringify({kind:'onDemandDesktopGameHostReadiness',checkedAt:new Date().toISOString(),...value}));
-  await dialog.showMessageBox(window,{type:'info',title:'Game host connection',message:value.ready?'Native session is ready.':'Native session is not ready.',detail:!value.authenticated?'Sign in in this native window.':!value.administrationCurrent?'Native administration has expired.':!value.contextCurrent?'Review Session disclosure in this native window.':value.attached?'The approved native game host is attached.':value.nativeConfigured?'Approved native setup is supplied; the game session has not started.':'No approved native game setup is supplied. Readiness does not start gameplay.'});};
- const startApproved=async()=>{try{await gameHost.startApprovedSession();}catch{await dialog.showMessageBox(window,{type:'warning',title:'Game host connection',message:'The approved game session could not start.',detail:'The native session, finite setup and independently qualified backend must all be current. No automatic retry is performed.'});}};
- Menu.setApplicationMenu(Menu.buildFromTemplate([{role:'fileMenu'},{role:'editMenu'},{role:'viewMenu'},{label:'Game',submenu:[{id:'game-host-readiness',label:'Check game host connection',click:()=>void report().catch(()=>{})},{id:'game-host-start',label:'Start approved game session',enabled:gameHost?.configured===true,click:()=>void startApproved()},{id:'game-host-stop',label:'Stop game session',click:()=>void gameHost?.stop('stop')}]}]));
+ const actions=createGameHostMenuActions({window,gameHost,dialog,setStartEnabled:enabled=>{const item=Menu.getApplicationMenu()?.getMenuItemById('game-host-start');if(item)item.enabled=enabled;}});
+ module.exports.gameHostMenuActions=actions;
+ const selectSetup=async()=>{try{
+  const choice=await dialog.showOpenDialog(window,{title:'Select reviewed game setup',properties:['openFile'],filters:[{name:'Game setup',extensions:['json']}]});
+  if(choice.canceled||choice.filePaths.length!==1)return;
+  const path=choice.filePaths[0],stat=lstatSync(path);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>131072)throw Error('game_host_setup_unavailable');
+  gameHost.selectSetupSource({path,sha256:createHash('sha256').update(readFileSync(path)).digest('hex')});
+  Menu.getApplicationMenu().getMenuItemById('game-host-start').enabled=true;
+ }catch{console.log(JSON.stringify({kind:'gameHostSetupRejected',checkedAt:new Date().toISOString(),blockingReason:'setup_selection_failed'}));await dialog.showMessageBox(window,{type:'warning',title:'Game setup',message:'The game setup could not be selected.',detail:'Select a reviewed finite setup before starting a session.'});}};
+ Menu.setApplicationMenu(Menu.buildFromTemplate([{role:'fileMenu'},{role:'editMenu'},{role:'viewMenu'},{label:'Game',submenu:[{id:'game-host-setup',label:'Select reviewed game setup',enabled:!!gameHost,click:()=>void selectSetup()},{id:'game-host-readiness',label:'Check game host connection',click:()=>void actions.report().catch(()=>{})},{id:'game-host-start',label:'Start approved game session',enabled:gameHost?.configured===true,click:()=>void actions.startApproved()},{id:'game-host-stop',label:'Stop game session',click:()=>void actions.stop()}]}]));
  window.on('closed',()=>{void gameHost?.stop('closed');});
  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',(event,url)=>{if(new URL(url).origin!==endpoint.origin)event.preventDefault();});window.webContents.on('will-attach-webview',event=>event.preventDefault());
  let locked=false;const privacy=value=>{locked=value;if(!window.isDestroyed())window.webContents.send('privacy-lock',locked);};powerMonitor.on('lock-screen',()=>privacy(true));powerMonitor.on('unlock-screen',()=>privacy(false));powerMonitor.on('suspend',()=>privacy(true));powerMonitor.on('resume',()=>privacy(false));ipcMain.handle('privacy-lock-state',event=>{if(event.sender!==window.webContents||new URL(event.senderFrame.url).origin!==endpoint.origin)return true;return locked;});
@@ -49,7 +55,7 @@ app.whenReady().then(async()=>{
  // never a disposable profile, cookie getter or renderer-supplied request.
  if(args.includes('--game-host-readiness')){
   const {DesktopGameHostSessionBroker}=require('./game-host-session-broker.cjs');
-  const inspector=new DesktopGameHostSessionBroker({net,partition,gameHostMessage:()=>null});
+  const inspector=gameHost??new DesktopGameHostSessionBroker({net,partition,gameHostMessage:()=>null});
   const deadline=Date.now()+120000;let previous=null,busy=false;
   const inspect=async()=>{if(busy||window.isDestroyed()||Date.now()>=deadline)return;busy=true;try{const value=await inspector.readiness(),text=JSON.stringify(value);if(text!==previous){previous=text;console.log(JSON.stringify({kind:'actualDesktopGameHostReadiness',checkedAt:new Date().toISOString(),...value}));}}finally{busy=false;}};
   await inspect();const timer=setInterval(()=>{if(window.isDestroyed()||Date.now()>=deadline)clearInterval(timer);else void inspect();},5000);timer.unref();window.once('closed',()=>clearInterval(timer));

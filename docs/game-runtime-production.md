@@ -196,3 +196,105 @@ keeping HTTP, session and command deadlines unchanged. Source `fe255298` passed
 an actual packaged Electron/native frame-zero lifecycle with a synthetic backend
 and isolated save; live owner authentication, inference, gameplay and memory
 remain separate acceptance requirements.
+
+
+The separate post-sign-in binding repair adds trusted-main **Game > Select
+reviewed game setup**. Selection reads a bounded regular JSON file and pins its
+bytes in memory; it does not start the native driver. The renderer receives no
+setup selector, path, credential or start API. Existing exact-session v1 setup
+and launch switches remain supported.
+
+A finite `lifestream.desktop-game-host-setup.v2` descriptor keeps the same closed
+top-level fields, but `binding` is exactly `{"mode":"currentOwnerSession"}` and
+`attach.scope.contextBinding.sessionId` and `conversationId` are explicitly null.
+All other selected scope, source, provider, endpoint, permission and campaign
+values remain unchanged. At explicit trusted-main start, the existing broker
+reads the actual authenticated owner and current private session projection,
+requires the selected principal and remembered endpoint to match, fills only
+those two IDs, and captures the complete current endpoint/revision/runtime-source
+binding. Broker startup and every request recheck that exact captured binding.
+No credential is exported, issued, retained or renewed. Backend approval,
+source/inference qualification and final capability admission remain independent.
+
+The authenticated session-context API now projects only the current sign-in's
+active conversation ID, or null while unbound. Its deployment is required for
+v2; old backends fail closed. The descriptor still expires within ten minutes
+and the composition remains one-start/one-run. The same unedited descriptor can
+be selected after a fresh sign-in before its finite expiry and first run. This
+does not implement remembered credentials, repeat-run directory provisioning,
+standing unattended authority or automatic physical arrival. The selector is an
+operator setup/override/diagnostic, not the intended normal arrival ritual.
+
+`createGameVisionDecoder` in `apps/server/src/runtime/game-vision-decoder.ts`
+provides a pixels-only decoder for this existing observation hook. Trusted server
+composition must supply the actual scope/pins, loaded projector identity,
+current source/runtime/qualification predicates and one-time admission. Bind
+`runBackground` to the existing `DiscoveryAdministration.runBackground` and use
+the same selected `SglangInferenceProvider` instance as foreground inference.
+Its `generateGameFrame` method uses that provider's existing transport cleanup
+pool; it does not change the canonical text inference request contract. This
+factory is not registered or activated automatically.
+
+Before admission it verifies PNG custody metadata, digest, CRC/decompression,
+dimensions, freshness and exact observation/screenshot/scope/pins. Source or
+configuration withdrawal, cancellation, invalid output and deadline expiration
+discard the result. The deadline remains at most five seconds, with at most
+256 generated tokens. A changed or malformed frame never reaches inference.
+Requests accept only configured private-network/loopback endpoints and refuse
+redirects. The image is never a camera observation or a tool instruction.
+
+The decoder requires closed JSON with no fences, trailing content, duplicate
+keys, coercions or additional properties. The bounded response includes a
+tentative kind/scene and at most three OCR candidates with explicit limitations.
+Every returned fact remains untrusted inference attributed to its screenshot.
+It returns no controller-visible state fields. The observation reader preserves
+only independently admitted native fields that remain fresh for that exact
+observation; OCR never creates an action precondition, save claim or journal
+progress. Owned image copies are zeroed after completion or cancellation.
+
+The source fixtures and bounded historic-image qualification are recorded in
+`implementation/evidence/LINUX-CT-VISION-SOURCE-20261003.json`. The qualification
+uses synthetic scopes and proves neither real desktop authentication nor live
+gameplay. Native-size OCR still fails or abstains on some text; integer upscale
+and bounded crops are comparison inputs only, not an enabled transformation
+pipeline or new image detail. Actual source binding, qualified native state
+fields, reviewed runtime configuration, retention enforcement and ordinary-save
+behavior remain necessary before joined gameplay or memory acceptance.
+
+
+### Finite owned-frame transport
+
+Desktop setup `lifestream.desktop-game-host-setup.v3` explicitly opts into `frameTransfer` for `simulatedGame/gameFramebuffer`. Its closed bounds select frame count, PNG bytes, long edge and age; the initial qualification uses one frame, at most 2 MiB, 1024 pixels and 30 seconds. Setup v1/v2 remain references-only. Controller, planning, journal and memory permissions are independent.
+
+After the exact observe command is admitted, the native driver verifies its observation against owned evidence and reads that screenshot from its existing custody. The trusted session broker posts its original PNG bytes as `image/png` to `/api/runtime/v1/game-host/frame/{attachmentId}/{commandId}/{requestDigest}/{mediaRef}` using the same owner session, origin and CSRF transport. The closed success response is `{accepted:true}`. Only then may the unchanged ordinary `/result` completion be submitted. Control and response JSON limits remain 128 KiB. Arbitrary paths, URLs and caller-supplied credentials are not accepted.
+
+The explicitly enabled server composition independently checks current source/scope, admission, PNG structure, dimensions, digest, count and freshness. The completed observation must match the uploaded bytes before its trusted one-shot frame reader can consume them. Owned buffers are erased on failure, cancellation, expiry, consumption, detach and shutdown. There is no raw-frame database retention or public frame-download route. This source path is locally implemented; actual joined native observation qualification and production activation remain separate.
+
+### Current desktop readiness and backend restarts
+
+Game connection readiness checks the same current owner, finite administrative
+session, conversation, endpoint and effective audience predicates used at Start.
+The composed desktop also requires an unchanged, compatible, unexpired selected
+setup. `sessionReady` distinguishes current session metadata from selected-setup
+readiness; neither field proves native attachment or successful observation.
+Missing current audience evidence reports `audience_unavailable`, even when the
+stored Session disclosure still permits approved private context.
+
+Audience declarations and process leases are transient. A backend restart clears
+them; a saved personal endpoint, an earlier sign-in or test approval does not
+recreate a declaration. Stage source, packages and inert finite setup prerequisites
+first. After the final backend cutover, check the actual desktop session. If
+administration expired, the owner signs in again in that window. If audience is
+unknown and the owner is actually alone, the owner chooses **Only me — 5 minutes**
+in Audience privacy. Check readiness again before one bounded Start. Another
+backend restart invalidates that declaration again; do not ask the owner to
+declare before the final restart, infer their physical audience, auto-declare, or
+persist that evidence. An automatic source may qualify an audience only through
+its independently configured existing evidence contract.
+
+The native menu records closed blocking codes before displaying a start-failure
+dialog. Cleanup runs before that owned modal, disables another Start from the
+same attempted setup, and does not need to steal its foreground. Modal dismissal
+and dialog failure are separately recorded. Logs omit exception messages,
+responses, setup contents and credentials. A rejected menu attempt is not native
+launch evidence, and completed Stop is not proof of paused/neutral shutdown.

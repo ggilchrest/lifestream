@@ -1,4 +1,5 @@
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
+import {inspectGamePng} from '@lifestream/providers-bizhawk';
 import {isDeepStrictEqual} from 'node:util';
 import {performance} from 'node:perf_hooks';
 import {GAME_HOST_PROTOCOL as protocol,GAME_HOST_LIMITS,gameHostMessage,gameHostDigest,gameHostCompletionMatches} from '@lifestream/contracts/game-host';
@@ -16,6 +17,7 @@ export class GameHostError extends Error{readonly status:number;readonly code:st
 export type GameHostActor={principalId:string;sessionId:string;isCurrent:(scope:G.ActivityScope)=>boolean;runtimeFor?:(scope:G.ActivityScope,repository:ActivityCheckpointRepository)=>AuthenticatedGameRuntime|null};
 export type GameHostBinding=Omit<H.GameHostAttach,'protocol'>;
 export type GameHostOptions={
+ ownedFrames?:true;
  maxAttachments:number;maxDurationMs:number;createRepository:(database:Database)=>ActivityCheckpointRepository;
  /** Independent source/installation/display/authority qualification. Client metadata cannot grant this. */
  resolveAttachment:(actor:GameHostActor,metadata:Readonly<H.GameHostAttach>)=>GameHostBinding|null;
@@ -25,7 +27,7 @@ export type GameHostOptions={
  onAttached?:(join:GameHostJoin)=>void;
 };
 type Pending={command:H.GameHostCommand;context:GameCallContext;identity:H.GameHostAdmit&{hostId:string;sourceRevision:string};resolve:(result:H.GameHostResult)=>void;reject:(error:Error)=>void;timer:NodeJS.Timeout;abort:()=>void;deadline:number;delivered:boolean;entered:boolean};
-type Attachment={id:string;actor:GameHostActor;binding:Readonly<GameHostBinding>;expires:number;monotonicExpiry:number;lastPoll:number;pending:Pending|null;poll:(()=>void)|null;cancel:H.GameHostCancel|null;closed:boolean;effectUnresolved:boolean;controller:AbortController;adapter:GameActivityAdapter;runtime?:AuthenticatedGameRuntime};
+type Attachment={id:string;actor:GameHostActor;binding:Readonly<GameHostBinding>;expires:number;monotonicExpiry:number;lastPoll:number;pending:Pending|null;poll:(()=>void)|null;cancel:H.GameHostCancel|null;closed:boolean;effectUnresolved:boolean;frameAttempted?:boolean;controller:AbortController;adapter:GameActivityAdapter;runtime?:AuthenticatedGameRuntime};
 const owner=(scope:G.ActivityScope)=>({assistantId:scope.assistantId,principalId:scope.principalId,relationshipId:scope.relationshipId});
 function fail(status:number,code:string):never{throw new GameHostError(status,code);}
 const safe=(check:()=>boolean)=>{try{return check()===true;}catch{return false;}};
@@ -40,6 +42,7 @@ export class GameHostPort{
  private readonly options:Readonly<GameHostOptions>;
  private readonly sweepTimer:NodeJS.Timeout;
  private closed=false;
+ private frame: {attachment:Attachment;pending:Pending;mediaRef:string;bytes:Buffer;shot?:G.GameScreenshot;observationId?:string;timer:ReturnType<typeof setTimeout>;deadline:number}|undefined;
  constructor(database:Database,options:GameHostOptions){
   if(!Number.isSafeInteger(options.maxAttachments)||options.maxAttachments<1||options.maxAttachments>16||!Number.isSafeInteger(options.maxDurationMs)||options.maxDurationMs<1||options.maxDurationMs>120000||typeof options.resolveAttachment!=='function'||typeof options.bindingCurrent!=='function'||typeof options.controllerCurrent!=='function'||typeof options.boundary?.sourceAvailable!=='function')throw new Error('invalid_game_host_options');
   this.options=Object.freeze({...options,boundary:Object.freeze({...options.boundary})});
@@ -134,9 +137,42 @@ export class GameHostPort{
   if(!this.pendingCurrent(a,p)){this.cancel(a,'scopeChanged');fail(410,'game_host_expired');}p.entered=true;
   return {...message,admitted:true,expiresAt:p.command.expiresAt};
  }
+ beginOwnedFrameUpload(actor:GameHostActor,attachmentId:string,commandId:string,requestDigest:string,mediaRef:string):void{
+  if(this.options.ownedFrames!==true)fail(404,'game_host_frames_disabled');
+  if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(mediaRef))fail(400,'invalid_game_frame');
+  const a=this.attachment(actor,attachmentId),p=a.pending;
+  if(!p||!p.entered||!p.delivered||p.command.request.operation!=='GameActivityAdapter.observe'||p.command.commandId!==commandId||p.command.requestDigest!==requestDigest||!this.pendingCurrent(a,p))fail(409,'game_host_frame_conflict');
+  if(a.frameAttempted||this.frame)fail(409,'game_host_frame_conflict');a.frameAttempted=true;
+  const timer=setTimeout(()=>{this.discardFrame();this.cancel(a,'deadline');},Math.max(1,Date.parse(p.command.expiresAt)-Date.now()));timer.unref();
+  this.frame={attachment:a,pending:p,mediaRef,bytes:Buffer.alloc(0),timer,deadline:p.deadline};
+ }
+ finishOwnedFrameUpload(actor:GameHostActor,attachmentId:string,commandId:string,bytes:Buffer):void{
+  const a=this.attachment(actor,attachmentId),f=this.frame;
+  if(!f||f.attachment!==a||f.pending.command.commandId!==commandId||!this.pendingCurrent(a,f.pending)||f.bytes.length!==0||bytes.length===0||bytes.length>2097152)fail(409,'game_host_frame_conflict');
+  inspectGamePng(bytes,1024);if(!this.pendingCurrent(a,f.pending))fail(410,'game_host_expired');f.bytes=Buffer.from(bytes);
+ }
+ abortOwnedFrameUpload(attachmentId:string,commandId:string):void{
+  const f=this.frame;if(f&&f.attachment.id===attachmentId&&f.pending.command.commandId===commandId){const a=f.attachment;this.discardFrame();this.cancel(a,'cancelled');}
+ }
+ consumeOwnedFrame(scope:Readonly<G.ActivityScope>,observation:Readonly<G.GameObservation>,shot:Readonly<G.GameScreenshot>):Buffer|null{
+  const f=this.frame;if(!f||!f.shot||f.observationId!==observation.observationId||!isDeepStrictEqual(scope,observation.scope)||!isDeepStrictEqual(scope,f.attachment.binding.scope)||!isDeepStrictEqual(shot,f.shot)||Date.now()>=Date.parse(shot.expiresAt)||performance.now()>=f.deadline||!this.current(f.attachment)||createHash('sha256').update(f.bytes).digest('hex')!==shot.sha256)return null;
+  clearTimeout(f.timer);this.frame=undefined;return f.bytes;
+ }
+ closeOwnedAttachment(join:GameHostJoin):void{const a=this.attachments.get(join.attachmentId);if(a&&isDeepStrictEqual(join.scope,a.binding.scope))this.fence(a,'detached');}
+ private discardFrame():void{if(this.frame){clearTimeout(this.frame.timer);this.frame.bytes.fill(0);this.frame=undefined;}}
  complete(actor:GameHostActor,raw:unknown):H.GameHostAccepted{
   const completion=gameHostMessage('completion',raw);if(!completion)fail(400,'invalid_game_host_message');const a=this.attachment(actor,completion.attachmentId),p=a.pending;
   if(!p||!p.entered||!this.pendingCurrent(a,p)||!gameHostCompletionMatches(p.command,completion)||completion.result.providerRef!==a.binding.providerRef)fail(409,'game_host_conflict');
+  if(this.options.ownedFrames===true&&p.command.request.operation==='GameActivityAdapter.observe'){
+   const observed=(completion.result as G.GameObserveResult).outcome;
+   if(observed.status==='succeeded'){
+    const o=observed.payload?.observation,shot=o?.screenshots[0],f=this.frame,now=Date.now();
+    if(!o||o.screenshots.length!==1||!shot||!f||f.attachment!==a||f.pending!==p||f.mediaRef!==shot.mediaRef||shot.screenshotId!==shot.mediaRef||!isDeepStrictEqual(o.scope,a.binding.scope)||o.pinsDigest!==a.binding.pinsDigest||shot.mediaType!=='image/png'||shot.frameNumber!==o.frameNumber||shot.capturedAt!==o.capturedAt||!f.bytes.length||shot.byteLength!==f.bytes.length||shot.sha256!==createHash('sha256').update(f.bytes).digest('hex')||Date.parse(shot.capturedAt)>now||Date.parse(shot.expiresAt)<=now||Date.parse(shot.expiresAt)-Date.parse(shot.capturedAt)>30000||now-Date.parse(shot.capturedAt)>30000)fail(409,'game_host_frame_conflict');
+    const size=inspectGamePng(f.bytes,1024);if(size.width!==shot.width||size.height!==shot.height)fail(409,'game_host_frame_conflict');
+    f.shot=structuredClone(shot);f.observationId=o.observationId;clearTimeout(f.timer);f.deadline=performance.now()+Math.min(30000,Date.parse(shot.expiresAt)-now);
+    f.timer=setTimeout(()=>this.discardFrame(),Math.max(1,Date.parse(shot.expiresAt)-now));f.timer.unref();
+   }else this.discardFrame();
+  }
   if(p.command.request.operation==='GameActivityAdapter.applyController'&&!this.dispatch.receipt(p.identity,completion.resultDigest))fail(409,'game_host_conflict');
   if(!this.pendingCurrent(a,p)){this.cancel(a,'scopeChanged');fail(410,'game_host_expired');}
   this.clear(a,p);p.resolve(completion.result);
@@ -148,12 +184,12 @@ export class GameHostPort{
  private pendingCurrent(a:Attachment,p:Pending){return a.pending===p&&this.current(a,p.command.request.scope)&&Date.now()<Date.parse(p.command.expiresAt)&&performance.now()<p.deadline&&!p.context.signal.aborted&&safe(()=>p.context.isCurrent(p.command.request.scope));}
  private clear(a:Attachment,p:Pending){clearTimeout(p.timer);p.context.signal.removeEventListener('abort',p.abort);if(a.pending===p)a.pending=null;}
  private cancel(a:Attachment,reason:H.GameHostCancel['reason']){
-  const p=a.pending;if(!p)return;this.clear(a,p);
+  const p=a.pending;if(!p)return;if(this.frame?.attachment===a)this.discardFrame();this.clear(a,p);
   if(p.command.request.operation==='GameActivityAdapter.applyController'){a.effectUnresolved=true;try{this.dispatch.unresolved(p.identity);}catch{/* durable reservation/claim still prevents replay */}}
   a.cancel={protocol,kind:'cancel',attachmentId:a.id,commandId:p.command.commandId,requestDigest:p.command.requestDigest,cancellationId:p.command.request.cancellationId,reason};p.reject(new GameHostError(410,'game_host_expired'));a.poll?.();
  }
  private fence(a:Attachment,reason:H.GameHostCancel['reason']){
-  if(a.closed)return;a.closed=true;a.runtime?.close();this.cancel(a,reason);a.controller.abort();const claim=this.claims.get(a);if(claim){try{this.dispatch.unresolved(claim.identity);}catch{}this.claims.delete(a);}this.attachments.delete(a.id);a.poll?.();
+  if(a.closed)return;if(this.frame?.attachment===a)this.discardFrame();a.closed=true;a.runtime?.close();this.cancel(a,reason);a.controller.abort();const claim=this.claims.get(a);if(claim){try{this.dispatch.unresolved(claim.identity);}catch{}this.claims.delete(a);}this.attachments.delete(a.id);a.poll?.();
  }
  private sweep(){for(const a of this.attachments.values())if(!this.current(a))this.fence(a,'scopeChanged');}
  close(){if(this.closed)return;this.closed=true;clearInterval(this.sweepTimer);for(const a of this.attachments.values())this.fence(a,'shutdown');}

@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "localSourceAndPackagedMainQualifiedLiveAcceptancePending",
+  "disposition": "waiting",
+  "baseRevision": "b7af9e9bac022a2ffe07a5935e18ce25830b61ed",
+  "sourceRevision": "a43be6cc9ed9b1413bc524aeb628449dd2fa177a",
+  "scope": "Current CT desktop readiness/Start alignment and closed rejection diagnostics. Separate from persistent authentication, unattended access, deployment, controller use and game memory acceptance.",
+  "behavior": [
+    "Readiness, session binding and initial broker admission share current owner, finite administration, conversation, endpoint and effective audience predicates.",
+    "Selected-setup readiness checks current digest, compatible descriptor, transport scope and finite expiry without starting a driver. sessionReady distinguishes this from current session metadata.",
+    "Privacy withdrawal also fences an active transport. A saved personal endpoint cannot substitute for a current declaration after backend restart.",
+    "Closed rejection codes are retained in composition status and emitted before cleanup/dialog. Raw exceptions, setup/response bodies and credentials are omitted.",
+    "Cleanup and Start-menu disablement occur before an owned failure modal. Stop is independent of modal dismissal; overlapping callbacks do not dispatch another Start.",
+    "Windows and macOS source package allowlists include both new main-owned modules. No new renderer Start, setup, audience declaration or generic fetch API."
+  ],
+  "validation": [
+    {
+      "command": "node --test --experimental-strip-types apps/desktop/test/game-host-session-broker.test.mjs apps/desktop/test/game-host-composition.test.mjs apps/desktop/test/game-host-menu.test.mjs apps/desktop/test/game-host-session-request.test.mjs apps/desktop/test/connection.test.mjs apps/server/test/audience-restart-readiness.test.ts apps/server/test/audience.test.ts apps/server/test/audience-lease.test.ts packages/providers-bizhawk/test/game-host-client.test.ts",
+      "result": "pass",
+      "tests": 137,
+      "passed": 137,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -b --pretty false apps/server packages/contracts packages/runtime packages/providers-fixture packages/providers-voxcpm packages/providers-nemo-speech packages/providers-moonshine packages/providers-ollama packages/providers-pwce packages/providers-sglang packages/storage-sqlite packages/providers-bizhawk",
+      "result": "pass",
+      "projects": 12
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js apps/desktop/game-host-diagnostics.cjs apps/desktop/game-host-menu.cjs apps/desktop/game-host-composition.cjs apps/desktop/game-host-session-broker.cjs apps/desktop/main.cjs apps/desktop/test/game-host-menu.test.mjs apps/desktop/test/game-host-readiness-runtime.test.mjs apps/desktop/test/game-host-composition.test.mjs apps/desktop/test/game-host-session-broker.test.mjs apps/desktop/test/game-host-composition-runtime.test.mjs scripts/package-desktop.mjs scripts/package-desktop-windows.mjs",
+      "result": "pass"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "qualification": "Structure only"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "knownBaselineFailures",
+      "passed": 37,
+      "failed": 7,
+      "limitation": "Existing Windows forward-slash repository-containment fixture failures; no bootstrap-wide pass claimed."
+    },
+    {
+      "command": "node --test --experimental-strip-types --test-name-pattern \"actual packaged Electron binds|packaged main reports\" apps/desktop/test/game-host-composition-runtime.test.mjs apps/desktop/test/game-host-readiness-runtime.test.mjs",
+      "result": "pass",
+      "tests": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "qualification": "Packaged Electron window and main/menu wiring with disposable profiles, synthetic session responses and dialog promises; no owner authority or native launch"
+    }
+  ],
+  "firstValidationFailure": "The new endpoint agreement test first observed a generic rejection at the prevalidated binding gate. That gate now records context_unavailable; the subsequent complete focused run passed.",
+  "preflight": "LS-S066 preflight retains historical packet/scope/current-change mismatches. The public bounded CT aid was refreshed; private specification and pending whole-slice acceptance were preserved.",
+  "ownerActionAfterCutover": "After the final backend restart, sign in in the native window only if administration is expired. If audience is unknown and the owner is actually alone, choose Only me \u2014 5 minutes, then obtain fresh ordinary readiness before one bounded Start. Stored Session disclosure can be retained if still current. No automatic declaration or expired-evidence restoration.",
+  "stagingOrder": "Prepare and validate all source, packages, native pins and inert runtime prerequisites first. A single owner interaction can follow the final backend cutover. Declaring before a later restart cannot qualify that restarted backend; rollback or another restart invalidates it again.",
+  "claims": {
+    "liveDeployment": false,
+    "existingAppRestarted": false,
+    "ownerCredentialsAccessed": false,
+    "audienceAutoAsserted": false,
+    "actualObservationAccepted": false,
+    "controllerInput": false,
+    "journalOrMemoryAcceptance": false,
+    "macOSPackageRuntimeQualified": false,
+    "wholeSliceAccepted": false
+  },
+  "candidate": {
+    "sourceRevision": "a43be6cc9ed9b1413bc524aeb628449dd2fa177a",
+    "electronVersion": "44.3.0",
+    "executableSha256": "e048632e03fabc96de5e10afbebc0aa31f4e1674155ea3d270597fe7523f9d80",
+    "deployed": false
+  },
+  "remainingQualification": "Coordinated final backend cutover, actual current owner auth and fresh audience choice, finite native attachment and observation. No live retry was performed."
+}
