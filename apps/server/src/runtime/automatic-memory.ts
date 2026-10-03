@@ -9,6 +9,8 @@ import {visualPublicationEpisode,type VisualMemoryPublication,type VisualMemoryS
 import {VisualMemoryEvidence} from './visual-memory-evidence.ts';
 import {VisualMemoryCandidateEvidence,isVisualMemoryLifecycleTrace,type VisualMemoryCandidateTrace} from './visual-memory-candidate-evidence.ts';
 export type MemoryScope={principalId:string;assistantId:string;relationshipId:string};
+export type SemanticMemoryLease={references:readonly {id:string;revision:number}[];freshUntil:string;providerCalls:number;isCurrent:()=>boolean};
+export type ConversationRecallResult={state:'selected'|'empty'|'fallback';coverage:'idleWarm'|'fresh'|'miss';reason:string;lease?:SemanticMemoryLease};
 type Work={id:string;scope:string;source:string;sourceContext:string|null;revision:number;input:string;prepared:string|null;proposalDigest:string|null;attempts:number;expires:number;state:string;reason:string|null};
 const hash=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const key=(scope:MemoryScope)=>hash([scope.principalId,scope.assistantId,scope.relationshipId]);
@@ -26,6 +28,8 @@ export class AutomaticMemory {
  private readonly provider:()=>{provider:InferenceProvider;revision:string};private readonly idle:()=>boolean;
  private readonly scopeAllowed:(scope:MemoryScope)=>boolean;private readonly contentAllowed:(scope:MemoryScope,content:string)=>boolean;
  private readonly changed:()=>void;private timer:ReturnType<typeof setInterval>;private controller:AbortController|null=null;private activeWork:{id:string;expires:number}|null=null;private closed=false;
+ private readonly recallPending=new Map<string,{scope:MemoryScope;query:string;expires:number;current:()=>boolean}>();
+ private readonly recallCache=new Map<string,SemanticMemoryLease>();
  private readonly visualPending=new Map<string,{publication:VisualMemoryPublication;selection:VisualMemorySelection;scope:MemoryScope;memoryRevision:number;visualRevision:number}>();
  private readonly visualIntakeReceipts=new Map<string,{scope:MemoryScope;requestId:string;state:string;expires:number}>();
  private readonly visualIntakeJournal=new VisualMemoryEvidence();
@@ -197,10 +201,54 @@ export class AutomaticMemory {
  inspect(scope:MemoryScope){this.sweepExpired();const jobs=this.database.connection.prepare('SELECT id,state,result_json AS result,reason,created_at AS createdAt FROM automatic_memory_work WHERE scope_key=? ORDER BY created_at DESC LIMIT 20').all(key(scope));const visual=this.visual.inspect(scope,this.scopeAllowed(scope));const allowedEpisodes=visual.episodes.filter(row=>!row.episode||this.contentAllowed(scope,row.episode.summary)&&row.episode.observations.every(o=>this.contentAllowed(scope,o.description))&&row.corrections.every(c=>this.contentAllowed(scope,c.content)));const current=this.visual.policy(scope);const valid=this.scopeAllowed(scope)&&current.revision===visual.policy.revision;return {policy:this.policy(scope),jobs,visual:{...visual,policy:current,episodes:valid?allowedEpisodes:[],complete:valid&&visual.complete&&allowedEpisodes.length===visual.episodes.length,intakeReceipts:valid?[...this.visualIntakeReceipts.values()].filter(row=>key(row.scope)===key(scope)).map(({requestId,state})=>({requestId,state})):[]}};}
  isIdle(){return !this.controller;}
  preempt(){this.controller?.abort('foreground');}
+ /** Volatile exact-query projections only: no memory evidence, source text or
+  * interpretation is written. This queue uses the existing idle tick/lease. */
+ precomputeRecall(scope:MemoryScope,query:string,current:()=>boolean=()=>true):boolean{
+  try{
+   scope=Object.freeze({...scope});query=query.trim();
+   if(!query||Buffer.byteLength(query)>2000||secret.test(query)||this.closed||!current()||!this.policy(scope).enabled||!this.scopeAllowed(scope)||!this.contentAllowed(scope,query)||!current())return false;
+   const id=hash([key(scope),query]);if(this.cachedRecall(scope,query))return true;
+   // Latest eligible query per owner scope; global queue remains bounded.
+   for(const [pendingId,row] of this.recallPending)if(key(row.scope)===key(scope))this.recallPending.delete(pendingId);
+   if(this.recallPending.size>=32)return false;
+   this.recallPending.set(id,{scope,query,expires:Date.now()+55000,current});return true;
+  }catch{return false;}
+ }
+ private cachedRecall(scope:MemoryScope,query:string):SemanticMemoryLease|undefined{
+  const id=hash([key(scope),query.trim()]),lease=this.recallCache.get(id);
+  if(!lease)return undefined;
+  if(Date.parse(lease.freshUntil)<=Date.now()||!lease.isCurrent()){this.recallCache.delete(id);return undefined;}
+  return lease;
+ }
+ private cacheRecall(scope:MemoryScope,query:string,lease:SemanticMemoryLease){
+  if(!lease.isCurrent())return;const id=hash([key(scope),query.trim()]);this.recallCache.delete(id);this.recallCache.set(id,lease);
+  if(this.recallCache.size>32)this.recallCache.delete(this.recallCache.keys().next().value!);
+ }
+ /** Experimental host-only preparation. Zero wait reads completed projections
+  * only; a positive explicit budget may run the same bounded idle selector.
+  * Timeout/unavailability falls back, never fabricates a successful empty. */
+ async conversationRecall(scope:MemoryScope,query:string,waitBudgetMs:number,call:{signal?:AbortSignal;current:()=>boolean}):Promise<ConversationRecallResult>{
+  if(!Number.isSafeInteger(waitBudgetMs)||waitBudgetMs<0||waitBudgetMs>5000)throw Error('Invalid conversation recall wait budget');
+  const fallback=(reason:string):ConversationRecallResult=>({state:'fallback',coverage:'miss',reason});
+  if(call.signal?.aborted||!call.current())return fallback('scope_unavailable');
+  const cached=this.cachedRecall(scope,query);if(cached&&call.current()&&!call.signal?.aborted)return {state:cached.references.length?'selected':'empty',coverage:'idleWarm',reason:'completed_idle_result',lease:cached};
+  if(waitBudgetMs===0)return fallback('no_completed_idle_result');
+  const budget=new AbortController(),signal=call.signal?AbortSignal.any([budget.signal,call.signal]):budget.signal,timer=setTimeout(()=>budget.abort('preparation_budget'),waitBudgetMs);
+  try{
+   const result=await this.recall(scope,query,20,{signal,current:call.current});
+   if(signal.aborted||!call.current()||!result.complete||!('lease' in result)||!result.lease.isCurrent())return fallback(budget.signal.aborted?'preparation_budget':'selector_unavailable');
+   // Fresh results are request-bound; only independently queued idle results
+   // enter the volatile warm cache, so disconnect cannot leave a usable lease.
+   return {state:result.memories.length?'selected':'empty',coverage:'fresh',reason:'bounded_fresh_selection',lease:result.lease};
+  }finally{clearTimeout(timer);}
+ }
+
  retry(scope:MemoryScope,id:string){this.sweepExpired();const result=this.database.connection.prepare("UPDATE automatic_memory_work SET state=CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END,reason='retry_requested' WHERE id=? AND scope_key=? AND state='failed' AND attempts<6 AND expires_at>?").run(id,key(scope),Date.now());if(result.changes!==1)throw new Error('Memory retry is unavailable');}
  private expireWork(id:string){this.database.connection.prepare("UPDATE automatic_memory_work SET state='expired',input_text='',prepared_json=NULL,reason='retention_expired' WHERE id=? AND state IN ('queued','running','prepared','failed')").run(id);}
  private sweepExpired(){
   this.visual.sweep();const now=Date.now();
+  for(const [id,row] of this.recallPending)if(row.expires<=now)this.recallPending.delete(id);
+  for(const [id,lease] of this.recallCache)if(Date.parse(lease.freshUntil)<=now)this.recallCache.delete(id);
   for(const [id,row] of this.visualIntakeReceipts)if(row.expires<=now)this.visualIntakeReceipts.delete(id);
   for(const [id,item] of this.visualPending)if(!this.visualCurrent(item)){this.visualPending.delete(id);this.noteVisual(item.scope,item.publication.batch.requestId,item.publication.freshUntilMs<=now?'sourceExpired':'scopeChanged');}
   // Source retention is independent of foreground scheduling. Preserve receipts
@@ -220,6 +268,7 @@ export class AutomaticMemory {
  async recall(scope:MemoryScope,query:string,limit=20,call:{signal?:AbortSignal;current?:()=>boolean}={}){
   const unavailable=(reason:string)=>({state:'unavailable' as const,reason,memories:[] as MemoryRecord[],selection:[],complete:false});
   if(typeof query!=='string'||!query.trim()||Buffer.byteLength(query)>2000||!Number.isSafeInteger(limit)||limit<1||limit>100)return unavailable('invalid_query');
+  scope=Object.freeze({...scope});
   const policy=this.policy(scope),allowed=()=>!this.closed&&this.policy(scope).enabled&&this.policy(scope).revision===policy.revision&&this.scopeAllowed(scope)&&(call.current?.()??true);
   if(!allowed())return unavailable('permission_unavailable');if(secret.test(query)||!this.contentAllowed(scope,query))return unavailable('query_privacy_denied');if(!allowed())return unavailable('permission_unavailable');if(this.controller||!this.idle())return unavailable('worker_busy');
   const controller=this.controller=new AbortController(),signal=call.signal?AbortSignal.any([controller.signal,call.signal]):controller.signal,deadlineAt=new Date(Date.now()+55000).toISOString(),timeout=setTimeout(()=>controller.abort('deadline'),60000);
@@ -234,18 +283,25 @@ export class AutomaticMemory {
     if(!done||secret.test(output)||!this.contentAllowed(scope,output))throw Error('Semantic recall response unavailable');return output;
    }});
    if(!current()||this.provider().revision!==runtime.revision)throw Error('Semantic recall scope/provider changed');
-   return {state:result.memories.length?'selected' as const:'empty' as const,complete:true,...result,providerRevision:runtime.revision,qualification:'Model-proposed relevance; source evidence and truth remain unverified.'};
+   const sourceDigest=result.sourceDigest;
+   const lease:SemanticMemoryLease=Object.freeze({references:Object.freeze(result.selection.map(({id,revision})=>Object.freeze({id,revision}))),freshUntil:deadlineAt,providerCalls:result.providerCalls,isCurrent:()=>{try{return current()&&Date.now()<Date.parse(deadlineAt)&&this.provider().revision===runtime.revision&&hash(read())===sourceDigest&&current();}catch{return false;}}});
+   if(!lease.isCurrent())throw Error('Semantic recall lease changed');
+   return {state:result.memories.length?'selected' as const:'empty' as const,complete:true,...result,lease,providerRevision:runtime.revision,qualification:'Model-proposed relevance; source evidence and truth remain unverified.'};
   }catch{return unavailable('semantic_selection_unavailable');}finally{clearTimeout(timeout);if(this.controller===controller)this.controller=null;}
  }
  async tick():Promise<void>{
   if(this.closed)return;this.sweepExpired();if(this.controller||!this.idle())return;
+
   const pending=this.visualPending.entries().next().value;
   if(pending){
    const [id,item]=pending;this.visualPending.delete(id);
    try{if(this.visualCurrent(item)){const candidate=visualPublicationEpisode(item.publication.batch,item.selection,this.visual.policy(item.scope),Date.now(),item.publication.freshUntilMs);const result=candidate?this.enqueueVisual(item.scope,candidate.episode,candidate.admission,()=>this.visualCurrent(item)):{state:'unattributedSubject'};this.noteVisual(item.scope,item.publication.batch.requestId,result.state);if(result.state==='retained'&&candidate&&item.selection.transformationConfidence){try{const projected=this.projectVisual(item.scope,candidate.episode.episodeId,1,item.selection.transformationConfidence);if(projected.state==='projected')this.activateVisual(item.scope,candidate.episode.episodeId,2);}catch{/* The retained typed source is independent of optional projection failure. */}}}}catch{this.noteVisual(item.scope,item.publication.batch.requestId,'invalidEpisode');}
    return;
   }
-  const work=this.database.connection.prepare("SELECT id,scope_key AS scope,source_turn AS source,source_context_json AS sourceContext,policy_revision AS revision,input_text AS input,prepared_json AS prepared,proposal_digest AS proposalDigest,attempts,expires_at AS expires,state,reason FROM automatic_memory_work WHERE state IN ('queued','prepared') ORDER BY created_at LIMIT 1").get() as Work|undefined;if(!work)return;
+  const work=this.database.connection.prepare("SELECT id,scope_key AS scope,source_turn AS source,source_context_json AS sourceContext,policy_revision AS revision,input_text AS input,prepared_json AS prepared,proposal_digest AS proposalDigest,attempts,expires_at AS expires,state,reason FROM automatic_memory_work WHERE state IN ('queued','prepared') ORDER BY created_at LIMIT 1").get() as Work|undefined;if(!work){
+  const recall=this.recallPending.entries().next().value;
+  if(recall){const [id,row]=recall;this.recallPending.delete(id);try{if(row.expires>Date.now()&&row.current()){const result=await this.recall(row.scope,row.query,20,{current:()=>row.expires>Date.now()&&row.current()});if(result.complete&&'lease' in result)this.cacheRecall(row.scope,row.query,result.lease);}}catch{/* Optional query projection cannot change ordinary memory or conversation. */}return;}
+  return;}
   if(work.attempts>=2&&!work.prepared&&work.reason!=='retry_requested'){this.database.connection.prepare("UPDATE automatic_memory_work SET state='failed',reason='extraction_attempt_limit' WHERE id=?").run(work.id);return;}
   const owner=this.database.connection.prepare('SELECT principal_id AS principalId,assistant_id AS assistantId,relationship_id AS relationshipId,enabled,revision FROM automatic_memory_policies WHERE scope_key=?').get(work.scope) as (MemoryScope&{enabled:number;revision:number})|undefined;
   if(!owner||!owner.enabled||owner.revision!==work.revision||!this.scopeAllowed(owner)){this.database.connection.prepare("UPDATE automatic_memory_work SET state='cancelled',input_text='',prepared_json=NULL,reason='policy_changed' WHERE id=?").run(work.id);return;}
@@ -282,5 +338,5 @@ export class AutomaticMemory {
    if(!this.closed)this.database.connection.prepare("UPDATE automatic_memory_work SET state=CASE WHEN attempts<2 THEN CASE WHEN prepared_json IS NULL THEN 'queued' ELSE 'prepared' END ELSE 'failed' END,reason='extraction_or_persistence_failed' WHERE id=? AND state IN ('running','prepared') AND expires_at>?").run(work.id,Date.now());
   }finally{clearTimeout(timeout);this.sweepExpired();if(this.controller===controller){this.controller=null;this.activeWork=null;}}
  }
- async close(){this.closed=true;this.visualIntakeJournal.close();this.visualCandidateJournal.close();this.visualPending.clear();this.visualIntakeReceipts.clear();clearInterval(this.timer);this.controller?.abort();while(this.controller)await new Promise(r=>setTimeout(r,5));}
+ async close(){this.closed=true;this.recallPending.clear();this.recallCache.clear();this.visualIntakeJournal.close();this.visualCandidateJournal.close();this.visualPending.clear();this.visualIntakeReceipts.clear();clearInterval(this.timer);this.controller?.abort();while(this.controller)await new Promise(r=>setTimeout(r,5));}
 }

@@ -1,3 +1,4 @@
+import {attachConversationMemoryRecall,captureConversationMemoryRecall,type ConversationMemoryRecallOptions} from './runtime/conversation-memory-context.ts';
 import {proposalContextContent} from './runtime/memory-proposals.ts';
 import {GameHostPort,type GameHostOptions,type GameHostActor} from './runtime/game-host-port.ts';
 import {captureGameRuntimeOptions,productionGameMemory,createAuthenticatedGameRuntime,qualifiedGameInferenceBounds,type GameRuntimeOptions,type AuthenticatedGameRuntime} from './runtime/game-host-runtime.ts';
@@ -70,7 +71,7 @@ import { isProfile, loadProfile, redactedDigest } from "./config/loader.ts";
 import { createProviderRegistry, providerPriorityBounds, type ProviderInstanceHealth, type ProviderRegistry } from "./composition/providers.ts";
 import type { Profile, RuntimeConfig } from "./config/schema.js";
 import { unavailableWorldContext } from "@lifestream/runtime/context/world";
-import { streamMessage, type HostRuntimeInput } from "./runtime/inference.ts";
+import { streamMessage,prepareHostMemory, type HostRuntimeInput } from "./runtime/inference.ts";
 import { relationshipControlDefaults, relationshipControlInventory, compileRelationshipContext, type CompiledRelationshipContext, type RelationshipContextRecord } from "@lifestream/runtime/context";
 import { ContextCache } from "@lifestream/runtime/context/cache";
 import { buildCanonicalPrompt, createPreparedTurnBinding, type RuntimeSelfContext, type AssistantPersonaProjection } from "@lifestream/runtime/inference/prompt";
@@ -105,7 +106,7 @@ import {retainGameHelpAdvice,type GameHelpAdviceInput} from './runtime/game-advi
 import {projectGameEpisode} from '@lifestream/runtime/activity/memory';
 import {gameEpisodeDigest,gameEpisodeSnapshot} from '@lifestream/contracts/game-memory';
 import type {GameExperienceEpisode} from '@lifestream/contracts/game-activity';
-export type ServerOptions = { gameRuntime?:GameRuntimeOptions; gameHost?:GameHostOptions; gameMemory?:GameMemoryHostOptions; telegram?:TelegramHostOptions; urgentAway?:UrgentAwayHostOptions; urgentConditions?:UrgentAttentionOptions; sessionEnvironmentId?:string; experienceTestClock?:()=>number; visualInput?:VisualInputOptions; acknowledgmentAlignment?:()=>AcknowledgmentAlignment|undefined; acknowledgmentRequiresSync?:()=>boolean; incidentReview?:PwceIncidentOptions; audiencePrivacy?: AudienceOptions; presentationPackages?: { directory: string; ownerPrincipalId?: string; catalogOnly?: boolean }; pwceActionJournal?: { create?: boolean }; initiativeSimulation?:InitiativeSimulation; config: RuntimeConfig; host?: string; port?: number; shutdownDeadlineMs?: number; controlUiDirectory?: string; profileLoader?: (profile: Profile) => RuntimeConfig; localAuth?: LocalAuthOptions; capabilityProvider?: CapabilityProvider; capabilitySchemas?:CapabilitySchemaStore; capabilityProviderIdentity?: string; canonicalAuthority?: CanonicalAuthorityHost; canonicalCapabilities?: CanonicalCapabilityComposition | null };
+export type ServerOptions = { conversationMemoryRecall?:ConversationMemoryRecallOptions; gameRuntime?:GameRuntimeOptions; gameHost?:GameHostOptions; gameMemory?:GameMemoryHostOptions; telegram?:TelegramHostOptions; urgentAway?:UrgentAwayHostOptions; urgentConditions?:UrgentAttentionOptions; sessionEnvironmentId?:string; experienceTestClock?:()=>number; visualInput?:VisualInputOptions; acknowledgmentAlignment?:()=>AcknowledgmentAlignment|undefined; acknowledgmentRequiresSync?:()=>boolean; incidentReview?:PwceIncidentOptions; audiencePrivacy?: AudienceOptions; presentationPackages?: { directory: string; ownerPrincipalId?: string; catalogOnly?: boolean }; pwceActionJournal?: { create?: boolean }; initiativeSimulation?:InitiativeSimulation; config: RuntimeConfig; host?: string; port?: number; shutdownDeadlineMs?: number; controlUiDirectory?: string; profileLoader?: (profile: Profile) => RuntimeConfig; localAuth?: LocalAuthOptions; capabilityProvider?: CapabilityProvider; capabilitySchemas?:CapabilitySchemaStore; capabilityProviderIdentity?: string; canonicalAuthority?: CanonicalAuthorityHost; canonicalCapabilities?: CanonicalCapabilityComposition | null };
 type Json = Record<string, unknown>;
 type AuthContext = { principalId: string; sessionId: string; expiresAt: string; origin: string };
 const validUuid = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(value);
@@ -345,7 +346,7 @@ class AssistantAdminApi {
     const current=()=>{const rel=this.relationships.get(relationshipId),activeId=[...this.relationshipConfigurations.values()].find(c=>c.relationshipId===relationshipId&&c.status==="active")?.configurationId??null;const valid=!this.closed&&authorizationCurrent()&&rel?.lab?.experimentId===lab.experimentId&&rel.lab.status==="running"&&this.labBoundary(rel)===snapshot.sourceSnapshot.boundary&&activeId===snapshot.sourceSnapshot.configurationId;if(!valid)controller.abort();return valid;};
     setImmediate(()=>{void executeRelationshipLab(snapshot,this.labRuntime(),phase,controller.signal,current,result=>{const rel=this.relationships.get(relationshipId);if(!rel||!current())return;const field=phase==="comparison"?"comparison":"heldOut";const comparison=rel.lab![field]??{experimentId:lab.experimentId,status:"partial" as const,resultCount:0,results:[],heldOutExcluded:phase==="comparison"?lab.heldOutScenarioIds:[],variability:{},limitations:[]};comparison.results.push(result);comparison.resultCount=comparison.results.filter(r=>r.status!=="failed").length;rel.lab![field]=comparison;this.persistRelationship(rel);}).then(comparison=>{const rel=this.relationships.get(relationshipId);if(this.closed||rel?.lab?.experimentId!==lab.experimentId||rel.lab.status!=="running")return;if(!current()){rel.lab.status="cancelled";rel.lab.failure="Lab dependencies or authorization became stale; no automatic replay is permitted";delete rel.lab.activePhase;rel.lab.revision++;this.persistRelationship(rel);return;}rel.lab[phase==="comparison"?"comparison":"heldOut"]=comparison;rel.lab.status=comparison.status;delete rel.lab.activePhase;rel.lab.revision++;this.persistRelationship(rel);}).catch(()=>{const rel=this.relationships.get(relationshipId);if(!this.closed&&rel?.lab?.experimentId===lab.experimentId&&rel.lab.status==="running"){rel.lab.status="failed";rel.lab.failure="Pinned Lab execution failed; review retained partial results";delete rel.lab.activePhase;rel.lab.revision++;this.persistRelationship(rel);}}).finally(()=>this.labTasks.delete(lab.experimentId));});
   }
-  getPreparedRelationshipContext(assistantId: string, relationshipId: string | undefined, actor: string, options: { userInput?: string; audienceScope?: "authenticatedSession" | "unknown"; inferenceSessionId?:string; expressionWarmth?:number;activityRecords?:readonly RelationshipContextRecord[] } = {}): CompiledRelationshipContext | undefined {
+  getPreparedRelationshipContext(assistantId: string, relationshipId: string | undefined, actor: string, options: { userInput?: string; audienceScope?: "authenticatedSession" | "unknown"; inferenceSessionId?:string; expressionWarmth?:number;activityRecords?:readonly RelationshipContextRecord[];semanticReferences?:readonly {id:string;revision:number}[] } = {}): CompiledRelationshipContext | undefined {
     if(this.recovery.journal.currency!=="current")return undefined;
     const ownedRelationship = this.resolveRelationship(assistantId, relationshipId, actor);
     if (!ownedRelationship && (relationshipId || this.userProfiles.boundary(actor) === "unmapped")) return undefined;
@@ -360,7 +361,7 @@ class AssistantAdminApi {
     const cached = this.preparedCache.get(key); if (cached && Date.parse(cached.freshUntil) > Date.now() + minimumRemainingMs) return cached;
     const activity=options.activityRecords??[];if(activity.length>4)throw Error("Pending activity context exceeds bounded allocation");
     const records=[...this.relationshipContextRecords(relationship,actor,assistantId),...activity];
-    const view = compileRelationshipContext({ records,userInput:options.userInput ?? "",audienceScope:options.audienceScope ?? "unknown",profileRevision,relationshipRevision:`${relationship.relationshipId}:${relationship.revision}`,configurationRevision:active ? `${active.configurationId}:${active.revision}` : "default:1",controls:{...(active?.controls ?? relationshipControlDefaults),...(options.expressionWarmth!==undefined?{warmth:options.expressionWarmth}:active?.extensions?.initiative?{warmth:Number(asObject(active.extensions.initiative.dimensions)?.warmth)/11}:{})},representation:active?.representation??"recordOriented" });
+    const view = compileRelationshipContext({ records,...(options.semanticReferences===undefined?{}:{semanticReferences:options.semanticReferences}),userInput:options.userInput ?? "",audienceScope:options.audienceScope ?? "unknown",profileRevision,relationshipRevision:`${relationship.relationshipId}:${relationship.revision}`,configurationRevision:active ? `${active.configurationId}:${active.revision}` : "default:1",controls:{...(active?.controls ?? relationshipControlDefaults),...(options.expressionWarmth!==undefined?{warmth:options.expressionWarmth}:active?.extensions?.initiative?{warmth:Number(asObject(active.extensions.initiative.dimensions)?.warmth)/11}:{})},representation:active?.representation??"recordOriented" });
     const feedbackExpiry=relationship.candidates.filter(item=>feedbackIsCurrent(item)&&item.discoveryFeedback?.until).map(item=>Date.parse(item.discoveryFeedback!.until!));
     if(feedbackExpiry.length)view.freshUntil=new Date(Math.min(Date.parse(view.freshUntil),...feedbackExpiry)).toISOString();
     if(relationship.deploymentId&&active?.extensions?.understanding){const enrichment=this.discovery.select(relationship as UnderstandingScope,options.userInput??"",options.audienceScope??"unknown",view.budget.maximumBytes-view.budget.usedBytes,options.inferenceSessionId);appendDiscoveryContext(view,enrichment);}
@@ -645,6 +646,7 @@ class AssistantAdminApi {
   }
 }
 export class LifestreamServer {
+  private readonly conversationMemoryRecallOptions:Readonly<ConversationMemoryRecallOptions>|undefined;
   private readonly expectedMigrationIds=loadMigrations().map(m=>m.id);
   private readonly visualInput:VisualInputHost;
   private readonly localAuth: LocalAuthentication | undefined;
@@ -689,7 +691,7 @@ export class LifestreamServer {
   private experiential:ExperientialLearning|undefined;
   private readonly acknowledgmentAlignment:(()=>AcknowledgmentAlignment|undefined)|undefined;
   private readonly acknowledgmentRequiresSync:(()=>boolean)|undefined;
-  constructor(options: ServerOptions) {
+  constructor(options: ServerOptions) { this.conversationMemoryRecallOptions=captureConversationMemoryRecall(options.conversationMemoryRecall);
     if(options.gameRuntime&&(options.config.profile==='test'||!options.gameHost||options.gameMemory||options.config.authority.authentication!=='local-password'||!options.localAuth||!['127.0.0.1','localhost','::1'].includes(options.host??'127.0.0.1')))throw Error('Production game runtime requires separate authenticated loopback host composition');
     this.gameRuntimeOptions=options.gameRuntime?captureGameRuntimeOptions(options.gameRuntime):undefined;
     if(options.gameMemory&&(options.config.profile!=='test'||options.config.authority.authentication!=='local-password'||!options.localAuth||!['127.0.0.1','localhost','::1'].includes(options.host??'127.0.0.1')))throw Error('Game memory source injection requires isolated loopback local-auth tests');
@@ -1771,6 +1773,11 @@ export class LifestreamServer {
       result.prepareWorld = signal => world ? world.prepare(owner, signal) : Promise.resolve({ context: unavailableWorldContext("provider_unavailable"), isCurrent: owner.isCurrent, isSnapshotCurrent: owner.isCurrent });
       result.capabilityContext = "PWCE action administration is unavailable. World observations do not grant actions. Standalone grants cannot substitute for PWCE authority.";
     }
+    // Optional trusted composition only; ordinary defaults and audio do not
+    // acquire a fresh recall call. Preparation runs before foreground admission.
+    if(origin==='userTurn'&&microphone==='inactive'&&this.localAuth&&resolvedRelationship&&this.conversationMemoryRecallOptions&&result.runtimeSelfContext.audienceScope==='authenticatedSession'){
+      attachConversationMemoryRecall(result,{worker:this.automaticMemory,scope:{assistantId,principalId:context.principalId,relationshipId:resolvedRelationship},query:typeof body.userInput==='string'?body.userInput:'',options:this.conversationMemoryRecallOptions,compile:semanticReferences=>this.admin.getPreparedRelationshipContext(assistantId,relationshipId,context.principalId,{...(warmth()===undefined?{}:{expressionWarmth:warmth()!}),activityRecords:helpRecords,inferenceSessionId:context.sessionId,userInput:typeof body.userInput==='string'?body.userInput:'',audienceScope:'authenticatedSession',semanticReferences})});
+    }
     return result;
   }
   private invalidateWorldInputs(): void {
@@ -1792,6 +1799,7 @@ export class LifestreamServer {
     if (!this.storageReady || ["draining", "stopped"].includes(this.state) || this.providers.providers.inference?.status !== "healthy") return json(response, 503, { code: "inference_unavailable", message: "runtime inference is unavailable" });
     const context = this.requestContext(request, false); if (!context) return json(response, 401, { code: "authentication_required", message: "authentication required" });
     const body = asObject(await readBody(request)); if (!body) return json(response, 422, { code: "invalid_request", message: "message body must be an object" });
+    delete body.semanticReferences;delete body.prepareMemory;delete body.conversationMemoryRecall;
     delete body.preparedTurnBinding; delete body.preparedVisualContext; delete body.visualSelection; delete body.preparedRelationshipContext; delete body.profileProjection; delete body.runtimeSelfContext; delete body.memory; delete body.world; delete body.preparedWorldContext; delete body.capabilities;
     // Typed text does not establish a negotiated physical/logical endpoint.
     body.endpointId = null;
@@ -1804,6 +1812,11 @@ export class LifestreamServer {
     body.endpointId = prepared.endpointId ?? null;
     if (prepared.preparedRelationshipContext) body.preparedRelationshipContext = prepared.preparedRelationshipContext;
     const disconnected = new AbortController(); response.once("close", () => { if (!response.writableEnded) disconnected.abort(); });
+    // The existing worker admits only while idle. Finish the explicitly
+    // configured optional preparation before registering foreground work;
+    // cancellation and current source/authorization checks remain active.
+    try{if(prepared.prepareMemory)await prepareHostMemory(prepared,disconnected.signal);}catch{return json(response,409,{code:'runtime_context_changed',message:'Current memory context is unavailable.'});}
+    if(prepared.preparedRelationshipContext)body.preparedRelationshipContext=prepared.preparedRelationshipContext;
     const fence = { sessionId:context.sessionId, current: () => prepared.isCurrent(), abort: () => disconnected.abort() }; this.runtimeFences.add(fence);
     const releaseDiscovery=this.admin.discovery.foregroundStarted();
     const initiativeOwner=typeof body.assistantId==="string"?this.admin.initiativeOwner(body.assistantId,typeof body.relationshipId==="string"?body.relationshipId:undefined,context.principalId):undefined;

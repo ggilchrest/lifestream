@@ -12,7 +12,7 @@ test("one compiled view preserves mandatory lanes, bounded relevant allocation a
   const view = compileRelationshipContext({...base,records});
   assert.deepEqual(view.approvedBaseline,[records[0]!.content]); assert.deepEqual(view.criticalCorrections,[records[1]!.content]); assert.deepEqual(view.relevantContext.map(item=>item.id),['relevant']); assert.equal(view.preparationCount,1);
   assert.ok(view.omissions.some(item=>item.id==='hobby'&&item.reason==='no current-task relevance')); assert.doesNotMatch(formatPreparedRelationshipContext(view),/UNAPPROVED_PRIVATE_VALUE|rare clocks/);
-  assert.ok(view.budget.usedBytes <= view.budget.maximumBytes); assert.equal(view.compilerRevision,'relationship-context:10'); assert.deepEqual(compileRelationshipContext({...base,records}),view);
+  assert.ok(view.budget.usedBytes <= view.budget.maximumBytes); assert.equal(view.compilerRevision,'relationship-context:11'); assert.deepEqual(compileRelationshipContext({...base,records}),view);
   const disabled=compileRelationshipContext({...base,records,controls:{callbackFrequency:0}}); assert.equal(disabled.relevantContext.length,0); assert.equal(disabled.criticalCorrections.length,1); assert.equal(disabled.approvedBaseline.length,1);
   const unknown=compileRelationshipContext({...base,records,audienceScope:'unknown'}); assert.deepEqual(unknown.selections,[]); assert.doesNotMatch(formatPreparedRelationshipContext(unknown),/project uses Python|rare clocks|introductory/);
   assert.throws(()=>compileRelationshipContext({...base,records:[record('a','x'.repeat(3900),'correction'),record('b','y'.repeat(3900),'correction')]}),/Mandatory relationship boundaries/);
@@ -74,4 +74,22 @@ test('historical game memory uses the existing bounded lane with timeline uncert
  const view=compileRelationshipContext(input);assert.equal(view.relevantContext.length,1);assert.equal(view.freshUntil,record.expiresAt);assert.equal(view.preparationCount,1);assert.ok(view.budget.usedBytes<=8192);assert.match(formatPreparedRelationshipContext(view),/Transformation confidence is not perception calibration/);
  assert.equal(compileRelationshipContext({...input,now:5000}).selections.length,0);assert.equal(compileRelationshipContext({...input,audienceScope:'unknown'}).selections.length,0);assert.equal(compileRelationshipContext({...input,controls:{callbackFrequency:0}}).relevantContext.length,0);
  const oversized=compileRelationshipContext({...input,records:[{...record,content:record.content.repeat(4)}]});assert.equal(oversized.selections.length,0);assert.equal(oversized.omissions[0]!.reason,'bounded allocation');
+});
+
+
+test('host semantic references allocate paraphrases without admitting distractors or weakening context controls',async()=>{
+ const {compileRelationshipContext,relationshipControlDefaults}=await import('../src/context/builder.ts');
+ const record=(id:string,content:string)=>({id,content,revision:2,sourceFamily:'participant:'+id,status:'approved',use:'relevant' as const,personalization:true,mention:true,memoryRecord:true});
+ const query='Which gear deters insects around seedlings?',guidance=record('guidance','Participant advice: Put fine netting over the vegetable bed. Applicability remains unverified.'),literal=record('literal','Quoted typing exercise: '+query);
+ const input={records:[literal,guidance],userInput:query,audienceScope:'authenticatedSession' as const,profileRevision:'p',relationshipRevision:'r',configurationRevision:'c',controls:relationshipControlDefaults};
+ assert.deepEqual(compileRelationshipContext(input).relevantContext.map(r=>r.id),['literal']);
+ const selected=compileRelationshipContext({...input,semanticReferences:[{id:guidance.id,revision:2}]});assert.deepEqual(selected.relevantContext.map(r=>r.id),['guidance']);assert.match(formatPreparedRelationshipContext(selected),/Participant advice.*unverified/);assert.doesNotMatch(formatPreparedRelationshipContext(selected),/Quoted typing/);assert.equal(selected.selections[0]!.memoryRecord,true);assert.ok(selected.budget.usedBytes<=8192);assert.equal(selected.preparationCount,1);
+ assert.equal(compileRelationshipContext({...input,semanticReferences:[]}).relevantContext.length,0,'successful zero selection suppresses literal memory distractors');
+ for(const controls of [{...relationshipControlDefaults,callbackFrequency:0},{...relationshipControlDefaults,personalizationIntensity:0},{...relationshipControlDefaults,relevanceThreshold:1}])assert.equal(compileRelationshipContext({...input,controls,semanticReferences:[{id:guidance.id,revision:2}]}).relevantContext.length,0);
+ for(const patch of [{status:'candidate'},{personalization:false},{mention:false},{expiresAt:new Date(0).toISOString()}])assert.equal(compileRelationshipContext({...input,records:[{...guidance,...patch}],semanticReferences:[{id:guidance.id,revision:2}]}).relevantContext.length,0);
+ assert.equal(compileRelationshipContext({...input,audienceScope:'unknown',semanticReferences:[{id:guidance.id,revision:2}]}).selections.length,0);
+ for(const refs of [[{id:'foreign',revision:2}],[{id:guidance.id,revision:3}],[{id:guidance.id,revision:2},{id:guidance.id,revision:2}]])assert.throws(()=>compileRelationshipContext({...input,semanticReferences:refs}),/reference changed|references/);
+ assert.throws(()=>compileRelationshipContext({...input,records:[{...guidance,memoryRecord:false}],semanticReferences:[{id:guidance.id,revision:2}]}),/reference changed/);
+ const oversized={...guidance,content:guidance.content.repeat(8)};assert.equal(compileRelationshipContext({...input,records:[oversized],semanticReferences:[{id:guidance.id,revision:2}]}).relevantContext.length,0);
+ const correction={...guidance,id:'correction',content:'Apply the reviewed correction.',use:'correction' as const};assert.deepEqual(compileRelationshipContext({...input,records:[guidance,correction],semanticReferences:[],controls:{callbackFrequency:0}}).criticalCorrections,[correction.content]);
 });
