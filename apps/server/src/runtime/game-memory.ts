@@ -9,5 +9,5 @@ export type GameMemoryHostOptions={source:GameEpisodeOptions;maximumCandidates:n
 export function gameMemoryContextRecord(record:MemoryRecord):RelationshipContextRecord{
  const binding=(record.provenance.canonical as {extensions:Record<string,GameMemoryBinding>}).extensions['lifestream.localGameActivity']!;
  return {id:record.id,revision:Number(record.lifecycle.revision),sourceFamily:'game:'+String(record.provenance.gameFamilyKey),status:'approved',use:'relevant',personalization:true,mention:true,expiresAt:String(record.provenance.gameExpiresAt),gameExperience:true,memoryRecord:true,
-  content:`Past simulated game experience ${String(record.provenance.gameOccurredFrom)} [timeline=${binding.timelineId}]. ${record.content} Uncertainty: ${String(record.provenance.gameUncertainty)}. Raw evidence not retained. Historical game memory, not current progress, a Human statement, physical-world fact or feelings.`};
+  content:`Past simulated game experience ${String(record.provenance.gameOccurredFrom)} [timeline=${binding.timelineId}]. ${record.content} Uncertainty: ${String(record.provenance.gameUncertainty)} Historical game memory; no raw frames; not current progress, Human testimony, world facts or feelings.`};
 }

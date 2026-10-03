@@ -16,7 +16,7 @@ const facts=(o:G.GameObservation)=>o.facts.filter(f=>f.sourceScreenshotIds.lengt
 export function gameObservationJournalEntries(o:G.GameObservation,receipt:G.GameActionReceipt,time:string):Entry[]{
  return facts(o).map(f=>({entryId:randomUUID(),kind:'currentSituation',epistemicKind:f.epistemicKind==='visibleFeature'?'observation':'inference',content:f.description,sourceRefs:['game-observation:'+o.observationId,'game-fact:'+f.factId,'game-action:'+receipt.actionId],sourceSessionRef:'game-run:'+o.scope.runId,recordedAt:time,limitations:[...f.limitations,'Simulated game observation; historical after this frame. No current-progress or save-persistence claim.',f.uncertainty].filter(Boolean)}));
 }
-const summary=(o:G.GameObservation,r:G.GameActionReceipt)=>`Recorded ${r.disposition} controller attempt (${r.framesApplied} frames, controls neutralized). Resulting player-visible observation: ${facts(o).map(f=>`${f.epistemicKind==='inference'?'Interpretation':'Visible feature'}: ${f.description}`).join(' ')}`;
+const summary=(o:G.GameObservation,r:G.GameActionReceipt)=>`Recorded ${r.disposition} ${r.framesApplied}-frame attempt. View: ${facts(o).map(f=>`${f.epistemicKind==='inference'?'Interpretation':'Visible feature'}: ${f.description}`).join(' ')}`;
 export type GameplayGroundingOptions={database:()=>Database;journal:CampaignJournalOptions;scopeCurrent:(owner:Readonly<Owner>)=>boolean;quarantined:()=>boolean;retentionFor:(owner:Readonly<Owner>,activityId:string)=>{policyRevision:number;retention:GameEpisodeRetention}|null;publicationCurrent:(scope:Readonly<G.ActivityScope>)=>boolean;maximumFences:number;estimate:GameMemoryHostOptions['estimate']};
 
 /** Selected episode sources are captured from the genuinely settled ledger and

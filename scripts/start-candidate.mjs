@@ -7,10 +7,13 @@ import {resolve,dirname,join} from 'node:path';
 import {createLifestreamServer} from '../apps/server/src/index.ts';
 import {loadTelegramConfiguration} from '../apps/server/src/channels/telegram-configuration.ts';
 import {PwceConditionClient} from '../packages/providers-pwce/src/conditions.ts';
+import {loadCandidateGameplayOwners} from './candidate-gameplay-owners.mjs';
 import {candidateConfiguration,candidateInstallerToken} from './candidate-configuration.mjs';
 const args=process.argv.slice(2),values={};
-if(args.includes('--help')){console.log('node scripts/start-candidate.mjs --directory OUTSIDE_GIT [--presentations PRIVATE_PACKAGE_DIRECTORY] [--profile ai5090|test | --config PRIVATE_JSON] [--port 43182] [--incident-review PRIVATE_CONFIG_JSON] [--urgent-conditions PRIVATE_CONFIG_JSON] [--telegram PRIVATE_CONFIG_JSON] [--game-observation PRIVATE_REVIEWED_JSON]');process.exit(0);}
-for(let i=0;i<args.length;i+=2){assert.ok(['--directory','--presentations','--profile','--config','--port','--incident-review','--urgent-conditions','--telegram','--game-observation'].includes(args[i])&&args[i+1]&&values[args[i]]===undefined,'Unknown, duplicate or incomplete option');values[args[i]]=args[i+1];}
+if(args.includes('--help')){console.log('node scripts/start-candidate.mjs --directory OUTSIDE_GIT [--presentations PRIVATE_PACKAGE_DIRECTORY] [--profile ai5090|test | --config PRIVATE_JSON] [--port 43182] [--incident-review PRIVATE_CONFIG_JSON] [--urgent-conditions PRIVATE_CONFIG_JSON] [--telegram PRIVATE_CONFIG_JSON] [--game-observation PRIVATE_REVIEWED_JSON | --gameplay-owners PRIVATE_REVIEWED_MODULE --gameplay-owners-sha256 SHA256]');process.exit(0);}
+for(let i=0;i<args.length;i+=2){assert.ok(['--directory','--presentations','--profile','--config','--port','--incident-review','--urgent-conditions','--telegram','--game-observation','--gameplay-owners','--gameplay-owners-sha256'].includes(args[i])&&args[i+1]&&values[args[i]]===undefined,'Unknown, duplicate or incomplete option');values[args[i]]=args[i+1];}
+assert.equal(!!values['--gameplay-owners'],!!values['--gameplay-owners-sha256'],'Gameplay owner module and digest must be supplied together');
+assert.ok(!(values['--gameplay-owners']&&values['--game-observation']),'Select one game composition');
 assert.ok(values['--directory'],'An operator-local state directory is required');
 const config=await candidateConfiguration({profile:values['--profile'],configurationPath:values['--config']});
 const directory=resolve(values['--directory']);await mkdir(directory,{recursive:true,mode:0o700});const canonical=await realpath(directory);
@@ -34,7 +37,8 @@ if(values['--game-observation']){
  const file=await realpath(values['--game-observation']);for(let p=dirname(file);;p=dirname(p)){assert.equal(existsSync(join(p,'.git')),false,'Reviewed observation configuration must be outside Git');if(dirname(p)===p)break;}
  const bytes=await readFile(file);assert.ok(bytes.length<=32768,'Reviewed observation configuration too large');gameObservation=JSON.parse(bytes.toString('utf8'));
 }
-const app=createLifestreamServer({...(gameObservation?{gameObservation}:{}),...(telegram?{telegram}:{}),sessionEnvironmentId:candidate.sessionEnvironmentId,...(incidentReview?{incidentReview}:{}),...(urgentConditions?{urgentConditions}:{}),config,audiencePrivacy:{},host:'127.0.0.1',port,localAuth:{stateDirectory:join(canonical,'safety'),installerToken:await candidateInstallerToken(canonical)},...(values['--presentations']?{presentationPackages:{directory:await realpath(values['--presentations'])}}:{})});
+const gameplayOwners=values['--gameplay-owners']?await loadCandidateGameplayOwners(values['--gameplay-owners'],values['--gameplay-owners-sha256']):undefined;
+const app=createLifestreamServer({...(gameplayOwners?{gameplayOwners}:{}),...(gameObservation?{gameObservation}:{}),...(telegram?{telegram}:{}),sessionEnvironmentId:candidate.sessionEnvironmentId,...(incidentReview?{incidentReview}:{}),...(urgentConditions?{urgentConditions}:{}),config,audiencePrivacy:{},host:'127.0.0.1',port,localAuth:{stateDirectory:join(canonical,'safety'),installerToken:await candidateInstallerToken(canonical)},...(values['--presentations']?{presentationPackages:{directory:await realpath(values['--presentations'])}}:{})});
 try{await app.start();console.log(JSON.stringify({url:`http://127.0.0.1:${app.address().port}/control/#conversation`,profile,fixture:profile==='test',telegram:{configured:!!telegram,enabled:telegram?.enabled()??false,alertsConfigured:!!telegram?.localAlerts},stateDirectory:canonical,installerTokenFile:tokenFile,startupMode:app.health.acceptingInteractions?'ready':'administrationOnly',...(app.health.acceptingInteractions?{}:{notice:'Required selected providers are unavailable. Authenticated administration remains available; conversation is unavailable and no fallback was selected.'}),health:app.health},null,2));}
 catch(error){await app.shutdown();throw error;}
 for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>void app.shutdown().then(()=>process.exit(0)));

@@ -68,7 +68,9 @@ export function createSupervisedGameRuntime({native,campaign,createRepository,re
       if(!recorded||recorded.journalCommitted!==true)throw Error('Durable campaign journal unavailable');
       if(recorded.episode&&current()){
        const memoryResult=join.runtime.publishEpisode(recorded.episode);
-       report({state:'episodePublication',index,retained:memoryResult.state==='retained'});
+       const episodeRetained=memoryResult.state==='retained';
+       const memoryId=episodeRetained&&typeof memoryResult.memoryId==='string'&&memoryResult.memoryId.trim()?memoryResult.memoryId:null;
+       report({state:'episodePublication',index,retained:episodeRetained,episodeRetained,memoryActive:memoryId!==null,memoryId});
       }
       report({state:'settled',index});
      }

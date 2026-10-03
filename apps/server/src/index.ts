@@ -1,4 +1,5 @@
 import {createGameplayComposition,type GameplayCompositionOptions} from './runtime/gameplay-composition.ts';
+import {gameplayOptionsFromOwners,type GameplayRunOwners} from './runtime/gameplay-run-owner.ts';
 import {createReviewedGameObservationComposition,qualifiedCtVisionCurrent,type ReviewedGameObservationRun} from './runtime/reviewed-game-observation.ts';
 import type {SglangInferenceProvider} from '@lifestream/providers-sglang';
 import {GameHostPort,type GameHostOptions,type GameHostActor} from './runtime/game-host-port.ts';
@@ -107,7 +108,7 @@ import {retainGameHelpAdvice,type GameHelpAdviceInput} from './runtime/game-advi
 import {projectGameEpisode} from '@lifestream/runtime/activity/memory';
 import {gameEpisodeDigest,gameEpisodeSnapshot} from '@lifestream/contracts/game-memory';
 import type {GameExperienceEpisode} from '@lifestream/contracts/game-activity';
-export type ServerOptions = { gameplay?:GameplayCompositionOptions; gameObservation?:ReviewedGameObservationRun; gameRuntime?:GameRuntimeOptions; gameHost?:GameHostOptions; gameMemory?:GameMemoryHostOptions; telegram?:TelegramHostOptions; urgentAway?:UrgentAwayHostOptions; urgentConditions?:UrgentAttentionOptions; sessionEnvironmentId?:string; experienceTestClock?:()=>number; visualInput?:VisualInputOptions; acknowledgmentAlignment?:()=>AcknowledgmentAlignment|undefined; acknowledgmentRequiresSync?:()=>boolean; incidentReview?:PwceIncidentOptions; audiencePrivacy?: AudienceOptions; presentationPackages?: { directory: string; ownerPrincipalId?: string; catalogOnly?: boolean }; pwceActionJournal?: { create?: boolean }; initiativeSimulation?:InitiativeSimulation; config: RuntimeConfig; host?: string; port?: number; shutdownDeadlineMs?: number; controlUiDirectory?: string; profileLoader?: (profile: Profile) => RuntimeConfig; localAuth?: LocalAuthOptions; capabilityProvider?: CapabilityProvider; capabilitySchemas?:CapabilitySchemaStore; capabilityProviderIdentity?: string; canonicalAuthority?: CanonicalAuthorityHost; canonicalCapabilities?: CanonicalCapabilityComposition | null };
+export type ServerOptions = { gameplayOwners?:GameplayRunOwners; gameplay?:GameplayCompositionOptions; gameObservation?:ReviewedGameObservationRun; gameRuntime?:GameRuntimeOptions; gameHost?:GameHostOptions; gameMemory?:GameMemoryHostOptions; telegram?:TelegramHostOptions; urgentAway?:UrgentAwayHostOptions; urgentConditions?:UrgentAttentionOptions; sessionEnvironmentId?:string; experienceTestClock?:()=>number; visualInput?:VisualInputOptions; acknowledgmentAlignment?:()=>AcknowledgmentAlignment|undefined; acknowledgmentRequiresSync?:()=>boolean; incidentReview?:PwceIncidentOptions; audiencePrivacy?: AudienceOptions; presentationPackages?: { directory: string; ownerPrincipalId?: string; catalogOnly?: boolean }; pwceActionJournal?: { create?: boolean }; initiativeSimulation?:InitiativeSimulation; config: RuntimeConfig; host?: string; port?: number; shutdownDeadlineMs?: number; controlUiDirectory?: string; profileLoader?: (profile: Profile) => RuntimeConfig; localAuth?: LocalAuthOptions; capabilityProvider?: CapabilityProvider; capabilitySchemas?:CapabilitySchemaStore; capabilityProviderIdentity?: string; canonicalAuthority?: CanonicalAuthorityHost; canonicalCapabilities?: CanonicalCapabilityComposition | null };
 type Json = Record<string, unknown>;
 type AuthContext = { principalId: string; sessionId: string; expiresAt: string; origin: string };
 const validUuid = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(value);
@@ -672,6 +673,7 @@ export class LifestreamServer {
   private readonly gameObservation:ReturnType<typeof createReviewedGameObservationComposition>|undefined;
   private readonly gameRuntimeOptions:Readonly<GameRuntimeOptions>|undefined;
   private readonly activeGameRuntimes=new Map<string,AuthenticatedGameRuntime>();
+  private gameCompositionRetired=false;
   private automaticMemory: AutomaticMemory;
   private presentationSelection: PresentationSelection;
   private readonly audioSessions = new Set<AudioSession>();
@@ -694,8 +696,9 @@ export class LifestreamServer {
   private readonly acknowledgmentAlignment:(()=>AcknowledgmentAlignment|undefined)|undefined;
   private readonly acknowledgmentRequiresSync:(()=>boolean)|undefined;
   constructor(options: ServerOptions) {
-    if(options.gameplay&&(options.gameHost||options.gameRuntime||options.gameMemory||options.gameObservation||options.config.profile==='test'||options.config.authority.authentication!=='local-password'||!options.localAuth||!['127.0.0.1','localhost','::1'].includes(options.host??'127.0.0.1')))throw Error('Gameplay requires one production authenticated loopback composition');
-    this.gameplay=options.gameplay?createGameplayComposition(options.gameplay,()=>this.database):undefined;
+    if((options.gameplay||options.gameplayOwners)&&(options.gameplay&&options.gameplayOwners||options.gameHost||options.gameRuntime||options.gameMemory||options.gameObservation||options.config.profile==='test'||options.config.authority.authentication!=='local-password'||!options.localAuth||!['127.0.0.1','localhost','::1'].includes(options.host??'127.0.0.1')))throw Error('Gameplay requires one production authenticated loopback composition');
+    const gameplayOptions=options.gameplayOwners?gameplayOptionsFromOwners(options.gameplayOwners,{database:()=>this.database,current:()=>this.state==='ready'&&!this.profileSwitching&&!this.gameCompositionRetired,quarantined:()=>this.restoreQuarantine,readFrame:(scope,observation,shot)=>this.gameHost?.consumeOwnedFrame(scope,observation,shot)??null}):options.gameplay;
+    this.gameplay=gameplayOptions?createGameplayComposition(gameplayOptions,()=>this.database):undefined;
     if(options.gameRuntime&&(options.config.profile==='test'||!(options.gameHost||options.gameObservation)||options.gameMemory||options.config.authority.authentication!=='local-password'||!options.localAuth||!['127.0.0.1','localhost','::1'].includes(options.host??'127.0.0.1')))throw Error('Production game runtime requires separate authenticated loopback host composition');
     if(options.gameObservation&&(options.gameHost||options.gameRuntime||options.gameMemory||options.config.profile==='test'||options.config.authority.authentication!=='local-password'||!options.localAuth||!['127.0.0.1','localhost','::1'].includes(options.host??'127.0.0.1')))throw Error('Reviewed observation requires one production authenticated loopback composition');
     this.gameObservation=options.gameObservation?createReviewedGameObservationComposition(options.gameObservation,{
@@ -744,7 +747,7 @@ export class LifestreamServer {
   }
   private gameHostActor(request:IncomingMessage,administration:boolean):GameHostActor {
     this.assertLocalRequest(request,true);
-    if(!this.localAuth||this.restoreQuarantine)throw new AuthenticationError(503,'game_host_unavailable');
+    if(!this.localAuth||this.restoreQuarantine||this.gameCompositionRetired)throw new AuthenticationError(503,'game_host_unavailable');
     const auth=this.localAuth,context=this.requestContext(request,administration) as LocalContext|undefined;
     if(!context)throw new AuthenticationError();
     const csrf=request.headers['x-lifestream-csrf'];if(typeof csrf!=='string')throw new AuthenticationError(403,'csrf_rejected');auth.csrf(context,csrf,administration);
@@ -1604,6 +1607,11 @@ export class LifestreamServer {
       if (body?.action === "check") return json(response, 200, { requestedProfile: requested, activeProfile: this.config.profile, ready: candidateProviders.ready, providers: candidateProviders.providers });
       if (!candidateProviders.ready) return json(response, 503, { code: "profile_unavailable", message: `${requested} required providers are unavailable; ${this.config.profile} remains active`, activeProfile: this.config.profile, requestedProfile: requested, providers: candidateProviders.providers });
       await ensureStorage(candidateConfig); candidateDatabase = new Database({ path: candidateConfig.storage.databasePath }); const candidateMigrations = candidateDatabase.migrate(); const candidateMemories = new MemoryRepository(candidateDatabase); const candidateInitiative = new RelationalInitiativeCoordinator(8, new InitiativeLedgerRepository(candidateDatabase)); const candidateAdmin = new AssistantAdminApi(new AssistantProfileRepository(candidateDatabase), candidateMemories, candidateDatabase,()=>isolatedLabRuntime(preparedProviders,candidateConfig),candidateConfig.storage.databasePath===":memory:"?undefined:join(candidateConfig.storage.artifactDirectory,"relationship-recovery"));
+      // Keep the original database/session and historical shutdown ingress alive
+      // until the exact owned game lease has retired. A new profile must obtain
+      // a fresh operator composition; never reuse captured old repositories.
+      await this.gameplay?.stop();this.gameObservation?.stop();this.gameHost?.close();
+      for(const runtime of this.activeGameRuntimes.values())runtime.close();this.activeGameRuntimes.clear();this.gameCompositionRetired=true;
       for (const session of this.audioSessions) session.close(); this.audioSessions.clear();
       this.telegramAlerts?.close();this.telegramAlerts=undefined;this.telegramNoticeAuthority=undefined;this.telegramAudience?.close();this.telegramAudience=undefined;await this.telegram?.close();this.telegram=undefined; const previousDatabase = this.database; this.acknowledgmentService?.close();this.acknowledgmentService=undefined; await this.experiential?.close();this.experiential=undefined; await this.automaticMemory.close(); this.providers.world?.close(); this.providers.pwceCapabilities?.close(); this.initiativeHost.close(); this.initiativeHost=new InitiativeHost(candidateDatabase); this.urgentAway?.close(); this.urgentAway=undefined; this.awayDestinations=[]; this.urgentAttention.close(); this.urgentAttention=new UrgentAttentionHost(candidateDatabase); this.admin.close(); this.gameHelp=undefined;this.gameExperience=undefined;this.config = candidateConfig; this.providers = candidateProviders; this.database = candidateDatabase; this.presentationSelection=new PresentationSelection(candidateDatabase); this.memories = candidateMemories; this.automaticMemory=this.createAutomaticMemory(); this.initiative = candidateInitiative; this.admin = candidateAdmin; this.migrationRecords = candidateMigrations; candidateDatabase = undefined; previousDatabase.close(); this.state = "ready"; this.profileSwitching = false;this.acknowledgments.start();this.experience.start();
       return json(response, 200, { ...this.health, switched: true });
@@ -1747,7 +1755,7 @@ export class LifestreamServer {
         sourceRevision:createHash('sha256').update(JSON.stringify([state.sourceRevision,visualAvailability.sourceRevision,visualAvailability.expiresAtMs])).digest('hex')};
     }
     const preparedTurnBinding=conversationText!==undefined && visualBinding.expectedConversationId
-      ? createPreparedTurnBinding({viewId:randomUUID(),revision:1,invalidationKey:createHash('sha256').update(fingerprint).digest('hex'),
+      ? createPreparedTurnBinding({viewId:randomUUID(),revision:1,invalidationKey:origin==='activityStep'?randomUUID():createHash('sha256').update(fingerprint).digest('hex'),
         scope:{assistantId,principalId:context.principalId,relationshipId:resolvedRelationship??null,conversationId:visualBinding.expectedConversationId,sessionId:context.sessionId,endpointId:prepared.endpointId},conversation:conversationText,
         sourceRevisions:{runtime:prepared.runtimeSelfContext.sourceRevision,
           ...(prepared.profileProjection?{persona:prepared.profileProjection.sourceRevision}:{}),
