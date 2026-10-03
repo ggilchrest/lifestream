@@ -7,5 +7,5 @@ export {WindowsHostLifecycle,WindowsHostLifecycleError,WINDOWS_HOST_BACKEND_URL,
 export {WindowsGameHostClient,GameHostClientError,type WindowsGameHostClientOptions,type GameHostFenceContext,type GameHostClientFailure} from './game-host-client.js';
 export {ReviewedFrameDecoder,type ReviewedFrameManifest} from './reviewed-frame-decoder.js';
 export {LiveFrameDecoder,gameFramePixels,gamePixelRegionDigest,type LiveFrameManifest,type ReviewedPixelCue,type PixelRegion} from './live-frame-decoder.js';
-export {NativeGameEvidence,type NativeGameEvidenceOptions} from './native-evidence.js';
+export {NativeGameEvidence,type NativeGameEvidenceOptions,type NativeControllerReadback,type NativeShutdownReadback} from './native-evidence.js';
 export {createOwnedWindowsGameHostDriver,type OwnedWindowsGameHostDriverOptions} from './owned-native-driver.js';
