@@ -75,7 +75,16 @@ export function loadMigrations(): Migration[] {
     [65, "game_help", "0065_game_help.sql"],
     [66, "game_advice_custody", "0066_game_advice_custody.sql"],
     [67, "activity_controller_reservations", "0067_activity_controller_reservations.sql"],
-    [68, "game_host_dispatch", "0068_game_host_dispatch.sql"]
+    [68, "game_host_dispatch", "0068_game_host_dispatch.sql"],
+    [69, "memory_proposals", "0069_memory_proposals.sql"],
+    [70, "conversation_history", "0070_conversation_history.sql"],
+    [71, "conversation_content_fences", "0071_conversation_content_fences.sql"],
+    [72, "desktop_sessions", "0072_desktop_sessions.sql"],
+    [73, "conversation_until_deletion", "0073_conversation_until_deletion.sql"],
+    [74, "returning_browser_preferences", "0074_returning_browser_preferences.sql"],
+    [75, "autonomy", "0075_autonomy.sql"],
+    [76, "conversation_message_actions", "0076_conversation_message_actions.sql"],
+    [77, "voice_reference_library", "0077_voice_reference_library.sql"]
   ].map(([id, name, file]) => {
     const sql = readFileSync(join(migrationDirectory, file as string), "utf8");
     return { id: id as number, name: name as string, sql, digest: createHash("sha256").update(sql).digest("hex") };

@@ -1,0 +1,633 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-location/1.0.0",
+  "title": "Raw phone-source location observations and age-only assessment; no identity, presence, policy or world-state authority.",
+  "$ref": "#/$defs/LocationObservation",
+  "$defs": {
+    "LocationInstant": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{1,9})?Z$"
+    },
+    "LocationUnknownReason": {
+      "enum": [
+        "notProvided",
+        "notObservable",
+        "unsupported"
+      ]
+    },
+    "LocationProvenanceFlag": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reported"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            },
+            "reason": {
+              "$ref": "#/$defs/LocationUnknownReason"
+            }
+          }
+        }
+      ]
+    },
+    "LocationCollectionMethod": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reported"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            }
+          }
+        }
+      ]
+    },
+    "LocationProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "simulatedBySoftware",
+        "accessoryProduced",
+        "mockProvider"
+      ],
+      "properties": {
+        "method": {
+          "$ref": "#/$defs/LocationCollectionMethod"
+        },
+        "simulatedBySoftware": {
+          "$ref": "#/$defs/LocationProvenanceFlag"
+        },
+        "accessoryProduced": {
+          "$ref": "#/$defs/LocationProvenanceFlag"
+        },
+        "mockProvider": {
+          "$ref": "#/$defs/LocationProvenanceFlag"
+        },
+        "monotonicClock": {
+          "$ref": "#/$defs/LocationMonotonicClock"
+        }
+      }
+    },
+    "LocationSourceIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collector",
+        "namespace",
+        "upstreamId",
+        "originalApp",
+        "originalDevice"
+      ],
+      "properties": {
+        "collector": {
+          "enum": [
+            "coreLocation",
+            "androidLocation"
+          ]
+        },
+        "namespace": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "upstreamId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "originalApp": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "originalDevice": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LocationAccuracyConfidence": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "probability"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reported"
+            },
+            "probability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unspecified"
+            }
+          }
+        }
+      ]
+    },
+    "LocationHorizontalAccuracy": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "meters",
+            "confidence"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reported"
+            },
+            "meters": {
+              "type": "number",
+              "minimum": 0
+            },
+            "confidence": {
+              "$ref": "#/$defs/LocationAccuracyConfidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            },
+            "reason": {
+              "$ref": "#/$defs/LocationUnknownReason"
+            }
+          }
+        }
+      ]
+    },
+    "LocationCoordinates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "latitude",
+        "longitude"
+      ],
+      "properties": {
+        "system": {
+          "const": "WGS84"
+        },
+        "latitude": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "longitude": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
+      }
+    },
+    "LocationPosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "coordinates",
+        "horizontalAccuracy"
+      ],
+      "properties": {
+        "kind": {
+          "const": "position"
+        },
+        "coordinates": {
+          "$ref": "#/$defs/LocationCoordinates"
+        },
+        "horizontalAccuracy": {
+          "$ref": "#/$defs/LocationHorizontalAccuracy"
+        }
+      }
+    },
+    "LocationRegionTransition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "sourceRegionId",
+        "transition"
+      ],
+      "properties": {
+        "kind": {
+          "const": "regionTransition"
+        },
+        "sourceRegionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "transition": {
+          "enum": [
+            "entered",
+            "exited",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "LocationUnavailable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "reason"
+      ],
+      "properties": {
+        "kind": {
+          "const": "unavailable"
+        },
+        "reason": {
+          "enum": [
+            "notObservable",
+            "unsupported",
+            "temporarilyUnavailable",
+            "invalidMeasurement",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "LocationObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "source",
+            "observedAt",
+            "collectedAt",
+            "provenance",
+            "observation"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "source": {
+              "$ref": "#/$defs/LocationSourceIdentity"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/LocationInstant"
+            },
+            "collectedAt": {
+              "$ref": "#/$defs/LocationInstant"
+            },
+            "provenance": {
+              "$ref": "#/$defs/LocationProvenance"
+            },
+            "observation": {
+              "$ref": "#/$defs/LocationPosition"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "source",
+            "observedAt",
+            "collectedAt",
+            "provenance",
+            "observation"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "source": {
+              "$ref": "#/$defs/LocationSourceIdentity"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/LocationInstant"
+            },
+            "collectedAt": {
+              "$ref": "#/$defs/LocationInstant"
+            },
+            "provenance": {
+              "$ref": "#/$defs/LocationProvenance"
+            },
+            "observation": {
+              "$ref": "#/$defs/LocationRegionTransition"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "source",
+            "observedAt",
+            "collectedAt",
+            "provenance",
+            "observation"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "source": {
+              "$ref": "#/$defs/LocationSourceIdentity"
+            },
+            "observedAt": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/LocationInstant"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "collectedAt": {
+              "$ref": "#/$defs/LocationInstant"
+            },
+            "provenance": {
+              "$ref": "#/$defs/LocationProvenance"
+            },
+            "observation": {
+              "$ref": "#/$defs/LocationUnavailable"
+            }
+          }
+        }
+      ]
+    },
+    "LocationAgeContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "referenceAt",
+        "maximumAgeMs"
+      ],
+      "properties": {
+        "referenceAt": {
+          "$ref": "#/$defs/LocationInstant"
+        },
+        "maximumAgeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "LocationAgeAssessment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "ageNanoseconds",
+            "maximumAgeMs",
+            "qualification"
+          ],
+          "properties": {
+            "state": {
+              "enum": [
+                "fresh",
+                "stale"
+              ]
+            },
+            "ageNanoseconds": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]{0,23})$"
+            },
+            "maximumAgeMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "qualification": {
+              "const": "observationAgeOnly"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "reason",
+            "ageNanoseconds",
+            "maximumAgeMs",
+            "qualification"
+          ],
+          "properties": {
+            "state": {
+              "const": "unknown"
+            },
+            "reason": {
+              "enum": [
+                "unavailable",
+                "futureObservation",
+                "futureCollection",
+                "observationAfterCollection"
+              ]
+            },
+            "ageNanoseconds": {
+              "type": "null"
+            },
+            "maximumAgeMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "qualification": {
+              "const": "observationAgeOnly"
+            }
+          }
+        }
+      ]
+    },
+    "LocationElapsedUncertainty": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "nanoseconds",
+            "confidence"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reported"
+            },
+            "nanoseconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "confidence": {
+              "$ref": "#/$defs/LocationAccuracyConfidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            },
+            "reason": {
+              "$ref": "#/$defs/LocationUnknownReason"
+            }
+          }
+        }
+      ]
+    },
+    "LocationMonotonicClock": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "elapsedRealtimeNanoseconds",
+            "uncertainty",
+            "clockScope"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reported"
+            },
+            "elapsedRealtimeNanoseconds": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]{0,18})$"
+            },
+            "uncertainty": {
+              "$ref": "#/$defs/LocationElapsedUncertainty"
+            },
+            "clockScope": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            },
+            "reason": {
+              "$ref": "#/$defs/LocationUnknownReason"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -3,6 +3,21 @@ import { test } from "node:test";
 import { calculateLatency } from "../src/performance/metrics.ts";
 import { SpeechSafeSegmenter, projectSpeech } from "../src/voice/segmenter.ts";
 
+test('numeric and symbolic meanings survive speech projection',()=>{
+ assert.equal(projectSpeech('Use ~5 kg, not -5.25 kg. 3*4=12; 2 < 3; 4 > 1; 12% and $1,234.50.'),'Use approximately 5 kg, not -5.25 kg. 3 times 4=12; 2 < 3; 4 > 1; 12% and $1,234.50.');
+ assert.equal(projectSpeech('- 5.25 °C; ~~5~~ and ~5.'),'- 5.25 °C; 5 and approximately 5.');
+ assert.equal(projectSpeech('**Important**: a*b is a formula; ~~old~~ is deleted.'),'Important: a*b is a formula; old is deleted.');
+});
+test('table cells never leak through preview/read-aloud segmentation at any split',()=>{
+ const raw='Here are the details.\n\n| Year | Temperature |\n|---|---|\n| 2025 | 12.50 |\n| 2024 | -5.25 |\n\nKeep the original units.';
+ for(let split=0;split<=raw.length;split++){
+  const segmenter=new SpeechSafeSegmenter(360),units=[...segmenter.push(raw.slice(0,split)),...segmenter.push(raw.slice(split)),...segmenter.flush()].map(u=>u.text).join(' ');
+  assert.equal(units,'Here are the details. Table details are available in the conversation text. Keep the original units.',String(split));
+ }
+});
+
+test('unbordered Markdown tables are projected without cell contents',()=>{const segmenter=new SpeechSafeSegmenter();const raw='Year | High\n---|---\n2025 | -12.50\n\nDone.';assert.deepEqual([...segmenter.push(raw),...segmenter.flush()].map(s=>s.text),['Table details are available in the conversation text.','Done.']);});
+
 test('first-clause mode releases a substantial natural pause once, retaining every word',()=>{
   const first='The gardener carefully checked the quiet greenhouse before opening the door,';
   const rest=' and found a smooth blue stone beside the oldest rose bush.';

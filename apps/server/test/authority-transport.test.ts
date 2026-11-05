@@ -1,0 +1,8 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {admitAuthorityStream,audienceTransportOwner} from '../src/runtime/authority-transport.ts';
+import type {ServerResponse} from 'node:http';
+const response=()=>{const calls:unknown[]=[];return{calls,port:{writeHead:(...args:unknown[])=>calls.push(args),end:()=>calls.push('end')}as unknown as ServerResponse};};
+test('compatibility gate is bodyless terminal204 and marked query remains closed',()=>{const r=response();assert.equal(admitAuthorityStream(r.port,new URLSearchParams()),false);assert.deepEqual(r.calls,[[204,{'cache-control':'no-store','x-lifestream-transport':'upgrade-required'}],'end']);for(const query of ['transport=bad','transport=shared-v1&transport=shared-v1','transport=shared-v1&extra=1'])assert.throws(()=>admitAuthorityStream(response().port,new URLSearchParams(query)),{status:422});const a=response();assert.equal(admitAuthorityStream(a.port,new URLSearchParams('transport=shared-v1')),true);assert.deepEqual(a.calls,[]);});
+test('urgent accepts only original assistant plus one compatibility marker',()=>{assert.equal(admitAuthorityStream(response().port,new URLSearchParams('assistantId=owned&transport=shared-v1'),true),true);for(const query of ['transport=shared-v1','assistantId=a&assistantId=b&transport=shared-v1','assistantId=a&unknown=1'])assert.throws(()=>admitAuthorityStream(response().port,new URLSearchParams(query),true),{status:422});});
+test('audience transport stamp copies only authenticated request identity',()=>{assert.deepEqual(audienceTransportOwner({principalId:'actor',sessionId:'session',endpointId:null}),{principalId:'actor',authenticatedSessionId:'session',endpointId:null});});

@@ -1,4 +1,4 @@
-import { describeRelationshipControls } from "./controls.ts";
+import { describeRelationshipControls, relationshipControlDefaults } from "./controls.ts";
 export { relationshipControlDefaults, relationshipControlInventory } from "./controls.ts";
 export type ContextSource = { id: string; content: string; rank: number };
 // Conservative estimate for byte-based tokenization; the serving tokenizer is not measured here.
@@ -41,10 +41,13 @@ export function formatPreparedRelationshipContext(context: PreparedRelationshipC
 }
 
 export type RelationshipContextRecord = { id: string; content: string; revision: number; sourceFamily: string; status: string; use: "baseline" | "correction" | "relevant"; personalization: boolean; mention: boolean; uncertainty?: string; expiresAt?: string; visualObservation?: boolean; gameExperience?:boolean; gameHelp?:boolean; memoryRecord?:boolean };
+/** Host-selected relevance only. The current scoped source and its use gates
+ * remain authoritative; a reference cannot authorize or recreate a record. */
+export type SemanticContextReference = { id: string; revision: number };
 export type ContextOmission = { id: string; revision: number; reason: string };
 export type ContextSelection = { id: string; revision: number; sourceFamily: string; lane: RelationshipContextRecord["use"]; byteContribution: number; memoryRecord?:boolean };
-export type CompiledRelationshipContext = PreparedRelationshipContext & { compilerRevision: string; representationRevision: string; builtAt: string; freshUntil: string; sourceRevisions: readonly string[]; selections: readonly ContextSelection[]; omissions: readonly ContextOmission[]; budget: { maximumBytes: number; usedBytes: number; estimator: "utf8-bytes-upper-bound" }; preparationCount: 1 };
-export const RELATIONSHIP_COMPILER_REVISION = "relationship-context:10";
+export type CompiledRelationshipContext = PreparedRelationshipContext & { compilerRevision: string; representationRevision: string; builtAt: string; freshUntil: string; sourceValidUntil?: string; sourceRevisions: readonly string[]; selections: readonly ContextSelection[]; omissions: readonly ContextOmission[]; budget: { maximumBytes: number; usedBytes: number; estimator: "utf8-bytes-upper-bound" }; preparationCount: 1 };
+export const RELATIONSHIP_COMPILER_REVISION = "relationship-context:11";
 /** Exact source metadata after the formatter's final optional allocation.
  * Compiler selection alone can precede discovery displacing an optional item.
  * This describes rendered sources; it grants no new source eligibility. */
@@ -70,12 +73,30 @@ function requestsPersonalRecall(input: string): boolean {
     || /^(?:what\s+do\s+you\s+remember|do\s+you\s+remember)\b[^.!?\n]{0,120}\b(?:me|my|i)\b/u.test(request);
 }
 const terms = (value: string) => new Set((value.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? []).filter(word => !["the", "and", "that", "this", "with", "for", "are", "was", "user", "prefers", "please", "about", "explain"].includes(word)));
-export function compileRelationshipContext(input: { records: readonly RelationshipContextRecord[]; userInput: string; audienceScope: "authenticatedSession" | "unknown"; profileRevision: string; relationshipRevision: string; configurationRevision: string; controls?: Readonly<Record<string, number>>; representation?: "recordOriented"|"conventionOriented"; now?: number }): CompiledRelationshipContext {
-  const now = input.now ?? Date.now(), maximumBytes = 8192;
-  const view: CompiledRelationshipContext = { profileRevision: input.profileRevision, relationshipRevision: input.relationshipRevision, configurationRevision: input.configurationRevision, ...(input.controls ? { configurationControls: input.controls } : {}), compilerRevision: RELATIONSHIP_COMPILER_REVISION, representationRevision: input.representation === "conventionOriented" ? "convention-oriented:1" : "record-oriented:1", builtAt: new Date(now).toISOString(), freshUntil: new Date(now + 120_000).toISOString(), approvedBaseline: [], criticalCorrections: [], relevantContext: [], sourceRevisions: [], selections: [], omissions: [], budget: { maximumBytes, usedBytes: 0, estimator: "utf8-bytes-upper-bound" }, preparationCount: 1, limitations: ["Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences.", "Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect.", "Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall.", "Selection and byte contributions are observed inputs, not causal proof of reply behavior."] };
+export function compileRelationshipContext(input: { records: readonly RelationshipContextRecord[]; semanticReferences?: readonly SemanticContextReference[]; userInput: string; audienceScope: "authenticatedSession" | "unknown"; profileRevision: string; relationshipRevision: string; configurationRevision: string; controls?: Readonly<Record<string, number>>; representation?: "recordOriented"|"conventionOriented"; now?: number; maximumAgeMs?:number }): CompiledRelationshipContext {
+  const now = input.now ?? Date.now(), maximumBytes = 8192, maximumAgeMs=input.maximumAgeMs??120000;
+  if(!Number.isSafeInteger(maximumAgeMs)||maximumAgeMs<1||maximumAgeMs>600000)throw new Error('Invalid host context lifetime');
+  let referenceRanks: Map<string, number> | undefined;
+  if (input.semanticReferences !== undefined) {
+    const references = input.semanticReferences;
+    if (!Array.isArray(references) || references.length > 100 || Reflect.ownKeys(references).length !== references.length + 1) throw new Error("Invalid semantic memory references");
+    referenceRanks = new Map();
+    for (const reference of references) {
+      if (!reference || typeof reference !== 'object' || Reflect.ownKeys(reference).length !== 2 || !['id','revision'].every(key => Object.hasOwn(Object.getOwnPropertyDescriptor(reference,key) ?? {},'value')) || typeof reference.id !== 'string' || !Number.isSafeInteger(reference.revision) || reference.revision < 1 || referenceRanks.has(reference.id)) throw new Error("Invalid semantic memory reference");
+      const matching = input.records.filter(record => record.memoryRecord === true && record.id === reference.id);
+      if (matching.length !== 1 || matching[0]!.revision !== reference.revision) throw new Error("Current semantic memory reference unavailable");
+      referenceRanks.set(reference.id, referenceRanks.size);
+    }
+  }
+  // The host recall experiment supports the original default relevance setting.
+  // Customized lexical thresholds keep their existing effect; no model score
+  // or confidence is invented to substitute for a user's configured threshold.
+  const semanticRanks = (input.controls?.relevanceThreshold ?? relationshipControlDefaults.relevanceThreshold) === relationshipControlDefaults.relevanceThreshold ? referenceRanks : undefined;
+  const view: CompiledRelationshipContext = { profileRevision: input.profileRevision, relationshipRevision: input.relationshipRevision, configurationRevision: input.configurationRevision, ...(input.controls ? { configurationControls: input.controls } : {}), compilerRevision: RELATIONSHIP_COMPILER_REVISION, representationRevision: input.representation === "conventionOriented" ? "convention-oriented:1" : "record-oriented:1", builtAt: new Date(now).toISOString(), freshUntil: new Date(now + maximumAgeMs).toISOString(), approvedBaseline: [], criticalCorrections: [], relevantContext: [], sourceRevisions: [], selections: [], omissions: [], budget: { maximumBytes, usedBytes: 0, estimator: "utf8-bytes-upper-bound" }, preparationCount: 1, limitations: ["Current explicit requests and runtime/policy/Core Persona limits take precedence over historical expression preferences.", "Use context only when helpful to the current task; never recite a profile or imply a recalled fact authorizes contact or an effect.", "Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall.", "Selection and byte contributions are observed inputs, not causal proof of reply behavior."] };
   if(input.records.some(record=>record.visualObservation))view.limitations=[...view.limitations,'Visual recall is a past sampled model interpretation, not a user statement or current/continuous sight. Unknown perception confidence stays unknown; model scores are uncalibrated. The capture interval includes clock uncertainty, not an exact event time. Raw media was not retained. Tentative inference omitted by the appearance intake is not remembered evidence.'];
   if(input.records.some(record=>record.gameExperience))view.limitations=[...view.limitations,'Game recall is attributed historical simulated experience from its recorded timeline, not current game progress, Human testimony, physical-world evidence or observed feelings. Transformation confidence is not perception calibration.'];
   if(input.records.some(record=>record.gameHelp))view.limitations=[...view.limitations,'Pending game help is a historical simulated problem/question, not Human advice, a fresh screen, delivered message/image or authority.'];
+  if (referenceRanks) view.limitations = view.limitations.map(limitation => limitation === "Optional rich-archive recall is unavailable; mandatory approved conventions and corrections do not require recall." ? "Optional memory relevance follows current host-selected references; relevance and truth remain unverified. Mandatory approved conventions and corrections do not require recall." : limitation);
   const selected: ContextSelection[] = [], omitted: ContextOmission[] = [], eligible: RelationshipContextRecord[] = [];
   const records = [...input.records].sort((a,b) => a.id.localeCompare(b.id));
   for (const record of records) {
@@ -106,18 +127,32 @@ export function compileRelationshipContext(input: { records: readonly Relationsh
     (record.use === "correction" ? view.criticalCorrections as string[] : view.approvedBaseline as string[]).push(record.content);
   }
   const requestTerms = terms(input.userInput.slice(0, 8000));
-  const ranked = eligible.filter(record => record.use === "relevant").map(record => ({ record, score: [...terms(record.content)].filter(term => requestTerms.has(term)).length })).sort((a,b) => b.score-a.score || a.record.id.localeCompare(b.record.id));
-  for (const { record, score } of ranked) {
-    const reason = input.controls?.personalizationIntensity === 0 ? "personalization disabled" : input.controls?.callbackFrequency === 0 ? "optional personal callbacks disabled" : score === 0 ? "no current-task relevance" : score / (score + 0.25) < (input.controls?.relevanceThreshold ?? 0.7) ? "below lexical relevance threshold" : (view.relevantContext.length >= optionalLimit || optionalBytes+estimateTokens(`${record.id}=${record.content}`)+16>512 || !take(record)) ? "bounded allocation" : undefined;
+  const ranked = eligible.filter(record => record.use === "relevant").map(record => ({
+    record,
+    semanticRank: record.memoryRecord === true ? semanticRanks?.get(record.id) : undefined,
+    score: [...terms(record.content)].filter(term => requestTerms.has(term)).length,
+  })).sort((a,b) => {
+    if (a.semanticRank !== undefined) return b.semanticRank === undefined ? -1 : a.semanticRank-b.semanticRank;
+    if (b.semanticRank !== undefined) return 1;
+    return b.score-a.score || a.record.id.localeCompare(b.record.id);
+  });
+  for (const { record, score, semanticRank } of ranked) {
+    const reason = input.controls?.personalizationIntensity === 0 ? "personalization disabled" : input.controls?.callbackFrequency === 0 ? "optional personal callbacks disabled" : record.memoryRecord === true && referenceRanks && !referenceRanks.has(record.id) ? "not selected by semantic recall" : semanticRank === undefined && score === 0 ? "no current-task relevance" : semanticRank === undefined && score / (score + 0.25) < (input.controls?.relevanceThreshold ?? 0.7) ? "below lexical relevance threshold" : (view.relevantContext.length >= optionalLimit || optionalBytes+estimateTokens(`${record.id}=${record.content}`)+16>512 || !take(record)) ? "bounded allocation" : undefined;
     if (reason) omitted.push({ id: record.id, revision: record.revision, reason });
-    else {optionalBytes+=estimateTokens(`${record.id}=${record.content}`)+16;(view.relevantContext as ContextSource[]).push({ id: record.id, content: record.content, rank: -score });}
+    else {
+      optionalBytes+=estimateTokens(`${record.id}=${record.content}`)+16;
+      // Fixed ordinal priority keeps the first semantic reference at -1, the
+      // original discovery priority. Omitted tail references cannot boost it.
+      // This ordering is never a confidence or truth score.
+      (view.relevantContext as ContextSource[]).push({ id: record.id, content: record.content, rank: semanticRank === undefined ? -score : semanticRank-1 });
+    }
   }
   if(input.representation === "conventionOriented") {
     const groups = new Map<string,NonNullable<PreparedRelationshipContext["compiledConventions"]>[number]>();
     for(const selection of selected){const record=records.find(r=>r.id===selection.id)!;const key=record.use==="correction"?`correction:${record.id}`:`${record.use}:${record.content.trim().toLowerCase().replace(/\s+/gu," ")}`;const group=groups.get(key)??{lane:record.use,text:record.content,sources:[]};group.sources.push({id:record.id,revision:record.revision,family:record.sourceFamily});groups.set(key,group);}
     view.compiledConventions=[...groups.values()];
   }
-  const sourceExpiries=selected.map(selection=>records.find(record=>record.id===selection.id)?.expiresAt).filter((value):value is string=>value!==undefined).map(value=>Date.parse(value));if(sourceExpiries.length)view.freshUntil=new Date(Math.min(Date.parse(view.freshUntil),...sourceExpiries)).toISOString();
+  const sourceExpiries=selected.map(selection=>records.find(record=>record.id===selection.id)?.expiresAt).filter((value):value is string=>value!==undefined).map(value=>Date.parse(value));if(sourceExpiries.length){view.sourceValidUntil=new Date(Math.min(...sourceExpiries)).toISOString();view.freshUntil=new Date(Math.min(Date.parse(view.freshUntil),...sourceExpiries)).toISOString();}
   view.selections = selected; view.omissions = omitted; view.sourceRevisions = records.map(record => `${record.id}:${record.revision}`); view.budget.usedBytes = bytes(formatPreparedRelationshipContext(view)); if (view.budget.usedBytes > maximumBytes) throw new Error("Prepared relationship view exceeds bounded context capacity");
   if (input.audienceScope !== "authenticatedSession") view.limitations = [...view.limitations, "Personal relationship payload withheld because audience scope is unknown."];
   return view;

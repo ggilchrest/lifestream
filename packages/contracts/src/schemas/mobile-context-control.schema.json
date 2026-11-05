@@ -1,0 +1,590 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+  "$defs": {
+    "MobileControlPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaId",
+        "schemaVersion",
+        "digest"
+      ],
+      "properties": {
+        "schemaId": {
+          "const": "https://lifestream.dev/contracts/mobile-context-control/1.0.0"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "MobileControlTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "principalId",
+        "endpointId",
+        "collector",
+        "enrollmentId",
+        "sourceNamespace",
+        "expectedRevision"
+      ],
+      "properties": {
+        "principalId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+        },
+        "endpointId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+        },
+        "collector": {
+          "enum": [
+            "healthKit",
+            "healthConnect"
+          ]
+        },
+        "enrollmentId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sourceNamespace": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "MobileControlBinding": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "createNew"
+          ],
+          "properties": {
+            "createNew": {
+              "const": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sourceNamespace",
+            "expectedSourceRevision"
+          ],
+          "properties": {
+            "sourceNamespace": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            },
+            "expectedSourceRevision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        }
+      ]
+    },
+    "MobileEnrollAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "const": "enroll"
+        }
+      }
+    },
+    "MobileBindAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "binding"
+      ],
+      "properties": {
+        "kind": {
+          "const": "bindSource"
+        },
+        "binding": {
+          "$ref": "#/$defs/MobileControlBinding"
+        }
+      }
+    },
+    "MobileConfigureAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "state",
+        "configuration"
+      ],
+      "properties": {
+        "kind": {
+          "const": "configure"
+        },
+        "state": {
+          "enum": [
+            "active",
+            "disconnected"
+          ]
+        },
+        "configuration": {
+          "$ref": "https://lifestream.dev/contracts/mobile-context/1.0.0#/$defs/MobileSourceConfiguration"
+        }
+      }
+    },
+    "MobileRemoveAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "scope"
+      ],
+      "properties": {
+        "kind": {
+          "const": "remove"
+        },
+        "scope": {
+          "const": "wholeSource"
+        }
+      }
+    },
+    "MobileControlAction": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/MobileEnrollAction"
+        },
+        {
+          "$ref": "#/$defs/MobileBindAction"
+        },
+        {
+          "$ref": "#/$defs/MobileConfigureAction"
+        },
+        {
+          "$ref": "#/$defs/MobileRemoveAction"
+        }
+      ]
+    },
+    "MobileControlRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operationId",
+        "target",
+        "action"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operationId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+        },
+        "target": {
+          "$ref": "#/$defs/MobileControlTarget"
+        },
+        "action": {
+          "$ref": "#/$defs/MobileControlAction"
+        }
+      }
+    },
+    "MobileControlEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producerPin",
+        "operation",
+        "payload"
+      ],
+      "properties": {
+        "producerPin": {
+          "$ref": "#/$defs/MobileControlPin"
+        },
+        "operation": {
+          "enum": [
+            "control",
+            "reconcileControl"
+          ]
+        },
+        "payload": {
+          "$ref": "#/$defs/MobileControlRequest"
+        }
+      }
+    },
+    "MobileControlCurrentness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "policyRevision"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "current",
+            "settingsChanged",
+            "unavailable"
+          ]
+        },
+        "policyRevision": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "MobileEnrolledResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "enrollment"
+      ],
+      "properties": {
+        "kind": {
+          "const": "enroll"
+        },
+        "enrollment": {
+          "$ref": "https://lifestream.dev/contracts/mobile-context/1.0.0#/$defs/MobileEnrollmentRecord"
+        }
+      }
+    },
+    "MobileBoundResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "enrollment"
+      ],
+      "properties": {
+        "kind": {
+          "const": "bindSource"
+        },
+        "enrollment": {
+          "$ref": "https://lifestream.dev/contracts/mobile-context/1.0.0#/$defs/MobileEnrollmentRecord"
+        }
+      }
+    },
+    "MobileConfiguredResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "enrollment"
+      ],
+      "properties": {
+        "kind": {
+          "const": "configure"
+        },
+        "enrollment": {
+          "$ref": "https://lifestream.dev/contracts/mobile-context/1.0.0#/$defs/MobileEnrollmentRecord"
+        }
+      }
+    },
+    "MobileRemovedResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "scope",
+        "enrollment",
+        "removedCount",
+        "suppressionEpoch",
+        "suppressionCommitted"
+      ],
+      "properties": {
+        "kind": {
+          "const": "remove"
+        },
+        "scope": {
+          "const": "wholeSource"
+        },
+        "enrollment": {
+          "$ref": "https://lifestream.dev/contracts/mobile-context/1.0.0#/$defs/MobileEnrollmentRecord"
+        },
+        "removedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "suppressionEpoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "suppressionCommitted": {
+          "const": true
+        }
+      }
+    },
+    "MobileControlAppliedResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/MobileEnrolledResult"
+        },
+        {
+          "$ref": "#/$defs/MobileBoundResult"
+        },
+        {
+          "$ref": "#/$defs/MobileConfiguredResult"
+        },
+        {
+          "$ref": "#/$defs/MobileRemovedResult"
+        }
+      ]
+    },
+    "MobileControlAppliedReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiptId",
+        "committedAt",
+        "durability",
+        "result"
+      ],
+      "properties": {
+        "receiptId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+        },
+        "committedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "durability": {
+          "const": "sqlCommit"
+        },
+        "result": {
+          "$ref": "#/$defs/MobileControlAppliedResult"
+        }
+      }
+    },
+    "MobileControlRejectedReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiptId",
+        "committedAt",
+        "durability",
+        "effects",
+        "code"
+      ],
+      "properties": {
+        "receiptId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+        },
+        "committedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "durability": {
+          "const": "sqlCommit"
+        },
+        "effects": {
+          "const": "none"
+        },
+        "code": {
+          "enum": [
+            "settingsChanged",
+            "scope",
+            "quota",
+            "conflict"
+          ]
+        }
+      }
+    },
+    "MobileControlAppliedOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "originalRequest",
+        "requestDigest",
+        "current",
+        "status",
+        "receipt"
+      ],
+      "properties": {
+        "originalRequest": {
+          "$ref": "#/$defs/MobileControlRequest"
+        },
+        "requestDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "current": {
+          "$ref": "#/$defs/MobileControlCurrentness"
+        },
+        "status": {
+          "const": "applied"
+        },
+        "receipt": {
+          "$ref": "#/$defs/MobileControlAppliedReceipt"
+        }
+      }
+    },
+    "MobileControlRejectedOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "originalRequest",
+        "requestDigest",
+        "current",
+        "status",
+        "receipt"
+      ],
+      "properties": {
+        "originalRequest": {
+          "$ref": "#/$defs/MobileControlRequest"
+        },
+        "requestDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "current": {
+          "$ref": "#/$defs/MobileControlCurrentness"
+        },
+        "status": {
+          "const": "rejected"
+        },
+        "receipt": {
+          "$ref": "#/$defs/MobileControlRejectedReceipt"
+        }
+      }
+    },
+    "MobileControlPendingOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "originalRequest",
+        "requestDigest",
+        "current",
+        "status"
+      ],
+      "properties": {
+        "originalRequest": {
+          "$ref": "#/$defs/MobileControlRequest"
+        },
+        "requestDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "current": {
+          "$ref": "#/$defs/MobileControlCurrentness"
+        },
+        "status": {
+          "const": "pending"
+        }
+      }
+    },
+    "MobileControlUnknownOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "originalRequest",
+        "requestDigest",
+        "current",
+        "status"
+      ],
+      "properties": {
+        "originalRequest": {
+          "$ref": "#/$defs/MobileControlRequest"
+        },
+        "requestDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "current": {
+          "$ref": "#/$defs/MobileControlCurrentness"
+        },
+        "status": {
+          "const": "unknown"
+        }
+      }
+    },
+    "MobileControlOutcome": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/MobileControlAppliedOutcome"
+        },
+        {
+          "$ref": "#/$defs/MobileControlRejectedOutcome"
+        },
+        {
+          "$ref": "#/$defs/MobileControlPendingOutcome"
+        },
+        {
+          "$ref": "#/$defs/MobileControlUnknownOutcome"
+        }
+      ]
+    },
+    "MobileControlResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "producerPin",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "producerPin": {
+          "$ref": "#/$defs/MobileControlPin"
+        },
+        "result": {
+          "$ref": "#/$defs/MobileControlOutcome"
+        }
+      }
+    }
+  }
+}

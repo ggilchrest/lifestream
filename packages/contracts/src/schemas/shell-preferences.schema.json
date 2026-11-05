@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/shell-preferences/1.1.0",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/ShellPreferences"
+    },
+    {
+      "$ref": "#/$defs/ShellPreferencesRead"
+    },
+    {
+      "$ref": "#/$defs/ShellPreferencesUpdate"
+    },
+    {
+      "$ref": "#/$defs/ShellPreferencesEvent"
+    },
+    {
+      "$ref": "#/$defs/ShellPreferencesError"
+    }
+  ],
+  "$defs": {
+    "PreferenceScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "actorId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "effectiveUserId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "endpointRef": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [
+        "actorId",
+        "effectiveUserId",
+        "endpointRef"
+      ]
+    },
+    "PresentationPreferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "theme": {
+          "enum": [
+            "system",
+            "light",
+            "dark"
+          ]
+        },
+        "textScale": {
+          "type": "number",
+          "minimum": 0.75,
+          "maximum": 2
+        },
+        "motion": {
+          "enum": [
+            "system",
+            "reduced",
+            "full"
+          ]
+        },
+        "contrast": {
+          "enum": [
+            "system",
+            "normal",
+            "high"
+          ]
+        },
+        "keyboardHints": {
+          "type": "boolean"
+        },
+        "defaultView": {
+          "enum": [
+            "conversation",
+            "history",
+            "memory",
+            "settings"
+          ]
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sidebarWidth": {
+              "type": "integer",
+              "minimum": 200,
+              "maximum": 480
+            },
+            "activityWidth": {
+              "type": "integer",
+              "minimum": 240,
+              "maximum": 960
+            },
+            "activityExpanded": {
+              "type": "boolean"
+            },
+            "navigationExpanded": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "sidebarWidth",
+            "activityWidth",
+            "activityExpanded",
+            "navigationExpanded"
+          ]
+        }
+      },
+      "required": [
+        "theme",
+        "textScale",
+        "motion",
+        "contrast",
+        "keyboardHints",
+        "defaultView",
+        "layout"
+      ]
+    },
+    "ShellPreferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": "1.1.0"
+        },
+        "scope": {
+          "$ref": "#/$defs/PreferenceScope"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "values": {
+          "$ref": "#/$defs/PresentationPreferences"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "scope",
+        "revision",
+        "values",
+        "updatedAt"
+      ]
+    },
+    "ShellPreferencesRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": "1.1.0"
+        },
+        "operation": {
+          "const": "read"
+        },
+        "endpointRef": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "operation",
+        "endpointRef"
+      ]
+    },
+    "ShellPreferencesUpdate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": "1.1.0"
+        },
+        "operation": {
+          "const": "update"
+        },
+        "operationId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "endpointRef": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "values": {
+          "$ref": "#/$defs/PresentationPreferences"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "operation",
+        "operationId",
+        "idempotencyKey",
+        "endpointRef",
+        "expectedRevision",
+        "values"
+      ]
+    },
+    "ShellPreferencesEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": "1.1.0"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "eventSequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "snapshot": {
+          "$ref": "#/$defs/ShellPreferences"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "eventSequence",
+        "snapshot",
+        "occurredAt"
+      ]
+    },
+    "ShellPreferencesError": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": "1.1.0"
+        },
+        "code": {
+          "enum": [
+            "unauthenticated",
+            "forbidden",
+            "scopeChanged",
+            "notFound",
+            "unsupportedVersion",
+            "invalidRequest",
+            "revisionConflict",
+            "invalidCursor",
+            "restartPage",
+            "unavailable",
+            "idempotencyConflict",
+            "backpressure"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 512
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "correlationId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "code",
+        "message",
+        "retryable",
+        "correlationId"
+      ]
+    }
+  }
+}

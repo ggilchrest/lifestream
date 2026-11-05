@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { Profile, ProviderRequirement, RuntimeConfig, SecretRef } from "./schema.js";
 import { validatePwceProfile } from "./pwce.ts";
+import { sameHostInferenceEndpoint } from "./local-inference-endpoint.ts";
 
 type ConfigInput = Partial<RuntimeConfig> & { [key: string]: unknown };
 type ConfigSources = { defaults: ConfigInput; profile: ConfigInput; environment: ConfigInput; cli: ConfigInput };
@@ -58,6 +59,14 @@ export const loadConfig = (sources: ConfigSources): RuntimeConfig => {
     const artifacts = [inferenceProfile.containerImageDigest, inferenceProfile.modelArtifactDigest].filter((value) => typeof value === "string" && value.length > 0);
     if (artifacts.length !== 1) throw new Error("inference profile requires exactly one runtime artifact digest");
     if (typeof inferenceProfile.contextLength !== "number" || !Number.isInteger(inferenceProfile.contextLength) || inferenceProfile.contextLength <= 0 || inferenceProfile.developmentOnly !== true) throw new Error("invalid inference profile limits");
+    if (inferenceProfile.requiredGpu !== undefined) {
+      const gpu = assertObject(inferenceProfile.requiredGpu, "inferenceProfile.requiredGpu");
+      assertKeys(gpu, new Set(["pciBusId", "serviceUnit"]), "inferenceProfile.requiredGpu");
+      const endpoint = new URL(String(inferenceProfile.endpoint));
+      if (providers.inference !== "llama-cpp-local" || !sameHostInferenceEndpoint(endpoint) ||
+          typeof gpu.pciBusId !== "string" || !/^[a-f0-9]{4}:[a-f0-9]{2}:[a-f0-9]{2}\.[0-7]$/.test(gpu.pciBusId) ||
+          typeof gpu.serviceUnit !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.@-]{0,127}\.service$/.test(gpu.serviceUnit)) throw new Error("invalid local inference GPU requirement");
+    }
   }
   const sttProfile = merged.sttProfile === undefined ? undefined : assertObject(merged.sttProfile, "sttProfile");
   if (sttProfile) {

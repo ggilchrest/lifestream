@@ -1,0 +1,1 @@
+export const healthPolicyPin=Object.freeze({"schemaId": "https://lifestream.dev/contracts/mobile-context-policy-owner/1.0.0", "schemaVersion": "1.0.0", "digest": "66003667e18c4d5cc7d5a7026204c9a257a4d077e43b5f1838648e3bd0f84f5f"} as const);

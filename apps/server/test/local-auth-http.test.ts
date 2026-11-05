@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { randomBytes, randomUUID } from "node:crypto";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createLifestreamServer } from "../src/index.ts";
@@ -16,15 +16,18 @@ test('audience evidence and declarations survive admin expiry while CSRF, revoca
  const setup=await request('/api/auth/v1/setup',{username:'synthetic-owner',password:secret(),installerToken});assert.equal(setup.status,201);headers.cookie=setup.headers.get('set-cookie')!.split(';')[0]!;const {session}=await setup.json() as {session:{csrfToken:string;sessionId:string}};headers['x-lifestream-csrf']=session.csrfToken;
  assert.equal((await request('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession'})).status,200);
  assert.equal((await request('/api/runtime/v1/audience',{mode:'solo',seconds:300})).status,200);
+ for(const name of ['authority-worker.js','authority-broker.js','authority-transport.js']){const asset=await request('/daily/owners/'+name);assert.equal(asset.status,200);assert.equal(await asset.text(),await readFile(new URL('../../daily-web/owners/'+name,import.meta.url),'utf8'));}
  const activity=()=>app.database.connection.prepare('SELECT admin_last_activity FROM local_sessions WHERE session_id=?').get(session.sessionId)!.admin_last_activity,original=activity();
- const stream=await request('/api/runtime/v1/audience/events');assert.equal(stream.status,200);const reader=stream.body!.getReader();t.after(()=>reader.cancel());assert.equal((await reader.read()).done,false);
+ for(const route of ['/api/runtime/v1/audience/events','/api/auth/v1/user-context/events'])for(const suffix of ['?transport=bad','?transport=shared-v1&transport=shared-v1','?transport=shared-v1&unknown=1'])assert.equal((await request(route+suffix)).status,422);
+ const legacy=await request('/api/runtime/v1/audience/events');assert.equal(legacy.status,204);assert.equal(await legacy.text(),'');assert.equal(legacy.headers.get('x-lifestream-transport'),'upgrade-required');
+ const stream=await request('/api/runtime/v1/audience/events?transport=shared-v1');assert.equal(stream.status,200);const reader=stream.body!.getReader();t.after(()=>reader.cancel());const first=await reader.read();assert.equal(first.done,false);const value=JSON.parse(Buffer.from(first.value!).toString().split('data: ')[1]!.trim());assert.equal(value.transportOwner.authenticatedSessionId,session.sessionId);assert.equal(typeof value.transportOwner.principalId,'string');assert.equal(typeof value.transportOwner.endpointId,'string');
  now+=1_800_000;
- assert.equal((await request('/api/auth/v1/session')).status,401);assert.equal((await request('/api/admin/v1/assistants',{})).status,401);
+ assert.equal((await request('/api/auth/v1/session')).status,403);assert.equal((await request('/api/admin/v1/assistants',{})).status,403);
  const next=await reader.read();assert.equal(next.done,false,'Audience heartbeat must use continuing conversation authority');assert.match(Buffer.from(next.value!).toString(),/"privateAllowed":true/);
  assert.equal((await request('/api/runtime/v1/audience',{mode:'solo',seconds:300},{'x-lifestream-csrf':'wrong'})).status,403);
  assert.equal((await request('/api/runtime/v1/audience',{mode:'solo',seconds:300})).status,200,'Expiring declarations must remain renewable without extending administration');
  for(const [mode,allowed] of [['shared',false],['solo',true],['lock',false],['unlock',false],['solo',true],['clear',false]] as const){const response=await request('/api/runtime/v1/audience',{mode,seconds:300});assert.equal(response.status,200);assert.equal((await response.json() as {privateAllowed:boolean}).privateAllowed,allowed);}
- assert.equal(activity(),original,'Runtime audience activity must not refresh administration');assert.equal((await request('/api/auth/v1/session')).status,401);
+ assert.equal(activity(),original,'Runtime audience activity must not refresh administration');assert.equal((await request('/api/auth/v1/session')).status,403);
  assert.equal((await request('/api/auth/v1/sign-out',{})).status,200);
  let ended=false;while(!ended){ended=(await reader.read()).done===true;}
  assert.equal((await request('/api/runtime/v1/audience')).status,401);assert.equal((await request('/api/runtime/v1/audience',{mode:'solo'})).status,401);
@@ -32,6 +35,7 @@ test('audience evidence and declarations survive admin expiry while CSRF, revoca
 test("real local sessions protect actual administration, scope and approvals while idle-expired conversation continues",async t=>{
  const root=await mkdtemp(join(tmpdir(),"ls-auth-http-"));t.after(()=>rm(root,{recursive:true,force:true}));let now=1_800_000_000_000;const config=loadProfile("test");config.storage={databasePath:join(root,"db.sqlite"),artifactDirectory:join(root,"artifacts")};config.authority.authentication="local-password";const installerToken=secret();const app=createLifestreamServer({config,localAuth:{stateDirectory:join(root,"safety"),installerToken,now:()=>now}});await app.start();t.after(()=>app.shutdown());const base=`http://127.0.0.1:${app.address().port}`;let cookie="",csrf="";const request=(path:string,body?:unknown,extra:Record<string,string>={})=>fetch(base+path,{method:body===undefined?"GET":"POST",headers:{origin:base,"content-type":"application/json",cookie,"x-lifestream-csrf":csrf,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
  assert.equal((await request('/api/runtime/v1/session-context')).status,401);
+ for(const route of ['/api/runtime/v1/audience/events','/api/auth/v1/user-context/events'])for(const suffix of ['', '?transport=shared-v1'])assert.equal((await request(route+suffix)).status,401);
  assert.equal((await request('/api/admin/v1/assistants',{})).status,401);assert.equal((await request('/api/admin/v1/assistants',{}, {'x-lifestream-fixture-session':'spoof','x-lifestream-fixture-principal':'owner'})).status,401);
  assert.equal((await request('/api/auth/v1/setup',{username:'owner',password:secret(),installerToken},{origin:'https://untrusted.invalid'})).status,403);
  const password=secret();const enrollment=await request('/api/auth/v1/setup',{username:'owner',password,installerToken});assert.equal(enrollment.status,201);const setCookie=enrollment.headers.get('set-cookie')!;assert.match(setCookie,/HttpOnly/);assert.match(setCookie,/SameSite=Strict/);cookie=setCookie.split(';')[0]!;const setup=await enrollment.json() as {session:{csrfToken:string;principalId:string;sessionId:string};recoveryCodes:string[]};csrf=setup.session.csrfToken;
@@ -49,7 +53,7 @@ test("real local sessions protect actual administration, scope and approvals whi
  assert.equal((await request('/api/auth/v1/proposals',{operation:{...staleOperation,expectedRevision:null}})).status,409);
  cookie=memberCookie;csrf=memberCsrf;const scopedProposal=await (await request('/api/auth/v1/proposals',{operation:{...staleOperation,body:{displayName:'Scoped proposed revision',expectedRevision:2},expectedRevision:2}})).json() as {proposalId:string;digest:string};cookie=ownerCookie;csrf=ownerCsrf;await request('/api/auth/v1/permissions',{principalId:member.principalId,assistantId:assistant.assistantId,administer:false});cookie=memberCookie;csrf=memberCsrf;assert.equal((await request(`/api/auth/v1/proposals/${scopedProposal.proposalId}/approve`,{reviewedDigest:scopedProposal.digest,humanConfirmed:true})).status,403);cookie=ownerCookie;csrf=ownerCsrf;
 
- now+=1_799_000;assert.equal((await request('/api/auth/v1/session')).status,200);now+=1_000;assert.equal((await request('/api/admin/v1/assistants',{displayName:'Expired'})).status,401);const conversation=await request('/api/runtime/v1/messages',{assistantId:assistant.assistantId,userInput:'Continue synthetic conversation.'});assert.equal(conversation.status,200);assert.match(await conversation.text(),/Fixture response/);assert.equal((await request('/api/auth/v1/session')).status,401);assert.equal((await request('/api/auth/v1/sign-out',{})).status,200);assert.equal((await request('/api/runtime/v1/messages',{assistantId:assistant.assistantId,userInput:'Revoked'})).status,401);
+ now+=1_799_000;assert.equal((await request('/api/auth/v1/session')).status,200);now+=1_000;assert.equal((await request('/api/admin/v1/assistants',{displayName:'Expired'})).status,403);const conversation=await request('/api/runtime/v1/messages',{assistantId:assistant.assistantId,userInput:'Continue synthetic conversation.'});assert.equal(conversation.status,200);assert.match(await conversation.text(),/Fixture response/);assert.equal((await request('/api/auth/v1/session')).status,403);assert.equal((await request('/api/auth/v1/sign-out',{})).status,200);assert.equal((await request('/api/runtime/v1/messages',{assistantId:assistant.assistantId,userInput:'Revoked'})).status,401);
 });
 
 test("real session logout, permission, audience and endpoint changes fence pending typed output", async t => {

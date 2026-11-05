@@ -1,0 +1,12 @@
+export type CalendarCategory='CalendarEvent';
+export type CalendarRetentionChoice=Readonly<{mode:'indefinite'}>|Readonly<{mode:'finite';durationDays:number;anchor:'sourceEnd'|'firstAuthoritativeImport'}>;
+export type CalendarPolicyScope=Readonly<{kind:'classification';category:CalendarCategory}>|Readonly<{kind:'rawRetention';principalId:string;collector:'eventKit';sourceNamespace:string;category:CalendarCategory}>;
+export type CalendarPolicyOriginal=Readonly<{operationId:string;expectedRevision:number;scope:Extract<CalendarPolicyScope,{kind:'classification'}>;command:'approveMapping';classification:'public'|'personal'|'sensitive'|'restricted'}>|Readonly<{operationId:string;expectedRevision:number;scope:Extract<CalendarPolicyScope,{kind:'classification'}>;command:'revokeMapping'}>|Readonly<{operationId:string;expectedRevision:number;scope:Extract<CalendarPolicyScope,{kind:'rawRetention'}>;command:'setRawRetention';mappingRevision:number;choice:CalendarRetentionChoice}>;
+export type CalendarPolicyPin=Readonly<{schemaId:string;schemaVersion:'1.0.0';digest:string}>;
+export type CalendarPolicyEnvelope=Readonly<{producerPin:CalendarPolicyPin;operation:'inspect';payload:CalendarPolicyScope}>|Readonly<{producerPin:CalendarPolicyPin;operation:'preview'|'reconcile';payload:CalendarPolicyOriginal}>|Readonly<{producerPin:CalendarPolicyPin;operation:'apply';payload:CalendarPolicyOriginal;previewDigest?:string}>;
+export type CalendarPolicyHeld=Readonly<{kind:'held';reason:'unknown'|'pending'|'unavailable'|'conflict'|'configuration'|'scope'|'quota'}>;
+export type CalendarPolicyPreview=Readonly<{kind:'ready';digest:string;revision:number;affected:number;deleted:number;configDigest:string}>;
+export type CalendarPolicyReceipt=Readonly<{receiptId:string;operationId:string;requestDigest:string;scopeDigest:string;revision:number;decisionDigest:string;committedAt:string;sqlCommit:true}>;
+export type CalendarPolicyTerminal=Readonly<{kind:'terminal';original:CalendarPolicyOriginal;requestDigest:string;status:'applied';binding:Readonly<{family:'calendarPolicy';reservationDigest:string;preparedDigest:string;terminalDigest:string}>;receipt:CalendarPolicyReceipt}>;
+export type CalendarPolicyResult=CalendarPolicyHeld|CalendarPolicyPreview|Readonly<{kind:'status';scope:CalendarPolicyScope;revision:number;value:unknown;canChangeDuration:boolean}>|Readonly<{kind:'observed';operationId:string}>|CalendarPolicyTerminal;
+export type CalendarPolicyResponse=Readonly<{producerPin:CalendarPolicyPin;schemaVersion:'1.0.0';result:CalendarPolicyResult}>;

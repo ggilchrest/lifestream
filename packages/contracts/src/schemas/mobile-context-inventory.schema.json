@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-inventory/1.0.0",
+  "$defs": {
+    "MobileInventoryPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaId",
+        "schemaVersion",
+        "digest"
+      ],
+      "properties": {
+        "schemaId": {
+          "const": "https://lifestream.dev/contracts/mobile-context-inventory/1.0.0"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "MobileInventoryRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "pageSize": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        }
+      }
+    },
+    "MobileInventorySource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceNamespace",
+        "collector",
+        "policyRevision",
+        "configuration",
+        "enrollmentCount",
+        "currentEndpointEnrollment",
+        "coverage"
+      ],
+      "properties": {
+        "sourceNamespace": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "collector": {
+          "enum": [
+            "healthKit",
+            "healthConnect"
+          ]
+        },
+        "policyRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "configuration": {
+          "$ref": "https://lifestream.dev/contracts/mobile-context/1.0.0#/$defs/MobileSourceConfiguration"
+        },
+        "enrollmentCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "currentEndpointEnrollment": {
+          "oneOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/mobile-context/1.0.0#/$defs/MobileEnrollmentRecord"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "state": {
+              "const": "unknown"
+            }
+          }
+        }
+      }
+    },
+    "MobileOwnerInventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "principalId",
+        "endpointId",
+        "sources",
+        "unboundEnrollments",
+        "nextCursor"
+      ],
+      "properties": {
+        "principalId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "endpointId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sources": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/MobileInventorySource"
+          }
+        },
+        "unboundEnrollments": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/mobile-context/1.0.0#/$defs/MobileEnrollmentRecord"
+          }
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "MobileInventoryResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "producerPin",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "producerPin": {
+          "$ref": "#/$defs/MobileInventoryPin"
+        },
+        "result": {
+          "$ref": "#/$defs/MobileOwnerInventory"
+        }
+      }
+    }
+  }
+}

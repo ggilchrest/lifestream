@@ -1,3 +1,4 @@
+import {invalidateCanonicalPresenceConfiguration} from '../runtime/canonical-presence-owners.ts';
 import { randomUUID } from "node:crypto";
 import { createContractValidator } from "@lifestream/contracts";
 import type { Database } from "@lifestream/storage-sqlite";
@@ -26,16 +27,16 @@ export class UserProfileAdministration {
     let identity = this.identity(principalId); if (identity) return identity;
     requireValue(/^[0-9a-f]{8}-[0-9a-f-]{27}$/iu.test(principalId), "Stable authenticated UUID principal required; legacy fixture identities are not inferred profile subjects", 409);
     this.db.transaction(tx => {
-      tx.run("INSERT OR IGNORE INTO user_profile_deployment (singleton, deployment_id) VALUES (1, ?)", randomUUID());
+      const candidateDeployment=randomUUID();invalidateCanonicalPresenceConfiguration(this.db);tx.run("INSERT OR IGNORE INTO user_profile_deployment (singleton, deployment_id) VALUES (1, ?)", candidateDeployment);
       const deployment = tx.get<{ deploymentId: string }>("SELECT deployment_id AS deploymentId FROM user_profile_deployment WHERE singleton=1")!;
-      tx.run("INSERT INTO user_subject_mappings (principal_id,user_id,deployment_id) VALUES (?,?,?)", principalId, principalId, deployment.deploymentId);
+      invalidateCanonicalPresenceConfiguration(this.db);tx.run("INSERT INTO user_subject_mappings (principal_id,user_id,deployment_id) VALUES (?,?,?)", principalId, principalId, deployment.deploymentId);
     }); identity = this.identity(principalId); return identity!;
   }
   list(principalId: string): UserProfile[] {
     return (this.db.connection.prepare("SELECT payload_json AS payload FROM user_profile_revisions WHERE principal_id=? ORDER BY revision").all(principalId) as { payload: string }[]).map(row => JSON.parse(row.payload) as UserProfile);
   }
   active(principalId: string): UserProfile | undefined { const row=this.db.connection.prepare("SELECT payload_json AS payload FROM user_profile_revisions WHERE principal_id=? AND status='active'").get(principalId) as {payload:string}|undefined; return row ? JSON.parse(row.payload) as UserProfile : undefined; }
-  boundary(principalId: string): string { const row=this.db.connection.prepare("SELECT profile_id AS id,revision FROM user_profile_revisions WHERE principal_id=? AND status='active'").get(principalId) as {id:string;revision:number}|undefined; return row ? `${row.id}:${row.revision}` : "unmapped"; }
+  boundary(principalId: string): string { const row=this.db.readGet("SELECT profile_id AS id,revision FROM user_profile_revisions WHERE principal_id=? AND status='active'",principalId) as {id:string;revision:number}|undefined; return row ? `${row.id}:${row.revision}` : "unmapped"; }
   records(principalId: string, assistantId: string): RelationshipContextRecord[] {
     const profile = this.active(principalId); if (!profile) return [];
     const scope = profile.assistantScopes.find(item => item.assistantId === assistantId);
@@ -70,12 +71,12 @@ export class UserProfileAdministration {
         requireValue(target!.status === "draft", "Only a reviewed draft can activate", 409);
         requireValue(target!.assistantScopes.every(scope => canUseAssistant(scope.assistantId)), "Assistant permission was revoked", 403);
         this.db.transaction(tx => {
-          if (active) tx.run("UPDATE user_profile_revisions SET status='superseded',payload_json=? WHERE profile_id=?", JSON.stringify({ ...active, status: "superseded" }), active.profileId);
-          tx.run("UPDATE user_profile_revisions SET status='active',payload_json=? WHERE profile_id=?", JSON.stringify({ ...target, status: "active", consentRefs: [`local-profile-review:${target!.profileId}:${principalId}`] }), target!.profileId);
+          if (active) {const payload=JSON.stringify({ ...active, status: "superseded" });invalidateCanonicalPresenceConfiguration(this.db);tx.run("UPDATE user_profile_revisions SET status='superseded',payload_json=? WHERE profile_id=?", payload, active.profileId);}
+          const payload=JSON.stringify({ ...target, status: "active", consentRefs: [`local-profile-review:${target!.profileId}:${principalId}`] });invalidateCanonicalPresenceConfiguration(this.db);tx.run("UPDATE user_profile_revisions SET status='active',payload_json=? WHERE profile_id=?", payload, target!.profileId);
         });
       } else if (operation === "revoke") {
         requireValue(target!.status === "active", "Only the current active profile can be revoked", 409);
-        this.db.connection.prepare("UPDATE user_profile_revisions SET status='revoked',payload_json=? WHERE profile_id=?").run(JSON.stringify({ ...target, status: "revoked", revokedAt: new Date().toISOString() }), target!.profileId);
+        const statement=this.db.connection.prepare("UPDATE user_profile_revisions SET status='revoked',payload_json=? WHERE profile_id=?"),payload=JSON.stringify({ ...target, status: "revoked", revokedAt: new Date().toISOString() });invalidateCanonicalPresenceConfiguration(this.db);statement.run(payload, target!.profileId);
       } else throw new ProfileScopeError("Unsupported profile operation", 404);
       return { status: 200, body: { profiles: this.list(principalId), activeStateChanged: true } };
     } catch (error) { if (error instanceof ProfileScopeError) return { status: error.status, body: { code: "user_profile_scope_or_revision", message: error.message } }; throw error; }

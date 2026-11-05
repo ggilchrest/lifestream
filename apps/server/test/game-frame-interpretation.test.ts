@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {randomUUID,createHash} from 'node:crypto';
 import {crc32,deflateSync} from 'node:zlib';
 import {gameCampaignFixture} from '../../../packages/runtime/test/fixtures/game-campaign.ts';
-import {createGameObservationReader,type GameFrameDecoder} from '../src/runtime/game-frame-interpretation.ts';
+import {createGameObservationReader,createGameObservationInterpreter,type GameFrameDecoder} from '../src/runtime/game-frame-interpretation.ts';
 import type {GameHostJoin} from '../src/runtime/game-host-port.ts';
 import type * as G from '@lifestream/contracts/game-activity';
 function png(){const chunk=(type:string,data:Buffer)=>{const head=Buffer.alloc(8),tail=Buffer.alloc(4);head.writeUInt32BE(data.length);head.write(type,4);tail.writeUInt32BE(crc32(Buffer.concat([head.subarray(4),data])));return Buffer.concat([head,data,tail]);},header=Buffer.alloc(13);header.writeUInt32BE(1,0);header.writeUInt32BE(1,4);header[8]=8;header[9]=2;return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(Buffer.from([0,255,0,0]))),chunk('IEND',Buffer.alloc(0))]);}
@@ -34,4 +34,18 @@ test('withdrawn source and decoder callback replacement discard interpretation a
 });
 test('finite interpretation deadline also zeros owned frame bytes that arrive after cancellation',async()=>{
  const f=fixture();f.options.maximumDurationMs=10;let late:Buffer|undefined;f.options.readFrame=async()=>{await new Promise(resolve=>setTimeout(resolve,30));late=Buffer.from(f.bytes);return late;};assert.equal(await createGameObservationReader(f.options)(f.join,new AbortController().signal),null);await new Promise(resolve=>setTimeout(resolve,40));assert.ok(late);assert.ok(late.every(byte=>byte===0));
+});
+
+test('interpretation refusals preserve source stage, binding, single notification and null even when observer throws',async()=>{
+ for(const mode of ['source','digest','decoder','foreign'] as const){
+  const f=fixture(),values:any[]=[];if(mode==='source')f.withdraw();if(mode==='digest')f.shot.sha256='b'.repeat(64);if(mode==='decoder')f.decoder.decode=async()=>null;if(mode==='foreign')f.observation.scope={...f.observation.scope,runId:randomUUID()};
+  const read=createGameObservationInterpreter({...f.options,onRefusal:(observation,value)=>{values.push({observationId:observation.observationId,...value});throw Error('PRIVATE OBSERVER');}});
+  assert.equal(await read(f.join,f.observation,new AbortController().signal),null);assert.equal(values.length,1);
+  assert.equal(values[0].observationId,f.observation.observationId);assert.equal(values[0].reason,{source:'source_current',digest:'frame_integrity',decoder:'decoder_output',foreign:'observation_validation'}[mode]);assert.doesNotMatch(JSON.stringify(values),/PRIVATE/);
+ }
+});
+test('successful native interpretation and empty decoded facts produce no refusal metadata',async()=>{
+ const f=fixture(),values:any[]=[];f.decoder.decode=async()=>({facts:[],visibleState:[]});
+ const result=await createGameObservationInterpreter({...f.options,onRefusal:(_observation,value)=>values.push(value)})(f.join,f.observation,new AbortController().signal);
+ assert.ok(result);assert.equal(values.length,0);
 });

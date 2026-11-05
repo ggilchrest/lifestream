@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {randomUUID} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
-import {selectGameWindow,gameWindowCurrent,type GameWindowInput} from '../src/activity/policy.ts';
+import {selectGameWindow,gameWindowCurrent,selectManualGameStart,manualGameStartCurrent,type GameWindowInput} from '../src/activity/policy.ts';
 import {gameCampaignFixture} from './fixtures/game-campaign.ts';
 import {scriptedGameBounds,scriptedGamePolicy} from './fixtures/game-policy.ts';
 function fixture(at='2026-09-30T12:00:00Z'){
@@ -57,4 +57,49 @@ test('contact hours require exact separately configured channel/recipient policy
 test('foreign owner/relationship/environment/activity or hostile accessors cannot donate current-window eligibility',async t=>{
  for(const key of ['assistantId','principalId','relationshipId','environmentId','activityId'] as const)await t.test(key,()=>{const f=fixture(),view=selectGameWindow(f.input,f.boundary);assert.equal(gameWindowCurrent(view,{...f.input.scope,[key]:randomUUID()}),false);});
  const f=fixture();let reads=0;const raw:any={...f.input};Object.defineProperty(raw,'policy',{enumerable:true,get(){reads++;return f.input.policy;}});assert.equal(selectGameWindow(raw,f.boundary).reason,'invalidInput');assert.equal(reads,0);
+});
+
+function manualFixture(){
+ const f=fixture(),{purpose:_purpose,...base}=f.input,input={...base,expiresAtMs:base.nowMs+90000};
+ input.policy.schedule={enabled:false,timeZone:null,windows:[],validatedPolicyRevision:null,validatedAt:null,policyCurrent:false,unavailableReason:'notConfigured'};
+ const boundary={explicitStartCurrent:()=>true,now:()=>input.nowMs};return {input,boundary};
+}
+test('explicit manual selection is finite, exact-run metadata and leaves disabled unattended schedule untouched',()=>{
+ const f=manualFixture(),before=structuredClone(f.input.policy),view=selectManualGameStart(f.input,f.boundary);
+ assert.equal(view.status,'selected');assert.equal(view.authority,false);assert.equal(view.expiresAtMs,f.input.expiresAtMs);assert.ok(Object.isFrozen(view));
+ assert.equal(manualGameStartCurrent(view,f.input.scope,{policy:f.input.policy,bounds:f.input.bounds}),true);
+ assert.deepEqual(f.input.policy,before);
+ const {expiresAtMs:_expires,...calendar}=f.input;assert.equal(selectGameWindow({...calendar,purpose:'play'},{policyCurrent:()=>true}).reason,'disabled');
+});
+test('manual selection rejects clones, full-scope changes and extra configuration keys without invoking getters',()=>{
+ const f=manualFixture(),view=selectManualGameStart(f.input,f.boundary),config={policy:f.input.policy,bounds:f.input.bounds};
+ assert.equal(manualGameStartCurrent({...view},f.input.scope,config),false);
+ for(const key of ['runId','activityId','campaignId','timelineId','environmentId','principalId','assistantId','relationshipId'] as const)assert.equal(manualGameStartCurrent(view,{...f.input.scope,[key]:randomUUID()},config),false,key);
+ for(const key of ['activityEpoch','timelineRevision'] as const)assert.equal(manualGameStartCurrent(view,{...f.input.scope,[key]:f.input.scope[key]+1},config),false,key);
+ assert.equal(manualGameStartCurrent(view,{...f.input.scope,contextBinding:{...f.input.scope.contextBinding,sessionId:randomUUID()}},config),false);
+ assert.equal(manualGameStartCurrent(view,{...f.input.scope,runId:randomUUID()},{...config,scope:f.input.scope} as any),false);
+ let reads=0;const hostile={...config};Object.defineProperty(hostile,'policy',{enumerable:true,get(){reads++;return f.input.policy;}});assert.equal(manualGameStartCurrent(view,f.input.scope,hostile),false);assert.equal(reads,0);
+});
+test('manual selection never survives expiry, rollback, consent withdrawal, callback mutation or reentrant eligibility',async t=>{
+ for(const mode of ['expiry','rollback','consent','callback','clock','reentrant'])await t.test(mode,()=>{
+  const f=manualFixture();let clock=f.input.nowMs,allowed=true,recursive=false;let view:ReturnType<typeof selectManualGameStart>;
+  f.boundary.now=()=>clock;f.boundary.explicitStartCurrent=()=>{if(recursive)view.isCurrent();return allowed;};view=selectManualGameStart(f.input,f.boundary);assert.equal(view.status,'selected');
+  if(mode==='expiry')clock=f.input.expiresAtMs;if(mode==='rollback')clock--;if(mode==='consent')allowed=false;if(mode==='callback')f.boundary.explicitStartCurrent=()=>true;if(mode==='clock')f.boundary.now=()=>clock;if(mode==='reentrant')recursive=true;
+  assert.equal(view.isCurrent(),false);clock=f.input.nowMs;allowed=true;recursive=false;assert.equal(view.isCurrent(),false,'No renewal after first refusal');
+ });
+});
+test('manual selection requires explicit current consent and a finite original deadline within bounds',async t=>{
+ for(const mode of ['missingConsent','expired','tooLong','wallBudget','fractional','infinite','extra','accessor','changedPolicy'])await t.test(mode,()=>{
+  const f=manualFixture();let reads=0;
+  if(mode==='missingConsent')f.boundary.explicitStartCurrent=()=>false;
+  if(mode==='expired')f.input.expiresAtMs=f.input.nowMs;
+  if(mode==='tooLong')f.input.expiresAtMs=f.input.nowMs+120001;
+  if(mode==='wallBudget')f.input.bounds.wallBudgetMs=100;
+  if(mode==='fractional')f.input.expiresAtMs+=.5;
+  if(mode==='infinite')f.input.expiresAtMs=Infinity;
+  if(mode==='extra')(f.input as any).mode='backgroundP2';
+  if(mode==='accessor')Object.defineProperty(f.input,'scope',{enumerable:true,get(){reads++;return {};}});
+  if(mode==='changedPolicy'){const expected=structuredClone(f.input.policy);f.boundary.explicitStartCurrent=(_scope?:any,policy?:any)=>isDeepStrictEqual(policy,expected);const held=selectManualGameStart(f.input,f.boundary);expected.playWindowRef='changed';assert.equal(held.isCurrent(),false);return;}
+  assert.equal(selectManualGameStart(f.input,f.boundary).status,'unavailable');assert.equal(reads,0);
+ });
 });

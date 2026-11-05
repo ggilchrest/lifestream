@@ -1,3 +1,6 @@
+import {performance} from 'node:perf_hooks';
+import {lifecycleObservation} from './lifecycle-observation.ts';
+import {transportObservation,httpActivitySnapshot,httpActivitySince} from './transport-observation.ts';
 import { createHash } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 const PROTOCOL_VERSION = "voxcpm.loopback.v1" as const;
@@ -12,21 +15,22 @@ interface TextToSpeechProvider { capabilities(): TtsCapabilities; synthesize(req
 
 type VoiceReference = { dataBase64: string; sampleRateHz: 16000; transcript: string };
 type VoiceDesign = { description: string; seed: number; reference?: VoiceReference | null };
-export type VoxCpmOptions = { busyAdmissionRetries?:0|2; baseUrl: string; voiceBundleKey: string; voiceBundleRevision: number; runtimeRevision: string; modelRevision: string; mappingRevision: string; voiceDesign?: VoiceDesign; fetch?: typeof globalThis.fetch; onDiagnostic?: (event: { requestId: string; code: string }) => void };
+type FailureBoundary = { phase: "request" | "read" | "parse" | "validate"; preAudioSeen: boolean; frames: number; samples: number; failureKind: "invalid_json" | "type_error" | "other"; transportCode: string | null };
+export type VoxCpmOptions = { busyAdmissionRetries?:0|2; baseUrl: string; voiceBundleKey: string; voiceBundleRevision: number; runtimeRevision: string; modelRevision: string; mappingRevision: string; voiceDesign?: VoiceDesign; fetch?: typeof globalThis.fetch; onDiagnostic?: (event: { requestId: string; code: string; boundary?: FailureBoundary }) => void };
 
 export class VoxCpmProvider implements TextToSpeechProvider {
   private readonly options: VoxCpmOptions;
   private readonly requestFetch: typeof globalThis.fetch;
-  private controls: { description: boolean; reference: boolean } | undefined;
+  private controls: { description: boolean; reference: boolean; deliveryHints?: boolean } | undefined;
   constructor(options: VoxCpmOptions) { this.options = options; this.requestFetch = options.fetch ?? globalThis.fetch; }
   withVoiceDesign(voiceDesign: VoiceDesign): VoxCpmProvider { const provider = new VoxCpmProvider({ ...this.options, voiceDesign }); provider.controls = this.controls; return provider; }
   withoutAdmissionRetries(): VoxCpmProvider { const provider=new VoxCpmProvider({...this.options,busyAdmissionRetries:0});provider.controls=this.controls;return provider; }
-  async voiceControls(): Promise<{ description: boolean; reference: boolean }> {
+  async voiceControls(): Promise<{ description: boolean; reference: boolean; deliveryHints?: boolean }> {
     if (this.controls) return { ...this.controls };
-    try { const response = await this.requestFetch(`${this.options.baseUrl}/v1/capabilities`, { signal: AbortSignal.timeout(2000) }); const body = await response.json() as { voiceDesignControl?: string; voiceReferenceControl?: string }; if (response.ok) this.controls = { description: body.voiceDesignControl === "voxcpm.voice-design.v1", reference: body.voiceReferenceControl === "voxcpm.voice-reference.v1" }; return this.controls ? { ...this.controls } : { description: false, reference: false }; } catch { return { description: false, reference: false }; }
+    try { const response = await this.requestFetch(`${this.options.baseUrl}/v1/capabilities`, { signal: AbortSignal.timeout(2000) }); const body = await response.json() as { voiceDesignControl?: string; voiceReferenceControl?: string; deliveryHintsControl?: {version?:string;referenceStyle?:boolean} }; if (response.ok) this.controls = { description: body.voiceDesignControl === "voxcpm.voice-design.v1", reference: body.voiceReferenceControl === "voxcpm.voice-reference.v1", deliveryHints: body.deliveryHintsControl?.version === "voxcpm.delivery-hints.v1" && body.deliveryHintsControl.referenceStyle === true }; return this.controls ? { ...this.controls } : { description: false, reference: false }; } catch { return { description: false, reference: false }; }
   }
   async supportsVoiceDesign(): Promise<boolean> { return (await this.voiceControls()).description; }
-  capabilities(): TtsCapabilities { return { contractVersion: "2.0.0", supportedDimensions: ["urgency", "deliveryMode", "pace", "energy"], degradableDimensions: ["affect", "urgency", "deliveryMode", "pace", "energy"], supportsStreaming: true, maxOutputSamples: 48_000 * 60 }; }
+  capabilities(): TtsCapabilities { return { contractVersion: "2.0.0", supportedDimensions: this.options.mappingRevision === "voxcpm2-map-3" && !this.options.voiceDesign?.reference?.transcript ? ["deliveryMode", "pace", "energy"] : [], degradableDimensions: ["affect", "urgency", "deliveryMode", "pace", "energy"], supportsStreaming: true, maxOutputSamples: 48_000 * 60 }; }
 
   async *synthesize(request: TtsRequest, signal?: AbortSignal): AsyncIterable<TtsEvent> {
     yield* this.synthesizeAttempt(request,signal,0);
@@ -34,26 +38,40 @@ export class VoxCpmProvider implements TextToSpeechProvider {
   private async *synthesizeAttempt(request: TtsRequest, signal: AbortSignal | undefined, attempt: number): AsyncIterable<TtsEvent> {
     const body: ProtocolRequest = { protocolVersion: PROTOCOL_VERSION, requestId: `${request.delivery.interactionId}:${request.segmentId}`, correlationId: request.decision.decisionId, interactionId: request.delivery.interactionId, deadlineAt: request.deadlineAt, voiceBundleKey: this.options.voiceBundleKey, voiceBundleRevision: this.options.voiceBundleRevision, text: request.text, delivery: request.delivery, format: { encoding: "pcm_s16le", sampleRateHz: 48000, channels: 1 } };
     let nextSequence = 0, nextOffset = 0, frames = 0;
+    const lifecycle=(()=>{try{return lifecycleObservation().begin(body.requestId);}catch{return undefined;}})();
+    let lifecycleStart:number|undefined, lifecycleEnd:number|undefined, lifecycleHeaders:number|null=null, lifecycleBytes=0;
+    let lifecycleOutcome="failed";
+    const finishLifecycle=()=>{try{lifecycle?.finish({attempt,requestBodyBytes:lifecycleBytes,headersMs:lifecycleHeaders,elapsedMs:lifecycleStart===undefined?0:(lifecycleEnd??performance.now())-lifecycleStart,phase,preAudioSeen,frames,samples:nextOffset,outcome:lifecycleOutcome});}catch{}};
     let degraded: string[] = [];
     let disposition: "fullyApplied" | "partiallyApplied" = "fullyApplied";
     let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
     const controller = new AbortController();
     let timedOut = false;
+    let phase: FailureBoundary["phase"] = "request", preAudioSeen = false;
     const abort = () => controller.abort();
     if (signal?.aborted) abort();
     signal?.addEventListener("abort", abort, { once: true });
     const remainingMs = Date.parse(request.deadlineAt) - Date.now();
+    let httpStartedAt:number|undefined;
+    let httpActivity:ReturnType<typeof httpActivitySnapshot>|undefined;
+    const observation=transportObservation();
     const timer = setTimeout(() => { timedOut = true; controller.abort(); }, Math.max(1, remainingMs));
     try {
       if (remainingMs <= 0) { timedOut = true; throw new Error("speech deadline expired"); }
       const design = this.options.voiceDesign, reference = design?.reference;
       const referenceDigest = reference ? createHash("sha256").update(Buffer.from(reference.dataBase64, "base64")).digest("hex") : null;
-      const response = await this.requestFetch(`${this.options.baseUrl}/v1/tts/synthesize`, { method: "POST", headers: { "content-type": "application/json", accept: "application/x-ndjson" }, body: JSON.stringify({ ...body, ...(design ? { voiceDesign: { version: "voxcpm.voice-design.v1", description: design.description, seed: design.seed } } : {}), ...(reference ? { voiceReference: { version: "voxcpm.voice-reference.v1", sampleRateHz: reference.sampleRateHz, dataBase64: reference.dataBase64, transcript: reference.transcript } } : {}) }), signal: controller.signal });
+      httpStartedAt=Date.now();if(observation)httpActivity=httpActivitySnapshot();observation?.emit('http_begin',body.requestId);
+      // requestBodyBytes counts encoded bytes supplied to fetch, not proof of dispatch/receipt.
+      const serializedBody=JSON.stringify({ ...body, ...(design ? { voiceDesign: { version: "voxcpm.voice-design.v1", description: design.description, seed: design.seed } } : {}), ...(reference ? { voiceReference: { version: "voxcpm.voice-reference.v1", sampleRateHz: reference.sampleRateHz, dataBase64: reference.dataBase64, transcript: reference.transcript } } : {}) });
+      if(lifecycle){lifecycleBytes=Buffer.byteLength(serializedBody);lifecycleStart=performance.now();}
+      const response = await this.requestFetch(`${this.options.baseUrl}/v1/tts/synthesize`, { method: "POST", headers: { "content-type": "application/json", accept: "application/x-ndjson" }, body: serializedBody, signal: controller.signal });
+      if(lifecycleStart!==undefined)lifecycleHeaders=performance.now()-lifecycleStart;
       reader = response.body?.getReader();
       if (!response.ok || !response.body) throw new Error(`provider HTTP ${response.status}`);
       const decoder = new TextDecoder();
-      let buffer = "", terminalSeen = false, preAudioSeen = false;
+      let buffer = "", terminalSeen = false;
       while (!terminalSeen) {
+        phase = "read";
         const { value, done } = await reader!.read();
         if (controller.signal.aborted) throw new Error("speech request aborted");
         buffer += decoder.decode(value, { stream: !done });
@@ -61,12 +79,16 @@ export class VoxCpmProvider implements TextToSpeechProvider {
         buffer = done ? "" : (lines.pop() ?? "");
         for (const raw of lines) {
           if (!raw.trim()) continue;
+          phase = "parse";
           const event = JSON.parse(raw) as ProtocolEvent;
+          phase = "validate";
           if (event.sequence !== nextSequence++) throw new Error("protocol sequence invalid");
           if (event.kind === "preAudio") {
             if (preAudioSeen || event.sequence !== 0 || event.requestId !== body.requestId || event.correlationId !== body.correlationId || event.voiceBundleRevision !== body.voiceBundleRevision) throw new Error("protocol identity invalid");
             if (event.runtimeRevision !== this.options.runtimeRevision || event.modelRevision !== this.options.modelRevision || event.mappingRevision !== this.options.mappingRevision) throw new Error("protocol revision invalid");
-            if (this.options.voiceDesign && (event.effectiveSynthesis.voiceDescription !== this.options.voiceDesign.description || event.effectiveSynthesis.seed !== this.options.voiceDesign.seed)) throw new Error("provider did not apply voice design settings");
+            if (this.options.voiceDesign && event.effectiveSynthesis.seed !== this.options.voiceDesign.seed) throw new Error("provider did not apply the requested seed");
+            if (event.effectiveSynthesis.voiceDesignApplied === false && !["deliveryMode", "pace", "energy"].every(d => event.degradedDimensions.includes(d))) throw new Error("provider did not report degraded delivery controls");
+            if (this.options.voiceDesign && event.effectiveSynthesis.voiceDesignApplied !== false && event.effectiveSynthesis.voiceDescription !== this.options.voiceDesign.description) throw new Error("provider did not apply voice design settings");
             if (referenceDigest && event.effectiveSynthesis.referenceDigest !== referenceDigest) throw new Error("provider did not apply the reference audio");
             if (reference && event.effectiveSynthesis.conditioningMode !== (reference.transcript ? "continuation" : "reference")) throw new Error("provider did not apply the reference conditioning mode");
             preAudioSeen = true;
@@ -85,9 +107,12 @@ export class VoxCpmProvider implements TextToSpeechProvider {
             if(terminalOnly&&event.outcome==="providerUnavailable"&&attempt<(this.options.busyAdmissionRetries??2)&&Date.parse(request.deadlineAt)-Date.now()>100){
               this.options.onDiagnostic?.({requestId:body.requestId,code:"busy_admission_retry"});
               await reader!.cancel();reader!.releaseLock();reader=undefined;
+              lifecycleOutcome="providerRejected";finishLifecycle();
               await delay(100,undefined,{signal:controller.signal});
               yield* this.synthesizeAttempt(request,signal,attempt+1);return;
             }
+            if(lifecycleStart!==undefined)lifecycleEnd=performance.now();
+            lifecycleOutcome=event.outcome==="completed"?"completed":"providerRejected";
             terminalSeen = true;
             if (event.outcome !== "completed") this.options.onDiagnostic?.({ requestId: body.requestId, code: `remote:${event.outcome}` });
           }
@@ -97,13 +122,23 @@ export class VoxCpmProvider implements TextToSpeechProvider {
         if (done && !terminalSeen) throw new Error("protocol lifecycle invalid");
       }
     } catch (error) {
+      try {
+      observation?.emit('http_failure',body.requestId,{elapsedMs:httpStartedAt===undefined?undefined:Math.max(0,Date.now()-httpStartedAt),aborted:controller.signal.aborted,timedOut,...(httpActivity?httpActivitySince(httpActivity):{})});
+      } catch {/* Observation must not change failure semantics. */}
       // Only adapter-authored diagnostics; never log request text, audio, keys,
       // remote exception strings, or arbitrary fetch error messages.
       const message = error instanceof Error ? error.message : "";
       const code = /^(protocol (sequence|identity|revision|audio ordering|PCM length|terminal counts|lifecycle) invalid|provider HTTP \d{3}|provider did not apply (voice design settings|the reference audio|the reference conditioning mode)|speech deadline expired|speech request aborted)$/u.test(message) ? message : "transport_or_parse_failure";
-      if (!signal?.aborted) this.options.onDiagnostic?.({ requestId: body.requestId, code });
+      // Closed metadata only: never retain exception messages, arbitrary names,
+      // response bodies, request text, voice references, or socket addresses.
+      const causeCode = error instanceof Error && error.cause && typeof error.cause === "object" && "code" in error.cause ? error.cause.code : undefined;
+      const transportCode = typeof causeCode === "string" && ["UND_ERR_SOCKET", "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT", "ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EPIPE"].includes(causeCode) ? causeCode : null;
+      if (!signal?.aborted) this.options.onDiagnostic?.({ requestId: body.requestId, code, ...(code === "transport_or_parse_failure" ? { boundary: { phase, preAudioSeen, frames, samples: nextOffset, failureKind: error instanceof SyntaxError ? "invalid_json" as const : error instanceof TypeError ? "type_error" as const : "other" as const, transportCode } } : {}) });
+      if(lifecycleStart!==undefined)lifecycleEnd=performance.now();
+      lifecycleOutcome=signal?.aborted?"cancelled":timedOut?"timedOut":"failed";
       yield { kind: "terminal", sequence: nextSequence, segmentId: request.segmentId, outcome: signal?.aborted ? "cancelled" : timedOut ? "timedOut" : "failed", outputSamples: nextOffset, frameCount: frames, disposition: signal?.aborted ? "cancelled" : timedOut ? "timedOut" : "providerFailure", degradedDimensions: degraded, mappingRevision: this.options.mappingRevision };
     } finally {
+      finishLifecycle();
       clearTimeout(timer);
       signal?.removeEventListener("abort", abort);
       controller.abort();

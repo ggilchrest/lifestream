@@ -1,0 +1,1 @@
+export const calendarSourceConsentPin=Object.freeze({"schemaId": "https://lifestream.dev/contracts/mobile-context-calendar-source-consent/1.0.0", "schemaVersion": "1.0.0", "digest": "97ef1a3167c4ed9e0c48f1046e3f423894f317d5c9932e36f6880b61a056aca7"} as const);

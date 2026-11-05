@@ -2,7 +2,41 @@
   "name": "@lifestream/providers-bizhawk",
   "private": true,
   "type": "module",
-  "scripts": { "build": "tsc -b", "typecheck": "tsc -b --pretty false" },
-  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
-  "dependencies": { "@lifestream/contracts": "workspace:*" }
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./c72-native-configuration": {
+      "types": "./dist/c72-native-configuration.d.ts",
+      "import": "./dist/c72-native-configuration.js"
+    },
+    "./native-facts-preparation": {
+      "types": "./dist/native-facts-preparation.d.ts",
+      "import": "./dist/native-facts-preparation.js"
+    },
+    "./native-pairing-custody": {
+      "types": "./dist/native-pairing-custody.d.ts",
+      "import": "./dist/native-pairing-custody.js"
+    },
+    "./owned-ubuntu-native": {
+      "types": "./dist/owned-ubuntu-native.d.ts",
+      "import": "./dist/owned-ubuntu-native.js"
+    },
+    "./owned-c72-native": {
+      "types": "./dist/owned-c72-native.d.ts",
+      "import": "./dist/owned-c72-native.js"
+    },
+    "./reviewed-live-frame": {
+      "types": "./dist/reviewed-live-frame.d.ts",
+      "import": "./dist/reviewed-live-frame.js"
+    }
+  },
+  "dependencies": {
+    "@lifestream/contracts": "workspace:*"
+  }
 }

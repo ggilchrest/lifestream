@@ -748,7 +748,10 @@
           "const": false
         },
         "planningClockPolicy": {
-          "const": "continuesNormally"
+          "enum": [
+            "continuesNormally",
+            "pausesBetweenActions"
+          ]
         },
         "maxPlanningAgeMs": {
           "type": "integer",
@@ -1242,7 +1245,7 @@
           "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
         },
         "invalidationKey": {
-          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          "$ref": "#/$defs/GamePreparedInvalidationKey"
         },
         "buttons": {
           "type": "array",
@@ -4182,7 +4185,7 @@
           "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/Revision"
         },
         "invalidationKey": {
-          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+          "$ref": "#/$defs/GamePreparedInvalidationKey"
         },
         "observationId": {
           "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
@@ -5518,6 +5521,20 @@
         }
       },
       "description": "Concrete Chrono Trigger game binding around the activity-neutral journal. Campaign identity spans run/session changes but remains pinned to the selected game profile and ordinary-save lineage. New observed campaigns before the first ordinary save may have null save/lineage; restart without an ordinary save cannot reconstruct unsaved emulator state. Resume requires loaded journal summary/bounded unfinished goals, exact revision/access joins, fresh visible-state and actual ordinary-save reconciliation before action. Missing/stale/contradictory sources pause for reconciliation/help. Historical entries from progress lost by older-save loading remain dated history, never current milestone claims. Opaque saves are never decoded into cognition; all emulator snapshots remain forbidden."
+    },
+    "GamePreparedInvalidationKey": {
+      "description": "Exact prepared-context invalidation identity: legacy UUID or the lowercase SHA256 fingerprint emitted by the authenticated server. This identity is not permission or authority.",
+      "oneOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        }
+      ]
     }
   }
 }

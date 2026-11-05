@@ -1,0 +1,10 @@
+// Generated Calendar read contract; source records remain owned by frozen producers.
+import type {CalendarSourceIdentity,CalendarEvent,Task} from './mobile-context-calendar.types.ts';
+import type {CalendarRecordLocator} from './mobile-context-calendar-delivery.types.ts';
+export type CalendarContextWindow = ({ "kind": "instant"; "startAt": string; "endAt": string }) | ({ "kind": "date"; "startDate": string; "endDateExclusive": string }) | ({ "kind": "floating"; "startLocal": string; "endLocal": string });
+export type CalendarContextQuery = { "schemaVersion": "1.0.0"; "enrollmentId": string; "assistantId": string; "window": CalendarContextWindow; "pageSize"?: number; "cursor"?: string };
+export type CalendarContextLineage = { "sourceKey": string; "suppressionKey": string; "recordDigest": string; "policyBindingDigest": string };
+export type CalendarContextRecord = ({ "recordId": string; "source": CalendarSourceIdentity; "locator": CalendarRecordLocator; "match": "inWindow" | "undetermined"; "reason": "timeWithinWindow" | "incomparableClock" | "unknownDue" | "recurrenceNotExpanded"; "lineage": CalendarContextLineage; "recordType": "CalendarEvent"; "record": CalendarEvent }) | ({ "recordId": string; "source": CalendarSourceIdentity; "locator": CalendarRecordLocator; "match": "inWindow" | "undetermined"; "reason": "timeWithinWindow" | "incomparableClock" | "unknownDue" | "recurrenceNotExpanded"; "lineage": CalendarContextLineage; "recordType": "Task"; "record": Task });
+export type CalendarContextPage = { "schemaVersion": "1.0.0"; "asOf": string; "queryDigest": string; "enrollmentId": string; "sourceNamespace": string; "policyRevision": number; "policyBindingDigest": string; "coverage": "partial" | "unknown"; "records": (CalendarContextRecord)[]; "nextCursor": (string) | (null); "limitations": (string)[] };
+export type CalendarContextPin = { "schemaId": "https://lifestream.dev/contracts/mobile-context-calendar-context/1.0.0"; "schemaVersion": "1.0.0"; "digest": string };
+export type CalendarContextResponse = { "schemaVersion": "1.0.0"; "producerPin": CalendarContextPin; "result": CalendarContextPage };

@@ -8,13 +8,20 @@ const request = { contractVersion: "2.0.0" as const, deadlineAt: new Date(Date.n
 const response = (body: string): Response => new Response(body, { status: 200, headers: { "content-type": "application/x-ndjson" } });
 const stream = () => JSON.stringify({ kind: "preAudio", sequence: 0, requestId: "interaction-1:segment-1", correlationId: "decision-1", voiceBundleRevision: 1, requestedDelivery: request.delivery, appliedDelivery: request.delivery, degradedDimensions: [], mappingRevision: "voxcpm2-map-1", effectiveSynthesis: { mode: "neutral" }, format: request.format, runtimeRevision: "19b6bf7590025418821a86dcb817504e0ad7e5df", modelRevision: "hf-snapshot" }) + "\n" + JSON.stringify({ kind: "data", sequence: 1, sampleOffset: 0, sampleCount: 10, dataBase64: "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", format: request.format }) + "\n" + JSON.stringify({ kind: "terminal", sequence: 2, outcome: "completed", outputSamples: 10, frameCount: 1 }) + "\n";
 
+test('native hint capability is explicit and continuation does not claim expressive support',async()=>{
+ const provider=new VoxCpmProvider({baseUrl:'http://fixture.invalid',voiceBundleKey:'fixture',voiceBundleRevision:1,runtimeRevision:'r',modelRevision:'m',mappingRevision:'voxcpm2-map-3',fetch:async()=>Response.json({voiceDesignControl:'voxcpm.voice-design.v1',voiceReferenceControl:'voxcpm.voice-reference.v1',deliveryHintsControl:{version:'voxcpm.delivery-hints.v1',referenceStyle:true}})});
+ assert.deepEqual(await provider.voiceControls(),{description:true,reference:true,deliveryHints:true});
+ assert.deepEqual(provider.capabilities().supportedDimensions,['deliveryMode','pace','energy']);
+ assert.deepEqual(provider.withVoiceDesign({description:'',seed:0,reference:{dataBase64:'AA==',sampleRateHz:16000,transcript:'Reference text.'}}).capabilities().supportedDimensions,[]);
+});
+
 test("internal diagnostics distinguish busy and redact arbitrary transport messages",async()=>{
   const diagnostics:unknown[]=[];
   for(const busy of [true,false]){
     const provider=new VoxCpmProvider({baseUrl:"http://tts.invalid",voiceBundleKey:"fixture",voiceBundleRevision:1,runtimeRevision:"r",modelRevision:"m",mappingRevision:"map",onDiagnostic:event=>diagnostics.push(event),fetch:async()=>{if(!busy)throw new Error("private request or secret");return response(JSON.stringify({kind:"terminal",sequence:0,outcome:"providerUnavailable",outputSamples:0,frameCount:0})+"\n");}});
     for await(const event of provider.synthesize(request))assert.equal(event.kind,"terminal");
   }
-  assert.deepEqual(diagnostics,[{requestId:"interaction-1:segment-1",code:"busy_admission_retry"},{requestId:"interaction-1:segment-1",code:"busy_admission_retry"},{requestId:"interaction-1:segment-1",code:"remote:providerUnavailable"},{requestId:"interaction-1:segment-1",code:"transport_or_parse_failure"}]);
+  assert.deepEqual(diagnostics,[{requestId:"interaction-1:segment-1",code:"busy_admission_retry"},{requestId:"interaction-1:segment-1",code:"busy_admission_retry"},{requestId:"interaction-1:segment-1",code:"remote:providerUnavailable"},{requestId:"interaction-1:segment-1",code:"transport_or_parse_failure",boundary:{phase:"request",preAudioSeen:false,frames:0,samples:0,failureKind:"other",transportCode:null}}]);
 });
 test("busy admission retries have no duplicate audio and preserve the original deadline",async()=>{
   const deadlines:string[]=[];
@@ -26,8 +33,8 @@ test("busy admission retries have no duplicate audio and preserve the original d
 test("negotiated voice controls remain available while the single worker is busy", async () => {
   let calls=0;
   const provider=new VoxCpmProvider({baseUrl:"http://tts.invalid",voiceBundleKey:"fixture",voiceBundleRevision:1,runtimeRevision:"r",modelRevision:"m",mappingRevision:"map",fetch:async()=>{calls++;if(calls>1)throw new Error("worker busy");return Response.json({voiceDesignControl:"voxcpm.voice-design.v1",voiceReferenceControl:"voxcpm.voice-reference.v1"});}});
-  assert.deepEqual(await provider.voiceControls(),{description:true,reference:true});
-  assert.deepEqual(await provider.withVoiceDesign({description:"steady",seed:0}).voiceControls(),{description:true,reference:true});
+  assert.deepEqual(await provider.voiceControls(),{description:true,reference:true,deliveryHints:false});
+  assert.deepEqual(await provider.withVoiceDesign({description:"steady",seed:0}).voiceControls(),{description:true,reference:true,deliveryHints:false});
   assert.equal(calls,1);
 });
 
@@ -71,4 +78,32 @@ test('explicit no-retry speech admission attempts a busy provider only once with
  const events=[];for await(const event of provider.withoutAdmissionRetries().synthesize({...request,deadlineAt:new Date(Date.now()+10000).toISOString()}))events.push(event);
  assert.equal(calls,1);assert.equal(events.length,1);assert.equal(events[0]!.kind,'terminal');
  calls=0;for await(const _event of provider.synthesize({...request,deadlineAt:new Date(Date.now()+10000).toISOString()})){/* Exhaust the unchanged ordinary provider. */}assert.equal(calls,3);
+});
+
+test("reference and continuation both require seed acknowledgement before PCM",async()=>{
+ for(const transcript of ["", "Synthetic transcript"])for(const actualSeed of [42,99,undefined]){
+  const reference={dataBase64:Buffer.alloc(64000).toString("base64"),sampleRateHz:16000 as const,transcript},digest=createHash("sha256").update(Buffer.from(reference.dataBase64,"base64")).digest("hex"),lines=stream().trim().split("\n").map(line=>JSON.parse(line)),continuation=!!transcript;
+  lines[0].effectiveSynthesis={voiceDescription:"",seed:actualSeed,referenceDigest:digest,conditioningMode:continuation?"continuation":"reference",voiceDesignApplied:!continuation};lines[0].degradedDimensions=continuation?["deliveryMode","pace","energy"]:[];
+  const provider=new VoxCpmProvider({baseUrl:"http://tts.invalid",voiceBundleKey:"fixture",voiceBundleRevision:1,runtimeRevision:"19b6bf7590025418821a86dcb817504e0ad7e5df",modelRevision:"hf-snapshot",mappingRevision:"voxcpm2-map-1",fetch:async()=>response(lines.map(line=>JSON.stringify(line)).join("\n")+"\n")}).withVoiceDesign({description:"",seed:42,reference});const events=[];for await(const event of provider.synthesize(request))events.push(event);assert.equal(events.some(event=>event.kind==="data"),actualSeed===42);
+ }
+});
+
+test('unapplied voice design cannot claim delivery controls were fully applied',async()=>{
+ const lines=stream().trim().split('\n').map(line=>JSON.parse(line));lines[0].effectiveSynthesis={voiceDescription:'',seed:0,voiceDesignApplied:false};lines[0].degradedDimensions=[];
+ const provider=new VoxCpmProvider({baseUrl:'http://tts.invalid',voiceBundleKey:'fixture',voiceBundleRevision:1,runtimeRevision:'19b6bf7590025418821a86dcb817504e0ad7e5df',modelRevision:'hf-snapshot',mappingRevision:'voxcpm2-map-1',fetch:async()=>response(lines.map(line=>JSON.stringify(line)).join('\n')+'\n')}).withVoiceDesign({description:'',seed:0});const events=[];for await(const event of provider.synthesize(request))events.push(event);assert.equal(events.some(event=>event.kind==='data'),false);assert.equal(events.at(-1)?.outcome,'failed');
+});
+
+test('unknown request-stage UND_ERR_SOCKET fails without resubmission or private diagnostic text',async()=>{
+ let calls=0;const diagnostics:unknown[]=[];
+ const provider=new VoxCpmProvider({baseUrl:'http://synthetic.invalid',voiceBundleKey:'fixture',voiceBundleRevision:1,runtimeRevision:'r',modelRevision:'m',mappingRevision:'map',onDiagnostic:event=>diagnostics.push(event),fetch:async()=>{calls++;throw new TypeError('private text must not escape',{cause:{code:'UND_ERR_SOCKET'}});}});
+ const events=[];for await(const event of provider.synthesize({...request,deadlineAt:new Date(Date.now()+5000).toISOString()}))events.push(event);
+ assert.equal(calls,1);assert.deepEqual(events.map(event=>event.kind),['terminal']);assert.equal(events.at(-1)?.outcome,'failed');
+ assert.deepEqual(diagnostics,[{requestId:'interaction-1:segment-1',code:'transport_or_parse_failure',boundary:{phase:'request',preAudioSeen:false,frames:0,samples:0,failureKind:'type_error',transportCode:'UND_ERR_SOCKET'}}]);
+});
+test('socket failure after PCM cannot trigger admission retry or duplicate emitted audio',async()=>{
+ let calls=0;const diagnostics:unknown[]=[];let pulled=false;
+ const provider=new VoxCpmProvider({baseUrl:'http://synthetic.invalid',voiceBundleKey:'fixture',voiceBundleRevision:1,runtimeRevision:'19b6bf7590025418821a86dcb817504e0ad7e5df',modelRevision:'hf-snapshot',mappingRevision:'voxcpm2-map-1',onDiagnostic:event=>diagnostics.push(event),fetch:async()=>{calls++;return new Response(new ReadableStream({pull(controller){if(!pulled){pulled=true;controller.enqueue(new TextEncoder().encode(stream().split('\n').slice(0,2).join('\n')+'\n'));}else controller.error(new TypeError('private socket detail',{cause:{code:'UND_ERR_SOCKET'}}));}}));}});
+ const events=[];for await(const event of provider.synthesize({...request,deadlineAt:new Date(Date.now()+5000).toISOString()}))events.push(event);
+ assert.equal(calls,1);assert.deepEqual(events.map(event=>event.kind),['preAudio','data','terminal']);assert.equal(events.at(-1)?.outcome,'failed');
+ assert.deepEqual(diagnostics,[{requestId:'interaction-1:segment-1',code:'transport_or_parse_failure',boundary:{phase:'read',preAudioSeen:true,frames:1,samples:10,failureKind:'type_error',transportCode:'UND_ERR_SOCKET'}}]);
 });

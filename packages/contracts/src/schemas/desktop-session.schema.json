@@ -1,0 +1,1889 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/desktop-session/1.0.0",
+  "title": "Lifestream desktop session control boundary",
+  "description": "Producer-owned JSON control metadata. Media and native input remain in the separately pinned engine; structural validity does not authorize a host effect.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/DesktopSession"
+    },
+    {
+      "$ref": "#/$defs/OperationRequest"
+    },
+    {
+      "$ref": "#/$defs/OperationResult"
+    },
+    {
+      "$ref": "#/$defs/BoundaryError"
+    },
+    {
+      "$ref": "#/$defs/SessionEvent"
+    },
+    {
+      "$ref": "#/$defs/PauseReceipt"
+    }
+  ],
+  "$defs": {
+    "Owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "actorId",
+        "effectiveUserId",
+        "clientInstanceId",
+        "leaseId",
+        "expiresAt"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "assistant",
+            "human"
+          ]
+        },
+        "actorId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "effectiveUserId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "clientInstanceId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "leaseId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 40
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "assistant"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "clientInstanceId": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "clientInstanceId": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "minLength": 36,
+                "maxLength": 36
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surfaceId",
+        "kind",
+        "sourceBindingId",
+        "sourceRevision",
+        "title",
+        "availability",
+        "reasonCode"
+      ],
+      "properties": {
+        "surfaceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "browser",
+            "desktop",
+            "game"
+          ]
+        },
+        "sourceBindingId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "sourceRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "availability": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "unavailable",
+            "stale"
+          ]
+        },
+        "reasonCode": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "container",
+        "display",
+        "source",
+        "bridge",
+        "guard",
+        "audio",
+        "saveStorage",
+        "stream",
+        "reasonCodes"
+      ],
+      "properties": {
+        "container": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "display": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "bridge": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "guard": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "audio": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "saveStorage": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "stream": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "reasonCodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]*$"
+          },
+          "maxItems": 32,
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      }
+    },
+    "DesktopSession": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "sessionId",
+        "workspaceId",
+        "resourceGroupId",
+        "effectiveUserId",
+        "assistantId",
+        "endpointRef",
+        "sessionEpoch",
+        "ownershipRevision",
+        "controlEpoch",
+        "state",
+        "owner",
+        "surfaces",
+        "capabilities",
+        "health",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0",
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "workspaceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "resourceGroupId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "effectiveUserId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "assistantId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "endpointRef": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "sessionEpoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "ownershipRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "controlEpoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "unavailable",
+            "observing",
+            "assistantControlled",
+            "takeoverPending",
+            "humanControlledPaused",
+            "humanControlledActive",
+            "returnPending",
+            "paused",
+            "recoveryRequired"
+          ]
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Owner"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "surfaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Surface"
+          },
+          "maxItems": 16,
+          "minItems": 0
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "observeVideo",
+              "observeAudio",
+              "pointer",
+              "keyboard",
+              "gameController",
+              "pauseGame",
+              "resumeGame",
+              "fullscreen",
+              "popout"
+            ]
+          },
+          "maxItems": 9,
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "health": {
+          "$ref": "#/$defs/Health"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 40
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "assistantControlled"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "owner": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "assistant"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "humanControlledPaused",
+                  "humanControlledActive"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "owner": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "human"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "unavailable",
+                  "observing",
+                  "takeoverPending",
+                  "returnPending",
+                  "paused",
+                  "recoveryRequired"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "owner": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BoundaryError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "code",
+        "message",
+        "retryable",
+        "correlationId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0",
+          "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "unauthenticated",
+            "forbidden",
+            "scopeChanged",
+            "notFound",
+            "unsupportedVersion",
+            "unsupportedCapability",
+            "invalidRequest",
+            "staleEpoch",
+            "revisionConflict",
+            "idempotencyConflict",
+            "controlBusy",
+            "notOwner",
+            "leaseExpired",
+            "sourceUnavailable",
+            "pauseUnconfirmed",
+            "deadlineExceeded",
+            "backpressure",
+            "recoveryRequired"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 512,
+          "pattern": "^[^\u0000-\u001f\u007f<>]*$"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        }
+      }
+    },
+    "OperationRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operationId",
+            "idempotencyKey",
+            "sessionId",
+            "resourceGroupId",
+            "clientInstanceId",
+            "expectedSessionEpoch",
+            "expectedOwnershipRevision",
+            "expectedControlEpoch",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0",
+              "type": "string"
+            },
+            "operationId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "sessionId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "resourceGroupId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "clientInstanceId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "expectedSessionEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedOwnershipRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedControlEpoch": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "operation": {
+              "const": "describeSession",
+              "type": "string"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operationId",
+            "idempotencyKey",
+            "sessionId",
+            "resourceGroupId",
+            "clientInstanceId",
+            "expectedSessionEpoch",
+            "expectedOwnershipRevision",
+            "expectedControlEpoch",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0",
+              "type": "string"
+            },
+            "operationId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "sessionId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "resourceGroupId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "clientInstanceId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "expectedSessionEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedOwnershipRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedControlEpoch": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "operation": {
+              "const": "getOperation",
+              "type": "string"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "targetOperationId"
+              ],
+              "properties": {
+                "targetOperationId": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "minLength": 36,
+                  "maxLength": 36
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operationId",
+            "idempotencyKey",
+            "sessionId",
+            "resourceGroupId",
+            "clientInstanceId",
+            "expectedSessionEpoch",
+            "expectedOwnershipRevision",
+            "expectedControlEpoch",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0",
+              "type": "string"
+            },
+            "operationId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "sessionId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "resourceGroupId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "clientInstanceId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "expectedSessionEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedOwnershipRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedControlEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "operation": {
+              "const": "attachViewer",
+              "type": "string"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "surfaceId",
+                "audioRequested"
+              ],
+              "properties": {
+                "surfaceId": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "minLength": 36,
+                  "maxLength": 36
+                },
+                "audioRequested": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operationId",
+            "idempotencyKey",
+            "sessionId",
+            "resourceGroupId",
+            "clientInstanceId",
+            "expectedSessionEpoch",
+            "expectedOwnershipRevision",
+            "expectedControlEpoch",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0",
+              "type": "string"
+            },
+            "operationId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "sessionId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "resourceGroupId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "clientInstanceId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "expectedSessionEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedOwnershipRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedControlEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "operation": {
+              "const": "detachViewer",
+              "type": "string"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "viewerId"
+              ],
+              "properties": {
+                "viewerId": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "minLength": 36,
+                  "maxLength": 36
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operationId",
+            "idempotencyKey",
+            "sessionId",
+            "resourceGroupId",
+            "clientInstanceId",
+            "expectedSessionEpoch",
+            "expectedOwnershipRevision",
+            "expectedControlEpoch",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0",
+              "type": "string"
+            },
+            "operationId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "sessionId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "resourceGroupId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "clientInstanceId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "expectedSessionEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedOwnershipRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedControlEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "operation": {
+              "const": "takeOver",
+              "type": "string"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "surfaceId"
+              ],
+              "properties": {
+                "surfaceId": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "minLength": 36,
+                  "maxLength": 36
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operationId",
+            "idempotencyKey",
+            "sessionId",
+            "resourceGroupId",
+            "clientInstanceId",
+            "expectedSessionEpoch",
+            "expectedOwnershipRevision",
+            "expectedControlEpoch",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0",
+              "type": "string"
+            },
+            "operationId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "sessionId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "resourceGroupId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "clientInstanceId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "expectedSessionEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedOwnershipRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedControlEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "operation": {
+              "const": "resumeHumanGame",
+              "type": "string"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "surfaceId"
+              ],
+              "properties": {
+                "surfaceId": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "minLength": 36,
+                  "maxLength": 36
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operationId",
+            "idempotencyKey",
+            "sessionId",
+            "resourceGroupId",
+            "clientInstanceId",
+            "expectedSessionEpoch",
+            "expectedOwnershipRevision",
+            "expectedControlEpoch",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0",
+              "type": "string"
+            },
+            "operationId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "sessionId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "resourceGroupId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "clientInstanceId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "expectedSessionEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedOwnershipRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedControlEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "operation": {
+              "const": "returnToAssistant",
+              "type": "string"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operationId",
+            "idempotencyKey",
+            "sessionId",
+            "resourceGroupId",
+            "clientInstanceId",
+            "expectedSessionEpoch",
+            "expectedOwnershipRevision",
+            "expectedControlEpoch",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0",
+              "type": "string"
+            },
+            "operationId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "sessionId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "resourceGroupId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "clientInstanceId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "expectedSessionEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedOwnershipRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedControlEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "operation": {
+              "const": "pause",
+              "type": "string"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operationId",
+            "idempotencyKey",
+            "sessionId",
+            "resourceGroupId",
+            "clientInstanceId",
+            "expectedSessionEpoch",
+            "expectedOwnershipRevision",
+            "expectedControlEpoch",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0",
+              "type": "string"
+            },
+            "operationId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "sessionId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "resourceGroupId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "clientInstanceId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "expectedSessionEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedOwnershipRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedControlEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "operation": {
+              "const": "transferHumanControl",
+              "type": "string"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "destinationClientInstanceId"
+              ],
+              "properties": {
+                "destinationClientInstanceId": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "minLength": 36,
+                  "maxLength": 36
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operationId",
+            "idempotencyKey",
+            "sessionId",
+            "resourceGroupId",
+            "clientInstanceId",
+            "expectedSessionEpoch",
+            "expectedOwnershipRevision",
+            "expectedControlEpoch",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0",
+              "type": "string"
+            },
+            "operationId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "sessionId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "resourceGroupId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "clientInstanceId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "expectedSessionEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedOwnershipRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedControlEpoch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "operation": {
+              "const": "heartbeat",
+              "type": "string"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "leaseId",
+                "sequence"
+              ],
+              "properties": {
+                "leaseId": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "minLength": 36,
+                  "maxLength": 36
+                },
+                "sequence": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ViewerAttachment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "viewerId",
+        "connectPath",
+        "expiresAt",
+        "transport",
+        "capabilities"
+      ],
+      "properties": {
+        "viewerId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "connectPath": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 512,
+          "pattern": "^/(?!/)[A-Za-z0-9/_-]+$"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 40
+        },
+        "transport": {
+          "const": "websocket",
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "observeVideo",
+              "observeAudio",
+              "pointer",
+              "keyboard",
+              "gameController",
+              "pauseGame",
+              "resumeGame",
+              "fullscreen",
+              "popout"
+            ]
+          },
+          "maxItems": 9,
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      }
+    },
+    "OperationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operationId",
+        "status",
+        "sessionId",
+        "ownershipRevision",
+        "controlEpoch",
+        "state",
+        "error",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0",
+          "type": "string"
+        },
+        "operationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "completed",
+            "rejected",
+            "unknown"
+          ]
+        },
+        "sessionId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "ownershipRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "controlEpoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "unavailable",
+            "observing",
+            "assistantControlled",
+            "takeoverPending",
+            "humanControlledPaused",
+            "humanControlledActive",
+            "returnPending",
+            "paused",
+            "recoveryRequired"
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoundaryError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DesktopSession"
+                },
+                {
+                  "$ref": "#/$defs/OperationResult"
+                },
+                {
+                  "$ref": "#/$defs/ViewerAttachment"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "detached"
+                  ],
+                  "properties": {
+                    "detached": {
+                      "const": true,
+                      "type": "boolean"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "transitionId"
+                  ],
+                  "properties": {
+                    "transitionId": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "minLength": 36,
+                      "maxLength": 36
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "resumed"
+                  ],
+                  "properties": {
+                    "resumed": {
+                      "const": true,
+                      "type": "boolean"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "pauseReceiptId"
+                  ],
+                  "properties": {
+                    "pauseReceiptId": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "minLength": 36,
+                      "maxLength": 36
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "expiresAt"
+                  ],
+                  "properties": {
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "Z$",
+                      "maxLength": 40
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "rejected"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "$ref": "#/$defs/BoundaryError"
+              },
+              "result": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "error": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "completed"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SessionEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "eventSequence",
+        "sessionId",
+        "sessionEpoch",
+        "ownershipRevision",
+        "controlEpoch",
+        "type",
+        "occurredAt",
+        "operationId",
+        "snapshot"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0",
+          "type": "string"
+        },
+        "eventId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "eventSequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "sessionId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "sessionEpoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "ownershipRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "controlEpoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "stateChanged",
+            "sourceChanged",
+            "operationCompleted",
+            "authorizationRevoked",
+            "streamDegraded"
+          ]
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 40
+        },
+        "operationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "snapshot": {
+          "$ref": "#/$defs/DesktopSession"
+        }
+      }
+    },
+    "FrameSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frameNumber",
+        "observedAtMonotonicMs"
+      ],
+      "properties": {
+        "frameNumber": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "observedAtMonotonicMs": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "PauseReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "receiptId",
+        "resourceGroupId",
+        "controlEpoch",
+        "processInstanceId",
+        "runId",
+        "requestedAt",
+        "acknowledgedAt",
+        "inputNeutral",
+        "frameSamples",
+        "status"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0",
+          "type": "string"
+        },
+        "receiptId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "resourceGroupId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "controlEpoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "processInstanceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "requestedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 40
+        },
+        "acknowledgedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 40
+        },
+        "inputNeutral": {
+          "type": "boolean"
+        },
+        "frameSamples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FrameSample"
+          },
+          "maxItems": 128,
+          "minItems": 2
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "failed",
+            "unknown"
+          ]
+        }
+      }
+    }
+  }
+}

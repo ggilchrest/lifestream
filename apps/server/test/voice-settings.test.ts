@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { defaultVoiceSettings, parseVoiceSettings } from "../src/runtime/voice-settings.ts";
+import { defaultVoiceSettings, parseVoiceSettings, synthesisReference } from "../src/runtime/voice-settings.ts";
 test("voice test settings are closed, bounded and detached from caller changes", () => {
   assert.deepEqual(parseVoiceSettings(undefined),defaultVoiceSettings);
   const draft={description:"An adult woman, calm and conversational",pace:0.2,energy:0.4,seed:42,deliveryMode:"neutral"};
@@ -13,4 +13,11 @@ test("voice reference requires permission and bounded valid PCM, not a URL or pa
   const settings=parseVoiceSettings({reference}); assert.equal(settings.reference?.transcript,reference.transcript);
   reference.transcript="changed";assert.notEqual(settings.reference?.transcript,reference.transcript);
   for(const ref of [{...reference,consent:false},{...reference,sampleRateHz:48000},{...reference,dataBase64:"broken"},{...reference,path:"/etc/passwd"},{...reference,dataBase64:Buffer.alloc(640002).toString("base64")}]) assert.throws(()=>parseVoiceSettings({reference:ref}));
+});
+
+test("explicit conditioning projects reference without changing retained PCM or transcript and preserves legacy behavior",()=>{
+ const reference={sampleRateHz:16000,dataBase64:Buffer.alloc(64000,3).toString("base64"),transcript:"Synthetic",consent:true};
+ const legacy=parseVoiceSettings({reference}),expressive=parseVoiceSettings({reference,conditioningMode:"reference"}),continuation=parseVoiceSettings({reference,conditioningMode:"continuation"});
+ assert.equal(synthesisReference(legacy)?.transcript,"Synthetic");assert.equal(synthesisReference(continuation)?.transcript,"Synthetic");assert.equal(synthesisReference(expressive)?.transcript,"");assert.equal(synthesisReference(expressive)?.dataBase64,reference.dataBase64);assert.equal(expressive.reference?.transcript,"Synthetic");
+ assert.throws(()=>parseVoiceSettings({reference,conditioningMode:"other"}));assert.throws(()=>parseVoiceSettings({conditioningMode:"reference"}));assert.throws(()=>parseVoiceSettings({reference:{...reference,transcript:""},conditioningMode:"continuation"}));
 });

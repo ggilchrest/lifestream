@@ -6,6 +6,8 @@ import type * as G from './game-activity.ts';
 /** Transport metadata never confers game, native-installation, or effect authority. */
 export const GAME_HOST_PROTOCOL = 'lifestream.game-host.v1' as const;
 export const GAME_HOST_BASE_PATH = '/api/runtime/v1/game-host' as const;
+/** Fresh normal Play terms. Diagnostic envelopes remain independent. */
+export const ORDINARY_GAME_SESSION_LIMITS=Object.freeze({maximumMs:28800000,decisions:512,actions:512,modelCalls:1536,frames:61440,inputTokens:11501568,outputTokens:524288,checkpointBytes:16777216,nativeRequests:8192});
 export const GAME_HOST_LIMITS = Object.freeze({messageBytes:131072,pollMs:1000,attachmentMs:60000,idleMs:10000,inFlightCommands:1,pendingPolls:1});
 export type GameHostRequest = G.GameObserveRequest | G.GameActionRequest | G.GameReleaseRequest;
 export type GameHostResult = G.GameObserveResult | G.GameActionResult | G.GameReleaseResult;
@@ -80,4 +82,13 @@ export function gameHostMessage<N extends GameHostMessageName>(name:N,input:unkn
 /** Cross-message correlation only; schema validity/authenticated ingress is not qualification. */
 export function gameHostCompletionMatches(command:GameHostCommand,completion:GameHostCompletion):boolean{
  return completion.attachmentId===command.attachmentId&&completion.commandId===command.commandId&&completion.requestDigest===command.requestDigest&&completion.result.operation===command.request.operation&&completion.result.requestId===command.request.requestId&&completion.result.correlationId===command.request.correlationId&&gameHostDigest(completion.result)===completion.resultDigest;
+}
+
+/** Fresh ordinary-gameplay policy; diagnostic envelopes remain unchanged. */
+export const ORDINARY_GAMEPLAY=Object.freeze({maximumHoldFrames:120,maximumHoldMs:2000,validatorRef:'owned-bizhawk-dispatch:live-v1'});
+/** Normal time advances during inference/dispatch. Frame lineage is monotonic;
+ * action-context compatibility is checked from actual observations by the
+ * campaign owner, never inferred from elapsed frames. */
+export function ordinaryEntryFrameMatches(request:G.GameActionRequest,beforeFrame:number|null,enabled:boolean):boolean{
+ const expected=request.payload.expectedFrameNumber;if(beforeFrame===expected)return true;return enabled&&request.payload.dispatchValidation.validatorRef===ORDINARY_GAMEPLAY.validatorRef&&beforeFrame!==null&&Number.isSafeInteger(beforeFrame)&&beforeFrame>=expected;
 }

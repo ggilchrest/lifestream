@@ -1,16 +1,26 @@
+import {createPresenceTerminalCustodyOwner,type PresenceAuthSessionCustodyOwners} from '../runtime/presence-terminal-custody.ts';
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, randomUUID, scrypt, timingSafeEqual } from "node:crypto";
 import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import {SystemAdministrators} from "./system-administrator.ts";
+import {EffectiveSubjects} from "./effective-subject.ts";
+import type {EffectiveSubjectContext} from "@lifestream/contracts/effective-subject";
 import type { Database } from "@lifestream/storage-sqlite";
 
 export const AUTH_PARAMETERS = Object.freeze({ password: "scrypt:N=32768,r=8,p=3,keyLength=32,saltBytes=16", totp: "RFC6238:HMAC-SHA1,digits=6,period=30,window=1", recoveryCodeCount: 10, recoveryCodeBytes: 32, adminIdleMs: 1_800_000, maxPasswordBytes: 1024 });
 export class AuthenticationError extends Error { readonly status: number; readonly code: string; constructor(status = 401, code = "authentication_required") { super(code.replaceAll("_", " ")); this.status = status; this.code = code; } }
-export type LocalContext = { principalId: string; sessionId: string; expiresAt: string; origin: string; owner: boolean; authenticatedAt: number; tokenHash: string };
-export type LocalAuthOptions = { stateDirectory: string; installerToken?: string; now?: () => number; afterSafetyWrite?: () => void };
+export type PersonalDailySessionPolicy = { enabled:boolean; scope:'installationOwner'; expiration:'untilRevoked'; windowFocusRequired:false };
+export const INACTIVE_PERSONAL_DAILY_SESSION_POLICY:Readonly<PersonalDailySessionPolicy> = Object.freeze({enabled:false,scope:'installationOwner',expiration:'untilRevoked',windowFocusRequired:false});
+export type PersonalDailySessionMetadata = {schemaVersion:'personal-daily-session-policy/1';scope:'installationOwner';expiration:'untilRevoked';windowFocusRequired:false};
+const persistentMetadata:Readonly<PersonalDailySessionMetadata> = Object.freeze({schemaVersion:'personal-daily-session-policy/1',scope:'installationOwner',expiration:'untilRevoked',windowFocusRequired:false});
+/** An unbounded session deadline is local arithmetic, never a serialized date or timer. */
+export const sessionDeadline = (expiresAt:string|null):number => expiresAt===null?Infinity:Date.parse(expiresAt);
+export type LocalContext = { principalId: string; sessionId: string; expiresAt: string|null; origin: string; owner: boolean; authenticatedAt: number; tokenHash: string; effectiveContext?:EffectiveSubjectContext; contextRef?:string };
+export type LocalAuthOptions = { stateDirectory: string; installerToken?: string; now?: () => number; afterSafetyWrite?: () => void; personalSessionPolicy?:PersonalDailySessionPolicy };
 type Account = { principal_id: string; username: string; owner: number; password_verifier: string; totp_secret: string | null; totp_last_step: number; epoch: number; disabled: number; created_at: number };
 type CredentialSnapshot = { account: Account; recoveryHashes: string[] };
 type Session = { principal_id: string; session_id: string; csrf_hash: string; origin: string; epoch: number; authenticated_at: number; admin_last_activity: number; revoked: number };
-export type LocalSession = { token: string; csrfToken: string; principalId: string; sessionId: string; owner: boolean; adminExpiresAt: string };
+export type LocalSession = { token: string; csrfToken: string; principalId: string; sessionId: string; owner: boolean; adminExpiresAt: string|null; sessionPolicy?:Readonly<PersonalDailySessionMetadata> };
 export type ProposedOperation = { method: "POST" | "PUT" | "PATCH" | "DELETE"; path: string; body: Record<string, unknown>; expectedRevision: number | null };
 const digest = (value: string) => createHash("sha256").update(value).digest("hex");
 const equal = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -29,19 +39,58 @@ function validStep(secret: string, code: string, now: number, previous: number):
 function canonical(value: unknown): string { if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`; if (value && typeof value === "object") return `{${Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`).join(",")}}`; return JSON.stringify(value); }
 export const operationDigest = (operation: ProposedOperation) => digest(canonical(operation));
 
+type CustodyOwner=ReturnType<typeof createPresenceTerminalCustodyOwner>;
+const canonicalSessions=new WeakMap<object,{owner:CustodyOwner;authentication:CustodyOwner;closed:boolean}>();
+const canonicalAuthentications=new WeakMap<object,{database:Database;owner:CustodyOwner;stateDirectory:string;options:LocalAuthOptions;session:{owner:CustodyOwner;authentication:CustodyOwner;closed:boolean};owners:PresenceAuthSessionCustodyOwners}>();
+/** Exact original constructor identities only; no current-verdict registration. */
+export function canonicalAuthSessionCustody(authentication:unknown,database:unknown):PresenceAuthSessionCustodyOwners|null{
+ if(!authentication||typeof authentication!=='object')return null;const record=canonicalAuthentications.get(authentication);
+ return record&&record.database===database&&!record.session.closed?record.owners:null;
+}
+/** Original constructor-owned directory metadata only; never credentials or a grant. */
+export function canonicalAuthStateDirectory(authentication:unknown,database:unknown):string|null{
+ if(!authentication||typeof authentication!=='object')return null;const record=canonicalAuthentications.get(authentication);
+ if(!record||record.database!==database||record.session.closed)return null;
+ const stateDirectory=Object.getOwnPropertyDescriptor(record.options,'stateDirectory')?.value;
+ const originalOptions=Object.getOwnPropertyDescriptor(authentication,'options')?.value;
+ return originalOptions===record.options&&typeof stateDirectory==='string'&&stateDirectory===record.stateDirectory&&!record.session.closed?record.stateDirectory:null;
+}
+export function invalidateCanonicalAuthenticationCustody(database:object):void{canonicalSessions.get(database)?.authentication.invalidate();}
+export function invalidateCanonicalSessionCustody(database:object):void{canonicalSessions.get(database)?.owner.invalidate();}
+export function invalidateCanonicalAuthSessionCustody(authentication:unknown,database:unknown):void{
+ if(!authentication||typeof authentication!=='object')return;const record=canonicalAuthentications.get(authentication);if(record&&record.database===database){record.owner.invalidate();record.session.owner.invalidate();}
+}
+/** Called before the original captured database is closed/replaced. */
+export function closeCanonicalAuthSessionCustody(authentication:unknown,database:unknown):void{
+ if(!authentication||typeof authentication!=='object')return;const record=canonicalAuthentications.get(authentication);if(record&&record.database===database){record.owner.close();record.session.owner.close();record.session.closed=true;const current=canonicalSessions.get(record.database);if(current){current.authentication.close();current.owner.close();current.closed=true;}}
+}
+
 /** Owner-local authentication. The safety directory is deliberately outside database backup/restore. */
 export class LocalAuthentication {
   private readonly database: Database; private readonly options: LocalAuthOptions; private readonly key: Buffer; private readonly now: () => number;
+  readonly administrators:SystemAdministrators;readonly effectiveSubjects:EffectiveSubjects;
+  private readonly custody:CustodyOwner;
+  private readonly personalSessionPolicy:Readonly<PersonalDailySessionPolicy>;
+  // Reuse only a decrypted enrollment identity for identical encrypted bytes.
+  // Every use still reads the file and checks the current database owner set.
+  private enrollmentProof:{source:string;principalId:string}|undefined;
   private busy = 0; private readonly pendingMfa = new Map<string, { secret: string; until: number; principalId: string }>();
   constructor(database: Database, options: LocalAuthOptions) {
     this.database = database; this.options = options; this.now = options.now ?? Date.now;
+    const policy=options.personalSessionPolicy??INACTIVE_PERSONAL_DAILY_SESSION_POLICY;
+    if(!policy||Object.getPrototypeOf(policy)!==Object.prototype||Reflect.ownKeys(policy).length!==4||Object.keys(policy).sort().join(',')!=='enabled,expiration,scope,windowFocusRequired'||!Object.values(Object.getOwnPropertyDescriptors(policy)).every(d=>Object.hasOwn(d,'value'))||typeof policy.enabled!=='boolean'||policy.scope!=='installationOwner'||policy.expiration!=='untilRevoked'||policy.windowFocusRequired!==false)throw new AuthenticationError(422,'personal_session_policy_invalid');
+    this.personalSessionPolicy=Object.freeze({...policy});
+    let session=canonicalSessions.get(database);if(!session||session.closed){session={owner:createPresenceTerminalCustodyOwner('session'),authentication:createPresenceTerminalCustodyOwner('authentication'),closed:false};canonicalSessions.set(database,session);}
+    this.custody=session.authentication;canonicalAuthentications.set(this,{database,owner:this.custody,stateDirectory:options.stateDirectory,options,session,owners:Object.freeze({authentication:this.custody.handle,session:session.owner.handle})});
     mkdirSync(options.stateDirectory, { recursive: true, mode: 0o700 });
     const keyPath = join(options.stateDirectory, "authentication-key");
     if (!existsSync(keyPath)) { if (this.accountCount()) throw new AuthenticationError(503, "authentication_safety_state_missing"); try { this.writeExclusive(keyPath, randomBytes(32)); } catch (error) { if (!existsSync(keyPath)) throw error; } }
     this.key = readFileSync(keyPath); if (this.key.length !== 32) throw new AuthenticationError(503, "authentication_safety_state_invalid");
     this.reconcileCredentials();
+    this.administrators=new SystemAdministrators(database,options.stateDirectory,()=>this.enrollmentPrincipal(),id=>this.accountEnabled(id));
+    this.effectiveSubjects=new EffectiveSubjects(database,this.administrators,(context,administration)=>this.assertAuthenticationCurrent(context,administration),this.now,this.key);
   }
-  private writeExclusive(path: string, data: string | Buffer): void { const fd = openSync(path, "wx", 0o600); try { writeFileSync(fd, data); fsyncSync(fd); } finally { closeSync(fd); } const dir = openSync(this.options.stateDirectory, "r"); try { fsyncSync(dir); } finally { closeSync(dir); } }
+  private writeExclusive(path: string, data: string | Buffer): void { invalidateCanonicalAuthenticationCustody(this.database);const fd = openSync(path, "wx", 0o600); try { writeFileSync(fd, data); fsyncSync(fd); } finally { closeSync(fd); } const dir = openSync(this.options.stateDirectory, "r"); try { fsyncSync(dir); } finally { closeSync(dir); } }
   private reconcileCredentials(): void {
     const latest = new Map<string, CredentialSnapshot>();
     const enrollment = join(this.options.stateDirectory, "owner-enrolled");
@@ -55,7 +104,7 @@ export class LocalAuthentication {
     for (const snapshot of latest.values()) { const current = this.account(snapshot.account.principal_id); if (!current || current.epoch < snapshot.account.epoch) this.applyCredentials(snapshot); else if (current.epoch === snapshot.account.epoch && !this.safetyMatches(current)) this.writeEpoch(current.principal_id, current.epoch); }
   }
   private applyCredentials(snapshot: CredentialSnapshot): void {
-    const a = snapshot.account;
+    const a = snapshot.account;invalidateCanonicalAuthenticationCustody(this.database);
     this.database.transaction(tx => { const current = this.account(a.principal_id); if (current && current.epoch > a.epoch) throw new AuthenticationError(409, "credential_revision_conflict");
       tx.run("INSERT INTO local_accounts (principal_id,username,owner,password_verifier,totp_secret,totp_last_step,epoch,disabled,created_at) VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(principal_id) DO UPDATE SET password_verifier=excluded.password_verifier,totp_secret=excluded.totp_secret,totp_last_step=excluded.totp_last_step,epoch=excluded.epoch,disabled=excluded.disabled", a.principal_id,a.username,a.owner,a.password_verifier,a.totp_secret,a.totp_last_step,a.epoch,a.disabled,a.created_at);
       tx.run("UPDATE local_recovery_codes SET consumed=1 WHERE principal_id=?", a.principal_id);
@@ -65,7 +114,7 @@ export class LocalAuthentication {
     this.writeEpoch(a.principal_id,a.epoch);
   }
   private changeCredentials(account: Account, recoveryHashes: string[]): void {
-    const snapshot = { account, recoveryHashes };
+    const snapshot = { account, recoveryHashes };invalidateCanonicalAuthenticationCustody(this.database);
     this.writeExclusive(join(this.options.stateDirectory, `security-${account.principal_id}-${account.epoch}.json`), this.seal(JSON.stringify(snapshot), account.principal_id));
     this.options.afterSafetyWrite?.();
     this.applyCredentials(snapshot);
@@ -74,7 +123,7 @@ export class LocalAuthentication {
   private writeEpoch(principalId: string, epoch: number): void { const path = join(this.options.stateDirectory, `epoch-${principalId}`); const temporary = `${path}-${randomUUID()}`; this.writeExclusive(temporary, String(epoch)); renameSync(temporary, path); const dir = openSync(this.options.stateDirectory, "r"); try { fsyncSync(dir); } finally { closeSync(dir); } }
   private safetyMatches(account: Account): boolean { try { return readFileSync(join(this.options.stateDirectory, `epoch-${account.principal_id}`), "utf8") === String(account.epoch); } catch { return false; } }
   private accountCount(): number { return (this.database.connection.prepare("SELECT COUNT(*) AS n FROM local_accounts").get() as { n: number }).n; }
-  private account(principalId: string): Account | undefined { return this.database.connection.prepare("SELECT * FROM local_accounts WHERE principal_id = ?").get(principalId) as Account | undefined; }
+  private account(principalId: string): Account | undefined { return this.database.readGet("SELECT * FROM local_accounts WHERE principal_id = ?",principalId) as Account | undefined; }
   private seal(secret: string, principalId: string): string { const iv = randomBytes(12); const cipher = createCipheriv("aes-256-gcm", this.key, iv); cipher.setAAD(Buffer.from(principalId)); const data = Buffer.concat([cipher.update(secret, "utf8"), cipher.final()]); return [iv, cipher.getAuthTag(), data].map(value => value.toString("base64url")).join("."); }
   private unseal(value: string, principalId: string): string { const [iv, tag, data] = value.split(".").map(part => Buffer.from(part, "base64url")); if (!iv || !tag || !data) throw new AuthenticationError(); const decipher = createDecipheriv("aes-256-gcm", this.key, iv); decipher.setAAD(Buffer.from(principalId)); decipher.setAuthTag(tag); return Buffer.concat([decipher.update(data), decipher.final()]).toString("utf8"); }
   private event(principalId: string | null, action: string): void { this.database.connection.prepare("INSERT INTO local_auth_events (principal_id,action,occurred_at) VALUES (?,?,?)").run(principalId, action, this.now()); }
@@ -91,9 +140,18 @@ export class LocalAuthentication {
     const recoveryHashes=codes.map(code=>digest(`${principalId}:${code}`));
     try { this.writeExclusive(join(this.options.stateDirectory,"owner-enrolled"),JSON.stringify({principalId,payload:this.seal(JSON.stringify({account,recoveryHashes}),principalId)})); } catch { throw new AuthenticationError(409,"owner_already_enrolled"); }
     this.changeCredentials(account, recoveryHashes);
-    this.event(principalId, "owner_enrolled"); return { session: this.issue(this.account(principalId)!, origin), recoveryCodes: codes };
+    this.administrators.reconcile(); this.event(principalId, "owner_enrolled"); return { session: this.issue(this.account(principalId)!, origin), recoveryCodes: codes };
   }
-  private issue(account: Account, origin: string): LocalSession { const token = opaque(), csrfToken = createHmac("sha256",this.key).update(`csrf:${digest(token)}`).digest("base64url"), sessionId = randomUUID(), now = this.now(); this.database.connection.prepare("INSERT INTO local_sessions VALUES (?,?,?,?,?,?,?,?,0)").run(digest(token), account.principal_id, sessionId, digest(csrfToken), origin, account.epoch, now, now); return { token, csrfToken, principalId: account.principal_id, sessionId, owner: !!account.owner, adminExpiresAt: new Date(now + AUTH_PARAMETERS.adminIdleMs).toISOString() }; }
+  private persistentOwner(principalId:string,origin:string):boolean {
+    if(!this.personalSessionPolicy.enabled)return false;
+    let url:URL;try{url=new URL(origin);}catch{return false;}
+    return url.protocol==='http:'&&['127.0.0.1','localhost','[::1]'].includes(url.hostname)&&this.account(principalId)?.owner===1&&this.enrollmentPrincipal()===principalId;
+  }
+  sessionMetadata(context:LocalContext):{adminExpiresAt:string|null;sessionPolicy?:Readonly<PersonalDailySessionMetadata>} {
+    this.assertCurrent(context,false);
+    return {adminExpiresAt:context.expiresAt,...(context.expiresAt===null?{sessionPolicy:persistentMetadata}:{})};
+  }
+  private issue(account: Account, origin: string): LocalSession { const token = opaque(), csrfToken = createHmac("sha256",this.key).update(`csrf:${digest(token)}`).digest("base64url"), sessionId = randomUUID(), now = this.now();invalidateCanonicalAuthenticationCustody(this.database); this.database.connection.prepare("INSERT INTO local_sessions VALUES (?,?,?,?,?,?,?,?,0)").run(digest(token), account.principal_id, sessionId, digest(csrfToken), origin, account.epoch, now, now); const persistent=this.persistentOwner(account.principal_id,origin);return { token, csrfToken, principalId: account.principal_id, sessionId, owner: !!account.owner, adminExpiresAt:persistent?null:new Date(now + AUTH_PARAMETERS.adminIdleMs).toISOString(),...(persistent?{sessionPolicy:persistentMetadata}:{}) }; }
   async signIn(username: string, password: string, code: string, origin: string, remote: string): Promise<LocalSession> {
     const normalized = normalizeUser(username); this.rate(`remote:${remote}`, 40); this.rate(`signin:${normalized}`);
     return this.bounded(async () => {
@@ -113,37 +171,68 @@ export class LocalAuthentication {
     const account = this.account(session.principal_id), now = this.now();
     if (!account || account.disabled || account.epoch !== session.epoch || !this.safetyMatches(account) || !this.validSessionTime(session, now, administration)) return undefined;
     return Object.freeze({ principalId: account.principal_id, owner: !!account.owner, sessionId: session.session_id, origin,
-      expiresAt: new Date(session.admin_last_activity + AUTH_PARAMETERS.adminIdleMs).toISOString(), authenticatedAt: session.authenticated_at, tokenHash });
+      expiresAt: this.persistentOwner(account.principal_id,origin)?null:new Date(session.admin_last_activity + AUTH_PARAMETERS.adminIdleMs).toISOString(), authenticatedAt: session.authenticated_at, tokenHash });
   }
   private validSessionTime(session: Session, now: number, administration: boolean): boolean {
     return Number.isSafeInteger(now) && now >= 0 && now <= 8_640_000_000_000_000 &&
       Number.isSafeInteger(session.authenticated_at) && Number.isSafeInteger(session.admin_last_activity) &&
       session.authenticated_at >= 0 && session.admin_last_activity <= 8_640_000_000_000_000 - AUTH_PARAMETERS.adminIdleMs &&
       session.authenticated_at <= session.admin_last_activity && now >= session.admin_last_activity &&
-      (!administration || now < session.admin_last_activity + AUTH_PARAMETERS.adminIdleMs);
+      (!administration || this.persistentOwner(session.principal_id,session.origin) || now < session.admin_last_activity + AUTH_PARAMETERS.adminIdleMs);
   }
-  assertCurrent(context: LocalContext, administration = true): LocalContext {
+  private assertAuthenticationCurrent(context: LocalContext, administration = true): LocalContext {
     const expected = { ...context };
     if (typeof expected.tokenHash !== 'string' || !/^[a-f0-9]{64}$/.test(expected.tokenHash)) throw new AuthenticationError();
-    const session = this.database.connection.prepare("SELECT * FROM local_sessions WHERE token_hash=?").get(expected.tokenHash) as Session | undefined;
+    const session = this.database.readGet("SELECT * FROM local_sessions WHERE token_hash=?",expected.tokenHash) as Session | undefined;
     const account = session && this.account(session.principal_id), now = this.now();
     if (!session || session.revoked || existsSync(join(this.options.stateDirectory, `revoked-${expected.tokenHash}`)) || !account || account.disabled ||
-      session.epoch !== account.epoch || !this.safetyMatches(account) || !this.validSessionTime(session, now, administration) ||
+      session.epoch !== account.epoch || !this.safetyMatches(account) || !this.validSessionTime(session, now, false) ||
       expected.principalId !== session.principal_id || expected.sessionId !== session.session_id || expected.origin !== session.origin ||
       expected.authenticatedAt !== session.authenticated_at || expected.owner !== !!account.owner ||
-      !Number.isFinite(Date.parse(expected.expiresAt)) || Date.parse(expected.expiresAt) > session.admin_last_activity + AUTH_PARAMETERS.adminIdleMs ||
+      (this.persistentOwner(session.principal_id,session.origin)?expected.expiresAt!==null:expected.expiresAt===null||!Number.isFinite(Date.parse(expected.expiresAt))||Date.parse(expected.expiresAt)>session.admin_last_activity+AUTH_PARAMETERS.adminIdleMs) ||
       (Object.keys(expected) as Array<keyof LocalContext>).some(key => context[key] !== expected[key])) throw new AuthenticationError();
+    if (administration && !this.validSessionTime(session, now, true)) throw new AuthenticationError(403, 'administration_freshness_required');
     return context;
   }
+  /** Credential operations always authenticate principalId, the real actor. */
+  enrollmentPrincipal():string|null {
+    const path=join(this.options.stateDirectory,'owner-enrolled');
+    if(!existsSync(path)){this.enrollmentProof=undefined;if(this.accountCount())throw new AuthenticationError(503,'owner_enrollment_evidence_missing');return null;}
+    try{
+      const source=readFileSync(path,'utf8');let principalId:string;
+      if(this.enrollmentProof?.source===source)principalId=this.enrollmentProof.principalId;
+      else{
+        this.enrollmentProof=undefined;
+        const saved=JSON.parse(source) as {principalId:string;payload:string},snapshot=JSON.parse(this.unseal(saved.payload,saved.principalId)) as CredentialSnapshot;
+        if(snapshot.account.principal_id!==saved.principalId||snapshot.account.owner!==1)throw Error();
+        principalId=saved.principalId;
+      }
+      const owners=this.database.readAll('SELECT principal_id FROM local_accounts WHERE owner=1') as {principal_id:string}[];
+      if(owners.length!==1||owners[0]!.principal_id!==principalId)throw Error();
+      // Larger legacy records retain their original validation path without
+      // becoming a long-lived allocation. No credential snapshot is retained.
+      this.enrollmentProof=Buffer.byteLength(source)<=65536?{source,principalId}:undefined;
+      return principalId;
+    }catch{this.enrollmentProof=undefined;throw new AuthenticationError(503,'owner_enrollment_evidence_invalid');}
+  }
+  accountEnabled(id:string):boolean {const account=this.account(id);return !!account&&!account.disabled&&this.safetyMatches(account);}
+  hostSessionContext(sessionId:string):LocalContext {const row=this.database.connection.prepare('SELECT s.*,a.owner FROM local_sessions s JOIN local_accounts a ON a.principal_id=s.principal_id WHERE session_id=?').get(sessionId) as {principal_id:string;session_id:string;token_hash:string;origin:string;owner:number;authenticated_at:number;admin_last_activity:number}|undefined;if(!row)throw new AuthenticationError();const actor:LocalContext={principalId:row.principal_id,sessionId:row.session_id,tokenHash:row.token_hash,origin:row.origin,owner:!!row.owner,authenticatedAt:row.authenticated_at,expiresAt:this.persistentOwner(row.principal_id,row.origin)?null:new Date(row.admin_last_activity+AUTH_PARAMETERS.adminIdleMs).toISOString()};this.assertAuthenticationCurrent(actor,false);return this.bindContext(actor,undefined,true);}
+  accountDisplay(id:string):{principalId:string;username:string;owner:boolean}|null {const a=this.account(id);return a&&!a.disabled?{principalId:a.principal_id,username:a.username,owner:!!a.owner}:null;}
+  bindContext(context:LocalContext,reference:unknown,exempt=false):LocalContext {const current=this.effectiveSubjects.bind(context,reference,exempt);return Object.freeze({...context,effectiveContext:current.context,contextRef:current.contextRef});}
+  assertCurrent(context:LocalContext,administration=true):LocalContext {this.assertAuthenticationCurrent(context,administration);if(context.effectiveContext)this.effectiveSubjects.assert(context,context.effectiveContext,context.contextRef);return context;}
+  effectiveUser(context:LocalContext):string {this.assertCurrent(context,false);return context.effectiveContext?.effectiveUserId??context.principalId;}
+  isSystemAdministrator(context:LocalContext,administration=true):boolean {this.assertCurrent(context,administration);return this.administrators.has(context.principalId);}
+  async reauthenticate(context:LocalContext,password:string):Promise<void>{this.assertCurrent(context);if(typeof password!=='string'||!await this.bounded(()=>verifyPassword(password,this.account(context.principalId)!.password_verifier)))throw new AuthenticationError(403,'reauthentication_required');this.assertCurrent(context);}
   csrf(context: LocalContext, token: string, administration = true): void { this.assertCurrent(context, administration); const session = this.database.connection.prepare("SELECT csrf_hash FROM local_sessions WHERE token_hash=?").get(context.tokenHash) as { csrf_hash: string } | undefined; if (!session || !equal(digest(token), session.csrf_hash)) throw new AuthenticationError(403, "csrf_rejected"); }
-  renewCsrf(context: LocalContext): string { this.assertCurrent(context); return createHmac("sha256",this.key).update(`csrf:${context.tokenHash}`).digest("base64url"); }
-  touch(context: LocalContext): void { this.assertCurrent(context); this.database.connection.prepare("UPDATE local_sessions SET admin_last_activity=? WHERE token_hash=?").run(this.now(), context.tokenHash); }
-  logout(context: LocalContext): void { this.assertCurrent(context, false); const path=join(this.options.stateDirectory,`revoked-${context.tokenHash}`);if(!existsSync(path))this.writeExclusive(path,"revoked");this.database.connection.prepare("UPDATE local_sessions SET revoked=1 WHERE token_hash=?").run(context.tokenHash); this.pendingMfa.delete(context.sessionId); this.event(context.principalId, "signed_out"); }
-  async provision(context: LocalContext, username: string, password: string): Promise<{ principalId: string; username: string; owner: false; assistantPermissions: string[] }> { this.assertCurrent(context); if (!context.owner) throw new AuthenticationError(403, "owner_required"); const normalized = normalizeUser(username), encoded = await this.bounded(() => verifier(password)); this.assertCurrent(context); const principalId = randomUUID(); if (this.database.connection.prepare("SELECT principal_id FROM local_accounts WHERE username=?").get(normalized)) throw new AuthenticationError(409, "account_exists"); this.changeCredentials({ principal_id: principalId, username: normalized, owner: 0, password_verifier: encoded, totp_secret: null, totp_last_step: -1, epoch: 1, disabled: 0, created_at: this.now() }, []); this.touch(context); this.event(context.principalId, "account_provisioned"); return { principalId, username: normalized, owner: false, assistantPermissions: [] }; }
-  accounts(context: LocalContext): Array<Record<string, unknown>> { this.assertCurrent(context); if (!context.owner) throw new AuthenticationError(403, "owner_required"); return this.database.connection.prepare("SELECT principal_id AS principalId,username,owner,disabled FROM local_accounts ORDER BY username").all() as Array<Record<string, unknown>>; }
-  permission(context: LocalContext, principalId: string, assistantId: string, administer: boolean): void { this.assertCurrent(context); if (!context.owner || !this.account(principalId) || !this.database.connection.prepare("SELECT 1 FROM assistant_profiles WHERE assistant_id=?").get(assistantId)) throw new AuthenticationError(403, "permission_assignment_denied"); this.database.connection.prepare("INSERT INTO local_assistant_permissions VALUES (?,?,?) ON CONFLICT(principal_id,assistant_id) DO UPDATE SET administer=excluded.administer").run(principalId, assistantId, Number(administer)); this.touch(context); this.event(context.principalId, "assistant_permission_changed"); }
-  permitCreator(context: LocalContext, assistantId: string): void { this.assertCurrent(context); if (!context.owner) throw new AuthenticationError(403, "owner_required"); this.database.connection.prepare("INSERT INTO local_assistant_permissions VALUES (?,?,1)").run(context.principalId, assistantId); }
-  canAdminister(context: LocalContext, assistantId: string): boolean { this.assertCurrent(context); return !!this.database.connection.prepare("SELECT 1 FROM local_assistant_permissions WHERE principal_id=? AND assistant_id=? AND administer=1").get(context.principalId, assistantId); }
+  renewCsrf(context: LocalContext, administration = true): string { this.assertCurrent(context, administration); return createHmac("sha256",this.key).update(`csrf:${context.tokenHash}`).digest("base64url"); }
+  touch(context: LocalContext): void { this.assertCurrent(context);const statement=this.database.connection.prepare("UPDATE local_sessions SET admin_last_activity=? WHERE token_hash=?"),now=this.now();invalidateCanonicalAuthenticationCustody(this.database);statement.run(now,context.tokenHash); }
+  logout(context: LocalContext): void { this.assertCurrent(context, false);invalidateCanonicalAuthenticationCustody(this.database); const path=join(this.options.stateDirectory,`revoked-${context.tokenHash}`);if(!existsSync(path))this.writeExclusive(path,"revoked");this.database.connection.prepare("UPDATE local_sessions SET revoked=1 WHERE token_hash=?").run(context.tokenHash); this.pendingMfa.delete(context.sessionId); this.event(context.principalId, "signed_out"); }
+  async provision(context: LocalContext, username: string, password: string): Promise<{ principalId: string; username: string; owner: false; assistantPermissions: string[] }> { this.assertCurrent(context); if (!this.isSystemAdministrator(context)) throw new AuthenticationError(403, "system_administrator_required"); const normalized = normalizeUser(username), encoded = await this.bounded(() => verifier(password)); this.assertCurrent(context); const principalId = randomUUID(); if (this.database.connection.prepare("SELECT principal_id FROM local_accounts WHERE username=?").get(normalized)) throw new AuthenticationError(409, "account_exists"); this.changeCredentials({ principal_id: principalId, username: normalized, owner: 0, password_verifier: encoded, totp_secret: null, totp_last_step: -1, epoch: 1, disabled: 0, created_at: this.now() }, []); this.touch(context); this.event(context.principalId, "account_provisioned"); return { principalId, username: normalized, owner: false, assistantPermissions: [] }; }
+  accounts(context: LocalContext): Array<Record<string, unknown>> { this.assertCurrent(context); if (!this.isSystemAdministrator(context)) throw new AuthenticationError(403, "system_administrator_required"); return this.database.connection.prepare("SELECT principal_id AS principalId,username,owner,disabled FROM local_accounts ORDER BY username").all() as Array<Record<string, unknown>>; }
+  permission(context: LocalContext, principalId: string, assistantId: string, administer: boolean): void { this.assertCurrent(context); if (!this.isSystemAdministrator(context) || !this.account(principalId) || !this.database.connection.prepare("SELECT 1 FROM assistant_profiles WHERE assistant_id=?").get(assistantId)) throw new AuthenticationError(403, "permission_assignment_denied");invalidateCanonicalAuthenticationCustody(this.database); this.database.connection.prepare("INSERT INTO local_assistant_permissions VALUES (?,?,?) ON CONFLICT(principal_id,assistant_id) DO UPDATE SET administer=excluded.administer").run(principalId, assistantId, Number(administer)); this.touch(context); this.event(context.principalId, "assistant_permission_changed"); }
+  permitCreator(context: LocalContext, assistantId: string): void { this.assertCurrent(context); if (!this.isSystemAdministrator(context)) throw new AuthenticationError(403, "system_administrator_required");invalidateCanonicalAuthenticationCustody(this.database); this.database.connection.prepare("INSERT INTO local_assistant_permissions VALUES (?,?,1)").run(context.principalId, assistantId); }
+  canAdminister(context: LocalContext, assistantId: string): boolean { this.assertCurrent(context); return !!this.database.connection.prepare("SELECT 1 FROM assistant_profiles WHERE assistant_id=?").get(assistantId) && (this.isSystemAdministrator(context)||!!this.database.connection.prepare("SELECT 1 FROM local_assistant_permissions WHERE principal_id=? AND assistant_id=? AND administer=1").get(this.effectiveUser(context), assistantId)); }
+  canUseAssistant(context:LocalContext,assistantId:string):boolean {this.assertCurrent(context,false);return !!this.database.connection.prepare('SELECT 1 FROM assistant_profiles WHERE assistant_id=?').get(assistantId)&&(this.administrators.has(context.principalId)||!!this.database.connection.prepare('SELECT 1 FROM local_assistant_permissions WHERE principal_id=? AND assistant_id=? AND administer=1').get(this.effectiveUser(context),assistantId));}
   async beginMfa(context: LocalContext, password: string): Promise<{ secret: string; uri: string }> { this.assertCurrent(context); this.rate(`mfa:${context.principalId}`); const account = this.account(context.principalId)!; if (account.totp_secret || !await this.bounded(() => verifyPassword(password, account.password_verifier))) throw new AuthenticationError(403, "mfa_enrollment_denied"); this.assertCurrent(context); const secret = encodeBase32(randomBytes(20)); this.pendingMfa.set(context.sessionId, { secret, principalId: context.principalId, until: this.now() + 300_000 }); this.touch(context); return { secret, uri: `otpauth://totp/Lifestream:${encodeURIComponent(account.username)}?secret=${secret}&issuer=Lifestream&algorithm=SHA1&digits=6&period=30` }; }
   confirmMfa(context: LocalContext, code: string): void { this.assertCurrent(context); this.rate(`mfa-confirm:${context.principalId}`); const pending = this.pendingMfa.get(context.sessionId), account = this.account(context.principalId)!; const step = pending && pending.until > this.now() && pending.principalId === context.principalId ? validStep(pending.secret, code, this.now(), -1) : undefined; if (step === undefined || !pending || account.totp_secret) throw new AuthenticationError(403, "mfa_enrollment_denied"); this.changeCredentials({ ...account, totp_secret: this.seal(pending.secret, account.principal_id), totp_last_step: step, epoch: account.epoch + 1 }, this.activeRecoveryHashes(account.principal_id)); this.pendingMfa.delete(context.sessionId); this.event(context.principalId, "mfa_enrolled_sessions_revoked"); }
   async recover(username: string, code: string, newPassword: string, remote: string): Promise<{ recoveryCodes: string[]; signInRequired: true }> {
@@ -160,8 +249,10 @@ export class LocalAuthentication {
     this.event(account.principal_id, "owner_recovered_sessions_revoked"); return { recoveryCodes: [replacement], signInRequired: true };
   }
   async rotateRecoveryCodes(context: LocalContext, password: string): Promise<string[]> { this.assertCurrent(context); const account=this.account(context.principalId)!; if (!context.owner || !await this.bounded(()=>verifyPassword(password,account.password_verifier))) throw new AuthenticationError(403,"recovery_rotation_denied"); this.assertCurrent(context); const codes=Array.from({length:AUTH_PARAMETERS.recoveryCodeCount},opaque); this.changeCredentials({...account,epoch:account.epoch+1},codes.map(code=>digest(`${account.principal_id}:${code}`))); this.event(context.principalId,"recovery_codes_rotated_sessions_revoked"); return codes; }
-  revokeAccount(context: LocalContext, principalId: string): void { this.assertCurrent(context); const account = this.account(principalId); if (!context.owner || !account || account.owner) throw new AuthenticationError(403, "account_revocation_denied"); this.changeCredentials({ ...account, disabled: 1, epoch: account.epoch + 1 }, []); this.touch(context); this.event(context.principalId, "account_revoked"); }
-  propose(context: LocalContext, operation: ProposedOperation): { proposalId: string; digest: string; operation: ProposedOperation; status: "proposed" } { this.assertCurrent(context); if (!operation || typeof operation!=="object" || !["POST", "PUT", "PATCH", "DELETE"].includes(operation.method) || !/^\/api\/(admin|authority)\/v1\//.test(operation.path) || operation.path.includes("?") || operation.path.includes("..") || !operation.body || typeof operation.body !== "object" || Array.isArray(operation.body) || !(operation.expectedRevision === null || Number.isInteger(operation.expectedRevision)) || JSON.stringify(operation).length > 32768) throw new AuthenticationError(422, "invalid_proposed_operation"); const proposalId = randomUUID(), hash = operationDigest(operation); this.database.connection.prepare("INSERT INTO local_admin_proposals VALUES (?,?,?,?,?,?,?,NULL)").run(proposalId, context.principalId, context.sessionId, JSON.stringify(operation), hash, this.now(), "proposed"); return { proposalId, digest: hash, operation: structuredClone(operation), status: "proposed" }; }
-  review(context: LocalContext, proposalId: string): { operation: ProposedOperation; digest: string; status: string } { this.assertCurrent(context); const proposal = this.database.connection.prepare("SELECT * FROM local_admin_proposals WHERE proposal_id=? AND principal_id=?").get(proposalId, context.principalId) as { session_id: string; operation_json: string; digest: string; status: string; created_at: number } | undefined; if (!proposal || proposal.session_id !== context.sessionId || proposal.created_at + AUTH_PARAMETERS.adminIdleMs <= this.now()) throw new AuthenticationError(409, "proposal_requires_fresh_review"); return { operation: JSON.parse(proposal.operation_json) as ProposedOperation, digest: proposal.digest, status: proposal.status }; }
+  revokeAccount(context: LocalContext, principalId: string): void { this.assertCurrent(context); const account = this.account(principalId); if (!this.isSystemAdministrator(context) || !account || account.owner) throw new AuthenticationError(403, "account_revocation_denied"); this.administrators.protectDisable(principalId); this.changeCredentials({ ...account, disabled: 1, epoch: account.epoch + 1 }, []); this.assertAuthenticationCurrent(context);this.database.connection.prepare("UPDATE local_sessions SET admin_last_activity=? WHERE token_hash=?").run(this.now(),context.tokenHash); this.event(context.principalId, "account_revoked"); }
+  private bindProposal(context:LocalContext,id:string){this.database.exec('CREATE TABLE IF NOT EXISTS local_proposal_context(proposal_id TEXT PRIMARY KEY,context_ref TEXT)');this.database.connection.prepare('INSERT INTO local_proposal_context VALUES(?,?)').run(id,context.contextRef??null);}
+  private assertProposalBinding(context:LocalContext,id:string){this.database.exec('CREATE TABLE IF NOT EXISTS local_proposal_context(proposal_id TEXT PRIMARY KEY,context_ref TEXT)');const row=this.database.connection.prepare('SELECT context_ref FROM local_proposal_context WHERE proposal_id=?').get(id) as {context_ref:string|null}|undefined;if(row&&(row.context_ref??null)!==(context.contextRef??null))throw new AuthenticationError(409,'proposal_effective_context_changed');}
+  propose(context: LocalContext, operation: ProposedOperation): { proposalId: string; digest: string; operation: ProposedOperation; status: "proposed" } { this.assertCurrent(context); if (!operation || typeof operation!=="object" || !["POST", "PUT", "PATCH", "DELETE"].includes(operation.method) || !/^\/api\/(admin|authority)\/v1\//.test(operation.path) || operation.path.includes("?") || operation.path.includes("..") || !operation.body || typeof operation.body !== "object" || Array.isArray(operation.body) || !(operation.expectedRevision === null || Number.isInteger(operation.expectedRevision)) || JSON.stringify(operation).length > 32768) throw new AuthenticationError(422, "invalid_proposed_operation"); const proposalId = randomUUID(), hash = operationDigest(operation); this.database.connection.prepare("INSERT INTO local_admin_proposals VALUES (?,?,?,?,?,?,?,NULL)").run(proposalId, context.principalId, context.sessionId, JSON.stringify(operation), hash, this.now(), "proposed"); this.bindProposal(context,proposalId); return { proposalId, digest: hash, operation: structuredClone(operation), status: "proposed" }; }
+  review(context: LocalContext, proposalId: string): { operation: ProposedOperation; digest: string; status: string } { this.assertCurrent(context); this.assertProposalBinding(context,proposalId); const proposal = this.database.connection.prepare("SELECT * FROM local_admin_proposals WHERE proposal_id=? AND principal_id=?").get(proposalId, context.principalId) as { session_id: string; operation_json: string; digest: string; status: string; created_at: number } | undefined; if (!proposal || proposal.session_id !== context.sessionId || proposal.created_at + AUTH_PARAMETERS.adminIdleMs <= this.now()) throw new AuthenticationError(409, "proposal_requires_fresh_review"); return { operation: JSON.parse(proposal.operation_json) as ProposedOperation, digest: proposal.digest, status: proposal.status }; }
   approve<T>(context: LocalContext, proposalId: string, reviewedDigest: string, humanConfirmed: boolean, apply: (operation: ProposedOperation) => T): T { const proposal = this.review(context, proposalId); if (!humanConfirmed || proposal.status !== "proposed" || !equal(proposal.digest, reviewedDigest)) throw new AuthenticationError(409, "proposal_changed_or_unapproved"); const result = this.database.connection.prepare("UPDATE local_admin_proposals SET status='consumed',decided_by=? WHERE proposal_id=? AND status='proposed'").run(context.principalId, proposalId); if (result.changes !== 1) throw new AuthenticationError(409, "proposal_already_consumed"); this.touch(context); this.event(context.principalId, "human_proposal_approval_consumed"); return apply(proposal.operation); }
 }

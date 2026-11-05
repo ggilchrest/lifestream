@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-removal-settlement/1.0.0",
+  "title": "Retained source removal admission and independently witnessed terminal reconciliation",
+  "$defs": {
+    "RemovalRequest": {
+      "allOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/mobile-context-control/1.0.0#/$defs/MobileControlRequest"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "remove"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RemovalControl": {
+      "allOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/mobile-context-control/1.0.0#/$defs/MobileControlResponse"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "result": {
+              "type": "object",
+              "properties": {
+                "originalRequest": {
+                  "$ref": "#/$defs/RemovalRequest"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AppliedRemovalControl": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/RemovalControl"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "result": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "applied"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producerPin",
+        "operation",
+        "payload"
+      ],
+      "properties": {
+        "producerPin": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaId",
+            "schemaVersion",
+            "digest"
+          ],
+          "properties": {
+            "schemaId": {
+              "const": "https://lifestream.dev/contracts/mobile-context-removal-settlement/1.0.0"
+            },
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "operation": {
+          "enum": [
+            "control",
+            "reconcile"
+          ]
+        },
+        "payload": {
+          "$ref": "#/$defs/RemovalRequest"
+        }
+      }
+    },
+    "Response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "producerPin",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "producerPin": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaId",
+            "schemaVersion",
+            "digest"
+          ],
+          "properties": {
+            "schemaId": {
+              "const": "https://lifestream.dev/contracts/mobile-context-removal-settlement/1.0.0"
+            },
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "result": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "reason"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "held"
+                },
+                "reason": {
+                  "enum": [
+                    "pending",
+                    "unknown",
+                    "unqualified",
+                    "otherFamily",
+                    "unavailable"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "control"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "observed"
+                },
+                "control": {
+                  "$ref": "#/$defs/RemovalControl"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "binding",
+                "control"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "terminal"
+                },
+                "binding": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "family",
+                    "reservationDigest",
+                    "preparedDigest",
+                    "terminalDigest"
+                  ],
+                  "properties": {
+                    "family": {
+                      "const": "sourceRemovalControl"
+                    },
+                    "reservationDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "preparedDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "terminalDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  }
+                },
+                "control": {
+                  "$ref": "#/$defs/AppliedRemovalControl"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import test,{type TestContext} from 'node:test';
-import {createContractValidator} from '@lifestream/contracts';
+import {createContractValidator,unifiedDesktopContractPin} from '@lifestream/contracts';
 import {Database} from '@lifestream/storage-sqlite';
 import type {InferenceProvider,InferenceRequest} from '@lifestream/runtime/inference';
 import {createLifestreamServer} from '../src/index.ts';
@@ -189,17 +189,39 @@ test('lost speech playback acknowledgment expires unknown and never releases a r
  await until(()=>f.pending()===0);const final=outcome(await f.extension({operation:'inspect'}));assert.equal(final.state,'unknown');assert.deepEqual(final.reasonCodes,['ackTimeout']);assert.equal(final.lastDeliveryStage,'acknowledged');assert.equal(final.acknowledgmentKind,'endpointAccepted');assert.equal((await f.extension(request)).body.delivery,null);assert.equal(f.model.length,1);assert.equal((await f.ack(r,'playbackCompleted')).status,409);
 });
 
-test('authenticated microphone start requires the current audio endpoint and closes when disclosure changes',{timeout:15000},async t=>{
- const f=await fixture(t,true,'speech');let recognition=0;
- (f.app as any).providers.stt={async *transcribe(){recognition++;yield {kind:'terminal',outcome:'failed'};}};
- const endpoint=(await f.send('/api/runtime/v1/session-context')).body.endpoint;
- const connect=async()=>{const wire:any[]=[];const socket=new WebSocket(f.base.replace('http:','ws:')+'/api/runtime/v1/audio',{origin:f.base,headers:{cookie:f.headers.cookie!}});t.after(()=>socket.close());socket.on('message',data=>wire.push(JSON.parse(data.toString())));await new Promise<void>((resolve,reject)=>{socket.once('open',resolve);socket.once('error',reject);});return {socket,wire};};
- const request=(revision:number,endpointId=endpoint.endpointId)=>({schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId:f.auth.sessionId,expectedSessionRevision:revision,endpointId,audioInputId:randomUUID(),format:{encoding:'pcm_s16le',sampleRateHz:16000,channels:1},assistantId:f.assistant.assistantId,relationshipId:f.rel.relationshipId});
- for(const invalid of [request(0),request(1,randomUUID())]){const c=await connect();c.socket.send(JSON.stringify({type:'start',request:invalid}));await until(()=>c.socket.readyState===WebSocket.CLOSED);assert.equal(c.wire.some(e=>e.type==='accepted'),false);assert.equal(c.wire.find(e=>e.type==='error').problem.code,'audio_input_scope_changed');}
- const c=await connect(),input=request(1);c.socket.send(JSON.stringify({type:'start',request:input}));await until(()=>c.wire.some(e=>e.type==='accepted'));
- c.socket.send(JSON.stringify({type:'frame',audioInputId:input.audioInputId,frame:{frameId:randomUUID(),sequence:0,format:input.format,sampleOffset:0,sampleCount:10,dataBase64:Buffer.alloc(20).toString('base64')}}));
- assert.equal((await f.send('/api/runtime/v1/session-context',{expectedRevision:1,mode:'audio',audienceScope:'unknown'})).status,200);await until(()=>c.socket.readyState===WebSocket.CLOSED);assert.equal(recognition,0);assert.equal(c.wire.find(e=>e.type==='error').problem.code,'audio_input_scope_changed');
- const fresh=await connect();fresh.socket.send(JSON.stringify({type:'start',request:request(2)}));await until(()=>fresh.wire.some(e=>e.type==='accepted'));assert.equal(fresh.wire.some(e=>e.type==='error'),false);
+test('authenticated microphone start requires owned private history and explicit private requalification after disclosure withdrawal',{timeout:15000},async t=>{
+ const f=await fixture(t,true,'speech'),calls={stt:0,inference:0,tts:0,voiceControls:0};
+ (f.app as any).providers.stt={async *transcribe(){calls.stt++;throw Error('ASR forbidden in start-only test');}};
+ (f.app as any).providers.inference={async *generate(){calls.inference++;throw Error('Inference forbidden in start-only test');}};
+ (f.app as any).providers.tts={async voiceControls(){calls.voiceControls++;throw Error('Voice controls forbidden in start-only test');},async *synthesize(){calls.tts++;throw Error('Synthesis forbidden in start-only test');}};
+ const refresh=async()=>{const context=await f.send('/api/auth/v1/user-context');assert.equal(context.status,200);assert.equal(typeof context.body.contextRef,'string');f.headers['x-lifestream-user-context']=context.body.contextRef;};
+ const session=async()=>{const result=await f.send('/api/runtime/v1/session-context');assert.equal(result.status,200);return result.body;};
+ await refresh();let state=await session();assert.equal(state.shellPreferenceScope.scope,null,'the shared fixture remains unbound by default');
+ const connect=async(revision=state.revision,endpointId=state.endpoint.endpointId)=>{
+  const wire:any[]=[],socket=new WebSocket(f.base.replace('http:','ws:')+'/api/runtime/v1/audio?userContextRef='+encodeURIComponent(f.headers['x-lifestream-user-context']!),{origin:f.base,headers:{cookie:f.headers.cookie!}});t.after(()=>socket.close());
+  socket.on('message',data=>wire.push(JSON.parse(data.toString())));await new Promise<void>((resolve,reject)=>{socket.once('open',resolve);socket.once('error',reject);});
+  socket.send(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId:f.auth.sessionId,expectedSessionRevision:revision,endpointId,audioInputId:randomUUID(),format:{encoding:'pcm_s16le',sampleRateHz:16000,channels:1},assistantId:f.assistant.assistantId,relationshipId:f.rel.relationshipId}}));
+  await until(()=>wire.some(e=>e.type==='accepted')||socket.readyState===WebSocket.CLOSED);return {socket,wire};
+ };
+ const refused=(c:{socket:WebSocket;wire:any[]},scopeError=false)=>{assert.equal(c.socket.readyState,WebSocket.CLOSED);assert.equal(c.wire.some(e=>e.type==='accepted'),false);if(scopeError)assert.equal(c.wire.find(e=>e.type==='error')?.problem.code,'audio_input_scope_changed');};
+ refused(await connect(state.revision-1),true);refused(await connect(state.revision,randomUUID()),true);
+ refused(await connect());
+ const bindingKey=randomUUID();
+ const revise=async(audienceScope:'authenticatedSession'|'unknown')=>{const changed=await f.send('/api/runtime/v1/session-context',{expectedRevision:state.revision,mode:'audio',audienceScope,bindingKey});assert.equal(changed.status,200);state=changed.body;await refresh();state=await session();};
+ await revise('authenticatedSession');assert.ok(state.shellPreferenceScope.scope,'only the original public API establishes ownership');
+ const producerPin=unifiedDesktopContractPin('conversation-history');
+ const created=await f.send('/api/runtime/v1/conversations',{producerPin,request:{schemaVersion:'1.0.0',operation:'create',operationId:randomUUID(),idempotencyKey:randomUUID(),payload:{assistantId:f.assistant.assistantId,title:'Synthetic empty start-only conversation'}}});assert.ok(created.status>=200&&created.status<300);const conversationId=created.body.result.conversationId;assert.equal(typeof conversationId,'string');
+ const selected=await f.send('/api/runtime/v1/conversations/select',{producerPin,conversationId,assistantId:f.assistant.assistantId,expectedSessionRevision:state.revision});assert.equal(selected.status,200);await refresh();state=await session();assert.equal(state.selectedConversation?.conversationId,conversationId);
+ const savingOff=async()=>{const retention=await f.send('/api/runtime/v1/conversation-retention?assistantId='+f.assistant.assistantId);assert.equal(retention.status,200);assert.equal(retention.body.enabled,false);assert.equal(retention.body.mode,'disabled');};
+ await savingOff();const bound=await connect();assert.equal(bound.socket.readyState,WebSocket.OPEN);assert.equal(bound.wire.filter(e=>e.type==='accepted').length,1);assert.equal(bound.wire.some(e=>e.type==='error'),false);
+ const privateRevision=state.revision;await revise('unknown');assert.ok(state.revision>privateRevision);await until(()=>bound.socket.readyState===WebSocket.CLOSED);assert.equal(bound.wire.find(e=>e.type==='error')?.problem.code,'audio_input_scope_changed');
+ // A NEW unknown-scope start is refused; private access is never inferred from a current revision.
+ refused(await connect());const unknownRevision=state.revision;
+ await revise('authenticatedSession');assert.ok(state.revision>unknownRevision);assert.ok(state.shellPreferenceScope.scope);assert.equal(state.selectedConversation?.conversationId,conversationId);await savingOff();
+ refused(await connect(unknownRevision),true);refused(await connect(state.revision,randomUUID()),true);
+ const restored=await connect();assert.equal(restored.socket.readyState,WebSocket.OPEN);assert.equal(restored.wire.filter(e=>e.type==='accepted').length,1);assert.equal(restored.wire.some(e=>e.type==='error'),false);
+ const page=await f.send('/api/runtime/v1/conversations',{producerPin,request:{schemaVersion:'1.0.0',operation:'page',operationId:randomUUID(),payload:{conversationId,direction:'older',pageSize:50}}});assert.equal(page.status,200);assert.deepEqual(page.body.result.entries,[]);
+ assert.deepEqual(calls,{stt:0,inference:0,tts:0,voiceControls:0});
 });
 
 test('forgetting clears shared dialogue and stale browser history cannot reintroduce it',{timeout:15000},async t=>{
@@ -255,5 +277,20 @@ test('quiet and ordinary engagement cancel timing waits; short freshness discard
   if(mode==='reply'){await new Promise(r=>setTimeout(r,80));const reply=await fetch(f.base+'/api/runtime/v1/messages',{method:'POST',headers:f.headers,body:JSON.stringify({assistantId:f.assistant.assistantId,relationshipId:f.rel.relationshipId,userInput:'Resume the ordinary conversation.'})});assert.equal(reply.status,200);assert.match(await reply.text(),/interaction.completed/);}
   const result=await pending;assert.equal(outcome(result).state,mode==='expires'?'expired':'cancelled');assert.equal(outcome(result).lastDeliveryStage,'none');assert.equal(result.body.delivery,null);assert.equal(calls(f.db),1);
   assert.equal((await f.extension({operation:'inspect'})).body.explanations.some((e:any)=>e.code==='initiative_timing_feedback'),false);t.mock.restoreAll();
+ }
+});
+
+test('ordinary typed source admission and notice survive composition while absent hooks retain replies and withdrawal blocks inference',async()=>{
+ const {streamMessage}=await import('../src/runtime/inference.ts');
+ for(const mode of ['source','absent','withdraw'] as const){
+  let current=true,output='',calls=0;const order:string[]=[],assistantId=randomUUID(),sessionId=randomUUID();
+  const input:any={assistantId,isCurrent:()=>current,runtimeSelfContext:{sourceRevision:'synthetic-source',runtimeStatus:'ready',endpointId:null,endpointScope:'sessionEndpoint',audienceScope:'authenticatedSession',permissionState:'authenticatedSession',inputModalities:{text:'active',microphone:'inactive',visual:'notConfigured'},outputModalities:{text:'active',speechGeneration:'unavailable',speechDelivery:'notObserved',presentation:'notConfigured'},limitations:[]},...(mode==='absent'?{}:{sourceNotice:'source-linked-calendar/1',sourceBegin:(_id:string,modality:string)=>{order.push('begin:'+modality);if(mode==='withdraw')current=false;}})};
+  const response={destroyed:false,writableEnded:false,writeHead(){},write(value:string){output+=value;return true;},end(){this.writableEnded=true;}} as unknown as import('node:http').ServerResponse;
+  const provider:any={async *generate(){calls++;order.push('generate');yield {kind:'text',text:'Synthetic typed reply.'};yield {kind:'done'};}};
+  await streamMessage(response,provider,{assistantId,userInput:'Synthetic typed request.'},sessionId,new AbortController().signal,undefined,input.runtimeSelfContext,input);
+  assert.equal(order.filter(x=>x==='begin:text').length,mode==='absent'?0:1);
+  assert.equal(output.includes('source-linked-calendar/1'),mode!=='absent');
+  if(mode==='withdraw'){assert.equal(calls,0);assert.match(output,/runtime_input_stale/);}
+  else{assert.equal(calls,1);assert.match(output,/Synthetic typed reply/);if(mode==='source')assert.ok(order.indexOf('begin:text')<order.indexOf('generate'));}
  }
 });

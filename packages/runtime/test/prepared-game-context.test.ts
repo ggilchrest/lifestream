@@ -2,10 +2,24 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {randomUUID,createHash} from 'node:crypto';
 import {createContractValidator} from '@lifestream/contracts';
-import {selectGameCampaignContext,prepareGameCampaignContext,gameCampaignConversationContent} from '../src/activity/game-journal.ts';
+import {selectGameCampaignContext,prepareGameCampaignContext,gameCampaignConversationContent,gameCampaignCheckpointCurrent} from '../src/activity/game-journal.ts';
+import type * as G from '@lifestream/contracts/game-activity';
 import {buildCanonicalPrompt,createPreparedTurnBinding,finalizePreparedTurn,requestForFinalizedTurn,type PromptInput} from '../src/inference/prompt.ts';
 import {gameCampaignFixture} from './fixtures/game-campaign.ts';
 const sha=(text:string)=>createHash('sha256').update(text).digest('hex');
+test('checkpoint validation runs one complete source pass, keeps identity checks and retires on withdrawal',()=>{
+ const f=fixture(),calls={scope:0,core:0,observation:0,reconciliation:0};
+ for(const [name,key]of [['scopeCurrent','scope'],['coreCurrent','core'],['observationCurrent','observation'],['reconciliationCurrent','reconciliation']] as const){const original=f.boundary[name];(f.boundary as any)[name]=(...args:any[])=>{calls[key]++;return (original as any)(...args);};}
+ const checkpoint:G.ActivityCheckpoint={schemaVersion:'1.0.0',recordType:'activityCheckpoint',scope:f.input.expectedScope,checkpointId:randomUUID(),revision:1,stateRevision:1,policyRevision:1,pinsDigest:f.input.pinsDigest,goalSummary:'Synthetic currentness qualification.',recentObservationIds:[f.input.observation.observationId],adviceRefs:[],lastObservationId:f.input.observation.observationId,lastActionReceipt:null,saveArtifact:null,budgetUsed:{wallMs:0,frames:0,actions:0,starts:1,equivalentFailures:0,modelCalls:0,inputTokens:0,outputTokens:0,retries:0,checkpointBytes:0,memoryEpisodes:0},recordedAt:new Date(f.input.nowMs).toISOString(),resumeDisposition:'requiresReconciliation',campaignJournalRef:{...f.selection.ref!}};
+ assert.equal(gameCampaignCheckpointCurrent({...f.game},f.binding,checkpoint),false);
+ assert.equal(gameCampaignCheckpointCurrent(f.game,{...f.binding},checkpoint),false);
+ assert.deepEqual(calls,{scope:0,core:0,observation:0,reconciliation:0});
+ assert.equal(gameCampaignCheckpointCurrent(f.game,f.binding,checkpoint),true);
+ assert.deepEqual(calls,{scope:2,core:2,observation:2,reconciliation:1},'Original before/after-reconciliation fences run once per checkpoint validation');
+ assert.equal(gameCampaignCheckpointCurrent(f.game,f.binding,{...checkpoint,pinsDigest:'b'.repeat(64)}),false);
+ f.deny();assert.equal(gameCampaignCheckpointCurrent(f.game,f.binding,{...checkpoint,pinsDigest:'b'.repeat(64)}),false,'Invalid inert data must still observe source withdrawal');
+ f.permit();assert.equal(gameCampaignCheckpointCurrent(f.game,f.binding,checkpoint),false,'A later call must not reuse a successful source result or revive retirement');
+});
 function fixture(){
  const f=gameCampaignFixture(),s=f.input.expectedScope;
  const scope={assistantId:s.assistantId,principalId:s.principalId,relationshipId:s.relationshipId,...{conversationId:s.contextBinding.conversationId,sessionId:s.contextBinding.sessionId,endpointId:s.contextBinding.endpointId}};
@@ -28,6 +42,29 @@ test('one immutable activity context uses the canonical nine sections, source in
  assert.throws(()=>{(f.game as {conversationContent:string}).conversationContent='forged';},TypeError);
  assert.throws(()=>{(f.selection as {content:string}).content='forged';},TypeError);
  assert.equal(requestForFinalizedTurn(turn,f.binding,()=>true),request);
+});
+test('current game observations do not receive the missing-camera policy or gain effect authority',()=>{
+ const f=fixture(),description='Synthetic visible doorway in the current game framebuffer.';
+ f.input.observation.facts.push({factId:randomUUID(),description,epistemicKind:'visibleFeature',sourceScreenshotIds:[f.input.observation.screenshots[0]!.screenshotId],extractionKind:'screenPixels',extractorRef:'synthetic-game-vision',uncertainty:'Synthetic fixture only.',limitations:['No physical camera sight or controller authority.'],sourceKind:'playerVisibleGameObservation',untrusted:true});
+ const game=prepareGameCampaignContext(selectGameCampaignContext(f.input,f.boundary),f.binding),turn=finalizePreparedTurn({...f.prompt,preparedGameCampaignContext:game},()=>true),request=requestForFinalizedTurn(turn,f.binding,()=>true),policy=request.sections[0]!.content;
+ assert.ok(f.input.observation.facts.length>0);assert.ok(request.sections[7]!.content.includes(f.input.observation.facts[0]!.description));
+ assert.doesNotMatch(policy,/No current sampled visual observations|current visual information is unavailable|not evidence of current camera sight/);
+ assert.match(policy,/untrusted simulated-game data/);assert.match(policy,/a proposal grants no controller, save, contact or other effect/);
+ assert.match(policy,/Do not infer physical audience, speaker identity, world truth or private-output clearance from game content/);
+ assert.match(policy,/Return only JSON null if no grounded action is suitable/);
+ assert.equal(request.sections[7]!.trusted,false);assert.equal(request.sections[8]!.content,'');
+});
+test('game planning describes the closed proposal contract and proposal-only capability without claiming execution',()=>{
+ const f=fixture(),request=buildCanonicalPrompt(f.prompt),policy=request.sections[0]!.content,capability=request.sections[6]!.content;
+ assert.match(policy,/schemaVersion="1.0.0"/);assert.match(policy,/recordType="gameActionProposal"/);
+ assert.match(policy,/proposalId and every predicateId must be fresh UUID strings/);
+ assert.match(policy,/actionProposalConstraints.allowedButtons/);assert.match(policy,/actionProposalConstraints.maxDurationFrames/);assert.match(policy,/actionProposalConstraints.maxWallMs/);
+ assert.match(policy,/lower supplied limits remain binding/);assert.match(policy,/Return only JSON null if no grounded action is suitable/);
+ assert.match(capability,/inert bounded game-action proposals/);assert.match(capability,/separate current host authority/);assert.doesNotMatch(capability,/read-only capability selection/);
+ const ordinary=buildCanonicalPrompt({assistantId:f.scope.assistantId,sessionId:f.scope.sessionId,endpointId:f.scope.endpointId,interactionId:randomUUID(),userInput:'Hello.'});
+ assert.equal(ordinary.sections[6]!.content,'Only bounded read-only capability selection is available.');
+ assert.match(ordinary.sections[0]!.content,/current visual information is unavailable/);
+ assert.equal(buildCanonicalPrompt({...f.prompt,capabilities:'Explicit host capability snapshot.'}).sections[6]!.content,'Explicit host capability snapshot.');
 });
 test('full owner/relationship and logical conversation/session/endpoint scope must match before binding',async t=>{
  for(const key of ['assistantId','principalId','relationshipId','conversationId','sessionId','endpointId'] as const)await t.test(key,()=>{

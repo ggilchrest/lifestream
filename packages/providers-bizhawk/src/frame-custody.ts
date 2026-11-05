@@ -37,7 +37,7 @@ export class GameFrameCustody{
  constructor(directory:string,options:FrameCustodyOptions){
   this.options=Object.freeze({...options});
   if(!Number.isSafeInteger(options.maxQueueBytes)||options.maxQueueBytes<1||options.maxQueueBytes>67108864)throw new GameFrameCustodyError();
-  if(!Number.isSafeInteger(options.maxBytes)||options.maxBytes<1||options.maxBytes>2097152||!Number.isSafeInteger(options.maxLongEdge)||options.maxLongEdge<1||options.maxLongEdge>1024||!Number.isSafeInteger(options.maxFrames)||options.maxFrames<1||options.maxFrames>32||!Number.isSafeInteger(options.maxTtlMs)||options.maxTtlMs<1||options.maxTtlMs>30000)throw new GameFrameCustodyError();
+  if(!Number.isSafeInteger(options.maxBytes)||options.maxBytes<1||options.maxBytes>2097152||!Number.isSafeInteger(options.maxLongEdge)||options.maxLongEdge<1||options.maxLongEdge>1024||!Number.isSafeInteger(options.maxFrames)||options.maxFrames<1||options.maxFrames>32||!Number.isSafeInteger(options.maxTtlMs)||options.maxTtlMs<1||options.maxTtlMs>300000)throw new GameFrameCustodyError();
   const path=resolve(directory),stat=lstatSync(path);if(!stat.isDirectory()||stat.isSymbolicLink())throw new GameFrameCustodyError();this.directory=realpathSync(path);
  }
  private valid(scope:G.ActivityScope):void{const now=Date.now();if(now<this.lastWall){this.dispose();throw new GameFrameCustodyError();}this.lastWall=now;if(this.disposed||!this.options.current(scope)||realpathSync(this.directory)!==this.directory)throw new GameFrameCustodyError();}

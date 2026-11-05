@@ -28,6 +28,49 @@ function fixture(path=':memory:',modelCallBudget=2){
  const input={scope,turn,binding,game,provider,bounds:{maximumInputTokens:8192,maximumOutputTokens:1024,maximumOutputBytes:32768,maximumChunks:100,deadlineMs:3000}};
  return {...f,sourceInput:f.input,input,scope,owner,checkpoint,policy,options,ports,provider,requests,published,get db(){return db;},get repository(){return repository;},get admin(){return admin;},calls:()=>calls,authority:(v:boolean)=>{authorized=v;},source:(v:boolean)=>{sourceCurrent=v;},quarantine:(v:boolean)=>{quarantined=v;},close:()=>{admin.close();db.close();},reopen:()=>{admin.close();db.close();db=new Database({path});db.migrate();repository=new ActivityCheckpointRepository(db,options);admin=adminFactory();ports.repository=repository;ports.background=admin;}};
 }
+test('checkpoint currentness observes the original sharing/provider/owner refusal without extra authority calls or refund',async t=>{
+ for(const mode of ['sharing','provider','owner','ownerThrows']as const)await t.test(mode,async t=>{
+  const old=process.env.LIFESTREAM_TEXT_TIMING_DIAGNOSTICS;t.after(()=>{if(old===undefined)delete process.env.LIFESTREAM_TEXT_TIMING_DIAGNOSTICS;else process.env.LIFESTREAM_TEXT_TIMING_DIAGNOSTICS=old;});
+  let baselineNegativeCalls=0;
+  for(const enabled of [false,true]){
+   if(enabled)process.env.LIFESTREAM_TEXT_TIMING_DIAGNOSTICS='1';else delete process.env.LIFESTREAM_TEXT_TIMING_DIAGNOSTICS;
+   const logs:Record<string,unknown>[]=[];t.mock.method(console,'info',(value:string)=>{logs.push(JSON.parse(value));throw Error('PRIVATE_REPORTER');});
+   const f=fixture();try{
+    let sharing=true,allowed=true,ownerThrows=false,negativeOwnerCalls=0;
+    f.ports.inferenceMode='supervisedForeground';f.ports.foreground=f.admin;f.ports.sharingConsentCurrent=()=>sharing;
+    f.ports.current=()=>{if(!allowed||ownerThrows)negativeOwnerCalls++;if(ownerThrows)throw Error('PRIVATE_OWNER');return allowed;};
+    f.provider.tokenize=async()=>{if(mode==='sharing')sharing=false;if(mode==='provider')f.ports.providerRevision='PRIVATE_REPLACEMENT';if(mode==='owner')allowed=false;if(mode==='ownerThrows')ownerThrows=true;return {count:100,identity:'scripted-tokenizer:1'};};
+    assert.equal((await runCheckpointedGamePlanning(f.input,f.ports)).state,'cancelled');assert.equal(f.calls(),0);assert.equal(f.published.length,0);
+    const entries=logs.filter(v=>v.event==='game-checkpoint-currentness-refusal');assert.equal(entries.length,enabled?1:0);
+    if(enabled){assert.equal(entries[0]!.predicate,mode==='sharing'?'sharing_consent':mode==='provider'?'provider_revision':mode==='owner'?'owner_current':'owner_current_threw');assert.equal(negativeOwnerCalls,baselineNegativeCalls,'observation cannot add an authority probe');}
+    else baselineNegativeCalls=negativeOwnerCalls;
+    assert.equal(f.db.connection.prepare('SELECT state FROM activity_planning_reservations').get()!.state,'reserved');assert.doesNotMatch(JSON.stringify(logs),/PRIVATE/);
+   }finally{f.close();}
+  }
+ });
+});
+test('a queued source inspection settles before loaded checkpointed planning revalidates its original owner',async t=>{
+ const f=fixture();t.after(()=>f.close());let inspectionCompleted=false;const current=f.ports.current;
+ f.ports.current=(...args)=>{const end=performance.now()+0.25;while(performance.now()<end){}return inspectionCompleted&&current(...args);};setImmediate(()=>{inspectionCompleted=true;});
+ assert.equal((await runCheckpointedGamePlanning(f.input,f.ports)).state,'published');assert.equal(f.calls(),1);
+});
+test('an inspection that remains unavailable cannot gain readiness from an I/O yield',async t=>{
+ const f=fixture();t.after(()=>f.close());f.ports.current=()=>false;
+ assert.equal((await runCheckpointedGamePlanning(f.input,f.ports)).state,'suppressed');
+ assert.equal(f.calls(),0);assert.equal(f.db.readGet('SELECT count(*) AS n FROM activity_planning_reservations')!.n,0);
+});
+test('the original finalized-turn deadline cannot restart after a delayed checkpoint I/O phase',async t=>{
+ const f=fixture();t.after(()=>f.close());const binding=f.input.binding,c=f.scope.contextBinding;
+ f.input.turn=finalizePreparedTurn({assistantId:f.scope.assistantId,sessionId:c.sessionId,endpointId:c.endpointId,interactionId:randomUUID(),conversation:'[]',origin:'activityStep',preparedTurnBinding:binding,preparedGameCampaignContext:f.input.game,maximumOutputTokens:1024,deadlineAt:new Date(Date.now()+30).toISOString()},()=>true);
+ setImmediate(()=>{const end=performance.now()+60;while(performance.now()<end){}});
+ await assert.rejects(runCheckpointedGamePlanning(f.input,f.ports),/unavailable/);
+ assert.equal(f.calls(),0);assert.equal(f.db.readGet('SELECT count(*) AS n FROM activity_planning_reservations')!.n,0);
+});
+test('owner withdrawal in the checkpoint phase I/O turn prevents durable reservation and inference',async t=>{
+ const f=fixture();t.after(()=>f.close());setImmediate(()=>f.authority(false));
+ assert.equal((await runCheckpointedGamePlanning(f.input,f.ports)).state,'suppressed');
+ assert.equal(f.calls(),0);assert.equal(f.db.readGet('SELECT count(*) AS n FROM activity_planning_reservations')!.n,0);
+});
 test('existing runtime P2 coordinator uses the exact canonical nine-section request and durable once-only settlement for one inert decision',async t=>{
  const f=fixture();t.after(()=>f.close());const request=requestForFinalizedTurn(f.input.turn,f.input.binding,()=>true),result=await runCheckpointedGamePlanning(f.input,f.ports);assert.equal(result.state,'published');assert.equal(f.calls(),1);assert.equal(f.requests[0],request);assert.equal(request.sections.length,9);assert.equal(request.sections[8]!.content,'');assert.equal(f.published[0]!.proposal,null);const state=f.repository.get(f.owner,f.scope.runId)!;assert.equal(state.used.modelCalls,1);assert.equal(state.used.inputTokens,100);assert.equal(state.used.outputTokens,50);assert.equal(state.reserved.modelCalls,0);assert.equal(state.checkpoint.budgetUsed.modelCalls,0);assert.equal(state.continuationAuthority,false);assert.equal((await runCheckpointedGamePlanning(f.input,f.ports)).state,'suppressed');assert.equal(f.calls(),1);
 });

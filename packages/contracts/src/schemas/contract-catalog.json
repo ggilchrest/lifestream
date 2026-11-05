@@ -242,6 +242,24 @@
       "effects": false,
       "ownerSlice": "LS-S014",
       "signal": "ProviderCallContext.signal"
+    },
+    {
+      "port": "RelationshipAdministration",
+      "method": "inspectInitiativeOperationReceipt",
+      "request": "https://lifestream.dev/contracts/initiative-operation-receipt/1.0.0#/$defs/Request",
+      "result": "https://lifestream.dev/contracts/initiative-operation-receipt/1.0.0#/$defs/Response",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S099"
+    },
+    {
+      "port": "RelationshipAdministration",
+      "method": "inspectInitiativeAttentionReceipt",
+      "request": "https://lifestream.dev/contracts/initiative-attention-receipt/1.0.0#/$defs/Request",
+      "result": "https://lifestream.dev/contracts/initiative-attention-receipt/1.0.0#/$defs/Response",
+      "stream": false,
+      "effects": false,
+      "ownerSlice": "LS-S099"
     }
   ],
   "routes": [

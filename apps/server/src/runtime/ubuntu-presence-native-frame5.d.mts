@@ -1,0 +1,1 @@
+export class UbuntuOwnedFrameBinding { constructor(host:object);capture(context:object,channelId:string):Promise<{version:1;state:"stored"|"supported"|"uncertain"|"incomplete"|"unavailable";configurationRevision:number}>;stopSession(sessionId:string):void;cancel(context:object,channelId:string):void;close():void; }

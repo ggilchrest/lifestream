@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-calendar-conversation/1.0.0",
+  "$defs": {
+    "CalendarConversationWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "startDate",
+        "endDateExclusive"
+      ],
+      "properties": {
+        "kind": {
+          "const": "date"
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "endDateExclusive": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "CalendarConversationIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "assistantId",
+        "conversationId",
+        "enrollmentId",
+        "sourceNamespace",
+        "expectedPolicyRevision",
+        "policyBindingDigest",
+        "window",
+        "expiresAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "assistantId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "conversationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "enrollmentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sourceNamespace": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedPolicyRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policyBindingDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "window": {
+          "$ref": "#/$defs/CalendarConversationWindow"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "CalendarConversationPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaId",
+        "schemaVersion",
+        "digest"
+      ],
+      "properties": {
+        "schemaId": {
+          "const": "https://lifestream.dev/contracts/mobile-context-calendar-conversation/1.0.0"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "CalendarConversationAttachment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producerPin",
+        "intent"
+      ],
+      "properties": {
+        "producerPin": {
+          "$ref": "#/$defs/CalendarConversationPin"
+        },
+        "intent": {
+          "$ref": "#/$defs/CalendarConversationIntent"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "personalSessionPolicy": {
+    "enabled": false,
+    "scope": "installationOwner",
+    "expiration": "untilRevoked",
+    "windowFocusRequired": false
+  }
+}

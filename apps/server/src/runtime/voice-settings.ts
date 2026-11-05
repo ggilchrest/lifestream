@@ -1,14 +1,15 @@
 // Ephemeral conversation-test overrides, not a persisted Assistant VoiceProfile.
 export const deliveryModes = ["neutral", "explanation", "reassurance", "concern", "celebration", "warning", "emergency"] as const;
 export type VoiceReference = { dataBase64: string; sampleRateHz: 16000; transcript: string; consent: true };
-export type VoiceSettings = { description: string; seed: number; deliveryMode: typeof deliveryModes[number]; pace: number; energy: number; reference: VoiceReference | null };
+export type VoiceSettings = { description: string; seed: number; deliveryMode: typeof deliveryModes[number]; pace: number; energy: number; reference: VoiceReference | null; conditioningMode?: "reference" | "continuation" };
 export const defaultVoiceSettings: Readonly<VoiceSettings> = Object.freeze({ description: "", seed: 0, deliveryMode: "neutral", pace: 0.5, energy: 0.4, reference: null });
 export function parseVoiceSettings(value: unknown): VoiceSettings {
   if (value === undefined) return { ...defaultVoiceSettings };
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Voice settings must be an object");
   const data = value as Record<string, unknown>;
-  if (Object.keys(data).some(key => !Object.hasOwn(defaultVoiceSettings, key))) throw new Error("Unknown voice setting");
-  const settings = { ...defaultVoiceSettings, ...data };
+  if (Object.keys(data).some(key => !Object.hasOwn(defaultVoiceSettings, key) && key !== "conditioningMode")) throw new Error("Unknown voice setting");
+  const settings = { ...defaultVoiceSettings, ...data } as VoiceSettings;
+  if (settings.conditioningMode !== undefined && !["reference", "continuation"].includes(settings.conditioningMode)) throw new Error("Unsupported reference conditioning mode");
   if (typeof settings.description !== "string" || settings.description.length > 300 || /[()\r\n\x00-\x1f]/u.test(settings.description)) throw new Error("Voice description must be up to 300 characters without parentheses or line breaks");
   if (!Number.isInteger(settings.seed) || settings.seed < 0 || settings.seed > 2147483647) throw new Error("Seed must be an integer from 0 to 2147483647");
   if (!deliveryModes.includes(settings.deliveryMode)) throw new Error("Unsupported delivery tone");
@@ -23,5 +24,10 @@ export function parseVoiceSettings(value: unknown): VoiceSettings {
     if (typeof ref.transcript !== "string" || ref.transcript.length > 1000) throw new Error("Reference transcript must be up to 1000 characters");
     settings.reference = { ...ref, transcript: ref.transcript.trim() };
   }
+  if (settings.conditioningMode && !settings.reference) throw new Error("An explicit conditioning mode requires a retained reference");
+  if (settings.conditioningMode === "continuation" && !settings.reference?.transcript) throw new Error("Transcript continuation requires a retained transcript");
   return { ...settings, description: settings.description.trim() };
 }
+
+// Project an explicit reference-only choice for synthesis; never change the retained reference.
+export function synthesisReference(settings: VoiceSettings): VoiceReference | null { return settings.reference && settings.conditioningMode === "reference" ? {...settings.reference, transcript:""} : settings.reference; }

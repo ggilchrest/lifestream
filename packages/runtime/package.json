@@ -175,6 +175,14 @@
     "./activity/help": {
       "types": "./dist/activity/help.d.ts",
       "import": "./dist/activity/help.js"
+    },
+    "./voice/response-router": {
+      "types": "./dist/voice/response-router.d.ts",
+      "import": "./dist/voice/response-router.js"
+    },
+    "./mobile-context/sleep": {
+      "types": "./dist/mobile-context/sleep.d.ts",
+      "import": "./dist/mobile-context/sleep.js"
     }
   },
   "scripts": {

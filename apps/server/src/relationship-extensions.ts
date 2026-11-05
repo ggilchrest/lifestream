@@ -1,3 +1,5 @@
+import {initiativeReceiptMetadata} from "./initiative-operation-receipts.ts";
+import {invalidateCanonicalPresenceConfiguration} from './runtime/canonical-presence-owners.ts';
 import { createHash, randomUUID } from "node:crypto";
 import { createContractValidator } from "@lifestream/contracts";
 import {initiativeSettingsError} from "./admin/initiative-policy.ts";
@@ -55,12 +57,18 @@ export function handleExtensionConfiguration(options: {
       const binding = `extension:${kind}:${operation}:${createHash("sha256").update(canonical([{assistantId:scope.assistantId,userId:scope.userId,relationshipId:scope.relationshipId,deploymentId:scope.deploymentId}, request])).digest("hex")}`;
       if (key) {
         const previous = tx.get<{ relationshipId: string; operation: string; response: string }>("SELECT relationship_id AS relationshipId, operation, response_json AS response FROM assistant_relationship_idempotency WHERE idempotency_key=?", key);
-        if (previous) return previous.relationshipId === scope.relationshipId && previous.operation === binding ? JSON.parse(previous.response) as Result : extensionError(409, "idempotency_conflict", "This retry key was used for a different request.");
+        if (previous) {
+          if(previous.relationshipId !== scope.relationshipId || previous.operation !== binding)return extensionError(409, "idempotency_conflict", "This retry key was used for a different request.");
+          // Stored envelope metadata is private to receipt verification. Replays
+          // expose only the unchanged original status and body, including legacy rows.
+          const replay=JSON.parse(previous.response) as Result;
+          return {status:replay.status,body:replay.body};
+        }
       }
       let selected = parents.find(parent => parent.configurationId === request.configurationId);
       let changed = false;
       let status = 200;
-      const save = (parent: RelationshipConfiguration) => tx.run("INSERT OR REPLACE INTO assistant_relationship_configurations (configuration_id,relationship_id,payload_json) VALUES (?,?,?)", parent.configurationId, scope.relationshipId, JSON.stringify(parent));
+      const save = (parent: RelationshipConfiguration) => {const payload=JSON.stringify(parent);if(parent.status!=="draft")invalidateCanonicalPresenceConfiguration(database);return tx.run("INSERT OR REPLACE INTO assistant_relationship_configurations (configuration_id,relationship_id,payload_json) VALUES (?,?,?)", parent.configurationId, scope.relationshipId, payload);};
       if (operation === "draft" || operation === "rollback") {
         if (parents.length >= 128) return extensionError(409, "configuration_capacity", "The bounded configuration history is full.");
         if (operation === "draft" && request.expectedActiveConfigurationId !== (active?.configurationId ?? null)) return extensionError(409, "configuration_basis_stale", "Active settings changed. Review a fresh draft.");
@@ -84,7 +92,7 @@ export function handleExtensionConfiguration(options: {
       const response: Result = { status, body: { schemaVersion: "1.0.0", relationshipId: scope.relationshipId, operation, activeConfigurationId: changed ? selected!.configurationId : active?.configurationId ?? null, records: records.slice(-128), explanations: [{ code: changed ? "activated" : "review_only", summary: changed ? "The existing parent configuration was activated. Output and research still require current runtime policy." : "Review has no delivery, acquisition or active-setting effect.", sourceRefs: [] }], activeStateChanged: changed, executionMode: "live", nextCursor: null, ...(kind === "initiative" ? { delivery: null } : {}) } };
       if(options.reviewExplanations)(response.body.explanations as unknown[]).push(...options.reviewExplanations(selected??active));
       if (!validator.validate(`${apiId(kind)}#/$defs/Response`, response.body).valid) throw new Error("Invalid extension response");
-      if (key) tx.run("INSERT INTO assistant_relationship_idempotency (idempotency_key,relationship_id,operation,response_json) VALUES (?,?,?,?)", key, scope.relationshipId, binding, JSON.stringify(response));
+      if (key) tx.run("INSERT INTO assistant_relationship_idempotency (idempotency_key,relationship_id,operation,response_json) VALUES (?,?,?,?)", key, scope.relationshipId, binding, JSON.stringify(kind === "initiative" ? {...response,initiativeReceiptMetadata:initiativeReceiptMetadata(scope,request,binding)} : response));
       return response;
     });
     if (result.status < 400) options.reload();

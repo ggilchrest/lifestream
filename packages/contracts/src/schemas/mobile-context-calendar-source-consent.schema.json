@@ -1,0 +1,879 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-calendar-source-consent/1.0.0",
+  "$defs": {
+    "Scope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "sourceConsent"
+            },
+            "principalId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "collector": {
+              "const": "eventKit"
+            },
+            "sourceNamespace": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "category": {
+              "const": "CalendarEvent"
+            },
+            "installationId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "environmentId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "destinationId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "purpose": {
+              "enum": [
+                "collection",
+                "transmission"
+              ]
+            },
+            "recipient": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "kind",
+            "principalId",
+            "collector",
+            "sourceNamespace",
+            "category",
+            "installationId",
+            "environmentId",
+            "destinationId",
+            "purpose",
+            "recipient"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "sourceConsent"
+            },
+            "principalId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "collector": {
+              "const": "eventKit"
+            },
+            "sourceNamespace": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "category": {
+              "const": "CalendarEvent"
+            },
+            "installationId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "environmentId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "destinationId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "purpose": {
+              "const": "answers"
+            },
+            "recipient": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "kind",
+            "principalId",
+            "collector",
+            "sourceNamespace",
+            "category",
+            "installationId",
+            "environmentId",
+            "destinationId",
+            "purpose",
+            "recipient"
+          ]
+        }
+      ]
+    },
+    "Validity": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "untilRevoked"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "expiresAt"
+            },
+            "expiresAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "kind",
+            "expiresAt"
+          ]
+        }
+      ]
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "command": {
+          "const": "requestSourceConsent"
+        },
+        "validity": {
+          "$ref": "#/$defs/Validity"
+        },
+        "reviewDeadlineAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "operationId",
+        "expectedRevision",
+        "scope",
+        "command",
+        "validity",
+        "reviewDeadlineAt"
+      ]
+    },
+    "Approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "command": {
+          "const": "approveSourceConsent"
+        },
+        "request": {
+          "$ref": "#/$defs/Request"
+        },
+        "confirmationDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "humanConfirmed": {
+          "const": true
+        }
+      },
+      "required": [
+        "operationId",
+        "expectedRevision",
+        "scope",
+        "command",
+        "request",
+        "confirmationDigest",
+        "humanConfirmed"
+      ]
+    },
+    "Revocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "command": {
+          "const": "revokeSourceConsent"
+        }
+      },
+      "required": [
+        "operationId",
+        "expectedRevision",
+        "scope",
+        "command"
+      ]
+    },
+    "Original": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Request"
+        },
+        {
+          "$ref": "#/$defs/Approval"
+        },
+        {
+          "$ref": "#/$defs/Revocation"
+        }
+      ]
+    },
+    "Pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaId": {
+          "const": "https://lifestream.dev/contracts/mobile-context-calendar-source-consent/1.0.0"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "schemaId",
+        "schemaVersion",
+        "digest"
+      ]
+    },
+    "Envelope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "producerPin": {
+              "$ref": "#/$defs/Pin"
+            },
+            "operation": {
+              "const": "describe"
+            },
+            "payload": {
+              "$ref": "#/$defs/DescriptorQuery"
+            }
+          },
+          "required": [
+            "producerPin",
+            "operation",
+            "payload"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "producerPin": {
+              "$ref": "#/$defs/Pin"
+            },
+            "operation": {
+              "const": "inspect"
+            },
+            "payload": {
+              "$ref": "#/$defs/Scope"
+            }
+          },
+          "required": [
+            "producerPin",
+            "operation",
+            "payload"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "producerPin": {
+              "$ref": "#/$defs/Pin"
+            },
+            "operation": {
+              "const": "requestApproval"
+            },
+            "payload": {
+              "$ref": "#/$defs/Request"
+            }
+          },
+          "required": [
+            "producerPin",
+            "operation",
+            "payload"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "producerPin": {
+              "$ref": "#/$defs/Pin"
+            },
+            "operation": {
+              "const": "approve"
+            },
+            "payload": {
+              "$ref": "#/$defs/Approval"
+            }
+          },
+          "required": [
+            "producerPin",
+            "operation",
+            "payload"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "producerPin": {
+              "$ref": "#/$defs/Pin"
+            },
+            "operation": {
+              "const": "revoke"
+            },
+            "payload": {
+              "$ref": "#/$defs/Revocation"
+            }
+          },
+          "required": [
+            "producerPin",
+            "operation",
+            "payload"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "producerPin": {
+              "$ref": "#/$defs/Pin"
+            },
+            "operation": {
+              "const": "reconcile"
+            },
+            "payload": {
+              "$ref": "#/$defs/Original"
+            }
+          },
+          "required": [
+            "producerPin",
+            "operation",
+            "payload"
+          ]
+        }
+      ]
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "receiptId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "operationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "requestDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "scopeDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "decisionDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "committedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sqlCommit": {
+          "const": true
+        }
+      },
+      "required": [
+        "receiptId",
+        "operationId",
+        "requestDigest",
+        "scopeDigest",
+        "revision",
+        "decisionDigest",
+        "committedAt",
+        "sqlCommit"
+      ]
+    },
+    "Terminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "terminal"
+        },
+        "original": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Approval"
+            },
+            {
+              "$ref": "#/$defs/Revocation"
+            }
+          ]
+        },
+        "requestDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "status": {
+          "const": "applied"
+        },
+        "binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "family": {
+              "const": "calendarSourceConsent"
+            },
+            "reservationDigest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "preparedDigest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "terminalDigest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          "required": [
+            "family",
+            "reservationDigest",
+            "preparedDigest",
+            "terminalDigest"
+          ]
+        },
+        "receipt": {
+          "$ref": "#/$defs/Receipt"
+        }
+      },
+      "required": [
+        "kind",
+        "original",
+        "requestDigest",
+        "status",
+        "binding",
+        "receipt"
+      ]
+    },
+    "Reserved": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "reserved"
+        },
+        "original": {
+          "$ref": "#/$defs/Request"
+        },
+        "requestDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "confirmationDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sourceDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reviewContextDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reservationDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "approvalAvailable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "original",
+        "requestDigest",
+        "confirmationDigest",
+        "sourceDigest",
+        "reviewContextDigest",
+        "reservationDigest",
+        "approvalAvailable"
+      ]
+    },
+    "Result": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "held"
+            },
+            "reason": {
+              "enum": [
+                "unknown",
+                "pending",
+                "unavailable",
+                "conflict",
+                "configuration",
+                "scope",
+                "quota"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "observed"
+            },
+            "operationId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "kind",
+            "operationId"
+          ]
+        },
+        {
+          "$ref": "#/$defs/Reserved"
+        },
+        {
+          "$ref": "#/$defs/Terminal"
+        },
+        {
+          "$ref": "#/$defs/Descriptor"
+        },
+        {
+          "$ref": "#/$defs/Status"
+        }
+      ]
+    },
+    "Response": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "producerPin": {
+          "$ref": "#/$defs/Pin"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "result": {
+          "$ref": "#/$defs/Result"
+        }
+      },
+      "required": [
+        "producerPin",
+        "schemaVersion",
+        "result"
+      ]
+    },
+    "DescriptorQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enrollmentId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "enrollmentId"
+      ]
+    },
+    "Descriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "descriptor"
+        },
+        "principalId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "endpointId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "enrollmentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sourceNamespace": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sourceRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "collector": {
+          "const": "eventKit"
+        },
+        "category": {
+          "const": "CalendarEvent"
+        },
+        "installationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "environmentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "destinationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "kind",
+        "principalId",
+        "endpointId",
+        "enrollmentId",
+        "sourceNamespace",
+        "sourceRevision",
+        "collector",
+        "category",
+        "installationId",
+        "environmentId",
+        "destinationId"
+      ]
+    },
+    "Status": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "status"
+            },
+            "scope": {
+              "$ref": "#/$defs/Scope"
+            },
+            "revision": {
+              "const": 0
+            },
+            "consentState": {
+              "const": "absent"
+            },
+            "decision": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "none"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "scope",
+            "revision",
+            "consentState",
+            "decision"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "status"
+            },
+            "scope": {
+              "$ref": "#/$defs/Scope"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "consentState": {
+              "enum": [
+                "valid",
+                "expired"
+              ]
+            },
+            "decision": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "approved"
+                },
+                "validity": {
+                  "$ref": "#/$defs/Validity"
+                },
+                "requestDigest": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "operationId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "decidedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "kind",
+                "validity",
+                "requestDigest",
+                "operationId",
+                "decidedAt"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "scope",
+            "revision",
+            "consentState",
+            "decision"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "status"
+            },
+            "scope": {
+              "$ref": "#/$defs/Scope"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "consentState": {
+              "const": "revoked"
+            },
+            "decision": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "revoked"
+                },
+                "operationId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "decidedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "kind",
+                "operationId",
+                "decidedAt"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "scope",
+            "revision",
+            "consentState",
+            "decision"
+          ]
+        }
+      ]
+    }
+  }
+}
