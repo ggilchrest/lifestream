@@ -42,6 +42,108 @@
     "./game-host": {
       "types": "./dist/game-host.d.ts",
       "import": "./dist/game-host.js"
-    }
+    },
+    "./conversation-history": {
+      "types": "./dist/conversation-history.d.ts",
+      "import": "./dist/conversation-history.js"
+    },
+    "./shell-preferences": {
+      "types": "./dist/shell-preferences.d.ts",
+      "import": "./dist/shell-preferences.js"
+    },
+    "./effective-subject": {
+      "types": "./dist/effective-subject.d.ts",
+      "import": "./dist/effective-subject.js"
+    },
+    "./desktop-session": {
+      "types": "./dist/desktop-session.d.ts",
+      "import": "./dist/desktop-session.js"
+    },
+    "./unified-desktop-contracts": {
+      "types": "./dist/unified-desktop-contracts.d.ts",
+      "import": "./dist/unified-desktop-contracts.js"
+    },
+    "./voice-response": {
+      "types": "./dist/voice-response.d.ts",
+      "import": "./dist/voice-response.js"
+    },
+    "./mobile-context": {
+      "types": "./dist/mobile-context.d.ts",
+      "import": "./dist/mobile-context.js"
+    },
+    "./mobile-context-inventory": {
+      "types": "./dist/mobile-context-inventory.d.ts",
+      "import": "./dist/mobile-context-inventory.js"
+    },
+    "./mobile-context-control": {
+      "types": "./dist/mobile-context-control.d.ts",
+      "import": "./dist/mobile-context-control.js"
+    },
+    "./mobile-context-interpretation": {
+      "types": "./dist/mobile-context-interpretation.d.ts",
+      "import": "./dist/mobile-context-interpretation.js"
+    },
+    "./mobile-context-calendar": {
+      "types": "./dist/mobile-context-calendar.d.ts",
+      "import": "./dist/mobile-context-calendar.js"
+    },
+    "./mobile-context-calendar-delivery": {
+      "types": "./dist/mobile-context-calendar-delivery.d.ts",
+      "import": "./dist/mobile-context-calendar-delivery.js"
+    },
+    "./mobile-context-location": {
+      "types": "./dist/mobile-context-location.d.ts",
+      "import": "./dist/mobile-context-location.js"
+    },
+    "./mobile-context-activity": {
+      "types": "./dist/mobile-context-activity.d.ts",
+      "import": "./dist/mobile-context-activity.js"
+    },
+    "./mobile-context-signal": {
+      "types": "./dist/mobile-context-signal.d.ts",
+      "import": "./dist/mobile-context-signal.js"
+    },
+    "./mobile-context-shared-item": {
+      "types": "./dist/mobile-context-shared-item.d.ts",
+      "import": "./dist/mobile-context-shared-item.js"
+    },
+    "./mobile-context-location-delivery": {
+      "types": "./dist/mobile-context-location-delivery.d.ts",
+      "import": "./dist/mobile-context-location-delivery.js"
+    },
+    "./mobile-context-control-settlement": {
+      "types": "./dist/mobile-context-control-settlement.d.ts",
+      "import": "./dist/mobile-context-control-settlement.js"
+    },
+    "./mobile-context-policy-owner": {
+      "types": "./dist/mobile-context-policy-owner.d.ts",
+      "default": "./dist/mobile-context-policy-owner.js"
+    },
+    "./mobile-context-calendar-context": {
+      "types": "./dist/mobile-context-calendar-context.d.ts",
+      "import": "./dist/mobile-context-calendar-context.js"
+    },
+    "./mobile-context-calendar-choices": {
+      "types": "./dist/mobile-context-calendar-choices.d.ts",
+      "import": "./dist/mobile-context-calendar-choices.js"
+    },
+    "./mobile-context-calendar-conversation": {
+      "types": "./dist/mobile-context-calendar-conversation.d.ts",
+      "import": "./dist/mobile-context-calendar-conversation.js"
+    },
+    "./mobile-context-calendar-settings-control": {
+      "types": "./dist/mobile-context-calendar-settings-control.d.ts",
+      "import": "./dist/mobile-context-calendar-settings-control.js"
+    },
+    "./mobile-context-calendar-policy-owner": {
+      "types": "./dist/mobile-context-calendar-policy-owner.d.ts",
+      "import": "./dist/mobile-context-calendar-policy-owner.js"
+    },
+    "./mobile-context-calendar-selected-delivery": {
+      "types": "./dist/mobile-context-calendar-selected-delivery.d.ts",
+      "import": "./dist/mobile-context-calendar-selected-delivery.js"
+    },
+    "./mobile-context-calendar-source-consent": "./dist/mobile-context-calendar-source-consent.js",
+    "./mobile-context-health-source-consent": "./dist/mobile-context-health-source-consent.js"
   }
 }

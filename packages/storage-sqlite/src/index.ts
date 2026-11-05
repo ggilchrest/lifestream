@@ -1,6 +1,7 @@
 export { Database } from "./database.js";
 export * from './game-starts.ts';
 export { loadMigrations } from "./migrations/index.js";
+export { loadHealthBasicMigrations } from './mobile-health-migrations.js';
 export type { Transaction } from "./database.js";
 export { AssistantProfileRepository } from "./assistant-profile.js";
 export type { AssistantProfile } from "./assistant-profile.js";
@@ -47,3 +48,19 @@ export * from './game-help.ts';
 export type {GameEpisodeAdviceSource} from './game-advice-custody.ts';
 
 export {GameHostDispatchRepository,type GameHostDispatchIdentity} from './game-host-dispatch.ts';
+
+export { ConversationHistoryRepository, ConversationHistoryError } from './conversation-history.ts';
+export type { ConversationHistoryScope, ConversationRetentionPolicy, ObservedTimelineEntry } from './conversation-history.ts';
+
+export {AutonomyRepository,autonomyDigest,type AutonomyBudget} from "./autonomy.ts";
+
+export * from './mobile-context.ts';
+
+export { conversationSourceCanonical, conversationSourceDigest, conversationSourceBodyDigest, conversationSourceIdentity, conversationSourceLegacyMember } from './conversation-history.ts';
+export type { ConversationSourceIdentity, ConversationSourceRetention, ConversationSourceRef, ConversationSourceParent, ConversationSourceClosure, ConversationSourceAdmission, ConversationSourceCommit, ConversationSourceBinding, ConversationSourceRow, ConversationSourceHooks } from './conversation-history.ts';
+
+export {loadCalendarBasicMigrations,assertCalendarMigrationInventory} from './mobile-calendar-migrations.ts';
+
+export {loadHealthConsentMigrations,assertHealthConsentMigrationInventory} from './mobile-health-migrations.ts';
+
+export {loadMobileSourceControlMigrations,assertMobileSourceControlMigrationInventory} from './mobile-source-control-migrations.ts';

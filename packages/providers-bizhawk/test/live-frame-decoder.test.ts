@@ -20,3 +20,21 @@ test('reviewed local pixel cue survives unrelated changes but never claims absen
 test('current arbitrary PNG yields actual pixels with source lineage and fails closed after expiry or scope change',()=>{
  const f=source(png(Buffer.alloc(14))),decoder=new LiveFrameDecoder({revision:'1.0.0',cues:[]}),fields=decoder.decode(f);assert.equal(fields.length,2);assert.equal(fields[0]?.value,true);assert.equal(fields[0]?.lastObservedRef,f.observation.observationId);assert.equal(fields[0]?.timelineId,f.scope.timelineId);assert.equal(fields[0]?.manifestDigest,decoder.manifestDigest);assert.deepEqual(decoder.decode({...f,now:time+1000}),[]);assert.deepEqual(decoder.decode({...f,scope:{...f.scope,timelineId:randomUUID()}}),[]);const corrupted=Buffer.from(f.bytes);corrupted[40]^=1;assert.deepEqual(decoder.decode({...f,bytes:corrupted}),[]);
 });
+test('a newly issued paused image can survive long planning without renewing its capture or scope',()=>{
+ const f=source(png(Buffer.alloc(14))),decoder=new LiveFrameDecoder({revision:'1.0.0',cues:[]});
+ f.observation.screenshots[0]!.expiresAt=new Date(time+90000).toISOString();const capturedAt=f.observation.capturedAt;
+ assert.equal(decoder.decode({...f,now:time+46000}).length,2);
+ assert.equal(f.observation.capturedAt,capturedAt);assert.equal(f.observation.screenshots[0]!.capturedAt,capturedAt);
+ assert.deepEqual(decoder.decode({...f,now:time+90000}),[]);
+ assert.deepEqual(decoder.decode({...f,now:time+46000,scope:{...f.scope,timelineId:randomUUID()}}),[]);
+});
+test('combined sixty-second perception and planning tails retain the original paused image with dispatch headroom',()=>{
+ const f=source(png(Buffer.alloc(14))),decoder=new LiveFrameDecoder({revision:'1.0.0',cues:[]});
+ f.observation.screenshots[0]!.expiresAt=new Date(time+180000).toISOString();
+ const capturedAt=f.observation.capturedAt,afterBothModels=time+60000+60000+10000;
+ assert.equal(decoder.decode({...f,now:afterBothModels}).length,2);
+ assert.equal(afterBothModels-(time+60000),70000,'pre-planning perception is distinct from the ninety-second gameplay clock');
+ assert.equal(Date.parse(f.observation.screenshots[0]!.expiresAt)-afterBothModels,50000);
+ assert.equal(f.observation.capturedAt,capturedAt);assert.equal(f.observation.screenshots[0]!.capturedAt,capturedAt);
+ assert.deepEqual(decoder.decode({...f,now:time+180000}),[]);
+});

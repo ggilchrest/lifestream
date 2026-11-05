@@ -1,3 +1,4 @@
+import {invalidateCanonicalSessionCustody,sessionDeadline} from '../auth/local-auth.ts';
 import {createHash,randomUUID} from 'node:crypto';
 import type {Database} from '@lifestream/storage-sqlite';
 import {createContractValidator} from '@lifestream/contracts';
@@ -41,7 +42,7 @@ export class AuthenticatedSessionHandoff {
   this.prune();const scope=this.scope(context,assistantId,relationshipId);
   if(!this.current(scope)||!this.unused(context.sessionId))throw new HandoffError(409,'Use a fresh unused sign-in, choose private disclosure and Only me, and close its microphone and output before marking it ready.');
   this.cancel(context);if(this.ready.size>=handoffLimits.readiness)throw new HandoffError(429,'Handoff readiness is full. Wait for an existing readiness to expire.');
-  const id=randomUUID(),expires=Math.min(this.now()+handoffLimits.ttlMs,Date.parse(context.expiresAt));this.ready.set(id,{id,context,scope,expires});this.schedule();return {readinessId:id,expiresAt:new Date(expires).toISOString()};
+  const id=randomUUID(),expires=Math.min(this.now()+handoffLimits.ttlMs,sessionDeadline(context.expiresAt));this.ready.set(id,{id,context,scope,expires});this.schedule();return {readinessId:id,expiresAt:new Date(expires).toISOString()};
  }
  cancel(context:LocalContext):void{for(const [id,r] of this.ready)if(r.context.sessionId===context.sessionId&&r.context.principalId===context.principalId)this.ready.delete(id);this.prune();}
  prepare(context:LocalContext,assistantId:string,relationshipId:string|undefined,destinationReadinessId:string){
@@ -50,7 +51,7 @@ export class AuthenticatedSessionHandoff {
   for(const [id,p] of this.plans)if(p.context.sessionId===context.sessionId)this.plans.delete(id);
   const dialogue=this.history.prepareTransfer(source.scope);
   if(this.plans.size>=handoffLimits.plans||[...this.plans.values()].reduce((n,p)=>n+Buffer.byteLength(p.dialogue?.content??''),Buffer.byteLength(dialogue.content))>handoffLimits.planBytes)throw new HandoffError(429,'Handoff review capacity is full. Wait for a review to expire.');
-  const id=randomUUID(),expires=Math.min(ready.expires,this.now()+handoffLimits.ttlMs,Date.parse(context.expiresAt),dialogue.expiresAt);
+  const id=randomUUID(),expires=Math.min(ready.expires,this.now()+handoffLimits.ttlMs,sessionDeadline(context.expiresAt),dialogue.expiresAt);
   const contextBoundary={reference:'lifestream:handoff-review:'+id,sha256:digest([source.scope,dialogue.content]),mediaType:'application/json',schemaRef:'lifestream:volatile-conversation-boundary:1',byteLength:Buffer.byteLength(dialogue.content)};
   const request:HandoffRequest={schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),idempotencyKey:randomUUID(),payload:{sessionId:context.sessionId,expectedRevision:source.revision,destinationEndpointId:ready.scope.endpointId,contextBoundary,reason:{code:'reviewed_between_turn_handoff',summary:'Continue bounded dialogue at the independently ready destination; end source conversation. No authority or capture consent transfers.'}}};
   this.plans.set(id,{id,context,source,ready,dialogue,request,expires});this.schedule();
@@ -72,9 +73,9 @@ export class AuthenticatedSessionHandoff {
    this.prune();if(!plan.dialogue||this.plans.get(plan.id)!==plan||!this.current(plan.source)||!this.current(plan.ready.scope)||!this.unused(plan.ready.context.sessionId))throw Error('Handoff scope changed');
    const destinationScope={...plan.source.scope,sessionId:plan.ready.context.sessionId};
    let result:HandoffResponse|undefined;
-   this.history.withTransfer(plan.dialogue,destinationScope,Date.parse(plan.ready.context.expiresAt),install=>this.database.transaction(tx=>{
+   this.history.withTransfer(plan.dialogue,destinationScope,Math.min(plan.dialogue.expiresAt,sessionDeadline(plan.ready.context.expiresAt)),install=>this.database.transaction(tx=>{
     if(!this.current(plan.source)||!this.current(plan.ready.scope)||!this.unused(plan.ready.context.sessionId))throw Error('Handoff scope changed');
-    tx.run("UPDATE sessions SET status='ended',revision=revision+1 WHERE id=? AND revision=? AND status='active'",sessionId,plan.source.revision);
+    invalidateCanonicalSessionCustody(this.database);tx.run("UPDATE sessions SET status='ended',revision=revision+1 WHERE id=? AND revision=? AND status='active'",sessionId,plan.source.revision);
     if(tx.get<{n:number}>('SELECT changes() AS n')?.n!==1)throw Error('Source revision changed');
     tx.run("UPDATE sessions SET conversation_id=?,revision=revision+1,interaction_id=? WHERE id=? AND revision=? AND status='active'",plan.source.scope.conversationId,randomUUID(),plan.ready.context.sessionId,plan.ready.scope.revision);
     if(tx.get<{n:number}>('SELECT changes() AS n')?.n!==1)throw Error('Destination revision changed');

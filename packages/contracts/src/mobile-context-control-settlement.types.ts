@@ -1,0 +1,10 @@
+import type {MobileControlRequest,MobileControlResponse,MobileControlOutcome} from './mobile-context-control.types.ts';
+import type {ordinaryControlPin} from './mobile-context-control-settlement.pin.ts';
+export type OrdinaryControlRequest=MobileControlRequest & {action:Exclude<MobileControlRequest['action'],{kind:'remove'}>};
+export type OrdinaryControlEnvelope={producerPin:typeof ordinaryControlPin;operation:'control'|'reconcile';payload:OrdinaryControlRequest};
+export type OrdinaryControlBinding={family:'ordinaryControl';reservationDigest:string;terminalDigest:string;preparedDigest?:string};
+type OrdinaryNestedControl=MobileControlResponse & {result:MobileControlOutcome & {originalRequest:OrdinaryControlRequest}};
+type AppliedControl=OrdinaryNestedControl & {result:Extract<MobileControlOutcome,{status:'applied'}>};
+type RejectedControl=OrdinaryNestedControl & {result:Extract<MobileControlOutcome,{status:'rejected'}>};
+export type OrdinaryControlResult={kind:'held';reason:'pending'|'unknown'|'unqualified'|'otherFamily'|'unavailable'}|{kind:'observed';control:OrdinaryNestedControl}|{kind:'terminal';binding:OrdinaryControlBinding & {preparedDigest:string};control:AppliedControl}|{kind:'terminal';binding:Omit<OrdinaryControlBinding,'preparedDigest'> & {preparedDigest?:never};control:RejectedControl};
+export type OrdinaryControlResponse={schemaVersion:'1.0.0';producerPin:typeof ordinaryControlPin;result:OrdinaryControlResult};

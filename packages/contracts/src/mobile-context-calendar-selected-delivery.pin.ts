@@ -1,0 +1,1 @@
+export const calendarSelectedDeliveryPin=Object.freeze({"schemaId": "https://lifestream.dev/contracts/mobile-context-calendar-selected-delivery/1.0.0", "schemaVersion": "1.0.0", "digest": "27688770ff658204fac6198f17b6d8e09b482d33bc1abf282cafac751f59fc35"} as const);

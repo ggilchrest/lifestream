@@ -1,0 +1,451 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-location-delivery/1.0.0",
+  "title": "Raw Location delivery data; no authority",
+  "$defs": {
+    "LocationDeliveryBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "humanId",
+        "endpointId",
+        "enrollmentId",
+        "enrollmentRevision",
+        "collector",
+        "sourceNamespace",
+        "sourceEpoch",
+        "policyRevision",
+        "policyBindingDigest",
+        "policyRef",
+        "classificationRuleRef",
+        "retentionPolicyRef",
+        "useScopeRef"
+      ],
+      "properties": {
+        "humanId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "endpointId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "enrollmentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "enrollmentRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "collector": {
+          "enum": [
+            "coreLocation",
+            "androidLocation"
+          ]
+        },
+        "sourceNamespace": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "sourceEpoch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "policyRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policyBindingDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "policyRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "classificationRuleRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "retentionPolicyRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "useScopeRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "RawLocationPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaId",
+        "schemaVersion",
+        "digest"
+      ],
+      "properties": {
+        "schemaId": {
+          "const": "https://lifestream.dev/contracts/mobile-context-location/1.0.0"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "digest": {
+          "const": "d517c97de632e1fdc83280d5978d83bf460d83f6f6965b966e09b79b84010a47"
+        }
+      }
+    },
+    "LocationDeliveryItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "binding",
+        "eventId",
+        "attemptId",
+        "observationSha256",
+        "requestDigest",
+        "rawProducerPin",
+        "observationUtf8Base64"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "binding": {
+          "$ref": "#/$defs/LocationDeliveryBinding"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "attemptId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "observationSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "requestDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "rawProducerPin": {
+          "$ref": "#/$defs/RawLocationPin"
+        },
+        "observationUtf8Base64": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 87384
+        }
+      }
+    },
+    "LocationDeliveryReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "binding",
+        "eventId",
+        "attemptId",
+        "observationSha256",
+        "requestDigest",
+        "outcome",
+        "code",
+        "durability",
+        "receiptDigest"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "binding": {
+          "$ref": "#/$defs/LocationDeliveryBinding"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "attemptId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "observationSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "requestDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "outcome": {
+          "enum": [
+            "accepted",
+            "duplicate",
+            "rejected",
+            "unknown"
+          ]
+        },
+        "code": {
+          "enum": [
+            "stored",
+            "sameOriginal",
+            "invalid",
+            "scope",
+            "policyChanged",
+            "suppressed",
+            "conflict",
+            "quota",
+            "unavailable"
+          ]
+        },
+        "durability": {
+          "enum": [
+            "sqlCommit",
+            null
+          ]
+        },
+        "receiptDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "outcome": {
+              "const": "accepted"
+            },
+            "code": {
+              "enum": [
+                "stored"
+              ]
+            },
+            "durability": {
+              "const": "sqlCommit"
+            }
+          }
+        },
+        {
+          "properties": {
+            "outcome": {
+              "const": "duplicate"
+            },
+            "code": {
+              "enum": [
+                "sameOriginal"
+              ]
+            },
+            "durability": {
+              "const": "sqlCommit"
+            }
+          }
+        },
+        {
+          "properties": {
+            "outcome": {
+              "const": "rejected"
+            },
+            "code": {
+              "enum": [
+                "invalid",
+                "scope",
+                "policyChanged",
+                "suppressed",
+                "conflict",
+                "quota",
+                "unavailable"
+              ]
+            },
+            "durability": {
+              "const": null
+            }
+          }
+        },
+        {
+          "properties": {
+            "outcome": {
+              "const": "unknown"
+            },
+            "code": {
+              "enum": [
+                "unavailable"
+              ]
+            },
+            "durability": {
+              "const": null
+            }
+          }
+        }
+      ]
+    },
+    "LocationDeliveryBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "items"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/LocationDeliveryItem"
+          }
+        }
+      }
+    },
+    "LocationEnrollmentDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "enrollmentId",
+        "humanId",
+        "endpointId",
+        "collector",
+        "sourceNamespace",
+        "revision",
+        "state"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "enrollmentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "humanId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "endpointId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "collector": {
+          "enum": [
+            "coreLocation",
+            "androidLocation"
+          ]
+        },
+        "sourceNamespace": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f-]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "state": {
+          "enum": [
+            "unbound",
+            "active",
+            "disconnected"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "state": {
+              "const": "unbound"
+            },
+            "sourceNamespace": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "state": {
+              "enum": [
+                "active",
+                "disconnected"
+              ]
+            },
+            "sourceNamespace": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f-]+$"
+            }
+          }
+        }
+      ]
+    },
+    "LocationPolicyDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "binding",
+        "allowedObservationKinds",
+        "collectionAllowed",
+        "useAllowed"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "binding": {
+          "$ref": "#/$defs/LocationDeliveryBinding"
+        },
+        "allowedObservationKinds": {
+          "type": "array",
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "position",
+              "regionTransition",
+              "unavailable"
+            ]
+          }
+        },
+        "collectionAllowed": {
+          "type": "boolean"
+        },
+        "useAllowed": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

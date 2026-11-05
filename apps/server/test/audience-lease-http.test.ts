@@ -32,7 +32,8 @@ test('authenticated personal phone leases enforce CSRF, payload bounds and stabl
  const begin=await f.request(path,body);assert.equal(begin.status,200);const active=await begin.json() as {revision:number;leaseId:string;privateAllowed:boolean};assert.equal(active.leaseId,id);assert.equal(active.privateAllowed,true);
  assert.equal((await f.snapshot()).leaseId,id);
  const activity=()=>f.app.database.connection.prepare('SELECT admin_last_activity FROM local_sessions WHERE session_id=?').get(f.session.sessionId)!.admin_last_activity,original=activity();
- f.expireAdministration();assert.equal((await f.request('/api/auth/v1/session')).status,401);
+ f.expireAdministration();const expired=await f.request('/api/auth/v1/session');assert.equal(expired.status,403);assert.equal((await expired.json() as {code:string}).code,'administration_freshness_required');
+ const continuing=await f.request('/api/auth/v1/user-context');assert.equal(continuing.status,200);assert.equal((await continuing.json()).context.authenticatedSessionId,f.session.sessionId);
  f.advance(5000);const renewed=await f.change('renew',id,active.revision);assert.equal(renewed.status,200);assert.equal((await renewed.json() as {revision:number}).revision,active.revision);assert.equal(activity(),original);
  f.advance(20000);assert.equal((await f.snapshot()).privateAllowed,false);assert.equal((await f.change('renew',id)).status,409);
 });
@@ -64,7 +65,7 @@ test('a delayed begin cannot override a later clear that leaves audience unknown
 });
 test('sign-out retires an active lease and publishes the loss before its audience stream closes',async t=>{
  const f=await fixture(t),id=randomUUID();assert.equal((await f.change('begin',id)).status,200);
- const stream=await f.request('/api/runtime/v1/audience/events'),reader=stream.body!.getReader();t.after(()=>reader.cancel());
+ const stream=await f.request('/api/runtime/v1/audience/events?transport=shared-v1'),reader=stream.body!.getReader();t.after(()=>reader.cancel());
  assert.match(Buffer.from((await reader.read()).value!).toString(),new RegExp(id));
  assert.equal((await f.request('/api/auth/v1/sign-out',{})).status,200);
  let received='';for(;;){const item=await reader.read();if(item.done)break;received+=Buffer.from(item.value).toString();}

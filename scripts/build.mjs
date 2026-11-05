@@ -19,6 +19,7 @@ for (const [source, destination, suffix] of [
   ['apps/server/src/config/profiles', 'apps/server/dist/config/profiles', '.json'],
   ['packages/storage-sqlite/src/migrations', 'packages/storage-sqlite/dist/migrations', '.sql'],
   ['packages/contracts/src/schemas', 'packages/contracts/dist/schemas', '.json'],
+  ['packages/contracts/src', 'packages/contracts/dist', 'unified-desktop.lock.json'],
 ]) {
   await mkdir(join(root, destination), { recursive: true });
   for (const name of await readdir(join(root, source))) {

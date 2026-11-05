@@ -8,10 +8,11 @@ local function encode(v)
   return tostring(v)
 end
 local json={null=null,array=function(v)return v end,encode=encode,decode=function(raw)return assert(registry[raw])end}
-local function fixture()
+local function fixture(timing)
   local now,frame,paused,connected=0,10,true,true
   local state={buttons={},advanced=0};local incoming,sent={},{};local count=0
   local config={scope={activityEpoch=1},executionMode='simulation',providerRef='fixture',pinsDigest='pins',scopeDigest='scope',romSha1=string.rep('b',40),emulatorVersion='2.11.1',sessionDurationMs=10000,bounds={maxActionFrames=5,maxActionWallMs=200,maxInputLeaseMs=200,actionBudget=4,frameBudget=20,wallBudgetMs=1000}}
+  if timing then config.sessionDurationMs=10;config.nativeAuthority={schemaVersion='ct-native-authority-lifetime/1',expiresAt=tostring(timing.expiresAt or 10000),remainingMs=timing.remainingMs or 10000};if timing.extra then config.nativeAuthority.extra=true end end
   local api={version=function()return state.version or '2.11.1'end,system=function()return 'SNES'end,romHash=function()return config.romSha1 end,frame=function()return frame end,set=function(v)state.buttons=v end,immediate=function()return state.buttons end,pause=function()paused=true end,paused=function()return paused end,resume=function()paused=false end,speedOne=function()end,yield=function()now=now+1 end,advance=function()frame=frame+1;now=now+20;state.advanced=state.advanced+1;if state.disconnect then connected=false end end}
   local clock={ms=function()return now end,utc=function()return tostring(now)end,before=function(t)return tonumber(t)>now end,issued=function(t)return tonumber(t)<=now end}
   local crypto={uuid=function()count=count+1;return 'fixture-'..count end,hmac=function()return string.rep('d',64)end,equal=function(a,b)return a==b end}
@@ -22,15 +23,20 @@ local function fixture()
   local send=channel.send;channel.send=function(raw)if raw:match('^%{"type":"authenticate"')then return end;send(raw)end
   local factory=assert(loadfile(assert(os.getenv('LIFESTREAM_NATIVE_PEER_FILE'))))()
   local peer=factory(config,{json=json,api=api,clock=clock,crypto=crypto,channel=channel,store={capture=function(f,t)return {frameNumber=f,capturedAt=t}end}})
+  if timing and timing.authDelay then now=now+timing.authDelay end
   peer.authenticate()
   local function request(operation)
     count=count+1;local vector={up=false,down=false,left=false,right=false,a=true,b=false,x=false,y=false,l=false,r=false,start=false,select=false}
     return {schemaVersion='1.0.0',scope=config.scope,executionMode='simulation',requestId='request-'..count,correlationId='correlation',idempotencyKey='identity',deadlineAt='10000',operation=operation or 'GameActivityAdapter.applyController',payload={actionId='action',inputOwnerLeaseId='lease',expectedPinsDigest=config.pinsDigest,expectedFrameNumber=frame,protectedMenuOperation='none',buttonVector=vector,proposal={scope=config.scope,proposalId='proposal',buttons={'a'},durationFrames=3,maxWallMs=200},admission={expiresAt='10000',issuedAt='0',inputDigest='input',admissionId='admission'},dispatchValidation={preparedContextFreshUntil='10000'}}}
   end
-  return {peer=peer,request=request,state=state,incoming=incoming,sent=sent,config=config,paused=api.paused}
+  return {peer=peer,request=request,state=state,incoming=incoming,sent=sent,config=config,paused=api.paused,advance=function(ms)now=now+ms end}
 end
 local out=assert(io.open(assert(os.getenv('LIFESTREAM_NATIVE_FIXTURE_RESULT')),'w'))
 local ok=pcall(function()
+  local current=fixture({authDelay=20});current.advance(30);check(current.peer.idle());check(current.state.advanced==0);check(current.paused())
+  local expired=fixture({expiresAt=50});expired.advance(50);check(not expired.peer.idle());check(expired.paused());check(expired.state.advanced==0)
+  local mono=fixture({remainingMs=50});mono.advance(50);check(not mono.peer.idle());check(mono.paused())
+  check(not pcall(function()fixture({extra=true})end))
   local f=fixture();local r=f.request();f.peer.handle(encode(r));local result=f.sent[#f.sent];check(result.outcome.payload.framesApplied==3);check(result.outcome.payload.disposition=='completed');check(result.outcome.payload.buttonsNeutralized==true)
   local release=f.request('GameActivityAdapter.releaseControls');release.payload={targetInputOwnerLeaseId='lease',reason='pause'};f.peer.handle(encode(release));check(f.paused());check(f.sent[#f.sent].outcome.payload.disposition=='neutralizedAndPaused')
   for _,change in ipairs({function(f,r)r.payload.expectedFrameNumber=9 end,function(f,r)r.payload.buttonVector.b=true end,function(f,r)r.payload.protectedMenuOperation='save'end,function(f,r)r.payload.admission.expiresAt='0'end,function(f,r)f.state.version='wrong'end})do local f=fixture();local r=f.request();change(f,r);f.peer.handle(encode(r));check(f.state.advanced==0);check(f.sent[#f.sent].outcome.status=='rejected')end

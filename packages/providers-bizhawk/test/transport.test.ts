@@ -1,3 +1,4 @@
+import {createNativeExecutionLifetime} from '../src/native-execution-lifetime.ts';
 import assert from 'node:assert/strict';
 import test,{type TestContext} from 'node:test';
 import {createHmac,randomUUID} from 'node:crypto';
@@ -109,4 +110,59 @@ test('a decoder cannot replace native scope/frame/pins/pixels or action lineage'
  for(const key of ['frameNumber','pinsDigest','scope','screenshots','previousActionId'])await t.test(key,async t=>{
   const {transport,peer,s}=setup(t,{options:{enrichObservation:(_request:any,o:any)=>{if(key==='frameNumber')o.frameNumber++;else if(key==='pinsDigest')o.pinsDigest='b'.repeat(64);else if(key==='scope')o.scope.timelineId=randomUUID();else if(key==='screenshots')o.screenshots[0].sha256='b'.repeat(64);else o.previousActionId=randomUUID();return o;}}});await peer.authenticate();await transport.ready;await peer.next();const pending=transport.adapter.observe(observe(s),context),sent=await peer.next();peer.send(observed(sent));await assert.rejects(pending,boundaryError('invalidResponse'));
  });
+});
+
+
+test('/3 transport uses original custody instead of early gameplay duration and aborts on original lifecycle cancellation',async t=>{
+ const controller=new AbortController(),executionLifetime=createNativeExecutionLifetime(Object.freeze({signal:controller.signal,check:()=>true}),new Date(Date.now()+1500).toISOString());
+ const {transport,peer,s,failures}=setup(t,{options:{authenticationTimeoutMs:20,sessionDurationMs:25,executionLifetime}});await peer.authenticate();await transport.ready;await peer.next();
+ await new Promise(resolve=>setTimeout(resolve,55));assert.deepEqual(failures,[]);
+ const pending=transport.adapter.observe(observe(s),context),sent=await peer.next();peer.send(observed(sent));assert.equal((await pending).outcome.payload!.observation.frameNumber,10);
+ controller.abort();assert.deepEqual(failures,[]);assert.equal(transport.isQuiescent(),false);await assert.rejects(transport.adapter.observe(observe(s),context));
+});
+
+test('/3 transport still expires at original native authority, without renewing it after authentication',async t=>{
+ const controller=new AbortController(),executionLifetime=createNativeExecutionLifetime(Object.freeze({signal:controller.signal,check:()=>true}),new Date(Date.now()+100).toISOString());
+ const {transport,peer,s,failures}=setup(t,{options:{authenticationTimeoutMs:20,sessionDurationMs:10000,executionLifetime}});await peer.authenticate();await transport.ready;await peer.next();
+ await new Promise(resolve=>setTimeout(resolve,125));assert.deepEqual(failures,['timedOut']);await assert.rejects(transport.adapter.observe(observe(s),context));
+});
+
+
+test('transport quiescence requires authenticated idle and no pending, abandoned or still-validating native call',async t=>{
+ const {transport,peer,s}=setup(t);assert.equal(transport.isQuiescent(),false);await peer.authenticate();await transport.ready;await peer.next();assert.equal(transport.isQuiescent(),true);
+ const controller=new AbortController(),pending=transport.adapter.observe(observe(s),{...context,signal:controller.signal}),sent=await peer.next();assert.equal(transport.isQuiescent(),false);
+ controller.abort();await assert.rejects(pending);assert.equal(transport.isQuiescent(),false,'A cancelled but unreconciled command is not proof of a quiet native channel');
+ peer.send(observed(sent));await new Promise(r=>setImmediate(r));assert.equal(transport.isQuiescent(),true);transport.close();assert.equal(transport.isQuiescent(),false);
+});
+
+test('/3 original lifecycle cancellation preserves only independently admitted exact-old-lease safety release',async t=>{
+ const controller=new AbortController(),executionLifetime=createNativeExecutionLifetime(Object.freeze({signal:controller.signal,check:()=>true}),new Date(Date.now()+1500).toISOString());
+ const lease=randomUUID();const {transport,peer,s}=setup(t,{boundary:{admitRelease:async()=>false},options:{executionLifetime,shutdownAdmission:async(r:G.GameReleaseRequest)=>r.payload.targetInputOwnerLeaseId===lease}});
+ await peer.authenticate();await transport.ready;await peer.next();controller.abort();assert.equal(transport.isQuiescent(),false);
+ const request:G.GameReleaseRequest={...observe(s),operation:'GameActivityAdapter.releaseControls',payload:{targetInputOwnerLeaseId:lease,reason:'stop',neutralButtons:{...neutral}}};
+ await assert.rejects(transport.adapter.releaseControls(request,context),boundaryError('admissionRequired'));
+ await assert.rejects(transport.safetyRelease!({...request,requestId:randomUUID(),payload:{...request.payload,targetInputOwnerLeaseId:randomUUID()}},context),boundaryError('admissionRequired'));
+ assert.equal(peer.messages.length,0);
+ const pending=transport.safetyRelease!(request,context),sent=await peer.next(),time=stamp();assert.equal(sent.payload.targetInputOwnerLeaseId,lease);
+ peer.send({schemaVersion:'1.0.0',operation:sent.operation,requestId:sent.requestId,correlationId:sent.correlationId,providerRef:'scripted-peer',completedAt:time,outcome:{status:'succeeded',error:null,payload:{targetInputOwnerLeaseId:lease,disposition:'neutralizedAndPaused',confirmedAt:time,emulatorPaused:true,buttonsNeutralized:true,pauseFrameNumber:10,verifiedFrameNumber:10,pauseConfirmedMonotonicMs:100,verifiedMonotonicMs:110,activityEpochAfterFence:2,confirmationSource:'adapterObserved',resumeRequiresFreshObservation:true}}});
+ assert.equal((await pending).outcome.payload!.disposition,'neutralizedAndPaused');
+ const plain=setup(t);assert.equal(plain.transport.safetyRelease,undefined);
+});
+
+
+test('transport is not quiescent while original effect admission is pending before any native entry exists',async t=>{
+ let finish!:(value:boolean)=>void;const {transport,peer,s}=setup(t,{boundary:{claimEffect:()=>new Promise<boolean>(resolve=>{finish=resolve;})}});await peer.authenticate();await transport.ready;await peer.next();
+ const pending=transport.adapter.applyController(action(s),context);await new Promise(r=>setImmediate(r));assert.equal(peer.messages.length,0);assert.equal(transport.isQuiescent(),false);finish(false);await assert.rejects(pending);assert.equal(transport.isQuiescent(),true);
+});
+
+
+test('/3 ordinary release stays fenced after cancellation even when ordinary admission remains true; only private safety lane survives',async t=>{
+ const controller=new AbortController(),executionLifetime=createNativeExecutionLifetime(Object.freeze({signal:controller.signal,check:()=>true}),new Date(Date.now()+1500).toISOString()),lease=randomUUID();
+ const {transport,peer,s}=setup(t,{boundary:{admitRelease:async()=>true},options:{executionLifetime,shutdownAdmission:async(r:G.GameReleaseRequest)=>r.payload.targetInputOwnerLeaseId===lease}});
+ await peer.authenticate();await transport.ready;await peer.next();
+ const request=():G.GameReleaseRequest=>({...observe(s),operation:'GameActivityAdapter.releaseControls',payload:{targetInputOwnerLeaseId:lease,reason:'stop',neutralButtons:{...neutral}}});
+ const result=(sent:any)=>{const time=stamp();return {schemaVersion:'1.0.0',operation:sent.operation,requestId:sent.requestId,correlationId:sent.correlationId,providerRef:'scripted-peer',completedAt:time,outcome:{status:'succeeded',error:null,payload:{targetInputOwnerLeaseId:lease,disposition:'neutralizedAndPaused',confirmedAt:time,emulatorPaused:true,buttonsNeutralized:true,pauseFrameNumber:10,verifiedFrameNumber:10,pauseConfirmedMonotonicMs:100,verifiedMonotonicMs:110,activityEpochAfterFence:2,confirmationSource:'adapterObserved',resumeRequiresFreshObservation:true}}};};
+ const pending=transport.adapter.releaseControls(request(),context),sent=await peer.next();controller.abort();await assert.rejects(pending);peer.send(result(sent));await new Promise(r=>setImmediate(r));
+ await assert.rejects(transport.adapter.releaseControls(request(),context));assert.equal(peer.messages.length,0,'Ordinary true admission must not bypass the captured lifecycle');
+ const safety=transport.safetyRelease!(request(),context),safeSent=await peer.next();peer.send(result(safeSent));assert.equal((await safety).outcome.payload!.disposition,'neutralizedAndPaused');assert.equal(transport.isQuiescent(),false);
 });

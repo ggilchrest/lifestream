@@ -22,7 +22,20 @@ export class FixtureInferenceProvider implements InferenceProvider {
       yield { kind: "done" };
       return;
     }
-    yield { kind: "text", text: `Fixture response: ${request.sections.at(-1)?.content ?? ""}` };
+    const text=`Fixture response: ${request.sections.at(-1)?.content ?? ""}`;
+    const spoken=request.sections.some(s=>s.kind==='policy'&&s.sourceRef==='policy:spoken-v1');
+    if(spoken){
+      yield {kind:"text",text:JSON.stringify({version:"voice-response/1"})+"\n"};
+      const words=text.split(/\s+/u),parts:string[]=[];let part="";
+      if(words.some(word=>word.length>600)){
+        yield {kind:"text",text:JSON.stringify({channel:"speech",text:"The fixture response is available in the conversation text."})+"\n"};
+        for(let offset=0;offset<text.length;offset+=600)yield {kind:"text",text:JSON.stringify({channel:"display",text:text.slice(offset,offset+600)})+"\n"};
+      }else{
+        for(const word of words){if(part.length+word.length+1>600){parts.push(part);part=word;}else part+=(part?" ":"")+word;}
+        if(part)parts.push(part);
+        for(const value of parts)yield {kind:"text",text:JSON.stringify({channel:"speech",text:value})+"\n"};
+      }
+    }else yield {kind:"text",text};
     yield { kind: "done" };
   }
 }

@@ -1,0 +1,8 @@
+// Generated from producing-owner schema; run scripts/generate-unified-desktop-contracts.mjs.
+export type PreferenceScope = { "actorId": string; "effectiveUserId": string; "endpointRef": string };
+export type PresentationPreferences = { "theme": "system" | "light" | "dark"; "textScale": number; "motion": "system" | "reduced" | "full"; "contrast": "system" | "normal" | "high"; "keyboardHints": boolean; "defaultView": "conversation" | "history" | "memory" | "settings"; "layout": { "sidebarWidth": number; "activityWidth": number; "activityExpanded": boolean; "navigationExpanded": boolean } };
+export type ShellPreferences = { "schemaVersion": "1.1.0"; "scope": PreferenceScope; "revision": number; "values": PresentationPreferences; "updatedAt": string };
+export type ShellPreferencesRead = { "schemaVersion": "1.1.0"; "operation": "read"; "endpointRef": string };
+export type ShellPreferencesUpdate = { "schemaVersion": "1.1.0"; "operation": "update"; "operationId": string; "idempotencyKey": string; "endpointRef": string; "expectedRevision": number; "values": PresentationPreferences };
+export type ShellPreferencesEvent = { "schemaVersion": "1.1.0"; "eventId": string; "eventSequence": number; "snapshot": ShellPreferences; "occurredAt": string };
+export type ShellPreferencesError = { "schemaVersion": "1.1.0"; "code": "unauthenticated" | "forbidden" | "scopeChanged" | "notFound" | "unsupportedVersion" | "invalidRequest" | "revisionConflict" | "invalidCursor" | "restartPage" | "unavailable" | "idempotencyConflict" | "backpressure"; "message": string; "retryable": boolean; "correlationId": string };

@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/initiative-operation-receipt/1.0.0",
+  "title": "Read-only historical Initiative operation receipt; unknown never permits retry",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Request"
+    },
+    {
+      "$ref": "#/$defs/Response"
+    },
+    {
+      "$ref": "#/$defs/Error"
+    }
+  ],
+  "$defs": {
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "operation",
+        "requestDigest"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "operation": {
+          "enum": [
+            "draft",
+            "activate",
+            "rollback"
+          ]
+        },
+        "requestDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "Recorded": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "configurationId",
+        "revision",
+        "activeStateChanged",
+        "activeConfigurationId"
+      ],
+      "properties": {
+        "configurationId": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "activeStateChanged": {
+          "type": "boolean"
+        },
+        "activeConfigurationId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "state",
+        "operation",
+        "requestDigest",
+        "recorded",
+        "currentActiveConfigurationId",
+        "mutationDispatched"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "state": {
+          "enum": [
+            "committed",
+            "unknown",
+            "unavailable"
+          ]
+        },
+        "operation": {
+          "enum": [
+            "draft",
+            "activate",
+            "rollback"
+          ]
+        },
+        "requestDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "recorded": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Recorded"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "currentActiveConfigurationId": {
+          "anyOf": [
+            {
+              "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mutationDispatched": {
+          "const": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "committed"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "recorded": {
+                "$ref": "#/$defs/Recorded"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "recorded": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Error": {
+      "$ref": "https://lifestream.dev/contracts/initiative-api/1.0.0#/$defs/Error"
+    }
+  }
+}

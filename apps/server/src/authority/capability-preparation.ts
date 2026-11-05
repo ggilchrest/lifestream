@@ -24,6 +24,7 @@ type Definition = capabilitySnapshot_Root['capabilities'][number];
 export type CapabilityScopeAdapter = {
   capabilityId: string; version: string; providerRouteRef: string; revision: string;
   inputSchema: ArtifactRef; outputSchema: ArtifactRef;
+  allowedGrantClasses?:readonly ('allowOnce'|'allowSession'|'allowPersistent')[];
   derive(input: unknown): { scope: OperationScope; effectSummary: string; scopeDerivation: TrustedGrantProposal['scopeDerivation'] };
 };
 export type CanonicalCapabilityComposition = {

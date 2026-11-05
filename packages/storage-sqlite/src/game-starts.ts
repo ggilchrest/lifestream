@@ -5,16 +5,20 @@ import {boundedGameDataSnapshot} from '@lifestream/contracts/game-journal';
 import type * as G from '@lifestream/contracts/game-activity';
 import type {Database} from './database.ts';
 export type GameStartOccurrence={scope:G.ActivityScope;policy:G.GamePolicy;bounds:G.GameBounds;windowId:string;localDate:string;occurrenceKey:string};
+export type ManualGameStartOccurrence={scope:G.ActivityScope;policy:G.GamePolicy;bounds:G.GameBounds;expiresAtMs:number};
+type GameStartInput=GameStartOccurrence|ManualGameStartOccurrence;
+/** enabled enrolls automatic calendar starts. An independently current explicit
+ * manual start still consumes the same revision and finite numeric quotas. */
 export type GameStartLimits={enabled:boolean;revision:number;rollingPeriodMs:number;rollingStartLimit:number;startsPerWindow:number};
 type Disposition='claimed'|'paused'|'recoveryRequired'|'stopped'|'completed';
 type Row={run_id:string;assistant_id:string;scope_digest:string;owner_key:string;occurrence_key:string;calendar_key:string;policy_digest:string;claimed_at:number;revision:number;disposition:Disposition;receipt_digest:string|null};
 export type GameStartOptions={
  maxClaims:number;maxAssistantSlots:number;
  quarantined:()=>boolean;
- limitsFor:(input:GameStartOccurrence)=>GameStartLimits|null;
+ limitsFor:(input:GameStartInput)=>GameStartLimits|null;
  /** Actual registered policy, current hours, runtime enrollment, source/display,
   * authority, takeover/old-run resolution and all remaining resource budgets. */
- admissionCurrent:(input:GameStartOccurrence,limits:GameStartLimits)=>boolean;
+ admissionCurrent:(input:GameStartInput,limits:GameStartLimits)=>boolean;
  inspectionCurrent:(scope:G.ActivityScope)=>boolean;
  /** Independently qualified exact-old-run pause/terminal evidence. A callback
   * returning true is trusted host truth, never model or schema self-certification. */
@@ -36,23 +40,37 @@ export class GameStartRepository {
  constructor(database:Database,options:GameStartOptions){if(!positive(options.maxClaims,8192)||!positive(options.maxAssistantSlots,128))throw unavailable();this.database=database;this.options=options;this.capacity=Object.freeze({claims:options.maxClaims,slots:options.maxAssistantSlots});}
  private time(){const now=(this.options.now??Date.now)(),floor=this.database.connection.prepare('SELECT observed_at FROM activity_metadata_clock WHERE singleton=1').get()!.observed_at as number;if(!Number.isSafeInteger(now)||now<floor||!Number.isFinite(new Date(now).getTime()))throw unavailable();this.database.connection.prepare('UPDATE activity_metadata_clock SET observed_at=? WHERE singleton=1').run(now);return now;}
  private scope(raw:G.ActivityScope){const scope=boundedGameDataSnapshot(raw) as G.ActivityScope|null;if(!scope||!validator.validate(schema+'ActivityScope',scope).valid)throw unavailable();return freeze(scope);}
- private limits(input:GameStartOccurrence){const limits=boundedGameDataSnapshot(this.options.limitsFor(input)) as GameStartLimits|null;if(!limits||Object.keys(limits).sort().join(',')!=='enabled,revision,rollingPeriodMs,rollingStartLimit,startsPerWindow'||limits.enabled!==true||limits.revision!==input.policy.revision||!positive(limits.rollingPeriodMs)||!positive(limits.rollingStartLimit)||!positive(limits.startsPerWindow))throw unavailable();return freeze(limits);}
- private current(input:GameStartOccurrence,limits:GameStartLimits,currentWindow:()=>boolean){return checked(()=>this.options.quarantined()===false&&currentWindow()===true&&this.options.admissionCurrent(input,limits)===true&&isDeepStrictEqual(this.limits(input),limits)&&currentWindow()===true&&this.options.quarantined()===false);}
+ private limits(input:GameStartInput){const limits=boundedGameDataSnapshot(this.options.limitsFor(input)) as GameStartLimits|null;if(!limits||Object.keys(limits).sort().join(',')!=='enabled,revision,rollingPeriodMs,rollingStartLimit,startsPerWindow'||typeof limits.enabled!=='boolean'||!Object.hasOwn(input,'expiresAtMs')&&limits.enabled!==true||limits.revision!==input.policy.revision||!positive(limits.rollingPeriodMs)||!positive(limits.rollingStartLimit)||!positive(limits.startsPerWindow))throw unavailable();return freeze(limits);}
+ private current(input:GameStartInput,limits:GameStartLimits,currentStart:()=>boolean){return checked(()=>this.options.quarantined()===false&&currentStart()===true&&this.options.admissionCurrent(input,limits)===true&&isDeepStrictEqual(this.limits(input),limits)&&currentStart()===true&&this.options.quarantined()===false);}
  claim(raw:GameStartOccurrence,currentWindow:()=>boolean):boolean {
   const input=boundedGameDataSnapshot(raw) as GameStartOccurrence|null;if(!input||Object.keys(input).sort().join(',')!=='bounds,localDate,occurrenceKey,policy,scope,windowId'||!validator.validate(schema+'ActivityScope',input.scope).valid||!validator.validate(schema+'GamePolicy',input.policy).valid||!validator.validate(schema+'GameBounds',input.bounds).valid||!/^\d{4}-\d{2}-\d{2}$/u.test(input.localDate)||!input.policy.schedule.enabled||input.policy.schedule.validatedPolicyRevision!==input.policy.revision||!input.policy.schedule.windows.some(w=>w.windowId===input.windowId))throw unavailable();
   freeze(input);const s=input.scope,parts=[s.assistantId,s.principalId,s.relationshipId,s.environmentId,s.activityId,'play'],calendar=[input.policy.schedule.timeZone,input.localDate,input.windowId];
   if(input.occurrenceKey!==hash([...parts,input.policy.revision,...calendar]))throw unavailable();
-  const now=this.time(),limits=this.limits(input),calendarKey=hash([...parts,...calendar]);if(!this.current(input,limits,currentWindow))return false;
+  return this.claimOnce(input,input.occurrenceKey,hash([...parts,...calendar]),currentWindow);
+ }
+ /** Same durable once-only ledger and Assistant slot as automatic starts. The
+  * authenticated foreground owner supplies currentStart; disabled unattended
+  * enrollment is neither enabled nor represented as a calendar occurrence. */
+ claimManual(raw:ManualGameStartOccurrence,currentStart:()=>boolean):boolean{
+  const input=boundedGameDataSnapshot(raw) as ManualGameStartOccurrence|null;
+  if(!input||Object.keys(input).sort().join(',')!=='bounds,expiresAtMs,policy,scope'||!validator.validate(schema+'ActivityScope',input.scope).valid||!validator.validate(schema+'GamePolicy',input.policy).valid||!validator.validate(schema+'GameBounds',input.bounds).valid||!Number.isSafeInteger(input.expiresAtMs)||!Number.isFinite(new Date(input.expiresAtMs).getTime()))throw unavailable();
+  freeze(input);const now=this.time();if(input.expiresAtMs<=now||input.expiresAtMs-now>Math.min(120000,input.bounds.wallBudgetMs))return false;
+  const current=()=>this.time()<input.expiresAtMs&&currentStart()===true;
+  return this.claimOnce(input,hash(['manual-start',input.scope]),hash(['manual-run',input.scope]),current);
+ }
+ private claimOnce(input:GameStartInput,occurrenceKey:string,calendarKey:string,currentStart:()=>boolean):boolean{
+  const s=input.scope,parts=[s.assistantId,s.principalId,s.relationshipId,s.environmentId,s.activityId,'play'];
+  const now=this.time(),limits=this.limits(input);if(!this.current(input,limits,currentStart))return false;
   return this.database.transaction(tx=>{
-   if(tx.get('SELECT run_id FROM game_start_claims WHERE run_id=? OR occurrence_key=? OR calendar_key=?',s.runId,input.occurrenceKey,calendarKey)||tx.get('SELECT run_id FROM game_controller_slots WHERE assistant_id=?',s.assistantId))return false;
+   if(tx.get('SELECT run_id FROM game_start_claims WHERE run_id=? OR occurrence_key=? OR calendar_key=?',s.runId,occurrenceKey,calendarKey)||tx.get('SELECT run_id FROM game_controller_slots WHERE assistant_id=?',s.assistantId))return false;
    if(tx.get<{n:number}>('SELECT count(*) AS n FROM game_start_claims')!.n>=this.capacity.claims||tx.get<{n:number}>('SELECT count(*) AS n FROM game_controller_slots')!.n>=this.capacity.slots)throw unavailable();
    // All prior claims, including unknown/failed starts, count across activity,
    // owner/environment/policy changes. A new configuration cannot reset usage.
    if(tx.get<{n:number}>('SELECT count(*) AS n FROM game_start_claims WHERE assistant_id=? AND claimed_at>?',s.assistantId,now-limits.rollingPeriodMs)!.n>=limits.rollingStartLimit)return false;
-   if(!this.current(input,limits,currentWindow))return false;
-   tx.run("INSERT INTO game_start_claims VALUES(?,?,?,?,?,?,?,?,1,'claimed',NULL)",s.runId,s.assistantId,hash(s),hash(parts),input.occurrenceKey,calendarKey,hash([input.policy,input.bounds,limits]),now);
+   if(!this.current(input,limits,currentStart))return false;
+   tx.run("INSERT INTO game_start_claims VALUES(?,?,?,?,?,?,?,?,1,'claimed',NULL)",s.runId,s.assistantId,hash(s),hash(parts),occurrenceKey,calendarKey,hash([input.policy,input.bounds,limits]),now);
    tx.run('INSERT INTO game_controller_slots VALUES(?,?)',s.assistantId,s.runId);
-   if(!this.current(input,limits,currentWindow)||this.time()<now||!this.current(input,limits,currentWindow))throw unavailable();return true;
+   if(!this.current(input,limits,currentStart)||this.time()<now||!this.current(input,limits,currentStart))throw unavailable();return true;
   });
  }
  inspect(raw:G.ActivityScope){const scope=this.scope(raw);this.time();const current=()=>checked(()=>this.options.quarantined()===false&&this.options.inspectionCurrent(scope)&&this.options.quarantined()===false);if(!current())return null;const row=this.database.connection.prepare('SELECT * FROM game_start_claims WHERE run_id=? AND scope_digest=?').get(scope.runId,hash(scope)) as Row|undefined;if(!row||!current())return null;return Object.freeze({runId:scope.runId,revision:row.revision,recordedDisposition:row.disposition,claimedAt:new Date(row.claimed_at).toISOString(),blocksReplacement:!['stopped','completed'].includes(row.disposition),continuationAuthority:false as const});}

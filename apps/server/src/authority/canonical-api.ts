@@ -15,6 +15,7 @@ type ProposalInput = CreateAuthorityRequestRequest['payload'];
  * retrieve and validate the original invocation's arguments and material scope. */
 export type CanonicalAuthorityHost = {
   environmentId: string;
+  environmentIdFor?(binding: GrantOwnerBinding): string;
   assertCurrent(binding: GrantOwnerBinding, principalId: string): void;
   assertProposalCurrent?(request: TrustedGrantProposal['request'], principalId: string): void;
   validateProposal?(request: TrustedGrantProposal['request'], principalId: string, call: CapabilityCallContext): Promise<void>;
@@ -69,14 +70,15 @@ export function canonicalAuthorityFailure(error: unknown, headers: { requestId?:
 }
 export class CanonicalAuthorityApi {
   private readonly database: Database;
+  private readonly identityDatabase: Database;
   private readonly auth: LocalAuthentication;
   private readonly repository: CanonicalGrantRepository;
   private readonly host: CanonicalAuthorityHost | undefined;
   private readonly now: () => number;
-  constructor(database: Database, auth: LocalAuthentication, host?: CanonicalAuthorityHost, now: () => number = Date.now) {
+  constructor(database: Database, auth: LocalAuthentication, host?: CanonicalAuthorityHost, now: () => number = Date.now, identityDatabase: Database = database) {
     if (host && !valid(common + 'UUID', host.environmentId)) throw new Error('Canonical authority requires a configured environment UUID');
-    this.database = database; this.auth = auth; this.repository = new CanonicalGrantRepository(database, 'local-human');
-    this.host = host && { environmentId: host.environmentId, assertCurrent: host.assertCurrent.bind(host), resolveProposal: host.resolveProposal.bind(host), ...(host.assertProposalCurrent ? { assertProposalCurrent: host.assertProposalCurrent.bind(host) } : {}), ...(host.validateProposal ? { validateProposal: host.validateProposal.bind(host) } : {}) }; this.now = now;
+    this.database = database; this.identityDatabase=identityDatabase; this.auth = auth; this.repository = new CanonicalGrantRepository(database, 'local-human');
+    this.host = host && { environmentId: host.environmentId, assertCurrent: host.assertCurrent.bind(host), ...(host.environmentIdFor ? { environmentIdFor: host.environmentIdFor.bind(host) } : {}), resolveProposal: host.resolveProposal.bind(host), ...(host.assertProposalCurrent ? { assertProposalCurrent: host.assertProposalCurrent.bind(host) } : {}), ...(host.validateProposal ? { validateProposal: host.validateProposal.bind(host) } : {}) }; this.now = now;
   }
   static matches(path: string): boolean { return /^\/api\/authority\/v1\/(?:requests|grants)(?:\/|$)/.test(path); }
   private context(local: LocalContext, call: CapabilityCall): CanonicalHumanContext {
@@ -85,13 +87,14 @@ export class CanonicalAuthorityApi {
       now: () => new Date(this.now()).toISOString(), assertAssistant,
       assertCurrent: binding => {
         assertAssistant(binding.assistantId);
-        if (binding.sessionId !== null && !this.database.connection.prepare('SELECT 1 FROM local_sessions WHERE session_id=? AND principal_id=?').get(binding.sessionId, local.principalId)) throw new AuthenticationError(404, 'authority_not_found');
+        if (binding.sessionId !== null && !this.identityDatabase.connection.prepare('SELECT 1 FROM local_sessions WHERE session_id=? AND principal_id=?').get(binding.sessionId, local.principalId)) throw new AuthenticationError(404, 'authority_not_found');
       } };
   }
   private issuable(binding: GrantOwnerBinding, local: LocalContext): void {
-    const endpoint = readSessionEndpoint(this.database, local.sessionId).endpoint;
+    const endpoint = readSessionEndpoint(this.identityDatabase, local.sessionId).endpoint;
     if (!this.host) throw unavailable();
-    if (binding.environmentId !== this.host.environmentId || binding.sessionId !== local.sessionId || !endpoint || endpoint.endpointId !== binding.endpointId) throw new AuthenticationError(409, 'authority_scope_changed');
+    const environmentId=this.host.environmentIdFor?.(binding)??this.host.environmentId;
+    if (!valid(common + 'UUID',environmentId) || binding.environmentId !== environmentId || binding.sessionId !== local.sessionId || !endpoint || endpoint.endpointId !== binding.endpointId) throw new AuthenticationError(409, 'authority_scope_changed');
     this.host.assertCurrent(structuredClone(binding), local.principalId);
   }
   private grantView(grant: CanonicalGrant, local: LocalContext, context: CanonicalHumanContext) {

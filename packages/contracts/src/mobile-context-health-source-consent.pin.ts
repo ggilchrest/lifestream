@@ -1,0 +1,1 @@
+export const healthSourceConsentPin=Object.freeze({"schemaId": "https://lifestream.dev/contracts/mobile-context-health-source-consent/1.0.0", "schemaVersion": "1.0.0", "digest": "0d81d750b4ef9d7c7f13f27f19e6caf9d35a9cf29fa9189b325d4df4932ae72a"} as const);

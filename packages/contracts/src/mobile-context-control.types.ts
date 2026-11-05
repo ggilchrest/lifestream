@@ -1,0 +1,26 @@
+// Generated from producing control schema; shared records remain owned by mobile-context.
+import type {MobileSourceConfiguration,MobileEnrollmentRecord} from './mobile-context.types.ts';
+export type MobileControlPin = { "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0"; "schemaVersion": "1.0.0"; "digest": string };
+export type MobileControlTarget = { "principalId": string; "endpointId": string; "collector": "healthKit" | "healthConnect"; "enrollmentId": (string) | (null); "sourceNamespace": (string) | (null); "expectedRevision": number };
+export type MobileControlBinding = ({ "createNew": true }) | ({ "sourceNamespace": string; "expectedSourceRevision": number });
+export type MobileEnrollAction = { "kind": "enroll" };
+export type MobileBindAction = { "kind": "bindSource"; "binding": MobileControlBinding };
+export type MobileConfigureAction = { "kind": "configure"; "state": "active" | "disconnected"; "configuration": MobileSourceConfiguration };
+export type MobileRemoveAction = { "kind": "remove"; "scope": "wholeSource" };
+export type MobileControlAction = (MobileEnrollAction) | (MobileBindAction) | (MobileConfigureAction) | (MobileRemoveAction);
+export type MobileControlRequest = { "schemaVersion": "1.0.0"; "operationId": string; "target": MobileControlTarget; "action": MobileControlAction };
+export type MobileControlEnvelope = { "producerPin": MobileControlPin; "operation": "control" | "reconcileControl"; "payload": MobileControlRequest };
+export type MobileControlCurrentness = { "state": "current" | "settingsChanged" | "unavailable"; "policyRevision": (number) | (null) };
+export type MobileEnrolledResult = { "kind": "enroll"; "enrollment": MobileEnrollmentRecord };
+export type MobileBoundResult = { "kind": "bindSource"; "enrollment": MobileEnrollmentRecord };
+export type MobileConfiguredResult = { "kind": "configure"; "enrollment": MobileEnrollmentRecord };
+export type MobileRemovedResult = { "kind": "remove"; "scope": "wholeSource"; "enrollment": MobileEnrollmentRecord; "removedCount": number; "suppressionEpoch": number; "suppressionCommitted": true };
+export type MobileControlAppliedResult = (MobileEnrolledResult) | (MobileBoundResult) | (MobileConfiguredResult) | (MobileRemovedResult);
+export type MobileControlAppliedReceipt = { "receiptId": string; "committedAt": string; "durability": "sqlCommit"; "result": MobileControlAppliedResult };
+export type MobileControlRejectedReceipt = { "receiptId": string; "committedAt": string; "durability": "sqlCommit"; "effects": "none"; "code": "settingsChanged" | "scope" | "quota" | "conflict" };
+export type MobileControlAppliedOutcome = { "originalRequest": MobileControlRequest; "requestDigest": string; "current": MobileControlCurrentness; "status": "applied"; "receipt": MobileControlAppliedReceipt };
+export type MobileControlRejectedOutcome = { "originalRequest": MobileControlRequest; "requestDigest": string; "current": MobileControlCurrentness; "status": "rejected"; "receipt": MobileControlRejectedReceipt };
+export type MobileControlPendingOutcome = { "originalRequest": MobileControlRequest; "requestDigest": string; "current": MobileControlCurrentness; "status": "pending" };
+export type MobileControlUnknownOutcome = { "originalRequest": MobileControlRequest; "requestDigest": string; "current": MobileControlCurrentness; "status": "unknown" };
+export type MobileControlOutcome = (MobileControlAppliedOutcome) | (MobileControlRejectedOutcome) | (MobileControlPendingOutcome) | (MobileControlUnknownOutcome);
+export type MobileControlResponse = { "schemaVersion": "1.0.0"; "producerPin": MobileControlPin; "result": MobileControlOutcome };

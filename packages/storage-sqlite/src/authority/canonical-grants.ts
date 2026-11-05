@@ -262,11 +262,28 @@ export class CanonicalGrantRepository {
       const next = { ...request, state: input.decision, revision: request.revision + 1 }; this.saveRequest(tx, next); return { request: next, grant: null, events: [] };
     });
   }
+  // Inspection must also work inside the caller's existing admission/CAS
+  // transaction. It never writes or begins a second transaction. A fresh row
+  // join after the authenticated owner guard rejects intervening changes.
   inspectRequest(id: string, context: CanonicalHumanContext): GrantRequest {
-    return this.database.transaction(tx => this.request(tx, id, context));
+    check(common + 'UUID', id);const principal=context.principalId;
+    const read=()=>this.database.readGet<Row>('SELECT * FROM canonical_grant_requests WHERE request_id=? AND principal_id=?',id,principal),before=read(),request=stored<GrantRequest>(before,providerSchema+'GrantRequest');
+    if(request.requestId!==id)fail('unavailable');this.guard(context,request);
+    if(context.principalId!==principal||!isDeepStrictEqual(read(),before))fail('unavailable');return request;
   }
   inspectGrant(id: string, context: CanonicalHumanContext): CanonicalGrant {
-    return this.database.transaction(tx => this.grant(tx, id, context));
+    return this.inspectGrantWith(id,context,grant=>grant);
+  }
+  /** One synchronous qualification pass. The original authenticated guard runs
+   * once; the canonical row is rejoined after ALL caller validation callbacks.
+   * No verdict/row is retained for another boundary or across an await. */
+  inspectGrantWith<T>(id:string,context:CanonicalHumanContext,evaluate:(grant:CanonicalGrant)=>T):T {
+    check(common + 'UUID', id);const principal=context.principalId;
+    const read=()=>this.database.readGet<Row>('SELECT * FROM canonical_grants WHERE grant_id=? AND principal_id=?',id,principal),before=read(),grant=stored<CanonicalGrant>(before,grantSchema);
+    if(grant.grantId!==id)fail('unavailable');this.guard(context,grant);
+    const result=evaluate(grant);
+    if(result&&typeof (result as any).then==='function')fail('invalid');
+    if(context.principalId!==principal||JSON.stringify(grant)!==before!.payload_json||!isDeepStrictEqual(read(),before))fail('unavailable');return result;
   }
   getRequest(id: string, context: CanonicalHumanContext): GrantRequest {
     return this.database.transaction(tx => {

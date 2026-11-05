@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-calendar-selected-delivery/1.0.0",
+  "title": "Calendar selected delivery; explicit narrowing of original server authority, no SDK provenance assertion",
+  "$defs": {
+    "SelectedDeliveryPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaId",
+        "schemaVersion",
+        "digest"
+      ],
+      "properties": {
+        "schemaId": {
+          "const": "https://lifestream.dev/contracts/mobile-context-calendar-selected-delivery/1.0.0"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "SelectedDeliveryPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "enrollmentId",
+        "run",
+        "selection",
+        "items"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "enrollmentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "run": {
+          "$ref": "https://lifestream.dev/contracts/mobile-context-calendar-settings-control/1.0.0#/$defs/CalendarSyncRun"
+        },
+        "selection": {
+          "$ref": "https://lifestream.dev/contracts/mobile-context-calendar-settings-control/1.0.0#/$defs/CalendarSelectionIdentity"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0#/$defs/CalendarDeliveryItem"
+          }
+        }
+      }
+    },
+    "SelectedDeliveryEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producerPin",
+        "operation",
+        "payload"
+      ],
+      "properties": {
+        "producerPin": {
+          "$ref": "#/$defs/SelectedDeliveryPin"
+        },
+        "operation": {
+          "const": "ingestSelected"
+        },
+        "payload": {
+          "$ref": "#/$defs/SelectedDeliveryPayload"
+        }
+      }
+    },
+    "SelectedDeliveryResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "producerPin",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "producerPin": {
+          "$ref": "#/$defs/SelectedDeliveryPin"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "receipts"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sync"
+            },
+            "receipts": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0#/$defs/CalendarDeliveryReceipt"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

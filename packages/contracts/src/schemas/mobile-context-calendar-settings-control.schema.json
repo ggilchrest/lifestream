@@ -1,0 +1,742 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-calendar-settings-control/1.0.0",
+  "title": "Additive Calendar settings and original control settlement; historical delivery v1 unchanged",
+  "$defs": {
+    "CalendarSyncWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "lookBackDays",
+        "lookAheadDays",
+        "timeZone"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "lookBackDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 366
+        },
+        "lookAheadDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 366
+        },
+        "timeZone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "CalendarControlTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "principalId",
+        "endpointId",
+        "collector",
+        "enrollmentId",
+        "sourceNamespace",
+        "expectedRevision"
+      ],
+      "properties": {
+        "principalId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "endpointId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "collector": {
+          "const": "eventKit"
+        },
+        "enrollmentId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sourceNamespace": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "CalendarSettingsConfiguration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceConfiguration"
+      ],
+      "properties": {
+        "sourceConfiguration": {
+          "$ref": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0#/$defs/CalendarConfiguration"
+        },
+        "syncWindow": {
+          "$ref": "#/$defs/CalendarSyncWindow"
+        }
+      }
+    },
+    "CalendarControlRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operationId",
+        "target",
+        "action"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "operationId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "target": {
+          "$ref": "#/$defs/CalendarControlTarget"
+        },
+        "action": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "enroll"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "binding"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "bindSource"
+                },
+                "binding": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "createNew"
+                      ],
+                      "properties": {
+                        "createNew": {
+                          "const": true
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "sourceNamespace"
+                      ],
+                      "properties": {
+                        "sourceNamespace": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "state",
+                "configuration"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "configure"
+                },
+                "state": {
+                  "enum": [
+                    "active",
+                    "disconnected"
+                  ]
+                },
+                "configuration": {
+                  "$ref": "#/$defs/CalendarSettingsConfiguration"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CalendarControlOutcome": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "receipt",
+            "enrollment",
+            "syncWindow"
+          ],
+          "properties": {
+            "status": {
+              "const": "applied"
+            },
+            "receipt": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "operationId",
+                "committedAt"
+              ],
+              "properties": {
+                "operationId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                },
+                "committedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "enrollment": {
+              "$ref": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0#/$defs/CalendarEnrollment"
+            },
+            "syncWindow": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/CalendarSyncWindow"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "code"
+          ],
+          "properties": {
+            "status": {
+              "const": "rejected"
+            },
+            "code": {
+              "enum": [
+                "scope",
+                "settingsChanged",
+                "invalid",
+                "unavailable"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "CalendarControlBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "reservationDigest",
+        "terminalDigest"
+      ],
+      "properties": {
+        "family": {
+          "const": "calendarControl"
+        },
+        "reservationDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "preparedDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "terminalDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "CalendarSyncRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "anchorAt",
+        "startAt",
+        "endAt",
+        "timeZone",
+        "configurationRevision",
+        "selectionDigest"
+      ],
+      "properties": {
+        "anchorAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "startAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timeZone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "configurationRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "selectionDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA256 UTF8(domain + canonical CalendarSelectionIdentity); domain is lifestream/calendar-selection/1 followed by LF. Sort calendars by unsigned UTF8 byte order of each recursively key-sorted canonical JSON object; reject duplicate containerId. Other object keys recursively sorted; strings JSON-escaped, no Unicode normalization; no BOM/trailing newline. Bind original current principal/endpoint/enrollment/source/revision/eventKit/providerLocal. accountId null means unknown; no ownership inference. SDK/store/session provenance remains independently captured original authority, not digest proof."
+        }
+      },
+      "description": "startAt/endAt bound the FULL fixed approved settings union at the captured anchor in supplied timeZone, not one SDK subscan. Every retained prefix item must be provably in this union and original provider-local selection; any false/unknown denies the entire prefix without filtering/rewrite. SDK subscans individually remain <=31 elapsed days and resource-bounded by the original native owner. Submitted metadata never grants authority. Preserve the captured anchor local wall-clock time and fractional second when adding/subtracting configured local calendar days; never round to midnight or move the anchor. DST changes the UTC offset. Unprovable/ambiguous original scope stays unavailable."
+    },
+    "CalendarSettingsPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaId",
+        "schemaVersion",
+        "digest"
+      ],
+      "properties": {
+        "schemaId": {
+          "const": "https://lifestream.dev/contracts/mobile-context-calendar-settings-control/1.0.0"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "CalendarSettingsEnvelope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producerPin",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "producerPin": {
+              "$ref": "#/$defs/CalendarSettingsPin"
+            },
+            "operation": {
+              "const": "control"
+            },
+            "payload": {
+              "$ref": "#/$defs/CalendarControlRequest"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producerPin",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "producerPin": {
+              "$ref": "#/$defs/CalendarSettingsPin"
+            },
+            "operation": {
+              "const": "reconcile"
+            },
+            "payload": {
+              "$ref": "#/$defs/CalendarControlRequest"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producerPin",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "producerPin": {
+              "$ref": "#/$defs/CalendarSettingsPin"
+            },
+            "operation": {
+              "const": "inspect"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schemaVersion",
+                "enrollmentId"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": "1.0.0"
+                },
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producerPin",
+            "operation",
+            "payload"
+          ],
+          "properties": {
+            "producerPin": {
+              "$ref": "#/$defs/CalendarSettingsPin"
+            },
+            "operation": {
+              "const": "ingestScoped"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schemaVersion",
+                "enrollmentId",
+                "run",
+                "items"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": "1.0.0"
+                },
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                },
+                "run": {
+                  "$ref": "#/$defs/CalendarSyncRun"
+                },
+                "items": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 64,
+                  "items": {
+                    "$ref": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0#/$defs/CalendarDeliveryItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CalendarSettingsResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "operationId",
+            "requestDigest",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "held"
+            },
+            "operationId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "requestDigest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "reason": {
+              "enum": [
+                "pending",
+                "unknown",
+                "conflict",
+                "unavailable",
+                "otherFamily"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "originalRequest",
+            "requestDigest",
+            "outcome",
+            "current"
+          ],
+          "properties": {
+            "kind": {
+              "const": "observed"
+            },
+            "originalRequest": {
+              "$ref": "#/$defs/CalendarControlRequest"
+            },
+            "requestDigest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "outcome": {
+              "$ref": "#/$defs/CalendarControlOutcome"
+            },
+            "current": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "originalRequest",
+            "requestDigest",
+            "outcome",
+            "current",
+            "binding"
+          ],
+          "properties": {
+            "kind": {
+              "const": "terminal"
+            },
+            "originalRequest": {
+              "$ref": "#/$defs/CalendarControlRequest"
+            },
+            "requestDigest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "outcome": {
+              "$ref": "#/$defs/CalendarControlOutcome"
+            },
+            "current": {
+              "type": "boolean"
+            },
+            "binding": {
+              "$ref": "#/$defs/CalendarControlBinding"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "enrollment",
+            "syncWindow"
+          ],
+          "properties": {
+            "kind": {
+              "const": "settings"
+            },
+            "enrollment": {
+              "$ref": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0#/$defs/CalendarEnrollment"
+            },
+            "syncWindow": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/CalendarSyncWindow"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "receipts"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sync"
+            },
+            "receipts": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0#/$defs/CalendarDeliveryReceipt"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CalendarSettingsResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "producerPin",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "producerPin": {
+          "$ref": "#/$defs/CalendarSettingsPin"
+        },
+        "result": {
+          "$ref": "#/$defs/CalendarSettingsResult"
+        }
+      }
+    },
+    "CalendarSelectionIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "principalId",
+        "endpointId",
+        "enrollmentId",
+        "sourceNamespace",
+        "configurationRevision",
+        "collector",
+        "upstreamIdentityScope",
+        "calendars"
+      ],
+      "properties": {
+        "principalId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "endpointId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "enrollmentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sourceNamespace": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "configurationRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "collector": {
+          "const": "eventKit"
+        },
+        "upstreamIdentityScope": {
+          "const": "providerLocal"
+        },
+        "calendars": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "containerId",
+              "accountId"
+            ],
+            "properties": {
+              "containerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "accountId": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

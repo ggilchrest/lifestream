@@ -1,0 +1,307 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-shared-item/1.0.0",
+  "title": "Declared shared selections and in-memory byte integrity; no protected custody, access, enrollment or delivery authority.",
+  "$ref": "#/$defs/SharedItem",
+  "$defs": {
+    "SharedItemInstant": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{1,9})?Z$"
+    },
+    "SharedItemSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collector",
+        "namespace",
+        "upstreamId",
+        "originalApp",
+        "originalDevice"
+      ],
+      "properties": {
+        "collector": {
+          "enum": [
+            "iosShareDeclaration",
+            "androidShareDeclaration"
+          ]
+        },
+        "namespace": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "upstreamId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "originalApp": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "originalDevice": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SharedItemUrl": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8192,
+      "format": "uri",
+      "pattern": "^https?://[!-~]+$"
+    },
+    "SharedTextSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "mediaType",
+        "text"
+      ],
+      "properties": {
+        "kind": {
+          "const": "text"
+        },
+        "mediaType": {
+          "const": "text/plain"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 32768
+        }
+      }
+    },
+    "SharedUrlSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "mediaType",
+        "url",
+        "title"
+      ],
+      "properties": {
+        "kind": {
+          "const": "url"
+        },
+        "mediaType": {
+          "const": "text/uri-list"
+        },
+        "url": {
+          "$ref": "#/$defs/SharedItemUrl"
+        },
+        "title": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SharedAttachmentReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "contentKind",
+        "artifact",
+        "displayName"
+      ],
+      "properties": {
+        "kind": {
+          "const": "attachmentReference"
+        },
+        "contentKind": {
+          "enum": [
+            "image",
+            "file"
+          ]
+        },
+        "artifact": {
+          "$ref": "https://lifestream.dev/contracts/protocol-common/1.0.0#/$defs/ArtifactRef"
+        },
+        "displayName": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SharedUnavailableSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "reason",
+        "declaredMediaType",
+        "displayName"
+      ],
+      "properties": {
+        "kind": {
+          "const": "unavailable"
+        },
+        "reason": {
+          "enum": [
+            "unsupportedType",
+            "temporarilyUnavailable",
+            "notObservable",
+            "unknown"
+          ]
+        },
+        "declaredMediaType": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "displayName": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SharedItemContent": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/SharedTextSelection"
+        },
+        {
+          "$ref": "#/$defs/SharedUrlSelection"
+        },
+        {
+          "$ref": "#/$defs/SharedAttachmentReference"
+        },
+        {
+          "$ref": "#/$defs/SharedUnavailableSelection"
+        }
+      ]
+    },
+    "SharedItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "source",
+        "sharedAt",
+        "collectedAt",
+        "originUrl",
+        "note",
+        "content"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "$ref": "#/$defs/SharedItemSource"
+        },
+        "sharedAt": {
+          "$ref": "#/$defs/SharedItemInstant"
+        },
+        "collectedAt": {
+          "$ref": "#/$defs/SharedItemInstant"
+        },
+        "originUrl": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/SharedItemUrl"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 8192
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "$ref": "#/$defs/SharedItemContent"
+        }
+      }
+    },
+    "SharedItemIntegrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualification",
+        "sha256",
+        "byteLength"
+      ],
+      "properties": {
+        "qualification": {
+          "const": "integrityOnly"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        }
+      }
+    }
+  }
+}
