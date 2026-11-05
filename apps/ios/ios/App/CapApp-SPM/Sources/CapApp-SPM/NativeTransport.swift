@@ -3,7 +3,7 @@ import Foundation
 import AssistantCore
 
 final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSocketDelegate {
-    struct Pending { var data=Data(); var response:HTTPURLResponse?; let done:(Result<(Data,HTTPURLResponse),Error>)->Void }
+    struct Pending { var data=Data(); var response:HTTPURLResponse?; var limit=64*1024*1024; var onResponse:((HTTPURLResponse)->Void)?; let done:(Result<(Data,HTTPURLResponse),Error>)->Void }
     struct RestoredConnection {
         let connection:SavedConnection?
         let authState:String
@@ -137,15 +137,16 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
         try store.save(saved);connection=saved
     }
     @discardableResult
-    func request(_ path:String,method:String="GET",body:String?=nil,timeout:Double=15,done:@escaping(Result<(Data,HTTPURLResponse),Error>)->Void) -> URLSessionDataTask? {
-        guard let endpoint,EndpointPolicy.permits(path,method:method),body?.utf8.count ?? 0 <= 65536 else {done(.failure(VoiceError.invalidEndpoint));return nil}
+    func request(_ path:String,method:String="GET",body:String?=nil,timeout:Double=15,internalPreview:Bool=false,maxBytes:Int=64*1024*1024,onResponse:((HTTPURLResponse)->Void)?=nil,done:@escaping(Result<(Data,HTTPURLResponse),Error>)->Void) -> URLSessionDataTask? {
+        let previewAllowed=internalPreview && method=="POST" && ["/api/runtime/v1/tts","/api/runtime/v1/tts/playback","/api/runtime/v1/voice-reference-preview"].contains(path)
+        guard let endpoint,(EndpointPolicy.permits(path,method:method)||previewAllowed),body?.utf8.count ?? 0 <= 65536,maxBytes>0,maxBytes<=64*1024*1024 else {done(.failure(VoiceError.invalidEndpoint));return nil}
         var req=URLRequest(url:endpoint.appendingPathComponent(String(path.dropFirst())))
         req.httpMethod=method;req.timeoutInterval=timeout;req.httpBody=body?.data(using:.utf8)
         req.setValue(endpoint.absoluteString.trimmingCharacters(in:CharacterSet(charactersIn:"/")),forHTTPHeaderField:"Origin")
         req.setValue("application/json",forHTTPHeaderField:"Content-Type")
         if method != "GET" {req.setValue(csrf,forHTTPHeaderField:"x-lifestream-csrf")}
         let ticket=epoch,task=session.dataTask(with:req)
-        pending[ObjectIdentifier(task)]=Pending(done:{[weak self] result in
+        pending[ObjectIdentifier(task)]=Pending(limit:maxBytes,onResponse:onResponse,done:{[weak self] result in
             guard let self,self.epoch==ticket else {done(.failure(VoiceError.staleTurn));return}
             if case .success(let (data,response))=result, response.statusCode==200,
                ["/api/auth/v1/sign-in","/api/auth/v1/session"].contains(path),let json=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],let token=(json["csrfToken"] as? String) ?? ((json["session"] as? [String:Any])?["csrfToken"] as? String) {self.csrf=token}
@@ -168,11 +169,11 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
         let task=session.webSocketTask(with:r);task.maximumMessageSize=131072;return task
     }
     func urlSession(_ session:URLSession,dataTask:URLSessionDataTask,didReceive response:URLResponse,completionHandler:@escaping(URLSession.ResponseDisposition)->Void){
-        guard let response=response as? HTTPURLResponse,response.expectedContentLength <= 64*1024*1024,pending[ObjectIdentifier(dataTask)] != nil else {completionHandler(.cancel);return}
-        pending[ObjectIdentifier(dataTask)]?.response=response;completionHandler(.allow)
+        guard let response=response as? HTTPURLResponse,let item=pending[ObjectIdentifier(dataTask)],response.expectedContentLength <= item.limit else {completionHandler(.cancel);return}
+        pending[ObjectIdentifier(dataTask)]?.response=response;item.onResponse?(response);completionHandler(.allow)
     }
     func urlSession(_ session:URLSession,dataTask:URLSessionDataTask,didReceive data:Data){
-        guard let p=pending[ObjectIdentifier(dataTask)],p.data.count+data.count <= 64*1024*1024 else {dataTask.cancel();return}
+        guard let p=pending[ObjectIdentifier(dataTask)],p.data.count+data.count <= p.limit else {dataTask.cancel();return}
         pending[ObjectIdentifier(dataTask)]?.data.append(data)
     }
     func urlSession(_ session:URLSession,task:URLSessionTask,didCompleteWithError error:Error?){

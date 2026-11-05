@@ -7,6 +7,14 @@ export async function bundledAppearances() {
  return value;
 }
 export async function bundledResource(route,signal) {
+ const adapter='/api/runtime/v1/presentation/adapters/';
+ if(route.startsWith(adapter)){
+  const match=/^world-delta\.v1\/([a-z0-9][a-z0-9._-]{0,63})\/([a-f0-9]{64})$/.exec(route.slice(adapter.length));
+  if(!match||match[1]==='.'||match[1]==='..')throw Error('Invalid bundled motion runtime path.');
+  const response=await fetch('./appearances/adapters/world-delta.v1/'+match[1]+'/'+match[2]+'.js',{signal,credentials:'omit',redirect:'error'});
+  if(!response.ok)throw Error('Bundled motion runtime unavailable. Rebuild the app.');
+  return response.arrayBuffer();
+ }
  const prefix='/api/runtime/v1/presentation/resources/';
  if(!route.startsWith(prefix))throw Error('Appearance is not bundled.');
  const parts=route.slice(prefix.length).split('/');

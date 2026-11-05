@@ -2,13 +2,16 @@
 import Foundation
 
 enum NativeTextError:LocalizedError {
-    case invalidInput,invalidStream,cancelled,http(Int),runtime(String)
+    case invalidInput,invalidStream,cancelled,http(Int),contextChanged(preparation:Bool),runtime(String)
     var errorDescription:String? {
         switch self {
         case .invalidInput:return "Select an Assistant and enter a message of up to 16,000 characters."
         case .invalidStream:return "The server reply was incomplete or did not match this conversation. Please retry."
         case .cancelled:return "Text response stopped."
         case .http(let status):return status==401 ? "Sign in again to send a message.":"The server could not accept this message (\(status))."
+        case .contextChanged(let preparation):return preparation
+            ? "The server could not prepare the conversation context (runtime_context_changed). Please try again."
+            : "The conversation context changed before the response started (runtime_context_changed). Please try again."
         case .runtime(let code):return "The server could not complete this response (\(code))."
         }
     }
@@ -17,6 +20,7 @@ enum NativeTextError:LocalizedError {
 /// A bounded text-only request. No microphone, audio session, or TTS is started.
 /// The completed SSE envelope is validated before any reply text crosses the bridge.
 final class NativeText {
+    var diagnostic:((String,Int?,Int?)->Void)?
     private let transport:NativeTransport
     private var task:URLSessionDataTask?
     private var completion:((Result<[String:Any],Error>)->Void)?
@@ -29,7 +33,7 @@ final class NativeText {
         let done=completion;completion=nil;done?(.failure(NativeTextError.cancelled))
     }
 
-    func send(_ input:[String:Any],done:@escaping(Result<[String:Any],Error>)->Void){
+    func send(_ input:[String:Any],diagnosticTurn:Int?=nil,done:@escaping(Result<[String:Any],Error>)->Void){
         stop()
         guard let assistant=input["assistantId"] as? String,UUID(uuidString:assistant) != nil,
               let trace=input["trace"] as? String,UUID(uuidString:trace) != nil,
@@ -50,12 +54,26 @@ final class NativeText {
             let answer:Result<[String:Any],Error>
             if self.transport.epoch != transportEpoch {answer = .failure(NativeTextError.cancelled)}
             else {answer=result.flatMap{data,response in Result {
-                guard response.statusCode==200 else{throw NativeTextError.http(response.statusCode)}
+                self.diagnostic?("http_text",response.statusCode,diagnosticTurn)
+                guard response.statusCode==200 else{throw Self.httpError(data,status:response.statusCode,mimeType:response.mimeType)}
                 guard response.mimeType=="text/event-stream" else{throw NativeTextError.invalidStream}
-                let reply=try Self.parse(data,assistant:assistant)
+                let reply=try Self.parse(data,assistant:assistant);self.diagnostic?("text_stream_complete",nil,diagnosticTurn)
                 return ["trace":trace,"interactionTraceId":reply.trace,"text":reply.text]
             }}}
             self.task=nil;let callback=self.completion;self.completion=nil;callback?(answer)
+        }
+    }
+
+    // Do not expose arbitrary server text or retry a POST whose outcome may be
+    // unknown. These exact 409 envelopes are generated before inference starts.
+    private static func httpError(_ data:Data,status:Int,mimeType:String?) -> NativeTextError {
+        guard status==409,mimeType=="application/json",data.count<=4096,
+              let body=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],
+              body["code"] as? String=="runtime_context_changed",let message=body["message"] as? String else{return .http(status)}
+        switch message {
+        case "Current world context is unavailable.":return .contextChanged(preparation:true)
+        case "Current interaction context is unavailable.":return .contextChanged(preparation:false)
+        default:return .http(status)
         }
     }
 

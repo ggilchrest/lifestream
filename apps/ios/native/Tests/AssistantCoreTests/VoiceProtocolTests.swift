@@ -11,6 +11,30 @@ final class VoiceProtocolTests: XCTestCase {
         XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/presentation/resources/sample/model.glb", method: "GET"))
         XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/presentation", method: "POST"))
     }
+    func testHistoryRequestsKeepTheAudienceNeededForServerAdmission() {
+        XCTAssertTrue(EndpointPolicy.preservesAudience("/api/runtime/v1/conversations",method:"POST"))
+        XCTAssertTrue(EndpointPolicy.preservesAudience("/api/runtime/v1/conversations/select",method:"POST"))
+        XCTAssertFalse(EndpointPolicy.preservesAudience("/api/runtime/v1/session-context",method:"POST"))
+        XCTAssertFalse(EndpointPolicy.preservesAudience("/api/auth/v1/sign-out",method:"POST"))
+        XCTAssertFalse(EndpointPolicy.preservesAudience("/api/runtime/v1/conversations/erase",method:"POST"))
+        XCTAssertFalse(EndpointPolicy.preservesAudience("/api/runtime/v1/conversations",method:"GET"))
+    }
+    func testHistoryRoutesAreNarrowlyAllowedForPostOnly() {
+        XCTAssertTrue(EndpointPolicy.permits("/api/runtime/v1/conversations", method: "POST"))
+        XCTAssertTrue(EndpointPolicy.permits("/api/runtime/v1/conversations/select", method: "POST"))
+        XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/conversations/erase", method: "POST"))
+        XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/conversations", method: "GET"))
+        XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/conversations?other=1", method: "POST"))
+    }
+    func testVoiceRoutesAreStrictAndKeepAudienceForPreviewOwnership(){
+        let id=UUID().uuidString,path="/api/admin/v1/assistants/\(id)/voices"
+        XCTAssertTrue(EndpointPolicy.permits(path,method:"GET"));XCTAssertTrue(EndpointPolicy.permits(path,method:"POST"));XCTAssertTrue(EndpointPolicy.permits(path+"/activate",method:"POST"))
+        for p in [path+"/remove",path+"/other",path+"?x=y",path.replacingOccurrences(of:id,with:"invalid")]{XCTAssertFalse(EndpointPolicy.permits(p,method:"POST"))}
+        for p in [path,path+"/activate"]{XCTAssertTrue(EndpointPolicy.preservesAudience(p,method:"POST"))}
+        XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/tts",method:"POST"))
+        XCTAssertFalse(EndpointPolicy.permits(path+"/activate",method:"GET"))
+        let refs="/api/admin/v1/assistants/\(id)/voice-references";XCTAssertTrue(EndpointPolicy.permits(refs,method:"GET"));XCTAssertFalse(EndpointPolicy.permits(refs,method:"POST"));XCTAssertFalse(EndpointPolicy.permits(refs+"/other",method:"GET"));XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/voice-reference-preview",method:"POST"))
+    }
     func testPlaybackAccountingAndLateFrameFence() throws {
         let trace = UUID().uuidString; var stream = ReplyStream(); try stream.begin(trace)
         try stream.accept(trace: trace, segment: "a", sequence: 0, offset: 0, count: 4800, bytes: Data(count: 9600), queuedSamples: 0)

@@ -29,6 +29,16 @@ public struct VoiceActivity {
     public var snapshot:[String:Any]{["inputStage":inputStage,"backendStage":backendStage,"outputStage":outputStage,"inputLevel":inputLevel,"inputFrames":inputFrames,"sentFrames":sentFrames,"lastError":lastError]}
 }
 public enum EndpointPolicy {
+    private static func voicePath(_ path:String,activation:Bool=false)->Bool {
+        let suffix=activation ? "/voices/activate":"/voices",prefix="/api/admin/v1/assistants/"
+        guard path.hasPrefix(prefix),path.hasSuffix(suffix) else{return false}
+        let start=path.index(path.startIndex,offsetBy:prefix.count),end=path.index(path.endIndex,offsetBy:-suffix.count)
+        guard start<end else{return false};let id=String(path[start..<end]);return UUID(uuidString:id) != nil && id.count==36
+    }
+    private static func referencePath(_ path:String)->Bool {
+        let prefix="/api/admin/v1/assistants/",suffix="/voice-references"
+        guard path.hasPrefix(prefix),path.hasSuffix(suffix) else{return false};let start=path.index(path.startIndex,offsetBy:prefix.count),end=path.index(path.endIndex,offsetBy:-suffix.count);guard start<end else{return false};let id=String(path[start..<end]);return id.count==36 && UUID(uuidString:id) != nil
+    }
     public static func validate(_ input: String, allowLoopback: Bool = false) throws -> URL {
         guard let url = URL(string: input), let host = url.host, !host.isEmpty,
               url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
@@ -36,14 +46,20 @@ public enum EndpointPolicy {
               url.scheme == "https" || (allowLoopback && url.scheme == "http" && ["localhost", "127.0.0.1", "[::1]"].contains(host)) else { throw VoiceError.invalidEndpoint }
         return url
     }
+    /// History calls require the current private audience at the server.
+    /// All other mutating requests retain their existing retirement behavior.
+    public static func preservesAudience(_ path:String, method:String) -> Bool {
+        method == "POST" && (["/api/runtime/v1/conversations", "/api/runtime/v1/conversations/select"].contains(path) || voicePath(path) || voicePath(path,activation:true))
+    }
     public static func permits(_ path: String, method: String) -> Bool {
         guard !path.contains(".."), !path.contains("%"), !path.contains("?"), !path.contains("#"), !path.contains("\\"), !path.contains("//") else { return false }
         if method == "GET" {
+            if voicePath(path)||referencePath(path){return true}
             if ["/api/auth/v1/status", "/api/auth/v1/session", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/admin/v1/assistants"].contains(path) { return true }
             if path.range(of: "^/api/admin/v1/assistants/[a-fA-F0-9-]{36}/relationships$", options: .regularExpression) != nil { return true }
             return false
         }
-        return method == "POST" && ["/api/auth/v1/sign-in", "/api/auth/v1/sign-out", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/runtime/v1/audience/lease", "/api/runtime/v1/messages"].contains(path)
+        return method == "POST" && (["/api/auth/v1/sign-in", "/api/auth/v1/sign-out", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/runtime/v1/audience/lease", "/api/runtime/v1/messages", "/api/runtime/v1/conversations", "/api/runtime/v1/conversations/select"].contains(path) || voicePath(path) || voicePath(path,activation:true))
     }
 }
 

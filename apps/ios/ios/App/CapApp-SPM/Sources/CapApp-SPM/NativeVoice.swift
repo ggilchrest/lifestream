@@ -8,6 +8,11 @@ import AssistantCore
 final class NativeVoice {
     let transport:NativeTransport
     var emit:([String:Any])->Void = {_ in}
+    var diagnostic:((DiagnosticEvent,Int?)->Void)?
+    var diagnosticTurn:((DiagnosticEvent,DiagnosticCode?,Int?)->Void)?
+    var nextDiagnosticTurn:()->Int? = {nil}
+    private var currentDiagnosticTurn:Int?
+    var diagnosticsEnabled:()->Bool = {false}
     var expectedAudienceLease:()->String? = {nil}
     private let audio=AVAudioSession.sharedInstance()
     private struct Graph {let engine:AVAudioEngine,player:AVAudioPlayerNode}
@@ -16,10 +21,18 @@ final class NativeVoice {
     private var player:AVAudioPlayerNode?{graphOwner.current?.player}
     private var socket:URLSessionWebSocketTask?
     private var diagnostics=CaptureDiagnostics()
+    private var playback=PlaybackBuffer()
+    private var playbackTimer:Timer?
+    private var lastAudioArrival:TimeInterval?,maximumAudioGap:TimeInterval=0
+    private var maximumCallbackDispatch:TimeInterval=0,maximumReadDispatch:TimeInterval=0
+    private var speechInterruptions=0,queueDrains=0
+    private var playbackLevel:Float=0
+    private var lastPlaybackDiagnostics=[String]()
     private(set) var selectedInput="system"
     private var observers=[NSObjectProtocol](),remoteTargets=[(MPRemoteCommand,Any)]()
     private var gate=SpeechGate(),reply=ReplyStream(),activity=VoiceActivity(),request=[String:Any]()
-    private var generation=0,outputGeneration=0,queued=0,sequence=0,samples=0,sentMessages=0
+    private var generation=0,outputGeneration=0,sequence=0,samples=0,sentMessages=0
+    private var queued:Int{playback.queuedSamples}
     private var poll:Timer?,meter:Timer?,deadline:Timer?,inputRouteTimer:Timer?,privacyPending=false,privacyKey:String?,privacyExpires:Date?
     private var resumeRead:(()->Void)?
     private var capture:NativeCapture?,captureLifecycle=CaptureLifecycle(),tapInstalled=false
@@ -40,14 +53,14 @@ final class NativeVoice {
     private func observe(_ name:Notification.Name,_ handler:@escaping(Notification)->Void){observers.append(NotificationCenter.default.addObserver(forName:name,object:nil,queue:.main,using:handler))}
     func snapshot()->[String:Any]{
         let stats=capture?.snapshot() ?? lastCaptureStats
-        return activity.snapshot.merging(["active":active,"phase":phase,"backgroundEnabled":background,"route":routeSummary(),"selectedInputLabel":inputSelectionSummary(),"captureDiagnostics":diagnostics.lines,"playing":queued>0,"amplitude":amplitude,"sampleOffset":played,"trace":reply.trace ?? "","clock":"dataPlayedBack callbacks","queuedSamples":queued,"rawInputBuffers":stats?.rawBuffers ?? 0,"convertedInputBuffers":stats?.convertedBuffers ?? 0,"captureSampleRate":stats?.sampleRate ?? 0,"captureChannels":stats?.channels ?? 0,"captureEngineRunning":engine?.isRunning == true]){_,new in new}
+        return activity.snapshot.merging(["active":active,"phase":phase,"backgroundEnabled":background,"route":routeSummary(),"selectedInputLabel":inputSelectionSummary(),"captureDiagnostics":diagnostics.lines,"playbackDiagnostics":playbackDiagnostics(),"playing":playback.isPlaying,"amplitude":amplitude,"sampleOffset":played,"trace":reply.trace ?? "","clock":"dataPlayedBack callbacks","queuedSamples":queued,"rawInputBuffers":stats?.rawBuffers ?? 0,"convertedInputBuffers":stats?.convertedBuffers ?? 0,"captureSampleRate":stats?.sampleRate ?? 0,"captureChannels":stats?.channels ?? 0,"captureEngineRunning":engine?.isRunning == true]){_,new in new}
     }
     private func publish(){emit(["type":"state","state":snapshot()])}
     func start(_ input:[String:Any],background:Bool,resumingRoute:Bool=false,done:@escaping(Error?)->Void){
         guard UIApplication.shared.applicationState == .active || (resumingRoute && active && self.background) else{done(VoiceError.staleTurn);return}
         let previousPrivacy=resumingRoute ? privacyKey:nil
         stop("Preparing audio",preservingGraph:resumingRoute)
-        if !resumingRoute{diagnostics.clear();lastCaptureStats=nil};diagnose(resumingRoute ? "recover-transport":"user-start")
+        if !resumingRoute{diagnostics.clear();lastCaptureStats=nil;lastPlaybackDiagnostics=[];speechInterruptions=0;queueDrains=0;maximumAudioGap=0;maximumCallbackDispatch=0;maximumReadDispatch=0};diagnose(resumingRoute ? "recover-transport":"user-start")
         captureLifecycle.begin(generation:generation,recovering:resumingRoute);lastCaptureStats=nil;activity.start();phase="Starting microphone connection";privacyKey=previousPrivacy;publish()
         for key in ["sessionId","endpointId","assistantId"]{guard let s=input[key] as? String,UUID(uuidString:s) != nil else{fail("Select a current Assistant and reconnect before listening.",stage:"backend");done(VoiceError.invalidMessage);return}}
         guard let revision=input["expectedSessionRevision"] as? Int,revision>=0 else{fail("The conversation session is out of date. Reconnect before listening.",stage:"backend");done(VoiceError.invalidMessage);return}
@@ -59,8 +72,8 @@ final class NativeVoice {
             self.checkPrivacy{[weak self] okay in guard let self,self.generation==ticket else{done(VoiceError.staleTurn);return};guard okay else{self.fail("Audio could not start: audience or sign-in could not be verified. Reconnect and review your audience.",stage:"backend");done(VoiceError.staleTurn);return}
                 do{
                     self.active=true;self.phase="Connecting";let ws=try self.transport.webSocket();self.socket=ws
-                    self.transport.socketOpened={[weak self,weak ws] opened in guard let self,self.generation==ticket,opened===ws,self.socket===ws else{return};self.send(["type":"start","request":self.request])}
-                    self.transport.socketClosed={[weak self,weak ws] closed in guard let self,closed===ws,self.socket===ws else{return};self.fail("Speech connection closed. Check the private server and VPN, then start again.",stage:"backend")}
+                    self.transport.socketOpened={[weak self,weak ws] opened in guard let self,self.generation==ticket,opened===ws,self.socket===ws else{return};self.diagnose("socket-open");self.send(["type":"start","request":self.request])}
+                    self.transport.socketClosed={[weak self,weak ws] closed in guard let self,closed===ws,self.socket===ws else{return};self.diagnose(self.accepted ? "socket-close-after-accept":"socket-close-before-accept");self.fail("Speech connection closed. Check the private server and VPN, then start again.",stage:"backend")}
                     ws.resume();self.receive(ws,ticket:ticket)
                     self.deadline=Timer.scheduledTimer(withTimeInterval:10,repeats:false){[weak self] _ in guard let self,self.generation==ticket,!self.accepted else{return};self.fail("The speech connection did not become ready within 10 seconds. Check the private server and VPN.",stage:"backend")}
                     let privacy=Timer(timeInterval:0.5,repeats:true){[weak self] _ in self?.privacyTick()};self.poll=privacy;RunLoop.main.add(privacy,forMode:.common)
@@ -78,6 +91,8 @@ final class NativeVoice {
             var options:AVAudioSession.CategoryOptions=[.defaultToSpeaker]
             if #available(iOS 26.0,*){options.insert(.allowBluetoothHFP)}else{options.insert(.allowBluetooth)}
             try audio.setCategory(.playAndRecord,mode:.voiceChat,options:options)
+            // Preference only: route/client/hardware rates are reported separately.
+            try audio.setPreferredSampleRate(48000)
             try audio.setPreferredIOBufferDuration(0.02);try audio.setActive(true)
             diagnose("session-active")
         }
@@ -145,7 +160,7 @@ final class NativeVoice {
         guard generation==ticket,active,accepted else{engine.stop();return}
         engine.prepare();try engine.start()
         guard generation==ticket,active,accepted else{engine.stop();return}
-        player.play()
+        // Keep capture/AEC running, but start the player only after prebuffering.
         captureLifecycle.ready(generation:generation,route:routeFingerprint(),at:ProcessInfo.processInfo.systemUptime)
         diagnose("engine-started");activity.captureReady();phase="Microphone started · waiting for audio"
         MPNowPlayingInfoCenter.default().nowPlayingInfo=[MPMediaItemPropertyTitle:"Lifestream conversation",MPNowPlayingInfoPropertyIsLiveStream:true,MPNowPlayingInfoPropertyPlaybackRate:1]
@@ -159,9 +174,9 @@ final class NativeVoice {
         activity.captured(values,speaking:gate.speaking,waiting:turnPending && reply.trace == nil)
         guard !turnPending || reply.trace != nil else{return}
         for event in gate.push(values){switch event{
-        case .began:interruptReply("New speech");sequence=0;samples=0;phase="Hearing speech · pause to send"
+        case .began:interruptReply("New speech");currentDiagnosticTurn=nextDiagnosticTurn();diagnosticTurn?(.voiceSpeech,nil,currentDiagnosticTurn);sequence=0;samples=0;phase="Hearing speech · pause to send"
         case .frame(let bytes):send(["type":"frame","audioInputId":request["audioInputId"]!,"frame":["frameId":UUID().uuidString.lowercased(),"sequence":sequence,"format":["encoding":"pcm_s16le","sampleRateHz":16000,"channels":1],"sampleOffset":samples,"sampleCount":bytes.count/2,"dataBase64":bytes.base64EncodedString()]]);sequence += 1;samples += bytes.count/2;activity.sentFrame()
-        case .commit(let next,let count):send(["type":"commitTurn","audioInputId":request["audioInputId"]!,"nextSequence":next,"sampleCount":count]);turnPending=true;activity.committed();phase="Transcribing your speech";armResponseDeadline()
+        case .commit(let next,let count):send(["type":"commitTurn","audioInputId":request["audioInputId"]!,"nextSequence":next,"sampleCount":count]);turnPending=true;diagnosticTurn?(.voiceCommitted,nil,currentDiagnosticTurn);activity.committed();phase="Transcribing your speech";armResponseDeadline()
         }}
     }
     private func send(_ message:[String:Any]){
@@ -169,46 +184,92 @@ final class NativeVoice {
         sentMessages += 1;let ticket=generation
         socket.send(.string(text)){[weak self] error in DispatchQueue.main.async{guard let self,self.generation==ticket else{return};self.sentMessages -= 1;if error != nil{self.fail("Speech connection lost. Check the private server and VPN.",stage:"backend")}}}
     }
-    private func receive(_ ws:URLSessionWebSocketTask,ticket:Int){ws.receive{[weak self,weak ws] result in DispatchQueue.main.async{
+    private func receive(_ ws:URLSessionWebSocketTask,ticket:Int){ws.receive{[weak self,weak ws] result in
+        let deliveredAt=ProcessInfo.processInfo.systemUptime
+        DispatchQueue.main.async{
         guard let self,let ws,self.generation==ticket,self.socket===ws else{return}
+        self.maximumReadDispatch=max(self.maximumReadDispatch,ProcessInfo.processInfo.systemUptime-deliveredAt)
         do{let data:Data;switch try result.get(){case .string(let s):data=Data(s.utf8);case .data(let d):data=d;@unknown default:throw VoiceError.invalidMessage}
             guard let m=try JSONSerialization.jsonObject(with:data) as? [String:Any] else{throw VoiceError.invalidMessage}
-            try self.message(m);if self.active{if self.queued >= 96000{self.resumeRead={[weak self,weak ws] in guard let self,let ws,self.generation==ticket else{return};self.receive(ws,ticket:ticket)}}else{self.receive(ws,ticket:ticket)}}
-        }catch{self.fail("Speech processing stopped: the connection or audio response was invalid. Reconnect to retry.",stage:"backend")}
+            try self.message(m);if self.active{if self.queued >= 96000{self.lastAudioArrival=nil;self.resumeRead={[weak self,weak ws] in guard let self,let ws,self.generation==ticket else{return};self.receive(ws,ticket:ticket)}}else{self.receive(ws,ticket:ticket)}}
+        }catch{self.diagnose(self.accepted ? "receive-error-after-accept":"receive-error-before-accept");self.fail("Speech processing stopped: the connection or audio response was invalid. Reconnect to retry.",stage:"backend")}
     }}}
     private func message(_ m:[String:Any]) throws {
         guard let type=m["type"] as? String else{throw VoiceError.invalidMessage}
-        if type=="accepted"{guard !accepted,m["audioInputId"] as? String == request["audioInputId"] as? String else{throw VoiceError.invalidMessage};accepted=true;deadline?.invalidate();let ticket=generation;do{try prepareEngine()}catch{if generation==ticket,active,accepted{engineFailure(error)}};return}
-        if type=="error"{let problem=m["problem"] as? [String:Any],message=problem?["message"] as? String;fail("Server: "+(message.map{String($0.filter{!$0.isNewline && !$0.unicodeScalars.contains(where:{$0.value<32})}.prefix(350))} ?? "Speech processing was rejected."),stage:"backend");return}
+        if type=="accepted"{guard !accepted,m["audioInputId"] as? String == request["audioInputId"] as? String else{throw VoiceError.invalidMessage};accepted=true;diagnose("socket-accepted");deadline?.invalidate();let ticket=generation;do{try prepareEngine()}catch{if generation==ticket,active,accepted{engineFailure(error)}};return}
+        if type=="error"{diagnostic?(.socketFailed,nil);let problem=m["problem"] as? [String:Any],message=problem?["message"] as? String;fail("Server: "+(message.map{String($0.filter{!$0.isNewline && !$0.unicodeScalars.contains(where:{$0.value<32})}.prefix(350))} ?? "Speech processing was rejected."),stage:"backend");return}
         let event=m["event"] as? [String:Any],trace=(m["interactionTraceId"] as? String) ?? (event?["interactionTraceId"] as? String)
         guard let trace else{return};if reply.retired.contains(trace){return}
-        if type=="turnStarted"{try reply.begin(trace);played=0;armResponseDeadline();activity.committed();phase="Transcribing your speech";publish();return}
+        if type=="turnStarted"{diagnosticTurn?(.voiceTurnStarted,nil,currentDiagnosticTurn);try reply.begin(trace);outputGeneration += 1;playback.begin(generation:outputGeneration);lastAudioArrival=nil;played=0;armResponseDeadline();activity.committed();phase="Transcribing your speech";publish();return}
         guard trace==reply.trace else{throw VoiceError.staleTurn}
         if type=="stopPlayback"{interruptReply("Stopped by runtime");return}
-        if type=="transcript"{activity.transcribed();phase="Assistant is processing";publish();if let text=m["text"] as? String,text.count<=16000{emit(["type":"transcript","role":"user","text":text,"trace":trace])};return}
+        if type=="transcript"{if let text=m["text"] as? String,text.count<=16000{let event=VoiceDiagnostic.transcript(text);diagnosticTurn?(event,nil,currentDiagnosticTurn);if event == .voiceTranscribed{activity.transcribed();phase="Assistant is processing";publish();emit(["type":"transcript","role":"user","text":text,"trace":trace])}};return}
         if type=="response",let payload=event?["payload"] as? [String:Any]{
             if payload["type"] as? String == "textDelta",let text=payload["text"] as? String,text.count<=16000{activity.receivedText();emit(["type":"textDelta","text":text,"trace":trace])}
-            if payload["type"] as? String == "terminal"{guard payload["state"] as? String == "completed" else{fail("The backend could not complete the response. Please retry.",stage:"backend");return};try reply.finish(trace);activity.generationFinished();completeIfReady()}
+            if payload["type"] as? String == "terminal"{let problem=payload["error"] as? [String:Any];if let failure=VoiceDiagnostic.terminal(state:payload["state"] as? String,code:problem?["code"] as? String){diagnosticTurn?(failure.0,failure.1,currentDiagnosticTurn);fail("The backend could not complete the response. Please retry.",stage:"backend");return};try reply.finish(trace);diagnosticTurn?(.voiceGenerationDone,nil,currentDiagnosticTurn);activity.generationFinished();applyPlayback(playback.finish(generation:outputGeneration,at:ProcessInfo.processInfo.systemUptime));completeIfReady()}
         }
         if type=="audio"{
             guard let chunk=m["chunk"] as? [String:Any],let segment=chunk["segmentId"] as? String,let frame=chunk["frame"] as? [String:Any],let format=frame["format"] as? [String:Any],format["encoding"] as? String == "pcm_s16le",format["sampleRateHz"] as? Int == 48000,format["channels"] as? Int == 1,let n=frame["sampleCount"] as? Int,let seq=frame["sequence"] as? Int,let offset=frame["sampleOffset"] as? Int,let encoded=frame["dataBase64"] as? String,let bytes=Data(base64Encoded:encoded) else{throw VoiceError.invalidFrame}
             try reply.accept(trace:trace,segment:segment,sequence:seq,offset:offset,count:n,bytes:bytes,queuedSamples:queued)
             guard let player,let buffer=AVAudioPCMBuffer(pcmFormat:AVAudioFormat(standardFormatWithSampleRate:48000,channels:1)!,frameCapacity:AVAudioFrameCount(n)) else{throw VoiceError.invalidFrame}
             buffer.frameLength=AVAudioFrameCount(n);var energy:Float=0
-            for i in 0..<n{let bits=UInt16(bytes[i*2]) | UInt16(bytes[i*2+1])<<8;let value=Float(Int16(bitPattern:bits))/32768;buffer.floatChannelData![0][i]=value;energy += value*value}
-            queued += n;let ticket=outputGeneration,level=sqrt(energy/Float(n));phase="Speaking";activity.playing()
-            player.scheduleBuffer(buffer,completionCallbackType:.dataPlayedBack){[weak self] _ in DispatchQueue.main.async{guard let self,self.outputGeneration==ticket else{return};self.queued -= n;self.played += n;self.amplitude=self.queued>0 ? level:0;if self.queued==0{self.activity.playbackDrained()};self.completeIfReady();if self.queued<96000,let resume=self.resumeRead{self.resumeRead=nil;resume()}}}
-            if queued==n{amplitude=level};publish()
+            for (i,value) in try PlaybackPCM.decode(bytes,samples:n).enumerated(){buffer.floatChannelData![0][i]=value;energy += value*value}
+            let now=ProcessInfo.processInfo.systemUptime
+            // Delivery gaps include provider, network and client scheduling;
+            // intentionally paused reads are excluded by clearing the baseline.
+            if let previous=lastAudioArrival{let gap=now-previous;maximumAudioGap=max(maximumAudioGap,gap);if gap>=0.25{diagnose("delivery-gap-\(Int(min(999999,gap*1000)))ms")}};lastAudioArrival=now
+            let completion=try playback.enqueue(samples:n,generation:outputGeneration,at:now)
+            let ticket=outputGeneration,level=sqrt(energy/Float(n));playbackLevel=level
+            player.scheduleBuffer(buffer,completionCallbackType:.dataPlayedBack){[weak self] _ in
+                let callbackAt=ProcessInfo.processInfo.systemUptime
+                DispatchQueue.main.async{
+                guard let self,self.outputGeneration==ticket,self.active,self.accepted,self.engine?.isRunning==true else{return}
+                self.maximumCallbackDispatch=max(self.maximumCallbackDispatch,ProcessInfo.processInfo.systemUptime-callbackAt)
+                let before=self.queued,action=self.playback.completed(completion)
+                self.played += before-self.queued;self.amplitude=self.playback.isPlaying ? level:0
+                self.applyPlayback(action);self.completeIfReady()
+                if self.queued<96000,let resume=self.resumeRead{self.resumeRead=nil;self.lastAudioArrival=ProcessInfo.processInfo.systemUptime;resume()}
+            }}
+            applyPlayback(playback.playbackAction(generation:outputGeneration,at:now));armPlaybackDeadline();publish()
         }
     }
-    private func completeIfReady(){if reply.terminal && queued==0{send(["type":"playbackSettled","interactionTraceId":reply.trace!,"outcome":"completed","receivedSamples":reply.totalSamples]);reply.retire();turnPending=false;activity.completed();phase="Listening · speak, then pause to send";deadline?.invalidate();publish()}}
-    private func interruptReply(_ reason:String,resumePlayer:Bool=true){
-        outputGeneration += 1;player?.stop();if resumePlayer,engine?.isRunning==true{player?.play()};queued=0;amplitude=0;played=0;activity.completed()
+    private func completeIfReady(){if reply.terminal && queued==0{send(["type":"playbackSettled","interactionTraceId":reply.trace!,"outcome":"completed","receivedSamples":reply.totalSamples]);reply.retire();turnPending=false;diagnosticTurn?(.voiceTurnCompleted,nil,currentDiagnosticTurn);currentDiagnosticTurn=nil;activity.completed();phase="Listening · speak, then pause to send";deadline?.invalidate();publish()}}
+    private func applyPlayback(_ action:PlaybackBuffer.Action){
+        switch action {
+        case .none:
+            if queued>0,!playback.isPlaying{activity.playbackDrained();phase="Preparing speech"}
+        case .start:
+            playbackTimer?.invalidate();playbackTimer=nil
+            guard active,accepted,engine?.isRunning==true else{return}
+            player?.play();amplitude=playbackLevel;activity.playing();phase="Speaking"
+            diagnose("start-\(playback.lastStartReason?.rawValue ?? "unknown")-\(playback.lastStartQueuedSamples/48)ms")
+        case .pause:
+            player?.pause();queueDrains += 1;amplitude=0;activity.playbackDrained();phase="Waiting for more speech";diagnose("queue-drained")
+        case .finished:
+            player?.pause();playbackTimer?.invalidate();playbackTimer=nil;amplitude=0;activity.playbackDrained();diagnose("playback-finished")
+        }
+    }
+    private func armPlaybackDeadline(){
+        guard playbackTimer==nil,let until=playback.startupDeadline else{return}
+        let ticket=outputGeneration
+        let timer=Timer(timeInterval:max(0.001,until-ProcessInfo.processInfo.systemUptime),repeats:false){[weak self] _ in
+            guard let self,self.outputGeneration==ticket,self.active,self.accepted,self.engine?.isRunning==true else{return}
+            self.playbackTimer=nil
+            self.applyPlayback(self.playback.playbackAction(generation:ticket,at:ProcessInfo.processInfo.systemUptime))
+            self.armPlaybackDeadline();self.publish()
+        }
+        playbackTimer=timer;RunLoop.main.add(timer,forMode:.common)
+    }
+    private func interruptReply(_ reason:String){
+        if reply.trace != nil{if reason=="New speech"{speechInterruptions += 1;diagnose("speech-interrupt")}else{diagnose("reply-cancel")}}
+        outputGeneration += 1;playback.stop(generation:outputGeneration);playbackTimer?.invalidate();playbackTimer=nil
+        player?.stop();amplitude=0;played=0;activity.completed()
         if let trace=reply.trace{send(["type":"interrupt","interactionTraceId":trace,"reason":reason]);send(["type":"playbackSettled","interactionTraceId":trace,"outcome":"stopped","receivedSamples":reply.totalSamples]);reply.retire()};turnPending=false;deadline?.invalidate();if let resume=resumeRead{resumeRead=nil;resume()}
     }
     func stop(_ reason:String="Stopped",preservingGraph:Bool=false){
         if active || engine != nil{diagnose(preservingGraph ? "pause-graph":"stop")}
-        if socket != nil{interruptReply(reason,resumePlayer:false)}
+        if engine != nil{lastPlaybackDiagnostics=playbackDiagnostics()}
+        interruptReply(reason)
         generation += 1;captureLifecycle.stop(generation:generation);active=false;accepted=false;background=false;gate.reset();activity.stop();sentMessages=0;turnPending=false
         socket?.cancel(with:.normalClosure,reason:nil);socket=nil;transport.socketOpened=nil;transport.socketClosed=nil
         graphOwner.stop(recovering:preservingGraph,stop:{graph in
@@ -280,8 +341,43 @@ final class NativeVoice {
         return (output.isEmpty ? "System output":output)+" · "+(active ? "Mic: "+(input.isEmpty ? "not yet routed":input):"Mic off")+" · Selected: "+inputSelectionSummary()
     }
     private func diagnose(_ event:String){
+        if let diagnostic,diagnosticsEnabled() {
+            switch event {
+            case "socket-open":diagnostic(.socketOpen,nil)
+            case "socket-accepted":diagnostic(.socketAccepted,nil)
+            case "socket-close-before-accept","socket-close-after-accept":diagnostic(.socketClosed,nil)
+            case "first-converted":diagnostic(.captureReady,nil)
+            case "recover-graph","recover-transport":diagnostic(.captureRecovery,nil)
+            case "queue-drained":diagnostic(.playbackDrained,nil)
+            case "playback-finished":diagnostic(.playbackFinished,nil)
+            case "speech-interrupt":diagnostic(.voiceInterrupted,nil)
+            case "reply-cancel":diagnostic(.playbackCancelled,nil)
+            case "session-active":
+                let rate=audio.sampleRate;diagnostic(.sampleRate,rate.isFinite && rate>=0 && rate<=384000 ? Int(rate):nil)
+                let ports=audio.currentRoute.outputs.map(\.portType)
+                if ports.contains(.bluetoothHFP)||ports.contains(.bluetoothA2DP)||ports.contains(.bluetoothLE){diagnostic(.routeBluetooth,nil)}
+                else if ports.contains(.builtInSpeaker)||ports.contains(.builtInReceiver){diagnostic(.routeSpeaker,nil)}
+                else if ports.contains(.headphones)||ports.contains(.usbAudio){diagnostic(.routeWired,nil)}else{diagnostic(.routeOther,nil)}
+            default:if event.hasPrefix("delivery-gap-"),event.hasSuffix("ms"),let value=Int(event.dropFirst("delivery-gap-".count).dropLast(2)){diagnostic(.deliveryGap,value)}else if event.hasPrefix("receive-error-"){diagnostic(.socketFailed,nil)}else if event.hasPrefix("route-"){diagnostic(.routeChanged,nil)}else if event.hasPrefix("start-")||event=="playback-start"{diagnostic(.playbackStart,nil)}
+            }
+        }
         let stats=capture?.snapshot() ?? lastCaptureStats
         diagnostics.record(event,generation:generation,at:ProcessInfo.processInfo.systemUptime,engineRunning:engine?.isRunning == true,inputPorts:audio.currentRoute.inputs.map{$0.portType.rawValue},outputPorts:audio.currentRoute.outputs.map{$0.portType.rawValue},inputRate:engine?.inputNode.outputFormat(forBus:0).sampleRate ?? 0,outputRate:engine?.outputNode.inputFormat(forBus:0).sampleRate ?? 0,inputChannels:Int(engine?.inputNode.outputFormat(forBus:0).channelCount ?? 0),outputChannels:Int(engine?.outputNode.inputFormat(forBus:0).channelCount ?? 0),raw:stats?.rawBuffers ?? 0,converted:stats?.convertedBuffers ?? 0)
+    }
+    private func playbackDiagnostics()->[String]{
+        if engine == nil,!lastPlaybackDiagnostics.isEmpty{return ["Last active graph (stopped): "+lastPlaybackDiagnostics[0]]+lastPlaybackDiagnostics.dropFirst()}
+        func rate(_ value:Double)->Int{value.isFinite && value>=0 && value<=384000 ? Int(value):0}
+        func ms(_ value:Double)->Int{value.isFinite && value>=0 ? Int(min(value*1000,999999)):0}
+        let input=engine?.inputNode,output=engine?.outputNode
+        let category=audio.category == .playAndRecord ? "playAndRecord":audio.category == .playback ? "playback":"other"
+        let mode=audio.mode == .voiceChat ? "voiceChat":audio.mode == .default ? "default":"other"
+        return [
+            "Session: \(category)/\(mode) negotiated=\(rate(audio.sampleRate))Hz preferred=\(rate(audio.preferredSampleRate))Hz IO=\(ms(audio.ioBufferDuration))ms",
+            "Hardware: in=\(rate(input?.inputFormat(forBus:0).sampleRate ?? 0))Hz out=\(rate(output?.outputFormat(forBus:0).sampleRate ?? 0))Hz latency in=\(ms(audio.inputLatency))ms out=\(ms(audio.outputLatency))ms",
+            "PCM: 48000Hz mono PCM16 -> Float32; client in=\(rate(input?.outputFormat(forBus:0).sampleRate ?? 0))Hz out=\(rate(output?.inputFormat(forBus:0).sampleRate ?? 0))Hz VP=\(input?.isVoiceProcessingEnabled == true ? "on":"off") bypass=\(input?.isVoiceProcessingBypassed == true ? "on":"off")",
+            "Playback: queued=\(queued) samples (~\(queued/48)ms, callback based) playing=\(playback.isPlaying) drains=\(queueDrains) speechInterrupts=\(speechInterruptions) maxArrivalGap=\(ms(maximumAudioGap))ms",
+            "Buffer: startup=400ms recovery=600ms maxWait=1000ms; lastStart=\(playback.lastStartReason?.rawValue ?? "none")/\(playback.lastStartQueuedSamples/48)ms. Dispatch max callback=\(ms(maximumCallbackDispatch))ms read=\(ms(maximumReadDispatch))ms. Drains are not hardware underruns."
+        ]
     }
     private func routeFingerprint()->String {
         let input=engine?.inputNode.inputFormat(forBus:0),output=engine?.outputNode.outputFormat(forBus:0)
@@ -303,6 +399,9 @@ final class NativeVoice {
         case .fail:diagnose("recovery-limit");fail("The audio route could not stabilize. Open Audio diagnostics to inspect the attempt. Choose a microphone, then tap Start to retry.",stage:"input")
         case .recover:
             if selectedInput != "system",!currentInputMatchesSelection(){diagnose("input-route-mismatch");engineFailure(AudioInputSelectionError.unavailable);return}
+            // Engine configuration changes can stop rendering before recovery's
+            // delayed restart. Fence the old output now, not after that delay.
+            interruptReply("Audio route changed")
             diagnose("recover-graph");let ticket=generation;phase="Audio device changed · reconnecting once";publish()
             DispatchQueue.main.asyncAfter(deadline:.now()+0.25){[weak self] in
                 guard let self,self.generation==ticket,self.active else{return}

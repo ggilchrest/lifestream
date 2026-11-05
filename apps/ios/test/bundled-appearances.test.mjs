@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {bundleAppearances,outsideGit} from '../scripts/bundle-appearances.mjs';
+import {assertMobilePresentation,mobilePresentationLimits} from '../web/presentation-limits.js';
 async function fixture(t,uri){
  const root=await mkdtemp(join(tmpdir(),'mobile-assets-'));t.after(()=>rm(root,{recursive:true,force:true}));
  const packs=join(root,'packs'),dir=join(packs,'sample');await mkdir(dir,{recursive:true});
@@ -23,4 +24,21 @@ test('refuses Git outputs, symlinked Git outputs, and altered/remote-dependent a
  await mkdir(join(f.root,'repo/.git'),{recursive:true});await symlink(join(f.root,'repo'),join(f.root,'alias'));await assert.rejects(outsideGit(join(f.root,'alias/out')),/outside every Git/);
  await writeFile(join(f.dir,'model.gltf'),'changed');await assert.rejects(bundleAppearances(join(f.root,'bad'),{directory:f.packs,ids:['sample']}),/invalid or unavailable/);
  const remote=await fixture(t,'https://example.invalid/texture.png');await assert.rejects(bundleAppearances(join(remote.root,'out'),{directory:remote.packs,ids:['sample']}),/invalid or unavailable/);
+});
+test('mobile resource and aggregate limits accept detailed models and reject invalid or oversized declarations',()=>{
+ const item=bytes=>({id:'synthetic',manifest:{resources:bytes.map(bytes=>({bytes}))}});
+ assert.doesNotThrow(()=>assertMobilePresentation({id:'neutral'}));
+ assert.doesNotThrow(()=>assertMobilePresentation(item([90_000_000,2_000_000])));
+ assert.doesNotThrow(()=>assertMobilePresentation(item([mobilePresentationLimits.resourceBytes,mobilePresentationLimits.resourceBytes])));
+ assert.throws(()=>assertMobilePresentation(item([mobilePresentationLimits.resourceBytes+1])),/128 MiB/);
+ assert.throws(()=>assertMobilePresentation(item([mobilePresentationLimits.resourceBytes,mobilePresentationLimits.resourceBytes,1])),/256 MiB/);
+ for(const bytes of [0,-1,NaN,Infinity,1.5,Number.MAX_SAFE_INTEGER+1])assert.throws(()=>assertMobilePresentation(item([bytes])));
+ assert.throws(()=>assertMobilePresentation({id:'unvalidated'}));
+});
+
+
+test('packager uses an explicit, generic authored-framing exception only for selected packages',async t=>{
+ const f=await fixture(t);const a=await bundleAppearances(join(f.root,'default'),{directory:f.packs,ids:['sample']});assert.equal(a.packages[0].mobileView,'waist');
+ const b=await bundleAppearances(join(f.root,'authored'),{directory:f.packs,ids:['sample'],preserveFramingIds:['sample']});assert.equal(b.packages[0].mobileView,'authored');
+ await assert.rejects(bundleAppearances(join(f.root,'bad'),{directory:f.packs,ids:['sample'],preserveFramingIds:['not-selected']}),/selected appearances/);
 });
