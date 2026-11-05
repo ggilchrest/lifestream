@@ -14,7 +14,7 @@ async function probe(t){
  const core=name=>new URL('../native/Sources/AssistantCore/'+name,import.meta.url).pathname;
  await copyFile(new URL('./audience-probe.swift',import.meta.url),join(root,'main.swift'));
  for(const args of [
-  ['-emit-library','-emit-module','-module-name','AssistantCore',core('VoiceProtocol.swift'),core('AudienceLifecycle.swift'),'-o',join(root,'libAssistantCore.dylib'),'-emit-module-path',join(root,'AssistantCore.swiftmodule')],
+  ['-emit-library','-emit-module','-module-name','AssistantCore',core('VoiceProtocol.swift'),core('BoundedVoiceAudit.swift'),core('AudienceLifecycle.swift'),core('DiagnosticBuffer.swift'),'-o',join(root,'libAssistantCore.dylib'),'-emit-module-path',join(root,'AssistantCore.swiftmodule')],
   ['-D','DEBUG','-I',root,'-L',root,'-lAssistantCore','-Xlinker','-rpath','-Xlinker',root,source('NativeTransport.swift'),source('ConnectionStore.swift'),source('NativeAudience.swift'),join(root,'main.swift'),'-o',join(root,'probe')]
  ]){const result=spawnSync('swiftc',args,{encoding:'utf8'});assert.equal(result.status,0,result.stderr);}
  return config=>new Promise((resolve,reject)=>{const child=spawn(join(root,'probe'),[],{stdio:['pipe','pipe','pipe']});let out='',error='';child.stdout.on('data',x=>out+=x);child.stderr.on('data',x=>error+=x);child.on('error',reject);child.on('close',code=>{if(code!==0)return reject(Error(error||`Audience probe exited ${code}`));try{resolve(JSON.parse(out))}catch{reject(Error(out+error))}});child.stdin.end(JSON.stringify(config)+'\n');});

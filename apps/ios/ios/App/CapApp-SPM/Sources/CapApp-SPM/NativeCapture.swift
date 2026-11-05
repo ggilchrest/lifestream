@@ -14,7 +14,8 @@ final class NativeCapture {
     let bufferSize:AVAudioFrameCount
     private let inputFormat:AVAudioFormat,target:AVAudioFormat,converter:AVAudioConverter
     private let lock=NSLock(),conversionLock=NSLock()
-    private var pending=0,rawBuffers=0,convertedBuffers=0,failureQueued=false
+    private var pending=0,rawBuffers=0,convertedBuffers=0,failureQueued=false,paused=false
+    private var drained:(()->Void)?
     private var lastRaw:TimeInterval?,lastConverted:TimeInterval?
     private var sampleRate:Double,channels:UInt32
 
@@ -34,12 +35,13 @@ final class NativeCapture {
     func consume(_ buffer:AVAudioPCMBuffer,deliver:@escaping([Float])->Void,failed:@escaping(String)->Void){
         lock.lock()
         rawBuffers += 1;lastRaw=ProcessInfo.processInfo.systemUptime;sampleRate=buffer.format.sampleRate;channels=buffer.format.channelCount
+        if paused{lock.unlock();return}
         let admitted=pending<8;if admitted{pending += 1};lock.unlock()
         guard admitted else{failure("Microphone processing could not keep up. Start listening again.",failed);return}
         guard buffer.frameLength>0 else{release();return}
-        guard buffer.format.isEqual(inputFormat) else{release();failure("The microphone format changed. Start listening again with the selected audio device.",failed);return}
+        guard buffer.format.isEqual(inputFormat) else{failure("The microphone format changed. Start listening again with the selected audio device.",failed);release();return}
         let capacity=AVAudioFrameCount(ceil(Double(buffer.frameLength)*16000/inputFormat.sampleRate)+32)
-        guard let converted=AVAudioPCMBuffer(pcmFormat:target,frameCapacity:capacity) else{release();failure("Microphone buffer allocation failed.",failed);return}
+        guard let converted=AVAudioPCMBuffer(pcmFormat:target,frameCapacity:capacity) else{failure("Microphone buffer allocation failed.",failed);release();return}
         var supplied=false,error:NSError?
         conversionLock.lock()
         let status=converter.convert(to:converted,error:&error){_,state in
@@ -47,14 +49,25 @@ final class NativeCapture {
             supplied=true;state.pointee = .haveData;return buffer
         }
         conversionLock.unlock()
-        guard error==nil,status != .error else{release();failure("Microphone audio conversion failed. Select an audio device and start again.",failed);return}
+        guard error==nil,status != .error else{failure("Microphone audio conversion failed. Select an audio device and start again.",failed);release();return}
         guard let channel=converted.floatChannelData?[0],converted.frameLength>0 else{release();return}
         let values=Array(UnsafeBufferPointer(start:channel,count:Int(converted.frameLength)))
-        guard values.allSatisfy({$0.isFinite}) else{release();failure("Microphone produced invalid audio. Start listening again.",failed);return}
+        guard values.allSatisfy({$0.isFinite}) else{failure("Microphone produced invalid audio. Start listening again.",failed);release();return}
         lock.lock();convertedBuffers += 1;lastConverted=ProcessInfo.processInfo.systemUptime;lock.unlock()
         DispatchQueue.main.async{defer{self.release()};deliver(values)}
     }
-    private func release(){lock.lock();pending -= 1;lock.unlock()}
+    /// Freeze new input at Finish, then deliver every buffer admitted before the tap.
+    func pauseAndDrain(_ done:@escaping()->Void){
+        lock.lock();paused=true
+        if pending==0{lock.unlock();DispatchQueue.main.async(execute:done);return}
+        drained=done;lock.unlock()
+    }
+    func resume(){lock.lock();paused=false;lock.unlock()}
+    private func release(){
+        lock.lock();pending -= 1;let callback=paused && pending==0 ? drained:nil
+        if callback != nil{drained=nil};lock.unlock()
+        if let callback{DispatchQueue.main.async(execute:callback)}
+    }
     private func failure(_ message:String,_ failed:@escaping(String)->Void){
         lock.lock();let report = !failureQueued;failureQueued=true;lock.unlock()
         if report{DispatchQueue.main.async{failed(message)}}

@@ -26,8 +26,18 @@
 	<true/>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Connect to your configured private Assistant server.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Read the sleep and related Health measurements you choose for your configured Lifestream connection. Your existing source and use settings remain in control.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Listen to your voice during a conversation you start. Stop listening at any time.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Allow reading Calendar events for the connection you choose in Lifestream. iOS grants full Calendar access; this feature does not change your events. Collection is a separate action.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Allow reading Reminders for the connection you choose in Lifestream. iOS grants full Reminders access; this feature does not change your reminders. Collection is a separate action.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Read Calendar events for the connection you choose in Lifestream. This feature does not change your events. Collection is a separate action.</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>Read Reminders for the connection you choose in Lifestream. This feature does not change your reminders. Collection is a separate action.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

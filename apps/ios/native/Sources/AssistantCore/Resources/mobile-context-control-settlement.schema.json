@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+  "title": "Ordinary mobile control admission and witnessed terminal reconciliation adjunct",
+  "$defs": {
+    "Envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producerPin",
+        "operation",
+        "payload"
+      ],
+      "properties": {
+        "producerPin": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaId",
+            "schemaVersion",
+            "digest"
+          ],
+          "properties": {
+            "schemaId": {
+              "const": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0"
+            },
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "operation": {
+          "enum": [
+            "control",
+            "reconcile"
+          ]
+        },
+        "payload": {
+          "$ref": "#/$defs/OrdinaryRequest"
+        }
+      }
+    },
+    "Response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "producerPin",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "producerPin": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaId",
+            "schemaVersion",
+            "digest"
+          ],
+          "properties": {
+            "schemaId": {
+              "const": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0"
+            },
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "result": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "reason"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "held"
+                },
+                "reason": {
+                  "enum": [
+                    "pending",
+                    "unknown",
+                    "unqualified",
+                    "otherFamily",
+                    "unavailable"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "control"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "observed"
+                },
+                "control": {
+                  "$ref": "#/$defs/OrdinaryNestedResponse"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "binding",
+                "control"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "terminal"
+                },
+                "binding": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "family",
+                    "reservationDigest",
+                    "terminalDigest",
+                    "preparedDigest"
+                  ],
+                  "properties": {
+                    "family": {
+                      "const": "ordinaryControl"
+                    },
+                    "reservationDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "terminalDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "preparedDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  }
+                },
+                "control": {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/OrdinaryNestedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "result"
+                      ],
+                      "properties": {
+                        "result": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "const": "applied"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "binding",
+                "control"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "terminal"
+                },
+                "binding": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "family",
+                    "reservationDigest",
+                    "terminalDigest"
+                  ],
+                  "properties": {
+                    "family": {
+                      "const": "ordinaryControl"
+                    },
+                    "reservationDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "terminalDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  }
+                },
+                "control": {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/OrdinaryNestedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "result"
+                      ],
+                      "properties": {
+                        "result": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "const": "rejected"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "OrdinaryRequest": {
+      "allOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/mobile-context-control/1.0.0#/$defs/MobileControlRequest"
+        },
+        {
+          "type": "object",
+          "required": [
+            "action"
+          ],
+          "properties": {
+            "action": {
+              "type": "object",
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "enroll",
+                    "bindSource",
+                    "configure"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "OrdinaryNestedResponse": {
+      "allOf": [
+        {
+          "$ref": "https://lifestream.dev/contracts/mobile-context-control/1.0.0#/$defs/MobileControlResponse"
+        },
+        {
+          "type": "object",
+          "required": [
+            "result"
+          ],
+          "properties": {
+            "result": {
+              "type": "object",
+              "required": [
+                "originalRequest"
+              ],
+              "properties": {
+                "originalRequest": {
+                  "$ref": "#/$defs/OrdinaryRequest"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

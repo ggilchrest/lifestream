@@ -3,7 +3,7 @@ import Foundation
 import AssistantCore
 
 final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSocketDelegate {
-    struct Pending { var data=Data(); var response:HTTPURLResponse?; let done:(Result<(Data,HTTPURLResponse),Error>)->Void }
+    struct Pending { var data=Data(); var response:HTTPURLResponse?; var limit=64*1024*1024; var onResponse:((HTTPURLResponse)->Void)?; let done:(Result<(Data,HTTPURLResponse),Error>)->Void }
     struct RestoredConnection {
         let connection:SavedConnection?
         let authState:String
@@ -16,11 +16,36 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
             return result
         }
     }
+    let audit:BoundedVoiceAudit
+    // False fences Health only; true is an actual origin/account/session/auth-loss transition.
+    var healthContextWillChange:((_ authorityChanged:Bool)->Void)?
+    final class HealthContextTransition {
+        enum Kind{case authResponse,authUnavailable,connectionReset}
+        let kind:Kind,oldPrincipal:String?,oldSession:String?,proposedPrincipal:String?,proposedSession:String?,authData:Data?
+        init(kind:Kind,oldPrincipal:String?,oldSession:String?,proposedPrincipal:String?,proposedSession:String?,authData:Data?){self.kind=kind;self.oldPrincipal=oldPrincipal;self.oldSession=oldSession;self.proposedPrincipal=proposedPrincipal;self.proposedSession=proposedSession;self.authData=authData}
+    }
+    /// Ephemeral invalidation observation only. SourceOwner performs the existing
+    /// strict Auth parsing; no record/credential content is persisted or logged.
+    var healthContextTransition:((HealthContextTransition)->Void)?
+    /// Exact synchronous pairing with the typed notification. Legacy consumers
+    /// retain their original Bool callback; no inferred ignore-next authority.
+    var healthContextPairedWillChange:((Bool,HealthContextTransition?)->Void)?
+    private func notifyHealthContextWillChange(_ changed:Bool,notification:HealthContextTransition?=nil){
+        healthContextPairedWillChange?(changed,notification);healthContextWillChange?(changed)
+    }
+
+    var auditChanged:(()->Void)?
+    var auditStopConfirmed:(()->Void)?
     var endpoint:URL?; var csrf=""; var epoch=0
+    private var effectiveContextRef:String?
+    private var effectiveOwner:(principal:String,session:String)?
+    private(set) var effectiveIsSelf=false
+    var hasEffectiveOwner:Bool{effectiveOwner != nil}
+    var currentEffectiveOwner:(principal:String,session:String)?{effectiveOwner}
     var socketOpened:((URLSessionWebSocketTask)->Void)?; var socketClosed:((URLSessionWebSocketTask)->Void)?
     private let store:ConnectionStore
     private var connection:SavedConnection?
-    init(store:ConnectionStore=KeychainConnectionStore()){self.store=store;super.init()}
+    init(store:ConnectionStore=KeychainConnectionStore(),audit:BoundedVoiceAudit=BoundedVoiceAudit()){self.store=store;self.audit=audit;super.init()}
     private var pending=[ObjectIdentifier:Pending]()
     lazy var session:URLSession = makeSession()
     private func makeSession()->URLSession {
@@ -31,7 +56,9 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
         return URLSession(configuration:config,delegate:self,delegateQueue:.main)
     }
     private func reset() {
-        endpoint=nil;epoch += 1;csrf="";session.invalidateAndCancel();session=makeSession()
+        healthContextTransition?(.init(kind:.connectionReset,oldPrincipal:effectiveOwner?.principal,oldSession:effectiveOwner?.session,proposedPrincipal:nil,proposedSession:nil,authData:nil))
+        notifyHealthContextWillChange(true)
+        audit.invalidatePendingStatus();auditChanged?();endpoint=nil;epoch += 1;csrf="";effectiveContextRef=nil;effectiveOwner=nil;effectiveIsSelf=false;session.invalidateAndCancel();session=makeSession()
         session.configuration.httpCookieStorage?.removeCookies(since:.distantPast)
     }
     private func validated(_ value:String) throws -> URL {
@@ -47,7 +74,7 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
         let previous=try store.load()
         reset();endpoint=URL(string:origin)
         let settings=previous?.endpoint==origin && previous?.username==username ? previous?.settings:nil
-        connection=SavedConnection(endpoint:origin,username:username,settings:settings)
+        connection=SavedConnection(endpoint:origin,username:username,settings:settings,pendingPersonalLocks:previous?.pendingPersonalLocks)
         try store.save(connection!)
     }
     func restoreConnection() throws -> SavedConnection? {
@@ -111,6 +138,40 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
             }
         }catch{done(.failure(error))}
     }
+    func pendingLockState()->(state:String,body:String?,unresolvedElsewhere:Bool){
+        guard let saved=connection else{return ("none",nil,false)}
+        let all=saved.pendingPersonalLocks ?? [],onServer=all.filter{$0.endpoint==saved.endpoint}
+        guard let owner=effectiveOwner else{return (onServer.isEmpty ? "none":"mismatch",nil,!all.isEmpty)}
+        guard let pending=onServer.first(where:{$0.principalId==owner.principal}) else{return ("none",nil,!all.isEmpty)}
+        let elsewhere=all.contains{$0.endpoint != pending.endpoint || $0.principalId != pending.principalId}
+        guard owner.session==pending.sessionId else{return ("mismatch",nil,elsewhere)}
+        return ("matching",pending.body,elsewhere)
+    }
+    /// Only an exact current-session record can restrict an authenticated
+    /// successor. All other scoped records remain in custody and visible.
+    func personalAppPendingState()->(state:String,body:String?,unresolvedElsewhere:Bool){
+        guard let saved=connection,let owner=effectiveOwner else{return ("mismatch",nil,false)}
+        let all=saved.pendingPersonalLocks ?? []
+        if let current=all.first(where:{$0.endpoint==saved.endpoint && $0.principalId==owner.principal && $0.sessionId==owner.session}){
+            return ("matching",current.body,all.contains{$0.endpoint != current.endpoint || $0.principalId != current.principalId || $0.sessionId != current.sessionId})
+        }
+        return ("none",nil,!all.isEmpty)
+    }
+    func persistPendingLock(_ body:String) throws {
+        guard body.utf8.count<=4096,let owner=effectiveOwner,var saved=connection else{throw ConnectionStorageError.invalidRecord}
+        var pending=saved.pendingPersonalLocks ?? []
+        if let old=pending.first(where:{$0.endpoint==saved.endpoint && $0.principalId==owner.principal}) {
+            guard old.sessionId==owner.session,old.body==body else{throw ConnectionStorageError.invalidRecord}
+        }else{
+            guard pending.count<8 else{throw ConnectionStorageError.invalidRecord}
+            pending.append(PendingPersonalLock(endpoint:saved.endpoint,username:saved.username,principalId:owner.principal,sessionId:owner.session,body:body))
+        }
+        saved.pendingPersonalLocks=pending;try store.save(saved);connection=saved
+    }
+    func confirmPendingLock(_ body:String) throws {
+        guard var saved=connection,let owner=effectiveOwner,var pending=saved.pendingPersonalLocks,let index=pending.firstIndex(where:{$0.endpoint==saved.endpoint && $0.principalId==owner.principal && $0.sessionId==owner.session && $0.body==body}) else{throw ConnectionStorageError.invalidRecord}
+        pending.remove(at:index);saved.pendingPersonalLocks=pending;try store.save(saved);connection=saved
+    }
     func saveSettings(_ value:String) throws {
         guard value.utf8.count<=16384,(try JSONSerialization.jsonObject(with:Data(value.utf8))) is [String:Any] else{throw VoiceError.invalidMessage}
         guard var saved=connection else{throw VoiceError.invalidEndpoint};saved.settings=value;try store.save(saved);connection=saved
@@ -132,21 +193,70 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
         guard saved.hasSession else{throw VoiceError.invalidMessage}
         if let body,let input=(try? JSONSerialization.jsonObject(with:Data(body.utf8))) as? [String:Any],let password=input["password"] as? String,let username=input["username"] as? String,!password.isEmpty,password.utf8.count<=1024,username.count<=64 {
             // The successful response proves these credentials before retaining them.
-            saved=SavedConnection(endpoint:saved.endpoint,username:username,cookies:saved.cookies,settings:saved.username==username ? saved.settings:nil,password:password,requiresOneTimeCode:!((input["totp"] as? String) ?? "").isEmpty)
+            saved=SavedConnection(endpoint:saved.endpoint,username:username,cookies:saved.cookies,settings:saved.username==username ? saved.settings:nil,password:password,requiresOneTimeCode:!((input["totp"] as? String) ?? "").isEmpty,pendingPersonalLocks:saved.pendingPersonalLocks)
         }
         try store.save(saved);connection=saved
     }
     @discardableResult
-    func request(_ path:String,method:String="GET",body:String?=nil,timeout:Double=15,done:@escaping(Result<(Data,HTTPURLResponse),Error>)->Void) -> URLSessionDataTask? {
-        guard let endpoint,EndpointPolicy.permits(path,method:method),body?.utf8.count ?? 0 <= 65536 else {done(.failure(VoiceError.invalidEndpoint));return nil}
+    func request(_ path:String,method:String="GET",body:String?=nil,timeout:Double=15,internalPreview:Bool=false,internalHealth:Bool=false,internalCalendarConsent:Bool=false,internalHealthConsent:Bool=false,internalHealthControl:Bool=false,maxBytes:Int=64*1024*1024,onResponse:((HTTPURLResponse)->Void)?=nil,done:@escaping(Result<(Data,HTTPURLResponse),Error>)->Void) -> URLSessionDataTask? {
+        let previewAllowed=internalPreview && method=="POST" && ["/api/runtime/v1/tts","/api/runtime/v1/tts/playback","/api/runtime/v1/voice-reference-preview"].contains(path)
+        let healthAllowed=internalHealth && method=="POST" && path=="/api/runtime/v1/mobile-context"
+        let healthControlObject=body.flatMap{(try? JSONSerialization.jsonObject(with:Data($0.utf8))) as? [String:Any]}
+        let healthControlAllowed=internalHealthControl && method=="POST" && path=="/api/runtime/v1/mobile-context" &&
+            healthControlObject?["producerPin"] as? [String:String]==["schemaId":MobileOrdinaryControl.schemaId,"schemaVersion":"1.0.0","digest":MobileOrdinaryControl.schemaDigest] && ["control","reconcile"].contains(healthControlObject?["operation"] as? String ?? "")
+        let healthConsentAllowed=internalHealthConsent && method=="POST" && path=="/api/runtime/v1/mobile-context-policy" && body.flatMap{(try? JSONSerialization.jsonObject(with:Data($0.utf8))) as? [String:Any]}?["producerPin"] as? [String:String]==MobileHealthSourceConsent.pin
+        guard let endpoint,(EndpointPolicy.permits(path,method:method)||previewAllowed||healthAllowed||healthConsentAllowed||healthControlAllowed||(internalCalendarConsent && method=="POST" && path=="/api/runtime/v1/mobile-context-policy")),body?.utf8.count ?? 0 <= ((healthConsentAllowed || healthControlAllowed) ? 131072:65536),maxBytes>0,maxBytes<=64*1024*1024 else {done(.failure(VoiceError.invalidEndpoint));return nil}
         var req=URLRequest(url:endpoint.appendingPathComponent(String(path.dropFirst())))
         req.httpMethod=method;req.timeoutInterval=timeout;req.httpBody=body?.data(using:.utf8)
         req.setValue(endpoint.absoluteString.trimmingCharacters(in:CharacterSet(charactersIn:"/")),forHTTPHeaderField:"Origin")
         req.setValue("application/json",forHTTPHeaderField:"Content-Type")
         if method != "GET" {req.setValue(csrf,forHTTPHeaderField:"x-lifestream-csrf")}
+        if path != "/api/auth/v1/user-context",let ref=effectiveContextRef {req.setValue(ref,forHTTPHeaderField:"x-lifestream-user-context")}
+        let audienceRead=(path=="/api/runtime/v1/audience" || path=="/api/runtime/v1/audience/personal-session") && method=="GET"
+        let auditTicket=audienceRead ? audit.beginStatusRequest():nil
+        if (audienceRead || path=="/api/runtime/v1/audience/lease"),let labels=audit.correlation(){
+            req.setValue(labels.session,forHTTPHeaderField:"x-lfs-audit-session");req.setValue(labels.attempt,forHTTPHeaderField:"x-lfs-audit-attempt")
+            _=audit.record(.privacyRequestStart,session:labels.session,attempt:labels.attempt,turn:nil)
+        }
+        let auditLabels=(audienceRead || path=="/api/runtime/v1/audience/lease") ? audit.correlation():nil
         let ticket=epoch,task=session.dataTask(with:req)
-        pending[ObjectIdentifier(task)]=Pending(done:{[weak self] result in
+        pending[ObjectIdentifier(task)]=Pending(limit:maxBytes,onResponse:onResponse,done:{[weak self] result in
             guard let self,self.epoch==ticket else {done(.failure(VoiceError.staleTurn));return}
+            if let labels=auditLabels {
+                let code:Int,requestId:Int?;if case .success((_,let response))=result {code=response.statusCode;let session=response.value(forHTTPHeaderField:"x-lfs-audit-session");let raw=response.value(forHTTPHeaderField:"x-lfs-audit-request");requestId=session==labels.session ? raw.flatMap{Int($0)}:nil}else{code=0;requestId=nil}
+                _=self.audit.record(.privacyRequestFinish,session:labels.session,attempt:labels.attempt,turn:nil,value:code,request:requestId)
+            }
+            if let auditTicket {
+                if case .success((let data,let response))=result {let accepted=self.audit.completeStatusRequest(auditTicket,statusCode:response.statusCode,data:data);if accepted,response.statusCode==200,let body=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],body["diagnostics"]==nil{self.auditStopConfirmed?()}}
+                else {self.audit.completeStatusRequest(auditTicket,statusCode:0,data:Data())}
+                self.auditChanged?()
+            }
+            if case .success(let (_,response))=result,response.statusCode==401 {self.notifyHealthContextWillChange(true)}
+            if path=="/api/auth/v1/user-context" {
+                // Notify before publishing a changed effective subject. The
+                // original Source can fence collection immediately and retain
+                // its narrow protective persistence obligation across reset.
+                let notification:HealthContextTransition
+                if case .success(let(data,http))=result,http.statusCode==200,data.count<=65536,
+                   let value=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],let context=value["context"] as? [String:Any]{
+                    notification = .init(kind:.authResponse,oldPrincipal:self.effectiveOwner?.principal,oldSession:self.effectiveOwner?.session,proposedPrincipal:context["actorId"] as? String,proposedSession:context["authenticatedSessionId"] as? String,authData:data)
+                }else{
+                    notification = .init(kind:.authUnavailable,oldPrincipal:self.effectiveOwner?.principal,oldSession:self.effectiveOwner?.session,proposedPrincipal:nil,proposedSession:nil,authData:nil)
+                }
+                self.healthContextTransition?(notification)
+                guard self.epoch==ticket else{done(.failure(VoiceError.staleTurn));return}
+                if case .success(let (data,response))=result,response.statusCode==200,let json=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],let ref=json["contextRef"] as? String,!ref.isEmpty,ref.utf8.count<=512 {
+                    if let c=json["context"] as? [String:Any],let principal=c["actorId"] as? String,let session=c["authenticatedSessionId"] as? String,UUID(uuidString:principal) != nil,UUID(uuidString:session) != nil {
+                        let isSelf=c["effectiveUserId"] as? String == principal
+                        if let old=self.effectiveOwner {
+                            let authorityChanged = old.principal != principal || old.session != session || self.effectiveIsSelf != isSelf
+                            if authorityChanged || self.effectiveContextRef != ref {self.notifyHealthContextWillChange(authorityChanged,notification:notification)}
+                        }
+                        guard self.epoch==ticket else{done(.failure(VoiceError.staleTurn));return}
+                        self.effectiveContextRef=ref;self.effectiveOwner=(principal,session);self.effectiveIsSelf=isSelf
+                    }else{self.notifyHealthContextWillChange(false,notification:notification);guard self.epoch==ticket else{done(.failure(VoiceError.staleTurn));return};self.effectiveContextRef=ref;self.effectiveOwner=nil;self.effectiveIsSelf=false}
+                }else{self.notifyHealthContextWillChange(false,notification:notification)}
+            }
             if case .success(let (data,response))=result, response.statusCode==200,
                ["/api/auth/v1/sign-in","/api/auth/v1/session"].contains(path),let json=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],let token=(json["csrfToken"] as? String) ?? ((json["session"] as? [String:Any])?["csrfToken"] as? String) {self.csrf=token}
             do {
@@ -163,16 +273,18 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
         var c=URLComponents(url:endpoint,resolvingAgainstBaseURL:false)!;c.scheme=endpoint.scheme=="https" ? "wss":"ws";c.path="/api/runtime/v1/audio"
         var r=URLRequest(url:c.url!);r.setValue(endpoint.absoluteString.trimmingCharacters(in:CharacterSet(charactersIn:"/")),forHTTPHeaderField:"Origin")
         r.setValue(csrf,forHTTPHeaderField:"x-lifestream-csrf")
+        if let ref=effectiveContextRef{r.setValue(ref,forHTTPHeaderField:"x-lifestream-user-context")}
+        if let labels=audit.correlation(){r.setValue(labels.session,forHTTPHeaderField:"x-lfs-audit-session");r.setValue(labels.attempt,forHTTPHeaderField:"x-lfs-audit-attempt");if audit.recordsContent{r.setValue("speech-v1",forHTTPHeaderField:"x-lfs-audit-content")}}
         let cookies=session.configuration.httpCookieStorage?.cookies(for:endpoint) ?? []
         for (k,v) in HTTPCookie.requestHeaderFields(with:cookies){r.setValue(v,forHTTPHeaderField:k)}
         let task=session.webSocketTask(with:r);task.maximumMessageSize=131072;return task
     }
     func urlSession(_ session:URLSession,dataTask:URLSessionDataTask,didReceive response:URLResponse,completionHandler:@escaping(URLSession.ResponseDisposition)->Void){
-        guard let response=response as? HTTPURLResponse,response.expectedContentLength <= 64*1024*1024,pending[ObjectIdentifier(dataTask)] != nil else {completionHandler(.cancel);return}
-        pending[ObjectIdentifier(dataTask)]?.response=response;completionHandler(.allow)
+        guard let response=response as? HTTPURLResponse,let item=pending[ObjectIdentifier(dataTask)],response.expectedContentLength <= item.limit else {completionHandler(.cancel);return}
+        pending[ObjectIdentifier(dataTask)]?.response=response;item.onResponse?(response);completionHandler(.allow)
     }
     func urlSession(_ session:URLSession,dataTask:URLSessionDataTask,didReceive data:Data){
-        guard let p=pending[ObjectIdentifier(dataTask)],p.data.count+data.count <= 64*1024*1024 else {dataTask.cancel();return}
+        guard let p=pending[ObjectIdentifier(dataTask)],p.data.count+data.count <= p.limit else {dataTask.cancel();return}
         pending[ObjectIdentifier(dataTask)]?.data.append(data)
     }
     func urlSession(_ session:URLSession,task:URLSessionTask,didCompleteWithError error:Error?){

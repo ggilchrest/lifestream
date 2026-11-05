@@ -1,0 +1,8 @@
+{
+  "syntheticOnly": true,
+  "qualification": "Synthetic source-only lifecycle; not EventKit observation or a real deletion.",
+  "deletionVector": "explicit-occurrence-tombstone",
+  "checkpointScope": "synthetic-partial-window",
+  "coverage": "partial",
+  "expectedSequence": ["explicit-delete", "restart", "retryable-held", "rejected-quarantined", "owner-change-held"]
+}

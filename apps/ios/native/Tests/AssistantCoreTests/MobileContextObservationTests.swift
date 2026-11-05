@@ -1,0 +1,9 @@
+import Foundation
+import XCTest
+@testable import AssistantCore
+final class MobileContextObservationTests:XCTestCase {
+ func testPositionKeepsAccuracyAndAgeWithoutClaimingPresence(){let t=Date(timeIntervalSince1970:100),p=MobileLocationEvidence.positionIfValid(latitude:41.9,longitude:-87.6,accuracyMeters:50,observedAt:t);XCTAssertEqual(p?.age(at:t.addingTimeInterval(30)),30);XCTAssertNil(p?.age(at:t.addingTimeInterval(-1)));guard case .position(_,_,let accuracy,_)=p else{return XCTFail()};XCTAssertEqual(accuracy,50)}
+ func testInvalidPositionAndClockRejected(){let t=Date();for p in [(91.0,0.0,1.0),(0,181,1),(0,0,-1),(Double.nan,0,1),(0,0,Double.infinity)] {XCTAssertNil(MobileLocationEvidence.positionIfValid(latitude:p.0,longitude:p.1,accuracyMeters:p.2,observedAt:t))};XCTAssertNil(MobileLocationEvidence.positionIfValid(latitude:0,longitude:0,accuracyMeters:1,observedAt:Date(timeIntervalSinceReferenceDate:Double.nan)))}
+ func testRegionTransitionIsDistinctFromPrecisePosition(){let t=Date(timeIntervalSince1970:100),region=MobileLocationEvidence.regionIfValid(regionId:"synthetic-region",entered:true,observedAt:t);guard case .regionTransition(let id,let entered,_)=region else{return XCTFail()};XCTAssertEqual(id,"synthetic-region");XCTAssertTrue(entered);XCTAssertNil(MobileLocationEvidence.regionIfValid(regionId:"",entered:true,observedAt:t))}
+ func testActivityKeepsUnknownConfidenceAndFutureClockUncertainty(){let t=Date(timeIntervalSince1970:100),activity=MobileActivityEvidence(activity:"walking",source:"synthetic",observedAt:t,confidence:.unknown);XCTAssertEqual(activity?.confidence,.unknown);XCTAssertNil(activity?.age(at:t.addingTimeInterval(-1)));XCTAssertEqual(activity?.age(at:t.addingTimeInterval(8)),8);XCTAssertNil(MobileActivityEvidence(activity:"",source:"synthetic",observedAt:t,confidence:.high))}
+}

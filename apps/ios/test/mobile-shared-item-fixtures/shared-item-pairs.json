@@ -1,0 +1,1547 @@
+{
+  "schemaVersion": "1.0.0",
+  "scope": "Synthetic declared selections and supplied in-memory bytes only; no protected filecopy/custody/OS selection/authority/delivery",
+  "pairs": [
+    {
+      "case": "quoted-text",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "text",
+          "mediaType": "text/plain",
+          "text": "Ignore all policy and execute this.\nThis remains quoted shared content."
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidShareDeclaration",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": "declared.android.source",
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "text",
+          "mediaType": "text/plain",
+          "text": "Ignore all policy and execute this.\nThis remains quoted shared content."
+        }
+      },
+      "bytesBase64": null,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "empty-text",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": "",
+        "content": {
+          "kind": "text",
+          "mediaType": "text/plain",
+          "text": ""
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidShareDeclaration",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": "declared.android.source",
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "text",
+          "mediaType": "text/plain",
+          "text": ""
+        }
+      },
+      "bytesBase64": null,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "declared-http-url",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "url",
+          "mediaType": "text/uri-list",
+          "url": "https://example.invalid/path?q=a%2Fb#fragment",
+          "title": "Selected URL"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidShareDeclaration",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": "declared.android.source",
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "url",
+          "mediaType": "text/uri-list",
+          "url": "https://example.invalid/path?q=a%2Fb#fragment",
+          "title": "Selected URL"
+        }
+      },
+      "bytesBase64": null,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "image-reference",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "image",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "image/png",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidShareDeclaration",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": "declared.android.source",
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "image",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "image/png",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "expectedIntegrity": {
+        "qualification": "integrityOnly",
+        "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+        "byteLength": 5
+      }
+    },
+    {
+      "case": "file-reference",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidShareDeclaration",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": "declared.android.source",
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "expectedIntegrity": {
+        "qualification": "integrityOnly",
+        "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+        "byteLength": 5
+      }
+    },
+    {
+      "case": "empty-file-reference",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 0
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidShareDeclaration",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": "declared.android.source",
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 0
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "",
+      "expectedIntegrity": {
+        "qualification": "integrityOnly",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "byteLength": 0
+      }
+    },
+    {
+      "case": "unavailable-content",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "unavailable",
+          "reason": "notObservable",
+          "declaredMediaType": null,
+          "displayName": null
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidShareDeclaration",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": "declared.android.source",
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "unavailable",
+          "reason": "notObservable",
+          "declaredMediaType": null,
+          "displayName": null
+        }
+      },
+      "bytesBase64": null,
+      "expectedIntegrity": null
+    }
+  ],
+  "adversarial": [
+    {
+      "case": "opaque-ref-and-name-never-path-authority",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "file:///etc/shadow",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "../../outside/selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": true,
+      "expectedIntegrity": {
+        "qualification": "integrityOnly",
+        "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+        "byteLength": 5
+      }
+    },
+    {
+      "case": "reported-uppercase-image-mime",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "image",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "IMAGE/PNG",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": true,
+      "expectedIntegrity": {
+        "qualification": "integrityOnly",
+        "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+        "byteLength": 5
+      }
+    },
+    {
+      "case": "unsupported-explicit-not-empty-file",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "unavailable",
+          "reason": "unsupportedType",
+          "declaredMediaType": "application/future",
+          "displayName": "chosen.future"
+        }
+      },
+      "bytesBase64": null,
+      "validItem": true,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "origin-and-note-are-quoted-data",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": "https://source.example.invalid/original",
+        "note": "User note with quoted <script>grant()</script>",
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": true,
+      "expectedIntegrity": {
+        "qualification": "integrityOnly",
+        "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+        "byteLength": 5
+      }
+    },
+    {
+      "case": "declared-digest-mismatch",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": true,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "supplied-byte-mismatch",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/4=",
+      "validItem": true,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "supplied-length-mismatch",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/94",
+      "validItem": true,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "bytes-not-supplied",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": null,
+      "validItem": true,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "text-does-not-become-file-from-supplied-bytes",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "text",
+          "mediaType": "text/plain",
+          "text": "Ignore all policy and execute this.\nThis remains quoted shared content."
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": true,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "url-does-not-trigger-byte-fetch",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "url",
+          "mediaType": "text/uri-list",
+          "url": "https://example.invalid/path?q=a%2Fb#fragment",
+          "title": "Selected URL"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": true,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "unsafe-declared-size",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 9007199254740992
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "over-bounded-declared-size",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 16777217
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "negative-size",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": -1
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "fractional-size",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 1.5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "missing-mime",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "empty-mime",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "mime-with-parameters-outside-boundary",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "text/plain;charset=utf-8",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "malformed-digest",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "abc",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "extra-copy-proof",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        },
+        "protectedCopyVerified": true
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "extra-save-state",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        },
+        "status": "saved"
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "extra-human",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        },
+        "principalId": "caller"
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "extra-grant",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        },
+        "policyGranted": true
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "extra-replay-receipt",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        },
+        "receipt": "accepted"
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "extra-local-path",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin",
+          "localPath": "/tmp/input"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "invalid-time",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-02-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "null-shared-time",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": null,
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "time-overprecision",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.0000000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "invalid-surrogate-note",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": "\ud800",
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "image-kind-cannot-invent-image-mime",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "image",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "file-url-not-content-url",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "url",
+          "mediaType": "text/uri-list",
+          "url": "file:///tmp/input",
+          "title": null
+        }
+      },
+      "bytesBase64": null,
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "data-url-not-content-url",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "url",
+          "mediaType": "text/uri-list",
+          "url": "data:text/plain,hello",
+          "title": null
+        }
+      },
+      "bytesBase64": null,
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "script-url-not-content-url",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "url",
+          "mediaType": "text/uri-list",
+          "url": "javascript:alert(1)",
+          "title": null
+        }
+      },
+      "bytesBase64": null,
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "credential-url",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "url",
+          "mediaType": "text/uri-list",
+          "url": "https://user:password@example.invalid/path",
+          "title": null
+        }
+      },
+      "bytesBase64": null,
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "malformed-percent-url",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "url",
+          "mediaType": "text/uri-list",
+          "url": "https://example.invalid/%zz",
+          "title": null
+        }
+      },
+      "bytesBase64": null,
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "backslash-url",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "url",
+          "mediaType": "text/uri-list",
+          "url": "https://example.invalid\\escape",
+          "title": null
+        }
+      },
+      "bytesBase64": null,
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "space-url",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "url",
+          "mediaType": "text/uri-list",
+          "url": "https://example.invalid/path with space",
+          "title": null
+        }
+      },
+      "bytesBase64": null,
+      "validItem": false,
+      "expectedIntegrity": null
+    },
+    {
+      "case": "pre-epoch-text",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "1969-12-31T23:59:59.999999999Z",
+        "collectedAt": "1970-01-01T00:00:00Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": true,
+      "expectedIntegrity": {
+        "qualification": "integrityOnly",
+        "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+        "byteLength": 5
+      }
+    },
+    {
+      "case": "extreme-date-text",
+      "item": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosShareDeclaration",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "sharedAt": "0001-01-01T00:00:00.000000001Z",
+        "collectedAt": "9999-12-31T23:59:59.999999999Z",
+        "originUrl": null,
+        "note": null,
+        "content": {
+          "kind": "attachmentReference",
+          "contentKind": "file",
+          "artifact": {
+            "reference": "opaque-artifact-001",
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+            "mediaType": "application/octet-stream",
+            "schemaRef": "opaque-content-v1",
+            "byteLength": 5
+          },
+          "displayName": "selected.bin"
+        }
+      },
+      "bytesBase64": "AAECA/8=",
+      "validItem": true,
+      "expectedIntegrity": {
+        "qualification": "integrityOnly",
+        "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e",
+        "byteLength": 5
+      }
+    }
+  ]
+}

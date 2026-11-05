@@ -1,0 +1,2203 @@
+{
+  "schemaVersion": "1.0.0",
+  "scope": "Synthetic normalized activity reports only; no sensors, permissions, SDK or authority",
+  "pairs": [
+    {
+      "case": "walking",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 7,
+              "confidencePercent": 85
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "car-stopped-simultaneous",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": true,
+            "walking": false,
+            "running": false,
+            "cycling": false,
+            "automotive": true,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 0,
+              "confidencePercent": 95
+            },
+            {
+              "nativeType": 3,
+              "confidencePercent": 95
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "inVehicle",
+          "stationary"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "running",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": false,
+            "running": true,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "high"
+          }
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 8,
+              "confidencePercent": 100
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "running"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "cycling",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": false,
+            "running": false,
+            "cycling": true,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "low"
+          }
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 1,
+              "confidencePercent": 1
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "cycling"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "reported-unknown",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": false,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": true
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 4,
+              "confidencePercent": 75
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "unknown"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "unavailable-not-stationary",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": null,
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "unavailable",
+          "reason": "notObservable"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": null,
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "unavailable",
+          "reason": "notObservable"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "unknown",
+        "reason": "unavailable",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "unavailable",
+        "reason": "notObservable"
+      }
+    }
+  ],
+  "adversarial": [
+    {
+      "case": "all-false-keeps-empty",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": false,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "on-foot-not-walking",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 2,
+              "confidencePercent": 99
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "onFoot"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "hierarchical-candidates-not-distribution",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 2,
+              "confidencePercent": 100
+            },
+            {
+              "nativeType": 7,
+              "confidencePercent": 99
+            },
+            {
+              "nativeType": 8,
+              "confidencePercent": 98
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "onFoot",
+          "running",
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "zero-confidence-retained",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 7,
+              "confidencePercent": 0
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "unknown-native-type-retained",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": -2147483648,
+              "confidencePercent": 12
+            },
+            {
+              "nativeType": 2147483647,
+              "confidencePercent": 100
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [],
+        "unrecognizedNativeTypes": [
+          -2147483648,
+          2147483647
+        ]
+      }
+    },
+    {
+      "case": "unknown-confidence-not-low",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": false,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "unrecognized-native-confidence",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": false,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "unrecognized",
+            "nativeValue": 999
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "source-mismatch",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "missing-flag",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "numeric-flag",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": 1,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "extra-human",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        },
+        "humanId": "caller"
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "extra-authority",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          },
+          "isAlone": true
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "coerced-confidence",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": 0.7
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "null-method",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": null,
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "invalid-date",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-02-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "null-observed-classification",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": null,
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "fraction-overprecision",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.0000000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "offset-not-utc",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00+00:00",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "source-string-unpaired",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": "\ud800",
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "duplicate-native-type",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 7,
+              "confidencePercent": 80
+            },
+            {
+              "nativeType": 7,
+              "confidencePercent": 90
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "confidence-negative",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 7,
+              "confidencePercent": -1
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "confidence-over100",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 7,
+              "confidencePercent": 101
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "confidence-fraction",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 7,
+              "confidencePercent": 50.5
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "native-type-fraction",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 7.5,
+              "confidencePercent": 50
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "native-type-overflow",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 2147483648,
+              "confidencePercent": 50
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "too-many-candidates",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": [
+            {
+              "nativeType": 0,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 1,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 2,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 3,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 4,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 5,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 6,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 7,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 8,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 9,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 10,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 11,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 12,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 13,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 14,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 15,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 16,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 17,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 18,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 19,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 20,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 21,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 22,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 23,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 24,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 25,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 26,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 27,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 28,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 29,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 30,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 31,
+              "confidencePercent": 1
+            },
+            {
+              "nativeType": 32,
+              "confidencePercent": 1
+            }
+          ]
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "empty-android-report-not-unavailable",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidActivityRecognition",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "androidActivityRecognition",
+          "activities": []
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedMeaning": null
+    },
+    {
+      "case": "missing-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z"
+      },
+      "validObservation": true,
+      "expectedAge": null,
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "unsafe-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 9007199254740992
+      },
+      "validObservation": true,
+      "expectedAge": null,
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "negative-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": -1
+      },
+      "validObservation": true,
+      "expectedAge": null,
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "extra-skew",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000,
+        "skewMs": 50
+      },
+      "validObservation": true,
+      "expectedAge": null,
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "one-nanosecond-over",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "stale",
+        "ageNanoseconds": "1000000001",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "pre-epoch-borrow",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "1969-12-31T23:59:59.999999999Z",
+        "collectedAt": "1970-01-01T00:00:00Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "1970-01-01T00:00:00Z",
+        "maximumAgeMs": 0
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "stale",
+        "ageNanoseconds": "1",
+        "maximumAgeMs": 0,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "whole-supported-span",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "0001-01-01T00:00:00.000000001Z",
+        "collectedAt": "9999-12-31T23:59:59.999999999Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "9999-12-31T23:59:59.999999999Z",
+        "maximumAgeMs": 9007199254740991
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "315537897599999999998",
+        "maximumAgeMs": 9007199254740991,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "zero-age-zero-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:00Z",
+        "maximumAgeMs": 0
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "0",
+        "maximumAgeMs": 0,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "future-observation-precedence",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-31T00:00:00Z",
+        "collectedAt": "2026-11-01T00:00:00Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "unknown",
+        "reason": "futureObservation",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "future-collection",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-11-01T00:00:00Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "unknown",
+        "reason": "futureCollection",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    },
+    {
+      "case": "observed-after-collection",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreMotion",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.9Z",
+        "collectedAt": "2026-10-30T00:00:00.1Z",
+        "method": {
+          "kind": "unknown"
+        },
+        "observation": {
+          "kind": "coreMotion",
+          "flags": {
+            "stationary": false,
+            "walking": true,
+            "running": false,
+            "cycling": false,
+            "automotive": false,
+            "unknown": false
+          },
+          "confidence": {
+            "kind": "categorical",
+            "value": "medium"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "unknown",
+        "reason": "observationAfterCollection",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedMeaning": {
+        "kind": "classifications",
+        "categories": [
+          "walking"
+        ],
+        "unrecognizedNativeTypes": []
+      }
+    }
+  ]
+}

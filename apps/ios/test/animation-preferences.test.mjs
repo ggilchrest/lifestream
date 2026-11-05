@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {animationChoices,animationKey,resolveAppearance} from '../web/animation-preferences.js';
+import {animationChoices,animationKey,adapterAnimationChoices,resolveAppearance} from '../web/animation-preferences.js';
 
 test('all declared clips are offered and explicit replacement preserves disabled choices',()=>{
  const old={id:'sample',digest:'a'.repeat(64)},next={id:'sample',digest:'b'.repeat(64),manifest:{replaces:[old.digest],animationLibrary:[{clip:'idle',label:'Idle'},{clip:'wave',label:'Wave',group:'Movement'},{clip:'smile',label:'Smile',group:'Expression'}]}};
@@ -11,4 +11,21 @@ test('all declared clips are offered and explicit replacement preserves disabled
 
 test('older packages retain their semantic toggles without offering the speech amplitude overlay',()=>{
  assert.deepEqual(animationChoices({manifest:{animations:{idle:'idle',listening:'idle',speaking:'talk',mouthAmplitude:'mouth'}}}),[{clip:'idle',label:'Idle / Listening'},{clip:'talk',label:'Speaking'}]);
+});
+
+
+test('adding appearances preserves the exact existing selection and animation preferences',()=>{
+ const previous={id:'existing',digest:'a'.repeat(64),manifest:{schemaVersion:'1.4.0',animationLibrary:[{clip:'idle',label:'Idle'}]}};
+ const added={id:'modern',digest:'b'.repeat(64),manifest:{schemaVersion:'1.5.0',worldDelta:{adapter:'world-delta.v1'}}};
+ const disabled={[animationKey(previous,'idle')]:true},before=structuredClone(disabled);
+ const catalog={neutral:{id:'neutral',digest:'neutral-v1'},defaultId:'existing',packages:[previous,added]};
+ assert.deepEqual(resolveAppearance(catalog,previous,disabled),{item:previous,migrated:false});
+ assert.deepEqual(disabled,before);
+ assert.equal(resolveAppearance(catalog,null,disabled).item,previous);
+});
+
+
+test('adapter choices include only declared playable clips and never invent an animation',()=>{
+ const item={manifest:{schemaVersion:'1.5.0',worldDelta:{animations:[{sourceAnimationId:'a',clipName:'A'},{sourceAnimationId:'b',clipName:'B'}],cycle:['b']}}};
+ assert.deepEqual(adapterAnimationChoices(item).map(x=>x.sourceAnimationId),['b']);assert.deepEqual(adapterAnimationChoices({manifest:{schemaVersion:'1.4.0'}}),[]);assert.deepEqual(adapterAnimationChoices({manifest:{schemaVersion:'1.5.0'}}),[]);
 });
