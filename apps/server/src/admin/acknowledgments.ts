@@ -1,4 +1,5 @@
 import {createHash,randomUUID} from 'node:crypto';
+import {synthesisReference} from '../runtime/voice-settings.ts';
 import {buildCanonicalPrompt} from '@lifestream/runtime/inference/prompt';
 import type {InferenceProvider} from '@lifestream/runtime/inference';
 import type {VoxCpmProvider} from '@lifestream/providers-voxcpm';
@@ -16,7 +17,7 @@ export async function proposeAcknowledgments(provider:InferenceProvider,voice:Ac
  if(!done)throw Error('Acknowledgment proposal incomplete.');return JSON.parse(text);
 }
 export async function synthesizeAcknowledgment(provider:VoxCpmProvider,text:string,voice:AcknowledgmentVoice,signal:AbortSignal):Promise<Uint8Array>{
- let tts=provider.withoutAdmissionRetries();const s=voice.settings;if(s.description||s.seed!==0||s.reference)tts=tts.withVoiceDesign({description:s.description,seed:s.seed,reference:s.reference});
+ let tts=provider.withoutAdmissionRetries();const s=voice.settings;if(s.description||s.seed!==0||s.reference)tts=tts.withVoiceDesign({description:s.description,seed:s.seed,reference:synthesisReference(s)});
  const segmentId=randomUUID(),decisionId=randomUUID(),frames:Buffer[]=[];let samples=0,complete=false;
  for await(const event of tts.synthesize({contractVersion:'2.0.0',text,segmentId,format:{encoding:'pcm_s16le',sampleRateHz:48000,channels:1},voiceProfile:voice.voiceProfile,decision:{decisionId,revision:1},delivery:{interactionId:randomUUID(),segmentId,decisionId,decisionRevision:1,deliveryMode:s.deliveryMode,urgency:'low',pace:s.pace,energy:s.energy},deadlineAt:new Date(Date.now()+45000).toISOString()},signal)){
   if(signal.aborted||complete)throw Error('Acknowledgment synthesis is no longer current.');

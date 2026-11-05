@@ -10,15 +10,21 @@ export class AudioPlayback {
   private stopped = false;
   private samples = 0;
   private expired = false;
+  private readonly progressTimeoutMs:number|undefined;
   get deadlineExpired(): boolean { return this.expired; }
 
   readonly trace: string;
   private readonly stop: () => void;
-  constructor(trace: string, deadlineAt: string, stop: () => void) {
-    this.trace = trace; this.stop = stop;
+  constructor(trace: string, deadlineAt: string, stop: () => void,progressTimeoutMs?:number) {
+    if(progressTimeoutMs!==undefined&&(!Number.isSafeInteger(progressTimeoutMs)||progressTimeoutMs<1||progressTimeoutMs>120000))throw Error("Invalid playback stall bound");
+    this.progressTimeoutMs=progressTimeoutMs;this.trace = trace; this.stop = stop;
     this.settled = new Promise(resolve => { this.resolve = resolve; });
-    this.timer = setTimeout(() => { this.expired = true; this.endpointSettled = true; this.stopped = true; this.stop(); this.finish(); }, Math.max(1, Date.parse(deadlineAt) - Date.now()));
+    this.timer = setTimeout(() => { const stop=!this.stopped;this.expired = true; this.endpointSettled = true; this.stopped = true; if(stop)this.stop(); this.finish(); }, progressTimeoutMs??Math.max(1, Date.parse(deadlineAt) - Date.now()));
     this.timer.unref?.();
+  }
+  progress():void {
+    if(this.progressTimeoutMs===undefined||this.stopped)return;
+    clearTimeout(this.timer);this.timer=setTimeout(()=>{const stop=!this.stopped;this.expired=true;this.endpointSettled=true;this.stopped=true;if(stop)this.stop();this.finish();},this.progressTimeoutMs);this.timer.unref?.();
   }
   emittedOutput(samples = 0): void {
     if (this.stopped) throw new Error('Endpoint playback already stopped');

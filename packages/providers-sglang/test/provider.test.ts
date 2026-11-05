@@ -67,3 +67,21 @@ test('selected tokenizer measures the exact chat template and validates returned
  const seen:Array<{path:string;body:any}>=[];let invalid=false;const server=createServer(async(req,res)=>{let bytes='';for await(const c of req)bytes+=c;seen.push({path:req.url!,body:JSON.parse(bytes)});if(req.url==='/v1/tokenize')res.end(JSON.stringify({count:invalid?99:3,tokens:[1,2,3]}));else res.end('data: [DONE]\n\n');});await new Promise<void>(r=>server.listen(0,'127.0.0.1',r));t.after(()=>server.close());const p=new SglangInferenceProvider({endpoint:`http://127.0.0.1:${(server.address() as {port:number}).port}`,model:'synthetic'}),signal=new AbortController().signal;
  assert.equal((await p.tokenize(request,{signal})).count,3);for await(const _ of p.generate(request,{signal})){}assert.deepEqual(seen[0]!.body.messages,seen[1]!.body.messages);assert.deepEqual(seen[0]!.body.chat_template_kwargs,seen[1]!.body.chat_template_kwargs);assert.equal((await p.tokenize('é漢字',{signal})).count,3);assert.equal(seen[2]!.body.add_special_tokens,false);invalid=true;await assert.rejects(p.tokenize(request,{signal}),/token count/);
 });
+
+test('host JSON schema reaches only the selected model with original token and direct-answer controls',async t=>{
+ const bodies:Record<string,unknown>[]=[];
+ const server=createServer(async(req,res)=>{assert.equal(req.url,'/v1/chat/completions');let text='';for await(const part of req)text+=part;bodies.push(JSON.parse(text));res.end('data: [DONE]\n\n');});
+ await new Promise<void>(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.closeAllConnections();server.close();});
+ const provider=new SglangInferenceProvider({endpoint:`http://127.0.0.1:${(server.address() as {port:number}).port}`,model:'synthetic-selected-model'});
+ const responseFormat={type:'json_schema' as const,json_schema:{name:'semantic_memory_recall',schema:{type:'object',additionalProperties:false,required:['items'],properties:{items:{type:'array',maxItems:3}}}}};
+ const output=[];for await(const chunk of provider.generate({...request,responseFormat,maximumOutputTokens:160},{signal:new AbortController().signal}))output.push(chunk);
+ assert.deepEqual(output.map(c=>c.kind),['done']);assert.equal(bodies.length,1);assert.equal(bodies[0]!.model,'synthetic-selected-model');assert.deepEqual(bodies[0]!.response_format,responseFormat);assert.equal(bodies[0]!.max_tokens,160);assert.deepEqual(bodies[0]!.chat_template_kwargs,{enable_thinking:false});
+});
+test('invalid structured response envelopes fail before any provider request',async t=>{
+ let calls=0;const server=createServer((_req,res)=>{calls++;res.end('data: [DONE]\n\n');});await new Promise<void>(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.closeAllConnections();server.close();});
+ const provider=new SglangInferenceProvider({endpoint:`http://127.0.0.1:${(server.address() as {port:number}).port}`,model:'synthetic'});
+ for(const responseFormat of [null,{},[],{type:'text'},{type:'json_schema',json_schema:{name:'bad name',schema:{type:'object'}}},{type:'json_schema',json_schema:{name:'okay',schema:{type:'array'}}},{type:'json_schema',json_schema:{name:'okay',schema:{anyOf:[{type:'object'},{type:'string'}]}}},{type:'json_schema',json_schema:{name:'okay',schema:{anyOf:[{type:'object'},{type:'null'},{type:'array'}]}}},{type:'json_schema',json_schema:{name:'okay',schema:{type:'object',padding:'x'.repeat(32768)}}},{type:'json_schema',json_schema:{name:'okay',schema:{type:'object'}},extra:true}]){
+  const output=[];for await(const chunk of provider.generate({...request,responseFormat} as Parameters<SglangInferenceProvider['generate']>[0],{signal:new AbortController().signal}))output.push(chunk);assert.deepEqual(output.map(c=>c.error?.code),['invalid_canonical_request']);
+ }
+ assert.equal(calls,0);
+});

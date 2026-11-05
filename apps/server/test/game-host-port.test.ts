@@ -75,3 +75,10 @@ test('an unresolved native host cannot bypass uncertainty by changing run identi
  const f=fixture();t.after(()=>f.db.close());const repo=new GameHostDispatchRepository(f.db,f.repository),hostId=randomUUID(),identity={attachmentId:randomUUID(),hostId,commandId:randomUUID(),requestDigest:gameHostDigest(f.input.request),sourceRevision:'b'.repeat(64)};assert.equal(f.repository.reserveController(f.owner,f.input.request),true);assert.equal(repo.claim(f.owner,f.input.request,identity,()=>true),true);
  const next=fixture({database:f.db}),other=new GameHostDispatchRepository(f.db,next.repository);assert.equal(next.repository.reserveController(next.owner,next.input.request),true);assert.equal(other.claim(next.owner,next.input.request,{...identity,attachmentId:randomUUID(),commandId:randomUUID(),requestDigest:gameHostDigest(next.input.request)},()=>true),false);assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM game_host_dispatch').get()!.n,1);
 });
+
+test('stuck read-only refresh is bounded without entering an effect',async t=>{
+ const f=fixture();t.after(()=>f.db.close());const h=host(f,{sanityTiming:{readRefreshTimeoutMs:30},refreshSourceCustody:async()=>new Promise(()=>{})});t.after(()=>h.port.close());await assert.rejects(Promise.resolve(h.attached));assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM game_host_dispatch').get()!.n,0);
+});
+test('source withdrawal during a pending read refresh still refuses the attachment',async t=>{
+ const f=fixture();t.after(()=>f.db.close());let release!:()=>void;const work=new Promise<void>(resolve=>release=resolve);const h=host(f,{refreshSourceCustody:()=>work});t.after(()=>h.port.close());await Promise.resolve();h.withdraw();release();await assert.rejects(Promise.resolve(h.attached));assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM game_host_dispatch').get()!.n,0);
+});

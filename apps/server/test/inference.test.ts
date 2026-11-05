@@ -11,7 +11,10 @@ import { FixtureInferenceProvider } from "@lifestream/runtime/inference/fixture"
 import { createLifestreamServer } from "../src/index.ts";
 import { loadProfile } from "../src/config/loader.ts";
 import type { InferenceRequest } from "@lifestream/runtime/inference";
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
+import {AssistantProfileRepository} from '@lifestream/storage-sqlite';
+import {compileProfilePersona} from '../src/admin/prompt-document.ts';
+import {textGenerationTiming} from '../src/runtime/text-generation-window.ts';
 import {VisualObservationStore} from '@lifestream/runtime/perception/observation';
 import {createPreparedTurnBinding} from '@lifestream/runtime/inference/prompt';
 import type {VisualScope} from '@lifestream/runtime/perception/port';
@@ -48,7 +51,12 @@ test("actual typed runtime uses active profile and host modality truth, ignoring
   FixtureInferenceProvider.prototype.generate = async function* (request, context) { captured = request; yield* original.call(this, request, context); }; t.after(() => { FixtureInferenceProvider.prototype.generate = original; });
   const response = await fetch(base + "/api/runtime/v1/messages", { method: "POST", headers, body: JSON.stringify({ assistantId: created.assistantId, userInput: "hello", endpointId: "client-claimed-endpoint", runtimeSelfContext: { microphone: "active", authority: "owner" }, profileProjection: { corePersona: "CLIENT_OVERRIDE" } }) }); assert.equal(response.status, 200); await response.text();
   assert.ok(captured); assert.equal(captured.scope.endpointId, null); const state = captured.sections.find((section) => section.kind === "interactionState")!; assert.match(state.content, /input.microphone=inactive/u); assert.match(state.content, /output.speechGeneration=unavailable/u); assert.match(state.content, /output.speechDelivery=notObserved/u); assert.match(state.sourceRevision, /^[a-f0-9]{64}$/u);
-  const core = captured.sections.find((section) => section.kind === "corePersona")!; assert.match(core.content, /Synthetic Active/u); assert.doesNotMatch(core.content, /CLIENT_OVERRIDE/u); assert.equal(core.sourceRef, `assistant-profile:${created.profile.profileId}`); assert.match(core.sourceRevision, /^1:adaptations:/u);
+  const core = captured.sections.find((section) => section.kind === "corePersona")!; assert.match(core.content, /Synthetic Active/u); assert.doesNotMatch(core.content, /CLIENT_OVERRIDE/u); assert.equal(core.sourceRef, `assistant-profile:${created.profile.profileId}`); const active=new AssistantProfileRepository(app.database).list(created.assistantId).find(profile=>profile.status==='active');assert.ok(active);
+  assert.equal(active.profileId,created.profile.profileId);assert.equal(active.revision,created.profile.revision);
+  const compiled=compileProfilePersona(active),adaptationCount=app.database.connection.prepare("SELECT count(*) AS n FROM persona_adaptations WHERE assistant_id=? AND status='active'").get(created.assistantId) as {n:number};assert.equal(adaptationCount.n,0);
+  const expectedRevision=`${active.revision}:persona:${compiled.digest}:adaptations:${createHash('sha256').update(JSON.stringify([])).digest('hex')}`;
+  assert.equal(core.sourceRef,`assistant-profile:${active.profileId}`);assert.equal(core.sourceRevision,expectedRevision);assert.equal(core.content,compiled.content);
+  const owner=app.admin.getActivePersona(created.assistantId,'synthetic-owner',true);assert.ok(owner);assert.equal(owner.sourceRef,core.sourceRef);assert.equal(owner.sourceRevision,expectedRevision);assert.equal(owner.corePersona,core.content);
 });
 
 test("profile activation fences an already generating typed reply before late output", async (t) => {
@@ -100,18 +108,50 @@ test("real-authenticated ordinary turns use one scoped view, reviewed correction
   assert.equal((await post('/api/runtime/v1/session-context',{expectedRevision:1,mode:'text',audienceScope:'unknown'})).status,200);const withheld=await turn(one);assert.doesNotMatch(withheld.content,/two short sentences|project language is Python/);assert.match(withheld.content,/audience scope is unknown/);
 });
 
- test("typed deadline and caller cancellation retain distinct terminal reasons", async t => {
-  t.mock.timers.enable({ apis: ["setTimeout"] });
-  for (const mode of ["deadline", "cancel"] as const) {
-    const outer = new AbortController(); let output = "";
-    const response = { destroyed: false, writeHead() {}, write(value: string) { output += value; }, end() {} } as unknown as import("node:http").ServerResponse;
-    const provider: InferenceProvider = { async *generate(_request, context) { await new Promise<void>(resolve => context.signal.addEventListener("abort", () => resolve(), { once: true })); yield { kind: "text", text: "LATE_OUTPUT" }; } };
-    const pending = streamMessage(response, provider, { userInput: "synthetic" }, "session", outer.signal);
-    if (mode === "deadline") t.mock.timers.tick(30001); else outer.abort();
-    await pending;
-    assert.match(output, mode === "deadline" ? /deadline_exceeded/u : /cancelled/u); assert.doesNotMatch(output, /runtime_input_stale|LATE_OUTPUT|interaction.completed/u);
+test("typed total deadline, no-progress expiry and caller cancellation retain distinct terminal reasons",{timeout:10000},async t=>{
+  assert.deepEqual(textGenerationTiming,{maximumDurationMs:600000,noProgressMs:120000});
+  t.mock.timers.enable({apis:['Date','setTimeout'],now:Date.now()});
+  for(const mode of ['totalDeadline','noProgress','callerCancel'] as const){
+    const start=Date.now(),outer=new AbortController();let output='',calls=0,signal:AbortSignal|undefined,release:()=>void=()=>{},entered!:()=>void,pulseReady:()=>void=()=>{},pulses=0;
+    const providerEntered=new Promise<void>(resolve=>{entered=resolve;});
+    const nextPulse=(count:number)=>new Promise<void>(resolve=>{if(pulses>=count)resolve();else pulseReady=resolve;});
+    const response={destroyed:false,writeHead(){},write(value:string){output+=value;if(value.startsWith('event: message.delta\n')){pulses++;pulseReady();}return true;},end(){}} as unknown as import('node:http').ServerResponse;
+    const provider:InferenceProvider={async *generate(_request,context){
+      calls++;signal=context.signal;
+      if(mode==='totalDeadline'){
+        entered();
+        while(!context.signal.aborted){
+          let wake!:()=>void;const ready=new Promise<void>(resolve=>{wake=resolve;});release=wake;
+          context.signal.addEventListener('abort',wake,{once:true});
+          try{yield {kind:'text',text:'ADMITTED_PROGRESS'};await ready;}
+          finally{context.signal.removeEventListener('abort',wake);}
+        }
+      }else{
+        await new Promise<void>(resolve=>{context.signal.addEventListener('abort',()=>resolve(),{once:true});entered();if(context.signal.aborted)resolve();});
+      }
+      yield {kind:'text',text:'LATE_OUTPUT'};
+    }};
+    const pending=streamMessage(response,provider,{userInput:'synthetic'},'session',outer.signal);await providerEntered;assert.ok(signal);assert.equal(signal.aborted,false);
+    if(mode==='totalDeadline'){
+      await nextPulse(1);const step=textGenerationTiming.noProgressMs/2;
+      while(Date.now()-start+step<textGenerationTiming.maximumDurationMs){
+        t.mock.timers.tick(step);assert.equal(signal.aborted,false,'admitted progress must keep the real no-progress timer current');
+        const pulse=nextPulse(pulses+1);release();await pulse;
+      }
+      t.mock.timers.tick(textGenerationTiming.maximumDurationMs-(Date.now()-start)-1);assert.equal(signal.aborted,false);
+      t.mock.timers.tick(1);assert.equal(signal.aborted,true);assert.equal((signal.reason as Error).message,'deadline');
+    }else if(mode==='noProgress'){
+      t.mock.timers.tick(textGenerationTiming.noProgressMs-1);assert.equal(signal.aborted,false);
+      t.mock.timers.tick(1);assert.equal(signal.aborted,true);assert.equal((signal.reason as Error).message,'inference_stalled');
+    }else{outer.abort();assert.equal(signal.aborted,true);assert.ok(Date.now()-start<textGenerationTiming.noProgressMs);}
+    const outputAtExpiry=output;await pending;
+    const errors=output.split('\n\n').filter(frame=>frame.startsWith('event: interaction.error\n')).map(frame=>JSON.parse(frame.slice(frame.indexOf('data: ')+6)).code);
+    assert.deepEqual(errors,[mode==='totalDeadline'?'deadline_exceeded':mode==='noProgress'?'inference_stalled':'cancelled']);
+    assert.equal(calls,1);assert.doesNotMatch(output,/runtime_input_stale|LATE_OUTPUT|interaction.completed/u);
+    assert.doesNotMatch(output.slice(outputAtExpiry.length),/message.delta/u,'expiry or cancellation cannot admit further provider output');
+    if(mode==='totalDeadline'){assert.ok(pulses>1);assert.match(outputAtExpiry,/ADMITTED_PROGRESS/u);}else assert.equal(pulses,0);
   }
- });
+});
 
 function finalizedTextHarness(t:import('node:test').TestContext){
   let now=Date.now(),current=true,output='',status=0;const requests:InferenceRequest[]=[];
@@ -165,10 +205,14 @@ test('typed finalization joins awaited world context to the originally selected 
   assert.ok(Object.isFrozen(request));
 });
 
-test('typed bookkeeping cannot admit a request after its deadline before the timer runs',async t=>{
+test('typed bookkeeping distinguishes fresh admission, total expiry and actual stale-view rejection before inference',async t=>{
   const start=Date.now();t.mock.timers.enable({apis:['Date'],now:start});
-  const f=finalizedTextHarness(t);f.input.onInferenceRequest=()=>t.mock.timers.setTime(start+30001);
-  await f.run();assert.equal(f.requests.length,0);assert.match(f.output(),/deadline_exceeded/);assert.doesNotMatch(f.output(),/SAFE_SYNTHETIC_REPLY|message.delta|interaction.completed/);
+  const fresh=finalizedTextHarness(t);await fresh.run();assert.equal(fresh.requests.length,1);assert.match(fresh.output(),/SAFE_SYNTHETIC_REPLY/);assert.match(fresh.output(),/interaction.completed/);assert.doesNotMatch(fresh.output(),/event: interaction.error/);
+  const expired=finalizedTextHarness(t);expired.input.onInferenceRequest=()=>t.mock.timers.setTime(start+textGenerationTiming.maximumDurationMs+1);
+  await expired.run();assert.equal(expired.requests.length,0);assert.match(expired.output(),/"code":"deadline_exceeded"/);assert.doesNotMatch(expired.output(),/SAFE_SYNTHETIC_REPLY|message.delta|interaction.completed|inference_unavailable/);
+  t.mock.timers.setTime(start);
+  const stale=finalizedTextHarness(t);stale.input.onInferenceRequest=()=>stale.expire();
+  await stale.run();assert.equal(stale.requests.length,0);assert.match(stale.output(),/"code":"runtime_input_stale"/);assert.doesNotMatch(stale.output(),/SAFE_SYNTHETIC_REPLY|message.delta|interaction.completed|inference_unavailable|deadline_exceeded/);
 });
 
 test('visual turn evidence joins exact sealed inclusion and buffered SSE emission without a delivery claim',async t=>{

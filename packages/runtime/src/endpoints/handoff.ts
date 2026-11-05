@@ -20,6 +20,12 @@ export class SessionHandoffService {
   owns(lease:AudioOwnershipLease,now=Date.now()):boolean {
     const current=this.leases.get(lease.sessionId);return Number.isFinite(now)&&Date.parse(lease.expiresAt)>now&&!!current&&current.expiresAt===lease.expiresAt&&Date.parse(current.expiresAt)>now&&current.leaseId===lease.leaseId&&current.ownerEndpointId===lease.ownerEndpointId&&current.revision===lease.revision&&current.fencingToken===lease.fencingToken;
   }
+  /** Renew only the still-current fenced owner on admitted output progress.
+   * Expired, released and superseded leases cannot be revived. */
+  renew(lease:AudioOwnershipLease,expiresAt:string,now=Date.now()):AudioOwnershipLease|undefined {
+    if(!this.owns(lease,now)||!Number.isFinite(Date.parse(expiresAt))||Date.parse(expiresAt)<=now)return undefined;
+    const next={...lease,expiresAt};this.leases.set(lease.sessionId,next);return structuredClone(next);
+  }
   release(lease:AudioOwnershipLease):boolean {
     const current=this.leases.get(lease.sessionId);if(!current||current.leaseId!==lease.leaseId||current.revision!==lease.revision||current.fencingToken!==lease.fencingToken||current.ownerEndpointId!==lease.ownerEndpointId)return false;
     this.fences.set(lease.sessionId,Math.max(this.fences.get(lease.sessionId)??0,current.fencingToken));return this.leases.delete(lease.sessionId);

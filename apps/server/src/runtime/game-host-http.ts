@@ -28,7 +28,10 @@ export async function handleGameHostHttp(port:GameHostPort|undefined,request:Inc
   const actor=authenticate(operation==='attach'),input=await body(request);
   let result:unknown;
   switch(operation){
-   case 'attach':result=port.attach(actor,input);break;
+   case 'attach':{
+    const controller=new AbortController(),closed=()=>{if(!response.writableEnded)controller.abort();};response.once('close',closed);if(response.destroyed||response.writableEnded)controller.abort();
+    try{result=await port.attach(actor,input,controller.signal);}finally{response.removeListener('close',closed);}break;
+   }
    case 'admit':result=port.admit(actor,input);break;
    case 'result':result=port.complete(actor,input);break;
    case 'detach':result=port.detach(actor,input);break;

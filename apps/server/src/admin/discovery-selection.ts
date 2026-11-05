@@ -35,4 +35,5 @@ export function appendDiscoveryContext(view:CompiledRelationshipContext,enrichme
  view.sourceRevisions=[...view.sourceRevisions,...enrichment.items.map(item=>item.id)];
  view.selections=[...view.selections,...enrichment.items.map(item=>({id:item.id,revision:1,sourceFamily:'prepared-discovery-candidate',lane:'relevant' as const,byteContribution:Buffer.byteLength(item.content)}))];
  view.freshUntil=new Date(Math.min(Date.parse(view.freshUntil),enrichment.freshUntil)).toISOString();
+ view.sourceValidUntil=new Date(Math.min(view.sourceValidUntil?Date.parse(view.sourceValidUntil):Infinity,enrichment.freshUntil)).toISOString();
 }

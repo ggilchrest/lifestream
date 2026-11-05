@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/prompt-document/1.0.0",
+  "title": "Authored Assistant prompt additions",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "documentId", "revision", "scope", "sections"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "documentId": { "type": "string", "format": "uuid" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "scope": { "const": "assistant" },
+    "sections": {
+      "type": "array", "maxItems": 16,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["sectionId", "kind", "provenance", "text"],
+        "properties": {
+          "sectionId": { "type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,79}$" },
+          "kind": { "enum": ["identityAddition", "personality"] },
+          "provenance": { "enum": ["manual", "legacyAuthored"] },
+          "text": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+export const calendarPolicyPin=Object.freeze({"schemaId": "https://lifestream.dev/contracts/mobile-context-calendar-policy-owner/1.0.0", "schemaVersion": "1.0.0", "digest": "1d3a647f14b4cf8931194425c3a9ca7ecf4d66c29aa0fa276270a746e27aed9c"} as const);

@@ -27,7 +27,7 @@ try{
  const url=new URL(ready.url);assert.equal(url.protocol,'http:');assert.equal(url.hostname,'127.0.0.1');
  assert.equal(typeof ready.historicalBoundary,'string');
  for (const script of ['scripts/check-pwce-context.mjs','scripts/check-pwce-runtime.mjs']) {
- child=spawn(process.execPath,[script],{cwd:consumer,env:{PATH:process.env.PATH,PWCE_GATEWAY_URL:ready.url,PWCE_GATEWAY_TOKEN:token,PWCE_FIXTURE_HISTORICAL_BOUNDARY:ready.historicalBoundary},stdio:['ignore','pipe','pipe']});
+ child=spawn(process.execPath,['--experimental-transform-types',script],{cwd:consumer,env:{PATH:process.env.PATH,PWCE_GATEWAY_URL:ready.url,PWCE_GATEWAY_TOKEN:token,PWCE_FIXTURE_HISTORICAL_BOUNDARY:ready.historicalBoundary},stdio:['ignore','pipe','pipe']});
  let output='';for(const stream of [child.stdout,child.stderr])stream.on('data',chunk=>{output+=String(chunk);if(output.length>65536)child.kill('SIGTERM');});
  const timeout=setTimeout(()=>child.kill('SIGTERM'),50000);timeout.unref();
  const [code]=await once(child,'exit');clearTimeout(timeout);

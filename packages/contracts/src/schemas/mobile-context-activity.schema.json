@@ -1,0 +1,481 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-activity/1.0.0",
+  "title": "Raw phone activity classifications and age data; not presence or authority.",
+  "$ref": "#/$defs/ActivityObservation",
+  "$defs": {
+    "ActivityInstant": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{1,9})?Z$"
+    },
+    "ActivityUnknownReason": {
+      "enum": [
+        "notProvided",
+        "notObservable",
+        "unsupported"
+      ]
+    },
+    "ActivitySourceIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collector",
+        "namespace",
+        "upstreamId",
+        "originalApp",
+        "originalDevice"
+      ],
+      "properties": {
+        "collector": {
+          "enum": [
+            "coreMotion",
+            "androidActivityRecognition"
+          ]
+        },
+        "namespace": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f-]+$"
+        },
+        "upstreamId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "originalApp": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "originalDevice": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ActivityMethod": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reported"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            }
+          }
+        }
+      ]
+    },
+    "ActivityConfidence": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "categorical"
+            },
+            "value": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "nativeValue"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unrecognized"
+            },
+            "nativeValue": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            },
+            "reason": {
+              "$ref": "#/$defs/ActivityUnknownReason"
+            }
+          }
+        }
+      ]
+    },
+    "ActivityMotionFlags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stationary",
+        "walking",
+        "running",
+        "cycling",
+        "automotive",
+        "unknown"
+      ],
+      "properties": {
+        "stationary": {
+          "type": "boolean"
+        },
+        "walking": {
+          "type": "boolean"
+        },
+        "running": {
+          "type": "boolean"
+        },
+        "cycling": {
+          "type": "boolean"
+        },
+        "automotive": {
+          "type": "boolean"
+        },
+        "unknown": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ActivityCoreMotion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "flags",
+        "confidence"
+      ],
+      "properties": {
+        "kind": {
+          "const": "coreMotion"
+        },
+        "flags": {
+          "$ref": "#/$defs/ActivityMotionFlags"
+        },
+        "confidence": {
+          "$ref": "#/$defs/ActivityConfidence"
+        }
+      }
+    },
+    "ActivityAndroidCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nativeType",
+        "confidencePercent"
+      ],
+      "properties": {
+        "nativeType": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "confidencePercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "ActivityAndroidRecognition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "activities"
+      ],
+      "properties": {
+        "kind": {
+          "const": "androidActivityRecognition"
+        },
+        "activities": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/ActivityAndroidCandidate"
+          }
+        }
+      }
+    },
+    "ActivityUnavailable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "reason"
+      ],
+      "properties": {
+        "kind": {
+          "const": "unavailable"
+        },
+        "reason": {
+          "enum": [
+            "notObservable",
+            "unsupported",
+            "temporarilyUnavailable",
+            "invalidMeasurement",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "ActivityObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "source",
+            "observedAt",
+            "collectedAt",
+            "method",
+            "observation"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "source": {
+              "$ref": "#/$defs/ActivitySourceIdentity"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/ActivityInstant"
+            },
+            "collectedAt": {
+              "$ref": "#/$defs/ActivityInstant"
+            },
+            "method": {
+              "$ref": "#/$defs/ActivityMethod"
+            },
+            "observation": {
+              "$ref": "#/$defs/ActivityCoreMotion"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "source",
+            "observedAt",
+            "collectedAt",
+            "method",
+            "observation"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "source": {
+              "$ref": "#/$defs/ActivitySourceIdentity"
+            },
+            "observedAt": {
+              "$ref": "#/$defs/ActivityInstant"
+            },
+            "collectedAt": {
+              "$ref": "#/$defs/ActivityInstant"
+            },
+            "method": {
+              "$ref": "#/$defs/ActivityMethod"
+            },
+            "observation": {
+              "$ref": "#/$defs/ActivityAndroidRecognition"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "source",
+            "observedAt",
+            "collectedAt",
+            "method",
+            "observation"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "source": {
+              "$ref": "#/$defs/ActivitySourceIdentity"
+            },
+            "observedAt": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ActivityInstant"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "collectedAt": {
+              "$ref": "#/$defs/ActivityInstant"
+            },
+            "method": {
+              "$ref": "#/$defs/ActivityMethod"
+            },
+            "observation": {
+              "$ref": "#/$defs/ActivityUnavailable"
+            }
+          }
+        }
+      ]
+    },
+    "ActivityAgeContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "referenceAt",
+        "maximumAgeMs"
+      ],
+      "properties": {
+        "referenceAt": {
+          "$ref": "#/$defs/ActivityInstant"
+        },
+        "maximumAgeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ActivityAgeAssessment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "ageNanoseconds",
+            "maximumAgeMs",
+            "qualification"
+          ],
+          "properties": {
+            "state": {
+              "enum": [
+                "fresh",
+                "stale"
+              ]
+            },
+            "ageNanoseconds": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]{0,23})$"
+            },
+            "maximumAgeMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "qualification": {
+              "const": "observationAgeOnly"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "reason",
+            "ageNanoseconds",
+            "maximumAgeMs",
+            "qualification"
+          ],
+          "properties": {
+            "state": {
+              "const": "unknown"
+            },
+            "reason": {
+              "enum": [
+                "unavailable",
+                "futureObservation",
+                "futureCollection",
+                "observationAfterCollection"
+              ]
+            },
+            "ageNanoseconds": {
+              "type": "null"
+            },
+            "maximumAgeMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "qualification": {
+              "const": "observationAgeOnly"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,623 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0",
+  "title": "Calendar delivery over existing source owner; separate B authority required.",
+  "$ref": "#/$defs/CalendarDeliveryRequest",
+  "$defs": {
+    "CalendarDeliveryCollector": {
+      "enum": [
+        "eventKit",
+        "androidCalendar",
+        "googleTasks"
+      ]
+    },
+    "CalendarConfiguration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "categories",
+        "uses",
+        "assistantIds",
+        "collectionPaused",
+        "usePaused"
+      ],
+      "properties": {
+        "categories": {
+          "type": "array",
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "CalendarEvent",
+              "Task"
+            ]
+          }
+        },
+        "uses": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "answers",
+              "summaries",
+              "memory",
+              "proactive"
+            ]
+          }
+        },
+        "assistantIds": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          }
+        },
+        "collectionPaused": {
+          "type": "boolean"
+        },
+        "usePaused": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CalendarEnrollment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enrollmentId",
+        "principalId",
+        "endpointId",
+        "collector",
+        "sourceNamespace",
+        "revision",
+        "state",
+        "configuration"
+      ],
+      "properties": {
+        "enrollmentId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "principalId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "endpointId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "collector": {
+          "$ref": "#/$defs/CalendarDeliveryCollector"
+        },
+        "sourceNamespace": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "state": {
+          "enum": [
+            "unbound",
+            "active",
+            "disconnected"
+          ]
+        },
+        "configuration": {
+          "$ref": "#/$defs/CalendarConfiguration"
+        }
+      }
+    },
+    "CalendarEffectivePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policyRevision",
+        "sourceBound",
+        "policyAvailable",
+        "policyBindingDigest",
+        "collectionAllowed",
+        "categories",
+        "uses",
+        "assistantIds",
+        "sourceNamespace"
+      ],
+      "properties": {
+        "policyRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "sourceBound": {
+          "type": "boolean"
+        },
+        "policyAvailable": {
+          "type": "boolean"
+        },
+        "policyBindingDigest": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "collectionAllowed": {
+          "type": "boolean"
+        },
+        "categories": {
+          "type": "array",
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "CalendarEvent",
+              "Task"
+            ]
+          }
+        },
+        "uses": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "answers",
+              "summaries",
+              "memory",
+              "proactive"
+            ]
+          }
+        },
+        "assistantIds": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          }
+        },
+        "sourceNamespace": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CalendarRecordLocator": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sourceItem"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "originalStart"
+          ],
+          "properties": {
+            "kind": {
+              "const": "occurrence"
+            },
+            "originalStart": {
+              "$ref": "https://lifestream.dev/contracts/mobile-context-calendar/1.0.0#/$defs/CalendarPoint"
+            }
+          }
+        }
+      ]
+    },
+    "CalendarDeliveryItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "change",
+        "locator"
+      ],
+      "properties": {
+        "change": {
+          "$ref": "https://lifestream.dev/contracts/mobile-context-calendar/1.0.0#/$defs/CalendarChange"
+        },
+        "locator": {
+          "$ref": "#/$defs/CalendarRecordLocator"
+        }
+      }
+    },
+    "CalendarDeliveryBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "items"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/CalendarDeliveryItem"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "CalendarDeliveryReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eventId",
+        "requestDigest",
+        "outcome",
+        "code",
+        "durability"
+      ],
+      "properties": {
+        "eventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requestDigest": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "accepted",
+            "duplicate",
+            "rejected",
+            "retryable"
+          ]
+        },
+        "code": {
+          "enum": [
+            "applied",
+            "deleted",
+            "invalid",
+            "scope",
+            "settingsChanged",
+            "suppressed",
+            "conflict",
+            "quota",
+            "unavailable"
+          ]
+        },
+        "durability": {
+          "oneOf": [
+            {
+              "const": "sqlCommit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CalendarDeliveryPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaId",
+        "schemaVersion",
+        "digest"
+      ],
+      "properties": {
+        "schemaId": {
+          "const": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "CalendarDeliveryRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operation",
+            "collector"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "operation": {
+              "const": "enroll"
+            },
+            "collector": {
+              "$ref": "#/$defs/CalendarDeliveryCollector"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operation",
+            "enrollmentId",
+            "expectedRevision",
+            "binding"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "operation": {
+              "const": "bindSource"
+            },
+            "enrollmentId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "binding": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "createNew"
+                  ],
+                  "properties": {
+                    "createNew": {
+                      "const": true
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sourceNamespace"
+                  ],
+                  "properties": {
+                    "sourceNamespace": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operation",
+            "enrollmentId",
+            "expectedRevision",
+            "state",
+            "configuration"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "operation": {
+              "const": "configure"
+            },
+            "enrollmentId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "state": {
+              "enum": [
+                "active",
+                "disconnected"
+              ]
+            },
+            "configuration": {
+              "$ref": "#/$defs/CalendarConfiguration"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operation",
+            "enrollmentId"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "operation": {
+              "const": "policy"
+            },
+            "enrollmentId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "operation",
+            "items"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "operation": {
+              "const": "ingest"
+            },
+            "items": {
+              "type": "array",
+              "maxItems": 64,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/CalendarDeliveryItem"
+              },
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "CalendarDeliveryResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "producerPin",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "producerPin": {
+          "$ref": "#/$defs/CalendarDeliveryPin"
+        },
+        "result": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "enrollment"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "enrollment"
+                },
+                "enrollment": {
+                  "$ref": "#/$defs/CalendarEnrollment"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "enrollment",
+                "effective"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "policy"
+                },
+                "enrollment": {
+                  "$ref": "#/$defs/CalendarEnrollment"
+                },
+                "effective": {
+                  "$ref": "#/$defs/CalendarEffectivePolicy"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "receipts"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "sync"
+                },
+                "receipts": {
+                  "type": "array",
+                  "maxItems": 64,
+                  "items": {
+                    "$ref": "#/$defs/CalendarDeliveryReceipt"
+                  },
+                  "minItems": 1
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

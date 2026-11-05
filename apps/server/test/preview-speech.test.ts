@@ -30,3 +30,10 @@ test("preview stops at a failed segment and preserves the overall deadline", asy
   for await (const event of synthesizePreview(tts, expired)) assert.equal(event.kind === "terminal" && event.outcome, "timedOut");
   assert.equal(texts.length, 2);
 });
+
+test('shared speech projection retains terminal-only degradation instead of claiming full application',async()=>{
+ const {tts}=provider(),original=tts.synthesize.bind(tts);
+ tts.synthesize=async function*(request,signal){for await(const event of original(request,signal))yield event.kind==='terminal'?{...event,disposition:'partiallyApplied',degradedDimensions:['pace']}:event;};
+ const events=[];for await(const event of synthesizePreview(tts,request()))events.push(event);
+ assert.equal(events.at(-1)?.kind==='terminal'&&events.at(-1)?.disposition,'partiallyApplied');assert.deepEqual(events.at(-1)?.degradedDimensions,['pace']);
+});

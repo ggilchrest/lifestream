@@ -50,3 +50,32 @@ export function gameWindowCurrent(selection:GameWindowSelection,scope:Pick<G.Act
  if(configuration!==undefined){const config=boundedGameDataSnapshot(configuration) as typeof configuration|null;if(!config||Object.keys(config).sort().join(',')!=='bounds,policy'||!isDeepStrictEqual(config.policy,entry.policy)||!isDeepStrictEqual(config.bounds,entry.bounds))return false;}
  return (['assistantId','principalId','relationshipId','environmentId','activityId'] as const).every(k=>snapshot[k]===entry.scope[k])&&entry.current();
 }
+
+export type ManualGameStartInput={scope:G.ActivityScope;policy:G.GamePolicy;bounds:G.GameBounds;nowMs:number;expiresAtMs:number};
+export type ManualGameStartBoundary={explicitStartCurrent:(scope:G.ActivityScope,policy:G.GamePolicy,bounds:G.GameBounds)=>boolean;now?:()=>number};
+export type ManualGameStartSelection=Readonly<{status:'selected'|'unavailable';reason:'selected'|'invalidInput'|'startUnavailable';expiresAtMs:number|null;authority:false;isCurrent:()=>boolean}>;
+const manualStarts=new WeakMap<ManualGameStartSelection,{input:ManualGameStartInput;current:()=>boolean}>();
+/** A finite, already explicit foreground start. This creates neither a calendar
+ * enrollment nor permission, and cannot be donated to another run or context. */
+export function selectManualGameStart(raw:ManualGameStartInput,boundary:ManualGameStartBoundary):ManualGameStartSelection{
+ const input=boundedGameDataSnapshot(raw) as ManualGameStartInput|null;
+ const no=(reason:'invalidInput'|'startUnavailable'):ManualGameStartSelection=>freeze({status:'unavailable',reason,expiresAtMs:null,authority:false,isCurrent:()=>false});
+ if(!input||Object.keys(input).sort().join(',')!=='bounds,expiresAtMs,nowMs,policy,scope'||!validator.validate(schema+'ActivityScope',input.scope).valid||!validator.validate(schema+'GamePolicy',input.policy).valid||!validator.validate(schema+'GameBounds',input.bounds).valid||!Number.isSafeInteger(input.nowMs)||input.nowMs<0||!Number.isSafeInteger(input.expiresAtMs)||!Number.isFinite(new Date(input.expiresAtMs).getTime())||input.expiresAtMs<=input.nowMs||input.expiresAtMs-input.nowMs>Math.min(120000,input.bounds.wallBudgetMs))return no('invalidInput');
+ freeze(input);const explicit=boundary.explicitStartCurrent,originalClock=boundary.now,clock=originalClock??Date.now;
+ let retired=false,checking=false,lastNow=input.nowMs;
+ const permitted=()=>boundary.explicitStartCurrent===explicit&&boundary.now===originalClock&&explicit(input.scope,input.policy,input.bounds)===true;
+ const current=()=>{
+  if(retired||checking){retired=true;return false;}checking=true;
+  try{
+   const now=clock();if(!Number.isSafeInteger(now)||now<lastNow||now>=input.expiresAtMs||!permitted()){retired=true;return false;}
+   const after=clock();if(!Number.isSafeInteger(after)||after<now||after>=input.expiresAtMs||!permitted()||retired){retired=true;return false;}
+   lastNow=after;return true;
+  }catch{retired=true;return false;}finally{checking=false;}
+ };
+ if(!current())return no('startUnavailable');
+ const selection:ManualGameStartSelection=freeze({status:'selected',reason:'selected',expiresAtMs:input.expiresAtMs,authority:false,isCurrent:current});manualStarts.set(selection,{input,current});return selection;
+}
+export function manualGameStartCurrent(selection:ManualGameStartSelection,scope:G.ActivityScope,configuration:{policy:G.GamePolicy;bounds:G.GameBounds}):boolean{
+ const entry=manualStarts.get(selection),candidate=boundedGameDataSnapshot(scope) as G.ActivityScope|null,config=boundedGameDataSnapshot(configuration) as typeof configuration|null;
+ return !!entry&&!!candidate&&!!config&&Object.keys(config).sort().join(',')==='bounds,policy'&&isDeepStrictEqual(candidate,entry.input.scope)&&isDeepStrictEqual(config.policy,entry.input.policy)&&isDeepStrictEqual(config.bounds,entry.input.bounds)&&entry.current();
+}

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import type * as G from '@lifestream/contracts/game-activity';
 import {Database,GameStartRepository,CampaignJournalRepository,type ActivityMetadataOptions,type CampaignJournalOptions} from '@lifestream/storage-sqlite';
-import {selectGameWindow} from '@lifestream/runtime/activity/policy';
+import {selectGameWindow,selectManualGameStart} from '@lifestream/runtime/activity/policy';
 import {prepareGameCampaignContext,gameDecisionInput} from '@lifestream/runtime/activity/game-journal';
 import {createPreparedTurnBinding,finalizePreparedTurn,requestForFinalizedTurn} from '@lifestream/runtime/inference/prompt';
 import {gameCampaignFixture} from '../../../packages/runtime/test/fixtures/game-campaign.ts';
@@ -12,21 +12,26 @@ import {createGameCampaignOwner,type GameCampaignOwnerSource} from '../src/runti
 import type {GameHostJoin} from '../src/runtime/game-host-port.ts';
 import type {PreparedHostGameStep} from '../src/runtime/game-host-runtime.ts';
 
-function fixture(){
+function fixture(preparation=false,interpretObservation?:GameCampaignOwnerSource['interpretObservation'],startMode:'calendar'|'manual'|'disabledCalendar'='calendar',withConstraints=false){
  const f=gameCampaignFixture(),scope=f.input.expectedScope,o={principalId:scope.principalId,assistantId:scope.assistantId,relationshipId:scope.relationshipId!};
+ let waiting=false,releaseObservation!:()=>void,startCalls=0,observeCalls=0;const gate=new Promise<void>(resolve=>{releaseObservation=resolve;});
  let current=true,retention:{policyRevision:number;retention:{retentionMs:number;maximumEpisodes:number;maximumBytes:number;retentionPolicyRef:string}}|null=null;
  const bounds=structuredClone(scriptedGameBounds),policy=scriptedGamePolicy(Date.now());
+ if(startMode!=='calendar')policy.schedule={enabled:false,timeZone:null,windows:[],validatedPolicyRevision:null,validatedAt:null,policyCurrent:false,unavailableReason:'notConfigured'};
+ const refusals:string[]=[];
+ let constraints:any={allowedButtons:['up','down','left','right','a','b','x','y','l','r','select'],maxDurationFrames:12,maxWallMs:400,grantsAuthority:false};
  const metadata:ActivityMetadataOptions={maxRuns:4,maxReservations:8,maxControllerReservations:8,maxCheckpointBytes:32768,scopeCurrent:()=>current,quarantined:()=>false,policyFor:()=>({enabled:true,revision:1,retentionMs:3600000,bounds}),allowCreate:()=>current,checkpointCurrent:()=>current,transitionCurrent:()=>current,planningCurrent:()=>current,usageCurrent:()=>current,controllerCurrent:()=>current,controllerUsageCurrent:()=>current};
  const journalOptions:CampaignJournalOptions={maxJournals:4,maxEntryIdentities:32,maxSourceFences:64,maxJournalBytes:32768,scopeCurrent:()=>current,quarantined:()=>false,policyFor:()=>({enabled:true,revision:1,retentionMs:3600000,retentionPolicyRef:f.input.journal.retentionPolicyRef}),allowCreate:()=>current,sourceCurrent:()=>current,journalCurrent:()=>current};
  const checkpoint:G.ActivityCheckpoint={schemaVersion:'1.0.0',recordType:'activityCheckpoint',scope,checkpointId:randomUUID(),revision:1,stateRevision:1,policyRevision:1,pinsDigest:f.input.pinsDigest,goalSummary:'Deterministic fixture only; no CT progress.',recentObservationIds:[f.input.observation.observationId],adviceRefs:[],lastObservationId:f.input.observation.observationId,lastActionReceipt:null,saveArtifact:null,budgetUsed:{wallMs:0,frames:0,actions:0,starts:1,equivalentFailures:0,modelCalls:0,inputTokens:0,outputTokens:0,retries:0,checkpointBytes:0,memoryEpisodes:0},recordedAt:new Date().toISOString(),resumeDisposition:'requiresReconciliation',campaignJournalRef:{campaignId:scope.campaignId,journalId:f.input.journal.journalId,revision:1,accessRevision:1}};
  const planningBounds={deadlineMs:3000,maximumInputTokens:8192,maximumOutputTokens:1024,maximumOutputBytes:16384,maximumChunks:256};
  const observation=structuredClone(f.input.observation);
  observation.visibleState=[{fieldId:'fixture:visible-menu',value:'open',visibility:'visibleNow',firstObservedRef:observation.observationId,lastObservedRef:observation.observationId,timelineId:scope.timelineId,observedAt:observation.receivedAt,freshUntil:new Date(Date.now()+5000).toISOString(),decoderRevision:'1.0.0',manifestDigest:f.input.pinsDigest,limitations:['Scripted field; no native decoder qualification.']}];
- const source:GameCampaignOwnerSource={current:()=>current,startFor:()=>({policy,bounds,window:selectGameWindow({scope,policy,bounds,purpose:'play',nowMs:Date.now()},{policyCurrent:()=>current}),checkpoint,journal:f.input.journal}),observe:async(_join,_signal,afterActionId)=>{const observed=structuredClone(observation);if(afterActionId){observed.observationId=randomUUID();observed.previousActionId=afterActionId;observed.frameNumber+=2;observed.capturedAt=new Date().toISOString();observed.receivedAt=observed.capturedAt;observed.screenshots=observed.screenshots.map(s=>({...s,frameNumber:observed.frameNumber,capturedAt:observed.capturedAt}));}return observed;},bindingFor:(_scope,journal,obs)=>({...f.input.binding,journal,reconciledObservationId:obs.observationId}),campaignBoundary:{...f.boundary,now:Date.now},dispatchBoundary:{maxPlanningAgeMs:30000,maxPlanningFrameDelta:120,maximumObservationAgeMs:10000,validatorRef:'fixture:dispatch',observationCurrent:()=>current,now:Date.now},planningTerminalCurrent:()=>current,settledSourceCurrent:()=>current,retentionFor:()=>retention,requestFor:async(_join,result,dispatch,obs)=>({schemaVersion:'1.0.0',operation:'GameActivityAdapter.applyController',requestId:randomUUID(),correlationId:randomUUID(),deadlineAt:new Date(Date.now()+3000).toISOString(),cancellationId:randomUUID(),executionMode:'simulation',scope,idempotencyKey:randomUUID(),payload:{actionId:randomUUID(),proposal:result.proposal!,admission:{admissionId:randomUUID(),capabilityInvocationId:randomUUID(),authorityContextRef:{providerRef:'fixture:authority',contextId:randomUUID(),revision:1},dispatchReceipt:{reference:'fixture:receipt',sha256:'a'.repeat(64),mediaType:'application/json',schemaRef:'fixture:receipt',byteLength:1},scopeDigest:'a'.repeat(64),inputDigest:'a'.repeat(64),policyRevision:1,issuedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3000).toISOString()},inputOwnerLeaseId:randomUUID(),buttonVector:{up:false,down:false,left:false,right:false,a:true,b:false,x:false,y:false,l:false,r:false,start:false,select:false},protectedMenuOperation:'none',expectedFrameNumber:obs.frameNumber,expectedPinsDigest:f.input.pinsDigest,dispatchValidation:dispatch}})};
+ const source:GameCampaignOwnerSource={...(withConstraints?{actionProposalConstraintsFor:()=>constraints}:{}),...(preparation?{startAfterObservation:true as const}:{}),onRefusal:reason=>refusals.push(reason),current:()=>current,startFor:()=>{startCalls++;const nowMs=Date.now();return {policy,bounds,...(startMode==='manual'?{manualStart:selectManualGameStart({scope,policy,bounds,nowMs,expiresAtMs:nowMs+90000},{explicitStartCurrent:()=>current})}:{window:selectGameWindow({scope,policy,bounds,purpose:'play',nowMs},{policyCurrent:()=>current})}),checkpoint,journal:f.input.journal};},observe:async(_join,_signal,afterActionId)=>{observeCalls++;if(waiting)await gate;const observed=structuredClone(observation);if(afterActionId){observed.observationId=randomUUID();observed.previousActionId=afterActionId;observed.frameNumber+=2;observed.capturedAt=new Date().toISOString();observed.receivedAt=observed.capturedAt;observed.screenshots=observed.screenshots.map(s=>({...s,frameNumber:observed.frameNumber,capturedAt:observed.capturedAt}));}return observed;},bindingFor:(_scope,journal,obs)=>({...f.input.binding,journal,reconciledObservationId:obs.observationId}),campaignBoundary:{...f.boundary,now:Date.now},dispatchBoundary:{maxPlanningAgeMs:30000,maxPlanningFrameDelta:120,maximumObservationAgeMs:10000,validatorRef:'fixture:dispatch',observationCurrent:()=>current,now:Date.now},planningTerminalCurrent:()=>current,settledSourceCurrent:()=>current,retentionFor:()=>retention,requestFor:async(_join,result,dispatch,obs)=>({schemaVersion:'1.0.0',operation:'GameActivityAdapter.applyController',requestId:randomUUID(),correlationId:randomUUID(),deadlineAt:new Date(Date.now()+3000).toISOString(),cancellationId:randomUUID(),executionMode:'simulation',scope,idempotencyKey:randomUUID(),payload:{actionId:randomUUID(),proposal:result.proposal!,admission:{admissionId:randomUUID(),capabilityInvocationId:randomUUID(),authorityContextRef:{providerRef:'fixture:authority',contextId:randomUUID(),revision:1},dispatchReceipt:{reference:'fixture:receipt',sha256:'a'.repeat(64),mediaType:'application/json',schemaRef:'fixture:receipt',byteLength:1},scopeDigest:'a'.repeat(64),inputDigest:'a'.repeat(64),policyRevision:1,issuedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3000).toISOString()},inputOwnerLeaseId:randomUUID(),buttonVector:{up:false,down:false,left:false,right:false,a:true,b:false,x:false,y:false,l:false,r:false,start:false,select:false},protectedMenuOperation:'none',expectedFrameNumber:obs.frameNumber,expectedPinsDigest:f.input.pinsDigest,dispatchValidation:dispatch}})};
+ if(interpretObservation)source.interpretObservation=interpretObservation;
  const host=createGameCampaignOwner({metadata,journal:journalOptions,startsFor:db=>new GameStartRepository(db,{maxClaims:8,maxAssistantSlots:4,limitsFor:()=>({enabled:true,revision:1,rollingPeriodMs:3600000,rollingStartLimit:2,startsPerWindow:1}),quarantined:()=>false,admissionCurrent:()=>current,inspectionCurrent:()=>current,dispositionCurrent:()=>current}),source,planningBounds,maximumObservationAgeMs:10000,maximumContextBytes:16384});
  const db=new Database({path:':memory:'});db.migrate();const repository=host.createRepository(db);
  const join={scope,runtime:{isCurrent:()=>current,controllerCurrent:()=>current}} as GameHostJoin;
- return {f,scope,o,db,host,repository,join,source,checkpoint,journalOptions,observation,planningBounds,setRetention:(value:typeof retention)=>{retention=value;},withdraw:()=>{current=false;}};
+ return {setConstraints:(value:any)=>{constraints=value;},hold:()=>{waiting=true;},release:releaseObservation,startCalls:()=>startCalls,observeCalls:()=>observeCalls,f,scope,o,db,host,repository,join,source,checkpoint,journalOptions,observation,planningBounds,refusals,setRetention:(value:typeof retention)=>{retention=value;},withdraw:()=>{current=false;}};
 }
 
 test('actual SQLite start claim and selected campaign context are owned once, never re-created by missing runtime authority',async t=>{
@@ -75,4 +80,82 @@ test('genuine planning identity settles once, freshly dispatches, journals only 
  const checkpoint=f.repository.get(f.o,f.scope.runId)!;assert.equal(checkpoint.checkpoint.campaignJournalRef.revision,2);assert.equal(checkpoint.checkpoint.budgetUsed.actions,1);assert.equal(checkpoint.checkpoint.budgetUsed.modelCalls,1);
  const journal=new CampaignJournalRepository(f.db,f.journalOptions).get(f.o,f.f.input.journal.journalId)!;assert.equal(journal.revision,2);assert.ok(journal.entries.some(e=>e.sourceRefs.includes('game-action:'+receipt.actionId)));
  assert.equal(await f.host.campaign.recordSettledStep(f.join,input,settled,f.repository),null,'repeated receipt cannot append a second journal entry');
+});
+
+test('new preparation creates the actual start window and SQLite claim only after the initial qualified observation; legacy ordering is retained',async t=>{
+ for(const preparation of [false,true]){
+  const f=fixture(preparation);t.after(()=>f.db.close());f.hold();const pending=f.host.campaign.selectPlanning(f.join,f.repository,new AbortController().signal);await Promise.resolve();
+  assert.equal(f.observeCalls(),1);assert.equal(f.startCalls(),preparation?0:1);assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,0);
+  f.release();assert.ok(await pending);assert.equal(f.startCalls(),1);assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,1);
+ }
+});
+test('withdrawal while the initial image is held cannot create a new-mode start window or consume a start claim',async t=>{
+ const f=fixture(true);t.after(()=>f.db.close());f.hold();const pending=f.host.campaign.selectPlanning(f.join,f.repository,new AbortController().signal);await Promise.resolve();f.withdraw();f.release();assert.equal(await pending,null);assert.equal(f.startCalls(),0);assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,0);
+});
+
+test('vision uses the real checkpoint ledger after image review; duplicate admission and settlement are refused',async t=>{
+ const f=fixture(true,async(_join,observation,_signal,accounting)=>{
+  assert.ok(f.repository.get(f.o,f.scope.runId),'checkpoint must exist before any vision work');
+  assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,1);
+  assert.equal(accounting.admitOnce({providerRevision:'fixture:vision',maximumInputTokens:1000,maximumOutputTokens:192}),true);
+  assert.equal(accounting.admitOnce({providerRevision:'fixture:vision',maximumInputTokens:1000,maximumOutputTokens:192}),false);
+  const usage={providerRevision:'fixture:vision',inputTokens:171,outputTokens:130,completionRef:'fixture:actual-provider-terminal'};
+  assert.equal(accounting.settleUsage(usage),true);assert.equal(accounting.settleUsage(usage),false);
+  return structuredClone(observation);
+ });t.after(()=>f.db.close());
+ assert.ok(await f.host.campaign.selectPlanning(f.join,f.repository,new AbortController().signal));
+ const row=f.repository.get(f.o,f.scope.runId)!;
+ assert.equal(row.used.modelCalls,1);assert.equal(row.used.inputTokens,171);assert.equal(row.used.outputTokens,130);assert.equal(row.reserved.modelCalls,0);
+});
+
+test('vision result cannot bypass accounting, exceed finite bounds, mutate native evidence, or refund cancelled work',async t=>{
+ for(const mode of ['no-admission','no-settlement','over-budget','mutated-frame','withdrawn','aborted'] as const){
+  const controller=new AbortController();
+  const f=fixture(true,async(_join,observation,_signal,accounting)=>{
+   const admitted=mode==='no-admission'?false:accounting.admitOnce({providerRevision:'fixture:vision',maximumInputTokens:1000,maximumOutputTokens:192});
+   if(mode==='no-admission')return structuredClone(observation);
+   assert.equal(admitted,true);
+   if(mode==='withdrawn'){f.withdraw();assert.equal(accounting.settleUsage({providerRevision:'fixture:vision',inputTokens:171,outputTokens:130,completionRef:'fixture:terminal'}),false);return structuredClone(observation);}
+   if(mode==='aborted'){controller.abort();return structuredClone(observation);}
+   if(mode==='no-settlement')return structuredClone(observation);
+   assert.equal(accounting.settleUsage({providerRevision:'fixture:vision',inputTokens:mode==='over-budget'?1001:171,outputTokens:130,completionRef:'fixture:terminal'}),mode!=='over-budget');
+   return {...structuredClone(observation),frameNumber:observation.frameNumber+1};
+  });t.after(()=>f.db.close());
+  assert.equal(await f.host.campaign.selectPlanning(f.join,f.repository,controller.signal),null,mode);
+  const raw=f.db.connection.prepare('SELECT state,reserved_input,reserved_output FROM activity_planning_reservations').all();
+  assert.equal(raw.length,mode==='no-admission'?0:1);
+  if(raw.length)assert.equal(raw[0]!.state,mode==='mutated-frame'?'settled':'reserved',mode);
+ }
+});
+
+test('disabled calendar reproduces the pre-model refusal after an actual initial observation and reports only once',async t=>{
+ let visionCalls=0;const f=fixture(true,async()=>{visionCalls++;return null;},'disabledCalendar');t.after(()=>f.db.close());
+ assert.equal(await f.host.campaign.selectPlanning(f.join,f.repository,new AbortController().signal),null);assert.equal(f.observeCalls(),1);assert.equal(visionCalls,0);
+ assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,0);assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM activity_checkpoints').get()!.n,0);
+ assert.deepEqual(f.refusals,['start_claim_refused']);f.withdraw();assert.equal(await f.host.campaign.selectPlanning(f.join,f.repository,new AbortController().signal),null);assert.deepEqual(f.refusals,['start_claim_refused']);
+});
+test('explicit manual start with disabled schedule waits for the image then reaches accounted vision through one durable start',async t=>{
+ let visionCalls=0;const f=fixture(true,async(_join,observation,_signal,accounting)=>{
+  visionCalls++;assert.ok(f.repository.get(f.o,f.scope.runId));assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,1);
+  assert.equal(accounting.admitOnce({providerRevision:'fixture:manual-vision',maximumInputTokens:1000,maximumOutputTokens:192}),true);
+  assert.equal(accounting.settleUsage({providerRevision:'fixture:manual-vision',inputTokens:100,outputTokens:20,completionRef:'fixture:manual-vision-terminal'}),true);return structuredClone(observation);
+ },'manual');t.after(()=>f.db.close());
+ f.hold();const pending=f.host.campaign.selectPlanning(f.join,f.repository,new AbortController().signal);await Promise.resolve();assert.equal(f.startCalls(),0);assert.equal(visionCalls,0);assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM game_start_claims').get()!.n,0);
+ f.release();assert.ok(await pending);assert.equal(f.startCalls(),1);assert.equal(visionCalls,1);assert.deepEqual(f.refusals,[]);assert.equal(f.repository.get(f.o,f.scope.runId)!.used.modelCalls,1);
+});
+
+test('controller owner constraints are required when configured and remain current through prepared selection',async t=>{
+ const f=fixture(false,undefined,'calendar',true);t.after(()=>f.db.close());
+ const selected=await f.host.campaign.selectPlanning(f.join,f.repository,new AbortController().signal);assert.ok(selected);
+ const context=JSON.parse(selected.selection.content!);assert.deepEqual(context.actionProposalConstraints,{allowedButtons:['up','down','left','right','a','b','x','y','l','r','select'],maxDurationFrames:12,maxWallMs:400,grantsAuthority:false});
+ f.setConstraints(null);assert.equal(selected.selection.isCurrent(),false);
+ assert.equal(await f.host.campaign.selectPlanning(f.join,f.repository,new AbortController().signal),null);
+ f.setConstraints(context.actionProposalConstraints);assert.equal(selected.selection.isCurrent(),false,'restoring restrictions cannot revive a retired selection');
+ const next=await f.host.campaign.selectPlanning(f.join,f.repository,new AbortController().signal);assert.ok(next);
+ f.source.actionProposalConstraintsFor=()=>context.actionProposalConstraints;assert.equal(next.selection.isCurrent(),false,'replacement owner callback is not original source custody');
+});
+test('configured invalid controller metadata is refused without fallback to the wider contract ceiling',async t=>{
+ const f=fixture(false,undefined,'calendar',true);t.after(()=>f.db.close());
+ f.setConstraints({allowedButtons:['start'],maxDurationFrames:121,maxWallMs:500,grantsAuthority:false});
+ assert.equal(await f.host.campaign.selectPlanning(f.join,f.repository,new AbortController().signal),null);assert.equal(f.refusals.at(-1),'context_unavailable');
 });

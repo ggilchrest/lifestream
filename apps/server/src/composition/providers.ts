@@ -1,5 +1,6 @@
 import type { RuntimeConfig } from "../config/schema.js";
-import type { InferenceProvider } from "@lifestream/runtime/inference";
+import type { InferenceProvider, InferenceRequest, InferenceChunk, ProviderCallContext } from "@lifestream/runtime/inference";
+import {ContinuityRouteBoundary,ContinuityRouteError,type ContinuityPurpose,type ContinuityRouteHost} from "../runtime/continuity-route-boundary.ts";
 import {buildCanonicalPrompt} from "@lifestream/runtime/inference/prompt";
 import { FixtureInferenceProvider } from "@lifestream/runtime/inference/fixture";
 import type { SpeechToTextProvider } from "@lifestream/runtime/voice";
@@ -13,6 +14,11 @@ import { PwceCapabilityDiscovery } from './pwce-capabilities.ts';
 import { PwceWorldContext } from "./pwce-world.ts";
 import { validatePwceProfile } from "../config/pwce.ts";
 import { SHARED_PROVIDER_PREEMPTION_BOUND_MS, SHARED_PROVIDER_SLOT_RELEASE_BOUND_MS } from "@lifestream/runtime/understanding/coordinator";
+import { expectedGpuReady } from "./gpu-readiness.ts";
+import { sameHostInferenceEndpoint } from "../config/local-inference-endpoint.ts";
+
+// Apply the captured implementation through an intrinsic, never its mutable call/apply members.
+const applyCaptured:typeof Reflect.apply=Reflect.apply;
 
 export type ProviderHealthStatus = "healthy" | "degraded" | "unavailable";
 export type ProviderInstanceHealth = {
@@ -54,6 +60,7 @@ const createNemoSocket = (url: string): NemoSocketBridge => {
 };
 
 const descriptors: Record<string, ProviderDescriptor> = {
+  "public-github":{implementation:"lifestream:public-github-read",revision:"1.0.0",status:"healthy",fixture:false},
   fixture: { implementation: "@lifestream/providers-fixture", revision: "workspace", status: "healthy", fixture: true },
   system: { implementation: "node:system", revision: process.version, status: "healthy", fixture: false },
   unavailable: { implementation: "none", revision: "none", status: "unavailable", fixture: false, reason: "provider is explicitly unavailable in the selected profile" },
@@ -66,6 +73,12 @@ const descriptors: Record<string, ProviderDescriptor> = {
   pwce: { implementation: "@lifestream/providers-pwce", revision: "workspace", status: "unavailable", fixture: false, reason: "provider is not configured for this runtime profile" }
 };
 
+/** Source-only composition seam. No deployment custody issuer or non-inference role is invented. */
+export type ContinuityProviderRoute=Readonly<{
+ generate:(purpose:ContinuityPurpose,request:InferenceRequest,context:ProviderCallContext)=>AsyncIterable<InferenceChunk>;
+ tokenize:(purpose:ContinuityPurpose,input:InferenceRequest|string,context:ProviderCallContext&{deadlineAt:string})=>Promise<{count:number;identity:string}>;
+}>;
+
 export class ProviderRegistry {
   readonly providers: Record<string, ProviderInstanceHealth>;
   readonly inference?: InferenceProvider;
@@ -75,8 +88,10 @@ export class ProviderRegistry {
   readonly pwceCapabilities?: PwceCapabilityDiscovery;
   private readonly config: RuntimeConfig;
   private probing: Promise<void> | undefined;
-  constructor(config: RuntimeConfig) {
+  private readonly gpuReady: typeof expectedGpuReady;
+  constructor(config: RuntimeConfig, gpuReady: typeof expectedGpuReady = expectedGpuReady) {
     this.config = config;
+    this.gpuReady = gpuReady;
     const instances: Record<string, ProviderInstanceHealth> = {};
     for (const [id, provider] of Object.entries(config.providers)) {
       const descriptor = descriptors[provider];
@@ -99,6 +114,33 @@ export class ProviderRegistry {
     if (config.providers.stt === "moonshine-mlx" && config.sttProfile) this.stt = new MoonshineSpeechProvider({ baseUrl: config.sttProfile.endpoint, runtimeRevision: config.sttProfile.runtimeVersion, modelRevision: config.sttProfile.modelRevision, modelArtifactDigest: config.sttProfile.modelArtifactDigest, mappingRevision: config.sttProfile.mappingRevision });
     if (config.providers.stt === "nemo-speech" && config.sttProfile) this.stt = new NemoSpeechProvider({ baseUrl: config.sttProfile.endpoint, model: config.sttProfile.model, language: config.sttProfile.language, webSocketFactory: createNemoSocket });
 if (config.providers.tts === "voxcpm" && config.ttsProfile) this.tts = new VoxCpmProvider({ baseUrl: config.ttsProfile.endpoint, voiceBundleKey: config.ttsProfile.voiceBundleKey, voiceBundleRevision: config.ttsProfile.voiceBundleRevision, runtimeRevision: config.ttsProfile.runtimeVersion, modelRevision: config.ttsProfile.modelRevision, mappingRevision: config.ttsProfile.mappingRevision, onDiagnostic: event => console.warn(JSON.stringify({ component: "speech-provider", ...event })) });
+  }
+  /** Bind the actual selected object; locality labels and health never issue custody.
+   * This handle is not mounted by the server. A real host must supply current
+   * deployment/runtime ownership and complete known dependency closure. */
+  createContinuityRoute(custodyOwner:ContinuityRouteHost|null,hostCurrent:()=>boolean):ContinuityProviderRoute {
+    const selected=this.inference,health=this.providers.inference,configuration=this.config,providerName=configuration.providers.inference,profile=configuration.inferenceProfile,profileSnapshot=profile?{...profile}:undefined;
+    const generate=selected?.generate,tokenize=selected?.tokenize;
+    // Preserve the actual custody owner's receiver/private state, while pinning
+    // callbacks and configuration. A copied class instance is not its owner.
+    const owner=custodyOwner&&typeof custodyOwner.resolveCustody==='function'&&typeof custodyOwner.isCurrent==='function'?Object.freeze({deploymentId:custodyOwner.deploymentId,resolveCustody:custodyOwner.resolveCustody.bind(custodyOwner),isCurrent:custodyOwner.isCurrent.bind(custodyOwner),...(custodyOwner.receipt?{receipt:custodyOwner.receipt.bind(custodyOwner)}:{}),...(custodyOwner.maximumDurationMs!==undefined?{maximumDurationMs:custodyOwner.maximumDurationMs}:{}),...(custodyOwner.maximumChunks!==undefined?{maximumChunks:custodyOwner.maximumChunks}:{})}):null;
+    const unchanged=()=>this.inference===selected&&this.providers.inference===health&&health?.status==='healthy'&&this.config===configuration&&configuration.providers.inference===providerName&&configuration.inferenceProfile===profile&&(!profileSnapshot||!!profile&&Object.keys(profile).length===Object.keys(profileSnapshot).length&&Object.entries(profileSnapshot).every(([key,value])=>profile[key as keyof typeof profile]===value))&&selected?.generate===generate&&selected?.tokenize===tokenize;
+    const current=()=>{try{return unchanged()&&typeof hostCurrent==='function'&&hostCurrent()===true&&unchanged();}catch{return false;}};
+    const boundary=(purpose:ContinuityPurpose,callCurrent:()=>boolean)=>{
+      // Registry has no separate retrieval/rewrite/evaluation/fallback owner slots.
+      // An inference provider cannot silently become their selected execution root.
+      if(purpose!=='inference')throw new ContinuityRouteError('compositionPurposeUnavailable');
+      if(!selected||!owner)throw new ContinuityRouteError('custodyUnavailable');
+      const routeCurrent=()=>current()&&callCurrent()===true&&current();
+      return new ContinuityRouteBoundary({...owner,
+        resolveCustody:(provider,purpose)=>{if(!routeCurrent())return null;const record=owner.resolveCustody(provider,purpose);return routeCurrent()?record:null;},
+        isCurrent:(provider,record)=>routeCurrent()&&owner.isCurrent(provider,record)===true&&routeCurrent()
+      });
+    };
+    return Object.freeze({
+      generate:(purpose:ContinuityPurpose,request:InferenceRequest,context:ProviderCallContext)=>{const deadlineAt=request.deadlineAt,originalContext={...context},route=boundary(purpose,()=>request.deadlineAt===deadlineAt);return route.stream(selected!,purpose,{deadlineAt,signal:originalContext.signal},(_provider,signal)=>applyCaptured(generate!,selected!,[request,{...originalContext,signal}]));},
+      tokenize:async(purpose:ContinuityPurpose,input:InferenceRequest|string,context:ProviderCallContext&{deadlineAt:string})=>{const{deadlineAt,...originalContext}=context,route=boundary(purpose,()=>typeof input==='string'||input.deadlineAt===deadlineAt);if(!tokenize)throw new ContinuityRouteError('tokenizerUnavailable');if(typeof input!=='string'&&input.deadlineAt!==deadlineAt)throw new ContinuityRouteError('originalDeadlineMismatch');return route.call(selected!,purpose,{deadlineAt,signal:originalContext.signal},(_provider,signal)=>applyCaptured(tokenize,selected!,[input,{...originalContext,signal}]));}
+    });
   }
   async probe(timeoutMs = 2_000): Promise<void> {
     // Coalesce concurrent readiness callers; do not retain a startup snapshot
@@ -140,6 +182,11 @@ if (config.providers.tts === "voxcpm" && config.ttsProfile) this.tts = new VoxCp
       const ollama = this.config.providers.inference === "ollama-mac-local";
       const apiKey = process.env.LIFESTREAM_INFERENCE_API_KEY;
       if (this.config.providers.inference === "ai5090-development" && !apiKey) { this.providers.inference = Object.freeze({ ...current, status: "unavailable", reason: "Inference credential is not loaded; start the conversation connection launcher." }); return; }
+      if (this.config.inferenceProfile.requiredGpu && !sameHostInferenceEndpoint(new URL(this.config.inferenceProfile.endpoint))) {
+        const { reason: _previousReason, ...base } = current;
+        this.providers.inference = Object.freeze({ ...base, status: "unavailable", reason: "configured inference GPU endpoint is no longer on this host" });
+        return;
+      }
       const response = await fetch(`${this.config.inferenceProfile.endpoint.replace(/\/$/u, "")}${ollama ? "/api/tags" : "/v1/models"}`, { signal: controller.signal, ...(!ollama && apiKey ? { headers: { authorization: `Bearer ${apiKey}` } } : {}) });
       let healthy = response.ok;
       if (healthy && ollama) {
@@ -150,6 +197,11 @@ if (config.providers.tts === "voxcpm" && config.ttsProfile) this.tts = new VoxCp
       if (healthy && !ollama) {
         const payload = await response.json() as { data?: Array<{ id?: string }> };
         healthy = payload.data?.some(model => model.id === this.config.inferenceProfile?.servedModelName) === true;
+      }
+      if (healthy && this.config.inferenceProfile.requiredGpu && !await this.gpuReady(this.config.inferenceProfile.requiredGpu, controller.signal)) {
+        const { reason: _previousReason, ...base } = current;
+        this.providers.inference = Object.freeze({ ...base, status: "unavailable", reason: "configured inference GPU or service GPU execution is unavailable" });
+        return;
       }
       if (healthy && this.config.providers.inference === "llama-cpp-local") {
         const canonical = buildCanonicalPrompt({assistantId:"readiness-fixture",sessionId:"readiness-fixture",interactionId:"readiness-fixture",endpointId:null,userInput:"readiness",deadlineAt:new Date(Date.now()+timeoutMs).toISOString()});

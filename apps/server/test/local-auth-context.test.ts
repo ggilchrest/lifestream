@@ -69,7 +69,7 @@ test('unchanged verified identity survives activity refresh and reopening; logou
   const f = await setup(t); f.setNow(f.now() + 1000); f.auth.touch(f.context);
   assert.ok(f.auth.assertCurrent(f.context));
   const reopened = new LocalAuthentication(f.database, f.options); assert.ok(reopened.assertCurrent(f.context));
-  f.setNow(f.now() + 1_800_000); assert.throws(() => reopened.assertCurrent(f.context), denied);
+  f.setNow(f.now() + 1_800_000); assert.throws(() => reopened.assertCurrent(f.context), error => error instanceof AuthenticationError && error.status === 403 && error.code === 'administration_freshness_required');
   assert.ok(reopened.assertCurrent(f.context, false)); reopened.logout(f.context);
   assert.equal(reopened.context(f.token, origin, false), undefined);
 });

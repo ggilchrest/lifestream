@@ -14,9 +14,9 @@ async function fixture(t:any){
  const root=await mkdtemp(join(tmpdir(),'ls-handoff-'));t.after(()=>rm(root,{recursive:true,force:true}));const config=loadProfile('test');config.storage={databasePath:join(root,'state.sqlite'),artifactDirectory:join(root,'artifacts')};config.authority.authentication='local-password';const password=randomBytes(24).toString('hex'),installerToken=randomBytes(32).toString('hex'),sessionEnvironmentId=randomUUID(),options={config,sessionEnvironmentId,localAuth:{stateDirectory:join(root,'auth'),installerToken},audiencePrivacy:{sourceIds:[]}};
  let app=createLifestreamServer(options);await app.start();t.after(()=>app.shutdown());const port=app.address().port,base=`http://127.0.0.1:${port}`;
  type Client={headers:Record<string,string>;sessionId:string;principalId:string;request:(path:string,body?:unknown,headers?:Record<string,string>)=>Promise<Response>};
- const client=async(setup=false,username='owner'):Promise<Client>=>{
+ const client=async(setup=false,username='owner',clientPassword=password):Promise<Client>=>{
   const headers:Record<string,string>={origin:base,'content-type':'application/json'};const request=(path:string,body?:unknown,extra={})=>fetch(base+path,{method:body===undefined?'GET':'POST',headers:{...headers,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
-  const response=await request('/api/auth/v1/'+(setup?'setup':'sign-in'),{username,password,...(setup?{installerToken}:{})});assert.equal(response.status,setup?201:200);headers.cookie=response.headers.get('set-cookie')!.split(';')[0]!;const {session}=await response.json();headers['x-lifestream-csrf']=session.csrfToken;return {headers,sessionId:session.sessionId,principalId:session.principalId,request};
+  const response=await request('/api/auth/v1/'+(setup?'setup':'sign-in'),{username,password:clientPassword,...(setup?{installerToken}:{})});assert.equal(response.status,setup?201:200);headers.cookie=response.headers.get('set-cookie')!.split(';')[0]!;const {session}=await response.json();headers['x-lifestream-csrf']=session.csrfToken;return {headers,sessionId:session.sessionId,principalId:session.principalId,request};
  };
  const source=await client(true);const created=await(await source.request('/api/admin/v1/assistants',{displayName:'Synthetic handoff Assistant'})).json(),assistantId=created.assistantId;assert.equal((await source.request(`/api/admin/v1/assistants/${assistantId}/activate`,{profileId:created.profile.profileId,expectedActiveRevision:null})).status,200);
  const configure=async(c:Client,bindingKey=randomUUID())=>{assert.equal((await c.request('/api/runtime/v1/session-context',{expectedRevision:0,mode:'text',audienceScope:'authenticatedSession',bindingKey})).status,200);assert.equal((await c.request('/api/runtime/v1/audience',{mode:'solo',seconds:300})).status,200);};await configure(source);
@@ -73,13 +73,39 @@ test('two reviewed sources cannot both commit into one destination; readiness do
  const next=await f.client();await f.configure(next);const ready=await f.ready(next);await f.restart();await other.request('/api/runtime/v1/audience',{mode:'solo',seconds:300});assert.equal((await f.handoff(other,'prepare',{destinationReadinessId:ready.readinessId})).status,409);await next.request('/api/runtime/v1/audience',{mode:'solo',seconds:300});assert.equal((await(await f.inspect(next)).json()).ready,null);
 });
 
-test('handoff rechecks current administration, source dialogue and endpoint identity',{timeout:15000},async t=>{
+test('handoff rechecks source dialogue and endpoint identity',{timeout:15000},async t=>{
  const f=await fixture(t),target=await f.client();await f.configure(target);const first=await f.prepare(target);await(await f.source.request('/api/runtime/v1/messages',{assistantId:f.assistantId,userInput:'A later accepted turn invalidates that review.'})).text();assert.equal((await f.commit(first)).status,409);
- const next=await f.prepare(target),session=f.source;assert.ok(session.principalId);
- assert.equal((await f.source.request('/api/auth/v1/permissions',{principalId:session.principalId,assistantId:f.assistantId,administer:false})).status,200);assert.equal((await f.commit(next)).status,403);assert.equal((await f.inspect(target)).status,422);assert.equal((f.app as any).database.connection.prepare('SELECT status FROM sessions WHERE id=?').get(f.source.sessionId).status,'active');
- assert.equal((await f.source.request('/api/auth/v1/permissions',{principalId:session.principalId,assistantId:f.assistantId,administer:true})).status,200);
  const sourceBinding=(f.app as any).database.connection.prepare('SELECT binding_key FROM endpoint_bindings WHERE endpoint_id=(SELECT endpoint_id FROM sessions WHERE id=?)').get(f.source.sessionId).binding_key;
  const sameEndpoint=await f.client();await f.configure(sameEndpoint,sourceBinding);const ready=await f.ready(sameEndpoint);assert.equal((await f.handoff(f.source,'prepare',{destinationReadinessId:ready.readinessId})).status,409);
+});
+
+test('ordinary Assistant administrator loses reviewed and held handoff access when its grant is revoked',{timeout:15000},async t=>{
+ const f=await fixture(t),password=randomBytes(24).toString('hex');
+ const account=await f.source.request('/api/auth/v1/accounts',{username:'assistant-admin',password});assert.equal(account.status,201);const {principalId}=await account.json();
+ const permission=async(administer:boolean)=>{assert.equal((await f.source.request('/api/auth/v1/permissions',{principalId,assistantId:f.assistantId,administer})).status,200);};await permission(true);
+ const source=await f.client(false,'assistant-admin',password),target=await f.client(false,'assistant-admin',password);await f.configure(source);await f.configure(target);
+ const auth=(f.app as any).localAuth,db=(f.app as any).database.connection;
+ assert.equal(auth.isSystemAdministrator(auth.hostSessionContext(source.sessionId)),false);assert.equal(auth.canAdminister(auth.hostSessionContext(source.sessionId),f.assistantId),true);
+ const prepare=async()=>{const ready=await f.ready(target),response=await f.handoff(source,'prepare',{destinationReadinessId:ready.readinessId});assert.equal(response.status,200);return response.json();};
+ const review=await prepare(),path=`/api/runtime/v1/sessions/${source.sessionId}/handoff`,body=JSON.stringify(review.request);
+ // Hold the real HTTP body after the original CSRF/context checks. Revocation
+ // must be evaluated again before committing either session or its receipt.
+ let entered!:()=>void,bodyRead!:()=>void,settled!:(status:number)=>void;
+ const admitted=new Promise<void>(r=>entered=r),reading=new Promise<void>(r=>bodyRead=r),status=new Promise<number>(r=>settled=r);
+ const observe=(request:any)=>{if(request.url===path){entered();request.once('data',bodyRead);}};(f.app as any).server.on('request',observe);
+ const pending=httpRequest(f.base+path,{method:'POST',headers:{...source.headers,'transfer-encoding':'chunked'}},response=>{response.resume();response.on('end',()=>settled(response.statusCode!));});pending.on('error',()=>settled(0));t.after(()=>{pending.destroy();(f.app as any).server.off('request',observe);});
+ pending.flushHeaders();await admitted;pending.write(body.slice(0,8));await reading;await permission(false);pending.end(body.slice(8));assert.equal(await status,403,'body admitted before revocation cannot commit afterward');
+ assert.equal(auth.canAdminister(auth.hostSessionContext(source.sessionId),f.assistantId),false);assert.equal((await source.request(path,review.request)).status,403,'stale reviewed request remains denied');assert.equal((await f.inspect(target)).status,422);
+ assert.equal(db.prepare('SELECT status FROM sessions WHERE id=?').get(source.sessionId).status,'active');assert.equal(db.prepare('SELECT revision FROM sessions WHERE id=?').get(target.sessionId).revision,1);assert.equal(db.prepare('SELECT count(*) AS n FROM session_handoff_records').get().n,0);
+ await permission(true);const fresh=await prepare();assert.equal((await source.request(path,fresh.request)).status,200,'restored scoped grant permits a newly reviewed handoff');
+});
+
+test('enrolled system-wide Owner retains handoff access after only its Assistant grant is removed',{timeout:15000},async t=>{
+ const f=await fixture(t),target=await f.client();await f.configure(target);const auth=(f.app as any).localAuth,context=auth.hostSessionContext(f.source.sessionId);
+ assert.equal(context.principalId,auth.enrollmentPrincipal());assert.equal(auth.isSystemAdministrator(context),true);const review=await f.prepare(target);
+ assert.equal((await f.source.request('/api/auth/v1/permissions',{principalId:f.source.principalId,assistantId:f.assistantId,administer:false})).status,200);
+ assert.equal((f.app as any).database.connection.prepare('SELECT administer FROM local_assistant_permissions WHERE principal_id=? AND assistant_id=?').get(f.source.principalId,f.assistantId).administer,0);
+ assert.equal(auth.canAdminister(auth.hostSessionContext(f.source.sessionId),f.assistantId),true);assert.equal((await f.inspect(target)).status,200);assert.equal((await f.commit(review)).status,200);
 });
 
 test('Assistant administration permission does not delegate another principal’s handoff or receipts',{timeout:15000},async t=>{

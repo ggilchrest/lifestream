@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
@@ -75,4 +75,27 @@ test('finite repository quotas stay pinned even if the caller later mutates the 
 test('expiry during a final trusted callback rolls back each metadata mutation',async t=>{for(const mode of ['checkpoint','reservation','usage'])await t.test(mode,()=>{const f=fixture();try{if(mode!=='checkpoint')f.repository.put(f.owner,f.checkpoint,0);if(mode==='usage')f.repository.reservePlanning(f.owner,f.scope,f.reservation);let calls=0;const expire=()=>{if(++calls===2)f.clock(f.f.input.nowMs+f.policy.retentionMs+1);return true;};if(mode==='checkpoint')f.options.checkpointCurrent=expire;if(mode==='reservation')f.options.planningCurrent=expire;if(mode==='usage')f.options.usageCurrent=expire;if(mode==='checkpoint'){assert.throws(()=>f.repository.put(f.owner,f.checkpoint,0),/unavailable/);assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM activity_checkpoints').get()!.n,0);}if(mode==='reservation'){assert.throws(()=>f.repository.reservePlanning(f.owner,f.scope,f.reservation),/unavailable/);assert.equal(f.db.connection.prepare('SELECT count(*) AS n FROM activity_planning_reservations').get()!.n,0);}if(mode==='usage'){assert.throws(()=>f.repository.settlePlanning(f.owner,f.scope,f.reservation,{inputTokens:1,outputTokens:1,providerRevision:f.reservation.providerRevision,completionRef:'scripted-terminal'}),/unavailable/);assert.equal(f.db.connection.prepare('SELECT state FROM activity_planning_reservations').get()!.state,'reserved');}}finally{f.db.close();}});});
 test('bounded host cleanup expires private payload even in restore quarantine and preserves opaque reservation fences',t=>{
  const f=fixture();t.after(()=>f.db.close());f.repository.put(f.owner,f.checkpoint,0);f.repository.reservePlanning(f.owner,f.scope,f.reservation);f.quarantine(true);f.clock(f.f.input.nowMs+f.policy.retentionMs+1);f.repository.sweep();assert.equal(f.db.connection.prepare('SELECT payload_json FROM activity_checkpoints').get()!.payload_json,null);assert.equal(f.db.connection.prepare('SELECT state FROM activity_planning_reservations').get()!.state,'reserved');
+});
+
+// Real server prepared turns use a SHA256 context fingerprint, not a new UUID.
+test('SHA256 prepared identity reserves and settles exactly once without accepting a replacement fingerprint',t=>{
+ const f=fixture();t.after(()=>f.db.close());f.repository.put(f.owner,f.checkpoint,0);
+ const invalidationKey=createHash('sha256').update('original authenticated prepared context').digest('hex'),reservation={...f.reservation,invalidationKey};
+ assert.equal(f.repository.reservePlanning(f.owner,f.scope,reservation),true);
+ assert.equal(f.repository.reservePlanning(f.owner,f.scope,reservation),false);
+ const usage={inputTokens:100,outputTokens:10,providerRevision:reservation.providerRevision,completionRef:'scripted-qualified-terminal'};
+ assert.equal(f.repository.settlePlanning(f.owner,f.scope,{...reservation,invalidationKey:'b'.repeat(64)},usage),false);
+ assert.equal(f.repository.get(f.owner,f.scope.runId)!.reserved.modelCalls,1);
+ assert.equal(f.repository.settlePlanning(f.owner,f.scope,reservation,usage),true);
+ assert.equal(f.repository.settlePlanning(f.owner,f.scope,reservation,usage),false);
+ assert.equal(f.repository.get(f.owner,f.scope.runId)!.used.modelCalls,1);
+});
+test('prepared invalidation identity accepts only legacy UUID or exact lowercase SHA256; other IDs remain UUID-only',t=>{
+ const f=fixture();t.after(()=>f.db.close());f.repository.put(f.owner,f.checkpoint,0);
+ for(const invalidationKey of ['', 'arbitrary.context:1', 'a'.repeat(63), 'a'.repeat(65), 'A'.repeat(64), 'g'.repeat(64), 'a'.repeat(64)+'\n', null, 42]){
+  assert.equal(f.repository.reservePlanning(f.owner,f.scope,{...f.reservation,invalidationKey} as PlanningReservation),false);
+ }
+ assert.equal(f.repository.reservePlanning(f.owner,f.scope,{...f.reservation,viewId:'a'.repeat(64)}),false);
+ assert.equal(f.db.readGet('SELECT count(*) AS n FROM activity_planning_reservations')!.n,0);
+ assert.equal(f.repository.reservePlanning(f.owner,f.scope,f.reservation),true);
 });

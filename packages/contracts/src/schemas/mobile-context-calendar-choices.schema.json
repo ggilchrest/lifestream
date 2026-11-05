@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-calendar-choices/1.0.0",
+  "$defs": {
+    "CalendarChoicesQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "assistantId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "assistantId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "CalendarChoice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enrollmentId",
+        "sourceNamespace",
+        "collector",
+        "policyRevision",
+        "policyBindingDigest"
+      ],
+      "properties": {
+        "enrollmentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sourceNamespace": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "collector": {
+          "enum": [
+            "eventKit",
+            "androidCalendar",
+            "googleTasks"
+          ]
+        },
+        "policyRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policyBindingDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "CalendarChoices": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "principalId",
+        "assistantId",
+        "choices"
+      ],
+      "properties": {
+        "principalId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "assistantId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "choices": {
+          "type": "array",
+          "maxItems": 25,
+          "items": {
+            "$ref": "#/$defs/CalendarChoice"
+          }
+        }
+      }
+    },
+    "CalendarChoicesPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaId",
+        "schemaVersion",
+        "digest"
+      ],
+      "properties": {
+        "schemaId": {
+          "const": "https://lifestream.dev/contracts/mobile-context-calendar-choices/1.0.0"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "CalendarChoicesResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "producerPin",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "producerPin": {
+          "$ref": "#/$defs/CalendarChoicesPin"
+        },
+        "result": {
+          "$ref": "#/$defs/CalendarChoices"
+        }
+      }
+    }
+  }
+}

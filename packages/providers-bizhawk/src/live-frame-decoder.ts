@@ -33,24 +33,25 @@ export function gamePixelRegionDigest(rgb:Buffer,width:number,height:number,regi
  * unrelated pixels does not hide a matched cue. An absent/changed cue supplies
  * no field, never a claimed absence, safe menu, inferred location or game stat. */
 export class LiveFrameDecoder{
- readonly revision:string;readonly manifestDigest:string;private readonly cues:readonly ReviewedPixelCue[];
- constructor(manifest:LiveFrameManifest){
+ readonly revision:string;readonly manifestDigest:string;private readonly cues:readonly ReviewedPixelCue[];private readonly ordinaryGameTime:boolean;
+ constructor(manifest:LiveFrameManifest,options?:{ordinaryGameTime:true}){
+  this.ordinaryGameTime=options?.ordinaryGameTime===true;
   if(!manifest||!/^\d+\.\d+\.\d+$/.test(manifest.revision)||!Array.isArray(manifest.cues)||manifest.cues.length>62)throw Error('live_frame_manifest_unavailable');
   const fields=new Set<string>();for(const cue of manifest.cues){
    if(!/^ct\.ui\.[A-Za-z0-9_.-]{1,100}$/.test(cue.fieldId)||fields.has(cue.fieldId)||!['string','number','boolean'].includes(typeof cue.value)||typeof cue.value==='number'&&!Number.isFinite(cue.value)||typeof cue.value==='string'&&cue.value.length>500||!Array.isArray(cue.regions)||cue.regions.length<1||cue.regions.length>8)throw Error('live_frame_manifest_unavailable');fields.add(cue.fieldId);
    for(const r of cue.regions)if(![r.x,r.y,r.width,r.height].every(Number.isSafeInteger)||r.x<0||r.y<0||r.width<1||r.height<1||r.x+r.width>1024||r.y+r.height>1024||!/^[a-f0-9]{64}$/.test(r.rgbSha256))throw Error('live_frame_manifest_unavailable');
   }
-  const snapshot=JSON.stringify(manifest);this.manifestDigest=hash(Buffer.from(snapshot));this.revision=manifest.revision;this.cues=JSON.parse(snapshot).cues;
+  const snapshot=JSON.stringify(manifest);this.manifestDigest=hash(Buffer.from(this.ordinaryGameTime?snapshot+'|ordinary-game-time/1':snapshot));this.revision=manifest.revision;this.cues=JSON.parse(snapshot).cues;
   for(const cue of this.cues){for(const r of cue.regions)Object.freeze(r);Object.freeze(cue.regions);Object.freeze(cue);}Object.freeze(this.cues);Object.freeze(this);
  }
  decode({scope,observation,bytes,now}:{scope:ActivityScope;observation:GameObservation;bytes:Buffer;now:number}):PlayerVisibleStateValue[]{
   const shot=observation.screenshots[0];if(!Number.isFinite(now)||!isDeepStrictEqual(scope,observation.scope)||observation.untrusted!==true||observation.screenshots.length!==1||!shot||bytes.length>2097152||shot.sha256!==hash(bytes)||shot.byteLength!==bytes.length||shot.mediaType!=='image/png'||shot.frameNumber!==observation.frameNumber||shot.capturedAt!==observation.capturedAt)return [];
-  const captured=Date.parse(shot.capturedAt),expires=Date.parse(shot.expiresAt);if(!Number.isFinite(captured)||!Number.isFinite(expires)||captured>now||expires<=now||expires-captured>30000)return [];
+  const captured=Date.parse(shot.capturedAt),expires=Date.parse(shot.expiresAt);if(!Number.isFinite(captured)||!Number.isFinite(expires)||captured>now||expires<=now||expires-captured>300000)return [];
   let image:ReturnType<typeof gameFramePixels>;try{image=gameFramePixels(bytes);}catch{return [];}try{
    if(image.width!==shot.width||image.height!==shot.height)return [];
    const values:Array<{fieldId:string;value:string|number|boolean}>=[];
    values.push({fieldId:'display.visible.isEntirelyBlack',value:image.rgb.every(v=>v===0)});
-   values.push({fieldId:'display.visible.rgbSha256',value:hash(image.rgb)});
+   if(!this.ordinaryGameTime)values.push({fieldId:'display.visible.rgbSha256',value:hash(image.rgb)});
    for(const cue of this.cues){let matched=false;try{matched=cue.regions.every(r=>gamePixelRegionDigest(image.rgb,image.width,image.height,r)===r.rgbSha256);}catch{}if(matched)values.push({fieldId:cue.fieldId,value:cue.value});}
    return values.map(value=>({...value,visibility:'visibleNow',firstObservedRef:observation.observationId,lastObservedRef:observation.observationId,timelineId:scope.timelineId,observedAt:shot.capturedAt,freshUntil:shot.expiresAt,decoderRevision:this.revision,manifestDigest:this.manifestDigest,limitations:['Actual visible PNG pixels only; no hidden RAM, inferred gameplay state or model-supplied field values.','UI cues are positive exact reviewed pixel matches; a missing match does not prove absence or menu safety.','No controller, ordinary save/load, memory or image-disclosure authority is supplied.']}));
   }finally{image.rgb.fill(0);}

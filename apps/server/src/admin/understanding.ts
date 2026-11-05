@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 import { createContractValidator } from "@lifestream/contracts";
 import { UnderstandingRepository, understandingDigest, hypothesisFingerprint, candidateFingerprint, type Database, type UnderstandingRecord, type UnderstandingScope } from "@lifestream/storage-sqlite";
 import type {HypothesisRejection,CandidateSuppression} from './recovery-journal.ts';
-import { UnderstandingWorkCoordinator, SHARED_PROVIDER_PREEMPTION_BOUND_MS, SHARED_PROVIDER_SLOT_RELEASE_BOUND_MS, type BackgroundWork } from "@lifestream/runtime/understanding/coordinator";
+import { UnderstandingWorkCoordinator, SHARED_PROVIDER_PREEMPTION_BOUND_MS, SHARED_PROVIDER_SLOT_RELEASE_BOUND_MS, type BackgroundWork, type SupervisedForegroundWork } from "@lifestream/runtime/understanding/coordinator";
 import {selectDiscoveryContext} from "./discovery-selection.ts";
 import { extensionError, type RelationshipConfiguration } from "../relationship-extensions.ts";
 
@@ -48,14 +48,22 @@ export class DiscoveryAdministration {
   }
   foregroundStarted():()=>void{return this.coordinator.foregroundStarted();}
   backgroundIdle(){return this.coordinator.isIdle();}
+  canPrepareForeground(){return !this.closed&&this.coordinator.canPrepareForeground();}
   cancelBackground(key:string,reason:'explicit'|'scopeInvalidated'|'shutdown'='explicit'){return this.coordinator.cancel(key,reason);}
+  private readonly supervisedKeys=new Set<string>();
+  cancelSupervisedForeground(key:string,reason:'explicit'|'scopeInvalidated'|'shutdown'='explicit'){return this.coordinator.cancelSupervisedForeground(key,reason);}
+  async runSupervisedForeground<T>(work:SupervisedForegroundWork<T>){
+    if(this.closed)return {state:'suppressed' as const,reason:'runtimeClosed',completedSteps:0};
+    if(this.supervisedKeys.size)return {state:'suppressed' as const,reason:'supervisedForegroundBusy',completedSteps:0};
+    this.supervisedKeys.add(work.key);try{return await this.coordinator.runSupervisedForeground({...work,current:()=>!this.closed&&work.current()});}finally{this.supervisedKeys.delete(work.key);}
+  }
   async runBackground<T>(work:BackgroundWork<T>){
     if(this.closed)return {state:'suppressed' as const,reason:'runtimeClosed',completedSteps:0};
     if(this.backgroundKeys.size>=8)return {state:'suppressed' as const,reason:'backgroundCapacity',completedSteps:0};
     const token=Symbol();this.backgroundKeys.set(token,work.key);
     try{return await this.coordinator.run({...work,current:()=>!this.closed&&work.current()});}finally{this.backgroundKeys.delete(token);}
   }
-  close():void{if(this.closed)return;this.closed=true;for(const key of this.backgroundKeys.values())this.coordinator.cancel(key,'shutdown');this.inputLab.close();this.recent.clear();clearInterval(this.cleanupTimer);clearInterval(this.retryTimer);this.removeIdleListener();this.retryQueue.clear();for(const [key,task] of this.tasks){this.coordinator.cancel(key,"shutdown");this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
+  close():void{if(this.closed)return;this.closed=true;for(const key of this.supervisedKeys)this.coordinator.cancelSupervisedForeground(key,'shutdown');for(const key of this.backgroundKeys.values())this.coordinator.cancel(key,'shutdown');this.inputLab.close();this.recent.clear();clearInterval(this.cleanupTimer);clearInterval(this.retryTimer);this.removeIdleListener();this.retryQueue.clear();for(const [key,task] of this.tasks){this.coordinator.cancel(key,"shutdown");this.repository.finish(task.scope,key,"cancelled","Runtime closed; no automatic replay.");}}
   invalidate(relationshipId:string):void{for(const [key,entry]of this.retryQueue)if(entry.relationshipId===relationshipId){this.retryQueue.delete(key);this.repository.finish(entry.scope,key,"cancelled","Current authorization or evidence changed; idle retry withheld.");}for(const [key,task]of this.tasks)if(task.relationshipId===relationshipId)this.coordinator.cancel(key,"scopeInvalidated");}
   private queueRetry(key:string,entry:{relationshipId:string;scope:UnderstandingScope;run:()=>Promise<void>;attempt:number},reason:string):void {
     if(this.closed)return;

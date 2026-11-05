@@ -9,3 +9,7 @@ export {ReviewedFrameDecoder,type ReviewedFrameManifest} from './reviewed-frame-
 export {LiveFrameDecoder,gameFramePixels,gamePixelRegionDigest,type LiveFrameManifest,type ReviewedPixelCue,type PixelRegion} from './live-frame-decoder.js';
 export {NativeGameEvidence,type NativeGameEvidenceOptions} from './native-evidence.js';
 export {createOwnedWindowsGameHostDriver,type OwnedWindowsGameHostDriverOptions} from './owned-native-driver.js';
+
+export {nativeSourceWitness,captureNativeSource,nativeSourceException,captureFrameApproval,type NativeSourceWitness,type NativeSourceCapture,type FrameApprovalWitness,type FrameApprovalCapture} from './native-source-witness.ts';
+
+export {captureGameSanityTiming,GAME_SANITY_TIMING_DEFAULTS,type GameSanityTiming,type GameSanityTimingInput} from './game-sanity-timing.js';

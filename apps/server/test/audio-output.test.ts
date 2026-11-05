@@ -62,7 +62,7 @@ test('malformed, incomplete and failed synthesis cannot claim complete output',a
    if(mode!=='noTerminal')yield {kind:'terminal',outcome:'succeeded',outputSamples:mode==='badCounts'?9:10,frameCount:1,mappingRevision:'map',degradedDimensions:[]};
    if(mode==='postTerminal')yield {kind:'data',segmentId:request.segmentId,frame:f.frame(1),mappingRevision:'map'};
   };
-  await assert.rejects(f.session.speakOutputOnly(f.input),undefined,mode);assert.equal(f.events.at(-1).event.payload.state,'failed');assert.equal(f.service.currentLease(f.sessionId),undefined);
+  await assert.rejects(f.session.speakOutputOnly(f.input),undefined,mode);await new Promise(resolve=>setImmediate(resolve));assert.equal(f.events.at(-1).event.payload.state,'failed');assert.equal(f.service.currentLease(f.sessionId),undefined);
   if(['noAudio','badFrame'].includes(mode))assert.equal(f.counts().emitted,0);else assert.equal(f.events.some(e=>e.type==='stopPlayback'),true);
  }
 });
@@ -86,7 +86,7 @@ test('handoff fences the old output stream and its cleanup cannot release the ne
 test('failed durable emission callbacks stop playback and preserve the observed first write',async()=>{
  for(const afterWrite of [false,true]){
   const f=fixture();if(afterWrite)f.input.emitted=()=>{throw new Error('Synthetic receipt write failure');};else f.input.beforeEmission=()=>{throw new Error('Synthetic admission write failure');};
-  await assert.rejects(f.session.speakOutputOnly(f.input));assert.equal(f.events.some(e=>e.event?.payload.type==='textDelta'),afterWrite);assert.equal(f.events.some(e=>e.type==='stopPlayback'),afterWrite);assert.equal(f.events.filter(e=>e.type==='audio').length,0);assert.equal(f.service.currentLease(f.sessionId),undefined);
+  await assert.rejects(f.session.speakOutputOnly(f.input));await new Promise(resolve=>setImmediate(resolve));assert.equal(f.events.some(e=>e.event?.payload.type==='textDelta'),afterWrite);assert.equal(f.events.some(e=>e.type==='stopPlayback'),afterWrite);assert.equal(f.events.filter(e=>e.type==='audio').length,0);assert.equal(f.service.currentLease(f.sessionId),undefined);
  }
 });
 
@@ -168,4 +168,56 @@ test('output-only success requires both delivery confirmation and exact endpoint
 test('output-only cancellation without an endpoint report keeps ownership only until the existing expiry',async t=>{
  t.mock.timers.enable({apis:['setTimeout']});const f=fixture({autoSettle:false});let entered:()=>void=()=>{};const started=new Promise<void>(r=>{entered=r;});f.input.synthesized=async signal=>{entered();await new Promise<void>((_,reject)=>signal.addEventListener('abort',()=>reject(Error('Cancelled')),{once:true}));};
  const pending=f.session.speakOutputOnly(f.input);await started;await f.session.message(JSON.stringify({type:'interrupt',interactionTraceId:f.input.interactionId,reason:'Stop'}));await assert.rejects(pending);assert.ok(f.service.currentLease(f.sessionId));t.mock.timers.tick(30000);await new Promise(r=>setImmediate(r));assert.equal(f.service.currentLease(f.sessionId),undefined);assert.equal(f.session.outputAvailable,true);
+});
+
+test('output-only and read-aloud voice projection honors both saved reference modes',async()=>{
+ for(const mode of ['reference','continuation'] as const){const f=fixture(),reference={sampleRateHz:16000 as const,dataBase64:Buffer.alloc(64000,9).toString('base64'),transcript:'Synthetic source',consent:true as const},settings={description:'',seed:9,deliveryMode:'neutral' as const,pace:.5,energy:.4,reference,conditioningMode:mode},designs:any[]=[];f.tts.withVoiceDesign=(v:any)=>{designs.push(v);return f.tts;};f.deps.resolveVoice=()=>({settings,voiceProfile:{voiceRef:'saved-voice:synthetic',revision:1},language:'en',current:()=>true});await f.session.speakOutputOnly(f.input);assert.equal(designs[0].reference.dataBase64,reference.dataBase64);assert.equal(designs[0].reference.transcript,mode==='reference'?'':'Synthetic source');assert.equal(settings.reference.transcript,'Synthetic source');assert.equal(designs[0].seed,9);f.session.close();}
+});
+
+test('terminal audience admission follows before-emission, lease and voice callbacks before the first text or PCM write',async()=>{
+ for(const mode of ['beforeEmission','lease','voice'] as const){
+  const f=fixture();let admitted=true,armed=false;const trace:string[]=[];
+  f.input.current=()=>{trace.push('host.current');return true;};
+  f.input.terminalAdmission=()=>{trace.push('terminal.admission');return admitted;};
+  const originalBegin=f.input.beforeEmission;f.input.beforeEmission=()=>{originalBegin();armed=true;if(mode==='beforeEmission')admitted=false;};
+  const acquire=f.deps.outputLease;f.deps.outputLease=(...args:any[])=>{const lease=acquire(...args);return {...lease,current:()=>{const current=lease.current();trace.push('lease.current');if(armed&&mode==='lease')admitted=false;return current;}};};
+  f.deps.resolveVoice=()=>({settings:{description:'',seed:0,deliveryMode:'neutral',pace:.5,energy:.5},voiceProfile:{voiceRef:'synthetic',revision:1},current:()=>{trace.push('voice.current');if(armed&&mode==='voice')admitted=false;return true;}});
+  try{
+   await assert.rejects(f.session.speakOutputOnly(f.input));await new Promise(resolve=>setImmediate(resolve));
+   assert.equal(armed,true,mode);assert.equal(admitted,false,mode);assert.equal(f.events.filter(e=>e.event?.payload.type==='textDelta'||e.type==='audio').length,0,mode);
+   assert.equal(f.counts().emitted,0);assert.equal(f.service.currentLease(f.sessionId),undefined);
+   assert.ok(trace.lastIndexOf('terminal.admission')>trace.lastIndexOf('voice.current'));
+  }finally{f.session.close();}
+ }
+});
+
+test('optional terminal admission preserves ordinary output and cannot be replaced by a later owner callback',async()=>{
+ for(const mode of ['absent','accepted','replaced'] as const){
+  const f=fixture();let admitted=true;
+  if(mode!=='absent')f.input.terminalAdmission=()=>admitted;
+  const begin=f.input.beforeEmission;f.input.beforeEmission=()=>{begin();if(mode==='replaced'){admitted=false;f.input.terminalAdmission=()=>true;}};
+  try{
+   if(mode==='replaced'){await assert.rejects(f.session.speakOutputOnly(f.input));assert.equal(f.events.some(e=>e.event?.payload.type==='textDelta'||e.type==='audio'),false);}
+   else{const result=await f.session.speakOutputOnly(f.input);assert.equal(result.frames,1);assert.equal(f.events.filter(e=>e.event?.payload.type==='textDelta').length,1);assert.equal(f.counts().emitted,1);}
+  }finally{f.session.close();}
+ }
+});
+
+test('ordinary voice invokes source admission once before generation, publishes its notice and refuses a withdrawn source before synthesis',async()=>{
+ for(const mode of ['source','absent','withdraw'] as const){
+  const events:any[]=[],order:string[]=[],sessionId=randomUUID(),endpointId=randomUUID(),audioInputId=randomUUID();let current=true,synthesis=0;
+  const settings={sourceRevision:'synthetic-source',runtimeStatus:'ready',endpointId,endpointScope:'sessionEndpoint',audienceScope:'authenticatedSession',permissionState:'authenticatedSession',inputModalities:{text:'active',microphone:'active',visual:'notConfigured'},outputModalities:{text:'active',speechGeneration:'available',speechDelivery:'notObserved',presentation:'notConfigured'},limitations:[]};
+  const prepare=()=>({assistantId:randomUUID(),endpointId,runtimeSelfContext:settings,isCurrent:()=>current,...(mode==='absent'?{}:{sourceNotice:'source-linked-health/1',sourceBegin:(_id:string,modality:string)=>{order.push('begin:'+modality);if(mode==='withdraw')current=false;}})});
+  const deps:any={prepare,stt:{async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Synthetic user voice.'}};yield {kind:'terminal',outcome:'succeeded'};}},inference:{async *generate(){order.push('generate');yield {kind:'text',text:JSON.stringify({version:'voice-response/1'})+'\n'+JSON.stringify({channel:'speech',text:'Synthetic spoken reply.'})+'\n'};yield {kind:'done'};}},tts:{async *synthesize(request:any){synthesis++;order.push('synthesize');yield {kind:'data',segmentId:request.segmentId,frame:{frameId:randomUUID(),sequence:0,format:request.format,sampleOffset:0,sampleCount:10,dataBase64:Buffer.alloc(20).toString('base64')}};yield {kind:'terminal',outcome:'succeeded'};}}};
+  const audio=new AudioSession({readyState:1,send:value=>events.push(JSON.parse(value)),close(){}},deps,sessionId);
+  const bytes=Buffer.alloc(9600);for(let offset=0;offset<bytes.length;offset+=2)bytes.writeInt16LE(1000,offset);
+  const inputFrame={frameId:randomUUID(),sequence:0,format:{encoding:'pcm_s16le',sampleRateHz:16000,channels:1},sampleOffset:0,sampleCount:4800,dataBase64:bytes.toString('base64')};
+  try{
+   await audio.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,expectedSessionRevision:0,endpointId,audioInputId,format:inputFrame.format}}));assert.equal(events.some(e=>e.type==='accepted'),true);
+   await audio.message(JSON.stringify({type:'frame',audioInputId,frame:inputFrame}));await audio.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));
+   assert.equal(order.filter(x=>x==='begin:voice').length,mode==='absent'?0:1);assert.equal(events.some(e=>e.type==='sourceContextNotice'&&e.notice==='source-linked-health/1'),mode!=='absent');
+   if(mode==='withdraw'){assert.equal(synthesis,0);assert.equal(events.some(e=>e.type==='audio'),false);assert.notEqual(events.at(-1)?.event?.payload.state,'completed');}
+   else{assert.equal(synthesis,1);assert.equal(events.at(-1)?.event?.payload.state,'completed');if(mode==='source')assert.ok(order.indexOf('begin:voice')<order.indexOf('generate'));}
+  }finally{audio.close();}
+ }
 });

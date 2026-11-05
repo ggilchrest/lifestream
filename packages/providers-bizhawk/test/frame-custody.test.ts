@@ -18,3 +18,22 @@ test('custody binds exact source/frame/digest and refuses foreign scope, tamperi
 test('cleanup leaves unrelated or replaced files intact and zeroes retained memory',()=>{const f=fixture(),c=new GameFrameCustody(f.directory,{maxBytes:1024,maxQueueBytes:10000,maxLongEdge:256,maxFrames:1,maxTtlMs:10000,current:()=>true});try{assert.equal(c.ingest(f.observation),true);const path=join(f.directory,f.id+'.png');writeFileSync(path,'replacement');c.dispose();assert.equal(existsSync(path),true);assert.throws(()=>c.read(f.id,f.scope));}finally{c.dispose();rmSync(f.directory,{recursive:true,force:true});}});
 test('custody rejects queue overflow before admitting image bytes',()=>{const f=fixture(),c=new GameFrameCustody(f.directory,{maxBytes:1024,maxQueueBytes:f.bytes.length-1,maxLongEdge:256,maxFrames:1,maxTtlMs:10000,current:()=>true});try{assert.equal(c.ingest(f.observation),false);assert.throws(()=>c.read(f.id,f.scope));assert.equal(existsSync(join(f.directory,f.id+'.png')),true);}finally{c.dispose();rmSync(f.directory,{recursive:true,force:true});}});
 test('custody expires an idle frame without needing a subsequent read',{timeout:5000},async()=>{const f=fixture();f.shot.expiresAt=new Date(Date.now()+100).toISOString();const c=new GameFrameCustody(f.directory,{maxBytes:1024,maxQueueBytes:10000,maxLongEdge:256,maxFrames:1,maxTtlMs:10000,current:()=>true});try{assert.equal(c.ingest(f.observation),true);await new Promise(resolve=>setTimeout(resolve,200));assert.equal(existsSync(join(f.directory,f.id+'.png')),false);assert.throws(()=>c.read(f.id,f.scope));}finally{c.dispose();rmSync(f.directory,{recursive:true,force:true});}});
+test('long paused-frame retention preserves original bytes/timestamps and still expires at the issued boundary',t=>{
+ const f=fixture();let wall=Date.now();t.mock.method(Date,'now',()=>wall);
+ f.shot.expiresAt=new Date(wall+90000).toISOString();const capturedAt=f.shot.capturedAt;
+ const c=new GameFrameCustody(f.directory,{maxBytes:1024,maxQueueBytes:10000,maxLongEdge:256,maxFrames:1,maxTtlMs:90000,current:()=>true});
+ try{assert.equal(c.ingest(f.observation),true);wall+=46000;assert.deepEqual(c.read(f.id,f.scope).bytes,f.bytes);assert.equal(f.shot.capturedAt,capturedAt);wall=Date.parse(f.shot.expiresAt);assert.throws(()=>c.read(f.id,f.scope));assert.equal(existsSync(join(f.directory,f.id+'.png')),false);}
+ finally{c.dispose();rmSync(f.directory,{recursive:true,force:true});}
+});
+test('combined model tails fit a newly issued paused frame while a shorter real scope expiry still withdraws it',t=>{
+ let wall=Date.now();t.mock.method(Date,'now',()=>wall);
+ for(const nativeRemainingMs of [180000,125000]){
+  const f=fixture(),captured=wall,capturedAt=f.shot.capturedAt;
+  f.shot.expiresAt=new Date(captured+180000).toISOString();
+  const c=new GameFrameCustody(f.directory,{maxBytes:1024,maxQueueBytes:10000,maxLongEdge:256,maxFrames:1,maxTtlMs:180000,current:()=>wall<captured+nativeRemainingMs});
+  try{assert.equal(c.ingest(f.observation),true);wall+=130000;
+   if(nativeRemainingMs===180000)assert.deepEqual(c.read(f.id,f.scope).bytes,f.bytes);else assert.throws(()=>c.read(f.id,f.scope),'frame retention cannot extend actual source authority');
+   assert.equal(f.shot.capturedAt,capturedAt);wall=captured+180000;assert.throws(()=>c.read(f.id,f.scope));
+  }finally{c.dispose();rmSync(f.directory,{recursive:true,force:true});}
+ }
+});

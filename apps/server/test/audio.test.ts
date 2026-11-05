@@ -2,12 +2,32 @@ import {VisualTurnEvidence} from '../src/runtime/visual-turn-evidence.ts';
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
-import { AudioSession, hasAudioEnergy, VOICE_TURN_DEADLINE_MS } from "../src/runtime/audio.ts";
+import { AudioSession as RuntimeAudioSession, hasAudioEnergy, VOICE_TURN_DEADLINE_MS } from "../src/runtime/audio.ts";
 import {defaultVoiceSettings} from '../src/runtime/voice-settings.ts';
 import {VisualObservationStore} from '@lifestream/runtime/perception/observation';
 import {createPreparedTurnBinding} from '@lifestream/runtime/inference/prompt';
 import type {VisualScope} from '@lifestream/runtime/perception/port';
 import type {HostRuntimeInput} from '../src/runtime/inference.ts';
+
+// Legacy synthetic providers emit sentence units; model protocol tests use the
+// real AudioSession directly in voice-response.test.ts, including malformed EOF.
+class AudioSession extends RuntimeAudioSession {
+ constructor(...args:ConstructorParameters<typeof RuntimeAudioSession>){
+  const [socket,deps,sessionId]=args,provider=deps.inference;
+  const wrapped=new Proxy(provider,{get(target,key,receiver){
+   const method=Reflect.get(target,key,receiver);if(key!=="generate"||typeof method!=="function")return method;
+   return async function*(request:Parameters<typeof provider.generate>[0],context:Parameters<typeof provider.generate>[1]){
+    yield {kind:"text",text:JSON.stringify({version:"voice-response/1"})+"\n"};let terminal=false;
+    for await(const chunk of Reflect.apply(method,target,[request,context])){
+     if(chunk.kind==="text")yield {...chunk,text:JSON.stringify({channel:"speech",text:chunk.text?.trim()??""})+"\n"};
+     else {yield chunk;if(chunk.kind==="done"||chunk.kind==="error")terminal=true;}
+    }
+    if(!terminal)yield {kind:"done"};
+   };
+  }});
+  super(socket,{...deps,inference:wrapped},sessionId);
+ }
+}
 
 const frame = (value: number) => { const bytes = Buffer.alloc(4800 * 2); for (let offset = 0; offset < bytes.length; offset += 2) bytes.writeInt16LE(value, offset); return { frameId: randomUUID(), sequence: 0, format: { encoding: "pcm_s16le" as const, sampleRateHz: 16000 as const, channels: 1 as const }, sampleOffset: 0, sampleCount: 4800, dataBase64: bytes.toString("base64") }; };
 
@@ -281,7 +301,7 @@ test("canonical audio interrupt fences downstream work and playback", async () =
   let release: (() => void) | undefined;
   const stt = { async *transcribe() { yield { kind: "data" as const, sequence: 0, payload: { type: "committed" as const, utteranceId: randomUUID(), text: "hello", startSample: 0, endSample: 4800, speakerRef: null, confidence: 0 } }; } };
   const inference = { async *generate(_request: unknown, context: { signal: AbortSignal }) { yield { kind: "text" as const, text: "answer" }; await new Promise<void>((resolve) => { release = resolve; context.signal.addEventListener("abort", () => { resolve(); }, { once: true }); }); } };
-  const tts = { synthesize: async function* () { yield { kind: "terminal" as const, sequence: 0, segmentId: randomUUID(), outcome: "cancelled" as const, outputSamples: 0, frameCount: 0, disposition: "cancelled" as const, degradedDimensions: [], mappingRevision: "test" }; } };
+  const tts = { synthesize: async function* (_request:unknown,signal:AbortSignal) { await new Promise<void>(resolve=>{if(signal.aborted)resolve();else signal.addEventListener('abort',()=>resolve(),{once:true});});yield { kind: "terminal" as const, sequence: 0, segmentId: randomUUID(), outcome: "cancelled" as const, outputSamples: 0, frameCount: 0, disposition: "cancelled" as const, degradedDimensions: [], mappingRevision: "test" }; } };
   const sessionId = randomUUID(); const endpointId = randomUUID(); const audioInputId = randomUUID(); const correlationId = randomUUID(); const session = new AudioSession(socket, { stt: stt as never, inference: inference as never, tts: tts as never }, sessionId);
   await session.message(JSON.stringify({ type: "start", request: { schemaVersion: "1.0.0", requestId: randomUUID(), correlationId, sessionId, expectedSessionRevision: 1, endpointId, audioInputId, format: { encoding: "pcm_s16le", sampleRateHz: 16000, channels: 1 } } }));
   await session.message(JSON.stringify({ type: "frame", audioInputId, frame: frame(0) }));
@@ -400,11 +420,11 @@ test('audio bookkeeping cannot cross the turn deadline and still start inference
   finally{await f.close();}
 });
 
-test('audio visual receipts distinguish iterator exhaustion, synthesis and exact endpoint software acknowledgment',async()=>{
+test('audio visual receipts distinguish framed completion, synthesis and exact endpoint software acknowledgment',async()=>{
   const f=visualAudioHarness();
   try{
     await f.start();await f.turn();
-    assert.equal(f.receipts().find(item=>item.stage==='generationEnded')!.outcome,'exhausted');
+    assert.equal(f.receipts().find(item=>item.stage==='generationEnded')!.outcome,'completed');
     assert.ok(f.receipts().some(item=>item.stage==='synthesisCompleted'));
     assert.ok(f.receipts().every(item=>!item.endpointAcknowledged));
     const included=f.receipts().find(item=>item.stage==='providerInvoked')!;
@@ -449,4 +469,13 @@ test('audio provider lookup failure is distinct from actual invocation',async()=
     assert.ok(f.receipts().some(item=>item.stage==='admissionRejected'&&item.outcome==='provider_unavailable'));
     assert.ok(f.receipts().every(item=>item.stage!=='providerInvoked'&&item.stage!=='generationEnded'&&!item.endpointAcknowledged));assert.doesNotMatch(JSON.stringify(f.receipts()),/PRIVATE_AUDIO_LOOKUP/);
   }finally{await f.close();}
+});
+
+test('ordinary conversation projects both explicit saved reference modes without changing stored transcript',async()=>{
+ for(const mode of ['reference','continuation'] as const){
+  const events:any[]=[],designs:any[]=[],reference={sampleRateHz:16000 as const,dataBase64:Buffer.alloc(64000,9).toString('base64'),transcript:'Synthetic source',consent:true as const},settings={...defaultVoiceSettings,seed:9,reference,conditioningMode:mode};
+  const tts={voiceControls:async()=>({description:true,reference:true}),withVoiceDesign(v:any){designs.push(v);return this;},async *synthesize(request:any){yield {kind:'data',segmentId:request.segmentId,frame:frame(1200)};yield {kind:'terminal',outcome:'succeeded'};}},stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Hello.'}};yield {kind:'terminal',outcome:'succeeded'};}},inference={async *generate(){yield {kind:'text',text:'Synthetic reply.'};}},sessionId=randomUUID(),audioInputId=randomUUID();
+  const session=new AudioSession({readyState:1,send:value=>events.push(JSON.parse(value)),close:()=>{}},{stt:stt as never,inference:inference as never,tts:tts as never,resolveVoice:()=>({settings,voiceProfile:{voiceRef:'saved-voice:synthetic',revision:1},language:'en',current:()=>true})},sessionId);
+  await session.message(JSON.stringify({type:'start',request:{schemaVersion:'1.0.0',requestId:randomUUID(),correlationId:randomUUID(),sessionId,expectedSessionRevision:1,endpointId:randomUUID(),audioInputId,format:frame(0).format}}));await session.message(JSON.stringify({type:'frame',audioInputId,frame:frame(100)}));await session.message(JSON.stringify({type:'commitTurn',audioInputId,nextSequence:1,sampleCount:4800}));assert.equal(events.at(-1).event.payload.state,'completed');assert.equal(designs[0].reference.transcript,mode==='reference'?'':'Synthetic source');assert.equal(designs[0].reference.dataBase64,reference.dataBase64);assert.equal(settings.reference.transcript,'Synthetic source');session.close();
+ }
 });

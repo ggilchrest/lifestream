@@ -1,0 +1,1288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifestream.dev/contracts/mobile-context-calendar/1.0.0",
+  "title": "Source-only Calendar and Task semantics; data is not identity or policy authority.",
+  "$ref": "#/$defs/CalendarBatch",
+  "$defs": {
+    "CalendarZone": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "identifier"
+          ],
+          "properties": {
+            "kind": {
+              "const": "supplied"
+            },
+            "identifier": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "identifier",
+            "basis"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inferred"
+            },
+            "identifier": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "basis": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      ]
+    },
+    "CalendarOffset": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "minutes"
+          ],
+          "properties": {
+            "kind": {
+              "const": "supplied"
+            },
+            "minutes": {
+              "type": "integer",
+              "minimum": -840,
+              "maximum": 840
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "minutes",
+            "basis"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inferred"
+            },
+            "minutes": {
+              "type": "integer",
+              "minimum": -840,
+              "maximum": 840
+            },
+            "basis": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      ]
+    },
+    "CalendarInstant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "at",
+        "timeZone",
+        "offset"
+      ],
+      "properties": {
+        "at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,3})?Z$"
+        },
+        "timeZone": {
+          "$ref": "#/$defs/CalendarZone"
+        },
+        "offset": {
+          "$ref": "#/$defs/CalendarOffset"
+        }
+      }
+    },
+    "CalendarPoint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "date"
+          ],
+          "properties": {
+            "kind": {
+              "const": "date"
+            },
+            "date": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "instant"
+            },
+            "value": {
+              "$ref": "#/$defs/CalendarInstant"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "local"
+          ],
+          "properties": {
+            "kind": {
+              "const": "floating"
+            },
+            "local": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,3})?$"
+            }
+          }
+        }
+      ]
+    },
+    "CalendarTime": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "startDate",
+            "endDateExclusive",
+            "timeZone"
+          ],
+          "properties": {
+            "kind": {
+              "const": "allDay"
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            },
+            "endDateExclusive": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            },
+            "timeZone": {
+              "$ref": "#/$defs/CalendarZone"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ],
+          "properties": {
+            "kind": {
+              "const": "instantRange"
+            },
+            "start": {
+              "$ref": "#/$defs/CalendarInstant"
+            },
+            "end": {
+              "$ref": "#/$defs/CalendarInstant"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "startLocal",
+            "endLocal"
+          ],
+          "properties": {
+            "kind": {
+              "const": "floatingRange"
+            },
+            "startLocal": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,3})?$"
+            },
+            "endLocal": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,3})?$"
+            }
+          }
+        }
+      ]
+    },
+    "CalendarRecurrenceEnd": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unbounded"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "count"
+          ],
+          "properties": {
+            "kind": {
+              "const": "count"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "until"
+            },
+            "value": {
+              "$ref": "#/$defs/CalendarPoint"
+            }
+          }
+        }
+      ]
+    },
+    "CalendarWeekday": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "day",
+        "ordinal"
+      ],
+      "properties": {
+        "day": {
+          "enum": [
+            "MO",
+            "TU",
+            "WE",
+            "TH",
+            "FR",
+            "SA",
+            "SU"
+          ]
+        },
+        "ordinal": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -53,
+              "maximum": 53
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CalendarRecurrenceRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frequency",
+        "interval",
+        "end",
+        "days",
+        "monthDays",
+        "yearDays",
+        "weekNumbers",
+        "months",
+        "setPositions"
+      ],
+      "properties": {
+        "frequency": {
+          "enum": [
+            "daily",
+            "weekly",
+            "monthly",
+            "yearly"
+          ]
+        },
+        "interval": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "end": {
+          "$ref": "#/$defs/CalendarRecurrenceEnd"
+        },
+        "days": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/CalendarWeekday"
+          }
+        },
+        "monthDays": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "integer",
+            "minimum": -31,
+            "maximum": 31
+          }
+        },
+        "yearDays": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "integer",
+            "minimum": -366,
+            "maximum": 366
+          }
+        },
+        "weekNumbers": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "integer",
+            "minimum": -53,
+            "maximum": 53
+          }
+        },
+        "months": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          }
+        },
+        "setPositions": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "integer",
+            "minimum": -366,
+            "maximum": 366
+          }
+        }
+      }
+    },
+    "CalendarRecurrence": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "none"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reason",
+            "nativeRule"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unavailable"
+            },
+            "reason": {
+              "enum": [
+                "notObservable",
+                "unsupported",
+                "unknown"
+              ]
+            },
+            "nativeRule": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "timeZone",
+            "calendarIdentifier",
+            "rules"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rules"
+            },
+            "timeZone": {
+              "$ref": "#/$defs/CalendarZone"
+            },
+            "calendarIdentifier": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "rules": {
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "$ref": "#/$defs/CalendarRecurrenceRule"
+              },
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "CalendarOccurrence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "seriesUpstreamId",
+        "originalStart"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "none",
+            "unknown",
+            "occurrence",
+            "detached"
+          ]
+        },
+        "seriesUpstreamId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "originalStart": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CalendarPoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CalendarAlarm": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "seconds"
+          ],
+          "properties": {
+            "kind": {
+              "const": "relative"
+            },
+            "seconds": {
+              "type": "integer",
+              "minimum": -31536000,
+              "maximum": 31536000
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "absolute"
+            },
+            "value": {
+              "$ref": "#/$defs/CalendarInstant"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "nativeValue"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            },
+            "nativeValue": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      ]
+    },
+    "CalendarAttendee": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "address",
+        "role",
+        "status"
+      ],
+      "properties": {
+        "name": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "address": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 2048
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "role": {
+          "enum": [
+            "required",
+            "optional",
+            "chair",
+            "unknown"
+          ]
+        },
+        "status": {
+          "enum": [
+            "accepted",
+            "declined",
+            "tentative",
+            "pending",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "CalendarEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "title",
+        "notes",
+        "time",
+        "recurrence",
+        "occurrence",
+        "status",
+        "attendees",
+        "alarms"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "title": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notes": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 8192
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "time": {
+          "$ref": "#/$defs/CalendarTime"
+        },
+        "recurrence": {
+          "$ref": "#/$defs/CalendarRecurrence"
+        },
+        "occurrence": {
+          "$ref": "#/$defs/CalendarOccurrence"
+        },
+        "status": {
+          "enum": [
+            "confirmed",
+            "tentative",
+            "cancelled",
+            "unknown"
+          ]
+        },
+        "attendees": {
+          "oneOf": [
+            {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/CalendarAttendee"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "alarms": {
+          "oneOf": [
+            {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/CalendarAlarm"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CalendarComponents": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "year": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9999
+        },
+        "month": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 13
+        },
+        "day": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31
+        },
+        "hour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 23
+        },
+        "minute": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 59
+        },
+        "second": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 59
+        }
+      },
+      "minProperties": 1
+    },
+    "TaskDue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "none"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            }
+          }
+        },
+        {
+          "$ref": "#/$defs/CalendarPoint"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "values",
+            "calendarIdentifier",
+            "timeZone"
+          ],
+          "properties": {
+            "kind": {
+              "const": "components"
+            },
+            "values": {
+              "$ref": "#/$defs/CalendarComponents"
+            },
+            "calendarIdentifier": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "timeZone": {
+              "$ref": "#/$defs/CalendarZone"
+            }
+          }
+        }
+      ]
+    },
+    "TaskCompletion": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "state": {
+              "const": "unknown"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "state": {
+              "const": "incomplete"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "completedAt"
+          ],
+          "properties": {
+            "state": {
+              "const": "completed"
+            },
+            "completedAt": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/CalendarInstant"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "title",
+        "notes",
+        "due",
+        "completion",
+        "recurrence"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "title": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notes": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 8192
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "due": {
+          "$ref": "#/$defs/TaskDue"
+        },
+        "completion": {
+          "$ref": "#/$defs/TaskCompletion"
+        },
+        "recurrence": {
+          "$ref": "#/$defs/CalendarRecurrence"
+        }
+      }
+    },
+    "CalendarSourceIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collector",
+        "namespace",
+        "containerKind",
+        "containerId",
+        "accountId",
+        "upstreamId",
+        "upstreamIdentityScope",
+        "externalId",
+        "upstreamRevision",
+        "originalApp",
+        "originalDevice"
+      ],
+      "properties": {
+        "collector": {
+          "enum": [
+            "eventKit",
+            "androidCalendar",
+            "googleTasks"
+          ]
+        },
+        "namespace": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "containerKind": {
+          "enum": [
+            "calendar",
+            "taskList"
+          ]
+        },
+        "containerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "accountId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "upstreamId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "upstreamIdentityScope": {
+          "enum": [
+            "providerLocal",
+            "providerAccount",
+            "unknown"
+          ]
+        },
+        "externalId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "upstreamRevision": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "originalApp": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "originalDevice": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CalendarChange": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "eventId",
+            "enrollmentId",
+            "expectedPolicyRevision",
+            "source",
+            "collectedAt",
+            "mappingVersion",
+            "operation",
+            "recordType",
+            "record"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "eventId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "enrollmentId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "expectedPolicyRevision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "source": {
+              "$ref": "#/$defs/CalendarSourceIdentity"
+            },
+            "collectedAt": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,3})?Z$"
+            },
+            "mappingVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "operation": {
+              "const": "upsert"
+            },
+            "recordType": {
+              "const": "CalendarEvent"
+            },
+            "record": {
+              "$ref": "#/$defs/CalendarEvent"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "eventId",
+            "enrollmentId",
+            "expectedPolicyRevision",
+            "source",
+            "collectedAt",
+            "mappingVersion",
+            "operation",
+            "recordType",
+            "record"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "eventId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "enrollmentId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "expectedPolicyRevision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "source": {
+              "$ref": "#/$defs/CalendarSourceIdentity"
+            },
+            "collectedAt": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,3})?Z$"
+            },
+            "mappingVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "operation": {
+              "const": "upsert"
+            },
+            "recordType": {
+              "const": "Task"
+            },
+            "record": {
+              "$ref": "#/$defs/Task"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "eventId",
+            "enrollmentId",
+            "expectedPolicyRevision",
+            "source",
+            "collectedAt",
+            "mappingVersion",
+            "operation",
+            "recordType",
+            "deletionEvidence"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "eventId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "enrollmentId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "expectedPolicyRevision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "source": {
+              "$ref": "#/$defs/CalendarSourceIdentity"
+            },
+            "collectedAt": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,3})?Z$"
+            },
+            "mappingVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "operation": {
+              "const": "delete"
+            },
+            "recordType": {
+              "enum": [
+                "CalendarEvent",
+                "Task"
+              ]
+            },
+            "deletionEvidence": {
+              "const": "explicitProviderTombstone"
+            }
+          }
+        }
+      ]
+    },
+    "CalendarBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "changes"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "changes": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/CalendarChange"
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}
