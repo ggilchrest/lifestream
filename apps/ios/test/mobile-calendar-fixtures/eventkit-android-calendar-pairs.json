@@ -1,0 +1,18 @@
+{
+  "syntheticOnly": true,
+  "qualification": "Semantic inputs, not SDK captures or identity equivalence.",
+  "pairs": [
+    {
+      "id": "all-day-dst",
+      "eventKit": {"startDate": "2026-11-01", "endExclusive": "2026-11-02"},
+      "androidCalendar": {"startDate": "2026-11-01", "endExclusive": "2026-11-02"},
+      "expected": {"kind": "civilDateRange", "startDate": "2026-11-01", "endExclusive": "2026-11-02"}
+    },
+    {
+      "id": "detached-floating-occurrence",
+      "eventKit": {"originalDate": "2026-03-08", "originalHour": 9, "movedHour": 11, "endHour": 12, "detached": true},
+      "androidCalendar": {"originalDate": "2026-03-08", "originalHour": 9, "movedHour": 11, "endHour": 12, "detached": true},
+      "expected": {"kind": "floatingException", "originalDate": "2026-03-08", "originalHour": 9, "movedHour": 11, "endHour": 12, "detached": true}
+    }
+  ]
+}

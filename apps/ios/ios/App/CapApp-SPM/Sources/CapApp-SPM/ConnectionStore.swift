@@ -3,6 +3,7 @@ import Foundation
 import Security
 
 struct SavedCookie: Codable { let name:String; let value:String }
+struct PendingPersonalLock:Codable {let endpoint:String,username:String,principalId:String,sessionId:String,body:String}
 struct SavedConnection: Codable {
     let endpoint:String
     let username:String
@@ -10,6 +11,7 @@ struct SavedConnection: Codable {
     var settings:String?
     var password:String?
     var requiresOneTimeCode:Bool?
+    var pendingPersonalLocks:[PendingPersonalLock]?
     var hasSession:Bool { !cookies.isEmpty }
     var hasSavedCredentials:Bool { !(password ?? "").isEmpty }
 }

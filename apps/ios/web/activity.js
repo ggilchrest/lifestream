@@ -25,9 +25,11 @@ export function renderActivity(state={},text={}) {
  const format=[];if(Number.isFinite(state.captureSampleRate)&&state.captureSampleRate>0)format.push(`${state.captureSampleRate} Hz`);
  if(count(state.captureChannels)>0)format.push(`${state.captureChannels} channel${state.captureChannels===1?'':'s'}`);
  $('audio-detail').textContent=[state.lastError||detail,...(counters.length?[`Buffers: ${counters.join(' · ')}.`]:[]),...(format.length?[format.join(' · ')+'.']:[])].join(' ');
- const diagnostics=(Array.isArray(state.captureDiagnostics)?state.captureDiagnostics.slice(-24):[])
+ const diagnostics=[...(Array.isArray(state.playbackDiagnostics)?state.playbackDiagnostics.slice(0,5):[]),...(Array.isArray(state.captureDiagnostics)?state.captureDiagnostics.slice(-24):[])]
   .filter(line=>typeof line==='string').map(line=>line.slice(0,256).replace(/[\u0000-\u001f\u007f\u2028\u2029]/g,' ').trim()).filter(Boolean);
- $('audio-diagnostics-log').textContent=diagnostics.join('\n');
+ const log=$('audio-diagnostics-log'),diagnosticText=diagnostics.join('\n');
+ // Replacing an unchanged text node every meter tick destroys iOS selection.
+ if(log.textContent!==diagnosticText)log.textContent=diagnosticText;
  $('audio-diagnostics-log').hidden=diagnostics.length===0;
  $('audio-diagnostics-empty').hidden=diagnostics.length>0;
 }

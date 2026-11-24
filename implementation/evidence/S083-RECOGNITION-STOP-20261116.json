@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "1.0.0",
+  "receiptId": "S083-RECOGNITION-STOP-20261116",
+  "slice": "LS-S083",
+  "status": "componentVerified",
+  "runDisposition": "complete",
+  "canonicalPublicHead": "d7cbcfbf7a071f0f1d60e784350559a7d12dbb8e",
+  "isolatedBaseline": "4c22462f1ba6b3529342a38fc17879ed9a93efb4",
+  "recordedAt": "2026-11-16T22:38:20.663551Z",
+  "problem": "A recognizer yielding after interruption, successor input or deadline can emit a late committed transcript while input scope remains current. Existing cancellation after recognition prevents inference but is too late to fence caption publication.",
+  "change": "Check captured turn cancellation both before and immediately after extensible currentness hooks, before any recognition event can publish a transcript. Preserve existing terminal and next-turn behavior.",
+  "files": [
+    {
+      "path": "apps/server/src/runtime/audio.ts",
+      "preimageSha256": "aa60a9f032b4de1cb2d4a08e31410be1f7c2930707c2e8dd680121ce5dc5d6e4",
+      "candidateSha256": "89ded6c02b22ba8bf3de506a69337af9c143ab25cb3f959c21459bab990aac46"
+    },
+    {
+      "path": "apps/server/test/audio-recognition-stop.test.ts",
+      "preimageSha256": null,
+      "candidateSha256": "e2c3ca7dde33c840015448c18c98a00ddb2846250b63e9a983525e0507cfd1da"
+    },
+    {
+      "path": "docs/voice-playback.md",
+      "preimageSha256": "89df1b3d503ee552d06994a101a81a47211663ed1e7c83ba8074baf21ad73a13",
+      "candidateSha256": "0e5d733dc5c6f25ffc21ab3f731d0803d0e4fa72b8a793935e61320e27d7a9b5"
+    }
+  ],
+  "checks": [
+    {
+      "command": "node --test --experimental-transform-types apps/server/test/audio-recognition-stop.test.ts",
+      "result": "pass",
+      "count": 4,
+      "evidence": "regression-review-final.log:4pass; original3 regressions fail before initial fix; callback-review-before.log reproduces peer ordering counterexample on92811d0 (3pass/1fail), then new callback case passes after recheck."
+    },
+    {
+      "command": "node --test --experimental-transform-types --test-name-pattern='recognition|STT|interrupt|stopped endpoint|stale|queued voice|scope changes' apps/server/test/audio.test.ts",
+      "result": "pass",
+      "count": 10,
+      "evidence": "focused-audio-review.log"
+    },
+    {
+      "command": "node --test apps/control-web/test/conversation-capture.test.mjs apps/control-web/test/conversation-playback.test.mjs",
+      "result": "pass",
+      "count": 7,
+      "evidence": "focused-browser.log"
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -p apps/server/tsconfig.json --noEmit --incremental --tsBuildInfoFile ../server-check.tsbuildinfo",
+      "result": "pass",
+      "evidence": "server-typecheck-review.log"
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "count": 365,
+      "evidence": "private-validation-final.log; specification checks only, not runtime acceptance"
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass",
+      "evidence": "workspace-check.log"
+    },
+    {
+      "command": "node scripts/workspace.mjs preflight LS-S083",
+      "result": "fail",
+      "evidence": "preflight-scope.log; inherited effective-input drift in LS-S071,072,073,076,078. No prerequisite receipts changed or waived; fullslice not qualified."
+    }
+  ],
+  "reconciliation": [
+    "Older S083-AUDIO-INPUT-CURRENCY-1 receipt lists browser microphone/VAD/sharedcontext as pending; current ConversationCapture, ConversationOutput, ConversationRoom and later S083-SHARED-CONVERSATION-1 evidence implement those paths. Do not reopen them from that old receipt.",
+    "Current scope invalidation already fences STT results; cancellation alone leaves input current, producing this narrower demonstrated gap.",
+    "No new broad transcription feature, audio tuning, provider protocol or Stop lifecycle added."
+  ],
+  "limits": [
+    "No reported user incident was attributed definitively; defect is reproduced with deterministic synthetic noncooperative STT.",
+    "No real microphone/audio/provider/service, credentials, networked inference, deployment, merge or push.",
+    "Full S083 qualification remains pending inherited specification/qualification drift; this receipt qualifies only the cancellation-output fence.",
+    "Provider computation may still continue until it yields; this guard fences output rather than guaranteeing provider cancellation latency.",
+    "Physical device, audibility and real-provider acceptance not performed."
+  ],
+  "originalWorktreeModified": false,
+  "scopeExclusions": [
+    "apps/ios/**",
+    "saved voice preview",
+    "PWCE action errors",
+    "automatic-memory worker",
+    "Insights quarantine"
+  ],
+  "evidenceLogHashes": {
+    "workspace-check.log": "2f763d8db75a1d62072a68dc1d9f247eb4e501fe84e7295a57e3e69bda22b215",
+    "regression-after.log": "fbacf4092fb9ac1dcc5398a11ff8cefdf83c118853697ba150c713932a4d252e",
+    "preflight-initial.log": "8e952931b49c8b01a83a5c0ee52406ddf0bd39822c95aa414f05017810cc2e0d",
+    "regression-before.log": "8d4f11139fa40e684f6a6147944c3bfd58873fc38e55095d887a3feed939d93d",
+    "preflight-scope.log": "ca4b200f2a3fcd9713ddf0ef8f5cae025cae166f709b753c5c1ccbd52812ec93",
+    "private-validation.log": "20b3a32e054037d3b6f05c5b1eb42d4bf30fc9ae3d84e43c8656b707f878c490",
+    "server-typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "focused-audio.log": "b7abe1f7f0d2918968446ac285bab4595d1197cae3bf083cb1c948180f553ea1",
+    "private-validation-final.log": "f863f43f1f70e029e255822abd578be6e2281471ba37c75ad978847a20d4e8ca",
+    "focused-browser.log": "b589cd15b4d4aaccaf94f5c3a0083fc84cb417fbbaabb68e860d01c33dc51d39",
+    "callback-review-before.log": "088b4ce42c8723eddae73bbdaef82f13b508dea46a0caf0c2610ed5200f7505c",
+    "regression-review-final.log": "a64355a2563ee546349d7ca7d731aa3c736896a81efda9fbc194199ba0103867",
+    "focused-audio-review.log": "ddbae57a9ed29612da4d34a360f43b84d18ead4cc4c249cd40eaf816d94d6662",
+    "server-typecheck-review.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "reviewFollowup": {
+    "previousCandidate": "92811d0",
+    "finding": "Extensible inputCurrent can synchronously interrupt current trace and return true between early guard and caption publication.",
+    "reproduction": "Targeted fourth case cancels inside inputCurrent during recognition event, not before provider yield. Fails92811d0 then passes post-hook guard, with fresh successor recognition.",
+    "outcome": "addressed",
+    "scopeExpansion": false
+  }
+}

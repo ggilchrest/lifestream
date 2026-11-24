@@ -24,6 +24,7 @@ final class NativeAudience {
     private var lease:AudienceConnectionLease?,payload=[String:Any]()
     private var lifecycle=AudienceLifecycle()
     var onEnded:(String)->Void = {_ in}
+    var diagnostic:((DiagnosticEvent,DiagnosticCode)->Void)?
     var leaseId:String?{guard let lease,lease.expiresAt>now(),transportEpoch==transport.epoch else{return nil};return lease.id}
     init(transport:NativeTransport,now:@escaping()->Date=Date.init){self.transport=transport;self.now=now}
     deinit{timer?.invalidate();task?.cancel()}
@@ -88,7 +89,7 @@ final class NativeAudience {
             guard let self,self.generation==ticket,self.transport.epoch==epoch else{done(.failure(Failure.cancelled));return}
             self.pending=false;self.task=nil
             do{let value=try self.decode(result);try self.accept(value,id:lease.id);done(.success(value))}
-            catch{self.end(error.localizedDescription);done(.failure(error))}
+            catch{if case .failure(let networkError)=result {let ns=networkError as NSError;self.diagnostic?(.audienceRenewFailure,ns.domain==NSURLErrorDomain && ns.code==NSURLErrorTimedOut ? .requestTimedOut:.networkUnavailable)}else{self.diagnostic?(.audienceRenewFailure,.unknown)};self.end(error.localizedDescription);done(.failure(error))}
         }
     }
     func cancelActivation(){if lease==nil&&pending{end("Audience activation cancelled.",notify:false)}}

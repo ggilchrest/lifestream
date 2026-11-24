@@ -1,0 +1,267 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordedDate": "2026-10-27",
+  "status": "implementationCompleteVerificationPending",
+  "disposition": "waiting",
+  "baseRevision": "d7cbcfbf7a071f0f1d60e784350559a7d12dbb8e",
+  "sourceProvenance": {
+    "canonicalLinuxRevision": "c9891ffe5a2ab391751b9167f1ae295eaac9f829",
+    "localSourceSnapshot": "d758558d791a2de006b2bbbfc8b1ebd02555b46a",
+    "sharedPresentationFiles": 6,
+    "uncommittedAudioWorkPreserved": true,
+    "priorAcceptanceNotRewritten": true
+  },
+  "changes": [
+    "Reconcile shared schema1.5 presentation renderer and validation from clean canonical source snapshot.",
+    "Bundle only exact sealed registered motion runtime and declared selected resources outside every Git root.",
+    "Bound mobile encoded resources at128MiB each and256MiB per package.",
+    "Preserve installed appearance identity/digest and saved preferences when adding packages.",
+    "Include new Swift sources in private packager without sweeping unrelated untracked content.",
+    "Hide legacy animation switches where adapter does not support them."
+  ],
+  "validation": {
+    "swift": {
+      "command": "swift test --package-path apps/ios/native --scratch-path /tmp/lifestream-ios-refresh-native-20261027",
+      "passed": 55,
+      "failed": 0
+    },
+    "ios": {
+      "command": "npm --prefix apps/ios test",
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0
+    },
+    "typecheck": {
+      "command": "pnpm typecheck",
+      "result": "pass"
+    },
+    "sharedRenderer": {
+      "passed": 12,
+      "skipped": 1,
+      "scope": "presentation-core/playback/motion tests; optional browser test skipped in this command"
+    },
+    "trustedAdapterAndSchema": {
+      "passed": 13,
+      "failed": 0
+    },
+    "privateLocalRendering": {
+      "browser": "existing desktop Chrome",
+      "packagesRendered": 3,
+      "pageErrors": 0,
+      "deviceAcceptance": false
+    },
+    "unsignedXcodeRelease": {
+      "result": "pass",
+      "build": "11",
+      "bundleIdentifier": "org.lifestream.assistant",
+      "xcode": "27.0 (27A266a)",
+      "platform": "iphoneos arm64"
+    },
+    "bundleIntegrity": {
+      "packages": 3,
+      "declaredResourcesVerified": 19,
+      "runtimeModulesVerified": 2,
+      "oldMobileCatalogItemPreservedExactly": true,
+      "neutralAudioProbePresent": true,
+      "newAudioSwiftInputsIncluded": true
+    },
+    "workspaceCheck": "pass",
+    "gitDiffCheck": "pass",
+    "signedXcodeRelease": {
+      "result": "pass",
+      "build": "11",
+      "platform": "iphoneos arm64",
+      "provisioningUpdatesEnabledDuringFinalBuild": false
+    }
+  },
+  "signedBuild": {
+    "result": "pass",
+    "previousAttempt": "Expired/missing profile; download-only manual attempt did not refresh it. Xcode-managed profile rejected manual signing configuration.",
+    "renewal": "Operator-approved existing-profile renewal after user completed existing-account sign-in.",
+    "certificateUnchanged": true,
+    "teamUnchanged": true,
+    "deviceListUnchanged": true,
+    "entitlementsUnchanged": true,
+    "strictSignatureVerification": "pass",
+    "profileExpiresUTC": "2026-11-03 18:02:24",
+    "appBinarySha256": "eafe69cfd413c3a07e9068136533be6ba54cc633bdb0bdc75a8403b311ab032d",
+    "newIdentityAccountTrustOrEnrollmentCreated": false
+  },
+  "device": {
+    "model": "iPhone15Pro",
+    "lastObservedAvailability": "paired and available",
+    "previousInstalledBuild": "10",
+    "candidateBuild": "11",
+    "candidateInstalled": true,
+    "candidateLaunched": false,
+    "avatarVerifiedOnPhone": false,
+    "humanAcceptance": false,
+    "installation": "in-place update; no uninstall or data reset",
+    "verifiedInstalledVersion": "0.1.0",
+    "verifiedInstalledBuild": "11"
+  },
+  "remaining": [
+    "Obtain coordinator runtime-window clearance before app launch/live endpoint tests.",
+    "Verify saved connection/appearance and each added appearance on physical iPhone.",
+    "Verify memory/sustained animation and long response, speaker/AirPods, echo and spoken interruption with operator."
+  ],
+  "limits": [
+    "Encoded byte limits do not establish decoded GPU memory or phone performance.",
+    "Desktop browser rendering does not establish WKWebView compatibility.",
+    "Runtime wire compatibility handoff reports unchanged textDelta/audio/playbackSettled; no live endpoint check performed.",
+    "Existing LS-S066 checkpoint/preflight revision and scope inconsistencies remain separately recorded."
+  ],
+  "excluded": [
+    "No server changes/deploy/restart/reboot/GPU workload.",
+    "No voice model/reference/backend defaults changed.",
+    "No microphone recording or credential logging.",
+    "No app uninstall/reset, push or publication."
+  ],
+  "sourceFiles": [
+    {
+      "path": "apps/control-web/presentation-trusted-adapter.js",
+      "sha256": "9c78cc9cd5369465b4faf59afe7ab81baa3fe3c6214e915f8994431994a8804d"
+    },
+    {
+      "path": "apps/control-web/test/presentation-trusted-adapter.test.mjs",
+      "sha256": "0e05d96b376d09bc95c6aaa0cf865fc9f4d6a078f822c417367a15e02e3c0a50"
+    },
+    {
+      "path": "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/NativePlaybackProbe.swift",
+      "sha256": "996a0d7821124e62c5e5b3647a79fb7b37162378aa202fb4fb6c751a8d2c8e3a"
+    },
+    {
+      "path": "apps/ios/native/Sources/AssistantCore/PlaybackBuffer.swift",
+      "sha256": "13118f1f0c006fb4c14e1d01a7e54ab2472b76d6b454664d98f8d6fd5fb47652"
+    },
+    {
+      "path": "apps/ios/native/Sources/AssistantCore/PlaybackPCM.swift",
+      "sha256": "9daaebc00d8d153f0f5d3889f6b39d32e74f7de0c3726255912ba61069e71deb"
+    },
+    {
+      "path": "apps/ios/native/Tests/AssistantCoreTests/PlaybackBufferTests.swift",
+      "sha256": "5c690ba3f2aaba6d82934a275ff04ae3439c0cd056592697ae0a6b04e75f1c56"
+    },
+    {
+      "path": "apps/ios/native/Tests/AssistantCoreTests/PlaybackPCMTests.swift",
+      "sha256": "b0b53dd3d18bdb2d809176d81f784023e2eac71aaa3318416a6923769d0b0924"
+    },
+    {
+      "path": "apps/ios/scripts/generate-audio-probe.mjs",
+      "sha256": "a695cb92c6a163d320aa1198b829785e90f485c377797edd460aebe6b59106dc"
+    },
+    {
+      "path": "apps/ios/test/audio-probe.test.mjs",
+      "sha256": "ce18b1a4928f421fc6ab5b7b74a374b556faffd418b9c2940b291380355f7801"
+    },
+    {
+      "path": "apps/ios/test/bundled-runtime.test.mjs",
+      "sha256": "f3b3ddca3bde50a7f4b17ea2325e4730200b11b0b39746f43bf14e48e48e3a61"
+    },
+    {
+      "path": "apps/ios/test/native-playback.test.mjs",
+      "sha256": "8b71e36a60e9bc5d4c01e501fc09760405103eb0945b0f08033b2e5712fdaed5"
+    },
+    {
+      "path": "apps/ios/test/package-private.test.mjs",
+      "sha256": "5b8f9ed0b25a04b2656c0b5c30d5bd04c9e069c9af61b952a5334141f05a6218"
+    },
+    {
+      "path": "apps/ios/test/playback-render-probe.swift",
+      "sha256": "2b41194ea5396c8bd02af4d4cecb17bf96082ac37ae564a2a968ce8a435cdc88"
+    },
+    {
+      "path": "apps/ios/web/presentation-limits.js",
+      "sha256": "0cf784db7c2157c23a7acd6dff6f9462e0326adbfb09605cb39fdec49f7658a9"
+    },
+    {
+      "path": "apps/server/src/admin/presentation-runtime-registry.ts",
+      "sha256": "5a4ae9a9af5f00839aabe9fde21d902b1637e71a56f2dcc229935cbab9d2ba9a"
+    },
+    {
+      "path": "apps/server/src/admin/presentation-world-delta.ts",
+      "sha256": "79abcbc966f7b7e3337ae1d765e9e395e323b341a6d850d919db62874bccc01f"
+    },
+    {
+      "path": "apps/server/test/presentation-world-delta.test.ts",
+      "sha256": "94eeaae291b3298d22cd21ccbd8f56270dd2008d081bd035fe3bdc641e1e1062"
+    },
+    {
+      "path": "implementation/evidence/IOS-PLAYBACK-20261002.json",
+      "sha256": "71824d331a521c54824a6d2c0db98066bef7b996467268ab96d4f6b97a44d51a"
+    },
+    {
+      "path": "apps/control-web/presentation-core.js",
+      "sha256": "22afd57bf66e2c0a10c5b2a66bea6d351abd5bc42b7e146e5a153bc9613dfac8"
+    },
+    {
+      "path": "apps/control-web/presentation-runtime.js",
+      "sha256": "d1990f37413aed18fddfae099c792c2ebf71a7cccfddab3b6af72d1a6a4e2bb9"
+    },
+    {
+      "path": "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/AssistantPlugin.swift",
+      "sha256": "b1735f19b9847c1250dcb16907228c39ca6958adbce344b1461d89c727c0d874"
+    },
+    {
+      "path": "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/NativeVoice.swift",
+      "sha256": "fe9c7d581b303ad7080de2fb23b9ea1bb37e698c44a3c44c8a1b98590184892c"
+    },
+    {
+      "path": "apps/ios/scripts/build-web.mjs",
+      "sha256": "55afaea13486dc064e02ae5981c2c52cab171921f7b07f6203a3185a2e5c1e17"
+    },
+    {
+      "path": "apps/ios/scripts/bundle-appearances.mjs",
+      "sha256": "95deb4bd2b2b08ce74d2fcabda7f11c632dd2a8a28817d2f812d83c56668454c"
+    },
+    {
+      "path": "apps/ios/scripts/package-private.mjs",
+      "sha256": "fa9342cd5624a18c4e1d855e92657270cff1ae8669e29c99d03fbe99bd1adb2d"
+    },
+    {
+      "path": "apps/ios/test/activity.test.mjs",
+      "sha256": "cc494f01d5b8e10f88a79561ea970befa13af07aa16049389053d7b0d4b1232f"
+    },
+    {
+      "path": "apps/ios/test/animation-preferences.test.mjs",
+      "sha256": "ffefe2120b1a3fd87c4f6a058002cb2effcd7fbc36356c97f1fe261af93bef39"
+    },
+    {
+      "path": "apps/ios/test/bundled-appearances.test.mjs",
+      "sha256": "62d16fb3454e7acb091188863524ea37567ea75326bc05e798cb086123d1dcad"
+    },
+    {
+      "path": "apps/ios/test/integration.test.mjs",
+      "sha256": "28c18bca7891c256795ae5c1ba35ab4446ba8c577a9277744e926798a072a570"
+    },
+    {
+      "path": "apps/ios/web/activity.js",
+      "sha256": "bb004805ed841a0db6a30ffa30a1fe4249847e5feb98f0e7bde7ae9d47fd99c6"
+    },
+    {
+      "path": "apps/ios/web/bundled-appearances.js",
+      "sha256": "a67af8fba62e93bc2e5b89a2d8b855d5ff1c4610ff8430cdd7c5aaf6c9582c2d"
+    },
+    {
+      "path": "apps/ios/web/controller.js",
+      "sha256": "3b9384c6989c7d4da0eeff4204ab505c4cabe907c990027cca7531ece18854c7"
+    },
+    {
+      "path": "apps/ios/web/index.html",
+      "sha256": "df4be1e26bf4a10a47be1bbf6e82c118432cced4b67c766c2066d95b61720498"
+    },
+    {
+      "path": "apps/server/src/admin/presentation-packages.ts",
+      "sha256": "0c65473ff2f69fec26c7557acad9659e67fff3a2ff34f9ffd657509f568d2d18"
+    },
+    {
+      "path": "docs/ios-v0.1.md",
+      "sha256": "7ca03f2e4befcb831948d4adac48e3d2f003c2b995bff014d70184f1488aa48c"
+    },
+    {
+      "path": "implementation/checkpoint.json",
+      "sha256": "b3c8ee8866e603cacbf23c37396c6ae4c64e26afc7dd8969d6bf524367d36d73"
+    }
+  ],
+  "waitingFor": "Runtime-window clearance for launch/live checks, then physical avatar/audio checks and operator acceptance."
+}

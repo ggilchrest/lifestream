@@ -11,6 +11,30 @@ final class VoiceProtocolTests: XCTestCase {
         XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/presentation/resources/sample/model.glb", method: "GET"))
         XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/presentation", method: "POST"))
     }
+    func testHistoryRequestsKeepTheAudienceNeededForServerAdmission() {
+        XCTAssertTrue(EndpointPolicy.preservesAudience("/api/runtime/v1/conversations",method:"POST"))
+        XCTAssertTrue(EndpointPolicy.preservesAudience("/api/runtime/v1/conversations/select",method:"POST"))
+        XCTAssertFalse(EndpointPolicy.preservesAudience("/api/runtime/v1/session-context",method:"POST"))
+        XCTAssertFalse(EndpointPolicy.preservesAudience("/api/auth/v1/sign-out",method:"POST"))
+        XCTAssertFalse(EndpointPolicy.preservesAudience("/api/runtime/v1/conversations/erase",method:"POST"))
+        XCTAssertFalse(EndpointPolicy.preservesAudience("/api/runtime/v1/conversations",method:"GET"))
+    }
+    func testHistoryRoutesAreNarrowlyAllowedForPostOnly() {
+        XCTAssertTrue(EndpointPolicy.permits("/api/runtime/v1/conversations", method: "POST"))
+        XCTAssertTrue(EndpointPolicy.permits("/api/runtime/v1/conversations/select", method: "POST"))
+        XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/conversations/erase", method: "POST"))
+        XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/conversations", method: "GET"))
+        XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/conversations?other=1", method: "POST"))
+    }
+    func testVoiceRoutesAreStrictAndKeepAudienceForPreviewOwnership(){
+        let id=UUID().uuidString,path="/api/admin/v1/assistants/\(id)/voices"
+        XCTAssertTrue(EndpointPolicy.permits(path,method:"GET"));XCTAssertTrue(EndpointPolicy.permits(path,method:"POST"));XCTAssertTrue(EndpointPolicy.permits(path+"/activate",method:"POST"))
+        for p in [path+"/remove",path+"/other",path+"?x=y",path.replacingOccurrences(of:id,with:"invalid")]{XCTAssertFalse(EndpointPolicy.permits(p,method:"POST"))}
+        for p in [path,path+"/activate"]{XCTAssertTrue(EndpointPolicy.preservesAudience(p,method:"POST"))}
+        XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/tts",method:"POST"))
+        XCTAssertFalse(EndpointPolicy.permits(path+"/activate",method:"GET"))
+        let refs="/api/admin/v1/assistants/\(id)/voice-references";XCTAssertTrue(EndpointPolicy.permits(refs,method:"GET"));XCTAssertFalse(EndpointPolicy.permits(refs,method:"POST"));XCTAssertFalse(EndpointPolicy.permits(refs+"/other",method:"GET"));XCTAssertFalse(EndpointPolicy.permits("/api/runtime/v1/voice-reference-preview",method:"POST"))
+    }
     func testPlaybackAccountingAndLateFrameFence() throws {
         let trace = UUID().uuidString; var stream = ReplyStream(); try stream.begin(trace)
         try stream.accept(trace: trace, segment: "a", sequence: 0, offset: 0, count: 4800, bytes: Data(count: 9600), queuedSamples: 0)
@@ -28,10 +52,41 @@ final class VoiceProtocolTests: XCTestCase {
     func testSpeechGateCommitsExactPCMAndResets() {
         var gate=SpeechGate(), frames=[Data](), began=0, committed:Int?
         for chunk in Array(repeating:Array(repeating:Float(0.1),count:1600),count:5)+Array(repeating:Array(repeating:Float(0),count:1600),count:7) {
-            for event in gate.push(chunk) { switch event { case .began:began += 1;case .frame(let bytes):frames.append(bytes);case .commit(let sequence,let samples):XCTAssertEqual(sequence,frames.count);committed=samples } }
+            for event in gate.push(chunk) { switch event { case .began:began += 1;case .frame(let bytes):frames.append(bytes);case .commit(let sequence,let samples):XCTAssertEqual(sequence,frames.count);committed=samples;case .overflow:XCTFail("Unexpected overflow") } }
         }
         XCTAssertEqual(began,1);XCTAssertEqual(committed,frames.reduce(0){$0+$1.count/2});XCTAssertFalse(gate.speaking)
         XCTAssertTrue(gate.push(Array(repeating:0,count:1600)).isEmpty)
+    }
+    func testSettlementCloseFenceCompletesOnceAndFencesLateCallbacks(){
+        var results=[Bool]();let sent=SettlementCloseFence{results.append($0)};sent.finish(true);sent.finish(false);XCTAssertEqual(results,[true])
+        let timeout=SettlementCloseFence{results.append($0)};timeout.finish(false);timeout.finish(true);XCTAssertEqual(results,[true,false])
+    }
+    func testSynthetic600msPrerollComparisonCoversSoftOnset(){
+        // Fixed-size synthetic comparison between the old and approved bounds.
+        let signal=Array(repeating:Float(0.009),count:6400)+Array(repeating:Float(0.04),count:2560)
+        let current=Array(signal.suffix(4800)),proposed=Array(signal.suffix(9600))
+        XCTAssertEqual(current.filter{$0==0.009}.count,2240)
+        XCTAssertEqual(proposed.filter{$0==0.009}.count,6400)
+        XCTAssertEqual((9600-4800)*MemoryLayout<Int16>.size,9600)
+    }
+    func testSoftSyntheticOnsetIsPreservedByApprovedPreroll() {
+        var gate=SpeechGate(),frames=[Data]()
+        let signal=Array(repeating:Float(0.009),count:6400)+Array(repeating:Float(0.04),count:3200)+Array(repeating:Float(0),count:11200)
+        for offset in stride(from:0,to:signal.count,by:320){for event in gate.push(Array(signal[offset..<min(offset+320,signal.count)])){if case .frame(let bytes)=event{frames.append(bytes)}}}
+        let pcm=frames.reduce(into:Data()){$0.append($1)},values=pcm.withUnsafeBytes{raw in stride(from:0,to:raw.count,by:2).map{offset in Int16(littleEndian:raw.loadUnaligned(fromByteOffset:offset,as:Int16.self))}}
+        let quiet=values.prefix{abs(Int($0)-295)<=2}.count
+        XCTAssertEqual(quiet,6400,"The approved 600 ms total preroll retains the full 400 ms soft onset")
+    }
+    func testPrerollIsBoundedAndResetDiscardsPreviousUtterance() {
+        var gate=SpeechGate(),frames=[Data]()
+        XCTAssertTrue(gate.push(Array(repeating:Float(0.009),count:32000)).isEmpty,"Unqualified audio emits no frames");gate.reset()
+        let signal=Array(repeating:Float(0.004),count:16000)+Array(repeating:Float(0.04),count:2560)+Array(repeating:Float(0),count:11200)
+        for offset in stride(from:0,to:signal.count,by:320){for event in gate.push(Array(signal[offset..<min(offset+320,signal.count)])){if case .frame(let bytes)=event{frames.append(bytes)}}}
+        let pcm=frames.reduce(into:Data()){$0.append($1)},values=pcm.withUnsafeBytes{raw in stride(from:0,to:raw.count,by:2).map{offset in Int16(littleEndian:raw.loadUnaligned(fromByteOffset:offset,as:Int16.self))}}
+        XCTAssertEqual(values.prefix{abs(Int($0)-131)<=2}.count,7040,"600 ms total includes 160 ms confirmation")
+        XCTAssertFalse(values.contains{abs(Int($0)-295)<=2},"reset does not retain the previous window")
+        XCTAssertTrue(frames.allSatisfy{$0.count<=9600})
+        XCTAssertTrue(gate.push([Float.nan]).isEmpty)
     }
     func testSpeechGateAcceptsLargeVariableTapBuffersWithoutLosingSpeech() {
         // AVAudioEngine's requested tap size is advisory. A valid callback can
@@ -41,7 +96,7 @@ final class VoiceProtocolTests: XCTestCase {
             var gate=SpeechGate(),began=0,frames=[Data](),committed:Int?
             for offset in stride(from:0,to:samples.count,by:size) {
                 for event in gate.push(Array(samples[offset..<min(offset+size,samples.count)])) {
-                    switch event {case .began:began += 1;case .frame(let bytes):frames.append(bytes);case .commit(let sequence,let count):XCTAssertEqual(sequence,frames.count);committed=count}
+                    switch event {case .began:began += 1;case .frame(let bytes):frames.append(bytes);case .commit(let sequence,let count):XCTAssertEqual(sequence,frames.count);committed=count;case .overflow:XCTFail("Unexpected overflow")}
                 }
             }
             return (began,frames,committed)

@@ -376,3 +376,14 @@ For a selected PWCE provider, authenticated `GET /api/authority/v1/grants?assist
 `GET /api/authority/v1/assistants/<UUID>/tools/grant-summary-evidence/<reference UUID>` reads the original producer evidence under that same current owner and original catalog. Other methods and query overrides are rejected. The host retains at most 256 unexpired summaries, clears them on shutdown, and never replaces an original catalog to rescue evidence access. Each network read has a fresh bounded deadline. The summary remains inspectable until its original catalog expiry, independently of the completed network request; inspection does not renew either authority or summary lifetime.
 
 After loading capabilities, the Permissions & access page offers **PWCE permissions**, **Refresh permissions** and **Read original summary evidence**. Site and capability references have separate labeled tables, with original scope and proof in disclosures. Local grant duration/state controls are hidden for PWCE. Explicit refresh removes the older visible summary before reading; session or Assistant changes clear it. Expiry is announced and disables the proof control. No saved service or Human acceptance is implied by this development view.
+
+
+## When a PWCE action review becomes unavailable
+
+An earlier approval does not keep PWCE access valid. If the bounded action-preparation call becomes unavailable before confirmation or an approved action resumes, the host now returns HTTP 503 with `pwce_preparation_unavailable` instead of a generic HTTP 500. The response does not identify grant withdrawal as the unique cause, expose provider error text, or report whether an action had an effect.
+
+Changed scope and cancellation return distinct HTTP 409 codes; a bounded-call timeout returns 504, and an invalid bounded-call response returns 502. Existing local authentication/validation responses remain intact. Unclassified internal faults remain internal failures. These classifications do not change authorization, approval, dispatch, deadlines or retained uncertainty.
+
+Keep the original request identity when checking its result. Do not assume an unavailable response means nothing happened, automatically submit a replacement action, or treat a restored connection as renewed approval. Current PWCE access and the original review are still required.
+
+Synthetic QA: with disposable Lifestream/PWCE copies and existing dependencies, run `PWCE_PRODUCER_ROOT=/path/to/disposable/PWCE node --experimental-strip-types --test --test-concurrency=1 scripts/check-pwce-action-refusal.mjs`. Supply an owned, non-symlink `TMPDIR`; the test uses generated credentials, real local Auth and Human approval routes, and only an in-process synthetic target. It checks grant withdrawal before resuming, zero target effects, valid execution once, repeat idempotency, and error classification/redaction. It does not establish instantaneous invalidation or live-device acceptance.

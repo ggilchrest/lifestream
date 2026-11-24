@@ -1,0 +1,17 @@
+import Foundation
+final class Disk:HealthSnapshotStorage {var bytes:Data?;func read()throws->Data?{bytes};func replace(_ data:Data)throws{bytes=data}}
+let dir=URL(fileURLWithPath:CommandLine.arguments[1],isDirectory:true)
+func read(_ file:String)throws->[String:Any]{try JSONSerialization.jsonObject(with:Data(contentsOf:dir.appendingPathComponent(file))) as! [String:Any]}
+let seed=try read("control-seed.json"),capture=try read("control-responses.json"),envelope=try read("control-envelope.json"),identity=seed["originalIdentity"] as! [String:String],target=seed["target"] as! [String:Any],id=(identity["principalId"]).flatMap(UUID.init(uuidString:))!,endpoint=(identity["endpointId"]).flatMap(UUID.init(uuidString:))!,session=(identity["sessionId"]).flatMap(UUID.init(uuidString:))!,enrollment=UUID(uuidString:target["enrollmentId"] as! String)!,scope=HealthOriginalControlJournal.Scope(serverDigest:seed["serverOriginDigest"] as! String,principal:id,endpoint:endpoint,session:session)
+let proof=try MobileHealthPolicyParser.parse(JSONSerialization.data(withJSONObject:seed["initialPolicy"]!),expectedPrincipal:id,expectedEndpoint:endpoint,expectedEnrollment:enrollment),original=try JSONSerialization.data(withJSONObject:envelope["payload"]!),captured=capture["captured"] as! [[String:Any]],pending=captured.first{$0["case"] as? String == "initial-receipt-write-failure"}!,applied=captured.first{$0["case"] as? String == "fresh-same-human-new-endpoint-read-only"}!
+let disk=Disk(),journal=HealthOriginalControlJournal(storage:disk),initial=MobileControlFixtureHost.Context(scope:scope,transportEpoch:1,contextRevision:1,ordinarySelf:true);var current:MobileControlFixtureHost.Context?=initial,stage=0
+let host=MobileControlFixtureHost(journal:journal,current:{current},restrict:{plan in guard stage==0,plan.stopCollection,plan.keepCategories.isEmpty,plan.keepUses.isEmpty else{exit(2)};stage=1},exchange:{body in
+ guard let input=try JSONSerialization.jsonObject(with:body) as? [String:Any],let operation=input["operation"] as? String else{exit(3)}
+ if operation=="control" {guard stage==1,disk.bytes != nil,body == (try Data(contentsOf:dir.appendingPathComponent("control-envelope.json"))) else{exit(4)};stage=2;return (200,try JSONSerialization.data(withJSONObject:pending["body"]!))}
+ guard operation=="reconcileControl",stage==2,body == (try Data(contentsOf:dir.appendingPathComponent("reconcile-envelope.json"))) else{exit(5)};stage=3;return (200,try JSONSerialization.data(withJSONObject:applied["body"]!))
+})
+guard try host.apply(original:original,context:initial,proof:proof) == .held,stage==2 else{exit(6)}
+let fresh=capture["freshIdentity"] as! [String:String],newScope=HealthOriginalControlJournal.Scope(serverDigest:scope.serverDigest,principal:id,endpoint:UUID(uuidString:fresh["endpointId"]!)!,session:UUID(uuidString:fresh["sessionId"]!)!),next=MobileControlFixtureHost.Context(scope:newScope,transportEpoch:2,contextRevision:2,ordinarySelf:true);current=next
+guard try host.reconcile(context:next) == .applied,stage==3,case .current = try journal.status(scope:scope) else{exit(7)}
+let currentProof=try MobileHealthPolicyParser.parse(JSONSerialization.data(withJSONObject:capture["freshPolicy"]!),expectedPrincipal:id,expectedEndpoint:endpoint,expectedEnrollment:enrollment);guard !currentProof.permitsCollection else{exit(8)}
+print("injected host assessed captured pending and historical applied; journal held and current policy denied collection")

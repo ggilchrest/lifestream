@@ -122,18 +122,24 @@
     })));
     $('cap-' + kind + '-more').hidden = !lists[kind].cursor;
   };
-  const loadList = async (kind, more = false) => {
+  const loadList = async (kind, more = false, announce = false) => {
     const selected = lists[kind], cursor = more ? selected.cursor : null, requestNo=(selected.requestNo||0)+1; selected.requestNo=requestNo;
     if(kind==='grants'){delete selected.summary;$('cap-grants').replaceChildren(el('p','Reading permissions…'));}
-    let value;try{value = await S.request(`${root}/${kind}?assistantId=${encodeURIComponent(S.assistant())}&limit=20${$('cap-'+kind+'-state').value ? '&states='+encodeURIComponent($('cap-'+kind+'-state').value) : ''}${cursor ? '&cursor=' + encodeURIComponent(cursor) : ''}`);}catch(error){if(kind==='grants'&&selected===lists[kind]&&selected.requestNo===requestNo)$('cap-grants').replaceChildren(el('p','No current permission summary is available. Refresh permissions to try again.'));throw error;}
+    let value;try{value = await S.request(`${root}/${kind}?assistantId=${encodeURIComponent(S.assistant())}&limit=20${$('cap-'+kind+'-state').value ? '&states='+encodeURIComponent($('cap-'+kind+'-state').value) : ''}${cursor ? '&cursor=' + encodeURIComponent(cursor) : ''}`);}catch(error){
+      if(selected!==lists[kind]||selected.requestNo!==requestNo)return;
+      if(kind==='grants')$('cap-grants').replaceChildren(el('p','No current permission summary is available. Refresh permissions to try again.'));
+      throw error;
+    }
     if (selected !== lists[kind] || selected.requestNo!==requestNo) return;
     selected.rows = more ? [...selected.rows,...value.result[kind]] : value.result[kind]; selected.cursor = value.result.nextCursor;if(kind==='grants'){selected.summary=value.result.externalSummary;selected.sourceRevision=value.result.sourceRevision;} recordRows(kind);
+    // Announce only inside the same current response that rendered the list.
+    if(announce)status(selected.summary?'PWCE permission summary loaded. Approval and action results remain separate.':`Current ${kind} loaded. Select a record to inspect it.`);
   };
   const loadRequests = () => loadList('requests');
   $('cap-grants-class').onchange = () => { resetDetails(); recordRows('grants'); };
   for(const kind of ['requests','grants']) $('cap-'+kind+'-state').onchange=run(async () => { resetDetails(); await loadList(kind); });
   for (const kind of ['requests','grants']) {
-    $('cap-' + kind + '-refresh').onclick = run(async () => { resetDetails(); await loadList(kind); status(lists[kind].summary?'PWCE permission summary loaded. Approval and action results remain separate.':`Current ${kind} loaded. Select a record to inspect it.`); });
+    $('cap-' + kind + '-refresh').onclick = run(async () => { resetDetails(); await loadList(kind,false,true); });
     $('cap-' + kind + '-more').onclick = run(() => loadList(kind,true));
   }
   const action = (parent, label, url, command, done, confirmation) => {

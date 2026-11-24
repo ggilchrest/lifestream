@@ -1,6 +1,10 @@
-import {readFile,writeFile} from 'node:fs/promises';
-import {spawnSync} from 'node:child_process';
-const result=spawnSync('npx',['cap','sync','ios'],{stdio:'inherit'});if(result.status)process.exit(result.status);
-const path=new URL('../ios/App/CapApp-SPM/Package.swift',import.meta.url);let text=await readFile(path,'utf8');
-text=text.replace('dependencies: [\n        .package','dependencies: [\n        .package(path: "../../../native"),\n        .package').replace('dependencies: [\n                .product','dependencies: [\n                .product(name: "AssistantCore", package: "native"),\n                .product');
-await writeFile(path,text);
+import {cp,readFile,writeFile,lstat} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+// The maintained Xcode project is Lifestream, not Capacitor's generated App template.
+// Do not regenerate native code or overwrite a private, reviewed resource snapshot.
+const root=new URL('../',import.meta.url), destination=new URL('ios/App/App/public',root);
+try { if ((await lstat(destination)).isSymbolicLink()) throw Error('Private resources are linked. Use the reviewed private packaging workflow; generic sync would replace them.'); } catch(error) { if(error.code!=='ENOENT') throw error; }
+await cp(new URL('dist/',root),destination,{recursive:true});
+const config=JSON.parse(await readFile(new URL('capacitor.config.json',root),'utf8'));config.packageClassList=[];
+await writeFile(new URL('ios/App/App/capacitor.config.json',root),JSON.stringify(config,null,2)+'\n');
+console.log('Updated web resources for Lifestream.xcodeproj. Native source and signing were preserved.');

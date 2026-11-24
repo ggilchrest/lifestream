@@ -6,7 +6,7 @@ import type {AuthorityRequest,AuthorityDispatchRequest,CapabilityInvocationReque
 import {verifyPwceApprovalEvidence,type PwceApprovalIntent,PwceTransportError,PwceAuthorityAdmission,PwceInvocation,pwceGovernedDisposition,type PwceTrustedDispatchClient,PwceAuthorityPreview,pwceLightOperation,PWCE_LIGHT_CAPABILITY_ID,EXPECTED_PWCE_CAPABILITY_BUNDLE,type PwcePreparedAction,type PwceCatalogRecord} from '@lifestream/providers-pwce';
 import {boundedJson,canonicalJson,validateCapabilitySchema} from '@lifestream/runtime/capabilities/schema-validation';
 import {resolveCapabilitySchema} from '@lifestream/runtime/capabilities/schema-artifacts';
-import {CapabilityCall} from '@lifestream/runtime/capabilities/call';
+import {CapabilityCall,CapabilityCallError} from '@lifestream/runtime/capabilities/call';
 import type {CapabilityCallContext} from '@lifestream/runtime/capabilities/ports';
 import {AuthenticationError,type LocalAuthentication,type LocalContext} from '../auth/local-auth.ts';
 import type {PwceCapabilityDiscovery,PwceCapabilityOwner,PwceCapabilityLease} from '../composition/pwce-capabilities.ts';
@@ -100,7 +100,20 @@ export class PwceActionPreparation {
  private async scoped<T>(provider:PwceCapabilityDiscovery,owner:PwceCapabilityOwner,inputCall:CapabilityCallContext,operation:(lease:PwceCapabilityLease)=>Promise<T>,original?:PwceCatalogRecord):Promise<T>{
   // Preserve known host validation failures only after the outer scope checks.
   // Foreign/provider failures still use the bounded call's sanitized error.
-  const result=await provider.withCatalog(owner,inputCall,async lease=>{try{return {ok:true as const,value:await operation(lease)};}catch(error){if(error instanceof AuthenticationError)return {ok:false as const,error};throw error;}},original);
+  const result=await provider.withCatalog(owner,inputCall,async lease=>{try{return {ok:true as const,value:await operation(lease)};}catch(error){if(error instanceof AuthenticationError)return {ok:false as const,error};throw error;}},original).catch((error:unknown)=>{
+   // Classify the bounded call's existing failure identity, never provider prose
+   // or a claim that revocation occurred or the target had no effect.
+   if(error instanceof CapabilityCallError){
+    switch(error.code){
+     case 'providerUnavailable':return fail('pwce_preparation_unavailable',503);
+     case 'scopeChanged':return fail('pwce_preparation_scope_changed',409);
+     case 'cancelled':return fail('pwce_preparation_cancelled',409);
+     case 'timedOut':return fail('pwce_preparation_timed_out',504);
+     case 'invalidResponse':return fail('pwce_preparation_invalid_response',502);
+    }
+   }
+   throw error;
+  });
   if(!result.ok)throw result.error;return result.value;
  }
  private async inspectRecord(record:PwceActionPreparationRecord,assistantId:string,local:LocalContext,inputCall:CapabilityCallContext,replayed:boolean){

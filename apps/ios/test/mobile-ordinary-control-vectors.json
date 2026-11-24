@@ -1,0 +1,1293 @@
+{
+  "schemaVersion": "1.0.0",
+  "syntheticOnly": true,
+  "sourceRevision": "c9c6f8dc50b138f577c4e0e5201e425c740839a9",
+  "producerPin": {
+    "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+    "schemaVersion": "1.0.0",
+    "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+  },
+  "oldControlPin": {
+    "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+    "schemaVersion": "1.0.0",
+    "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+  },
+  "vectors": [
+    {
+      "case": "enroll-applied",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000011",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": null,
+          "sourceNamespace": null,
+          "expectedRevision": 0
+        },
+        "action": {
+          "kind": "enroll"
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "cd8b3d756b94c90db45a00834c069428ee372e880e84935aa0c08208935fb9dd",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "preparedDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000011",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": null,
+                  "sourceNamespace": null,
+                  "expectedRevision": 0
+                },
+                "action": {
+                  "kind": "enroll"
+                }
+              },
+              "requestDigest": "d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf",
+              "status": "applied",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "result": {
+                  "kind": "enroll",
+                  "enrollment": {
+                    "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                    "principalId": "00000000-0000-4000-8000-000000000002",
+                    "endpointId": "00000000-0000-4000-8000-000000000003",
+                    "collector": "healthKit",
+                    "sourceNamespace": null,
+                    "revision": 1,
+                    "state": "unbound",
+                    "configuration": {
+                      "categories": [],
+                      "uses": [],
+                      "assistantIds": [],
+                      "collectionPaused": true,
+                      "usePaused": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "requestCanonicalUtf8": "{\"action\":{\"kind\":\"enroll\"},\"operationId\":\"00000000-0000-4000-8000-000000000011\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":null,\"expectedRevision\":0,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":null}}",
+      "requestDigest": "d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf",
+      "reservationCanonicalUtf8": "{\"attemptStarted\":0,\"outcome\":null,\"requestDigest\":\"d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf\",\"selection\":null,\"state\":\"pending\"}",
+      "reservationDigest": "cd8b3d756b94c90db45a00834c069428ee372e880e84935aa0c08208935fb9dd",
+      "identityCanonicalUtf8": "{\"binding\":{\"family\":\"ordinaryControl\",\"preparedDigest\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"reservationDigest\":\"cd8b3d756b94c90db45a00834c069428ee372e880e84935aa0c08208935fb9dd\",\"terminalDigest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"original\":{\"action\":{\"kind\":\"enroll\"},\"operationId\":\"00000000-0000-4000-8000-000000000011\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":null,\"expectedRevision\":0,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":null}},\"producerPin\":{\"digest\":\"7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4\",\"schemaId\":\"https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0\",\"schemaVersion\":\"1.0.0\"},\"receipt\":{\"committedAt\":\"2026-10-29T12:00:00.000Z\",\"durability\":\"sqlCommit\",\"receiptId\":\"00000000-0000-4000-8000-000000000009\",\"result\":{\"enrollment\":{\"collector\":\"healthKit\",\"configuration\":{\"assistantIds\":[],\"categories\":[],\"collectionPaused\":true,\"usePaused\":true,\"uses\":[]},\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":\"00000000-0000-4000-8000-000000000004\",\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"revision\":1,\"sourceNamespace\":null,\"state\":\"unbound\"},\"kind\":\"enroll\"}},\"requestDigest\":\"d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf\",\"status\":\"applied\"}",
+      "terminalIdentity": "a92d64cffd38c9855db6bfce72eae30b983049d24abaa70f4c13b43acc10a97a",
+      "changedCurrent": {
+        "state": "settingsChanged",
+        "policyRevision": 7
+      }
+    },
+    {
+      "case": "enroll-rejected",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000011",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": null,
+          "sourceNamespace": null,
+          "expectedRevision": 0
+        },
+        "action": {
+          "kind": "enroll"
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "cd8b3d756b94c90db45a00834c069428ee372e880e84935aa0c08208935fb9dd",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000011",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": null,
+                  "sourceNamespace": null,
+                  "expectedRevision": 0
+                },
+                "action": {
+                  "kind": "enroll"
+                }
+              },
+              "requestDigest": "d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf",
+              "status": "rejected",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "effects": "none",
+                "code": "scope"
+              }
+            }
+          }
+        }
+      },
+      "requestCanonicalUtf8": "{\"action\":{\"kind\":\"enroll\"},\"operationId\":\"00000000-0000-4000-8000-000000000011\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":null,\"expectedRevision\":0,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":null}}",
+      "requestDigest": "d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf",
+      "reservationCanonicalUtf8": "{\"attemptStarted\":0,\"outcome\":null,\"requestDigest\":\"d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf\",\"selection\":null,\"state\":\"pending\"}",
+      "reservationDigest": "cd8b3d756b94c90db45a00834c069428ee372e880e84935aa0c08208935fb9dd",
+      "identityCanonicalUtf8": "{\"binding\":{\"family\":\"ordinaryControl\",\"reservationDigest\":\"cd8b3d756b94c90db45a00834c069428ee372e880e84935aa0c08208935fb9dd\",\"terminalDigest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"original\":{\"action\":{\"kind\":\"enroll\"},\"operationId\":\"00000000-0000-4000-8000-000000000011\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":null,\"expectedRevision\":0,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":null}},\"producerPin\":{\"digest\":\"7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4\",\"schemaId\":\"https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0\",\"schemaVersion\":\"1.0.0\"},\"receipt\":{\"code\":\"scope\",\"committedAt\":\"2026-10-29T12:00:00.000Z\",\"durability\":\"sqlCommit\",\"effects\":\"none\",\"receiptId\":\"00000000-0000-4000-8000-000000000009\"},\"requestDigest\":\"d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf\",\"status\":\"rejected\"}",
+      "terminalIdentity": "6f7e24abd8293d7862c47e87421a8c2c4d1b4976d4fddca68c7ad6acf7be70a8",
+      "changedCurrent": {
+        "state": "settingsChanged",
+        "policyRevision": 7
+      }
+    },
+    {
+      "case": "bindSource-applied",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000012",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": "00000000-0000-4000-8000-000000000004",
+          "sourceNamespace": null,
+          "expectedRevision": 1
+        },
+        "action": {
+          "kind": "bindSource",
+          "binding": {
+            "createNew": true
+          }
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "e8d81bfdd073983c272fb1eccdd7a442ee6bc5b3bec204e89de5ed88d36aeff3",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "preparedDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000012",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                  "sourceNamespace": null,
+                  "expectedRevision": 1
+                },
+                "action": {
+                  "kind": "bindSource",
+                  "binding": {
+                    "createNew": true
+                  }
+                }
+              },
+              "requestDigest": "18a2f7663535158d0c926dedab20ef96cc528d6b634c37f0261fa6288e3b7c48",
+              "status": "applied",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "result": {
+                  "kind": "bindSource",
+                  "enrollment": {
+                    "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                    "principalId": "00000000-0000-4000-8000-000000000002",
+                    "endpointId": "00000000-0000-4000-8000-000000000003",
+                    "collector": "healthKit",
+                    "sourceNamespace": "00000000-0000-4000-8000-000000000005",
+                    "revision": 1,
+                    "state": "disconnected",
+                    "configuration": {
+                      "categories": [],
+                      "uses": [],
+                      "assistantIds": [],
+                      "collectionPaused": true,
+                      "usePaused": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "requestCanonicalUtf8": "{\"action\":{\"binding\":{\"createNew\":true},\"kind\":\"bindSource\"},\"operationId\":\"00000000-0000-4000-8000-000000000012\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":\"00000000-0000-4000-8000-000000000004\",\"expectedRevision\":1,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":null}}",
+      "requestDigest": "18a2f7663535158d0c926dedab20ef96cc528d6b634c37f0261fa6288e3b7c48",
+      "reservationCanonicalUtf8": "{\"attemptStarted\":0,\"outcome\":null,\"requestDigest\":\"18a2f7663535158d0c926dedab20ef96cc528d6b634c37f0261fa6288e3b7c48\",\"selection\":null,\"state\":\"pending\"}",
+      "reservationDigest": "e8d81bfdd073983c272fb1eccdd7a442ee6bc5b3bec204e89de5ed88d36aeff3",
+      "identityCanonicalUtf8": "{\"binding\":{\"family\":\"ordinaryControl\",\"preparedDigest\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"reservationDigest\":\"e8d81bfdd073983c272fb1eccdd7a442ee6bc5b3bec204e89de5ed88d36aeff3\",\"terminalDigest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"original\":{\"action\":{\"binding\":{\"createNew\":true},\"kind\":\"bindSource\"},\"operationId\":\"00000000-0000-4000-8000-000000000012\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":\"00000000-0000-4000-8000-000000000004\",\"expectedRevision\":1,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":null}},\"producerPin\":{\"digest\":\"7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4\",\"schemaId\":\"https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0\",\"schemaVersion\":\"1.0.0\"},\"receipt\":{\"committedAt\":\"2026-10-29T12:00:00.000Z\",\"durability\":\"sqlCommit\",\"receiptId\":\"00000000-0000-4000-8000-000000000009\",\"result\":{\"enrollment\":{\"collector\":\"healthKit\",\"configuration\":{\"assistantIds\":[],\"categories\":[],\"collectionPaused\":true,\"usePaused\":true,\"uses\":[]},\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":\"00000000-0000-4000-8000-000000000004\",\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"revision\":1,\"sourceNamespace\":\"00000000-0000-4000-8000-000000000005\",\"state\":\"disconnected\"},\"kind\":\"bindSource\"}},\"requestDigest\":\"18a2f7663535158d0c926dedab20ef96cc528d6b634c37f0261fa6288e3b7c48\",\"status\":\"applied\"}",
+      "terminalIdentity": "739a3d99e8667c8a36dd696d4084f549b10697fb77bd3dedcdb3ea10110c0ed6",
+      "changedCurrent": {
+        "state": "settingsChanged",
+        "policyRevision": 7
+      }
+    },
+    {
+      "case": "bindSource-rejected",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000012",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": "00000000-0000-4000-8000-000000000004",
+          "sourceNamespace": null,
+          "expectedRevision": 1
+        },
+        "action": {
+          "kind": "bindSource",
+          "binding": {
+            "createNew": true
+          }
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "e8d81bfdd073983c272fb1eccdd7a442ee6bc5b3bec204e89de5ed88d36aeff3",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000012",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                  "sourceNamespace": null,
+                  "expectedRevision": 1
+                },
+                "action": {
+                  "kind": "bindSource",
+                  "binding": {
+                    "createNew": true
+                  }
+                }
+              },
+              "requestDigest": "18a2f7663535158d0c926dedab20ef96cc528d6b634c37f0261fa6288e3b7c48",
+              "status": "rejected",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "effects": "none",
+                "code": "scope"
+              }
+            }
+          }
+        }
+      },
+      "requestCanonicalUtf8": "{\"action\":{\"binding\":{\"createNew\":true},\"kind\":\"bindSource\"},\"operationId\":\"00000000-0000-4000-8000-000000000012\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":\"00000000-0000-4000-8000-000000000004\",\"expectedRevision\":1,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":null}}",
+      "requestDigest": "18a2f7663535158d0c926dedab20ef96cc528d6b634c37f0261fa6288e3b7c48",
+      "reservationCanonicalUtf8": "{\"attemptStarted\":0,\"outcome\":null,\"requestDigest\":\"18a2f7663535158d0c926dedab20ef96cc528d6b634c37f0261fa6288e3b7c48\",\"selection\":null,\"state\":\"pending\"}",
+      "reservationDigest": "e8d81bfdd073983c272fb1eccdd7a442ee6bc5b3bec204e89de5ed88d36aeff3",
+      "identityCanonicalUtf8": "{\"binding\":{\"family\":\"ordinaryControl\",\"reservationDigest\":\"e8d81bfdd073983c272fb1eccdd7a442ee6bc5b3bec204e89de5ed88d36aeff3\",\"terminalDigest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"original\":{\"action\":{\"binding\":{\"createNew\":true},\"kind\":\"bindSource\"},\"operationId\":\"00000000-0000-4000-8000-000000000012\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":\"00000000-0000-4000-8000-000000000004\",\"expectedRevision\":1,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":null}},\"producerPin\":{\"digest\":\"7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4\",\"schemaId\":\"https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0\",\"schemaVersion\":\"1.0.0\"},\"receipt\":{\"code\":\"scope\",\"committedAt\":\"2026-10-29T12:00:00.000Z\",\"durability\":\"sqlCommit\",\"effects\":\"none\",\"receiptId\":\"00000000-0000-4000-8000-000000000009\"},\"requestDigest\":\"18a2f7663535158d0c926dedab20ef96cc528d6b634c37f0261fa6288e3b7c48\",\"status\":\"rejected\"}",
+      "terminalIdentity": "0d0bc0248462c643e422e9018233b80e26747a3c04558a59c954b0f12ae6439f",
+      "changedCurrent": {
+        "state": "settingsChanged",
+        "policyRevision": 7
+      }
+    },
+    {
+      "case": "configure-applied",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000013",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": "00000000-0000-4000-8000-000000000004",
+          "sourceNamespace": "00000000-0000-4000-8000-000000000005",
+          "expectedRevision": 1
+        },
+        "action": {
+          "kind": "configure",
+          "state": "active",
+          "configuration": {
+            "categories": [
+              "SleepSegment"
+            ],
+            "uses": [
+              "answers"
+            ],
+            "assistantIds": [],
+            "collectionPaused": false,
+            "usePaused": false
+          }
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "d1a6c5aff890d302de5c14e9d232bc10ad9bb683a0e89d0756914b1865b37c0d",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "preparedDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000013",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                  "sourceNamespace": "00000000-0000-4000-8000-000000000005",
+                  "expectedRevision": 1
+                },
+                "action": {
+                  "kind": "configure",
+                  "state": "active",
+                  "configuration": {
+                    "categories": [
+                      "SleepSegment"
+                    ],
+                    "uses": [
+                      "answers"
+                    ],
+                    "assistantIds": [],
+                    "collectionPaused": false,
+                    "usePaused": false
+                  }
+                }
+              },
+              "requestDigest": "6aa5f6058402f16d311f16ebb1a3cb32d79d5200a129e5181dc84c98b5d8c9e0",
+              "status": "applied",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "result": {
+                  "kind": "configure",
+                  "enrollment": {
+                    "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                    "principalId": "00000000-0000-4000-8000-000000000002",
+                    "endpointId": "00000000-0000-4000-8000-000000000003",
+                    "collector": "healthKit",
+                    "sourceNamespace": "00000000-0000-4000-8000-000000000005",
+                    "revision": 2,
+                    "state": "active",
+                    "configuration": {
+                      "categories": [
+                        "SleepSegment"
+                      ],
+                      "uses": [
+                        "answers"
+                      ],
+                      "assistantIds": [],
+                      "collectionPaused": false,
+                      "usePaused": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "requestCanonicalUtf8": "{\"action\":{\"configuration\":{\"assistantIds\":[],\"categories\":[\"SleepSegment\"],\"collectionPaused\":false,\"usePaused\":false,\"uses\":[\"answers\"]},\"kind\":\"configure\",\"state\":\"active\"},\"operationId\":\"00000000-0000-4000-8000-000000000013\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":\"00000000-0000-4000-8000-000000000004\",\"expectedRevision\":1,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":\"00000000-0000-4000-8000-000000000005\"}}",
+      "requestDigest": "6aa5f6058402f16d311f16ebb1a3cb32d79d5200a129e5181dc84c98b5d8c9e0",
+      "reservationCanonicalUtf8": "{\"attemptStarted\":0,\"outcome\":null,\"requestDigest\":\"6aa5f6058402f16d311f16ebb1a3cb32d79d5200a129e5181dc84c98b5d8c9e0\",\"selection\":null,\"state\":\"pending\"}",
+      "reservationDigest": "d1a6c5aff890d302de5c14e9d232bc10ad9bb683a0e89d0756914b1865b37c0d",
+      "identityCanonicalUtf8": "{\"binding\":{\"family\":\"ordinaryControl\",\"preparedDigest\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"reservationDigest\":\"d1a6c5aff890d302de5c14e9d232bc10ad9bb683a0e89d0756914b1865b37c0d\",\"terminalDigest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"original\":{\"action\":{\"configuration\":{\"assistantIds\":[],\"categories\":[\"SleepSegment\"],\"collectionPaused\":false,\"usePaused\":false,\"uses\":[\"answers\"]},\"kind\":\"configure\",\"state\":\"active\"},\"operationId\":\"00000000-0000-4000-8000-000000000013\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":\"00000000-0000-4000-8000-000000000004\",\"expectedRevision\":1,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":\"00000000-0000-4000-8000-000000000005\"}},\"producerPin\":{\"digest\":\"7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4\",\"schemaId\":\"https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0\",\"schemaVersion\":\"1.0.0\"},\"receipt\":{\"committedAt\":\"2026-10-29T12:00:00.000Z\",\"durability\":\"sqlCommit\",\"receiptId\":\"00000000-0000-4000-8000-000000000009\",\"result\":{\"enrollment\":{\"collector\":\"healthKit\",\"configuration\":{\"assistantIds\":[],\"categories\":[\"SleepSegment\"],\"collectionPaused\":false,\"usePaused\":false,\"uses\":[\"answers\"]},\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":\"00000000-0000-4000-8000-000000000004\",\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"revision\":2,\"sourceNamespace\":\"00000000-0000-4000-8000-000000000005\",\"state\":\"active\"},\"kind\":\"configure\"}},\"requestDigest\":\"6aa5f6058402f16d311f16ebb1a3cb32d79d5200a129e5181dc84c98b5d8c9e0\",\"status\":\"applied\"}",
+      "terminalIdentity": "c75e9656755c0032e5ee9fa15a2861e84cd6409e9ab395aeff4e3a77bc195c9e",
+      "changedCurrent": {
+        "state": "settingsChanged",
+        "policyRevision": 7
+      }
+    },
+    {
+      "case": "configure-rejected",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000013",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": "00000000-0000-4000-8000-000000000004",
+          "sourceNamespace": "00000000-0000-4000-8000-000000000005",
+          "expectedRevision": 1
+        },
+        "action": {
+          "kind": "configure",
+          "state": "active",
+          "configuration": {
+            "categories": [
+              "SleepSegment"
+            ],
+            "uses": [
+              "answers"
+            ],
+            "assistantIds": [],
+            "collectionPaused": false,
+            "usePaused": false
+          }
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "d1a6c5aff890d302de5c14e9d232bc10ad9bb683a0e89d0756914b1865b37c0d",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000013",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                  "sourceNamespace": "00000000-0000-4000-8000-000000000005",
+                  "expectedRevision": 1
+                },
+                "action": {
+                  "kind": "configure",
+                  "state": "active",
+                  "configuration": {
+                    "categories": [
+                      "SleepSegment"
+                    ],
+                    "uses": [
+                      "answers"
+                    ],
+                    "assistantIds": [],
+                    "collectionPaused": false,
+                    "usePaused": false
+                  }
+                }
+              },
+              "requestDigest": "6aa5f6058402f16d311f16ebb1a3cb32d79d5200a129e5181dc84c98b5d8c9e0",
+              "status": "rejected",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "effects": "none",
+                "code": "scope"
+              }
+            }
+          }
+        }
+      },
+      "requestCanonicalUtf8": "{\"action\":{\"configuration\":{\"assistantIds\":[],\"categories\":[\"SleepSegment\"],\"collectionPaused\":false,\"usePaused\":false,\"uses\":[\"answers\"]},\"kind\":\"configure\",\"state\":\"active\"},\"operationId\":\"00000000-0000-4000-8000-000000000013\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":\"00000000-0000-4000-8000-000000000004\",\"expectedRevision\":1,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":\"00000000-0000-4000-8000-000000000005\"}}",
+      "requestDigest": "6aa5f6058402f16d311f16ebb1a3cb32d79d5200a129e5181dc84c98b5d8c9e0",
+      "reservationCanonicalUtf8": "{\"attemptStarted\":0,\"outcome\":null,\"requestDigest\":\"6aa5f6058402f16d311f16ebb1a3cb32d79d5200a129e5181dc84c98b5d8c9e0\",\"selection\":null,\"state\":\"pending\"}",
+      "reservationDigest": "d1a6c5aff890d302de5c14e9d232bc10ad9bb683a0e89d0756914b1865b37c0d",
+      "identityCanonicalUtf8": "{\"binding\":{\"family\":\"ordinaryControl\",\"reservationDigest\":\"d1a6c5aff890d302de5c14e9d232bc10ad9bb683a0e89d0756914b1865b37c0d\",\"terminalDigest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"original\":{\"action\":{\"configuration\":{\"assistantIds\":[],\"categories\":[\"SleepSegment\"],\"collectionPaused\":false,\"usePaused\":false,\"uses\":[\"answers\"]},\"kind\":\"configure\",\"state\":\"active\"},\"operationId\":\"00000000-0000-4000-8000-000000000013\",\"schemaVersion\":\"1.0.0\",\"target\":{\"collector\":\"healthKit\",\"endpointId\":\"00000000-0000-4000-8000-000000000003\",\"enrollmentId\":\"00000000-0000-4000-8000-000000000004\",\"expectedRevision\":1,\"principalId\":\"00000000-0000-4000-8000-000000000002\",\"sourceNamespace\":\"00000000-0000-4000-8000-000000000005\"}},\"producerPin\":{\"digest\":\"7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4\",\"schemaId\":\"https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0\",\"schemaVersion\":\"1.0.0\"},\"receipt\":{\"code\":\"scope\",\"committedAt\":\"2026-10-29T12:00:00.000Z\",\"durability\":\"sqlCommit\",\"effects\":\"none\",\"receiptId\":\"00000000-0000-4000-8000-000000000009\"},\"requestDigest\":\"6aa5f6058402f16d311f16ebb1a3cb32d79d5200a129e5181dc84c98b5d8c9e0\",\"status\":\"rejected\"}",
+      "terminalIdentity": "7f3d1bf79b3ff71fcf6a279e1a2a5ea191825f8d355aab4893fc615c7bc7237b",
+      "changedCurrent": {
+        "state": "settingsChanged",
+        "policyRevision": 7
+      }
+    }
+  ],
+  "negative": [
+    {
+      "case": "held",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000011",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": null,
+          "sourceNamespace": null,
+          "expectedRevision": 0
+        },
+        "action": {
+          "kind": "enroll"
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "held",
+          "reason": "unqualified"
+        }
+      },
+      "expected": "held"
+    },
+    {
+      "case": "observed",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000011",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": null,
+          "sourceNamespace": null,
+          "expectedRevision": 0
+        },
+        "action": {
+          "kind": "enroll"
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "observed",
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000011",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": null,
+                  "sourceNamespace": null,
+                  "expectedRevision": 0
+                },
+                "action": {
+                  "kind": "enroll"
+                }
+              },
+              "requestDigest": "d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf",
+              "status": "applied",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "result": {
+                  "kind": "enroll",
+                  "enrollment": {
+                    "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                    "principalId": "00000000-0000-4000-8000-000000000002",
+                    "endpointId": "00000000-0000-4000-8000-000000000003",
+                    "collector": "healthKit",
+                    "sourceNamespace": null,
+                    "revision": 1,
+                    "state": "unbound",
+                    "configuration": {
+                      "categories": [],
+                      "uses": [],
+                      "assistantIds": [],
+                      "collectionPaused": true,
+                      "usePaused": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": "held"
+    },
+    {
+      "case": "wrongPin",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000011",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": null,
+          "sourceNamespace": null,
+          "expectedRevision": 0
+        },
+        "action": {
+          "kind": "enroll"
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "cd8b3d756b94c90db45a00834c069428ee372e880e84935aa0c08208935fb9dd",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "preparedDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000011",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": null,
+                  "sourceNamespace": null,
+                  "expectedRevision": 0
+                },
+                "action": {
+                  "kind": "enroll"
+                }
+              },
+              "requestDigest": "d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf",
+              "status": "applied",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "result": {
+                  "kind": "enroll",
+                  "enrollment": {
+                    "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                    "principalId": "00000000-0000-4000-8000-000000000002",
+                    "endpointId": "00000000-0000-4000-8000-000000000003",
+                    "collector": "healthKit",
+                    "sourceNamespace": null,
+                    "revision": 1,
+                    "state": "unbound",
+                    "configuration": {
+                      "categories": [],
+                      "uses": [],
+                      "assistantIds": [],
+                      "collectionPaused": true,
+                      "usePaused": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": "held"
+    },
+    {
+      "case": "badReservation",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000011",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": null,
+          "sourceNamespace": null,
+          "expectedRevision": 0
+        },
+        "action": {
+          "kind": "enroll"
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "preparedDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000011",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": null,
+                  "sourceNamespace": null,
+                  "expectedRevision": 0
+                },
+                "action": {
+                  "kind": "enroll"
+                }
+              },
+              "requestDigest": "d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf",
+              "status": "applied",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "result": {
+                  "kind": "enroll",
+                  "enrollment": {
+                    "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                    "principalId": "00000000-0000-4000-8000-000000000002",
+                    "endpointId": "00000000-0000-4000-8000-000000000003",
+                    "collector": "healthKit",
+                    "sourceNamespace": null,
+                    "revision": 1,
+                    "state": "unbound",
+                    "configuration": {
+                      "categories": [],
+                      "uses": [],
+                      "assistantIds": [],
+                      "collectionPaused": true,
+                      "usePaused": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": "held"
+    },
+    {
+      "case": "wrongOriginal",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000088",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": null,
+          "sourceNamespace": null,
+          "expectedRevision": 0
+        },
+        "action": {
+          "kind": "enroll"
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "cd8b3d756b94c90db45a00834c069428ee372e880e84935aa0c08208935fb9dd",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "preparedDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000011",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": null,
+                  "sourceNamespace": null,
+                  "expectedRevision": 0
+                },
+                "action": {
+                  "kind": "enroll"
+                }
+              },
+              "requestDigest": "d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf",
+              "status": "applied",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "result": {
+                  "kind": "enroll",
+                  "enrollment": {
+                    "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                    "principalId": "00000000-0000-4000-8000-000000000002",
+                    "endpointId": "00000000-0000-4000-8000-000000000003",
+                    "collector": "healthKit",
+                    "sourceNamespace": null,
+                    "revision": 1,
+                    "state": "unbound",
+                    "configuration": {
+                      "categories": [],
+                      "uses": [],
+                      "assistantIds": [],
+                      "collectionPaused": true,
+                      "usePaused": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": "held"
+    },
+    {
+      "case": "remove",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000011",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": "00000000-0000-4000-8000-000000000004",
+          "sourceNamespace": "00000000-0000-4000-8000-000000000005",
+          "expectedRevision": 1
+        },
+        "action": {
+          "kind": "remove",
+          "scope": "wholeSource"
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "cd8b3d756b94c90db45a00834c069428ee372e880e84935aa0c08208935fb9dd",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "preparedDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000011",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": null,
+                  "sourceNamespace": null,
+                  "expectedRevision": 0
+                },
+                "action": {
+                  "kind": "enroll"
+                }
+              },
+              "requestDigest": "d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf",
+              "status": "applied",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "result": {
+                  "kind": "enroll",
+                  "enrollment": {
+                    "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                    "principalId": "00000000-0000-4000-8000-000000000002",
+                    "endpointId": "00000000-0000-4000-8000-000000000003",
+                    "collector": "healthKit",
+                    "sourceNamespace": null,
+                    "revision": 1,
+                    "state": "unbound",
+                    "configuration": {
+                      "categories": [],
+                      "uses": [],
+                      "assistantIds": [],
+                      "collectionPaused": true,
+                      "usePaused": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": "held"
+    },
+    {
+      "case": "extraBinding",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000011",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": null,
+          "sourceNamespace": null,
+          "expectedRevision": 0
+        },
+        "action": {
+          "kind": "enroll"
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "cd8b3d756b94c90db45a00834c069428ee372e880e84935aa0c08208935fb9dd",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "preparedDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "extra": true
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000011",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": null,
+                  "sourceNamespace": null,
+                  "expectedRevision": 0
+                },
+                "action": {
+                  "kind": "enroll"
+                }
+              },
+              "requestDigest": "d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf",
+              "status": "applied",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": null
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "result": {
+                  "kind": "enroll",
+                  "enrollment": {
+                    "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                    "principalId": "00000000-0000-4000-8000-000000000002",
+                    "endpointId": "00000000-0000-4000-8000-000000000003",
+                    "collector": "healthKit",
+                    "sourceNamespace": null,
+                    "revision": 1,
+                    "state": "unbound",
+                    "configuration": {
+                      "categories": [],
+                      "uses": [],
+                      "assistantIds": [],
+                      "collectionPaused": true,
+                      "usePaused": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": "held"
+    },
+    {
+      "case": "unavailableNonNull",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "operationId": "00000000-0000-4000-8000-000000000011",
+        "target": {
+          "principalId": "00000000-0000-4000-8000-000000000002",
+          "endpointId": "00000000-0000-4000-8000-000000000003",
+          "collector": "healthKit",
+          "enrollmentId": null,
+          "sourceNamespace": null,
+          "expectedRevision": 0
+        },
+        "action": {
+          "kind": "enroll"
+        }
+      },
+      "response": {
+        "schemaVersion": "1.0.0",
+        "producerPin": {
+          "schemaId": "https://lifestream.dev/contracts/mobile-context-control-settlement/1.0.0",
+          "schemaVersion": "1.0.0",
+          "digest": "7819f41352b0c298c29a26c9e3939f9967b7bddf029ee008e4d6562fe3c8ebf4"
+        },
+        "result": {
+          "kind": "terminal",
+          "binding": {
+            "family": "ordinaryControl",
+            "reservationDigest": "cd8b3d756b94c90db45a00834c069428ee372e880e84935aa0c08208935fb9dd",
+            "terminalDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "preparedDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "control": {
+            "schemaVersion": "1.0.0",
+            "producerPin": {
+              "schemaId": "https://lifestream.dev/contracts/mobile-context-control/1.0.0",
+              "schemaVersion": "1.0.0",
+              "digest": "fb854a621ce9fa2985047ded9ebeea6c094b108563e761fef431b02eec5853e3"
+            },
+            "result": {
+              "originalRequest": {
+                "schemaVersion": "1.0.0",
+                "operationId": "00000000-0000-4000-8000-000000000011",
+                "target": {
+                  "principalId": "00000000-0000-4000-8000-000000000002",
+                  "endpointId": "00000000-0000-4000-8000-000000000003",
+                  "collector": "healthKit",
+                  "enrollmentId": null,
+                  "sourceNamespace": null,
+                  "expectedRevision": 0
+                },
+                "action": {
+                  "kind": "enroll"
+                }
+              },
+              "requestDigest": "d441a9c3de01ee9d85aaaeb706613c7631f2491aa67f71c38d6ae4c7b3f0a7bf",
+              "status": "applied",
+              "current": {
+                "state": "unavailable",
+                "policyRevision": 1
+              },
+              "receipt": {
+                "receiptId": "00000000-0000-4000-8000-000000000009",
+                "committedAt": "2026-10-29T12:00:00.000Z",
+                "durability": "sqlCommit",
+                "result": {
+                  "kind": "enroll",
+                  "enrollment": {
+                    "enrollmentId": "00000000-0000-4000-8000-000000000004",
+                    "principalId": "00000000-0000-4000-8000-000000000002",
+                    "endpointId": "00000000-0000-4000-8000-000000000003",
+                    "collector": "healthKit",
+                    "sourceNamespace": null,
+                    "revision": 1,
+                    "state": "unbound",
+                    "configuration": {
+                      "categories": [],
+                      "uses": [],
+                      "assistantIds": [],
+                      "collectionPaused": true,
+                      "usePaused": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": "held"
+    }
+  ]
+}

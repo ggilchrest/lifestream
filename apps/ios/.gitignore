@@ -4,6 +4,9 @@ native/.build/
 ios/App/App/public/
 ios/App/App/capacitor.config.json
 ios/App/CapApp-SPM/.build/
-ios/App/App.xcodeproj/xcuserdata/
+ios/App/Lifestream.xcodeproj/xcuserdata/
 DerivedData/
 native/.swiftpm/
+
+# Operator-local private resource link is never a source artifact.
+ios/App/App/public

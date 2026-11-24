@@ -69,3 +69,20 @@ test('diagnostic history is rendered as text and bounded to recent single-line e
  renderActivity({captureDiagnostics:[null,1,{},'','valid']});assert.equal($('audio-diagnostics-log').textContent,'valid');
  renderActivity({captureDiagnostics:'not a native event array'});assert.equal($('audio-diagnostics-log').textContent,'');assert.equal($('audio-diagnostics-empty').hidden,false);
 });
+
+test('playback diagnostics keep hardware and wire rates distinct and never imply a hardware underrun',t=>{
+ const $=view(t);
+ renderActivity({playbackDiagnostics:['Session: playAndRecord/voiceChat negotiated=16000Hz','Hardware: in=16000Hz out=16000Hz','PCM: 48000Hz mono PCM16 -> Float32','Playback: drains=2 speechInterrupts=1','Drains are queue observations, not measured hardware underruns.','ignored'],captureDiagnostics:['+0ms start']});
+ const lines=$('audio-diagnostics-log').textContent.split('\n');
+ assert.equal(lines.length,6);assert.match(lines[0],/16000Hz/);assert.match(lines[2],/48000Hz/);assert.match(lines[4],/not measured hardware underruns/);assert.equal(lines[5],'+0ms start');
+});
+
+test('unchanged diagnostics retain their text node across microphone meter updates',t=>{
+ const $=view(t);renderActivity({captureDiagnostics:['stable route']});
+ const log=$('audio-diagnostics-log');let writes=0,text=log.textContent;
+ Object.defineProperty(log,'textContent',{get:()=>text,set:value=>{writes++;text=value}});
+ renderActivity({captureDiagnostics:['stable route'],inputLevel:.1});
+ renderActivity({captureDiagnostics:['stable route'],inputLevel:.2});
+ assert.equal(writes,0);
+ renderActivity({captureDiagnostics:['new route']});assert.equal(writes,1);
+});

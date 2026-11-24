@@ -1,0 +1,2963 @@
+{
+  "schemaVersion": "1.0.0",
+  "scope": "Synthetic normalized paired phone observations; no SDK or authority evidence",
+  "pairs": [
+    {
+      "case": "reported-radius-keeps-platform-confidence-distinct",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "monotonicClock": {
+            "kind": "unknown",
+            "reason": "unsupported"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "monotonicClock": {
+            "kind": "reported",
+            "elapsedRealtimeNanoseconds": "1234567890123456789",
+            "uncertainty": {
+              "kind": "reported",
+              "nanoseconds": 0.25,
+              "confidence": {
+                "kind": "reported",
+                "probability": 0.68
+              }
+            },
+            "clockScope": null
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "fraction-text-precision-preserved-but-same-instant",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.1Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.100000000Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "900000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "unavailable-is-not-zero-position",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": null,
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "unavailable",
+          "reason": "notObservable"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": null,
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "unavailable",
+          "reason": "notObservable"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "unknown",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly",
+        "reason": "unavailable"
+      }
+    },
+    {
+      "case": "source-region-event-is-not-position",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "regionTransition",
+          "sourceRegionId": "native-ios-region",
+          "transition": "entered"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "regionTransition",
+          "sourceRegionId": "native-android-region",
+          "transition": "entered"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "old-cached-source-time-is-stale",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-29T23:59:58.999999999Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-29T23:59:58.999999999Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "stale",
+        "ageNanoseconds": "2000000001",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "future-observation-is-unknown-no-clock-rewrite",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:01.000000001Z",
+        "collectedAt": "2026-10-30T00:00:01.000000001Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:01.000000001Z",
+        "collectedAt": "2026-10-30T00:00:01.000000001Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "unknown",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly",
+        "reason": "futureObservation"
+      }
+    },
+    {
+      "case": "simulated-provenance-not-authority",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "reported",
+            "value": true
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "unsupported"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "unsupported"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "reported",
+            "value": true
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      }
+    }
+  ],
+  "adversarial": [
+    {
+      "case": "exact-ms-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.1Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "one-ns-over-ms-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-29T23:59:59.999999999Z",
+        "collectedAt": "2026-10-30T00:00:00Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "stale",
+        "ageNanoseconds": "1000000001",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "one-ns-after-epoch-borrow",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "1969-12-31T23:59:59.999999999Z",
+        "collectedAt": "1970-01-01T00:00:00Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "1970-01-01T00:00:00Z",
+        "maximumAgeMs": 0
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "stale",
+        "ageNanoseconds": "1",
+        "maximumAgeMs": 0,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "pre-epoch-half-second",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "1969-12-31T23:59:59.5Z",
+        "collectedAt": "1970-01-01T00:00:00Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "1970-01-01T00:00:00Z",
+        "maximumAgeMs": 500
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "500000000",
+        "maximumAgeMs": 500,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "leap-date-fraction-rollover",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2000-02-29T23:59:59.123456789Z",
+        "collectedAt": "2000-03-01T00:00:00Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2000-03-01T00:00:00Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "876543211",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "zero-age-zero-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.000000001Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:00.000000001Z",
+        "maximumAgeMs": 0
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "0",
+        "maximumAgeMs": 0,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "extreme-full-calendar-span",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "0001-01-01T00:00:00.000000001Z",
+        "collectedAt": "9999-12-31T23:59:59.999999999Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "9999-12-31T23:59:59.999999999Z",
+        "maximumAgeMs": 9007199254740991
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "315537897599999999998",
+        "maximumAgeMs": 9007199254740991,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "future-both-observation-precedes-collection-reason",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:02Z",
+        "collectedAt": "2026-10-30T00:00:03Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "unknown",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly",
+        "reason": "futureObservation"
+      }
+    },
+    {
+      "case": "future-collection-only",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:02Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "unknown",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly",
+        "reason": "futureCollection"
+      }
+    },
+    {
+      "case": "observation-after-collection",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.100000001Z",
+        "collectedAt": "2026-10-30T00:00:00.1Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "unknown",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly",
+        "reason": "observationAfterCollection"
+      }
+    },
+    {
+      "case": "unavailable-precedes-future-reasons",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:02Z",
+        "collectedAt": "2026-10-30T00:00:03Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "unavailable",
+          "reason": "unknown"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "unknown",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly",
+        "reason": "unavailable"
+      }
+    },
+    {
+      "case": "unknown-accuracy-is-not-zero-but-age-only-can-be-fresh",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "unknown",
+            "reason": "unsupported"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "negative-zero-and-boundary-coordinates",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": -0.0,
+            "longitude": 180
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 0,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "invalid-time-0000-01-01T00:00:00Z",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "0000-01-01T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-time-1900-02-29T00:00:00Z",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "1900-02-29T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-time-2026-02-30T00:00:00Z",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-02-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-time-2026-10-30T24:00:00Z",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T24:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-time-2026-10-30T23:59:60Z",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T23:59:60Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-time-2026-10-30T00:00:00.1234567890Z",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.1234567890Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-time-2026-10-30T00:00:00+00:00",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00+00:00",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-time-2026-10-30T00:00:00z",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "latitude-outside",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 90.000000001,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "longitude-outside",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -180.000000001
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "negative-accuracy",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": -1,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "missing-accuracy",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "probability-outside",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 1.01
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "metadata-scalar-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "policy-is-not-observation",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        },
+        "collectionAllowed": true
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "health-proof-is-not-location-source",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "healthKit",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "missing-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z"
+      },
+      "validObservation": true,
+      "expectedAge": null
+    },
+    {
+      "case": "negative-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": -1
+      },
+      "validObservation": true,
+      "expectedAge": null
+    },
+    {
+      "case": "unsafe-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 9007199254740992
+      },
+      "validObservation": true,
+      "expectedAge": null
+    },
+    {
+      "case": "invented-skew",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "coreLocation",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "unspecified"
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000,
+        "maximumClockSkewMs": 10
+      },
+      "validObservation": true,
+      "expectedAge": null
+    },
+    {
+      "case": "source-monotonic-max-counter-not-UTC-or-authority",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "monotonicClock": {
+            "kind": "reported",
+            "elapsedRealtimeNanoseconds": "9223372036854775807",
+            "uncertainty": {
+              "kind": "reported",
+              "nanoseconds": 0.25,
+              "confidence": {
+                "kind": "unspecified"
+              }
+            },
+            "clockScope": null
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      }
+    },
+    {
+      "case": "invalid-source-monotonic-counter-9223372036854775808",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "monotonicClock": {
+            "kind": "reported",
+            "elapsedRealtimeNanoseconds": "9223372036854775808",
+            "uncertainty": {
+              "kind": "reported",
+              "nanoseconds": 0.25,
+              "confidence": {
+                "kind": "unspecified"
+              }
+            },
+            "clockScope": null
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-source-monotonic-counter--1",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "monotonicClock": {
+            "kind": "reported",
+            "elapsedRealtimeNanoseconds": "-1",
+            "uncertainty": {
+              "kind": "reported",
+              "nanoseconds": 0.25,
+              "confidence": {
+                "kind": "unspecified"
+              }
+            },
+            "clockScope": null
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-source-monotonic-counter-01",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "monotonicClock": {
+            "kind": "reported",
+            "elapsedRealtimeNanoseconds": "01",
+            "uncertainty": {
+              "kind": "reported",
+              "nanoseconds": 0.25,
+              "confidence": {
+                "kind": "unspecified"
+              }
+            },
+            "clockScope": null
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-source-monotonic-counter-1.5",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "monotonicClock": {
+            "kind": "reported",
+            "elapsedRealtimeNanoseconds": "1.5",
+            "uncertainty": {
+              "kind": "reported",
+              "nanoseconds": 0.25,
+              "confidence": {
+                "kind": "unspecified"
+              }
+            },
+            "clockScope": null
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-source-monotonic-counter-1e3",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "monotonicClock": {
+            "kind": "reported",
+            "elapsedRealtimeNanoseconds": "1e3",
+            "uncertainty": {
+              "kind": "reported",
+              "nanoseconds": 0.25,
+              "confidence": {
+                "kind": "unspecified"
+              }
+            },
+            "clockScope": null
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    },
+    {
+      "case": "invalid-source-clock-negative-uncertainty",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidLocation",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000000Z",
+        "provenance": {
+          "method": {
+            "kind": "unknown"
+          },
+          "simulatedBySoftware": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "accessoryProduced": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "mockProvider": {
+            "kind": "unknown",
+            "reason": "notProvided"
+          },
+          "monotonicClock": {
+            "kind": "reported",
+            "elapsedRealtimeNanoseconds": "9223372036854775807",
+            "uncertainty": {
+              "kind": "reported",
+              "nanoseconds": -1,
+              "confidence": {
+                "kind": "unspecified"
+              }
+            },
+            "clockScope": null
+          }
+        },
+        "observation": {
+          "kind": "position",
+          "coordinates": {
+            "system": "WGS84",
+            "latitude": 47.6205123456789,
+            "longitude": -122.3493123456789
+          },
+          "horizontalAccuracy": {
+            "kind": "reported",
+            "meters": 8.25,
+            "confidence": {
+              "kind": "reported",
+              "probability": 0.68
+            }
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null
+    }
+  ]
+}

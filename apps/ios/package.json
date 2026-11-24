@@ -8,7 +8,8 @@
     "build": "node scripts/build-web.mjs",
     "sync": "npm run build && node scripts/sync-native.mjs",
     "test": "node --test test/*.test.mjs",
-    "test:native": "swift test --package-path native"
+    "test:native": "swift test --package-path native",
+    "verify:release-assets": "node scripts/verify-release-assets.mjs"
   },
   "dependencies": {
     "@capacitor/core": "8.5.2",

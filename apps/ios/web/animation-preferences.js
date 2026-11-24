@@ -6,6 +6,12 @@ export function animationChoices(item){
  return [...clips].map(([clip,states])=>({clip,label:states.map(x=>x[0].toUpperCase()+x.slice(1)).join(' / ')}));
 }
 
+// The approved adapter can play only clips present in its declared cycle.
+export function adapterAnimationChoices(item){
+ const recipe=item?.manifest?.worldDelta;if(item?.manifest?.schemaVersion!=='1.5.0'||!Array.isArray(recipe?.animations)||!Array.isArray(recipe?.cycle))return [];
+ const playable=new Set(recipe.cycle);return recipe.animations.filter(clip=>playable.has(clip.sourceAnimationId));
+}
+
 // A package author must explicitly approve each predecessor. Arbitrary digest
 // changes retain the existing unavailable-selection behavior.
 export function resolveAppearance(catalog,saved,disabled){

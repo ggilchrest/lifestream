@@ -1,0 +1,1708 @@
+{
+  "schemaVersion": "1.0.0",
+  "scope": "Synthetic source-declared events; no configured Shortcut, OS execution, permission, enrollment, action or briefing authority",
+  "pairs": [
+    {
+      "case": "focus-enabled",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidDeclaredIntent",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "unknown",
+          "reason": "notProvided"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      }
+    },
+    {
+      "case": "focus-disabled",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": null,
+          "state": "disabled"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidDeclaredIntent",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "unknown",
+          "reason": "notProvided"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": null,
+          "state": "disabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": null,
+          "state": "disabled"
+        }
+      }
+    },
+    {
+      "case": "bluetooth-connected",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "connectionTransition",
+          "connectionKind": "bluetooth",
+          "sourceDeviceId": "opaque-device",
+          "state": "connected"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidDeclaredIntent",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "unknown",
+          "reason": "notProvided"
+        },
+        "signal": {
+          "kind": "connectionTransition",
+          "connectionKind": "bluetooth",
+          "sourceDeviceId": "opaque-device",
+          "state": "connected"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "connectionTransition",
+          "connectionKind": "bluetooth",
+          "sourceDeviceId": "opaque-device",
+          "state": "connected"
+        }
+      }
+    },
+    {
+      "case": "car-disconnected",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "connectionTransition",
+          "connectionKind": "car",
+          "sourceDeviceId": null,
+          "state": "disconnected"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidDeclaredIntent",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "unknown",
+          "reason": "notProvided"
+        },
+        "signal": {
+          "kind": "connectionTransition",
+          "connectionKind": "car",
+          "sourceDeviceId": null,
+          "state": "disconnected"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "connectionTransition",
+          "connectionKind": "car",
+          "sourceDeviceId": null,
+          "state": "disconnected"
+        }
+      }
+    },
+    {
+      "case": "declared-busy",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "availabilityDeclaration",
+          "state": "busy"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidDeclaredIntent",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "unknown",
+          "reason": "notProvided"
+        },
+        "signal": {
+          "kind": "availabilityDeclaration",
+          "state": "busy"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "availabilityDeclaration",
+          "state": "busy"
+        }
+      }
+    },
+    {
+      "case": "unrecognized-trigger",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "unknownNative",
+          "nativeType": "futureMode42",
+          "rawValue": "untrusted opaque value"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidDeclaredIntent",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "unknown",
+          "reason": "notProvided"
+        },
+        "signal": {
+          "kind": "unknownNative",
+          "nativeType": "futureMode42",
+          "rawValue": "untrusted opaque value"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "unknownNative",
+          "nativeType": "futureMode42",
+          "rawValue": "untrusted opaque value"
+        }
+      }
+    },
+    {
+      "case": "unavailable",
+      "ios": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": null,
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "unavailable",
+          "reason": "notObservable"
+        }
+      },
+      "android": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "androidDeclaredIntent",
+          "namespace": "20000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": null,
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "unknown",
+          "reason": "notProvided"
+        },
+        "signal": {
+          "kind": "unavailable",
+          "reason": "notObservable"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "expectedAge": {
+        "state": "unknown",
+        "reason": "unavailable",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "unavailable",
+          "reason": "notObservable"
+        }
+      }
+    }
+  ],
+  "adversarial": [
+    {
+      "case": "focusTransition-unknown-not-negative",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "state": "unknown",
+          "sourceFocusId": null
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "state": "unknown",
+          "sourceFocusId": null
+        }
+      }
+    },
+    {
+      "case": "connectionTransition-unknown-not-negative",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "connectionTransition",
+          "state": "unknown",
+          "connectionKind": "bluetooth",
+          "sourceDeviceId": null
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "connectionTransition",
+          "state": "unknown",
+          "connectionKind": "bluetooth",
+          "sourceDeviceId": null
+        }
+      }
+    },
+    {
+      "case": "availabilityDeclaration-unknown-not-negative",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "availabilityDeclaration",
+          "state": "unknown"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "availabilityDeclaration",
+          "state": "unknown"
+        }
+      }
+    },
+    {
+      "case": "declared-unavailable-not-observation-unavailable",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "explicitUserInput"
+        },
+        "signal": {
+          "kind": "availabilityDeclaration",
+          "state": "unavailable"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "availabilityDeclaration",
+          "state": "unavailable"
+        }
+      }
+    },
+    {
+      "case": "unknown-native-null-value",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "unknownNative",
+          "nativeType": "future",
+          "rawValue": null
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "1000000000",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "unknownNative",
+          "nativeType": "future",
+          "rawValue": null
+        }
+      }
+    },
+    {
+      "case": "boolean-focus-state",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": true
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "empty-focus-id",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "missing-focus-id",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "extra-signal-authority",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled",
+          "isAlone": true
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "extra-human",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        },
+        "humanId": "caller"
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "extra-policy",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        },
+        "policyGranted": true
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "extra-execution-proof",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        },
+        "shortcutInstalled": true
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "extra-briefing-command",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        },
+        "operation": "RequestBriefing"
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "extra-delivery-id",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        },
+        "eventId": "invented-delivery"
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "missing-origin",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "invented-origin-proof",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "verifiedOSExecution"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "null-time",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": null,
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "invalid-date",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-02-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "leap-second",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:60Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "overprecision",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.0000000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "offset-time",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00+00:00",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "invalid-surrogate-source",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": "\ud800",
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "unknown-type-overbound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "unknownNative",
+          "nativeType": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "rawValue": null
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "unknown-blob-forbidden",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "unknownNative",
+          "nativeType": "future",
+          "rawValue": {
+            "blob": "arbitrary"
+          }
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "connection-string-coercion-forbidden",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "connectionTransition",
+          "connectionKind": "bluetooth",
+          "sourceDeviceId": null,
+          "state": "false"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": false,
+      "expectedAge": null,
+      "expectedView": null
+    },
+    {
+      "case": "missing-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z"
+      },
+      "validObservation": true,
+      "expectedAge": null,
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      }
+    },
+    {
+      "case": "unsafe-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 9007199254740992
+      },
+      "validObservation": true,
+      "expectedAge": null,
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      }
+    },
+    {
+      "case": "extra-skew",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.000000001Z",
+        "collectedAt": "2026-10-30T00:00:00.100000001Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000,
+        "skewMs": 50
+      },
+      "validObservation": true,
+      "expectedAge": null,
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      }
+    },
+    {
+      "case": "one-nanosecond-over",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "stale",
+        "ageNanoseconds": "1000000001",
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      }
+    },
+    {
+      "case": "pre-epoch-borrow",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "1969-12-31T23:59:59.999999999Z",
+        "collectedAt": "1970-01-01T00:00:00Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "1970-01-01T00:00:00Z",
+        "maximumAgeMs": 0
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "stale",
+        "ageNanoseconds": "1",
+        "maximumAgeMs": 0,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      }
+    },
+    {
+      "case": "whole-supported-span",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "0001-01-01T00:00:00.000000001Z",
+        "collectedAt": "9999-12-31T23:59:59.999999999Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "9999-12-31T23:59:59.999999999Z",
+        "maximumAgeMs": 9007199254740991
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "315537897599999999998",
+        "maximumAgeMs": 9007199254740991,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      }
+    },
+    {
+      "case": "zero-age-zero-bound",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-10-30T00:00:00Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:00Z",
+        "maximumAgeMs": 0
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "fresh",
+        "ageNanoseconds": "0",
+        "maximumAgeMs": 0,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      }
+    },
+    {
+      "case": "future-observation-precedence",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-31T00:00:00Z",
+        "collectedAt": "2026-11-01T00:00:00Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "unknown",
+        "reason": "futureObservation",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      }
+    },
+    {
+      "case": "future-collection",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00Z",
+        "collectedAt": "2026-11-01T00:00:00Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "unknown",
+        "reason": "futureCollection",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      }
+    },
+    {
+      "case": "observation-after-collection",
+      "observation": {
+        "schemaVersion": "1.0.0",
+        "source": {
+          "collector": "iosDeclaredIntent",
+          "namespace": "10000000-0000-4000-8000-000000000001",
+          "upstreamId": null,
+          "originalApp": null,
+          "originalDevice": null
+        },
+        "observedAt": "2026-10-30T00:00:00.9Z",
+        "collectedAt": "2026-10-30T00:00:00.1Z",
+        "declaration": {
+          "kind": "reported",
+          "origin": "userConfiguredAutomation"
+        },
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      },
+      "ageContext": {
+        "referenceAt": "2026-10-30T00:00:01.000000001Z",
+        "maximumAgeMs": 1000
+      },
+      "validObservation": true,
+      "expectedAge": {
+        "state": "unknown",
+        "reason": "observationAfterCollection",
+        "ageNanoseconds": null,
+        "maximumAgeMs": 1000,
+        "qualification": "observationAgeOnly"
+      },
+      "expectedView": {
+        "qualification": "declaredSignalOnly",
+        "signal": {
+          "kind": "focusTransition",
+          "sourceFocusId": "opaque-work-focus",
+          "state": "enabled"
+        }
+      }
+    }
+  ]
+}

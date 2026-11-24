@@ -1,10 +1,12 @@
+import {captureTrustedRuntime,runtimeDescriptor,type TrustedPresentationRuntime} from './presentation-runtime-registry.ts';
+import {validateWorldDeltaFields,validatePhysicsProfile,type WorldDeltaFields} from './presentation-world-delta.ts';
 import { createHash } from 'node:crypto';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import type { Database } from '@lifestream/storage-sqlite';
 
 export type PresentationManifest = {
-  schemaVersion: '1.0.0' | '1.1.0' | '1.2.0' | '1.3.0' | '1.4.0'; id: string; version: string; label: string; renderer: 'three-glb.v1';
+  schemaVersion: '1.0.0' | '1.1.0' | '1.2.0' | '1.3.0' | '1.4.0' | '1.5.0'; id: string; version: string; label: string; renderer: 'three-glb.v1';
   model: string; resources: { path: string; sha256: string; bytes: number; mime: string }[];
   framing: { distance: number; targetHeight: number; yaw?: number; motionAnchor?: string }; animations: { idle?: string; listening?: string; preparing?: string; speaking?: string; interrupted?: string; working?: string; waiting?: string; failure?: string; mouthAmplitude?: string };
   animationLibrary?: {clip: string; label: string; group?: string; blendMode?: 'normal' | 'additive'}[];
@@ -15,7 +17,7 @@ export type PresentationManifest = {
   speech?: {cueSet:string;poses:Record<string,string>;transitionSeconds?:number};
   capabilities: { lipSync: 'none' | 'amplitude'; facialAnimation: boolean };
   fallback: 'neutral';
-};
+} & Partial<WorldDeltaFields>;
 const identifier = /^[a-z0-9][a-z0-9._-]{0,63}$/u;
 const assetPath = /^[A-Za-z0-9_-][A-Za-z0-9_./-]{0,239}\.(?:gltf|glb|bin|png|jpg|jpeg|webp)$/u;
 const mimes = new Set(['model/gltf+json', 'model/gltf-binary', 'application/octet-stream', 'image/png', 'image/jpeg', 'image/webp']);
@@ -29,21 +31,21 @@ function keys(value: Record<string, unknown>, allowed: string[]): void {
 }
 function short(value: unknown, max = 128): value is string { return typeof value === 'string' && value.length > 0 && value.length <= max && !/[\u0000-\u001f<>]/u.test(value); }
 export function validatePresentation(value: unknown): PresentationManifest {
-  const m = object(value); keys(m, ['schemaVersion','id','version','label','renderer','model','resources','framing','animations','mouth','capabilities','fallback',...(['1.1.0','1.2.0','1.3.0','1.4.0'].includes(String(m.schemaVersion))?['transitionSeconds']:[]),...(['1.2.0','1.3.0','1.4.0'].includes(String(m.schemaVersion))?['face']:[]),...(['1.3.0','1.4.0'].includes(String(m.schemaVersion))?['speech']:[]),...(m.schemaVersion==='1.4.0'?['animationLibrary','replaces']:[])]);
-  if (!['1.0.0','1.1.0','1.2.0','1.3.0','1.4.0'].includes(String(m.schemaVersion)) || !identifier.test(String(m.id)) || !short(m.version,32) || !short(m.label,80) || m.renderer !== 'three-glb.v1' || m.fallback !== 'neutral') throw new Error('Unsupported presentation manifest');
+  const m = object(value); keys(m, ['schemaVersion','id','version','label','renderer','model','resources','framing','animations','mouth','capabilities','fallback',...(['1.1.0','1.2.0','1.3.0','1.4.0','1.5.0'].includes(String(m.schemaVersion))?['transitionSeconds']:[]),...(['1.2.0','1.3.0','1.4.0','1.5.0'].includes(String(m.schemaVersion))?['face']:[]),...(['1.3.0','1.4.0','1.5.0'].includes(String(m.schemaVersion))?['speech']:[]),...(['1.4.0','1.5.0'].includes(String(m.schemaVersion))?['animationLibrary','replaces']:[]),...(m.schemaVersion==='1.5.0'?['sourceVariant','worldDelta','physics']:[])]);
+  if (!['1.0.0','1.1.0','1.2.0','1.3.0','1.4.0','1.5.0'].includes(String(m.schemaVersion)) || !identifier.test(String(m.id)) || !short(m.version,32) || !short(m.label,80) || m.renderer !== 'three-glb.v1' || m.fallback !== 'neutral') throw new Error('Unsupported presentation manifest');
   if (!Array.isArray(m.resources) || !m.resources.length || m.resources.length > 256) throw new Error('Presentation resource bound exceeded');
   const paths = new Set<string>(); let total = 0;
   for (const resource of m.resources) {
     const r = object(resource); keys(r,['path','sha256','bytes','mime']);
-    if (typeof r.path !== 'string' || !assetPath.test(r.path) || r.path.split('/').some(part => !part || part === '.' || part === '..') || paths.has(r.path) || !/^[a-f0-9]{64}$/u.test(String(r.sha256)) || !Number.isSafeInteger(r.bytes) || Number(r.bytes) < 1 || Number(r.bytes) > 192 * 1024 * 1024 || !mimes.has(String(r.mime))) throw new Error('Invalid presentation resource');
+    if (typeof r.path !== 'string' || !(assetPath.test(r.path)||m.schemaVersion==='1.5.0'&&/^[A-Za-z0-9_-][A-Za-z0-9_./-]{0,239}\.json$/u.test(r.path)) || r.path.split('/').some(part => !part || part === '.' || part === '..') || paths.has(r.path) || !/^[a-f0-9]{64}$/u.test(String(r.sha256)) || !Number.isSafeInteger(r.bytes) || Number(r.bytes) < 1 || Number(r.bytes) > 192 * 1024 * 1024 || !(mimes.has(String(r.mime))||m.schemaVersion==='1.5.0'&&r.mime==='application/json')) throw new Error('Invalid presentation resource');
     paths.add(r.path); total += Number(r.bytes);
   }
   if (total > 384 * 1024 * 1024 || typeof m.model !== 'string' || !paths.has(m.model) || !/\.(glb|gltf)$/u.test(m.model)) throw new Error('Presentation model or size is invalid');
-  const frame = object(m.framing); keys(frame,['distance','targetHeight','yaw',...(m.schemaVersion==='1.4.0'?['motionAnchor']:[])]);
+  const frame = object(m.framing); keys(frame,['distance','targetHeight','yaw',...(['1.4.0','1.5.0'].includes(String(m.schemaVersion))?['motionAnchor']:[])]);
   if(frame.motionAnchor!==undefined&&!short(frame.motionAnchor))throw new Error('Invalid motion anchor');
   if(frame.yaw!==undefined&&(typeof frame.yaw!=='number'||!Number.isFinite(frame.yaw)||Math.abs(frame.yaw)>Math.PI))throw new Error('Invalid presentation orientation');
   if (typeof frame.distance !== 'number' || !Number.isFinite(frame.distance) || frame.distance < 0.5 || frame.distance > 4 || typeof frame.targetHeight !== 'number' || !Number.isFinite(frame.targetHeight) || frame.targetHeight < 0 || frame.targetHeight > 1) throw new Error('Invalid presentation framing');
-  const animations = object(m.animations); keys(animations,['idle','listening','speaking','mouthAmplitude',...(['1.1.0','1.2.0','1.3.0','1.4.0'].includes(String(m.schemaVersion))?['preparing','interrupted','working','waiting','failure']:[])]);
+  const animations = object(m.animations); keys(animations,['idle','listening','speaking','mouthAmplitude',...(['1.1.0','1.2.0','1.3.0','1.4.0','1.5.0'].includes(String(m.schemaVersion))?['preparing','interrupted','working','waiting','failure']:[])]);
   if (Object.values(animations).some(value => !short(value))) throw new Error('Invalid semantic animation mapping');
   if(m.transitionSeconds!==undefined&&(typeof m.transitionSeconds!=='number'||!Number.isFinite(m.transitionSeconds)||m.transitionSeconds<0||m.transitionSeconds>1))throw new Error('Invalid animation transition duration');
   if(m.animationLibrary!==undefined){
@@ -64,6 +66,7 @@ export function validatePresentation(value: unknown): PresentationManifest {
    if(face.gaze!==undefined){const gaze=object(face.gaze);keys(gaze,['nodes','yawLimit','pitchLimit']);if(!Array.isArray(gaze.nodes)||!gaze.nodes.length||gaze.nodes.length>4||typeof gaze.yawLimit!=='number'||!Number.isFinite(gaze.yawLimit)||gaze.yawLimit<=0||gaze.yawLimit>.35||typeof gaze.pitchLimit!=='number'||!Number.isFinite(gaze.pitchLimit)||gaze.pitchLimit<=0||gaze.pitchLimit>.25)throw Error('Invalid gaze bounds');const names=new Set();for(const target of gaze.nodes){const node=object(target);keys(node,['node','yawAxis','pitchAxis']);if(!short(node.node)||names.has(node.node))throw Error('Invalid gaze target');names.add(node.node);for(const axis of [node.yawAxis,node.pitchAxis])if(!Array.isArray(axis)||axis.length!==3||axis.some(n=>typeof n!=='number'||!Number.isFinite(n))||Math.abs(Math.hypot(...axis)-1)>.001)throw Error('Invalid gaze axis');if(Math.abs((node.yawAxis as number[]).reduce((n,v,i)=>n+v*(node.pitchAxis as number[])[i]!,0))>.01)throw Error('Invalid gaze axes');}}
    if(face.blink!==undefined){const blink=object(face.blink);keys(blink,['clip','periodSeconds','durationSeconds']);if(!short(blink.clip)||typeof blink.periodSeconds!=='number'||!Number.isFinite(blink.periodSeconds)||blink.periodSeconds<1||blink.periodSeconds>30||typeof blink.durationSeconds!=='number'||!Number.isFinite(blink.durationSeconds)||blink.durationSeconds<.08||blink.durationSeconds>1||blink.durationSeconds>=blink.periodSeconds)throw Error('Invalid blink bounds');}
   }
+  if(m.schemaVersion==='1.5.0')validateWorldDeltaFields(m);
   return structuredClone(m) as PresentationManifest;
 }
 
@@ -71,10 +74,12 @@ export function validatePresentation(value: unknown): PresentationManifest {
 export class PresentationPackages {
   private packages = new Map<string, { manifest: PresentationManifest; digest: string; directory: string }>();
   readonly failures: string[] = [];
-  private readonly options: { directory: string; ownerPrincipalId: string | (()=>string | undefined); catalogOnly?: boolean } | undefined;
-  constructor(options?: { directory: string; ownerPrincipalId: string | (()=>string | undefined); catalogOnly?: boolean }) {
+  private trustedRuntime:TrustedPresentationRuntime|undefined;
+  private readonly options: { directory: string; ownerPrincipalId: string | (()=>string | undefined); catalogOnly?: boolean; trustedRuntime?:TrustedPresentationRuntime } | undefined;
+  constructor(options?: { directory: string; ownerPrincipalId: string | (()=>string | undefined); catalogOnly?: boolean; trustedRuntime?:TrustedPresentationRuntime }) {
     this.options=options;
     if (!options) return;
+    if(options.trustedRuntime){try{captureTrustedRuntime(options.trustedRuntime);this.trustedRuntime=structuredClone(options.trustedRuntime);}catch{this.trustedRuntime=undefined;}}
     const root = realpathSync(options.directory), indexBytes = readFileSync(join(root,'index.json'));
     if (indexBytes.length > 8192) throw new Error('Presentation index is too large');
     const index: unknown = JSON.parse(indexBytes.toString());
@@ -91,6 +96,7 @@ export class PresentationPackages {
           const content = this.readBounded(this.contained(directory,resource.path),resource.bytes);
           if(content.length!==resource.bytes||digest(content)!==resource.sha256)throw new Error('Presentation resource changed');
           if (/\.(gltf|glb)$/u.test(resource.path)) this.validateModel(content, resource.path, manifest);
+          if(manifest.schemaVersion==='1.5.0'&&resource.path===manifest.physics?.profileResource)validatePhysicsProfile(JSON.parse(content.toString('utf8')));
         }
       } catch { this.packages.delete(id); this.failures.push(id); }
     }
@@ -117,11 +123,16 @@ export class PresentationPackages {
     }; walk(model);
   }
   private owner():string|undefined {const owner=this.options?.ownerPrincipalId;return typeof owner==='function'?owner():owner;}
-  list(principalId: string): { id: string; label: string; digest: string; manifest: PresentationManifest }[] {
+  list(principalId: string): { id: string; label: string; digest: string; manifest: PresentationManifest; trustedRuntime?:{kind:'world-delta.v1';sha256:string;bytes:number} }[] {
     if(principalId!==this.owner())return [];
-    return [...this.packages].map(([id,e])=>({id,label:e.manifest.label,digest:e.digest,manifest:structuredClone(e.manifest)}));
+    return [...this.packages].map(([id,e])=>{const runtime=runtimeDescriptor(this.trustedRuntime,e.manifest);return {id,label:e.manifest.label,digest:e.digest,manifest:structuredClone(e.manifest),...(runtime?{trustedRuntime:runtime}:{})};});
   }
   matches(principalId: string, id: string, digest: string): boolean { return principalId===this.owner() && this.packages.get(id)?.digest===digest; }
+  runtime(principalId:string,id:string,packageDigest:string,kind:string):Buffer {
+    const entry=principalId===this.owner()?this.packages.get(id):undefined,config=this.trustedRuntime;
+    if(this.options?.catalogOnly||!entry||entry.digest!==packageDigest||kind!=='world-delta.v1'||!runtimeDescriptor(config,entry.manifest)||!config)throw Error('Presentation runtime unavailable');
+    return captureTrustedRuntime(config);
+  }
   resource(principalId: string, id: string, path: string): { bytes: Buffer; mime: string } {
     if(this.options?.catalogOnly === true)throw new Error('Presentation resource unavailable');
     const entry=principalId===this.owner()?this.packages.get(id):undefined, resource=entry?.manifest.resources.find(r=>r.path===path);

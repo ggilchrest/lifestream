@@ -29,3 +29,7 @@ GH_TOKEN="$(gh auth token --user ggilchrest)" gh <arguments>
 ```
 
 Never print a token, enable shell tracing around it, or store it in a file. If that account is unavailable, report the identity/access issue instead of silently using another account.
+
+## Native iOS builds
+
+Follow `docs/ios-build-checklist.md` for every native test or release build. Run `npm --prefix apps/ios run verify:release-assets -- ...` against both the packaged project and the final signed app, using the independently approved required asset catalog and audio clip. Every shipped appearance and declared embedded/external animation must prepare and render with the actual renderer and trusted adapter. Bind passing results to final web/resource hashes before installation; preserve private assets outside Git and existing app data.

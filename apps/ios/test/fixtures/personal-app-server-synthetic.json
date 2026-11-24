@@ -1,0 +1,52 @@
+{
+  "synthetic": true,
+  "source": "Actual disposable Auth HTTP routes; all IDs/context references are disposable. No real user/session/cookie or speech.",
+  "userContext": {
+    "producerPin": {
+      "schemaId": "https://lifestream.dev/contracts/effective-subject/1.0.0",
+      "schemaVersion": "1.0.0",
+      "digest": "ed098cad970a310a807881ea7a833b96f1c980e8377ee3cfcbdffd68f2bd0cf9"
+    },
+    "context": {
+      "schemaVersion": "1.0.0",
+      "actorId": "2d2c2d42-a04a-489d-8939-730d8afde392",
+      "effectiveUserId": "2d2c2d42-a04a-489d-8939-730d8afde392",
+      "authenticatedSessionId": "77b7bd07-de63-405d-8c1f-dc6ddeca7108",
+      "installationId": "5ff00911-9dfe-4327-b2a2-481987b07447",
+      "authorityRevision": 1,
+      "generation": 0,
+      "issuedAt": "2026-10-29T18:16:15.948Z"
+    },
+    "contextRef": "31c5abba-6b01-457f-badf-43a949298fbb",
+    "actor": {
+      "principalId": "2d2c2d42-a04a-489d-8939-730d8afde392",
+      "username": "synthetic-owner",
+      "owner": true,
+      "systemAdministrator": true
+    },
+    "effectiveUser": {
+      "principalId": "2d2c2d42-a04a-489d-8939-730d8afde392",
+      "username": "synthetic-owner"
+    },
+    "impersonating": false
+  },
+  "personalSession": {
+    "enforced": true,
+    "personalSessionPolicy": "personalApp",
+    "personalSessionState": "authenticated",
+    "privateAllowed": true,
+    "authenticatedSessionId": "77b7bd07-de63-405d-8c1f-dc6ddeca7108",
+    "principalId": "2d2c2d42-a04a-489d-8939-730d8afde392",
+    "expiresAt": "2026-10-29T18:46:15.948Z",
+    "leaseId": null,
+    "leaseExpiresAt": null,
+    "revision": 2
+  },
+  "reauthenticationRequired": {
+    "httpStatus": 403,
+    "body": {
+      "code": "personal_session_reauthentication_required",
+      "message": "personal session reauthentication required"
+    }
+  }
+}

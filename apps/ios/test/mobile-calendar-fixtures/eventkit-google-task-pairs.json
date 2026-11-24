@@ -1,0 +1,18 @@
+{
+  "syntheticOnly": true,
+  "qualification": "Semantic inputs, not a Google Tasks SDK or account integration.",
+  "pairs": [
+    {
+      "id": "date-only-due",
+      "eventKitReminder": {"dueDate": "2026-10-30", "completion": "unknown"},
+      "googleTasks": {"dueDate": "2026-10-30", "completion": "unknown"},
+      "expected": {"kind": "date", "dueDate": "2026-10-30", "completion": "unknown"}
+    },
+    {
+      "id": "completed-without-known-time",
+      "eventKitReminder": {"dueDate": "2026-11-01", "completion": "completed", "completedAt": null},
+      "googleTasks": {"dueDate": "2026-11-01", "completion": "completed", "completedAt": null},
+      "expected": {"kind": "date", "dueDate": "2026-11-01", "completion": "completed", "completedAt": null}
+    }
+  ]
+}

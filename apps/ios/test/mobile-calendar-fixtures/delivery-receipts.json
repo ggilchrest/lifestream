@@ -1,0 +1,478 @@
+{
+  "schemaVersion": "1.0.0",
+  "syntheticOnly": true,
+  "producerPin": {
+    "schemaId": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0",
+    "schemaVersion": "1.0.0",
+    "digest": "91dd3ae326706285babde6b31649f3f4d9687826df05fc9a524941301e5a212c"
+  },
+  "canonicalVersion": "calendar-delivery-canonical/1",
+  "digestPrefix": "lifestream/mobile-context-calendar-delivery-item/1\n",
+  "vectors": [
+    {
+      "name": "all-day-item",
+      "item": {
+        "change": {
+          "schemaVersion": "1.0.0",
+          "eventId": "20000000-0000-4000-8000-000000000002",
+          "enrollmentId": "30000000-0000-4000-8000-000000000001",
+          "expectedPolicyRevision": 1,
+          "source": {
+            "collector": "eventKit",
+            "namespace": "10000000-0000-4000-8000-000000000001",
+            "containerKind": "calendar",
+            "containerId": "synthetic-calendar",
+            "accountId": null,
+            "upstreamId": "synthetic-eventKit",
+            "upstreamIdentityScope": "providerLocal",
+            "externalId": null,
+            "upstreamRevision": null,
+            "originalApp": null,
+            "originalDevice": null
+          },
+          "collectedAt": "2026-10-30T08:00:00Z",
+          "mappingVersion": "synthetic-calendar-mapping/1",
+          "operation": "upsert",
+          "recordType": "CalendarEvent",
+          "record": {
+            "schemaVersion": "1.0.0",
+            "title": "Synthetic appointment",
+            "notes": null,
+            "time": {
+              "kind": "allDay",
+              "startDate": "2026-11-01",
+              "endDateExclusive": "2026-11-03",
+              "timeZone": {
+                "kind": "unknown"
+              }
+            },
+            "recurrence": {
+              "kind": "none"
+            },
+            "occurrence": {
+              "state": "none",
+              "seriesUpstreamId": null,
+              "originalStart": null
+            },
+            "status": "confirmed",
+            "attendees": null,
+            "alarms": null
+          }
+        },
+        "locator": {
+          "kind": "sourceItem"
+        }
+      },
+      "canonicalUtf8": "{\"change\":{\"collectedAt\":\"2026-10-30T08:00:00Z\",\"enrollmentId\":\"30000000-0000-4000-8000-000000000001\",\"eventId\":\"20000000-0000-4000-8000-000000000002\",\"expectedPolicyRevision\":1,\"mappingVersion\":\"synthetic-calendar-mapping/1\",\"operation\":\"upsert\",\"record\":{\"alarms\":null,\"attendees\":null,\"notes\":null,\"occurrence\":{\"originalStart\":null,\"seriesUpstreamId\":null,\"state\":\"none\"},\"recurrence\":{\"kind\":\"none\"},\"schemaVersion\":\"1.0.0\",\"status\":\"confirmed\",\"time\":{\"endDateExclusive\":\"2026-11-03\",\"kind\":\"allDay\",\"startDate\":\"2026-11-01\",\"timeZone\":{\"kind\":\"unknown\"}},\"title\":\"Synthetic appointment\"},\"recordType\":\"CalendarEvent\",\"schemaVersion\":\"1.0.0\",\"source\":{\"accountId\":null,\"collector\":\"eventKit\",\"containerId\":\"synthetic-calendar\",\"containerKind\":\"calendar\",\"externalId\":null,\"namespace\":\"10000000-0000-4000-8000-000000000001\",\"originalApp\":null,\"originalDevice\":null,\"upstreamId\":\"synthetic-eventKit\",\"upstreamIdentityScope\":\"providerLocal\",\"upstreamRevision\":null}},\"locator\":{\"kind\":\"sourceItem\"}}",
+      "sha256": "c971a7f2550074ae79e3cc854b36ffaacd527be2ecfbe68d393180597962ddc8"
+    },
+    {
+      "name": "unicode-and-json-escaping",
+      "item": {
+        "change": {
+          "schemaVersion": "1.0.0",
+          "eventId": "40000000-0000-4000-8000-000000000001",
+          "enrollmentId": "30000000-0000-4000-8000-000000000001",
+          "expectedPolicyRevision": 1,
+          "source": {
+            "collector": "eventKit",
+            "namespace": "10000000-0000-4000-8000-000000000001",
+            "containerKind": "calendar",
+            "containerId": "synthetic-calendar",
+            "accountId": null,
+            "upstreamId": "synthetic-eventKit",
+            "upstreamIdentityScope": "providerLocal",
+            "externalId": null,
+            "upstreamRevision": null,
+            "originalApp": null,
+            "originalDevice": null
+          },
+          "collectedAt": "2026-10-30T08:00:00Z",
+          "mappingVersion": "synthetic-calendar-mapping/1",
+          "operation": "upsert",
+          "recordType": "CalendarEvent",
+          "record": {
+            "schemaVersion": "1.0.0",
+            "title": "Synthetic appointment",
+            "notes": "Quote \" slash / backslash \\ newline\n tab\t vertical\u000b 🧪 é é    ",
+            "time": {
+              "kind": "allDay",
+              "startDate": "2026-11-01",
+              "endDateExclusive": "2026-11-03",
+              "timeZone": {
+                "kind": "unknown"
+              }
+            },
+            "recurrence": {
+              "kind": "none"
+            },
+            "occurrence": {
+              "state": "none",
+              "seriesUpstreamId": null,
+              "originalStart": null
+            },
+            "status": "confirmed",
+            "attendees": null,
+            "alarms": [
+              {
+                "kind": "relative",
+                "seconds": 0
+              }
+            ]
+          }
+        },
+        "locator": {
+          "kind": "sourceItem"
+        }
+      },
+      "canonicalUtf8": "{\"change\":{\"collectedAt\":\"2026-10-30T08:00:00Z\",\"enrollmentId\":\"30000000-0000-4000-8000-000000000001\",\"eventId\":\"40000000-0000-4000-8000-000000000001\",\"expectedPolicyRevision\":1,\"mappingVersion\":\"synthetic-calendar-mapping/1\",\"operation\":\"upsert\",\"record\":{\"alarms\":[{\"kind\":\"relative\",\"seconds\":0}],\"attendees\":null,\"notes\":\"Quote \\\" slash / backslash \\\\ newline\\n tab\\t vertical\\u000b 🧪 é é    \",\"occurrence\":{\"originalStart\":null,\"seriesUpstreamId\":null,\"state\":\"none\"},\"recurrence\":{\"kind\":\"none\"},\"schemaVersion\":\"1.0.0\",\"status\":\"confirmed\",\"time\":{\"endDateExclusive\":\"2026-11-03\",\"kind\":\"allDay\",\"startDate\":\"2026-11-01\",\"timeZone\":{\"kind\":\"unknown\"}},\"title\":\"Synthetic appointment\"},\"recordType\":\"CalendarEvent\",\"schemaVersion\":\"1.0.0\",\"source\":{\"accountId\":null,\"collector\":\"eventKit\",\"containerId\":\"synthetic-calendar\",\"containerKind\":\"calendar\",\"externalId\":null,\"namespace\":\"10000000-0000-4000-8000-000000000001\",\"originalApp\":null,\"originalDevice\":null,\"upstreamId\":\"synthetic-eventKit\",\"upstreamIdentityScope\":\"providerLocal\",\"upstreamRevision\":null}},\"locator\":{\"kind\":\"sourceItem\"}}",
+      "sha256": "8396e4c05bcb94ee3511d9b07891340cd54e8ade9bac05834a7e198a385cd248"
+    },
+    {
+      "name": "safe-integer-maximum",
+      "item": {
+        "change": {
+          "schemaVersion": "1.0.0",
+          "eventId": "20000000-0000-4000-8000-000000000002",
+          "enrollmentId": "30000000-0000-4000-8000-000000000001",
+          "expectedPolicyRevision": 9007199254740991,
+          "source": {
+            "collector": "eventKit",
+            "namespace": "10000000-0000-4000-8000-000000000001",
+            "containerKind": "calendar",
+            "containerId": "synthetic-calendar",
+            "accountId": null,
+            "upstreamId": "synthetic-eventKit",
+            "upstreamIdentityScope": "providerLocal",
+            "externalId": null,
+            "upstreamRevision": null,
+            "originalApp": null,
+            "originalDevice": null
+          },
+          "collectedAt": "2026-10-30T08:00:00Z",
+          "mappingVersion": "synthetic-calendar-mapping/1",
+          "operation": "upsert",
+          "recordType": "CalendarEvent",
+          "record": {
+            "schemaVersion": "1.0.0",
+            "title": "Synthetic appointment",
+            "notes": null,
+            "time": {
+              "kind": "allDay",
+              "startDate": "2026-11-01",
+              "endDateExclusive": "2026-11-03",
+              "timeZone": {
+                "kind": "unknown"
+              }
+            },
+            "recurrence": {
+              "kind": "none"
+            },
+            "occurrence": {
+              "state": "none",
+              "seriesUpstreamId": null,
+              "originalStart": null
+            },
+            "status": "confirmed",
+            "attendees": null,
+            "alarms": null
+          }
+        },
+        "locator": {
+          "kind": "sourceItem"
+        }
+      },
+      "canonicalUtf8": "{\"change\":{\"collectedAt\":\"2026-10-30T08:00:00Z\",\"enrollmentId\":\"30000000-0000-4000-8000-000000000001\",\"eventId\":\"20000000-0000-4000-8000-000000000002\",\"expectedPolicyRevision\":9007199254740991,\"mappingVersion\":\"synthetic-calendar-mapping/1\",\"operation\":\"upsert\",\"record\":{\"alarms\":null,\"attendees\":null,\"notes\":null,\"occurrence\":{\"originalStart\":null,\"seriesUpstreamId\":null,\"state\":\"none\"},\"recurrence\":{\"kind\":\"none\"},\"schemaVersion\":\"1.0.0\",\"status\":\"confirmed\",\"time\":{\"endDateExclusive\":\"2026-11-03\",\"kind\":\"allDay\",\"startDate\":\"2026-11-01\",\"timeZone\":{\"kind\":\"unknown\"}},\"title\":\"Synthetic appointment\"},\"recordType\":\"CalendarEvent\",\"schemaVersion\":\"1.0.0\",\"source\":{\"accountId\":null,\"collector\":\"eventKit\",\"containerId\":\"synthetic-calendar\",\"containerKind\":\"calendar\",\"externalId\":null,\"namespace\":\"10000000-0000-4000-8000-000000000001\",\"originalApp\":null,\"originalDevice\":null,\"upstreamId\":\"synthetic-eventKit\",\"upstreamIdentityScope\":\"providerLocal\",\"upstreamRevision\":null}},\"locator\":{\"kind\":\"sourceItem\"}}",
+      "sha256": "f53eb21d8eba81322b2e0f50838ab015c8c817aff99dcdb08a8ab2420082f25a"
+    },
+    {
+      "name": "detached-occurrence",
+      "item": {
+        "change": {
+          "schemaVersion": "1.0.0",
+          "eventId": "20000000-0000-4000-8000-000000000008",
+          "enrollmentId": "30000000-0000-4000-8000-000000000001",
+          "expectedPolicyRevision": 1,
+          "source": {
+            "collector": "eventKit",
+            "namespace": "10000000-0000-4000-8000-000000000001",
+            "containerKind": "calendar",
+            "containerId": "synthetic-calendar",
+            "accountId": null,
+            "upstreamId": "synthetic-eventKit",
+            "upstreamIdentityScope": "providerLocal",
+            "externalId": null,
+            "upstreamRevision": null,
+            "originalApp": null,
+            "originalDevice": null
+          },
+          "collectedAt": "2026-10-30T08:00:00Z",
+          "mappingVersion": "synthetic-calendar-mapping/1",
+          "operation": "upsert",
+          "recordType": "CalendarEvent",
+          "record": {
+            "schemaVersion": "1.0.0",
+            "title": "Synthetic appointment",
+            "notes": null,
+            "time": {
+              "kind": "instantRange",
+              "start": {
+                "at": "2026-11-01T06:30:00Z",
+                "timeZone": {
+                  "kind": "supplied",
+                  "identifier": "America/Chicago"
+                },
+                "offset": {
+                  "kind": "supplied",
+                  "minutes": -300
+                }
+              },
+              "end": {
+                "at": "2026-11-01T07:30:00Z",
+                "timeZone": {
+                  "kind": "supplied",
+                  "identifier": "America/Chicago"
+                },
+                "offset": {
+                  "kind": "supplied",
+                  "minutes": -360
+                }
+              }
+            },
+            "recurrence": {
+              "kind": "rules",
+              "timeZone": {
+                "kind": "supplied",
+                "identifier": "America/Chicago"
+              },
+              "calendarIdentifier": "gregorian",
+              "rules": [
+                {
+                  "frequency": "weekly",
+                  "interval": 1,
+                  "end": {
+                    "kind": "count",
+                    "count": 5
+                  },
+                  "days": [
+                    {
+                      "day": "SU",
+                      "ordinal": null
+                    }
+                  ],
+                  "monthDays": [],
+                  "yearDays": [],
+                  "weekNumbers": [],
+                  "months": [],
+                  "setPositions": []
+                }
+              ]
+            },
+            "occurrence": {
+              "state": "detached",
+              "seriesUpstreamId": "synthetic-series",
+              "originalStart": {
+                "kind": "instant",
+                "value": {
+                  "at": "2026-10-31T06:30:00Z",
+                  "timeZone": {
+                    "kind": "supplied",
+                    "identifier": "America/Chicago"
+                  },
+                  "offset": {
+                    "kind": "supplied",
+                    "minutes": -300
+                  }
+                }
+              }
+            },
+            "status": "confirmed",
+            "attendees": null,
+            "alarms": null
+          }
+        },
+        "locator": {
+          "kind": "occurrence",
+          "originalStart": {
+            "kind": "instant",
+            "value": {
+              "at": "2026-10-31T06:30:00Z",
+              "timeZone": {
+                "kind": "supplied",
+                "identifier": "America/Chicago"
+              },
+              "offset": {
+                "kind": "supplied",
+                "minutes": -300
+              }
+            }
+          }
+        }
+      },
+      "canonicalUtf8": "{\"change\":{\"collectedAt\":\"2026-10-30T08:00:00Z\",\"enrollmentId\":\"30000000-0000-4000-8000-000000000001\",\"eventId\":\"20000000-0000-4000-8000-000000000008\",\"expectedPolicyRevision\":1,\"mappingVersion\":\"synthetic-calendar-mapping/1\",\"operation\":\"upsert\",\"record\":{\"alarms\":null,\"attendees\":null,\"notes\":null,\"occurrence\":{\"originalStart\":{\"kind\":\"instant\",\"value\":{\"at\":\"2026-10-31T06:30:00Z\",\"offset\":{\"kind\":\"supplied\",\"minutes\":-300},\"timeZone\":{\"identifier\":\"America/Chicago\",\"kind\":\"supplied\"}}},\"seriesUpstreamId\":\"synthetic-series\",\"state\":\"detached\"},\"recurrence\":{\"calendarIdentifier\":\"gregorian\",\"kind\":\"rules\",\"rules\":[{\"days\":[{\"day\":\"SU\",\"ordinal\":null}],\"end\":{\"count\":5,\"kind\":\"count\"},\"frequency\":\"weekly\",\"interval\":1,\"monthDays\":[],\"months\":[],\"setPositions\":[],\"weekNumbers\":[],\"yearDays\":[]}],\"timeZone\":{\"identifier\":\"America/Chicago\",\"kind\":\"supplied\"}},\"schemaVersion\":\"1.0.0\",\"status\":\"confirmed\",\"time\":{\"end\":{\"at\":\"2026-11-01T07:30:00Z\",\"offset\":{\"kind\":\"supplied\",\"minutes\":-360},\"timeZone\":{\"identifier\":\"America/Chicago\",\"kind\":\"supplied\"}},\"kind\":\"instantRange\",\"start\":{\"at\":\"2026-11-01T06:30:00Z\",\"offset\":{\"kind\":\"supplied\",\"minutes\":-300},\"timeZone\":{\"identifier\":\"America/Chicago\",\"kind\":\"supplied\"}}},\"title\":\"Synthetic appointment\"},\"recordType\":\"CalendarEvent\",\"schemaVersion\":\"1.0.0\",\"source\":{\"accountId\":null,\"collector\":\"eventKit\",\"containerId\":\"synthetic-calendar\",\"containerKind\":\"calendar\",\"externalId\":null,\"namespace\":\"10000000-0000-4000-8000-000000000001\",\"originalApp\":null,\"originalDevice\":null,\"upstreamId\":\"synthetic-eventKit\",\"upstreamIdentityScope\":\"providerLocal\",\"upstreamRevision\":null}},\"locator\":{\"kind\":\"occurrence\",\"originalStart\":{\"kind\":\"instant\",\"value\":{\"at\":\"2026-10-31T06:30:00Z\",\"offset\":{\"kind\":\"supplied\",\"minutes\":-300},\"timeZone\":{\"identifier\":\"America/Chicago\",\"kind\":\"supplied\"}}}}}",
+      "sha256": "e8615072e2197aa7c02f463cd5777704695ab6ecd35f38905b423f97215f76c6"
+    },
+    {
+      "name": "explicit-occurrence-tombstone",
+      "item": {
+        "change": {
+          "schemaVersion": "1.0.0",
+          "eventId": "20000000-0000-4000-8000-000000000008",
+          "enrollmentId": "30000000-0000-4000-8000-000000000001",
+          "expectedPolicyRevision": 1,
+          "source": {
+            "collector": "eventKit",
+            "namespace": "10000000-0000-4000-8000-000000000001",
+            "containerKind": "calendar",
+            "containerId": "synthetic-calendar",
+            "accountId": null,
+            "upstreamId": "synthetic-eventKit",
+            "upstreamIdentityScope": "providerLocal",
+            "externalId": null,
+            "upstreamRevision": null,
+            "originalApp": null,
+            "originalDevice": null
+          },
+          "collectedAt": "2026-10-30T08:00:00Z",
+          "mappingVersion": "synthetic-calendar-mapping/1",
+          "operation": "delete",
+          "recordType": "CalendarEvent",
+          "deletionEvidence": "explicitProviderTombstone"
+        },
+        "locator": {
+          "kind": "occurrence",
+          "originalStart": {
+            "kind": "instant",
+            "value": {
+              "at": "2026-10-31T06:30:00Z",
+              "timeZone": {
+                "kind": "supplied",
+                "identifier": "America/Chicago"
+              },
+              "offset": {
+                "kind": "supplied",
+                "minutes": -300
+              }
+            }
+          }
+        }
+      },
+      "canonicalUtf8": "{\"change\":{\"collectedAt\":\"2026-10-30T08:00:00Z\",\"deletionEvidence\":\"explicitProviderTombstone\",\"enrollmentId\":\"30000000-0000-4000-8000-000000000001\",\"eventId\":\"20000000-0000-4000-8000-000000000008\",\"expectedPolicyRevision\":1,\"mappingVersion\":\"synthetic-calendar-mapping/1\",\"operation\":\"delete\",\"recordType\":\"CalendarEvent\",\"schemaVersion\":\"1.0.0\",\"source\":{\"accountId\":null,\"collector\":\"eventKit\",\"containerId\":\"synthetic-calendar\",\"containerKind\":\"calendar\",\"externalId\":null,\"namespace\":\"10000000-0000-4000-8000-000000000001\",\"originalApp\":null,\"originalDevice\":null,\"upstreamId\":\"synthetic-eventKit\",\"upstreamIdentityScope\":\"providerLocal\",\"upstreamRevision\":null}},\"locator\":{\"kind\":\"occurrence\",\"originalStart\":{\"kind\":\"instant\",\"value\":{\"at\":\"2026-10-31T06:30:00Z\",\"offset\":{\"kind\":\"supplied\",\"minutes\":-300},\"timeZone\":{\"identifier\":\"America/Chicago\",\"kind\":\"supplied\"}}}}}",
+      "sha256": "01b854ad9d475bb15c0db49a89eea7651d7b640eda3b75083bfd9d1340f76c80"
+    },
+    {
+      "name": "google-task-date-only",
+      "item": {
+        "change": {
+          "schemaVersion": "1.0.0",
+          "eventId": "20000000-0000-4000-8000-000000000013",
+          "enrollmentId": "30000000-0000-4000-8000-000000000001",
+          "expectedPolicyRevision": 1,
+          "source": {
+            "collector": "googleTasks",
+            "namespace": "10000000-0000-4000-8000-000000000001",
+            "containerKind": "taskList",
+            "containerId": "synthetic-list",
+            "accountId": null,
+            "upstreamId": "synthetic-googleTasks",
+            "upstreamIdentityScope": "providerLocal",
+            "externalId": null,
+            "upstreamRevision": null,
+            "originalApp": null,
+            "originalDevice": null
+          },
+          "collectedAt": "2026-10-30T08:00:00Z",
+          "mappingVersion": "synthetic-calendar-mapping/1",
+          "operation": "upsert",
+          "recordType": "Task",
+          "record": {
+            "schemaVersion": "1.0.0",
+            "title": "Synthetic task",
+            "notes": null,
+            "due": {
+              "kind": "date",
+              "date": "2026-11-01"
+            },
+            "completion": {
+              "state": "incomplete"
+            },
+            "recurrence": {
+              "kind": "unavailable",
+              "reason": "notObservable",
+              "nativeRule": null
+            }
+          }
+        },
+        "locator": {
+          "kind": "sourceItem"
+        }
+      },
+      "canonicalUtf8": "{\"change\":{\"collectedAt\":\"2026-10-30T08:00:00Z\",\"enrollmentId\":\"30000000-0000-4000-8000-000000000001\",\"eventId\":\"20000000-0000-4000-8000-000000000013\",\"expectedPolicyRevision\":1,\"mappingVersion\":\"synthetic-calendar-mapping/1\",\"operation\":\"upsert\",\"record\":{\"completion\":{\"state\":\"incomplete\"},\"due\":{\"date\":\"2026-11-01\",\"kind\":\"date\"},\"notes\":null,\"recurrence\":{\"kind\":\"unavailable\",\"nativeRule\":null,\"reason\":\"notObservable\"},\"schemaVersion\":\"1.0.0\",\"title\":\"Synthetic task\"},\"recordType\":\"Task\",\"schemaVersion\":\"1.0.0\",\"source\":{\"accountId\":null,\"collector\":\"googleTasks\",\"containerId\":\"synthetic-list\",\"containerKind\":\"taskList\",\"externalId\":null,\"namespace\":\"10000000-0000-4000-8000-000000000001\",\"originalApp\":null,\"originalDevice\":null,\"upstreamId\":\"synthetic-googleTasks\",\"upstreamIdentityScope\":\"providerLocal\",\"upstreamRevision\":null}},\"locator\":{\"kind\":\"sourceItem\"}}",
+      "sha256": "3ca383cd0c84102b0aedac42131e1b1dda09f778b28782d6a830259df906041d"
+    }
+  ],
+  "policy": {
+    "schemaVersion": "1.0.0",
+    "producerPin": {
+      "schemaId": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0",
+      "schemaVersion": "1.0.0",
+      "digest": "91dd3ae326706285babde6b31649f3f4d9687826df05fc9a524941301e5a212c"
+    },
+    "result": {
+      "kind": "policy",
+      "enrollment": {
+        "enrollmentId": "30000000-0000-4000-8000-000000000001",
+        "principalId": "50000000-0000-4000-8000-000000000001",
+        "endpointId": "60000000-0000-4000-8000-000000000001",
+        "collector": "eventKit",
+        "sourceNamespace": "10000000-0000-4000-8000-000000000001",
+        "revision": 2,
+        "state": "active",
+        "configuration": {
+          "categories": [
+            "CalendarEvent",
+            "Task"
+          ],
+          "uses": [],
+          "assistantIds": [],
+          "collectionPaused": false,
+          "usePaused": false
+        }
+      },
+      "effective": {
+        "policyRevision": 2,
+        "sourceBound": true,
+        "policyAvailable": true,
+        "policyBindingDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "collectionAllowed": true,
+        "categories": [
+          "CalendarEvent",
+          "Task"
+        ],
+        "uses": [],
+        "assistantIds": [],
+        "sourceNamespace": "10000000-0000-4000-8000-000000000001"
+      }
+    }
+  },
+  "sync": {
+    "schemaVersion": "1.0.0",
+    "producerPin": {
+      "schemaId": "https://lifestream.dev/contracts/mobile-context-calendar-delivery/1.0.0",
+      "schemaVersion": "1.0.0",
+      "digest": "91dd3ae326706285babde6b31649f3f4d9687826df05fc9a524941301e5a212c"
+    },
+    "result": {
+      "kind": "sync",
+      "receipts": [
+        {
+          "eventId": "20000000-0000-4000-8000-000000000002",
+          "requestDigest": "c971a7f2550074ae79e3cc854b36ffaacd527be2ecfbe68d393180597962ddc8",
+          "outcome": "accepted",
+          "code": "applied",
+          "durability": "sqlCommit"
+        }
+      ]
+    }
+  }
+}

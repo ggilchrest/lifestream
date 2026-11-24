@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {mkdtemp,readFile,rm} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join} from 'node:path';import {fileURLToPath} from 'node:url';import {spawnSync} from 'node:child_process';
+test('actual native diagnostic owner persists only closed events and keeps an immutable share file until completion',{timeout:30000},async t=>{
+ const root=await mkdtemp(join(tmpdir(),'lifestream-diagnostics-'));t.after(()=>rm(root,{recursive:true,force:true}));const core=fileURLToPath(new URL('../native/Sources/AssistantCore/DiagnosticBuffer.swift',import.meta.url)),native=fileURLToPath(new URL('../ios/App/CapApp-SPM/Sources/CapApp-SPM/NativeDiagnostics.swift',import.meta.url)),probe=fileURLToPath(new URL('./diagnostics-probe.swift',import.meta.url));
+ const audit=fileURLToPath(new URL('../native/Sources/AssistantCore/BoundedVoiceAudit.swift',import.meta.url));
+ const first=spawnSync('swiftc',['-emit-library','-emit-module','-module-name','AssistantCore',core,audit,'-o',join(root,'libAssistantCore.dylib'),'-emit-module-path',join(root,'AssistantCore.swiftmodule')],{encoding:'utf8'});assert.equal(first.status,0,first.stderr);
+ const {copyFile}=await import('node:fs/promises');await copyFile(probe,join(root,'main.swift'));const second=spawnSync('swiftc',['-I',root,'-L',root,'-lAssistantCore','-Xlinker','-rpath','-Xlinker',root,native,join(root,'main.swift'),'-o',join(root,'probe')],{encoding:'utf8'});assert.equal(second.status,0,second.stderr);
+ const result=spawnSync(join(root,'probe'),[root],{encoding:'utf8',timeout:15000});assert.equal(result.status,0,result.stderr);assert.match(result.stdout,/native diagnostic persistence/);
+});
+test('native bridge presents a share sheet, cleans up after completion and rejects empty logs',async()=>{
+ const source=await readFile(new URL('../ios/App/CapApp-SPM/Sources/CapApp-SPM/AssistantPlugin.swift',import.meta.url),'utf8');assert.match(source,/UIActivityViewController\(activityItems:\[file\]/);assert.match(source,/guard diagnosticLog\.count>0/);assert.match(source,/completionWithItemsHandler=\{[^\n]*DiagnosticExportFile\.finish\(file\)/);assert.match(source,/popover\.sourceView/);assert.doesNotMatch(source,/shareDiagnostics[\s\S]{0,1000}UIPasteboard/);
+});

@@ -224,7 +224,12 @@ export class AudioSession {
     try {
       let transcript: string | undefined;
       for await (const stt of this.deps.stt.transcribe({ deadlineAt: new Date(Math.min(Date.parse(deadlineAt), Date.now() + 30_000)).toISOString(), now: () => new Date().toISOString() }, audio, this.controller.signal)) {
+        // A recognizer can finish a buffered result after cancellation. Input
+        // scope may still be current, but that result no longer owns output.
+        if (controller.signal.aborted) throw new Error("audio turn interrupted");
         if (!current()) throw new Error("Audio input scope changed during recognition.");
+        // Currentness hooks can synchronously interrupt this same turn.
+        if (controller.signal.aborted) throw new Error("audio turn interrupted");
         if (stt.kind === "terminal" && stt.outcome !== "succeeded") throw new Error(`Speech recognition ${stt.outcome}; check the selected STT service and retry this turn.`);
         if (stt.kind !== "data" || stt.payload.type !== "committed" || transcript !== undefined) continue;
         transcript = stt.payload.text;

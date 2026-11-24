@@ -1,0 +1,300 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "IOS-PLAYBACK-20261002",
+  "status": "implementationCompleteVerificationPending",
+  "source": {
+    "repository": "lifestream",
+    "baseRevision": "d7cbcfbf7a071f0f1d60e784350559a7d12dbb8e",
+    "worktreeInitiallyClean": true,
+    "changesCommitted": false
+  },
+  "scope": "Native iOS playback repair and diagnosis only; existing slice and Human acceptance claims preserved.",
+  "findings": [
+    {
+      "claim": "Player started before PCM and lacked startup/recovery buffering",
+      "evidence": "Baseline NativeVoice.prepareEngine/startEngine and audio message scheduling",
+      "status": "verifiedSourceDefect",
+      "limit": "Establishes gap susceptibility, not a device-measured underrun."
+    },
+    {
+      "claim": "PCM decoding preserves little-endian signed PCM16 amplitudes; mixer converts route format",
+      "evidence": "PlaybackPCMTests and explicit AVAudioEngine format connections",
+      "status": "verifiedComponent"
+    },
+    {
+      "claim": "voiceChat/VPIO and HFP-capable session can account for tonal differences",
+      "evidence": "Source session configuration and Apple voiceChat documentation",
+      "status": "hypothesis",
+      "limit": "No causal device A/B result yet. 48 kHz client PCM does not prove Bluetooth bandwidth."
+    },
+    {
+      "claim": "Route recovery delay left old output callbacks eligible",
+      "evidence": "Source review: engine can stop before 250ms delayed restart; immediate output invalidation now precedes delay",
+      "status": "verifiedSourceRace"
+    },
+    {
+      "claim": "Speech gate may interrupt output independently of starvation",
+      "evidence": "SpeechGate.began invokes interruptReply; new diagnostic count distinguishes this path",
+      "status": "mechanismOnly",
+      "limit": "No echo-triggered false interruption observed by this run yet."
+    }
+  ],
+  "changes": [
+    "160ms startup/recovery PCM reserve, 250ms first-chunk deadline, immediate terminal tails",
+    "3-second bound retained; generation and per-buffer completion fencing",
+    "Immediate output invalidation during route recovery",
+    "48k preferred session rate; report actual session, hardware and client formats separately",
+    "Volatile port/queue/interarrival/interruption observations only",
+    "Optional offline generic local speech clip comparison through media and duplex VPIO modes",
+    "Stable diagnostic text and explicit native Copy diagnostics action, local-only clipboard with five-minute expiry"
+  ],
+  "validation": [
+    {
+      "command": "swift test --package-path apps/ios/native",
+      "result": "pass",
+      "tests": 53,
+      "failed": 0,
+      "profile": "macOS deterministic Swift unit tests; no microphone"
+    },
+    {
+      "command": "npm --prefix apps/ios test",
+      "result": "pass",
+      "tests": 26,
+      "failed": 0,
+      "skipped": 0,
+      "profile": "isolated local runtime/transport, Chrome UI, synthetic AVFoundation capture and offline playback rendering; native device dataPlayedBack timing excluded"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "result": "pass",
+      "tests": 44,
+      "failed": 0
+    },
+    {
+      "command": "node scripts/workspace.mjs check",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "xcodebuild -project <operator-local>/ios/App/App.xcodeproj -scheme App -configuration Release -destination id=<paired-device> -derivedDataPath <operator-local-derived> CURRENT_PROJECT_VERSION=9 build",
+      "result": "pass",
+      "xcode": "27.0 (27A266a)",
+      "sdk": "iPhoneOS",
+      "signed": true,
+      "bundleIdentifier": "org.lifestream.assistant",
+      "build": "9",
+      "compiledSourceFilesMatch": 17
+    },
+    {
+      "command": "npm --prefix .private run validate",
+      "result": "pass",
+      "tests": 365,
+      "failed": 0,
+      "profile": "private specification structure only",
+      "includesManifestValidation": true
+    },
+    {
+      "command": "node --test apps/ios/test/native-playback.test.mjs",
+      "result": "pass",
+      "tests": 1,
+      "profile": "AVAudioEngine offline rendering: startup/paused/cancelled silence, 7680 continuous samples plus 173-sample tail, restart and 48k-to-16k resampling frequency/amplitude; no hardware completion callback"
+    }
+  ],
+  "device": {
+    "model": "iPhone 15 Pro",
+    "os": "27.0 (24A437)",
+    "developerMode": "enabled",
+    "baselineInstalledBuild": "8",
+    "testBuild": "10",
+    "install": "verified build10; build9 observation preserved separately",
+    "listeningAcceptance": "pending",
+    "baselineObservation": {
+      "source": "Operator report and attached screenshot, 2026-10-02",
+      "report": "Both headset and built-in speaker sound the same. Diagnostic text selection disrupted by refresh.",
+      "observedScreenshot": [
+        "Stopped microphone; 862 raw, converted and delivered input buffers, displayed 48000Hz mono",
+        "Setup history contains MicrophoneBuiltIn and Speaker port types",
+        "Visible zero-rate entries precede engine construction; they are not a playback hardware measurement"
+      ],
+      "limits": [
+        "Hardware playback rate not established by the screenshot",
+        "No numerical underrun/interruption evidence in old build"
+      ]
+    },
+    "launch": "verified via devicectl process launch",
+    "installedBuild": "10"
+  },
+  "testLimitations": [
+    "No simulator runtime installed.",
+    "AVAudioEngine manual offline rendering cannot exercise dataPlayedBack; Apple AVAudioPlayerNode.h documents this callback as hardware-rendering only.",
+    "No phone audio or microphone recording collected."
+  ],
+  "preflight": {
+    "command": "node scripts/workspace.mjs preflight LS-S066",
+    "result": "existing mismatch",
+    "details": [
+      "revision",
+      "changedFiles",
+      "allowedFiles vs packet"
+    ],
+    "handling": "Preserve historical checkpoint and active slice; append bounded repair note and expected file paths without rewriting old qualification evidence."
+  },
+  "exclusions": [
+    "No server restart or server source/config changes",
+    "No model, LoRA, reference audio or provider-default changes",
+    "No microphone audio retained",
+    "No push or server deployment",
+    "No new Human acceptance"
+  ],
+  "remainingDeviceChecks": [
+    "Fully preloaded media vs conversation clip tone/routes on speaker and AirPods",
+    "Short and >=30-second streamed replies against accepted Mac voice",
+    "Silent-listener echo behavior and spoken barge-in/next-turn capture",
+    "Stop/cancel, headphone disconnect/reconnect, system interruption, repeated Start/Stop",
+    "Copy diagnostics captures stable metadata on the phone"
+  ],
+  "references": [
+    "docs/ios-v0.1.md",
+    "https://developer.apple.com/documentation/avfaudio/avaudiosession/mode-swift.struct/voicechat"
+  ],
+  "changedFiles": [
+    "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/AssistantPlugin.swift",
+    "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/NativePlaybackProbe.swift",
+    "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/NativeVoice.swift",
+    "apps/ios/native/Sources/AssistantCore/PlaybackBuffer.swift",
+    "apps/ios/native/Sources/AssistantCore/PlaybackPCM.swift",
+    "apps/ios/native/Tests/AssistantCoreTests/PlaybackBufferTests.swift",
+    "apps/ios/native/Tests/AssistantCoreTests/PlaybackPCMTests.swift",
+    "apps/ios/scripts/generate-audio-probe.mjs",
+    "apps/ios/test/activity.test.mjs",
+    "apps/ios/test/audio-probe.test.mjs",
+    "apps/ios/test/integration.test.mjs",
+    "apps/ios/test/native-playback.test.mjs",
+    "apps/ios/test/playback-render-probe.swift",
+    "apps/ios/web/activity.js",
+    "apps/ios/web/controller.js",
+    "apps/ios/web/index.html",
+    "docs/ios-v0.1.md",
+    "implementation/checkpoint.json",
+    "implementation/evidence/IOS-PLAYBACK-20261002.json"
+  ],
+  "sourceFileSHA256": {
+    "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/AssistantPlugin.swift": "b1735f19b9847c1250dcb16907228c39ca6958adbce344b1461d89c727c0d874",
+    "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/NativePlaybackProbe.swift": "996a0d7821124e62c5e5b3647a79fb7b37162378aa202fb4fb6c751a8d2c8e3a",
+    "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/NativeVoice.swift": "318e751e7b6c9cedd33252f67cedaf59572cff0f05c7caf04a5a6a4fe024dead",
+    "apps/ios/native/Sources/AssistantCore/PlaybackBuffer.swift": "fd6e13fbab9f7ab8ea23ee26add46ed5567bed6b35fabec725a5b12ab47a86df",
+    "apps/ios/native/Sources/AssistantCore/PlaybackPCM.swift": "9daaebc00d8d153f0f5d3889f6b39d32e74f7de0c3726255912ba61069e71deb",
+    "apps/ios/native/Tests/AssistantCoreTests/PlaybackBufferTests.swift": "06ee82abc327ba517f49027f8f8d92f1c7dcdb8c18aa119c8875c78a42c388b4",
+    "apps/ios/native/Tests/AssistantCoreTests/PlaybackPCMTests.swift": "b0b53dd3d18bdb2d809176d81f784023e2eac71aaa3318416a6923769d0b0924",
+    "apps/ios/scripts/generate-audio-probe.mjs": "a695cb92c6a163d320aa1198b829785e90f485c377797edd460aebe6b59106dc",
+    "apps/ios/test/activity.test.mjs": "cc494f01d5b8e10f88a79561ea970befa13af07aa16049389053d7b0d4b1232f",
+    "apps/ios/test/audio-probe.test.mjs": "ce18b1a4928f421fc6ab5b7b74a374b556faffd418b9c2940b291380355f7801",
+    "apps/ios/test/integration.test.mjs": "28c18bca7891c256795ae5c1ba35ab4446ba8c577a9277744e926798a072a570",
+    "apps/ios/test/native-playback.test.mjs": "8b71e36a60e9bc5d4c01e501fc09760405103eb0945b0f08033b2e5712fdaed5",
+    "apps/ios/test/playback-render-probe.swift": "2b41194ea5396c8bd02af4d4cecb17bf96082ac37ae564a2a968ce8a435cdc88",
+    "apps/ios/web/activity.js": "bb004805ed841a0db6a30ffa30a1fe4249847e5feb98f0e7bde7ae9d47fd99c6",
+    "apps/ios/web/controller.js": "43e552ee6b4a0e97ae1c855fdc5820bee55bcc7185d78ad22ff11464177e704e",
+    "apps/ios/web/index.html": "fd2bad092f63c6bf773bbf163eb23f9c1e6fd7bf7859fe3156e504fd2b232db6"
+  },
+  "privateScopeAidChanges": [
+    "roadmap/packets/LS-S066.json",
+    "contracts/contract-manifest.json"
+  ],
+  "physicalObservations": [
+    {
+      "build": "9",
+      "source": "Operator listening report and pasted native metadata",
+      "result": "fewer dropouts, several still audible; not accepted",
+      "routeBeforeListening": "BluetoothA2DPOutput",
+      "activeInputAndOutput": "BluetoothHFP",
+      "sessionAndHardwareFacingRateHz": 48000,
+      "voiceProcessing": true,
+      "bypass": false,
+      "ioMs": 20,
+      "reportedInputOutputLatencyMs": 4,
+      "queueDrains": 1,
+      "speechInterruptions": 0,
+      "maxHandledAudioArrivalGapMs": 362,
+      "playbackEventsMs": {
+        "start": 15794,
+        "queueDrained": 16137,
+        "restart": 16354,
+        "finished": 34058
+      },
+      "captureContinuity": "raw and converted counts increase through reply; no route recovery event during playback",
+      "interpretation": "An early queue drain without speech interruption supports a supply/cushion gap. Callback accounting may miss rendering gaps. HFP is confirmed, but tonal cause and every reported dropout remain unisolated."
+    }
+  ],
+  "nextCandidate": {
+    "build": "10",
+    "status": "implementationCompleteVerificationPending",
+    "policy": {
+      "startupMs": 400,
+      "recoveryMs": 600,
+      "firstChunkWaitLimitMs": 1000,
+      "immediateCompletedTail": true,
+      "maxQueueMs": 3000
+    },
+    "rationale": "Larger bounded reserve than observed362ms delivery gap; increased onset latency explicitly disclosed. No route/AEC/backend change.",
+    "diagnostics": [
+      "actual prebuffer at start",
+      "threshold/deadline/terminal start reason",
+      "delivery-gap event timestamps excluding intentional read backpressure",
+      "separate audio completion and receive callback dispatch delays"
+    ],
+    "validation": [
+      {
+        "command": "swift test --package-path apps/ios/native --scratch-path /tmp/lifestream-buffer-tests",
+        "result": "pass",
+        "tests": 55,
+        "failed": 0
+      },
+      {
+        "command": "npm --prefix apps/ios test",
+        "result": "pass",
+        "tests": 26,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "command": "xcodebuild Release arm64 signed CURRENT_PROJECT_VERSION=10 build",
+        "result": "pass",
+        "compiledSourceFilesMatch": 17,
+        "preservedAppearanceFiles": 1
+      },
+      {
+        "command": "node scripts/workspace.mjs check; git diff --check",
+        "result": "pass"
+      }
+    ],
+    "sourceFileSHA256": {
+      "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/AssistantPlugin.swift": "b1735f19b9847c1250dcb16907228c39ca6958adbce344b1461d89c727c0d874",
+      "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/NativePlaybackProbe.swift": "996a0d7821124e62c5e5b3647a79fb7b37162378aa202fb4fb6c751a8d2c8e3a",
+      "apps/ios/ios/App/CapApp-SPM/Sources/CapApp-SPM/NativeVoice.swift": "fe9c7d581b303ad7080de2fb23b9ea1bb37e698c44a3c44c8a1b98590184892c",
+      "apps/ios/native/Sources/AssistantCore/PlaybackBuffer.swift": "13118f1f0c006fb4c14e1d01a7e54ab2472b76d6b454664d98f8d6fd5fb47652",
+      "apps/ios/native/Sources/AssistantCore/PlaybackPCM.swift": "9daaebc00d8d153f0f5d3889f6b39d32e74f7de0c3726255912ba61069e71deb",
+      "apps/ios/native/Tests/AssistantCoreTests/PlaybackBufferTests.swift": "5c690ba3f2aaba6d82934a275ff04ae3439c0cd056592697ae0a6b04e75f1c56",
+      "apps/ios/native/Tests/AssistantCoreTests/PlaybackPCMTests.swift": "b0b53dd3d18bdb2d809176d81f784023e2eac71aaa3318416a6923769d0b0924",
+      "apps/ios/scripts/generate-audio-probe.mjs": "a695cb92c6a163d320aa1198b829785e90f485c377797edd460aebe6b59106dc",
+      "apps/ios/test/activity.test.mjs": "cc494f01d5b8e10f88a79561ea970befa13af07aa16049389053d7b0d4b1232f",
+      "apps/ios/test/audio-probe.test.mjs": "ce18b1a4928f421fc6ab5b7b74a374b556faffd418b9c2940b291380355f7801",
+      "apps/ios/test/integration.test.mjs": "28c18bca7891c256795ae5c1ba35ab4446ba8c577a9277744e926798a072a570",
+      "apps/ios/test/native-playback.test.mjs": "8b71e36a60e9bc5d4c01e501fc09760405103eb0945b0f08033b2e5712fdaed5",
+      "apps/ios/test/playback-render-probe.swift": "2b41194ea5396c8bd02af4d4cecb17bf96082ac37ae564a2a968ce8a435cdc88",
+      "apps/ios/web/activity.js": "bb004805ed841a0db6a30ffa30a1fe4249847e5feb98f0e7bde7ae9d47fd99c6",
+      "apps/ios/web/controller.js": "43e552ee6b4a0e97ae1c855fdc5820bee55bcc7185d78ad22ff11464177e704e",
+      "apps/ios/web/index.html": "fd2bad092f63c6bf773bbf163eb23f9c1e6fd7bf7859fe3156e504fd2b232db6"
+    },
+    "limitations": [
+      "Actual device dataPlayedBack/render timing still requires physical test",
+      "Local media/conversation A/B tone result remains unanswered",
+      "Larger buffer is a bounded response to observed delivery gap, not a proof of stable hardware output"
+    ],
+    "install": "verified: devicectl install and installed-app query show build10",
+    "launch": "verified via devicectl process launch",
+    "listeningAcceptance": "pending operator long-response and barge-in test"
+  }
+}

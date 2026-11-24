@@ -29,6 +29,16 @@ public struct VoiceActivity {
     public var snapshot:[String:Any]{["inputStage":inputStage,"backendStage":backendStage,"outputStage":outputStage,"inputLevel":inputLevel,"inputFrames":inputFrames,"sentFrames":sentFrames,"lastError":lastError]}
 }
 public enum EndpointPolicy {
+    private static func voicePath(_ path:String,activation:Bool=false)->Bool {
+        let suffix=activation ? "/voices/activate":"/voices",prefix="/api/admin/v1/assistants/"
+        guard path.hasPrefix(prefix),path.hasSuffix(suffix) else{return false}
+        let start=path.index(path.startIndex,offsetBy:prefix.count),end=path.index(path.endIndex,offsetBy:-suffix.count)
+        guard start<end else{return false};let id=String(path[start..<end]);return UUID(uuidString:id) != nil && id.count==36
+    }
+    private static func referencePath(_ path:String)->Bool {
+        let prefix="/api/admin/v1/assistants/",suffix="/voice-references"
+        guard path.hasPrefix(prefix),path.hasSuffix(suffix) else{return false};let start=path.index(path.startIndex,offsetBy:prefix.count),end=path.index(path.endIndex,offsetBy:-suffix.count);guard start<end else{return false};let id=String(path[start..<end]);return id.count==36 && UUID(uuidString:id) != nil
+    }
     public static func validate(_ input: String, allowLoopback: Bool = false) throws -> URL {
         guard let url = URL(string: input), let host = url.host, !host.isEmpty,
               url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
@@ -36,14 +46,20 @@ public enum EndpointPolicy {
               url.scheme == "https" || (allowLoopback && url.scheme == "http" && ["localhost", "127.0.0.1", "[::1]"].contains(host)) else { throw VoiceError.invalidEndpoint }
         return url
     }
+    /// History calls require the current private audience at the server.
+    /// All other mutating requests retain their existing retirement behavior.
+    public static func preservesAudience(_ path:String, method:String) -> Bool {
+        method == "POST" && (["/api/runtime/v1/conversations", "/api/runtime/v1/conversations/select"].contains(path) || voicePath(path) || voicePath(path,activation:true))
+    }
     public static func permits(_ path: String, method: String) -> Bool {
         guard !path.contains(".."), !path.contains("%"), !path.contains("?"), !path.contains("#"), !path.contains("\\"), !path.contains("//") else { return false }
         if method == "GET" {
-            if ["/api/auth/v1/status", "/api/auth/v1/session", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/admin/v1/assistants"].contains(path) { return true }
+            if voicePath(path)||referencePath(path){return true}
+            if ["/api/auth/v1/status", "/api/auth/v1/session", "/api/auth/v1/user-context", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/runtime/v1/audience/personal-session", "/api/admin/v1/assistants"].contains(path) { return true }
             if path.range(of: "^/api/admin/v1/assistants/[a-fA-F0-9-]{36}/relationships$", options: .regularExpression) != nil { return true }
             return false
         }
-        return method == "POST" && ["/api/auth/v1/sign-in", "/api/auth/v1/sign-out", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/runtime/v1/audience/lease", "/api/runtime/v1/messages"].contains(path)
+        return method == "POST" && (["/api/auth/v1/sign-in", "/api/auth/v1/sign-out", "/api/runtime/v1/session-context", "/api/runtime/v1/audience", "/api/runtime/v1/audience/lease", "/api/runtime/v1/audience/personal-session", "/api/runtime/v1/messages", "/api/runtime/v1/conversations", "/api/runtime/v1/conversations/select"].contains(path) || voicePath(path) || voicePath(path,activation:true))
     }
 }
 
@@ -77,23 +93,40 @@ public struct ReplyStream {
         guard trace == id, !terminal, totalSamples > 0 else { throw VoiceError.invalidMessage }
         terminal = true
     }
+    /// Ignore obsolete server output while retaining independently admitted input.
+    public mutating func ignore(_ id:String) throws {
+        guard UUID(uuidString:id) != nil else { throw VoiceError.invalidMessage }
+        if !retired.contains(id) { retired.append(id); if retired.count > 64 { retired.removeFirst() } }
+    }
     public mutating func retire() {
         if let id = trace { retired.append(id); if retired.count > 64 { retired.removeFirst() } }
         trace = nil; totalSamples = 0; segmentSamples = 0; sequence = 0; terminal = false; segments = []; segment = nil
     }
 }
 
+/// Main-queue fence: late send completions cannot close the retired socket twice.
+public final class SettlementCloseFence {
+    private var finished=false
+    private let close:(Bool)->Void
+    public init(close:@escaping(Bool)->Void){self.close=close}
+    public func finish(_ sent:Bool){guard !finished else{return};finished=true;close(sent)}
+}
+
 /// Bounded local speech gate after Apple's voice processing, not a speaker-identity detector.
 public struct SpeechGate {
-    public enum Event { case began, frame(Data), commit(Int, Int) }
+    public enum Event { case began, frame(Data), commit(Int, Int), overflow }
+    public static let maximumUtteranceSamples=1_440_000
     private var pre = [Float](), pending = [Float](), analysis = [Float]()
     private var voiced = 0, silence = 0, sequence = 0, sent = 0
     public private(set) var speaking = false
+    public var bufferedUnframedSamples:Int { pre.count + pending.count + analysis.count }
+    private var overflowed=false
     public var threshold: Float = 0.018
     public init() {}
-    public mutating func reset() { resetUtterance(); analysis.removeAll() }
+    public mutating func reset() { resetUtterance(); analysis.removeAll();overflowed=false }
     private mutating func resetUtterance() { pre.removeAll(); pending.removeAll(); voiced = 0; silence = 0; sequence = 0; sent = 0; speaking = false }
     public mutating func push(_ samples: [Float]) -> [Event] {
+        guard !overflowed else{return []}
         guard !samples.isEmpty, samples.allSatisfy({ $0.isFinite }) else { reset(); return [] }
         // Tap bufferSize is a request, not a guarantee. Analyze fixed 20 ms
         // windows so route-dependent callbacks cannot drop valid speech or
@@ -102,7 +135,7 @@ public struct SpeechGate {
         while offset<samples.count {
             let count=min(320-analysis.count,samples.count-offset)
             analysis.append(contentsOf:samples[offset..<offset+count]);offset += count
-            if analysis.count==320 {events.append(contentsOf:pushWindow(analysis));analysis.removeAll(keepingCapacity:true)}
+            if analysis.count==320 {events.append(contentsOf:pushWindow(analysis));analysis.removeAll(keepingCapacity:true);if overflowed{break}}
         }
         return events
     }
@@ -110,18 +143,31 @@ public struct SpeechGate {
         let rms = sqrt(samples.reduce(Float(0)) { $0 + $1 * $1 } / Float(samples.count))
         var events = [Event]()
         if !speaking {
-            pre.append(contentsOf: samples); if pre.count > 4800 { pre.removeFirst(pre.count - 4800) }
+            pre.append(contentsOf: samples); if pre.count > 9600 { pre.removeFirst(pre.count - 9600) }
             voiced = rms >= threshold ? voiced + samples.count : 0
             guard voiced >= 2560 else { return [] }
             speaking = true; pending = pre; pre.removeAll(); events.append(.began)
-        } else { pending.append(contentsOf: samples) }
+        } else {
+            guard sent+pending.count+samples.count<=Self.maximumUtteranceSamples else{resetUtterance();overflowed=true;return [.overflow]}
+            pending.append(contentsOf: samples)
+        }
         silence = rms < threshold * 0.65 ? silence + samples.count : 0
         while pending.count >= 1600 { events.append(.frame(Self.pcm(Array(pending.prefix(1600))))); pending.removeFirst(1600); sequence += 1; sent += 1600 }
-        if silence >= 9600 || sent + pending.count >= 320000 {
+        if silence >= 9600 {
             if !pending.isEmpty { events.append(.frame(Self.pcm(pending))); sequence += 1; sent += pending.count }
             events.append(.commit(sequence, sent)); resetUtterance()
         }
         return events
+    }
+    /// A deliberate finish submits the current utterance exactly once. Stop remains cancellation.
+    public mutating func finish()->[Event] {
+        guard speaking,!overflowed else{return []}
+        guard sent+pending.count+analysis.count<=Self.maximumUtteranceSamples else{resetUtterance();analysis.removeAll();overflowed=true;return [.overflow]}
+        pending.append(contentsOf:analysis);analysis.removeAll()
+        var events=[Event]()
+        while pending.count>=1600{events.append(.frame(Self.pcm(Array(pending.prefix(1600)))));pending.removeFirst(1600);sequence += 1;sent += 1600}
+        if !pending.isEmpty{events.append(.frame(Self.pcm(pending)));sequence += 1;sent += pending.count}
+        events.append(.commit(sequence,sent));resetUtterance();return events
     }
     private static func pcm(_ samples: [Float]) -> Data {
         var result = Data(capacity: samples.count * 2)
