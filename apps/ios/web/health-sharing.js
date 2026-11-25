@@ -5,11 +5,14 @@ function requireResult(condition, message) {
 }
 
 // The switch covers sync and private answers for the selected Assistant.
-async function phoneSource(call) {
-  const inventory = await call('healthInventory');
-  const mine = inventory.sources.filter(s => s.collector === 'healthKit' && s.currentEnrollmentId);
+function boundPhoneSource(sources) {
+  const mine = sources.filter(s => s.collector === 'healthKit' && s.currentEnrollmentId);
   requireResult(mine.length <= 1, 'More than one Health source is bound to this phone.');
   return mine[0];
+}
+
+async function phoneSource(call) {
+  return boundPhoneSource((await call('healthInventory')).sources);
 }
 
 async function prepareSource(call) {
@@ -206,6 +209,15 @@ export async function disableAssistantSharing(call, identity) {
   if (stopError) throw stopError;
 }
 
+function phoneUpdates(saved) {
+  if (saved?.persistence === 'savedEnabled') return true;
+  if (saved?.persistence === 'savedDisabled') return false;
+  if (saved?.persistence === 'pending' || saved?.state === 'pending' || !Array.isArray(saved?.choices)) return null;
+  if (saved.choices.some(row => row?.updatesEnabled === true && row.requiresRebind === false)) return true;
+  if (saved.state === 'absent' || saved.state === 'disabled') return false;
+  return null;
+}
+
 export function createHealthSharingView({panel, toggle, note, native, owner}) {
   let generation = 0, busy = false, statusTimer;
   function invalidate() {
@@ -214,6 +226,7 @@ export function createHealthSharingView({panel, toggle, note, native, owner}) {
     busy = false;
     toggle.checked = false;
     toggle.disabled = true;
+    toggle.hidden = true;
     note.textContent = '';
   }
   async function run(change) {
@@ -231,64 +244,64 @@ export function createHealthSharingView({panel, toggle, note, native, owner}) {
     const desired = toggle.checked;
     busy = true;
     toggle.disabled = true;
-    let available = true;
-    function waitForStatus(message) {
-      available = false;
-      toggle.indeterminate = true;
-      note.textContent = message;
+    toggle.hidden = true;
+    note.textContent = change ? 'Updating Assistant access…' : 'Checking Assistant access…';
+    function retryStatus() {
       statusTimer = setTimeout(() => {
         if (current() && panel.open && !panel.closest('[hidden]')) void run(false);
       }, 1500);
     }
     try {
-      toggle.indeterminate = false;
       const device = await call('healthSharingDevice');
-      available = device.supported === true && device.configured === true;
-      requireResult(device.supported, 'Apple Health is unavailable on this device.');
-      requireResult(device.configured, 'This recovery build has Health disabled. Install the regular iPhone build.');
+      if (!device.supported || !device.configured) {
+        note.textContent = device.supported ? 'This recovery build has Health disabled.' : 'Apple Health is unavailable on this device.';
+        return;
+      }
       if (change && desired) {
         await enableHealthSharing(call, identity, text => { note.textContent = text; });
-        note.textContent = 'Your Assistant can use shared Health records in private chat.';
       } else if (change) {
         await disableAssistantSharing(call, identity);
-        note.textContent = 'Sharing is off.';
-      } else {
-        const saved = await call('healthSavedRecoveryChoice', {operation:'status'});
-        requireResult(Array.isArray(saved.choices), 'Health sharing status is unavailable.');
-        if (saved.persistence === 'savedEnabled') toggle.checked = true;
-        else if (saved.persistence === 'savedDisabled') toggle.checked = false;
-        else if (saved.persistence === 'pending' || saved.state === 'pending') {
-          waitForStatus('Checking whether this phone is sharing…');
-          return;
-        }
-        else if (saved.choices.some(row => row.updatesEnabled && !row.requiresRebind)) toggle.checked = true;
-        else if (saved.state === 'absent' || saved.state === 'disabled' || saved.persistence === 'requiresRebind') toggle.checked = false;
-        else {
-          waitForStatus('The sharing setting is unavailable. Checking again…');
-          return;
-        }
-        const source = await phoneSource(call);
-        const answers = source && (await assistantSharing(call,identity,source,'status')).enabled === true;
-        if (toggle.checked && !answers) {
-          toggle.checked = false;
-          toggle.indeterminate = true;
-          note.textContent = 'This phone is syncing. Turn on sharing to use them in private chat.';
-          return;
-        }
-        if (answers) toggle.checked = true;
-        note.textContent = toggle.checked ? 'Your Assistant can use shared Health records in private chat.' : 'Share the past 30 days and new records. Your server keeps new imports for 30 days by default.';
       }
+      const saved = await call('healthSavedRecoveryChoice', {operation:'status'}).catch(() => null);
+      const updates = phoneUpdates(saved);
+      const {sources} = await call('healthInventory');
+      const source = boundPhoneSource(sources);
+      let access;
+      if (source) {
+        if (!identity.assistantId) {
+          note.textContent = 'Select an Assistant in Settings to check its Health access.';
+          return;
+        }
+        access = (await assistantSharing(call, identity, source, 'status'))?.enabled;
+      } else if (updates === false && (saved.state === 'absent' || !sources.some(s => s.collector === 'healthKit'))) {
+        access = false;
+      }
+      if (typeof access !== 'boolean') {
+        note.textContent = source ? 'Assistant access could not be verified.' : 'This phone’s Health source could not be verified.';
+        retryStatus();
+        return;
+      }
+      toggle.checked = access;
+      toggle.hidden = false;
+      toggle.disabled = false;
+      const accessText = access ? 'Assistant access is on. Your Assistant can use these records in private chat.'
+        : 'Assistant access is off. Your Assistant cannot use these records in private chat.';
+      const updatesText = updates === null ? 'Phone update settings are unavailable.'
+        : updates ? 'Phone updates are on.' : 'Phone updates are off.';
+      const setup = !source ? ' Turning on sharing includes the past 30 days and new records. Your server keeps new imports for 30 days by default.' : '';
+      note.textContent = accessText + ' ' + updatesText + setup;
+      if (saved?.persistence === 'pending' || saved?.state === 'pending') retryStatus();
     } catch (error) {
       if (current()) {
-        if (change) { toggle.checked = !desired; toggle.indeterminate = true; }
         const info = change && desired ? await call('healthSharingDevice').catch(() => null) : null;
         if (current()) {
-          if (!change && available) waitForStatus('The sharing setting is unavailable. Checking again…');
-          else note.textContent = info?.problem || error.message || 'This phone could not update Health sharing.';
+          note.textContent = change ? info?.problem || error.message || 'This phone could not update Health sharing.'
+            : 'Assistant access could not be verified.';
+          retryStatus();
         }
       }
     } finally {
-      if (current()) { busy = false; toggle.disabled = !available; }
+      if (current()) busy = false;
     }
   }
   panel.addEventListener('toggle', () => { if (panel.open) void run(false); else clearTimeout(statusTimer); });

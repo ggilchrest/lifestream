@@ -67,7 +67,6 @@ body:not(:has(#settings-pane:not([hidden]))) main{width:100%;min-height:0;flex:1
 .health-sharing-row input[role=switch]::before{content:'';display:block;width:24px;height:24px;border-radius:50%;background:white}
 .health-sharing-row input[role=switch]:checked{background:#248349}
 .health-sharing-row input[role=switch]:checked::before{transform:translateX(18px)}
-.health-sharing-row input[role=switch]:indeterminate::before{transform:translateX(9px)}
 .health-sharing-row input[role=switch]:disabled{opacity:.55}
 /* Settings uses a grouped index and shows one task at a time. */
 body:has(#settings-pane:not([hidden])) { background:var(--settings-bg); }

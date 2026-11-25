@@ -4,7 +4,7 @@ test('personal app restore requires native current-owner confirmation and expose
  const principal='00000000-0000-4000-8000-000000000001',session='00000000-0000-4000-8000-000000000002';let listener,policySeen=false,bound=false;window.calls=[];window.emit=x=>listener(x);
  const endpoint={endpointClass:'personalCompanion',privacyClass:'personal',ownership:'personal',inputModalities:['audio'],endpointId:'00000000-0000-4000-8000-000000000003',configurationRevision:1};
  const answer=(value,status=200)=>({status,body:JSON.stringify(value)});
-window.app=installApp({healthSharingDevice:async()=>({supported:true,configured:true}),healthSavedRecoveryChoice:async()=>window.healthPreference??({state:'absent',choices:[]}),healthChooseRecords:async()=>{calls.push('chooseRecords');throw Error('Apple Health could not finish the permission request.')},healthInventory:async()=>{window.calls.push('healthInventory');return {sources:[],unboundEnrollments:[]}},restoreConnection:async()=>{window.calls.push('restore');return {hasSession:window.scenario!=='fresh_old',authState:window.scenario==='fresh_old'?'needsSignIn':'authenticated',endpoint:'https://fixture.example',username:'fixture',account:{principalId:principal,sessionId:session}}},pendingPersonalLock:async()=>({state:window.scenario==='same_lock'?'matching':['old_lock','fresh_old'].includes(window.scenario)&&!policySeen?'mismatch':'none',unresolvedElsewhere:true,personalAppConfirmed:policySeen&&!['denied','same_lock'].includes(window.scenario),body:JSON.stringify({operation:'lock'})}),snapshot:async()=>({active:false,healthSyncProgress:window.healthProgress}),addListener:async(_,fn)=>{listener=fn},forgetSession:async()=>window.calls.push('forget'),configure:async()=>{},request:async({path,method})=>{window.calls.push(path+(method==='POST'?':POST':''));if(path==='/api/auth/v1/sign-in')return answer({session:{principalId:principal,sessionId:session}});if(path==='/api/auth/v1/user-context')return answer({});if(path==='/api/runtime/v1/session-context'){if(method==='POST')bound=true;return answer({revision:window.scenario==='fresh_old'&&bound?2:1,endpoint:window.scenario==='fresh_old'&&!bound?null:window.scenario==='shared'?{...endpoint,privacyClass:'shared',ownership:'shared'}:endpoint})};if(path==='/api/runtime/v1/audience/personal-session'){policySeen=true;if(window.scenario==='reauth')return answer({code:'personal_session_reauthentication_required',message:'reauth'},403);return answer({enforced:true,personalSessionPolicy:'personalApp',personalSessionState:'authenticated',privateAllowed:true,principalId:principal,authenticatedSessionId:session,expiresAt:'2099-01-01T00:00:00.000Z',leaseId:null,leaseExpiresAt:null,revision:window.scenario==='fresh_old'&&bound?2:1})}if(path==='/api/admin/v1/assistants')return answer({assistants:[]});return answer({},503)},stop:async()=>{window.calls.push('stop');return {active:false}},cancelText:async()=>{},setBackgroundPolicy:async()=>{},start:async()=>{window.calls.push('start')}});`);await bundleWeb({entryPoints:[entry],outfile:join(dir,'bundle.js')});const html=await readFile(new URL('../web/index.html',import.meta.url),'utf8'),css=await readFile(new URL('../web/app.css',import.meta.url),'utf8');const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright'),browser=await chromium.launch({channel:'chrome',headless:true});t.after(async()=>{await browser.close();await rm(dir,{recursive:true,force:true})});
+window.app=installApp({healthSharingDevice:async()=>({supported:true,configured:true}),healthSavedRecoveryChoice:async()=>window.healthPreference??({state:'absent',choices:[]}),healthChooseRecords:async()=>{calls.push('chooseRecords');throw Error('Apple Health could not finish the permission request.')},healthInventory:async()=>{window.calls.push('healthInventory');return {sources:window.healthSources??[],unboundEnrollments:[]}},healthAssistantSharing:async({action,assistantId,enrollmentId})=>{window.calls.push('healthAccess:'+action);if(assistantId!=='fixture-assistant'||enrollmentId!=='fixture-phone')throw Error('Incorrect Health owner');return window.healthAccess},restoreConnection:async()=>{window.calls.push('restore');return {hasSession:window.scenario!=='fresh_old',authState:window.scenario==='fresh_old'?'needsSignIn':'authenticated',endpoint:'https://fixture.example',username:'fixture',account:{principalId:principal,sessionId:session}}},pendingPersonalLock:async()=>({state:window.scenario==='same_lock'?'matching':['old_lock','fresh_old'].includes(window.scenario)&&!policySeen?'mismatch':'none',unresolvedElsewhere:true,personalAppConfirmed:policySeen&&!['denied','same_lock'].includes(window.scenario),body:JSON.stringify({operation:'lock'})}),snapshot:async()=>({active:false,healthSyncProgress:window.healthProgress}),addListener:async(_,fn)=>{listener=fn},forgetSession:async()=>window.calls.push('forget'),configure:async()=>{},request:async({path,method})=>{window.calls.push(path+(method==='POST'?':POST':''));if(path==='/api/auth/v1/sign-in')return answer({session:{principalId:principal,sessionId:session}});if(path==='/api/auth/v1/user-context')return answer({});if(path==='/api/runtime/v1/session-context'){if(method==='POST')bound=true;return answer({revision:window.scenario==='fresh_old'&&bound?2:1,endpoint:window.scenario==='fresh_old'&&!bound?null:window.scenario==='shared'?{...endpoint,privacyClass:'shared',ownership:'shared'}:endpoint})};if(path==='/api/runtime/v1/audience/personal-session'){policySeen=true;if(window.scenario==='reauth')return answer({code:'personal_session_reauthentication_required',message:'reauth'},403);return answer({enforced:true,personalSessionPolicy:'personalApp',personalSessionState:'authenticated',privateAllowed:true,principalId:principal,authenticatedSessionId:session,expiresAt:'2099-01-01T00:00:00.000Z',leaseId:null,leaseExpiresAt:null,revision:window.scenario==='fresh_old'&&bound?2:1})}if(path==='/api/admin/v1/assistants')return answer({assistants:window.scenario==='allowed'?[{assistantId:'fixture-assistant'}]:[]});return answer({},503)},stop:async()=>{window.calls.push('stop');return {active:false}},cancelText:async()=>{},setBackgroundPolicy:async()=>{},start:async()=>{window.calls.push('start')}});`);await bundleWeb({entryPoints:[entry],outfile:join(dir,'bundle.js')});const html=await readFile(new URL('../web/index.html',import.meta.url),'utf8'),css=await readFile(new URL('../web/app.css',import.meta.url),'utf8');const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright'),browser=await chromium.launch({channel:'chrome',headless:true});t.after(async()=>{await browser.close();await rm(dir,{recursive:true,force:true})});
  for(const scenario of ['allowed','old_lock','fresh_old','same_lock','denied','reauth','shared']){const page=await browser.newPage({viewport:{width:390,height:844}});await page.setContent(html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/,'').replace(/<link rel="stylesheet"[^>]*>/,`<style>${css}</style>`).replace(/<script type="module"[^>]*><\/script>/,''));await page.evaluate(v=>{window.scenario=v;if(!crypto.randomUUID)crypto.randomUUID=()=> '00000000-0000-4000-8000-000000000004'},scenario);await page.addScriptTag({path:join(dir,'bundle.js')});await page.waitForFunction(()=>!document.querySelector('#connection button').disabled);
   if(scenario==='fresh_old'){await page.locator('#open-settings').click();await page.locator('#password').fill('synthetic');await page.locator('#connection button').click();await page.waitForFunction(()=>window.app.state.privateAllowed,null,{timeout:5000}).catch(async e=>{throw Error((await page.locator('#status').textContent())+' calls '+JSON.stringify(await page.evaluate(()=>window.calls)))});assert.equal(await page.evaluate(()=>window.calls.filter(x=>x==='/api/runtime/v1/audience/personal-session:POST').length),0,'old Lock is never replayed under successor');await page.locator('#open-settings').click();await page.locator('[data-page=account]>summary').click();assert.equal(await page.locator('#pending-lock-notice').isVisible(),true);}
   if (scenario === 'allowed' || scenario === 'shared') {
@@ -27,24 +27,63 @@ window.app=installApp({healthSharingDevice:async()=>({supported:true,configured:
    assert.equal(await health.locator('input').count(),2);
    assert.equal(await health.locator('button').count(),0);
    const share=health.getByRole('switch',{name:'Share Health records with my Assistant'});
+   const note=health.locator('#health-sharing-note'), progress=health.locator('#health-sync-progress');
+   const reopen=async()=>{
+     await page.locator('#settings-back').click();
+     await health.locator('summary').click();
+   };
+   await note.getByText('Assistant access is off.',{exact:false}).waitFor();
    await share.click();
    await page.getByText('Apple Health could not finish the permission request.').waitFor();
    assert.equal(await share.isChecked(),false);
    assert.equal(await page.evaluate(()=>window.calls.filter(x=>x==='chooseRecords').length),1);
    await page.evaluate(()=>{
      window.healthPreference={persistence:'savedEnabled',choices:[]};
+     window.healthSources=[{collector:'healthKit',currentEnrollmentId:'fixture-phone'}];
+     window.healthAccess={enabled:false};
      window.healthProgress={phase:'preparing'};
    });
    await page.locator('#close-settings').click();
-   await page.getByText('Syncing health records…',{exact:true}).waitFor({timeout:3000});
+   await page.getByText('Preparing health records…',{exact:true}).waitFor({timeout:3000});
    assert.ok(await page.locator('#health-sync-bar').isVisible());
+   await page.evaluate(()=>{window.healthProgress={phase:'idle'};});
    await page.locator('#open-settings').click();
    await health.locator('summary').click();
-   await page.getByText('This phone is syncing. Turn on sharing to use them in private chat.').waitFor();
+   await note.getByText('Assistant access is off. Your Assistant cannot use these records in private chat. Phone updates are on.').waitFor();
+   assert.equal(await share.isChecked(),false);
+   assert.equal(await share.evaluate(el=>el.indeterminate),false);
+   await progress.getByText('No active transfer reported.').waitFor();
+   assert.ok(await health.locator('progress').isHidden());
+   await page.evaluate(()=>window.emit({type:'healthSyncProgress',progress:{phase:'syncing',confirmed:12,total:48}}));
+   await progress.getByText('Health · 12 of 48 confirmed this pass').waitFor();
+   assert.equal(await health.locator('progress').evaluate(el=>el.value),12);
+   await health.getByLabel('Show sync progress').uncheck();
+   assert.ok(await progress.isHidden());
+   assert.equal(await share.isChecked(),false);
+   await health.getByLabel('Show sync progress').check();
+   await progress.getByText('No active transfer reported.').waitFor();
+   await page.evaluate(()=>{window.healthPreference={persistence:'savedDisabled',choices:[]};window.healthAccess={enabled:true};});
+   await reopen();
+   await note.getByText('Assistant access is on. Your Assistant can use these records in private chat. Phone updates are off.').waitFor();
+   assert.equal(await share.isChecked(),true);
+   await page.evaluate(()=>{window.healthAccess={};});
+   await reopen();
+   await note.getByText('Assistant access could not be verified.').waitFor();
+   assert.ok(await health.locator('#share-health').isHidden());
+   await page.evaluate(()=>{window.healthSources=[];window.healthPreference={persistence:'savedEnabled',choices:[]};});
+   await reopen();
+   await note.getByText('This phone’s Health source could not be verified.').waitFor();
+   assert.ok(await health.locator('#share-health').isDisabled());
+   await page.evaluate(()=>{window.healthPreference={persistence:'savedDisabled',choices:[]};});
+   await reopen();
+   await note.getByText('Phone updates are off.',{exact:false}).waitFor();
+   assert.ok(await share.isEnabled());
    assert.equal(await share.isChecked(),false);
    assert.equal(await page.evaluate(()=>window.calls.filter(x=>x==='chooseRecords').length),1);
+   assert.ok(await page.evaluate(()=>window.calls.filter(x=>x.startsWith('healthAccess:')).every(x=>x==='healthAccess:status')));
    await page.evaluate(()=>window.emit({type:'personalSession',active:false,reason:'synthetic withdrawal'}));
    assert.equal(await health.isHidden(),true);
+   assert.equal(await page.locator('#health-sync-label').textContent(),'');
   }
   if(scenario==='shared'){assert.equal(await page.evaluate(()=>window.app.state.privateAllowed),false);assert.match(await page.locator('#status').textContent(),/not your personal phone/);}
   if(scenario==='same_lock'){assert.equal(await page.evaluate(()=>window.app.state.privateAllowed),false);assert.match(await page.locator('#status').textContent(),/withdrawal.*unconfirmed/);}

@@ -6,7 +6,7 @@ const categoryLabels = new Map([
 // Only the display preference survives a session. Counts stay in memory.
 export function createHealthSyncProgress({panel, label, bar, toggle, snapshot, storage}) {
   const key = 'lifestream.showHealthSyncProgress';
-  let allowed = false, revision = 0, timer;
+  let view = null, revision = 0, timer;
   try {
     storage ??= window.localStorage;
     toggle.checked = storage.getItem(key) !== 'off';
@@ -17,20 +17,35 @@ export function createHealthSyncProgress({panel, label, bar, toggle, snapshot, s
     panel.hidden = true;
     label.textContent = '';
     bar.removeAttribute('value');
+    bar.removeAttribute('max');
+    bar.hidden = true;
+  }
+
+  function settingsStatus(message) {
+    if (view === 'settings' && toggle.checked) {
+      label.textContent = message;
+      panel.hidden = false;
+    }
   }
 
   function update(value) {
     revision++;
     clear();
-    if (!allowed || !toggle.checked) return;
-    if (value?.phase === 'reading') {
+    if (!view || !toggle.checked) return;
+    if (value?.phase === 'idle') {
+      settingsStatus('No active transfer reported.');
+      return;
+    } else if (value?.phase === 'reading') {
       label.textContent = 'Reading health records…';
     } else if (value?.phase === 'preparing') {
-      label.textContent = 'Syncing health records…';
+      label.textContent = 'Preparing health records…';
     } else {
       const {phase, confirmed, total} = value ?? {};
       if (!['syncing', 'finished'].includes(phase) || !Number.isSafeInteger(total) || total <= 0 ||
-          !Number.isSafeInteger(confirmed) || confirmed < 0 || confirmed > total) return;
+          !Number.isSafeInteger(confirmed) || confirmed < 0 || confirmed > total) {
+        settingsStatus('Sync activity is unavailable.');
+        return;
+      }
       const category = categoryLabels.get(value.category) ?? 'Health';
       if (confirmed === 0 && phase === 'syncing') {
         label.textContent = `${category} · Sending from ${total.toLocaleString()} queued`;
@@ -39,27 +54,35 @@ export function createHealthSyncProgress({panel, label, bar, toggle, snapshot, s
         bar.max = total;
         bar.value = confirmed;
       }
-      if (phase === 'finished') timer = setTimeout(clear, 1800);
+      if (phase === 'finished') timer = setTimeout(() => {
+        clear();
+        settingsStatus('Last sync pass finished.');
+      }, 1800);
     }
+    bar.hidden = false;
     panel.hidden = false;
   }
 
   function refresh() {
     const ticket = ++revision;
-    if (allowed && toggle.checked) {
+    clear();
+    if (view && toggle.checked) {
+      settingsStatus('Checking sync activity…');
       void snapshot().then(value => {
-        if (ticket === revision) update(value.healthSyncProgress);
-      }).catch(() => {});
-    } else clear();
+        if (ticket === revision) update(value?.healthSyncProgress);
+      }).catch(() => {
+        if (ticket === revision) update(null);
+      });
+    }
   }
 
   toggle.onchange = () => {
     try { storage.setItem(key, toggle.checked ? 'on' : 'off'); } catch { /* Use the preference for this launch. */ }
     refresh();
   };
-  return {update, setPrivate(value) {
-    if (allowed === value) return;
-    allowed = value;
+  return {update, setView(next) {
+    if (view === next) return;
+    view = next;
     refresh();
   }};
 }

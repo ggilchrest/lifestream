@@ -17,7 +17,7 @@ test('shows reading, real counts, then clears the finished batch', t => {
   t.mock.timers.enable({apis:['setTimeout']});
   const ui = screen();
   assert.equal(ui.toggle.checked, true);
-  ui.setPrivate(true);
+  ui.setView('home');
   ui.update({phase:'reading'});
   assert.equal(ui.label.textContent, 'Reading health records…');
   assert.equal(ui.bar.value, undefined);
@@ -34,7 +34,7 @@ test('shows reading, real counts, then clears the finished batch', t => {
 
 test('switching record types shows the new queue while awaiting its first receipt', () => {
   const ui = screen();
-  ui.setPrivate(true);
+  ui.setView('home');
   ui.update({...counts(12, 48), category:'sleep'});
   assert.equal(ui.label.textContent, 'Sleep · 12 of 48 confirmed this pass');
   ui.update({...counts(0, 3208), category:'heartRate'});
@@ -47,7 +47,7 @@ test('switching record types shows the new queue while awaiting its first receip
 
 test('turning off hides active progress and persists across launches', async () => {
   const storage = new Map(), ui = screen(storage);
-  ui.setPrivate(true);
+  ui.setView('home');
   ui.toggle.checked = false;
   ui.toggle.onchange();
   ui.snapshots[0]({healthSyncProgress:counts(2, 10)});
@@ -55,7 +55,7 @@ test('turning off hides active progress and persists across launches', async () 
   ui.update(counts(3, 10));
   assert.equal(ui.panel.hidden, true);
   const reopened = screen(storage);
-  reopened.setPrivate(true);
+  reopened.setView('home');
   assert.equal(reopened.toggle.checked, false);
   assert.equal(reopened.snapshots.length, 0);
   reopened.toggle.checked = true;
@@ -67,18 +67,38 @@ test('turning off hides active progress and persists across launches', async () 
 
 test('new events beat older snapshots and leaving a private session clears counts', async () => {
   const ui = screen();
-  ui.setPrivate(true);
+  ui.setView('home');
   ui.update(counts(4, 8));
   ui.snapshots[0]({healthSyncProgress:{phase:'idle'}});
   await Promise.resolve();
   assert.equal(ui.bar.value, 4);
-  ui.setPrivate(false);
+  ui.setView(null);
   ui.update(counts(8, 8));
   assert.equal(ui.label.textContent, '');
   assert.equal(ui.panel.hidden, true);
-  ui.setPrivate(true);
-  ui.setPrivate(false);
+  ui.setView('home');
+  ui.setView(null);
   ui.snapshots[1]({healthSyncProgress:counts(8, 8)});
   await Promise.resolve();
   assert.equal(ui.panel.hidden, true);
+});
+
+test('Health Settings reports native idle, unavailable and live activity independently of access', async () => {
+  const ui = screen();
+  ui.setView('home');
+  ui.setView('settings');
+  ui.snapshots[1]({healthSyncProgress:{phase:'idle'}});
+  ui.snapshots[0]({healthSyncProgress:counts(12, 48)});
+  await Promise.resolve();
+  assert.equal(ui.label.textContent, 'No active transfer reported.');
+  assert.equal(ui.bar.hidden, true);
+  ui.update(counts(6, 11));
+  assert.equal(ui.bar.hidden, false);
+  assert.equal(ui.bar.value, 6);
+  ui.update({});
+  assert.equal(ui.label.textContent, 'Sync activity is unavailable.');
+  assert.equal(ui.bar.value, undefined);
+  ui.setView(null);
+  assert.equal(ui.panel.hidden, true);
+  assert.equal(ui.label.textContent, '');
 });
