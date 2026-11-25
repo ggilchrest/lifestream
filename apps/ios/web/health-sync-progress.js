@@ -1,3 +1,8 @@
+const categoryLabels = new Map([
+  ['sleep', 'Sleep'], ['heartRate', 'Heart rate'], ['restingHeartRate', 'Resting heart rate'],
+  ['respiratoryRate', 'Respiratory rate'], ['hrvSDNN', 'Heart rate variability']
+]);
+
 // Only the display preference survives a session. Counts stay in memory.
 export function createHealthSyncProgress({panel, label, bar, toggle, snapshot, storage}) {
   const key = 'lifestream.showHealthSyncProgress';
@@ -26,9 +31,14 @@ export function createHealthSyncProgress({panel, label, bar, toggle, snapshot, s
       const {phase, confirmed, total} = value ?? {};
       if (!['syncing', 'finished'].includes(phase) || !Number.isSafeInteger(total) || total <= 0 ||
           !Number.isSafeInteger(confirmed) || confirmed < 0 || confirmed > total) return;
-      label.textContent = `Health records ${confirmed} / ${total}`;
-      bar.max = total;
-      bar.value = confirmed;
+      const category = categoryLabels.get(value.category) ?? 'Health';
+      if (confirmed === 0 && phase === 'syncing') {
+        label.textContent = `${category} · Sending from ${total.toLocaleString()} queued`;
+      } else {
+        label.textContent = `${category} · ${confirmed.toLocaleString()} of ${total.toLocaleString()} confirmed this pass`;
+        bar.max = total;
+        bar.value = confirmed;
+      }
       if (phase === 'finished') timer = setTimeout(clear, 1800);
     }
     panel.hidden = false;

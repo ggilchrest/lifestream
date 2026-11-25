@@ -19,7 +19,7 @@ async function fixture(t){
  window.ui=createCalendarReconnectView({root:document.querySelector('#root'),native,owner:()=>allowed&&visible?{version:ownerVersion,endpoint,revision}:null,current:o=>allowed&&visible&&o.version===ownerVersion&&o.endpoint===endpoint&&o.revision===revision});`);
  await build({entryPoints:[entry],outfile:join(dir,'bundle.js'),bundle:true,platform:'browser'});
  const browser=await chromium.launch({channel:'chrome'});t.after(async()=>{await browser.close();await rm(dir,{recursive:true,force:true})});
- const page=await browser.newPage();await page.route('**/*',route=>route.abort());await page.setContent('<div id="root"></div>');await page.addScriptTag({path:join(dir,'bundle.js')});return page;
+ const page=await browser.newPage();await page.route('**/*',route=>route.abort());await page.setContent('<div id="root"></div>');await page.addScriptTag({path:join(dir,'bundle.js')});await page.getByText('Sync calendars',{exact:true}).click();return page;
 }
 async function choose(page){await page.getByRole('button',{name:'Load saved Calendar connections',exact:true}).click();await page.getByLabel('Saved Calendar connection',{exact:true}).selectOption('0')}
 const reconnect=page=>page.getByRole('button',{name:'Reconnect saved connection',exact:true});
@@ -50,7 +50,7 @@ test('owner view selection ABA and duplicate fences discard stale results',{time
  for(const drift of ['duplicate','selection-ABA','owner','endpoint','revision','visibility','settings-exit']){
   await page.evaluate(()=>{ui.invalidate();catalog=structuredClone(template);calls=[];pending=[];wait=false;allowed=true;visible=true;window.transform=null});await choose(page);await page.evaluate(()=>wait=true);await reconnect(page).click();await page.waitForFunction(()=>pending.length===1);
   await reconnect(page).evaluate(b=>b.dispatchEvent(new Event('click')));assert.equal(await page.evaluate(()=>calls.filter(x=>x.operation==='reconnect').length),1,'duplicate suppressed');
-  await page.evaluate(drift=>{if(drift==='selection-ABA'){const s=document.querySelector('select');s.value='1';s.dispatchEvent(new Event('change'));s.value='0';s.dispatchEvent(new Event('change'))}if(drift==='owner')ownerVersion++;if(drift==='endpoint')endpoint+='-changed';if(drift==='revision')revision++;if(drift==='visibility')visible=false;if(drift==='settings-exit')ui.invalidate();pending[0].resolve(reply('reconnect',pending[0].request));wait=false},drift);
+  await page.evaluate(drift=>{if(drift==='selection-ABA'){const s=document.querySelector('[aria-label="Saved Calendar connection"]');s.value='1';s.dispatchEvent(new Event('change'));s.value='0';s.dispatchEvent(new Event('change'))}if(drift==='owner')ownerVersion++;if(drift==='endpoint')endpoint+='-changed';if(drift==='revision')revision++;if(drift==='visibility')visible=false;if(drift==='settings-exit')ui.invalidate();pending[0].resolve(reply('reconnect',pending[0].request));wait=false},drift);
   if(drift==='duplicate')await page.getByText('Saved connection reconnected. No data was collected or delivered.',{exact:true}).waitFor();
   else{await page.waitForTimeout(20);assert.equal(await page.getByText('Saved connection reconnected. No data was collected or delivered.',{exact:true}).count(),0,drift);if(drift!=='settings-exit')assert.equal(await deliver(page).isDisabled(),true,drift)}
  }

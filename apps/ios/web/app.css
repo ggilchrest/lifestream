@@ -69,3 +69,74 @@ body:not(:has(#settings-pane:not([hidden]))) main{width:100%;min-height:0;flex:1
 .health-sharing-row input[role=switch]:checked::before{transform:translateX(18px)}
 .health-sharing-row input[role=switch]:indeterminate::before{transform:translateX(9px)}
 .health-sharing-row input[role=switch]:disabled{opacity:.55}
+/* Settings uses a grouped index and shows one task at a time. */
+body:has(#settings-pane:not([hidden])) { background:var(--settings-bg); }
+:root { --settings-bg:#f4f5f8; --settings-card:#fff; --settings-action:#126747; --settings-line:#dfe2e6; }
+@media(prefers-color-scheme:dark) {
+  :root { --settings-bg:#111315; --settings-card:#212427; --settings-action:#94e7bd; --settings-line:#383c40; }
+}
+body:has(#settings-pane:not([hidden])) > header { display:none; }
+#settings-pane { max-width:540px; margin:0 auto; padding:12px 0 max(32px,env(safe-area-inset-bottom)); }
+#settings-pane .settings-heading {
+  display:grid; grid-template-columns:1fr auto; align-items:center; gap:8px; margin:0 0 22px;
+}
+#settings-pane .settings-heading h2 { grid-column:1; grid-row:2; font-size:clamp(1.85rem,8vw,2.25rem); letter-spacing:-.045em; line-height:1.15; }
+#settings-pane #settings-back { grid-column:1;grid-row:1;justify-self:start;color:var(--settings-action);padding-left:0;font-size:16px; }
+#settings-pane #close-settings { grid-column:2;grid-row:1; width:44px;min-width:44px;height:44px;min-height:44px;border-radius:50%;background:var(--settings-card);color:var(--muted); }
+#settings-pane .settings-section-title { margin:24px 12px 7px;font-weight:600;font-size:13px;color:var(--muted); }
+#settings-pane .settings-list { border-radius:17px; background:var(--settings-card); overflow:hidden; }
+#settings-pane .settings-group, #settings-pane .calendar-task { margin:0;padding:0;border:0;border-radius:0;background:transparent; }
+#settings-pane .settings-list>.settings-group:not([hidden])~.settings-group:not([hidden]),
+#settings-pane .calendar-task+.calendar-task { border-top:1px solid var(--settings-line); }
+#settings-pane :is(.settings-group,.calendar-task)>summary {
+  display:flex;align-items:center;gap:13px; min-height:58px;padding:8px 15px;font-size:1rem;font-weight:550; list-style:none;
+}
+#settings-pane :is(.settings-group,.calendar-task)>summary::-webkit-details-marker {display:none;}
+#settings-pane :is(.settings-group,.calendar-task)>summary::before {
+  content:"";display:block;flex:0 0 30px;height:30px;border-radius:8px;
+  background:var(--glyph) center/20px 20px no-repeat,var(--tile,#497566);
+}
+#settings-pane :is(.settings-group,.calendar-task)>summary::after {
+  content:"";width:7px;height:7px;flex:none;margin-left:auto;border:solid var(--muted);border-width:0 1.6px 1.6px 0;transform:rotate(-45deg);
+}
+#settings-pane .sharing-index:not(:has([data-page]:not([hidden]))),
+#settings-pane.in-detail .settings-section-title,
+#settings-pane.in-detail [data-page]:not(.current-page),
+#settings-pane.in-detail .settings-list:not(:has(.current-page)),
+#settings-pane.in-detail details.current-page>summary,
+#calendar-reconnect:has(.current-page) [data-task]:not(.current-page) {display:none;}
+#settings-pane.in-detail .settings-list { background:transparent;overflow:visible; }
+#settings-pane.in-detail .settings-list>.settings-group.current-page { border:0; }
+#settings-pane .current-page:not([data-page=calendar]) { background:var(--settings-card); border-radius:16px; padding:4px 16px 16px; }
+#calendar-reconnect { background:var(--settings-card);border-radius:17px;overflow:hidden; }
+#settings-pane #calendar-reconnect .calendar-task.current-page { border:0; padding:4px 16px 16px; }
+#settings-pane :is(label,p,fieldset,pre) { overflow-wrap:anywhere; }
+#settings-pane fieldset { min-width:0;border:1px solid var(--settings-line);border-radius:12px;margin:16px 0;padding:10px 12px; }
+#settings-pane p { font-size:15px;line-height:1.45; }
+#settings-pane .hint,#settings-pane [role=status] {color:var(--muted);font-size:14px;}
+#settings-pane p:empty { display:none; }
+#settings-pane .setting-options { margin:14px 0 0; padding:0 4px;border-top:1px solid var(--settings-line); }
+#settings-pane .setting-options>summary { min-height:44px;padding:10px 0;color:var(--settings-action);font-weight:550; }
+#calendar-reconnect button { margin:4px 4px 4px 0;max-width:100%;min-height:44px; }
+#settings-pane :is(summary,button,input,select):focus-visible {outline:2px solid var(--settings-action);outline-offset:-3px;}
+
+[data-page="profile"] { --tile:#5c7598; --glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2012a4%204%200%201%200%200-8%204%204%200%200%200%200%208z%20M4%2021a8%208%200%200%201%2016%200%22/%3E%3C/svg%3E"); }
+[data-page="voice"] { --tile:#337f68; --glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2010v4m4-8v12m5-15v18m5-15v12m4-8v4%22/%3E%3C/svg%3E"); }
+[data-page="appearance"] { --tile:#8267a5; --glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m12%203%202.4%206.6L21%2012l-6.6%202.4L12%2021l-2.4-6.6L3%2012l6.6-2.4z%22/%3E%3C/svg%3E"); }
+[data-page="health"] { --tile:#ba5071; --glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2020%204.5%2013C-1%207.5%206%200%2012%207c6-7%2013%200.5%207.5%206z%22/%3E%3C/svg%3E"); }
+[data-page="calendar"] { --tile:#ae6054; --glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%206h16v15H4z%20M4%2010h16%20M8%203v5m8-5v5m-9%207h3m3%200h3%22/%3E%3C/svg%3E"); }
+[data-page="account"] { --tile:#448375; --glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M6%2010h12v11H6z%20M8%2010V7a4%204%200%200%201%208%200v3m-4%204v3%22/%3E%3C/svg%3E"); }
+[data-page="diagnostics"] { --tile:#6577ae; --glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%2020V9m5%2011V4m5%2016v-8m5%208V7%22/%3E%3C/svg%3E"); }
+[data-task="select"] { --tile:#527f9d; --glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%206l2%202%204-4m2%203h10M3%2013l2%202%204-4m2%203h10M4%2020h17%22/%3E%3C/svg%3E"); }
+[data-task="sharing"] { --tile:#82699e; --glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M6%2010h12v11H6z%20M8%2010V7a4%204%200%200%201%208%200v3m-4%204v3%22/%3E%3C/svg%3E"); }
+[data-task="sync"] { --tile:#428171; --glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%2010a8%208%200%200%201%2014-4l2%202m0-5v5h-5M20%2014a8%208%200%200%201-14%204l-2-2m0%205v-5h5%22/%3E%3C/svg%3E"); }
+
+#settings-title:focus { outline:none; }
+#settings-pane.in-detail .settings-list>.current-page { border-top:0 !important; }
+#settings-pane .calendar-primary { display:block;width:100%;background:var(--settings-action);color:var(--settings-bg); }
+#settings-pane .calendar-choice { display:flex;gap:10px;align-items:center;min-height:44px;margin:0;font-size:16px;color:var(--text); }
+.calendar-choice input { width:20px;height:20px;accent-color:var(--settings-action); }
+#settings-pane .calendar-identity { margin:0 0 6px 30px;color:var(--muted);font-size:13px; }
+#settings-pane .calendar-identity summary { min-height:44px;align-content:center; }
+
+.calendar-choice .saved-calendar { flex:none;white-space:nowrap;margin-left:auto;color:var(--settings-action);font-size:.8125rem;font-weight:600; }

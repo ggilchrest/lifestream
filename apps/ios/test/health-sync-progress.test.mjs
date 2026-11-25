@@ -23,13 +23,26 @@ test('shows reading, real counts, then clears the finished batch', t => {
   assert.equal(ui.bar.value, undefined);
   ui.update(counts(18, 72));
   assert.equal(ui.panel.hidden, false);
-  assert.equal(ui.label.textContent, 'Health records 18 / 72');
+  assert.equal(ui.label.textContent, 'Health · 18 of 72 confirmed this pass');
   assert.deepEqual([ui.bar.value, ui.bar.max], [18, 72]);
   ui.update(counts(20, 72, 'finished'));
   t.mock.timers.tick(2000);
   assert.equal(ui.panel.hidden, true);
   ui.update(counts(3, 2));
   assert.equal(ui.panel.hidden, true);
+});
+
+test('switching record types shows the new queue while awaiting its first receipt', () => {
+  const ui = screen();
+  ui.setPrivate(true);
+  ui.update({...counts(12, 48), category:'sleep'});
+  assert.equal(ui.label.textContent, 'Sleep · 12 of 48 confirmed this pass');
+  ui.update({...counts(0, 3208), category:'heartRate'});
+  assert.equal(ui.label.textContent, `Heart rate · Sending from ${(3208).toLocaleString()} queued`);
+  assert.equal(ui.bar.value, undefined);
+  ui.update({...counts(0, 1472), category:'respiratoryRate'});
+  assert.equal(ui.label.textContent, `Respiratory rate · Sending from ${(1472).toLocaleString()} queued`);
+  assert.equal(ui.bar.value, undefined);
 });
 
 test('turning off hides active progress and persists across launches', async () => {
@@ -49,7 +62,7 @@ test('turning off hides active progress and persists across launches', async () 
   reopened.toggle.onchange();
   reopened.snapshots[0]({healthSyncProgress:counts(6, 10)});
   await Promise.resolve();
-  assert.equal(reopened.label.textContent, 'Health records 6 / 10');
+  assert.equal(reopened.label.textContent, 'Health · 6 of 10 confirmed this pass');
 });
 
 test('new events beat older snapshots and leaving a private session clears counts', async () => {

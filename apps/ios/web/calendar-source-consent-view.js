@@ -6,7 +6,7 @@ const valid=v=>bounded(v)&&v.schemaVersion==='1.0.0'&&['unavailable','held','rev
 export function createCalendarSourceConsentView({root,native,owner,current,onBegin=()=>{}}){
  const el=(tag,text)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node};
  const button=(text,fn)=>{const b=el('button',text);b.type='button';b.addEventListener('click',fn);return b};
- const message=el('p','Review collection and transmission consent independently. These choices do not grant an Assistant access to Calendar data.');message.setAttribute('role','status');message.setAttribute('aria-live','polite');
+ const message=el('p','Manage permission to collect and send events to your server.');message.setAttribute('role','status');message.setAttribute('aria-live','polite');
  const detail=el('div'),actions=el('div'),purpose=el('select'),validity=el('select'),expiry=el('input'),deadline=el('input'),confirm=el('input');
  purpose.setAttribute('aria-label','Source consent purpose');purpose.append(new Option('Choose a purpose',''),new Option('Collection','collection'),new Option('Transmission','transmission'));
  validity.setAttribute('aria-label','Consent validity');validity.append(new Option('Choose validity',''),new Option('Until revoked','untilRevoked'),new Option('Expires at a specified time','expiresAt'));
@@ -20,12 +20,31 @@ export function createCalendarSourceConsentView({root,native,owner,current,onBeg
  const revoke=button('Revoke selected consent',()=>perform('calendarRevokeSourceConsent',{reviewId:review.reviewId,purpose:purpose.value,humanConfirmed:true},'revoke'));
  const reviewConnection=button('Review connection',()=>perform('calendarReviewSourceConnection',{},'connectionReview'));
  const connect=button('Connect / Resume source',()=>perform('calendarConnectSource',{connectionId:connection.connectionId,humanConfirmed:true},'connect'));
- actions.append(purpose,validity,el('p','Expiry, if selected (your phone’s local time):'),expiry,el('p','Review deadline (your phone’s local time):'),deadline,request,confirmation,approve,revoke,connect);
- root.replaceChildren(el('h3','Calendar source consent'),message,load,recover,detail,actions,reviewConnection);
- function controls(){const busy=!!job;load.disabled=busy||held;recover.disabled=busy;reviewConnection.disabled=busy||held;purpose.disabled=validity.disabled=expiry.disabled=deadline.disabled=busy||held;confirm.disabled=busy||held;request.disabled=busy||held||!review||!!review.request;approve.disabled=busy||held||!review?.request||review.approvalAvailable!==true||!confirm.checked;revoke.disabled=busy||held||!review||!!review.request||!purpose.value||!confirm.checked;connect.disabled=busy||held||!connection||!confirm.checked}
+ const expiryLabel=el('label','Permission expires'),deadlineLabel=el('label','Review by');
+ expiryLabel.append(expiry);deadlineLabel.append(deadline);
+ actions.append(purpose,validity,expiryLabel,deadlineLabel,request,confirmation,approve,revoke,connect);
+ const recovery=el('details');recovery.className='setting-options';
+ recovery.append(el('summary','Recover a previous decision'),recover);
+ root.replaceChildren(message,load,reviewConnection,detail,actions,recovery);
+ function controls(){
+  const choosing=!!review&&!review.request;
+  actions.hidden=!review&&!connection;
+  purpose.hidden=!review;validity.hidden=deadlineLabel.hidden=request.hidden=!choosing;
+  expiryLabel.hidden=!choosing||validity.value!=='expiresAt';
+  confirmation.hidden=!(connection||review?.request||choosing&&purpose.value);
+  approve.hidden=!review?.request;revoke.hidden=!choosing||!purpose.value;connect.hidden=!connection;
+  if(held)recovery.open=true;
+  const busy=!!job;load.disabled=busy||held;recover.disabled=busy;reviewConnection.disabled=busy||held;purpose.disabled=validity.disabled=expiry.disabled=deadline.disabled=busy||held;confirm.disabled=busy||held;request.disabled=busy||held||!review||!!review.request;approve.disabled=busy||held||!review?.request||review.approvalAvailable!==true||!confirm.checked;revoke.disabled=busy||held||!review||!!review.request||!purpose.value||!confirm.checked;connect.disabled=busy||held||!connection||!confirm.checked}
  function render(){
   detail.replaceChildren();const s=review?.source??connection?.source;
-  if(s){for(const [key,label]of [['principalId','Signed-in person'],['endpointId','Phone endpoint'],['sourceNamespace','Source'],['installationId','Installation'],['environmentId','Environment'],['destinationId','Destination']])detail.append(el('p',`${label}: ${String(s[key]??'Unavailable')}`));detail.append(el('p',`Server: ${review?.serverOrigin??connection?.serverOrigin}`),el('p','Data: Calendar events. Assistant recipient: none. Recorded consent remains subject to current source, classification and retention policy. Nothing is read or sent by these actions.'))}
+  if(s){
+   detail.append(el('p',`Destination: ${String(s.destinationId??'Unavailable')}`),el('p',`Server: ${review?.serverOrigin??connection?.serverOrigin}`));
+   const info=el('details');info.className='setting-options';info.append(el('summary','Connection details'));
+   for(const [key,label] of [['principalId','Signed-in person'],['endpointId','Phone endpoint'],['sourceNamespace','Source'],['installationId','Installation'],['environmentId','Environment']]){
+    info.append(el('p',`${label}: ${String(s[key]??'Unavailable')}`));
+   }
+   detail.append(info,el('p','These permissions cover Calendar events sent to this server. They do not grant an Assistant access.'));
+  }
   for(const status of review?.statuses??[])detail.append(el('p',`${status.purpose}: ${status.consentState}${status.validity?.kind==='expiresAt'?` until ${status.validity.expiresAt}`:status.validity?.kind==='untilRevoked'?' until revoked':''}`));
   if(review?.request){const r=review.request;detail.append(el('p',`Review only: ${r.scope?.purpose}. ${r.validity?.kind==='untilRevoked'?'Until revoked':`Expires ${r.validity?.expiresAt}`}. Review deadline: ${r.reviewDeadlineAt}.`),el('p','Preparing this request did not approve consent. Check the separate confirmation box to approve this exact review.'))}
   if(connection)detail.append(el('p',`Source state: ${connection.sourceState}; collection paused: ${connection.collectionPaused}. Connect / Resume changes the remote source connection only. Local availability is checked afterward; system access and Sync remain separate.`),el('p',`Saved range: ${JSON.stringify(connection.syncWindow)}`));controls();
@@ -52,6 +71,6 @@ export function createCalendarSourceConsentView({root,native,owner,current,onBeg
  }
  const changed=()=>{confirm.checked=false;if(review?.request||connection){review=connection=null;message.textContent='The reviewed choices changed. Load a fresh review before deciding.';render()}else controls()};
  for(const node of [purpose,validity,expiry,deadline])node.addEventListener('change',changed);confirm.addEventListener('change',controls);
- function invalidate(){generation++;job=null;identity=review=connection=null;held=false;confirm.checked=false;purpose.value=validity.value='';expiry.value=deadline.value='';message.textContent='Review source consent explicitly for your current connection.';render()}
+ function invalidate(){generation++;job=null;identity=review=connection=null;held=false;confirm.checked=false;purpose.value=validity.value='';expiry.value=deadline.value='';message.textContent='Manage permission to collect and send events to your server.';render()}
  controls();return {invalidate};
 }

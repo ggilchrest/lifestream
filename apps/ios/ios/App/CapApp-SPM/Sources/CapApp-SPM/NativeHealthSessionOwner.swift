@@ -146,7 +146,7 @@ final class NativeHealthSessionOwner {
                             begin(run)
                             coordinator.sync(ticket: ticket, progress: { [self] confirmed, total in
                                 guard !run.terminal else { return }
-                                run.display = ["phase": "syncing", "confirmed": confirmed, "total": total]
+                                run.display = ["phase": "syncing", "category": ticket.category, "confirmed": confirmed, "total": total]
                                 progressChanged()
                             }, send: { [self] batch, done in
                                 let gate = NativeHealthDelivery.Currentness(refresh: { callback in self.refresh(run, callback) }, isCurrent: { self.valid(run, ticket) })

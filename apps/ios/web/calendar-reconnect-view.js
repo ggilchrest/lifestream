@@ -52,11 +52,23 @@ export function createCalendarReconnectView({root,native,owner,current}){
  const el=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n};
  const load=el('button','Load saved Calendar connections'),message=el('p','Review a connection already configured for this phone.'),labelNode=el('label','Saved Calendar connection'),select=el('select'),detail=el('div');
  load.type='button';load.className='secondary';select.setAttribute('aria-label','Saved Calendar connection');message.setAttribute('role','status');message.setAttribute('aria-live','polite');labelNode.append(select);labelNode.hidden=true;
- root.replaceChildren(el('p','Reconnect an existing saved connection, then deliver retained items separately. This does not collect new Calendar data or request system access.'),load,message,labelNode,detail);
- const localRoot=el('section');root.append(localRoot);
+ function task(key, title) {
+  const page=el('details'), body=el('div');
+  page.dataset.task=key; page.className='calendar-task';
+  page.append(el('summary',title),body); root.append(page);
+  return body;
+ }
+ root.replaceChildren();
+ const pickerRoot=task('select','Choose calendars');
+ const consentRoot=task('sharing','Sharing permissions');
+ const savedRoot=task('sync','Sync calendars');
+ savedRoot.append(load,message,labelNode,detail);
+ const setupOptions=el('details'),localRoot=el('div');
+ setupOptions.className='setting-options';
+ setupOptions.append(el('summary','Set up an approved connection'),localRoot);savedRoot.append(setupOptions);
  const local=createCalendarLocalSetupView({root:localRoot,native,owner,current,onBegin:()=>{consent.invalidate();invalidateSaved()}});
- const pickerRoot=el('section');root.append(pickerRoot);const picker=createCalendarSelectionView({root:pickerRoot,native,owner,current,onBegin:()=>{consent.invalidate();local.invalidate();invalidateSaved()}});
- const consentRoot=el('section');root.append(consentRoot);const consent=createCalendarSourceConsentView({root:consentRoot,native,owner,current,onBegin:()=>{local.invalidate();picker.invalidate();invalidateSaved()}});
+ const picker=createCalendarSelectionView({root:pickerRoot,native,owner,current,onBegin:()=>{consent.invalidate();local.invalidate();invalidateSaved()}});
+ const consent=createCalendarSourceConsentView({root:consentRoot,native,owner,current,onBegin:()=>{local.invalidate();picker.invalidate();invalidateSaved()}});
  let generation=0,selectionGeneration=0,catalog=null,identity=null,job=null,ready=false,uncertain=false,syncReview=null;
  const clear=()=>{selectionGeneration++;catalog=null;identity=null;ready=false;uncertain=false;syncReview=null;select.replaceChildren();labelNode.hidden=true;detail.replaceChildren()};
  const live=run=>run.generation===generation&&run.selection===selectionGeneration&&run.identity===identity&&run.catalog===catalog&&current(run.identity)&&select.value===run.index;
