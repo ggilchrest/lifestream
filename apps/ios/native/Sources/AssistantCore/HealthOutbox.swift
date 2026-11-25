@@ -424,6 +424,14 @@ public final class HealthOutbox {
         guard (1...64).contains(limit) else { throw HealthOutboxError.invalid }
         return Array(e.queue.lazy.filter { $0.type == ticket.type && !$0.quarantined }.prefix(limit).map(\.change))
     }
+    /// Read the delivery window and its full eligible count from the same snapshot.
+    func deliveryWindow(ticket: HealthCollectionTicket) throws -> (items: [HealthChange], next: UUID?, total: Int) {
+        lock.lock(); defer { lock.unlock() }
+        let enrollment = try checked(ticket, in: read())
+        let eligible = enrollment.queue.lazy.filter { $0.type == ticket.type && !$0.quarantined }
+        let window = Array(eligible.prefix(65))
+        return (window.prefix(64).map(\.change), window.dropFirst(64).first?.change.eventId, eligible.count)
+    }
     /// Only IDs durably accepted by the server for this still-current subject may be acknowledged.
     public func acknowledge(ticket: HealthCollectionTicket, eventIds: Set<UUID>) throws {
         lock.lock(); defer { lock.unlock() }

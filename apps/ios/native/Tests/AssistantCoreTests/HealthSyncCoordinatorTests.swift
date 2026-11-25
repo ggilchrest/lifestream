@@ -15,6 +15,34 @@ final class HealthSyncCoordinatorTests:XCTestCase {
   sync.sync(ticket:ticket,send:{body,finish in sent.append(body);finish(.success([.init(eventId:items[0].eventId,outcome:.accepted,code:.applied),.init(eventId:items[1].eventId,outcome:.duplicate,code:.applied),.init(eventId:items[2].eventId,outcome:.retryable,code:.unavailable)]))},completion:{done=$0});XCTAssertEqual(sent[0],sent[1]);XCTAssertEqual(done,.retry);XCTAssertEqual(try store.pending(ticket:ticket),[items[2]])
   sync.sync(ticket:ticket,send:{_,finish in finish(.success([.init(eventId:items[2].eventId,outcome:.rejected,code:.settingsChanged)]))},completion:{done=$0});XCTAssertEqual(done,.needsAttention);XCTAssertEqual(try store.pending(ticket:ticket),[]);XCTAssertEqual(try store.quarantinedCount(ticket:ticket),1);XCTAssertEqual(try store.quarantineCounts(ticket:ticket)[.settingsChanged],1)
  }
+
+ func testProgressCountsOnlySettledReceiptsAcrossWindowsAndRetries() throws {
+    let (store, ticket, items) = try setup(80)
+    let coordinator = HealthSyncCoordinator(outbox: store)
+    var confirmed = [Int](), totals = [Int]()
+    let progress: (Int, Int) -> Void = { confirmed.append($0); totals.append($1) }
+    var sent = 0
+    coordinator.sync(ticket: ticket, progress: progress, send: { data, reply in
+        guard let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let changes = body["changes"] as? [[String: Any]] else {
+            XCTFail("Expected encoded health changes")
+            reply(.failure(HealthSyncCoordinator.SyncError.invalidReceipt))
+            return
+        }
+        sent = changes.count
+        XCTAssertEqual(confirmed, [0])
+        reply(.success(items.prefix(sent).enumerated().map { index, item in
+            HealthDeliveryResult(eventId: item.eventId, outcome: index == 0 ? .duplicate : .accepted, code: .applied)
+        }))
+    }, completion: { XCTAssertEqual($0, .applied) })
+    XCTAssertGreaterThan(sent, 0)
+    XCTAssertLessThan(sent, items.count)
+    coordinator.sync(ticket: ticket, progress: progress, send: { _, reply in reply(.success([])) },
+                     completion: { XCTAssertEqual($0, .invalidReceipt) })
+    XCTAssertEqual(confirmed, [0, sent, sent])
+    XCTAssertEqual(totals, [80, 80, 80])
+    XCTAssertEqual(try store.pending(ticket: ticket).first?.eventId, items[sent].eventId)
+ }
  func testIncompleteDuplicateOrForeignReceiptNeverAcknowledges()throws{
   let (store,ticket,items)=try setup(2),sync=HealthSyncCoordinator(outbox:store);for results in [[HealthDeliveryResult(eventId:items[0].eventId,outcome:.accepted,code:.applied)], [.init(eventId:items[0].eventId,outcome:.accepted,code:.applied),.init(eventId:items[0].eventId,outcome:.duplicate,code:.applied)],[.init(eventId:items[0].eventId,outcome:.accepted,code:.applied),.init(eventId:UUID(),outcome:.accepted,code:.applied)]] {var outcome:HealthSyncCoordinator.Completion?;sync.sync(ticket:ticket,send:{_,finish in finish(.success(results))},completion:{outcome=$0});XCTAssertEqual(outcome,.invalidReceipt);XCTAssertEqual(try store.pending(ticket:ticket),items)}
  }

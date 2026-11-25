@@ -20,11 +20,17 @@ final class NativeHealthSessionOwner {
         let scope: Scope, completion: (Result<HealthSyncCoordinator.Completion, Error>) -> Void
         var pending = 0, terminal = false, cancelled = false, reported = false
         var snapshot: Snapshot?, ticket: HealthCollectionTicket?, sender: NativeHealthDelivery.Cancellation?
+        var display: [String: Any]?
         init(_ scope: Scope, _ completion: @escaping (Result<HealthSyncCoordinator.Completion, Error>) -> Void) { self.scope = scope; self.completion = completion }
     }
     private let transport: NativeTransport, outbox: HealthOutbox, collector: CollectorHooks
     private let policy: NativeHealthPolicy, delivery: NativeHealthDelivery, coordinator: HealthSyncCoordinator
     private var active: Run?
+    var progressChanged: () -> Void = {}
+    var progress: [String: Any]? {
+        guard let run = active, !run.terminal, localCurrent(run) else { return nil }
+        return run.display
+    }
     private var drainWaiters: [() -> Void] = []
     private var releaseScheduled = false
     var busy: Bool { active != nil }
@@ -67,6 +73,14 @@ final class NativeHealthSessionOwner {
     private func end(_ run: Run) { run.pending -= 1; release(run) }
     private func finish(_ run: Run, _ result: Result<HealthSyncCoordinator.Completion, Error>) {
         guard !run.terminal else { return }
+        switch result {
+        case .success(.applied), .success(.retry), .success(.needsAttention):
+            if run.display?["confirmed"] != nil {
+                run.display?["phase"] = "finished"
+            } else { run.display = nil }
+        default: run.display = nil
+        }
+        progressChanged()
         run.terminal = true; begin(run)
         let failed: Bool
         switch result {
@@ -85,6 +99,7 @@ final class NativeHealthSessionOwner {
         guard let run = active, !run.terminal else { return }
         begin(run) // Prevent synchronous stop/sender callbacks from releasing during cancellation.
         run.cancelled = true; run.terminal = true
+        progressChanged()
         outbox.invalidatePolicy(enrollment: run.scope.enrollment)
         stopCollector(run); run.sender?.cancel()
         report(run, .failure(Failure.cancelled)); end(run)
@@ -111,6 +126,10 @@ final class NativeHealthSessionOwner {
                     let ticket = try outbox.ticket(enrollment: scope.enrollment, type: scope.category)
                     guard ticket.humanId == scope.human, ticket.enrollmentId == scope.enrollment, ticket.category == scope.category else { throw Failure.stale }
                     run.ticket = ticket
+                    if collectFirst {
+                        run.display = ["phase": "reading"]
+                        progressChanged()
+                    }
                     begin(run); var collected = false
                     let afterCollection:(Result<Void,Error>)->Void = { [self] result in
                         let complete = { [self] in
@@ -123,7 +142,11 @@ final class NativeHealthSessionOwner {
                             guard case .success = check, valid(run, ticket) else { finish(run, .failure(Failure.stale)); return }
                             // Coordinator may settle local invalid items synchronously.
                             begin(run)
-                            coordinator.sync(ticket: ticket, send: { [self] batch, done in
+                            coordinator.sync(ticket: ticket, progress: { [self] confirmed, total in
+                                guard !run.terminal else { return }
+                                run.display = ["phase": "syncing", "confirmed": confirmed, "total": total]
+                                progressChanged()
+                            }, send: { [self] batch, done in
                                 let gate = NativeHealthDelivery.Currentness(refresh: { callback in self.refresh(run, callback) }, isCurrent: { self.valid(run, ticket) })
                                 let handle = delivery.send(ticket: ticket, batch: batch, currentness: gate, completion: done)
                                 run.sender = handle

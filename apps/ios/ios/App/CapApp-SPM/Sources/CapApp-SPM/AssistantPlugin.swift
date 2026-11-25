@@ -44,6 +44,11 @@ public final class AssistantPlugin: CAPPlugin,CAPBridgedPlugin {
     private var lifecycleObservers=[NSObjectProtocol](),continueWhenLocked=false
     private var auditTimer:Timer?,lastAuditActive=false,lastAuditContent=false,lastAuditStopping=false,auditStopping=false,lastAuditObservation:AuditDiscoveryObservation?
     private var personalLifecycle=AudienceLifecycle(),personalAccess=PersonalSessionAccess(),pendingPersonalLock:String?
+    private var visibleHealthProgress: [String: Any] {
+        guard UIApplication.shared.applicationState == .active, UIApplication.shared.isProtectedDataAvailable,
+              personalAccess.enabled, let progress = healthHost.runtime?.syncProgress else { return ["phase": "idle"] }
+        return progress
+    }
     private func withdrawPersonal(_ reason:String,notify:Bool=true){
         personalAccess.withdraw();voicePreview.stop();audioProbe.stop();text.stop();voice.stop(reason)
         if notify{notifyListeners("event",data:["type":"personalSession","active":false,"reason":reason])}
@@ -62,6 +67,10 @@ public final class AssistantPlugin: CAPPlugin,CAPBridgedPlugin {
         transport.auditStopConfirmed={[weak self] in guard let self else{return};self.auditStopping=false;self.publishAudit()}
         auditTimer=Timer.scheduledTimer(withTimeInterval:1,repeats:true){[weak self] _ in guard let self else{return};self.transport.audit.prune();self.publishAudit()}
         func observe(_ name:Notification.Name,_ action:@escaping()->Void){lifecycleObservers.append(NotificationCenter.default.addObserver(forName:name,object:nil,queue:.main){_ in action()})}
+        observe(NativeHealthRuntime.syncProgressChanged) { [weak self] in
+            guard let self else { return }
+            self.notifyListeners("event", data: ["type": "healthSyncProgress", "progress": self.visibleHealthProgress])
+        }
         observe(UIApplication.willResignActiveNotification){[weak self] in self?.voicePreview.stop();self?.personalLifecycle.resignActive()}
         observe(UIApplication.protectedDataWillBecomeUnavailableNotification){[weak self] in self?.legacyHealthWithdrawal();self?.personalLifecycle.protectedDataUnavailable()}
         observe(UIApplication.protectedDataDidBecomeAvailableNotification){[weak self] in self?.protectedDataAvailable()}
@@ -403,7 +412,7 @@ public final class AssistantPlugin: CAPPlugin,CAPBridgedPlugin {
         if let popover=sheet.popoverPresentationController{popover.sourceView=controller.view;popover.sourceRect=CGRect(x:controller.view.bounds.midX,y:controller.view.bounds.midY,width:1,height:1);popover.permittedArrowDirections=[]}
         sheet.completionWithItemsHandler={_,completed,_,_ in DiagnosticExportFile.finish(file);call.resolve(["shared":completed])};DispatchQueue.main.asyncAfter(deadline:.now()+3600){DiagnosticExportFile.finish(file)};controller.present(sheet,animated:true)
     }}
-    @objc public func snapshot(_ call:CAPPluginCall){perform(call){[self] in var value=voice.snapshot();value["connection"]=transport.connectionSnapshot();call.resolve(value)}}
+    @objc public func snapshot(_ call:CAPPluginCall){perform(call){[self] in var value=voice.snapshot();value["connection"]=transport.connectionSnapshot();value["healthSyncProgress"]=visibleHealthProgress;call.resolve(value)}}
     @objc public func routePicker(_ call:CAPPluginCall){perform(call){[self] in
         guard UIApplication.shared.applicationState == .active,let controller=bridge?.viewController,
               controller.viewIfLoaded?.window != nil else{call.reject("Open the app to choose a microphone.");return}

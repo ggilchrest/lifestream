@@ -59,3 +59,6 @@ body:not(:has(#settings-pane:not([hidden]))) main{width:100%;min-height:0;flex:1
 .connection-indicator[data-state=checking] .connection-lamp{background:#a96b00}
 .connection-indicator[data-state=connected] .connection-lamp{background:#23833c}
 @media(prefers-color-scheme:dark){.connection-lamp{background:#ff737e;border-color:#fff5}.connection-indicator[data-state=checking] .connection-lamp{background:#efba49}.connection-indicator[data-state=connected] .connection-lamp{background:#65d787}}
+#health-sync-progress{flex:none;margin:0 0 4px;color:var(--muted);font-size:.75rem;font-variant-numeric:tabular-nums}
+#health-sync-progress label{display:block;margin:0;line-height:1.3}
+#health-sync-bar{display:block;width:100%;height:3px;accent-color:var(--accent)}

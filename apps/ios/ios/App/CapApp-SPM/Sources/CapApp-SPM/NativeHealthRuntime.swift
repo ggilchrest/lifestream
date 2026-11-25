@@ -166,6 +166,16 @@ final class NativeHealthRuntime: NativeHealthPolicySuspending {
     private struct Context: Equatable {let epoch:Int,revision:Int,generation:Int,endpointRevision:Int;let subject:Data}
     private let outbox:HealthOutbox
     private var collector:HealthKitCollector?,sessionOwner:NativeHealthSessionOwner?
+    static let syncProgressChanged = Notification.Name("LifestreamHealthSyncProgressChanged")
+    var syncProgress: [String: Any]? {
+        guard current(), root.healthIOCurrent, !preservesPauseHold else { return nil }
+        if let progress = sessionOwner?.progress { return progress }
+        if let run = observationLocal, observationInterest === run.interest { return ["phase": "reading"] }
+        return nil
+    }
+    private func publishSyncProgress() {
+        NotificationCenter.default.post(name: Self.syncProgressChanged, object: self)
+    }
     private var retainedHealthSDK:(any NativeHealthSDK)?
     private let root:NativeSharedOutboxOwner
     private(set) var configuration:Configuration?
@@ -309,6 +319,7 @@ final class NativeHealthRuntime: NativeHealthPolicySuspending {
             }
         },stop:{collector.stop()},whenDrained:{collector.whenDrained($0)})
         sessionOwner=NativeHealthSessionOwner(transport:transport,outbox:outbox,collector:hooks)
+        sessionOwner?.progressChanged = { [weak self] in self?.publishSyncProgress() }
     }
     private func collectorDrained(_ done:@escaping()->Void){if let collector{collector.whenDrained(done)}else{done()}}
     private func sessionDrained(_ done:@escaping()->Void){if let sessionOwner{sessionOwner.whenDrained(done)}else{done()}}
@@ -1477,6 +1488,7 @@ extension NativeHealthRuntime {
         defer{if disableSaved{protectSavedHealthSelection(disable:true,requireRebind:false)}}
         guard observationInterest != nil else{return}
         observationInterest=nil
+        publishSyncProgress()
         // Never cancel an independent original manual sync merely to stop updates.
         // Full pause/withdrawal still uses the existing stronger collector stop.
         if let local=observationLocal{
@@ -1573,6 +1585,7 @@ extension NativeHealthRuntime {
         }
         i.catchup.remove(plan.category)
         let run=ObservationLocal(i,plan,finishSDK);run.allowExistingQueue=allowExistingQueue;observationLocal=run;observationBegin()
+        publishSyncProgress()
         collector.collect(ticket:ticket,plan:plan,handledChanges:{run.changeCount=$0},current:{[weak self,weak i] in guard let self,let i else{return false};return self.observationCurrent(i) && self.root.healthIOCurrent}){[self] result in
             guard observationLocal === run,!run.reported else{return};run.reported=true
             if case .committed(let more)=result{run.committed=true;if more{i.catchup.insert(plan.category)}}else{i.catchup.insert(plan.category)}
@@ -1588,7 +1601,7 @@ extension NativeHealthRuntime {
                    configuration?.matches(i.configuration)==true,ready,adopted,capturedTransportCurrent(){
                     try? root.resumeHealth()
                 }
-                observationLocal=nil;observationEnd()
+                observationLocal=nil;publishSyncProgress();observationEnd()
             }
         }
         // SDK submission has FULLY returned. This single logical publication

@@ -10,12 +10,14 @@ import {assertMobilePresentation} from './presentation-limits.js';
 import {MobilePresentationRuntime} from './mobile-presentation-runtime.js';
 import {createVoiceSettings} from './voice-settings.js';
 import {createHealthInventoryView} from './health-inventory-view.js';
+import {createHealthSyncProgress} from './health-sync-progress.js';
 import {createCalendarReconnectView} from './calendar-reconnect-view.js';
 
 // The view owns no microphone, PCM queue, credential storage or background worker.
 export function installApp(native) {
  const $=id=>document.getElementById(id);
  const connectionIndicator=createConnectionIndicator($('connection-indicator'),$('connection-label'));
+ const healthProgress=createHealthSyncProgress({panel:$('health-sync-progress'),label:$('health-sync-label'),bar:$('health-sync-bar'),toggle:$('show-health-progress'),snapshot:()=>native.snapshot()});
  let diagnosticEnabled=false,lastCameraDiagnostic=0;
  const log=event=>{if(diagnosticEnabled&&typeof native.logDiagnostic==='function')void native.logDiagnostic({event}).catch(()=>{});};
  const cameraLog=()=>{if(!diagnosticEnabled)return;const now=performance.now();if(now-lastCameraDiagnostic>=1000){lastCameraDiagnostic=now;log('camera_changed');}};
@@ -57,8 +59,9 @@ export function installApp(native) {
  const invalidateConnectionViews=()=>{healthInventory.invalidate();calendarConnections.invalidate()};
  const setContext=value=>{if(context?.endpoint?.endpointId!==value?.endpoint?.endpointId||context?.revision!==value?.revision)invalidateConnectionViews();context=value;};
  const clearDisplay=()=>{epoch++;appearanceLoad?.abort();appearanceLoad=null;renderer?.dispose();renderer=null;const canvas=$('avatar');canvas.replaceWith(canvas.cloneNode(false));$('transcript').replaceChildren();$('intro').hidden=false;};
- const protect=()=>{invalidateConnectionViews();personalAppConfirmed=false;voiceSettings.invalidate();log('privacy_protected');history?.invalidate();historyBusy=false;historyCursor=null;historyConversation=null;newChat=true;chatsLoaded=false;$('history-list').replaceChildren(new Option('[New voice chat]',''));$('history-older').hidden=true;$('history-status').textContent='';if(textState.busy)void native.cancelText().catch(()=>{});textGeneration++;textState={};$('text-input').value='';privateAllowed=false;expires=0;clearDisplay();catalog=null;$('animation-options').replaceChildren();$('physics-options').hidden=true;$('animation-selector-controls').hidden=true;$('animation-selector').replaceChildren();$('physics-status').textContent='Available for appearances with a supported physics profile.';$('animation-status').textContent='Only me activates when you open the app, start listening or send a message.';$('appearance').replaceChildren(new Option('Neutral reference','neutral'));for(let i=1;i<$('assistant').options.length;i++)$('assistant').options[i].textContent=`Assistant ${i}`;$('privacy').textContent='Unknown/shared · private context withheld';};
+ const protect=()=>{healthProgress.setPrivate(false);invalidateConnectionViews();personalAppConfirmed=false;voiceSettings.invalidate();log('privacy_protected');history?.invalidate();historyBusy=false;historyCursor=null;historyConversation=null;newChat=true;chatsLoaded=false;$('history-list').replaceChildren(new Option('[New voice chat]',''));$('history-older').hidden=true;$('history-status').textContent='';if(textState.busy)void native.cancelText().catch(()=>{});textGeneration++;textState={};$('text-input').value='';privateAllowed=false;expires=0;clearDisplay();catalog=null;$('animation-options').replaceChildren();$('physics-options').hidden=true;$('animation-selector-controls').hidden=true;$('animation-selector').replaceChildren();$('physics-status').textContent='Available for appearances with a supported physics profile.';$('animation-status').textContent='Only me activates when you open the app, start listening or send a message.';$('appearance').replaceChildren(new Option('Neutral reference','neutral'));for(let i=1;i<$('assistant').options.length;i++)$('assistant').options[i].textContent=`Assistant ${i}`;$('privacy').textContent='Unknown/shared · private context withheld';};
  const controls=()=>{
+  healthProgress.setPrivate(!!session && privateAllowed && !document.hidden);
   $('health-inventory-panel').hidden=!session||!privateAllowed;$('calendar-connections-panel').hidden=!session||!privateAllowed;
   const active=!!nativeState.active,busy=!!textState.busy||!!appearanceLoad,historyUnavailable=historyBusy||!!history?.isPending()||needsChatResolution;renderActivity(nativeState,textState);
   $('refresh').disabled=!!appearanceLoad;
@@ -290,7 +293,8 @@ export function installApp(native) {
   log('sign_out');connectionGeneration++;startGeneration++;starting=false;personalSnapshot=null;protect();await native.stop();let remoteFailed=false;try{await api('/api/auth/v1/sign-out',{});}catch{remoteFailed=true;}finally{session=null;nativeState={};$('retry-connection').hidden=true;await native.forgetSession();pane(true);status(remoteFailed?'Signed out on this phone. The server was unavailable; its session could not be revoked.':'Signed out. Server and account details are remembered.');}
  });
  const eventListener=native.addListener('event',event=>{
-  if(event.type==='connection'){connectionIndicator.update(event.connection)}
+  if(event.type==='healthSyncProgress'){healthProgress.update(event.progress)}
+  else if(event.type==='connection'){connectionIndicator.update(event.connection)}
   else if(event.type==='audit'){$('audit-indicator').hidden=event.active!==true&&event.stopping!==true;$('audit-indicator').textContent=event.stopping?'Diagnostic capture may still be stopping.':event.contentEnabled?'Diagnostic session enabled; foreground speech content and audio may be recorded.':'Diagnostic session enabled. Start foreground listening to capture.';}
   else if(event.type==='audioProbe'){probeActive=event.active===true;if(event.mode==='media'||event.mode==='conversation')probeMode=event.mode;$('probe-status').textContent=String(event.status??'').slice(0,500);$('probe-detail').textContent=String(event.diagnostics??'').slice(0,2000);$('probe-detail').hidden=!$('probe-detail').textContent;controls();}
   else if((event.type==='audience'||event.type==='personalSession')&&!event.active){startGeneration++;starting=false;if(event.authoritative===true||event.type==='personalSession'){userLocked=true;personalSnapshot=null;protect();}status(event.reason??'Conversation transport stopped.');controls();}
