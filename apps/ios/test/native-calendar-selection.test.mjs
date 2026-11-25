@@ -10,8 +10,22 @@ test('Calendar source bootstrap, metadata, bounded settings, composition and con
  for(const [mode,sites]of Object.entries(cases))for(const site of sites){count++;const r=spawnSync(join(temp,'probe'),[mode,site],{encoding:'utf8',timeout:15000,env:{...process.env,CALENDAR_SETTINGS_BUNDLE:producer,NATIVE_V4_OUTPUT:join(temp,'synthetic-v4.json'),NATIVE_WIRE_OUTPUT:join(temp,'native-scoped-request.json'),SHARE_FIXTURE:join(ios,'test/mobile-shared-item-fixtures/shared-item-pairs.json'),CALENDAR_FIXTURE:join(ios,'test/mobile-calendar-fixtures/delivery-receipts.json'),LLVM_PROFILE_FILE:join(temp,mode+'-'+site+'-%p.profraw')}});writeFileSync(join(temp,mode+'-'+site+'.log'),r.stdout+r.stderr);if(r.status!==0||!r.stdout.includes(mode+'/'+site+' passed'))failures.push(mode+'/'+site+': '+r.stdout+r.stderr);else t.diagnostic(mode+'/'+site+' passed')}
  if(before){assert.equal(count,11);assert.equal(failures.length,9);for(const [mode,sites]of Object.entries(causalCases))for(const site of sites){const failing=failures.some(s=>s.startsWith(mode+'/'+site+':'));assert.equal(failing,site!=='exact-byte'&&mode!=='source-save',mode+'/'+site)}t.diagnostic('Actual frozen f68 reproduced9 expected regressions; exact-byte and normal Save positives passed.');return}
  assert.equal(count,79);assert.deepEqual(failures,[]);
- const baseline=process.env.NATIVE_CALENDAR_BASELINE_HEALTH_OUTBOX;assert.ok(baseline,'Supply actual retained baseline HealthOutbox.swift for old-reader qualification');assert.equal(createHash('sha256').update(readFileSync(baseline)).digest('hex'),'05c0e115135108e8d67ed14c6c851ab74d9115b8e26460e1e4cfa306fc40d948');
- const oldRoot=join(temp,'actual-old-core');mkdirSync(oldRoot);copyFileSync(join(ios,'native/Package.swift'),join(oldRoot,'Package.swift'));cpSync(join(ios,'native/Sources'),join(oldRoot,'Sources'),{recursive:true});cpSync(join(ios,'native/Tests'),join(oldRoot,'Tests'),{recursive:true});copyFileSync(baseline,join(oldRoot,'Sources/AssistantCore/HealthOutbox.swift'));copyFileSync(baseline,join(temp,'actual-baseline-HealthOutbox.swift'));
+ const baseline = process.env.NATIVE_CALENDAR_BASELINE_HEALTH_OUTBOX;
+ assert.ok(baseline, 'Supply actual retained baseline HealthOutbox.swift for old-reader qualification');
+ const oldOutbox = readFileSync(baseline);
+ assert.equal(createHash('sha256').update(oldOutbox).digest('hex'), '05c0e115135108e8d67ed14c6c851ab74d9115b8e26460e1e4cfa306fc40d948');
+ // Production coordinator from 4fbe0443f94b0d110f798903d3341db242254bc9, before deliveryWindow.
+ const oldCoordinator = readFileSync(new URL('./fixtures/calendar-old-reader/HealthSyncCoordinator.swift', import.meta.url));
+ assert.equal(createHash('sha256').update(oldCoordinator).digest('hex'), '3941681cfacf380022896b0e0d84592a26ab1419c961b5bf3febb67467d14e33');
+ const oldRoot = join(temp, 'actual-old-core');
+ mkdirSync(oldRoot);
+ copyFileSync(join(ios, 'native/Package.swift'), join(oldRoot, 'Package.swift'));
+ cpSync(join(ios, 'native/Sources'), join(oldRoot, 'Sources'), {recursive: true});
+ cpSync(join(ios, 'native/Tests'), join(oldRoot, 'Tests'), {recursive: true});
+ const oldCore = join(oldRoot, 'Sources/AssistantCore');
+ writeFileSync(join(oldCore, 'HealthOutbox.swift'), oldOutbox);
+ writeFileSync(join(oldCore, 'HealthSyncCoordinator.swift'), oldCoordinator);
+ writeFileSync(join(temp, 'actual-baseline-HealthOutbox.swift'), oldOutbox);
  const oldBuild=spawnSync('xcodebuild',['-scheme','AssistantCore','-configuration','Debug','-destination','platform=macOS','-derivedDataPath',join(temp,'old-core-build'),'build'],{cwd:oldRoot,encoding:'utf8',timeout:120000,maxBuffer:16*1024*1024});writeFileSync(join(temp,'old-reader-build.log'),oldBuild.stdout+oldBuild.stderr);assert.equal(oldBuild.status,0,oldBuild.stderr+oldBuild.stdout.slice(-5000));
  const oldProducts=join(temp,'old-core-build/Build/Products/Debug'),oldMain=join(temp,'old-main.swift');writeFileSync(oldMain,`import Foundation
 import AssistantCore
