@@ -8,7 +8,7 @@ import AssistantCore
 @objc(AssistantPlugin)
 public final class AssistantPlugin: CAPPlugin,CAPBridgedPlugin {
     public let identifier="AssistantPlugin",jsName="Assistant"
-    public let pluginMethods=["healthPreparePhoneStorage","healthSharingDevice","healthChooseRecords","healthBackgroundChoice","healthSavedRecoveryChoice","healthRememberedChoice","healthObservationChoice","healthBeginConfiguredSettings","healthReviewConfiguredReturn","healthConfirmConfiguredReturn","healthResumeConfiguredReturn","healthRemoteSetupOptions","healthReviewRemoteSetup","healthApplyRemoteSetup","healthRecoverRemoteSetup","healthPrepareExistingSource","healthLoadSourceConsent","healthRequestSourceConsent","healthConfirmSourceConsent","healthRevokeSourceConsent","healthRecoverSourceConsent","calendarLoadSourceConsent","calendarRequestSourceConsent","calendarConfirmSourceConsent","calendarRevokeSourceConsent","calendarRecoverSourceConsent","calendarReviewSourceConnection","calendarConnectSource","calendarBootstrapReadPermission","calendarDiscoverSelections","calendarPrepareSelection","calendarSaveSelection","calendarReconcileSelection","calendarCollectionDetailsChoice","calendarCollectAndDeliverChoice","calendarRequestReadPermissionChoice","calendarLocalSetupChoices","calendarSetupExistingChoice","calendarSavedChoices","calendarReconnectChoice","calendarDeliverPendingChoice","healthSetupChoices","healthSetupChoice","healthRequestReadPermission","healthSyncChoice","calendarReconnect","calendarSetup","calendarCollectAndDeliver","calendarDeliverPending","calendarCancel","healthInventory","healthSetup","healthStatus","healthPauseCollection","healthResumeCollection","healthSync","configure","restoreConnection","forgetSession","saveSettings","request","setBackgroundPolicy","pendingPersonalLock","sendText","cancelText","start","stop","finishUtterance","snapshot","routePicker","startAudioProbe","stopAudioProbe","copyAudioDiagnostics","diagnosticsStatus","setDiagnosticsEnabled","logDiagnostic","clearDiagnostics","shareDiagnostics","shareAuditDiagnostics","startVoicePreview","stopVoicePreview","voicePreviewStatus"].compactMap{CAPPluginMethod(name:$0,returnType:CAPPluginReturnPromise)}
+    public let pluginMethods=["healthAssistantSharing","healthPreparePhoneStorage","healthSharingDevice","healthChooseRecords","healthBackgroundChoice","healthSavedRecoveryChoice","healthRememberedChoice","healthObservationChoice","healthBeginConfiguredSettings","healthReviewConfiguredReturn","healthConfirmConfiguredReturn","healthResumeConfiguredReturn","healthRemoteSetupOptions","healthReviewRemoteSetup","healthApplyRemoteSetup","healthRecoverRemoteSetup","healthPrepareExistingSource","healthLoadSourceConsent","healthRequestSourceConsent","healthConfirmSourceConsent","healthRevokeSourceConsent","healthRecoverSourceConsent","calendarLoadSourceConsent","calendarRequestSourceConsent","calendarConfirmSourceConsent","calendarRevokeSourceConsent","calendarRecoverSourceConsent","calendarReviewSourceConnection","calendarConnectSource","calendarBootstrapReadPermission","calendarDiscoverSelections","calendarPrepareSelection","calendarSaveSelection","calendarReconcileSelection","calendarCollectionDetailsChoice","calendarCollectAndDeliverChoice","calendarRequestReadPermissionChoice","calendarLocalSetupChoices","calendarSetupExistingChoice","calendarSavedChoices","calendarReconnectChoice","calendarDeliverPendingChoice","healthSetupChoices","healthSetupChoice","healthRequestReadPermission","healthSyncChoice","calendarReconnect","calendarSetup","calendarCollectAndDeliver","calendarDeliverPending","calendarCancel","healthInventory","healthSetup","healthStatus","healthPauseCollection","healthResumeCollection","healthSync","configure","restoreConnection","forgetSession","saveSettings","request","setBackgroundPolicy","pendingPersonalLock","sendText","cancelText","start","stop","finishUtterance","snapshot","routePicker","startAudioProbe","stopAudioProbe","copyAudioDiagnostics","diagnosticsStatus","setDiagnosticsEnabled","logDiagnostic","clearDiagnostics","shareDiagnostics","shareAuditDiagnostics","startVoicePreview","stopVoicePreview","voicePreviewStatus"].compactMap{CAPPluginMethod(name:$0,returnType:CAPPluginReturnPromise)}
     private let transport:NativeTransport
     private var sharedHealthConnection:NativeHealthConnectionOwner?
     private var applicationOwnsHealth=false
@@ -210,6 +210,30 @@ public final class AssistantPlugin: CAPPlugin,CAPBridgedPlugin {
     @objc public func healthSetupChoice(_ call:CAPPluginCall){healthChoice(call,.setup)}
     @objc public func healthRequestReadPermission(_ call:CAPPluginCall){healthChoice(call,.permission)}
     @objc public func healthSyncChoice(_ call:CAPPluginCall){healthChoice(call,.sync)}
+    @objc public func healthAssistantSharing(_ call: CAPPluginCall) { perform(call) { [self] in
+        guard calendarRegistration?.enabled == true, personalAccess.enabled, transport.effectiveIsSelf,
+              UIApplication.shared.applicationState == .active, let owner = transport.currentEffectiveOwner,
+              let enrollment = call.getString("enrollmentId"), UUID(uuidString: enrollment) != nil,
+              let assistant = call.getString("assistantId"), UUID(uuidString: assistant) != nil,
+              let action = call.getString("action"), ["status","allowCategory","enable","disable"].contains(action)
+        else { call.reject("Open Health settings with your Assistant selected."); return }
+        var request = ["operation":"phoneAssistantSharing","enrollmentId":enrollment,"assistantId":assistant,"action":action]
+        if action == "allowCategory" {
+            guard let category = call.getString("category"), ["SleepSegment","heartRate","restingHeartRate","respiratoryRate","hrvSDNN"].contains(category)
+            else { call.reject("Unknown Health category."); return }
+            request["category"] = category
+        }
+        guard let data = try? JSONSerialization.data(withJSONObject: request), let body = String(data:data, encoding:.utf8)
+        else { call.reject("Could not prepare Health sharing."); return }
+        transport.request("/api/runtime/v1/mobile-context-policy", method:"POST", body:body, internalHealthConsent:true, maxBytes:4096) { [self] result in
+            guard transport.effectiveIsSelf, let current = transport.currentEffectiveOwner,
+                  current.principal == owner.principal, current.session == owner.session,
+                  case .success(let (data,response)) = result, response.statusCode == 200,
+                  let value = (try? JSONSerialization.jsonObject(with:data)) as? [String:Bool]
+            else { call.reject("The server could not confirm Health sharing with this Assistant."); return }
+            call.resolve(value)
+        }
+    }}
     @objc public func healthPreparePhoneStorage(_ call: CAPPluginCall) { perform(call) { [self] in
         guard calendarRegistration?.enabled == true, personalAccess.enabled, transport.effectiveIsSelf,
               UIApplication.shared.applicationState == .active, let owner = transport.currentEffectiveOwner,

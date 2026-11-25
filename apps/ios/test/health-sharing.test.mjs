@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {enableHealthSharing, stopHealthSharing} from '../web/health-sharing.js';
+import {enableHealthSharing, stopHealthSharing, disableAssistantSharing} from '../web/health-sharing.js';
 
-const context = {endpointId:'phone', revision:7};
+const context = {endpointId:'phone', revision:7, assistantId:'assistant'};
 test('turning sharing off uses the current saved preference while the choice list is empty', async () => {
   const requests=[];
   await stopHealthSharing(async (_,input) => {
@@ -17,6 +17,10 @@ function fixture() {
   async function call(name, input = {}) {
     calls.push(name);
     switch (name) {
+      case 'healthAssistantSharing':
+        assert.equal(input.assistantId,context.assistantId);
+        if(input.action==='allowCategory')return {approved:true};
+        return {enabled:input.action==='enable'};
       case 'healthChooseRecords': return {completed:true};
       case 'healthSetupChoices': return prepared ? {state:'available',catalogId:'local',choices:[{choice:'device'}]} : {choices:[]};
       case 'healthInventory': return {sources:source ? [source] : []};
@@ -85,7 +89,7 @@ test('one switch opens Apple first, sets up a new phone and stops its saved upda
   assert.equal(calls.filter(c=>c==='healthApplyRemoteSetup').length,3);
   assert.equal(calls.filter(c=>c==='healthConfirmSourceConsent').length,10);
   assert.equal(calls.filter(c=>c==='healthRecoverSourceConsent').length,10);
-  assert.equal(calls.at(-1),'healthRememberedChoice');
+  assert.equal(calls.at(-1),'healthAssistantSharing');
   await stopHealthSharing(call);
   assert.equal((await call('healthSavedRecoveryChoice')).persistence,'savedDisabled');
   const offset=calls.length;
@@ -129,5 +133,32 @@ test('retry checks an approval left pending by the previous build', async () => 
   },context,()=>{});
   assert.equal(calls.slice(offset).filter(name=>name==='healthConfirmSourceConsent').length,9);
   assert.equal(calls.filter(name=>name==='healthRecoverSourceConsent').length,10);
-  assert.equal(calls.at(-1),'healthRememberedChoice');
+  assert.equal(calls.at(-1),'healthAssistantSharing');
+});
+
+test('the switch shares every selected category with the same Assistant and revokes access on stop', async () => {
+  const fixtureState = fixture(), requests = [];
+  const call = async (name,input) => {
+    if (name === 'healthAssistantSharing') {
+      requests.push(input);
+      if (input.action === 'disable') return {enabled:false};
+    }
+    return fixtureState.call(name,input);
+  };
+  await enableHealthSharing(call,context,()=>{});
+  assert.deepEqual(requests.filter(r=>r.action==='allowCategory').map(r=>r.category),
+    ['SleepSegment','heartRate','restingHeartRate','respiratoryRate','hrvSDNN']);
+  await disableAssistantSharing(call,context);
+  assert.equal(requests.at(-1).action,'disable');
+  assert.ok(requests.every(r=>r.assistantId===context.assistantId && r.enrollmentId==='id'));
+});
+test('a failed category grant cannot complete Assistant sharing', async () => {
+  const {call} = fixture();
+  let enabled = false;
+  await assert.rejects(enableHealthSharing(async (name,input) => {
+    if(name==='healthAssistantSharing' && input.category==='heartRate')return {approved:false};
+    if(name==='healthAssistantSharing' && input.action==='enable')enabled=true;
+    return call(name,input);
+  },context,()=>{}), /Could not share/);
+  assert.equal(enabled,false);
 });

@@ -4,8 +4,7 @@ function requireResult(condition, message) {
   if (!condition) throw Error(message);
 }
 
-// Switch intent covers collection and transmission to this account. Existing
-// Assistant access, memory, proactive use and other phones are separate.
+// The switch covers sync and private answers for the selected Assistant.
 async function phoneSource(call) {
   const inventory = await call('healthInventory');
   const mine = inventory.sources.filter(s => s.collector === 'healthKit' && s.currentEnrollmentId);
@@ -80,6 +79,21 @@ async function consent(call, source, category, purpose) {
   }
 }
 
+async function assistantSharing(call, context, source, action, category) {
+  requireResult(context.assistantId, 'Select your Assistant before sharing Health records.');
+  return call('healthAssistantSharing', {action, assistantId:context.assistantId,
+    enrollmentId:source.currentEnrollmentId, ...(category ? {category} : {})});
+}
+async function allowAnswers(call, context, source) {
+  if ((await assistantSharing(call,context,source,'status')).enabled) return;
+  for (const category of source.categories) {
+    const result = await assistantSharing(call,context,source,'allowCategory',category);
+    requireResult(result.approved === true, 'Could not share this Health category with your Assistant.');
+  }
+  requireResult((await assistantSharing(call,context,source,'enable')).enabled === true,
+    'Your Assistant could not confirm access to your Health records.');
+}
+
 export async function enableHealthSharing(call, context, notify) {
   notify('Choose what to share in Apple Health.');
   const access = await call('healthChooseRecords');
@@ -111,6 +125,9 @@ export async function enableHealthSharing(call, context, notify) {
   }
   const saved = await call('healthRememberedChoice', {...binding, operation:'remember', humanConfirmed:true, updatesEnabled:true});
   requireResult(saved.persistence === 'savedEnabled' && saved.updatesEnabled === true, 'This phone could not save the sharing preference.');
+  const currentSource = await phoneSource(call);
+  requireResult(currentSource, 'This phone could not find its Health source.');
+  await allowAnswers(call,context,currentSource);
 }
 
 export async function stopHealthSharing(call) {
@@ -128,6 +145,15 @@ export async function stopHealthSharing(call) {
     }
     requireResult(result.persistence === 'savedDisabled', 'This phone could not confirm sharing has stopped. Try again.');
   }
+}
+
+export async function disableAssistantSharing(call, identity) {
+  let stopError;
+  try { await stopHealthSharing(call); } catch (error) { stopError = error; }
+  const source = await phoneSource(call);
+  if (source) requireResult((await assistantSharing(call,identity,source,'disable')).enabled === false,
+    'The server could not confirm that Assistant access is off.');
+  if (stopError) throw stopError;
 }
 
 export function createHealthSharingView({panel, toggle, note, native, owner}) {
@@ -172,9 +198,9 @@ export function createHealthSharingView({panel, toggle, note, native, owner}) {
       requireResult(device.configured, 'This recovery build has Health disabled. Install the regular iPhone build.');
       if (change && desired) {
         await enableHealthSharing(call, identity, text => { note.textContent = text; });
-        note.textContent = 'Sharing is on. You can change record access in Apple Health.';
+        note.textContent = 'Your Assistant can use shared Health records in private chat.';
       } else if (change) {
-        await stopHealthSharing(call);
+        await disableAssistantSharing(call, identity);
         note.textContent = 'Sharing is off.';
       } else {
         const saved = await call('healthSavedRecoveryChoice', {operation:'status'});
@@ -191,11 +217,20 @@ export function createHealthSharingView({panel, toggle, note, native, owner}) {
           waitForStatus('The sharing setting is unavailable. Checking again…');
           return;
         }
-        note.textContent = toggle.checked ? 'Sharing is on.' : 'Share the past 30 days and new records. Your server keeps new imports for 30 days by default.';
+        const source = await phoneSource(call);
+        const answers = source && (await assistantSharing(call,identity,source,'status')).enabled === true;
+        if (toggle.checked && !answers) {
+          toggle.checked = false;
+          toggle.indeterminate = true;
+          note.textContent = 'This phone is syncing. Turn on sharing to use them in private chat.';
+          return;
+        }
+        if (answers) toggle.checked = true;
+        note.textContent = toggle.checked ? 'Your Assistant can use shared Health records in private chat.' : 'Share the past 30 days and new records. Your server keeps new imports for 30 days by default.';
       }
     } catch (error) {
       if (current()) {
-        if (change) toggle.checked = !desired;
+        if (change) { toggle.checked = !desired; toggle.indeterminate = true; }
         const info = change && desired ? await call('healthSharingDevice').catch(() => null) : null;
         if (current()) {
           if (!change && available) waitForStatus('The sharing setting is unavailable. Checking again…');
