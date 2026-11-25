@@ -1,3 +1,4 @@
+import {renderChatSurface} from '../../control-web/chat-surface.js';
 import {createConnectionIndicator} from './connection-indicator.js';
 import {persistMobileAppearanceSelection,commitMobileAppearance} from './mobile-appearance-transition.js';
 import {shareOptionalCapture} from './optional-capture-share.js';
@@ -252,17 +253,25 @@ export function installApp(native) {
  $('animation-auto').onclick=run(async()=>{log('animation_automatic');if(!renderer?.motionAction('cycle'))throw Error('Automatic animation is unavailable while speech is playing.');$('animation-status').textContent='Automatic animation resumed.';});
  $('text-input').oninput=controls;
  $('text-input').onkeydown=event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();if(!$('send-text').disabled)$('text-chat').requestSubmit();}};
+ let nextItemRevision,sourceSurface;
  $('text-chat').onsubmit=run(async()=>{
-  const prompt=$('text-input').value.trim();if(!prompt||textState.busy)return;
+  const source=sourceSurface,itemRevision=nextItemRevision,prompt=$('text-input').value.trim();if(!prompt||textState.busy)return;
   if(!session||!$('assistant').value||nativeState.active||starting||restoring)throw Error('Stop listening and select an Assistant before sending text.');
   const ticket=++textGeneration,trace=crypto.randomUUID(),assistantId=$('assistant').value,owner=session;
   textState={busy:true};controls();status('Checking the current conversation…');
   try{const current=await activatePersonalSession(()=>ticket===textGeneration&&!!session&&!document.hidden);if(!current||ticket!==textGeneration||!privateAllowed||document.hidden)return;await ensureChat(()=>ticket===textGeneration&&!!session&&!document.hidden);if(ticket!==textGeneration||!privateAllowed||document.hidden)return;
    message('user',prompt,trace);$('text-input').value='';status('Sending text to your Assistant…');refreshDisplay();
-   const result=await native.sendText({assistantId,userInput:prompt,trace});
+   const result=await native.sendText({assistantId,userInput:prompt,trace,...(itemRevision?{itemRevision}:{})});
    if(ticket!==textGeneration||!privateAllowed||document.hidden)return;
    if(result.trace!==trace||typeof result.text!=='string')throw Error('The text response did not match this message.');
-   message('assistant',result.text,trace);textState={complete:true};chatsLoaded=false;status('Text reply received. Microphone remains off.');
+   message('assistant',result.text,trace);
+   const render=target=>renderChatSurface(target,result.surface,(name,item,revision)=>{
+    if(textState.busy||session!==owner||!privateAllowed||document.hidden||$('assistant').value!==assistantId)return;
+    sourceSurface=target;nextItemRevision=revision;$('text-input').value=name==='chat'?item:name+' '+item+(name==='snooze'?' for 10 minutes':'');
+    $('text-chat').requestSubmit();nextItemRevision=undefined;sourceSurface=undefined;
+   });
+   if(result.surface){render($('transcript').lastElementChild.lastElementChild);if(source?.isConnected)render(source);}
+   textState={complete:true};chatsLoaded=false;status('Text reply received. Microphone remains off.');
   }catch(error){if(ticket!==textGeneration)return;
    // Only the native client's recognized pre-inference rejection is safe to
    // return to the draft. Unknown failures may already have been admitted.
@@ -302,7 +311,7 @@ export function installApp(native) {
    nativeState=event.state;$('route').textContent=event.state.route||'System route';if(!textState.busy)status(event.state.phase);
    renderer?.applyState(event.state.playing?'speaking':event.state.active?'listening':'idle');
    if(event.state.authorizationLost===true){userLocked=true;personalSnapshot=null;protect();}controls();
-  }else if(event.type==='transcript')message('user',event.text,event.trace,false,true);else if(event.type==='textDelta')message('assistant',event.text,event.trace,true);
+  }else if(event.type==='transcript'){message('user',event.text,event.trace,false,true);if(event.reviewListRequest===true&&privateAllowed&&!document.hidden&&!$('text-input').value)$('text-input').value=event.text;}else if(event.type==='textDelta')message('assistant',event.text,event.trace,true);
  });
  // Reconcile after listener registration so early native restore events are not lost.
  void Promise.resolve(eventListener).then(()=>native.snapshot()).then(value=>connectionIndicator.update(value.connection)).catch(()=>connectionIndicator.unavailable());

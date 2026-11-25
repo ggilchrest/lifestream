@@ -1,3 +1,4 @@
+import {listCommand} from './personal-lists.ts';
 import {startVisualTurnEvidence,type VisualTurnRecorder,type VisualTurnOutcome} from './visual-turn-evidence.ts';
 import {AudioPlayback} from "./audio-playback.ts";
 import { randomUUID } from "node:crypto";
@@ -233,7 +234,7 @@ export class AudioSession {
         if (stt.kind === "terminal" && stt.outcome !== "succeeded") throw new Error(`Speech recognition ${stt.outcome}; check the selected STT service and retry this turn.`);
         if (stt.kind !== "data" || stt.payload.type !== "committed" || transcript !== undefined) continue;
         transcript = stt.payload.text;
-        send(this.socket, { type: "transcript", interactionTraceId: traceId, state: "committed", text: stt.payload.text });
+        send(this.socket, { type: "transcript", interactionTraceId: traceId, state: "committed", text: stt.payload.text,...(listCommand(stt.payload.text)?{reviewListRequest:true}:{}) });
       }
       // Finish recognition and its transport/deadline before starting the
       // independently bounded inference/speech phases. Never emit a completed
@@ -283,6 +284,14 @@ export class AudioSession {
         const generation = (async () => {
         this.invalidateIfStale();if(controller.signal.aborted)throw new Error('audio turn interrupted');
         if (this.currentInput?.admitWorld && !this.currentInput.admitWorld()) throw new Error("World context expired before speech inference admission");
+        if(listCommand(transcript)){
+          // This endpoint has no verified speaker identity. The authenticated user
+          // can submit the recognized draft through the ordinary chat operation.
+          answer='Review the recognized list request and send it from your personal chat.';
+          if(!admissionCurrent())throw Error('Voice scope changed.');
+          response(this.socket,traceId,this.sequence++,{type:'textDelta',text:answer});
+          await queue.put(answer);queue.close();return;
+        }
         if(!controller.signal.aborted&&current()&&(!outputLease||outputLease.current())){try{const catalog=this.deps.acknowledgment?.(request);if(catalog?.clipIds.length){playback?.emittedOutput();send(this.socket,{type:'acknowledgment',interactionTraceId:traceId,catalog});}}catch{/* Optional cached presentation cannot fail an ordinary reply. */}}
         try{this.currentInput?.onInferenceRequest?.(prompt);}catch{/* Optional inclusion bookkeeping is not speech authority. */}
         this.invalidateIfStale();

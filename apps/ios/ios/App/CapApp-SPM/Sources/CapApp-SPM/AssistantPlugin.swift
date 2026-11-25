@@ -334,7 +334,9 @@ public final class AssistantPlugin: CAPPlugin,CAPBridgedPlugin {
         guard UIApplication.shared.applicationState == .active,personalAccess.enabled,
               let assistant=call.getString("assistantId"),let prompt=call.getString("userInput"),let trace=call.getString("trace") else{call.reject("Open the app and enter a message for the selected Assistant.");return}
         let turn=diagnosticLog.nextTurn();diagnosticLog.record(.textStart,turn:turn);audioProbe.stop();voice.stop("Sending text; microphone is off.")
-        text.send(["assistantId":assistant,"userInput":prompt,"trace":trace],diagnosticTurn:turn){result in
+        var input:[String:Any]=["assistantId":assistant,"userInput":prompt,"trace":trace]
+        if let revision=call.getInt("itemRevision"){input["itemRevision"]=revision}
+        text.send(input,diagnosticTurn:turn){result in
             guard UIApplication.shared.applicationState == .active else{call.reject("Text response stopped because the display is locked.");return}
             switch result{
             case .success(let reply):self.diagnosticLog.record(.textDone,turn:turn);call.resolve(reply)

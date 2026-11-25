@@ -264,7 +264,7 @@ final class NativeVoice {
             if orderedInput.isResolved(final.inputSequence) { return }
             guard orderedInput.acceptFinal(sequence:final.inputSequence,revision:final.revision) else{throw VoiceError.invalidMessage}
             let event=VoiceDiagnostic.transcript(final.text);diagnosticTurn?(event,nil,inFlightDiagnostics[final.inputSequence])
-            if event == .voiceTranscribed { activity.transcribed();publish();emit(["type":"transcript","role":"user","text":final.text,"trace":final.trace]) };return
+            if event == .voiceTranscribed { activity.transcribed();publish();emit(["type":"transcript","role":"user","text":final.text,"trace":final.trace,"reviewListRequest":m["reviewListRequest"] as? Bool ?? false]) };return
         }
         if reply.retired.contains(trace){
             if type=="response",let payload=event?["payload"] as? [String:Any],payload["type"] as? String=="terminal",let turn=auditTurns[trace],let labels=transport.audit.correlation(){_=transport.audit.record(.retiredTerminal,session:labels.session,attempt:labels.attempt,turn:turn)}

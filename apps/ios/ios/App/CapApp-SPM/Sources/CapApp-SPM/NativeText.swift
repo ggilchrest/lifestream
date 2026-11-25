@@ -40,7 +40,8 @@ final class NativeText {
               let raw=input["userInput"] as? String,raw.count<=16000 else{done(.failure(NativeTextError.invalidInput));return}
         let text=raw.trimmingCharacters(in:.whitespacesAndNewlines)
         guard !text.isEmpty else{done(.failure(NativeTextError.invalidInput));return}
-        var body:[String:Any]=["assistantId":assistant,"userInput":text]
+        var body:[String:Any]=["assistantId":assistant,"userInput":text,"requestId":trace,"timeZone":TimeZone.current.identifier]
+        if let revision=input["itemRevision"] as? Int { body["itemRevision"]=revision }
         if let relationship=input["relationshipId"] {
             guard let id=relationship as? String,UUID(uuidString:id) != nil else{done(.failure(NativeTextError.invalidInput));return}
             body["relationshipId"]=id
@@ -58,7 +59,9 @@ final class NativeText {
                 guard response.statusCode==200 else{throw Self.httpError(data,status:response.statusCode,mimeType:response.mimeType)}
                 guard response.mimeType=="text/event-stream" else{throw NativeTextError.invalidStream}
                 let reply=try Self.parse(data,assistant:assistant);self.diagnostic?("text_stream_complete",nil,diagnosticTurn)
-                return ["trace":trace,"interactionTraceId":reply.trace,"text":reply.text]
+                var result:[String:Any]=["trace":trace,"interactionTraceId":reply.trace,"text":reply.text]
+                if let surface=reply.surface { result["surface"]=surface }
+                return result
             }}}
             self.task=nil;let callback=self.completion;self.completion=nil;callback?(answer)
         }
@@ -77,11 +80,11 @@ final class NativeText {
         }
     }
 
-    private static func parse(_ data:Data,assistant:String) throws -> (trace:String,text:String) {
+    private static func parse(_ data:Data,assistant:String) throws -> (trace:String,text:String,surface:[[String:Any]]?) {
         guard data.count<=262144,let raw=String(data:data,encoding:.utf8) else{throw NativeTextError.invalidStream}
         let source=raw.replacingOccurrences(of:"\r\n",with:"\n")
         guard source.hasSuffix("\n\n") else{throw NativeTextError.invalidStream}
-        var trace:String?,text="",completed=false
+        var trace:String?,text="",completed=false,surface:[[String:Any]]?
         for block in source.components(separatedBy:"\n\n") where !block.isEmpty {
             var event="",parts=[String]()
             for line in block.components(separatedBy:"\n") {
@@ -99,6 +102,9 @@ final class NativeText {
                 guard let trace,payload["interactionId"] as? String==trace,let delta=payload["text"] as? String,
                       text.utf8.count+delta.utf8.count<=64000 else{throw NativeTextError.invalidStream}
                 text += delta
+            case "message.surface":
+                guard let trace,payload["interactionId"] as? String==trace,let messages=payload["messages"] as? [[String:Any]] else{throw NativeTextError.invalidStream}
+                surface=messages
             case "interaction.completed":
                 guard let trace,payload["interactionId"] as? String==trace else{throw NativeTextError.invalidStream}
                 completed=true
@@ -109,6 +115,6 @@ final class NativeText {
             }
         }
         guard let trace,completed else{throw NativeTextError.invalidStream}
-        return (trace,text)
+        return (trace,text,surface)
     }
 }

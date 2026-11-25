@@ -51,3 +51,15 @@ test('confirmed local stop still waits for an in-flight provider to settle',asyn
  const running=f.turn();await started;await tick();await f.send({type:'interrupt',interactionTraceId:f.trace(),reason:'Stop'});await f.send({type:'playbackSettled',interactionTraceId:f.trace(),outcome:'stopped',receivedSamples:4800});await running;
  assert.ok(f.owners.currentLease(f.sessionId));assert.equal(f.session.outputAvailable,false);complete();await tick();assert.equal(f.owners.currentLease(f.sessionId),undefined);assert.equal(f.session.outputAvailable,true);f.session.close();
 });
+
+test('a dictated list change produces a reviewable draft and bypasses inference for an unidentified speaker',async t=>{
+ const f=await fixture();t.after(()=>f.session.close());
+ const text='Add wood glue to my shopping list';
+ f.deps.stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text}};yield {kind:'terminal',outcome:'succeeded'};}};
+ let inferenceCalls=0;
+ f.deps.inference={async *generate(){inferenceCalls++;yield {kind:'done'};}};
+ await f.turn();
+ assert.equal(inferenceCalls,0);
+ assert.ok(f.events.some(e=>e.type==='transcript'&&e.text===text&&e.reviewListRequest===true));
+ assert.ok(f.events.some(e=>e.event?.payload?.type==='textDelta'&&e.event.payload.text.includes('personal chat')));
+});
