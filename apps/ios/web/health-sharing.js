@@ -50,9 +50,25 @@ async function prepareSource(call) {
 }
 
 function sharingPermission(review, input, purpose) {
-  const status = review.statuses?.find(row => row.purpose === purpose);
-  requireResult(review.state === 'review' && status && review.source?.sourceNamespace === input.sourceNamespace &&
-    review.source.enrollmentId === input.enrollmentId && review.source.category === input.category, 'The server could not verify Health sharing permissions.');
+  if (review?.state !== 'review') {
+    const reasons = {
+      original_pending:'An earlier Health permission decision is still being checked.',
+      original_owner_unavailable:'The previous Health setup is still in use or unavailable.',
+      original_context_unavailable:'The current phone session could not be verified for Health setup.',
+      inventory_unavailable:'Health permission review failed while checking the phone’s source (inventory).',
+      descriptor_unavailable:'Health permission review failed while requesting the source details (descriptor).',
+      descriptor_mismatch:'Health permission review found source details that do not match this phone (descriptor mismatch).',
+      status_unavailable:'Health permission review failed while checking recorded permissions (status).',
+      review_changed:'Health permissions changed during review. Try again.',
+      consent_unavailable:'The Health permission review is unavailable. No new approval was confirmed.',
+      context_changed:'The phone session changed while checking Health permissions.'
+    };
+    throw Error(reasons[review?.reason] ?? 'The Health permission review is unavailable. No new approval was confirmed.');
+  }
+  const status = Array.isArray(review.statuses) ? review.statuses.find(row => row?.purpose === purpose) : null;
+  requireResult(status && review.source?.sourceNamespace === input.sourceNamespace &&
+    review.source.enrollmentId === input.enrollmentId && review.source.category === input.category,
+    'The Health permission review did not match this phone’s selected source.');
   return status.consentState;
 }
 
@@ -60,7 +76,9 @@ async function consent(call, source, category, purpose) {
   const input = {sourceNamespace:source.sourceNamespace, enrollmentId:source.currentEnrollmentId, category};
   let review = await call('healthLoadSourceConsent', input);
   if (review.state === 'held') {
-    await call('healthRecoverSourceConsent');
+    const recovered = await call('healthRecoverSourceConsent');
+    if (recovered?.state === 'review') throw Error('An earlier Health permission request needs review before setup can continue.');
+    if (recovered?.state !== 'recorded') sharingPermission(recovered, input, purpose);
     review = await call('healthLoadSourceConsent', input);
   }
   if (sharingPermission(review, input, purpose) === 'valid') return;
@@ -147,7 +165,15 @@ async function finishPhoneSharing(call, context, choices, source, selected) {
   const choice = choices.choices[0], binding = {catalogId:choices.catalogId, choice:choice.choice};
   if (choice.localSetup !== 'configuredLocalConfirmed') {
     const setup = await call('healthSetupChoice', binding);
-    requireResult(setup.setupOutcome === 'prepared', 'This phone could not open its Health sync store.');
+    const setupProblems = {
+      busy:'Health setup is still busy. No new setup was started.',
+      source_unavailable:'The selected Health source could not be confirmed.',
+      context_changed:'The phone session or Health connection changed during setup.',
+      not_started:'Health setup could not start.',
+      context_unavailable:'Open Health settings in your private phone session.',
+      operation_unconfirmed:'Health setup could not be confirmed. No reset was attempted.'
+    };
+    requireResult(setup.setupOutcome === 'prepared', setupProblems[setup.reason] ?? 'Health setup could not be confirmed. No reset was attempted.');
   }
   const saved = await call('healthRememberedChoice', {...binding, operation:'remember', humanConfirmed:true, updatesEnabled:true});
   requireResult(saved.persistence === 'savedEnabled' && saved.updatesEnabled === true, 'This phone could not save the sharing preference.');

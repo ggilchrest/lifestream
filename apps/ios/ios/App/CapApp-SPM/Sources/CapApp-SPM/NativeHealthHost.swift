@@ -557,7 +557,29 @@ extension NativeHealthHost {
                 run.invoked=true
                 performSetup(selection:record.descriptor.selector,action:record.descriptor.localSetup,expectedSourceNamespace:record.descriptor.namespace,authorized:run){[self] result in
                     run.runtime=runtime
-                    switch result{case .success:finish("prepared","ready");case .failure:finish("notConfirmed","operation_unconfirmed")}
+                    switch result {
+                    case .success: finish("prepared","ready")
+                    case .failure(let error):
+                        // Closed, transient messages only: never export records,
+                        // identifiers, paths, server responses or error strings.
+                        if run.isCurrent(), transport.healthSharingProblem == nil {
+                            switch error {
+                            case HealthOutboxError.lockedOrUnavailable:
+                                transport.healthSharingProblem = "The protected Health sync store could not be accessed or saved. No reset was attempted."
+                            case HealthOutboxError.corrupt:
+                                transport.healthSharingProblem = "The existing Health sync store could not be validated. No reset was attempted."
+                            case NativeHealthRuntime.Failure.stale, NativeHealthHost.Failure.currentness:
+                                transport.healthSharingProblem = "The session or Health policy could not be confirmed during setup."
+                            case NativeHealthRuntime.Failure.sourceMismatch:
+                                transport.healthSharingProblem = "The Health source changed during setup."
+                            case NativeHealthRuntime.Failure.invalid:
+                                transport.healthSharingProblem = "The configured Health record types could not be confirmed."
+                            default:
+                                transport.healthSharingProblem = "Health setup could not be confirmed. No reset was attempted."
+                            }
+                        }
+                        finish("notConfirmed","operation_unconfirmed")
+                    }
                 }
             case .permission:
                 guard let target=run.runtime,runtime === target else{finish("notInvoked","local_setup_required");return}

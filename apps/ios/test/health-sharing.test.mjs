@@ -108,6 +108,18 @@ test('failed server confirmation leaves sharing off', async () => {
     {state:'recorded',kind:'enroll',outcome:'rejected'} : call(name,input),context,()=>{}),/did not confirm/);
   assert.ok(!calls.includes('healthRememberedChoice'));
 });
+test('setup reports a changed connection without claiming storage failed or saving sharing', async () => {
+  const {call,calls}=fixture();
+  await assert.rejects(enableHealthSharing((name,input)=>name==='healthSetupChoice' ?
+    {setupOutcome:'notInvoked',reason:'context_changed'} : call(name,input),context,()=>{}), /session or Health connection changed/);
+  assert.ok(!calls.includes('healthRememberedChoice'));
+});
+test('uncertain setup does not claim a broken store or enable sharing', async () => {
+  const {call,calls}=fixture();
+  await assert.rejects(enableHealthSharing((name,input)=>name==='healthSetupChoice' ?
+    {setupOutcome:'notConfirmed',reason:'operation_unconfirmed'} : call(name,input),context,()=>{}), /could not be confirmed/);
+  assert.ok(!calls.includes('healthRememberedChoice'));
+});
 test('an unconfirmed permission stops setup without repeating the approval', async () => {
   const {call,calls} = fixture();
   await assert.rejects(enableHealthSharing((name,input)=>name==='healthRecoverSourceConsent' ?
@@ -115,6 +127,45 @@ test('an unconfirmed permission stops setup without repeating the approval', asy
   assert.equal(calls.filter(c=>c==='healthConfirmSourceConsent').length,1);
   assert.ok(!calls.includes('healthPreparePhoneStorage'));
   assert.ok(!calls.includes('healthRememberedChoice'));
+});
+test('a held permission recovery is reported without another review or approval', async () => {
+  const {call,calls} = fixture();
+  let loads=0;
+  await assert.rejects(enableHealthSharing(async (name,input) => {
+    if (name === 'healthLoadSourceConsent') { loads++; return {state:'held',reason:'original_pending'}; }
+    if (name === 'healthRecoverSourceConsent') return {state:'held',reason:'original_pending'};
+    return call(name,input);
+  },context,()=>{}), /still being checked/);
+  assert.equal(loads,1);
+  assert.ok(!calls.includes('healthConfirmSourceConsent'));
+  assert.ok(!calls.includes('healthRememberedChoice'));
+});
+test('a recovered review is preserved rather than replaced with a new request', async () => {
+  const {call,calls} = fixture();
+  let loads=0;
+  await assert.rejects(enableHealthSharing(async (name,input) => {
+    if (name === 'healthLoadSourceConsent') { loads++; return {state:'held',reason:'original_pending'}; }
+    if (name === 'healthRecoverSourceConsent') return {state:'review'};
+    return call(name,input);
+  },context,()=>{}), /needs review/);
+  assert.equal(loads,1);
+  assert.ok(!calls.includes('healthRequestSourceConsent'));
+  assert.ok(!calls.includes('healthConfirmSourceConsent'));
+});
+test('unknown review failures do not expose arbitrary server text', async () => {
+  const {call} = fixture();
+  await assert.rejects(enableHealthSharing((name,input)=>name==='healthLoadSourceConsent' ?
+    {state:'unavailable',reason:'sensitive arbitrary detail'} : call(name,input),context,()=>{}),
+    error => /review is unavailable/.test(error.message) && !error.message.includes('sensitive'));
+});
+test('consent review reports the bounded failing stage without requesting approval', async () => {
+  for (const [reason, marker] of [['inventory_unavailable','inventory'],['descriptor_unavailable','descriptor'],['descriptor_mismatch','descriptor mismatch'],['status_unavailable','status']]) {
+    const {call,calls} = fixture();
+    await assert.rejects(enableHealthSharing((name,input)=>name==='healthLoadSourceConsent' ?
+      {state:'unavailable',reason} : call(name,input),context,()=>{}), error=>error.message.includes(marker));
+    assert.ok(!calls.includes('healthRequestSourceConsent'));
+    assert.ok(!calls.includes('healthConfirmSourceConsent'));
+  }
 });
 test('retry checks an approval left pending by the previous build', async () => {
   const {call,calls} = fixture();

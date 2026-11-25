@@ -783,24 +783,27 @@ extension NativeCalendarSourceOwner {
     private func healthConsentFinish(_ value:NativeHealthRuntime.NativeCommandOutcome,id:UUID,runtime:NativeHealthRuntime,completion:@escaping([String:Any])->Void){
         if case .held(let op,let reason)=value{finishControl(id,reply("held",reason,["operationId":op?.uuidString.lowercased() as Any? ?? NSNull(),"activation":"unavailable"]),completion);return}
         guard !runtime.nativeCommandHeld else{finishControl(id,reply("held","original_pending",["activation":"unavailable"]),completion);return}
-        retireControl(runtime){[self] in finishControl(id,reply("unavailable","consent_unavailable",["activation":"unavailable"]),completion)}
+        let reason:String
+        if case .notApplied(let code)=value, ["inventory_unavailable","descriptor_unavailable","descriptor_mismatch","status_unavailable","review_changed"].contains(code){reason=code}else{reason="consent_unavailable"}
+        retireControl(runtime){[self] in finishControl(id,reply("unavailable",reason,["activation":"unavailable"]),completion)}
     }
     private func healthConsentReply(_ review:HealthConsentReview)->[String:Any]{
         var value=reply("review","explicit_review_required",["reviewId":review.id.uuidString.lowercased(),"source":review.descriptor.json,"statuses":review.statuses.map{["purpose":$0.scope.purpose.rawValue,"consentState":$0.state,"revision":$0.revision,"validity":$0.validity?.json as Any? ?? NSNull()]},"activation":"unavailable"])
         if let reserved=review.reserved{value["request"]=reserved.original.json;value["confirmationDigest"]=reserved.confirmation;value["approvalAvailable"]=reserved.approvalAvailable}
         return value
     }
-    private func readHealthConsent(namespace:UUID,enrollment:UUID?,category:String,id:UUID,binding b:Binding,runtime:NativeHealthRuntime,done:@escaping(HealthConsentReview?)->Void){
+    private func readHealthConsent(namespace:UUID,enrollment:UUID?,category:String,id:UUID,binding b:Binding,runtime:NativeHealthRuntime,done:@escaping(HealthConsentReview?,String)->Void){
         NativeHealthInventory(transport:transport).fetch(expectedEndpoint:b.endpoint){[self] result in
-            guard active==id,current(b),case .success(let inventory)=result,let source=inventory.sources.first(where:{$0.namespace==namespace}),source.collector=="healthKit",source.categories.contains(category),let actualEnrollment=source.currentEnrollment,enrollment==nil || enrollment==actualEnrollment,let read=try? MobileHealthSourceConsent.describe(enrollment:actualEnrollment,category:category) else{done(nil);return}
+            guard active==id,current(b),case .success(let inventory)=result,let source=inventory.sources.first(where:{$0.namespace==namespace}),source.collector=="healthKit",source.categories.contains(category),let actualEnrollment=source.currentEnrollment,enrollment==nil || enrollment==actualEnrollment,let read=try? MobileHealthSourceConsent.describe(enrollment:actualEnrollment,category:category) else{done(nil,"inventory_unavailable");return}
             healthConsentControl(read:read,id:id,binding:b,runtime:runtime){[self] value in
-                guard active==id,current(b),case .healthConsent(.descriptor(let descriptor))=value,descriptor.principal==b.human,descriptor.endpoint==b.endpoint,descriptor.enrollment==actualEnrollment,descriptor.namespace==namespace,descriptor.sourceRevision==source.policyRevision,descriptor.category==category,descriptor.collector=="healthKit",let subject=try? JSONSerialization.jsonObject(with:b.snapshot.subject) as? [String:Any],UUID(uuidString:subject["installationId"] as? String ?? "")==descriptor.installation else{done(nil);return}
+                guard case .healthConsent(.descriptor(let descriptor))=value else{done(nil,"descriptor_unavailable");return}
+                guard active==id,current(b),descriptor.principal==b.human,descriptor.endpoint==b.endpoint,descriptor.enrollment==actualEnrollment,descriptor.namespace==namespace,descriptor.sourceRevision==source.policyRevision,descriptor.category==category,descriptor.collector=="healthKit",let subject=try? JSONSerialization.jsonObject(with:b.snapshot.subject) as? [String:Any],UUID(uuidString:subject["installationId"] as? String ?? "")==descriptor.installation else{done(nil,"descriptor_mismatch");return}
                 func inspect(_ purposes:[MobileHealthSourceConsent.Purpose],_ values:[MobileHealthSourceConsent.Status]){
-                    guard active==id,current(b) else{done(nil);return}
-                    guard let purpose=purposes.first else{done(.init(id:UUID(),binding:b,descriptor:descriptor,statuses:values));return}
-                    guard let scope=try? descriptor.scope(purpose:purpose),let read=try? MobileHealthSourceConsent.inspect(scope) else{done(nil);return}
+                    guard active==id,current(b) else{done(nil,"status_unavailable");return}
+                    guard let purpose=purposes.first else{done(.init(id:UUID(),binding:b,descriptor:descriptor,statuses:values),"");return}
+                    guard let scope=try? descriptor.scope(purpose:purpose),let read=try? MobileHealthSourceConsent.inspect(scope) else{done(nil,"status_unavailable");return}
                     healthConsentControl(read:read,id:id,binding:b,runtime:runtime){value in
-                        guard case .healthConsent(.status(let status))=value,status.scope==scope else{done(nil);return}
+                        guard case .healthConsent(.status(let status))=value,status.scope==scope else{done(nil,"status_unavailable");return}
                         inspect(Array(purposes.dropFirst()),values+[status])
                     }
                 }
@@ -1113,7 +1116,7 @@ extension NativeCalendarSourceOwner {
                     case .healthConsent(.terminal(let terminal)):
                         publish(reply("recorded","decision_recorded_only",["purpose":terminal.original.scope.purpose.rawValue,"category":terminal.original.scope.category,"decision":terminal.original.kind == .revoke ? "revoked":"approved","activation":"unavailable"]))
                     case .healthConsent(.reserved(let reserved)):
-                        readHealthConsent(namespace:reserved.original.scope.namespace,enrollment:nil,category:reserved.original.scope.category,id:id,binding:b,runtime:runtime){[self] fresh in
+                        readHealthConsent(namespace:reserved.original.scope.namespace,enrollment:nil,category:reserved.original.scope.category,id:id,binding:b,runtime:runtime){[self] fresh,_ in
                             guard var fresh,current(b),let scope=try? fresh.descriptor.scope(purpose:reserved.original.scope.purpose),scope==reserved.original.scope,fresh.statuses.contains(where:{$0.scope==scope && $0.revision==reserved.original.revision}) else{healthConsentFinish(.notApplied("review_changed"),id:id,runtime:runtime,completion:completion);return}
                             fresh.reserved=reserved;healthConsentReview=fresh;publish(healthConsentReply(fresh))
                         }
@@ -1121,8 +1124,8 @@ extension NativeCalendarSourceOwner {
                     }
                 }
                 if recover{healthConsentControl(reconcile:true,id:id,binding:b,runtime:runtime,done:outcome);return}
-                readHealthConsent(namespace:namespace!,enrollment:enrollment,category:category!,id:id,binding:b,runtime:runtime){[self] fresh in
-                    guard let fresh,current(b) else{healthConsentFinish(.notApplied("source_unavailable"),id:id,runtime:runtime,completion:completion);return}
+                readHealthConsent(namespace:namespace!,enrollment:enrollment,category:category!,id:id,binding:b,runtime:runtime){[self] fresh,reason in
+                    guard let fresh,current(b) else{healthConsentFinish(.notApplied(reason),id:id,runtime:runtime,completion:completion);return}
                     if operation=="load"{healthConsentReview=fresh;publish(healthConsentReply(fresh));return}
                     guard let prior,prior.descriptor==fresh.descriptor else{healthConsentFinish(.notApplied("review_changed"),id:id,runtime:runtime,completion:completion);return}
                     do{
