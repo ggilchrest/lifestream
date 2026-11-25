@@ -48,7 +48,7 @@ final class NativeCalendarSourceOwner {
     private var applicationRestoreCompletion:(()->Void)?,applicationRestoreOwnerReleased=false
     private var backgroundReview:(UUID,UUID,HealthOutbox.SavedHealthSelection,Binding,NativeHealthRuntime)?
     private var composed=false
-    private var controlRuntime:NativeHealthRuntime?,controlBinding:Binding?,knownSettings:MobileCalendarSyncWindow?
+    private var controlRuntime:NativeHealthRuntime?,controlBinding:Binding?
     private var controlRetiring=false,controlReplyBinding:Binding?
     private struct ConsentReview {
         let id:UUID,binding:Binding,descriptor:MobileCalendarSourceConsent.Descriptor
@@ -401,12 +401,47 @@ final class NativeCalendarSourceOwner {
                 snapshot(id){[self] after in
                     guard after==binding,current(binding) else{finish(id,reply("unavailable","context_changed"),completion);return}
                     let captured=Catalog(binding,original,zone,values);catalog=captured
-                    let rows=captured.records.map{handle,metadata in metadata.json.merging(["choice":handle.uuidString.lowercased(),"selected":false]){_,new in new}}
-                    let value=reply("available","metadata_only",["catalogId":captured.id.uuidString.lowercased(),"choices":rows,"limits":resources.limits.json,"syncWindow":knownSettings?.json as Any? ?? NSNull()])
-                    guard let bytes=try? JSONSerialization.data(withJSONObject:value),bytes.count<=262144 else{catalog=nil;finish(id,reply("unavailable","metadata_limit"),completion);return}
-                    finish(id,value,completion)
+                    discoverSaved(binding,id:id){[self] saved in
+                        guard active==id,current(binding),catalog === captured else{finish(id,reply("unavailable","context_changed"),completion);return}
+                        let rows=captured.records.map{handle,metadata in
+                            let matched=saved?.selection.calendars.contains{identity in identity.accountID.map{Data($0.utf8)}==Data(metadata.sourceID.utf8) && Data(identity.containerID.utf8)==Data(metadata.containerID.utf8)} ?? false
+                            return metadata.json.merging(["choice":handle.uuidString.lowercased(),"selected":false,"previouslySaved":matched]){_,new in new}
+                        }
+                        let value=reply("available","metadata_only",["catalogId":captured.id.uuidString.lowercased(),"choices":rows,"limits":resources.limits.json,"syncWindow":saved?.window.json as Any? ?? NSNull()])
+                        guard let bytes=try? JSONSerialization.data(withJSONObject:value),bytes.count<=262144 else{catalog=nil;finish(id,reply("unavailable","metadata_limit"),completion);return}
+                        finish(id,value,completion)
+                    }
                 }
             }catch{finish(id,reply("unavailable","reading_or_metadata_unavailable"),completion)}
+        }
+    }
+    private func discoverSaved(_ binding:Binding,id:UUID,done:@escaping((selection:MobileCalendarSettingsWire.Selection,window:MobileCalendarSyncWindow)?)->Void){
+        guard current(binding),active==id,resources.protectedAvailable() else{done(nil);return}
+        // Discovery must never create the snapshot, its directory, or the
+        // custody lock for a first-time user. Existing owners retain custody.
+        if storage==nil {
+            guard let file=try? resources.resolveFile({[weak self] in self?.current(binding)==true}),
+                  current(binding),active==id,resources.protectedAvailable(),resources.filePort.snapshotExists(file),
+                  current(binding),active==id else{done(nil);return}
+        }
+        let runtime:NativeHealthRuntime
+        do{runtime=try originalRoot(binding)}catch{done(nil);return}
+        func finishRead(_ result:(selection:MobileCalendarSettingsWire.Selection,window:MobileCalendarSyncWindow)?){
+            retireControl(runtime){done(result)}
+        }
+        guard let terminal=try? runtime.savedCalendarCandidate(),let enrollment=terminal.enrollment,let window=terminal.window,current(binding) else{finishRead(nil);return}
+        let request:[String:Any]=["producerPin":["schemaId":MobileCalendarDelivery.schemaId,"schemaVersion":"1.0.0","digest":MobileCalendarDelivery.schemaDigest],"operation":"calendar","payload":["schemaVersion":"1.0.0","operation":"policy","enrollmentId":enrollment.id.uuidString.lowercased()]]
+        guard let bytes=try? JSONSerialization.data(withJSONObject:request),let body=String(data:bytes,encoding:.utf8) else{finishRead(nil);return}
+        var claimed=false
+        transport.request("/api/runtime/v1/mobile-context",method:"POST",body:body,internalHealth:true,maxBytes:65536){[self] result in
+            guard !claimed else{return};claimed=true
+            guard active==id,current(binding),resources.protectedAvailable(),case .success(let(data,http))=result,http.statusCode==200,
+                  let proof=try? NativeCalendarContext.policy(data,human:binding.human,endpoint:binding.endpoint,enrollment:enrollment.id) else{finishRead(nil);return}
+            snapshot(id){[self] after in
+                guard after==binding,current(binding),active==id,resources.protectedAvailable(),
+                      let selection=try? runtime.savedCalendarSelection(terminal:terminal,proof:proof) else{finishRead(nil);return}
+                finishRead((selection,window))
+            }
         }
     }
     func prepare(input:[String:Any],completion:@escaping([String:Any])->Void){
@@ -545,7 +580,6 @@ final class NativeCalendarSourceOwner {
             let configure=try command(b,enrollment:enrollment,action:["kind":"configure","state":enrollment.state,"configuration":["sourceConfiguration":source,"syncWindow":preview.plan.settings.json]])
             control(configure,reconcile:false,id:id,binding:b,runtime:runtime){[self] outcome in
                 guard case .terminal(let terminal)=outcome,terminal.applied,terminal.current,terminal.window==preview.plan.settings,current(b) else{controlFailed(outcome,id:id,runtime:runtime,completion:completion);return}
-                knownSettings=terminal.window
                 adopt(preview,terminal,id:id,runtime:runtime,completion:completion)
             }
         }catch{controlFailed(.notApplied("existing_configuration_requires_review"),id:id,runtime:runtime,completion:completion)}
@@ -583,7 +617,6 @@ final class NativeCalendarSourceOwner {
                 controlReplyBinding=b
                 control(nil,reconcile:true,id:id,binding:b,runtime:runtime){[self] outcome in
                     guard case .terminal(let terminal)=outcome else{controlFailed(outcome,id:id,runtime:runtime,completion:completion);return}
-                    if terminal.current && terminal.applied{knownSettings=terminal.window}
                     retireControl(runtime){[self] in finishControl(id,reply("reconciled","review_before_next_action",["settingsState":terminal.applied ? "saved":"rejected","syncWindow":terminal.window?.json as Any? ?? NSNull(),"activation":"unavailable"]),completion)}
                 }
             }catch{finishControl(id,reply("held","original_context_unavailable"),completion)}

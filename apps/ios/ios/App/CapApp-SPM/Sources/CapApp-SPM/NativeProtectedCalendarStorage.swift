@@ -9,7 +9,11 @@ protocol NativeCalendarFileHandle:AnyObject {
     func replace(_ bytes:Data)throws
     func close()
 }
-protocol NativeCalendarFilePort {func openExclusive(snapshot:URL)throws->any NativeCalendarFileHandle}
+protocol NativeCalendarFilePort {
+    func openExclusive(snapshot:URL)throws->any NativeCalendarFileHandle
+    func snapshotExists(_ snapshot:URL)->Bool
+}
+extension NativeCalendarFilePort {func snapshotExists(_ snapshot:URL)->Bool{false}}
 struct NativeCalendarProtectedFilePort:NativeCalendarFilePort {
     private final class Handle:NativeCalendarFileHandle {
         let fd:Int32,path:String,device:dev_t,inode:ino_t,storage:ProtectedHealthFileStorage
@@ -20,6 +24,11 @@ struct NativeCalendarProtectedFilePort:NativeCalendarFilePort {
         func replace(_ bytes:Data)throws{guard current else{throw CocoaError(.fileWriteNoPermission)};try storage.replace(bytes)}
         func close(){guard !closed else{return};closed=true;_ = flock(fd,LOCK_UN);_ = Darwin.close(fd)}
         deinit{close()}
+    }
+    func snapshotExists(_ snapshot:URL)->Bool{
+        guard snapshot.isFileURL,snapshot==snapshot.standardizedFileURL else{return false}
+        var info=stat()
+        return lstat(snapshot.path,&info)==0 && (info.st_mode & S_IFMT)==S_IFREG && info.st_uid==getuid()
     }
     func openExclusive(snapshot:URL)throws->any NativeCalendarFileHandle{
         guard snapshot.isFileURL,snapshot==snapshot.standardizedFileURL else{throw CocoaError(.fileReadInvalidFileName)}

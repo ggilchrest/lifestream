@@ -726,6 +726,38 @@ public final class HealthOutbox {
         guard let terminal=state.calendarNative?.terminal else{return nil}
         guard terminal.binding.origin==origin,terminal.binding.principal==principal,terminal.binding.endpoint==endpoint else{throw HealthOutboxError.ownerChanged};return terminal.original
     }
+    /// Read-only candidate for a fresh policy check. A historical terminal is
+    /// never itself proof of current remote policy or authority.
+    public func savedCalendarCandidate(origin:String,principal:UUID,endpoint:UUID)throws->MobileCalendarSettingsWire.Terminal?{
+        lock.lock();defer{lock.unlock()};let state=try read()
+        guard state.lastHuman==principal,state.calendarNative?.pending==nil,state.calendarNative?.consentPending==nil,
+              let saved=state.calendarNative?.terminal,saved.binding.origin==origin,saved.binding.principal==principal,saved.binding.endpoint==endpoint,
+              let command=try? MobileCalendarSettingsWire.command(saved.original),command.kind=="configure",
+              let terminal=try? MobileCalendarSettingsWire.terminal(saved.response,original:command),terminal.current,terminal.applied,
+              let enrollment=terminal.enrollment,terminal.window != nil,let local=state.calendarEnrollments?[enrollment.id],
+              local.human==principal,local.endpoint==endpoint,local.namespace==enrollment.namespace,local.revision==enrollment.revision,
+              local.collector=="eventKit",local.categories==["CalendarEvent"],!local.paused,!local.requiresRebind,
+              state.calendarNative?.selections[enrollment.id] != nil else{return nil}
+        return terminal
+    }
+    /// Called only with a freshly authenticated policy and matching durable
+    /// terminal. Returns metadata for native matching, never a collection grant.
+    public func savedCalendarSelection(origin:String,principal:UUID,endpoint:UUID,terminal:MobileCalendarSettingsWire.Terminal,proof:MobileCalendarPolicyProof)throws->MobileCalendarSettingsWire.Selection?{
+        lock.lock();defer{lock.unlock()};let state=try read()
+        guard state.lastHuman==principal,state.calendarNative?.pending==nil,state.calendarNative?.consentPending==nil,
+              let saved=state.calendarNative?.terminal,saved.binding.origin==origin,saved.binding.principal==principal,saved.binding.endpoint==endpoint,
+              saved.original==terminal.command.original,saved.response==terminal.response,terminal.current,terminal.applied,terminal.command.kind=="configure",
+              let enrollment=terminal.enrollment,terminal.window != nil,proof.principal==principal,proof.endpoint==endpoint,
+              proof.enrollment==enrollment.id,proof.namespace==enrollment.namespace,proof.revision==enrollment.revision,
+              proof.collector=="eventKit",proof.categories.contains("CalendarEvent"),
+              let local=state.calendarEnrollments?[enrollment.id],local.human==principal,local.endpoint==endpoint,
+              local.namespace==proof.namespace,local.revision==proof.revision,local.collector=="eventKit",
+              local.categories==["CalendarEvent"],!local.paused,!local.requiresRebind,
+              let bytes=state.calendarNative?.selections[enrollment.id],let object=try? MobileCalendarSettingsWire.object(bytes),
+              let selection=try? MobileCalendarSettingsWire.selection(object["identity"]),selection.principal==principal,
+              selection.endpoint==endpoint,selection.enrollment==enrollment.id,selection.namespace==proof.namespace,selection.revision==proof.revision else{return nil}
+        return selection
+    }
     /// The native ORIGINAL owner must independently qualify authenticated
     /// terminal transport/currentness and BOTH original custody currencies.
     /// Held/observed/inspect cannot construct this exact terminal transition.

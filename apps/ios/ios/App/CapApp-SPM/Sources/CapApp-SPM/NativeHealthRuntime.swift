@@ -286,6 +286,14 @@ final class NativeHealthRuntime: NativeHealthPolicySuspending {
         }
         guard fresh(),configuration==nil,choiceAdmissionAvailable,choiceSourceCurrent else{throw Failure.stale}
     }
+    func savedCalendarCandidate()throws->MobileCalendarSettingsWire.Terminal? {
+        let c=rootConfiguration
+        return try root.observe {try outbox.savedCalendarCandidate(origin:c.origin,principal:c.human,endpoint:c.endpoint)}
+    }
+    func savedCalendarSelection(terminal:MobileCalendarSettingsWire.Terminal,proof:MobileCalendarPolicyProof)throws->MobileCalendarSettingsWire.Selection? {
+        let c=rootConfiguration
+        return try root.observe {try outbox.savedCalendarSelection(origin:c.origin,principal:c.human,endpoint:c.endpoint,terminal:terminal,proof:proof)}
+    }
     func readExistingHealthProfilePolicy(enrollment:UUID,completion:@escaping(Result<MobileHealthPolicyProof,Error>)->Void){
         guard configuration==nil,choiceAdmissionAvailable,choiceSourceCurrent else{completion(.failure(Failure.unavailable));return}
         NativeHealthPolicy(transport:transport,outbox:outbox,collector:self).readForControl(enrollment:enrollment,expectedEndpoint:rootConfiguration.endpoint,completion:completion)

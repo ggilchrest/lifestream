@@ -19,7 +19,7 @@ final class SelectionHandle:NativeCalendarFileHandle {
  func close(){current=false;closes+=1}
 }
 let selectionHandle=SelectionHandle()
-struct SelectionFiles:NativeCalendarFilePort{func openExclusive(snapshot:URL)throws->any NativeCalendarFileHandle{selectionOpens+=1;if site=="lock-fails"{throw CocoaError(.fileReadNoPermission)};return selectionHandle}}
+struct SelectionFiles:NativeCalendarFilePort{func snapshotExists(_ snapshot:URL)->Bool{selectionHandle.data != nil};func openExclusive(snapshot:URL)throws->any NativeCalendarFileHandle{selectionOpens+=1;if site=="lock-fails"{throw CocoaError(.fileReadNoPermission)};return selectionHandle}}
 final class SelectionSDK:NativeCalendarSelectionSDK {
  var capability:NativeCalendarReadAccess = mode=="permission" ? .notDetermined:.fullRead
  var values=[NativeCalendarMetadata(containerID:"selected",sourceID:"synthetic-account",title:"Duplicate title",sourceTitle:"Account A",sourceKind:"CalDAV",delegated:nil),NativeCalendarMetadata(containerID:"second",sourceID:"other-account",title:"Duplicate title",sourceTitle:"Account B",sourceKind:"CalDAV",delegated:true)]
@@ -207,6 +207,13 @@ final class SyntheticShareAuthority:OutboxShareAuthority{
  let ticket=try! cold.calendarTicket(enrollment:after.enrollment,category:"CalendarEvent");check((try? cold.pendingCalendar(ticket:ticket)) != nil,"fresh actual policy and original terminal adopt SAME saved row")
  let saved=disk.data!;check((try? cold.applyCalendarConfiguredExistingLocal(terminal:restored,proof:after,selection:selection))==nil && disk.data==saved,"configured transaction cannot replay saved revision")
  let next=HealthOutbox(storage:disk);try! next.reconnectCalendarExistingLocal(proof:after,expectedCategories:["CalendarEvent"]);check(disk.data==saved,"new cold reader reconnects revision-equal with ZERO writes")
+ let reopened=HealthOutbox(storage:disk),candidate=try! reopened.savedCalendarCandidate(origin:origin,principal:after.principal,endpoint:after.endpoint)!
+ let restoredSelection=try! reopened.savedCalendarSelection(origin:origin,principal:after.principal,endpoint:after.endpoint,terminal:candidate,proof:after)!
+ check(restoredSelection==selected && candidate.window==terminal.window && disk.data==saved,"cold protected read proves saved identity and range without writes")
+ check((try! reopened.savedCalendarCandidate(origin:origin,principal:UUID(),endpoint:after.endpoint))==nil && (try! reopened.savedCalendarCandidate(origin:origin,principal:after.principal,endpoint:UUID()))==nil && (try! reopened.savedCalendarCandidate(origin:"https://other.example",principal:after.principal,endpoint:after.endpoint))==nil,"different owner, endpoint or origin receives no saved hint")
+ check((try! reopened.savedCalendarSelection(origin:origin,principal:after.principal,endpoint:after.endpoint,terminal:candidate,proof:before))==nil,"old policy cannot prove a saved selection")
+ let wrongAccount=MobileCalendarSettingsWire.Selection.CalendarIdentity(containerID:identities[0].containerID,accountID:"other-account"),wrongCalendar=MobileCalendarSettingsWire.Selection.CalendarIdentity(containerID:"other-calendar",accountID:identities[0].accountID)
+ check(!restoredSelection.calendars.contains(wrongAccount) && !restoredSelection.calendars.contains(wrongCalendar),"both exact source and container identity required")
  wireQualification()
 }
 var sourceRemote:[String:Any]?,sourceJournal:[UUID:[String:Any]]=[:],sourceCommands:[MobileCalendarSettingsWire.Command]=[]
@@ -270,6 +277,8 @@ func sourceControlReply(_ body:[String:Any])->[String:Any]?{
  }
  let checkpointsBeforeEdit=bytes(queueRows(selectionHandle.data)[0]["checkpoints"]!)
  let before=selectionHandle.data,commands=controlPosts,metadata=await sourceCall("metadata");check(metadata["state"] as? String=="available" && selectionFactories==1 && selectionOpens==1 && controlPosts==commands && selectionHandle.data==before,"profile actual retirement before metadata edit; same original SDK/file")
+ let displayed=metadata["choices"] as! [[String:Any]]
+ check(displayed.count==2 && displayed[0]["selected"] as? Bool==false && displayed[0]["previouslySaved"] as? Bool==true && displayed[1]["selected"] as? Bool==false && displayed[1]["previouslySaved"] as? Bool==false && (metadata["syncWindow"] as? [String:Any])?["lookBackDays"] as? Int==selectionSettings.lookBackDays,"reopened picker shows saved row and range as separate non-consenting intent")
  let updated=MobileCalendarSyncWindow(lookBackDays:2,lookAheadDays:6,timeZone:"UTC")!,review=await sourceCall("preview",selectionRequest(metadata,updated)),saved=await sourceCall("save",["schemaVersion":"1.0.0","previewId":review["previewId"]!]);check(saved["state"] as? String=="saved" && saved["activation"] as? String=="manualOnly" && selectionFactories==1 && selectionOpens==1,"post-save configurable duration update uses same physical SDK/store after real retirement")
  let next=queueRows(selectionHandle.data);if site=="post-sync"{check(bytes(next[0]["checkpoints"]!)==checkpointsBeforeEdit,"original checkpoint retained byte-for-byte across settings update")};check(next.count==1 && next[0]["revision"] as? Int==4 && sourceCommands.filter{$0.kind=="configure"}.map(\.expectedRevision)==[2,3],"second Save reuses actual enrollment/source, applies3→4 without reconnect or new local row")
 }
@@ -406,7 +415,7 @@ final class LowerSelectionPort:NativeCalendarSelectionPort{
  if mode=="byte-binding"{let row=selectionSDK.values[0];selectionSDK.values[0] = .init(containerID:site.contains("container") ? "caf\u{00e9}":row.containerID,sourceID:site.contains("source") || site=="exact-byte" ? "caf\u{00e9}":row.sourceID,title:row.title,sourceTitle:row.sourceTitle,sourceKind:row.sourceKind,delegated:row.delegated)}
  let catalog=await sourceCall("metadata")
  if site=="duplicate-identity"{check(catalog["state"] as? String=="unavailable" && selectionQueries==0,"ambiguous native identity denied");return}
- check(catalog["state"] as? String=="available" && selectionRequests==0 && selectionMetadata==1 && selectionQueries==0 && selectionOpens==0 && posts==0,"separate metadata-only action on same SDK")
+ check(catalog["state"] as? String=="available" && selectionRequests==0 && selectionMetadata==1 && selectionQueries==0 && selectionOpens==0 && selectionHandle.writes==0 && posts==0,"first discovery reads no missing snapshot and creates no store")
  let rows=catalog["choices"] as! [[String:Any]];check(rows.count==2 && rows.allSatisfy{$0["selected"] as? Bool==false && $0["ownership"] as? String=="unknown" && $0["sharing"] as? String=="unknown"} && rows[0]["choice"] as? String != rows[1]["choice"] as? String,"duplicate labels distinct real source identities, none selected, unknown ownership")
  if mode=="metadata"{return}
  var input=selectionRequest(catalog)
