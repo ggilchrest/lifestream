@@ -518,7 +518,14 @@ final class NativeHealthRuntime: NativeHealthPolicySuspending {
                     do {
                         if let expectedSourceNamespace{guard proof.sourceNamespace.flatMap(UUID.init(uuidString:))==expectedSourceNamespace else{throw Failure.sourceMismatch}}
                         let selected=Set(configuration.plans.map(\.category));guard selected.isSubset(of:proof.healthKitTypes) else{throw Failure.invalid}
-                        if action == .confirmExistingLocal {
+                        var localAction = action
+                        if action == .enrollExistingRemote && configuration.plans.allSatisfy({ $0.ongoingSharing }) {
+                            if !adopted { try outbox.setHuman(rootConfiguration.human); adopted = true }
+                            if (try? outbox.status(enrollment: configuration.enrollment)) != nil {
+                                localAction = .confirmExistingLocal
+                            }
+                        }
+                        if localAction == .confirmExistingLocal {
                             if !adopted {try outbox.setHuman(rootConfiguration.human);adopted=true}
                             let saved=try outbox.status(enrollment:configuration.enrollment)
                             guard !saved.paused,!saved.requiresRebind,!saved.localChangePending,setupCurrent() else{throw Failure.unavailable}
@@ -529,7 +536,7 @@ final class NativeHealthRuntime: NativeHealthPolicySuspending {
                             constructHealth(configuration,sdk:sdk)
                         }
                         if !adopted {try outbox.setHuman(rootConfiguration.human);adopted=true}
-                        switch action {
+                        switch localAction {
                         case .enrollExistingRemote:try outbox.enroll(proof:proof,selectedTypes:selected)
                         case .confirmExistingLocal:
                             let state=try outbox.status(enrollment:configuration.enrollment);guard !state.paused,!state.requiresRebind,!state.localChangePending else{throw Failure.unavailable}
@@ -1473,7 +1480,9 @@ extension NativeHealthRuntime {
         guard fresh(),configuration?.matches(c)==true,choiceAdmissionAvailable,ready,adopted,root.healthAdmission,
               knownLocalBinding?.namespace==namespace,!preservesPauseHold,observationOperations==0 else{return false}
         if let i=observationInterest{return i.configuration.matches(c) && i.namespace==namespace && i.revision==revision && i.current()}
-        let i=ObservationInterest(c,namespace,revision,fresh);observationInterest=i;queueObservationPump();return true
+        let i=ObservationInterest(c,namespace,revision,fresh)
+        i.opportunity.formUnion(c.plans.filter(\.ongoingSharing).map(\.category))
+        observationInterest=i;queueObservationPump();return true
     }
     func stopObservation(){
         precondition(Thread.isMainThread)
@@ -1521,8 +1530,19 @@ extension NativeHealthRuntime {
         guard backgroundCollectionEligible else{return}
         if let category=i.delivery.sorted().first,let sessionOwner{
             i.delivery.remove(category);observationBegin()
-            sessionOwner.deliverPending(scope:.init(human:rootConfiguration.human,enrollment:i.configuration.enrollment,endpoint:rootConfiguration.endpoint,category:category)){[self] _ in
-                sessionOwner.whenDrained{[self] in observationEnd()}
+            sessionOwner.deliverPending(scope:.init(human:rootConfiguration.human,enrollment:i.configuration.enrollment,endpoint:rootConfiguration.endpoint,category:category)){[self] result in
+                sessionOwner.whenDrained{[self] in
+                    if backgroundForeground, observationCurrent(i),
+                       i.configuration.plans.contains(where:{ $0.category == category && $0.ongoingSharing }) {
+                        switch result {
+                        case .success(.applied): i.delivery.insert(category)
+                        case .success(.idle):
+                            if i.catchup.remove(category) != nil { i.opportunity.insert(category) }
+                        default: break
+                        }
+                    }
+                    observationEnd()
+                }
             };return
         }
         guard observationIdle(i) else{return}

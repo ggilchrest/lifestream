@@ -2,12 +2,13 @@
 import Capacitor
 import UIKit
 import AVFoundation
+import HealthKit
 import AssistantCore
 
 @objc(AssistantPlugin)
 public final class AssistantPlugin: CAPPlugin,CAPBridgedPlugin {
     public let identifier="AssistantPlugin",jsName="Assistant"
-    public let pluginMethods=["healthBackgroundChoice","healthSavedRecoveryChoice","healthRememberedChoice","healthObservationChoice","healthBeginConfiguredSettings","healthReviewConfiguredReturn","healthConfirmConfiguredReturn","healthResumeConfiguredReturn","healthRemoteSetupOptions","healthReviewRemoteSetup","healthApplyRemoteSetup","healthRecoverRemoteSetup","healthPrepareExistingSource","healthLoadSourceConsent","healthRequestSourceConsent","healthConfirmSourceConsent","healthRevokeSourceConsent","healthRecoverSourceConsent","calendarLoadSourceConsent","calendarRequestSourceConsent","calendarConfirmSourceConsent","calendarRevokeSourceConsent","calendarRecoverSourceConsent","calendarReviewSourceConnection","calendarConnectSource","calendarBootstrapReadPermission","calendarDiscoverSelections","calendarPrepareSelection","calendarSaveSelection","calendarReconcileSelection","calendarCollectionDetailsChoice","calendarCollectAndDeliverChoice","calendarRequestReadPermissionChoice","calendarLocalSetupChoices","calendarSetupExistingChoice","calendarSavedChoices","calendarReconnectChoice","calendarDeliverPendingChoice","healthSetupChoices","healthSetupChoice","healthRequestReadPermission","healthSyncChoice","calendarReconnect","calendarSetup","calendarCollectAndDeliver","calendarDeliverPending","calendarCancel","healthInventory","healthSetup","healthStatus","healthPauseCollection","healthResumeCollection","healthSync","configure","restoreConnection","forgetSession","saveSettings","request","setBackgroundPolicy","pendingPersonalLock","sendText","cancelText","start","stop","finishUtterance","snapshot","routePicker","startAudioProbe","stopAudioProbe","copyAudioDiagnostics","diagnosticsStatus","setDiagnosticsEnabled","logDiagnostic","clearDiagnostics","shareDiagnostics","shareAuditDiagnostics","startVoicePreview","stopVoicePreview","voicePreviewStatus"].compactMap{CAPPluginMethod(name:$0,returnType:CAPPluginReturnPromise)}
+    public let pluginMethods=["healthPreparePhoneStorage","healthSharingDevice","healthChooseRecords","healthBackgroundChoice","healthSavedRecoveryChoice","healthRememberedChoice","healthObservationChoice","healthBeginConfiguredSettings","healthReviewConfiguredReturn","healthConfirmConfiguredReturn","healthResumeConfiguredReturn","healthRemoteSetupOptions","healthReviewRemoteSetup","healthApplyRemoteSetup","healthRecoverRemoteSetup","healthPrepareExistingSource","healthLoadSourceConsent","healthRequestSourceConsent","healthConfirmSourceConsent","healthRevokeSourceConsent","healthRecoverSourceConsent","calendarLoadSourceConsent","calendarRequestSourceConsent","calendarConfirmSourceConsent","calendarRevokeSourceConsent","calendarRecoverSourceConsent","calendarReviewSourceConnection","calendarConnectSource","calendarBootstrapReadPermission","calendarDiscoverSelections","calendarPrepareSelection","calendarSaveSelection","calendarReconcileSelection","calendarCollectionDetailsChoice","calendarCollectAndDeliverChoice","calendarRequestReadPermissionChoice","calendarLocalSetupChoices","calendarSetupExistingChoice","calendarSavedChoices","calendarReconnectChoice","calendarDeliverPendingChoice","healthSetupChoices","healthSetupChoice","healthRequestReadPermission","healthSyncChoice","calendarReconnect","calendarSetup","calendarCollectAndDeliver","calendarDeliverPending","calendarCancel","healthInventory","healthSetup","healthStatus","healthPauseCollection","healthResumeCollection","healthSync","configure","restoreConnection","forgetSession","saveSettings","request","setBackgroundPolicy","pendingPersonalLock","sendText","cancelText","start","stop","finishUtterance","snapshot","routePicker","startAudioProbe","stopAudioProbe","copyAudioDiagnostics","diagnosticsStatus","setDiagnosticsEnabled","logDiagnostic","clearDiagnostics","shareDiagnostics","shareAuditDiagnostics","startVoicePreview","stopVoicePreview","voicePreviewStatus"].compactMap{CAPPluginMethod(name:$0,returnType:CAPPluginReturnPromise)}
     private let transport:NativeTransport
     private var sharedHealthConnection:NativeHealthConnectionOwner?
     private var applicationOwnsHealth=false
@@ -209,6 +210,54 @@ public final class AssistantPlugin: CAPPlugin,CAPBridgedPlugin {
     @objc public func healthSetupChoice(_ call:CAPPluginCall){healthChoice(call,.setup)}
     @objc public func healthRequestReadPermission(_ call:CAPPluginCall){healthChoice(call,.permission)}
     @objc public func healthSyncChoice(_ call:CAPPluginCall){healthChoice(call,.sync)}
+    @objc public func healthPreparePhoneStorage(_ call: CAPPluginCall) { perform(call) { [self] in
+        guard calendarRegistration?.enabled == true, personalAccess.enabled, transport.effectiveIsSelf,
+              UIApplication.shared.applicationState == .active, let owner = transport.currentEffectiveOwner,
+              let enrollment = call.getString("enrollmentId"), UUID(uuidString: enrollment) != nil,
+              let category = call.getString("category"), ["SleepSegment","heartRate","restingHeartRate","respiratoryRate","hrvSDNN"].contains(category)
+        else { call.reject("Open Health settings in your private phone session."); return }
+        let request = ["operation":"preparePhoneStorage", "schemaVersion":"1.0.0", "enrollmentId":enrollment, "category":category]
+        guard let data = try? JSONSerialization.data(withJSONObject: request), let body = String(data: data, encoding: .utf8)
+        else { call.reject("Could not prepare the Health request."); return }
+        transport.request("/api/runtime/v1/mobile-context-policy", method:"POST", body:body, internalHealthConsent:true, maxBytes:4096) { [self] result in
+            guard transport.effectiveIsSelf, let current = transport.currentEffectiveOwner,
+                  current.principal == owner.principal, current.session == owner.session,
+                  case .success(let (data, response)) = result, response.statusCode == 200,
+                  let value = (try? JSONSerialization.jsonObject(with: data)) as? [String:Bool], value["ready"] == true
+            else { call.reject("The server could not confirm how to store these records. Check your account’s Health settings."); return }
+            call.resolve(["ready":true])
+        }
+    }}
+    @objc public func healthSharingDevice(_ call: CAPPluginCall) { perform(call) { [self] in
+        let supported = HKHealthStore.isHealthDataAvailable()
+        var info: [String:Any] = ["supported": supported, "configured": calendarRegistration?.enabled == true]
+        if let problem = transport.healthSharingProblem { info["problem"] = problem }
+        call.resolve(info)
+    }}
+
+    @objc public func healthChooseRecords(_ call: CAPPluginCall) { perform(call) { [self] in
+        guard calendarRegistration?.enabled == true, UIApplication.shared.applicationState == .active,
+              UIApplication.shared.isProtectedDataAvailable, personalAccess.enabled, transport.effectiveIsSelf,
+              let owner = transport.currentEffectiveOwner else {
+            call.reject("Open Health settings in your private phone session."); return
+        }
+        let sdk = HealthKitSDK(health: HKHealthStore())
+        guard let request = sdk.prepareReadAuthorization(types: HealthKitCollector.supportedCategories) else {
+            call.reject("Apple Health is unavailable on this device."); return
+        }
+        let epoch = transport.epoch
+        transport.healthSharingProblem = nil
+        request { result in DispatchQueue.main.async { [self] in
+            guard epoch == transport.epoch, transport.effectiveIsSelf, let now = transport.currentEffectiveOwner,
+                  now.principal == owner.principal, now.session == owner.session else {
+                call.reject("Your account changed. Open Health settings again."); return
+            }
+            switch result {
+            case .success: call.resolve(["completed": true])
+            case .failure: call.reject("Apple Health could not finish the permission request.")
+            }
+        }}
+    }}
     @objc public func healthInventory(_ call:CAPPluginCall){perform(call){[self] in
         healthHost.loadInventory { result in
             switch result { case .success(let value): call.resolve(value); case .failure: call.reject("Health connection details are unavailable. Check your connection and sign-in.") }

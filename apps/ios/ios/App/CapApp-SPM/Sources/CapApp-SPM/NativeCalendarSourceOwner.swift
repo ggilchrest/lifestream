@@ -1022,7 +1022,7 @@ extension NativeCalendarSourceOwner {
               let contextRevision=NativeHealthStatusRequest.number(input["contextRevision"],minimum:0),
               let categories=input["categories"] as? [String],(1...5).contains(categories.count),Set(categories).count==categories.count,
               Set(categories).isSubset(of:["SleepSegment","heartRate","restingHeartRate","respiratoryRate","hrvSDNN"]),
-              let local=input["localSetup"] as? String,["prepareNewLocal","confirmSavedLocal"].contains(local) else{completion(unavailable("invalid_input"));return}
+              let local=input["localSetup"] as? String,["prepareNewLocal","confirmSavedLocal","shareOnThisPhone"].contains(local) else{completion(unavailable("invalid_input"));return}
         func date(_ raw:Any?)->Date?{
             guard let text=raw as? String,text.utf8.count==24 else{return nil}
             let formatter=ISO8601DateFormatter();formatter.formatOptions=[.withInternetDateTime,.withFractionalSeconds];formatter.timeZone=TimeZone(secondsFromGMT:0)
@@ -1055,7 +1055,7 @@ extension NativeCalendarSourceOwner {
                             do{
                                 guard after==binding,current(binding),active==id,controlRuntime === runtime,connection.canInstallCalendarConfiguration else{throw NativeCalendarAdmissionError.stale}
                                 try runtime.prepareExistingHealthProfile(current:{self.active==id && self.current(binding) && self.connection.canInstallCalendarConfiguration})
-                                let plans=categories.sorted().map{NativeHealthCollectionPlan(category:$0=="SleepSegment" ? "sleep":$0,scope:"existing-remote-health/1:"+namespace.uuidString.lowercased(),mappingVersion:health.mappingVersion,start:start,end:end)}
+                                let plans=categories.sorted().map{NativeHealthCollectionPlan(category:$0=="SleepSegment" ? "sleep":$0,scope:(local == "shareOnThisPhone" ? NativeHealthCollectionPlan.sharingScope : "existing-remote-health/1:")+namespace.uuidString.lowercased(),mappingVersion:health.mappingVersion,start:start,end:end)}
                                 guard let storage else{throw NativeCalendarAdmissionError.unavailable}
                                 let root=runtime.rootConfiguration
                                 let config=NativeHealthRuntime.Configuration(provenance:root.provenance,origin:root.origin,human:root.human,session:root.session,endpoint:root.endpoint,enrollment:enrollment,plans:plans,maxBytes:root.maxBytes,maxEvents:root.maxEvents,storageOrigin:root.identity.storageOrigin,protectedFilePolicy:root.identity.protectedFilePolicy,protectedAvailable:resources.protectedAvailable,makeStorage:{try storage.openStorage()},makeSDK:health.makeSDK)

@@ -62,3 +62,9 @@ body:not(:has(#settings-pane:not([hidden]))) main{width:100%;min-height:0;flex:1
 #health-sync-progress{flex:none;margin:0 0 4px;color:var(--muted);font-size:.75rem;font-variant-numeric:tabular-nums}
 #health-sync-progress label{display:block;margin:0;line-height:1.3}
 #health-sync-bar{display:block;width:100%;height:3px;accent-color:var(--accent)}
+.health-sharing-row{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
+.health-sharing-row input[role=switch]{appearance:none;width:46px;height:28px;min-height:0;flex:none;margin:0;padding:2px;border:0;border-radius:20px;background:#767680;cursor:pointer}
+.health-sharing-row input[role=switch]::before{content:'';display:block;width:24px;height:24px;border-radius:50%;background:white}
+.health-sharing-row input[role=switch]:checked{background:#248349}
+.health-sharing-row input[role=switch]:checked::before{transform:translateX(18px)}
+.health-sharing-row input[role=switch]:disabled{opacity:.55}

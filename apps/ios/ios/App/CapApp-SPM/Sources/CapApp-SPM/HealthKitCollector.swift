@@ -22,6 +22,10 @@ struct NativeHealthCollectionPlan: Equatable {
     static func ==(lhs:Self,rhs:Self)->Bool {
         lhs.category.utf8.elementsEqual(rhs.category.utf8) && lhs.scope.utf8.elementsEqual(rhs.scope.utf8) && lhs.mappingVersion.utf8.elementsEqual(rhs.mappingVersion.utf8) && lhs.start.timeIntervalSince1970.bitPattern==rhs.start.timeIntervalSince1970.bitPattern && lhs.end.timeIntervalSince1970.bitPattern==rhs.end.timeIntervalSince1970.bitPattern
     }
+    static let sharingScope = "phone-health-sharing/1:"
+    var ongoingSharing: Bool { scope.hasPrefix(Self.sharingScope) }
+    // Existing explicitly dated plans retain their original end date.
+    var queryEnd: Date? { ongoingSharing ? nil : end }
     var anchorScope: String {
         // Length-framed exact bytes avoid Unicode normalization and delimiter aliases
         // in the protected outbox's existing String-keyed cursor dictionary.
@@ -309,7 +313,7 @@ final class HealthKitSDK: NativeHealthSDK {
         guard available,plan.valid,let type=Self.sampleType(plan.category) else{return nil}
         let health=self.health
         return {notification,registered in
-            let query=HKObserverQuery(sampleType:type,predicate:HKQuery.predicateForSamples(withStart:plan.start,end:plan.end,options:[])){_,finish,error in notification(error,finish)}
+            let query=HKObserverQuery(sampleType:type,predicate:HKQuery.predicateForSamples(withStart:plan.start,end:plan.queryEnd,options:[])){_,finish,error in notification(error,finish)}
             health.execute(query)
             // Preserves the existing explicit legacy capability. Bounded Runtime
             // calls never request it and do not claim background qualification.
@@ -331,7 +335,7 @@ final class HealthKitSDK: NativeHealthSDK {
         guard let type=Self.sampleType(plan.category) else{throw HealthOutboxError.invalid}
         let previous:HKQueryAnchor?
         if let anchor {guard let value=try NSKeyedUnarchiver.unarchivedObject(ofClass:HKQueryAnchor.self,from:anchor) else{throw HealthOutboxError.corrupt};previous=value}else{previous=nil}
-        let query=HKAnchoredObjectQuery(type:type,predicate:HKQuery.predicateForSamples(withStart:plan.start,end:plan.end,options:[]),anchor:previous,limit:512){ _,samples,deleted,next,error in
+        let query=HKAnchoredObjectQuery(type:type,predicate:HKQuery.predicateForSamples(withStart:plan.start,end:plan.queryEnd,options:[]),anchor:previous,limit:512){ _,samples,deleted,next,error in
             do {
                 if let error {throw error};guard let next else{throw HealthOutboxError.invalid}
                 let observations=try (samples ?? []).map{try Self.map($0,category:plan.category)}

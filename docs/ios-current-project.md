@@ -11,8 +11,7 @@ artifacts, not independent development roots. Do not edit or install those copie
 
 - Bundle ID stays `org.lifestream.assistant`; signing team and automatic signing stay unchanged.
 - HealthKit capability and the operator's Health read-purpose text are retained.
-- The build-37 recovery-disabled compiler condition remains the default. This cleanup
-  does not authorize enabling collection, changing server state or importing health data.
+- Use the regular build for Apple Health sharing. The recovery packaging flavor disables native Health setup. Sharing begins when the user turns it on in Settings.
 - Private resources are outside Git. The project's ignored `App/public` link references
   a preserved build-37 resource snapshot. Do not commit this link or resources.
 - Generic `npm run sync` deliberately refuses to overwrite linked private resources.

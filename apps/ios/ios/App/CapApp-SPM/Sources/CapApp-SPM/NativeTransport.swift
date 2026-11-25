@@ -38,6 +38,7 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
     var auditStopConfirmed:(()->Void)?
     var endpoint:URL?; var csrf=""; var epoch=0
     private var effectiveContextRef:String?
+    var healthSharingProblem: String?
     private var effectiveOwner:(principal:String,session:String)?
     private(set) var effectiveIsSelf=false
     var hasEffectiveOwner:Bool{effectiveOwner != nil}
@@ -108,7 +109,7 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
     private func reset() {
         healthContextTransition?(.init(kind:.connectionReset,oldPrincipal:effectiveOwner?.principal,oldSession:effectiveOwner?.session,proposedPrincipal:nil,proposedSession:nil,authData:nil))
         notifyHealthContextWillChange(true)
-        audit.invalidatePendingStatus();auditChanged?();endpoint=nil;epoch += 1;csrf="";effectiveContextRef=nil;effectiveOwner=nil;effectiveIsSelf=false;socketEpochs.removeAll();noteConnection(.reset);session.invalidateAndCancel();session=makeSession()
+        healthSharingProblem=nil; audit.invalidatePendingStatus();auditChanged?();endpoint=nil;epoch += 1;csrf="";effectiveContextRef=nil;effectiveOwner=nil;effectiveIsSelf=false;socketEpochs.removeAll();noteConnection(.reset);session.invalidateAndCancel();session=makeSession()
         session.configuration.httpCookieStorage?.removeCookies(since:.distantPast)
     }
     private func validated(_ value:String) throws -> URL {
@@ -255,7 +256,8 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
         let healthControlAllowed=internalHealthControl && method=="POST" && path=="/api/runtime/v1/mobile-context" &&
             healthControlObject?["producerPin"] as? [String:String]==["schemaId":MobileOrdinaryControl.schemaId,"schemaVersion":"1.0.0","digest":MobileOrdinaryControl.schemaDigest] && ["control","reconcile"].contains(healthControlObject?["operation"] as? String ?? "")
         let healthConsentAllowed=internalHealthConsent && method=="POST" && path=="/api/runtime/v1/mobile-context-policy" && body.flatMap{(try? JSONSerialization.jsonObject(with:Data($0.utf8))) as? [String:Any]}?["producerPin"] as? [String:String]==MobileHealthSourceConsent.pin
-        guard let endpoint,(EndpointPolicy.permits(path,method:method)||previewAllowed||healthAllowed||healthConsentAllowed||healthControlAllowed||(internalCalendarConsent && method=="POST" && path=="/api/runtime/v1/mobile-context-policy")),body?.utf8.count ?? 0 <= ((healthConsentAllowed || healthControlAllowed) ? 131072:65536),maxBytes>0,maxBytes<=64*1024*1024 else {done(.failure(VoiceError.invalidEndpoint));return nil}
+        let healthStorageAllowed = internalHealthConsent && method == "POST" && path == "/api/runtime/v1/mobile-context-policy" && healthControlObject?["operation"] as? String == "preparePhoneStorage"
+        guard let endpoint,(EndpointPolicy.permits(path,method:method)||previewAllowed||healthAllowed||healthConsentAllowed||healthStorageAllowed||healthControlAllowed||(internalCalendarConsent && method=="POST" && path=="/api/runtime/v1/mobile-context-policy")),body?.utf8.count ?? 0 <= ((healthConsentAllowed || healthControlAllowed) ? 131072:65536),maxBytes>0,maxBytes<=64*1024*1024 else {done(.failure(VoiceError.invalidEndpoint));return nil}
         var req=URLRequest(url:endpoint.appendingPathComponent(String(path.dropFirst())))
         req.httpMethod=method;req.timeoutInterval=timeout;req.httpBody=body?.data(using:.utf8)
         req.setValue(endpoint.absoluteString.trimmingCharacters(in:CharacterSet(charactersIn:"/")),forHTTPHeaderField:"Origin")
@@ -273,6 +275,15 @@ final class NativeTransport: NSObject, URLSessionDataDelegate, URLSessionWebSock
         let ticket=epoch,task=session.dataTask(with:req)
         pending[ObjectIdentifier(task)]=Pending(limit:maxBytes,onResponse:onResponse,done:{[weak self] result in
             guard let self,self.epoch==ticket else {done(.failure(VoiceError.staleTurn));return}
+            if (internalHealth || internalHealthControl || internalHealthConsent),
+               case .success(let (data, response)) = result, response.statusCode >= 400 {
+                let code = (try? JSONSerialization.jsonObject(with: data) as? [String:Any])?["code"] as? String
+                if ["health_basic_operation_unavailable","health_policy_unavailable","mobile_context_unavailable"].contains(code ?? "") {
+                    self.healthSharingProblem = "Health sharing is disabled on your Lifestream server."
+                } else if response.statusCode == 401 {
+                    self.healthSharingProblem = "Sign in again to share health records."
+                }
+            }
             if let labels=auditLabels {
                 let code:Int,requestId:Int?;if case .success((_,let response))=result {code=response.statusCode;let session=response.value(forHTTPHeaderField:"x-lfs-audit-session");let raw=response.value(forHTTPHeaderField:"x-lfs-audit-request");requestId=session==labels.session ? raw.flatMap{Int($0)}:nil}else{code=0;requestId=nil}
                 _=self.audit.record(.privacyRequestFinish,session:labels.session,attempt:labels.attempt,turn:nil,value:code,request:requestId)
