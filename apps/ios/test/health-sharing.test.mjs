@@ -3,6 +3,14 @@ import assert from 'node:assert/strict';
 import {enableHealthSharing, stopHealthSharing} from '../web/health-sharing.js';
 
 const context = {endpointId:'phone', revision:7};
+test('turning sharing off uses the current saved preference while the choice list is empty', async () => {
+  const requests=[];
+  await stopHealthSharing(async (_,input) => {
+    requests.push(input.operation);
+    return {persistence:input.operation==='stopCurrent'?'savedDisabled':'savedEnabled',choices:[]};
+  });
+  assert.deepEqual(requests,['status','stopCurrent']);
+});
 function fixture() {
   const calls = [], grants = new Set();
   let enrollment, source, action, consent, pendingApproval, prepared = false, sharing = false;

@@ -115,6 +115,8 @@ final class NativeHealthSessionOwner {
             guard !run.terminal else { return }
             guard case .success(let value) = initial else { finish(run, .failure(Failure.stale)); return }
             run.snapshot = value
+            run.display = ["phase": "preparing"]
+            progressChanged()
             begin(run); var claimed = false
             policy.reconcile(enrollment: scope.enrollment, expectedEndpoint: scope.endpoint) { [self] result in
                 precondition(Thread.isMainThread)

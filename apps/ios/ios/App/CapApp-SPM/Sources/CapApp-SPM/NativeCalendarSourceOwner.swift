@@ -201,10 +201,15 @@ final class NativeCalendarSourceOwner {
             }
         }
     }
+    private var foregroundSavedRuntime:NativeHealthRuntime?{
+        guard savedForegroundAllowed,resources.protectedAvailable() else{return nil}
+        if let installed=connection.host.runtime,installed.choiceSourceCurrent,installed.savedHealthSelection != nil{return installed}
+        guard let binding=controlBinding,current(binding),let runtime=controlRuntime,runtime.choiceSourceCurrent else{return nil}
+        return runtime
+    }
     func savedHealthRecoveryStatus()->[String:Any]{
         refreshSavedRecoveryChoiceFlags()
-        let bound=controlBinding.map{authorityCurrent($0) && transport.epoch==$0.epoch} ?? false
-        let runtime=savedForegroundAllowed && bound ? controlRuntime:nil,known=runtime?.savedSelectionPersistence ?? "notLoaded"
+        let known=foregroundSavedRuntime?.savedSelectionPersistence ?? "notLoaded"
         let preference:String
         if known != "notLoaded"{preference=known}
         else if savedRecoveryChoices.count==1{let value=savedRecoveryChoices[0].1;preference=value.requiresRebind ? "requiresRebind":value.updatesEnabled ? "savedEnabled":"savedDisabled"}
@@ -214,6 +219,13 @@ final class NativeCalendarSourceOwner {
     func savedHealthRecoveryChoice(input:[String:Any],completion:@escaping([String:Any])->Void){
         let operation=input["operation"] as? String
         if operation=="status",Set(input.keys)==["operation"]{completion(savedHealthRecoveryStatus());return}
+        if operation=="stopCurrent",Set(input.keys)==["operation"]{
+            guard let runtime=foregroundSavedRuntime,let selection=runtime.savedHealthSelection,
+                  savedRecoveryJob==nil,selection.updatesEnabled,runtime.stopSavedHealthSelection(selection) else{
+                completion(reply("unavailable","current_saved_choice_required"));return
+            }
+            completion(savedHealthRecoveryStatus());return
+        }
         refreshSavedRecoveryChoiceFlags()
         guard ["restore","stop"].contains(operation ?? ""),Set(input.keys)==["operation","choice"],let raw=input["choice"] as? String,
               let row=savedRecoveryChoices.first(where:{$0.0.uuidString.lowercased()==raw}),!row.1.requiresRebind,

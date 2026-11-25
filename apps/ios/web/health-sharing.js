@@ -117,9 +117,11 @@ export async function stopHealthSharing(call) {
   const saved = await call('healthSavedRecoveryChoice', {operation:'status'});
   requireResult(Array.isArray(saved.choices), 'This phone could not check whether sharing has stopped.');
   const active = saved.choices.filter(c => c.updatesEnabled && !c.requiresRebind);
-  requireResult(active.length || saved.persistence === 'savedDisabled' || saved.state === 'absent', 'Sharing may still be on. Try turning it off again.');
-  for (const {choice} of active) {
-    let result = await call('healthSavedRecoveryChoice', {operation:'stop', choice});
+  const stops = active.map(({choice}) => ({operation:'stop', choice}));
+  if (!stops.length && saved.persistence === 'savedEnabled') stops.push({operation:'stopCurrent'});
+  requireResult(stops.length || saved.persistence === 'savedDisabled' || saved.state === 'absent', 'Sharing may still be on. Try turning it off again.');
+  for (const request of stops) {
+    let result = await call('healthSavedRecoveryChoice', request);
     for (let attempt = 0; result.persistence === 'pending' && attempt < 25; attempt++) {
       await new Promise(resolve => setTimeout(resolve, 120));
       result = await call('healthSavedRecoveryChoice', {operation:'status'});
@@ -129,8 +131,9 @@ export async function stopHealthSharing(call) {
 }
 
 export function createHealthSharingView({panel, toggle, note, native, owner}) {
-  let generation = 0, busy = false;
+  let generation = 0, busy = false, statusTimer;
   function invalidate() {
+    clearTimeout(statusTimer);
     generation++;
     busy = false;
     toggle.checked = false;
@@ -140,6 +143,7 @@ export function createHealthSharingView({panel, toggle, note, native, owner}) {
   async function run(change) {
     const identity = owner();
     if (!identity || busy) return;
+    clearTimeout(statusTimer);
     const token = generation;
     const current = () => token === generation && owner()?.key === identity.key;
     const call = async (name, input = {}) => {
@@ -152,7 +156,16 @@ export function createHealthSharingView({panel, toggle, note, native, owner}) {
     busy = true;
     toggle.disabled = true;
     let available = true;
+    function waitForStatus(message) {
+      available = false;
+      toggle.indeterminate = true;
+      note.textContent = message;
+      statusTimer = setTimeout(() => {
+        if (current() && panel.open && !panel.closest('[hidden]')) void run(false);
+      }, 1500);
+    }
     try {
+      toggle.indeterminate = false;
       const device = await call('healthSharingDevice');
       available = device.supported === true && device.configured === true;
       requireResult(device.supported, 'Apple Health is unavailable on this device.');
@@ -166,20 +179,34 @@ export function createHealthSharingView({panel, toggle, note, native, owner}) {
       } else {
         const saved = await call('healthSavedRecoveryChoice', {operation:'status'});
         requireResult(Array.isArray(saved.choices), 'Health sharing status is unavailable.');
-        toggle.checked = saved.choices.some(row => row.updatesEnabled && !row.requiresRebind);
+        if (saved.persistence === 'savedEnabled') toggle.checked = true;
+        else if (saved.persistence === 'savedDisabled') toggle.checked = false;
+        else if (saved.persistence === 'pending' || saved.state === 'pending') {
+          waitForStatus('Checking whether this phone is sharing…');
+          return;
+        }
+        else if (saved.choices.some(row => row.updatesEnabled && !row.requiresRebind)) toggle.checked = true;
+        else if (saved.state === 'absent' || saved.state === 'disabled' || saved.persistence === 'requiresRebind') toggle.checked = false;
+        else {
+          waitForStatus('The sharing setting is unavailable. Checking again…');
+          return;
+        }
         note.textContent = toggle.checked ? 'Sharing is on.' : 'Share the past 30 days and new records. Your server keeps new imports for 30 days by default.';
       }
     } catch (error) {
       if (current()) {
         if (change) toggle.checked = !desired;
         const info = change && desired ? await call('healthSharingDevice').catch(() => null) : null;
-        if (current()) note.textContent = info?.problem || error.message || 'This phone could not update Health sharing.';
+        if (current()) {
+          if (!change && available) waitForStatus('The sharing setting is unavailable. Checking again…');
+          else note.textContent = info?.problem || error.message || 'This phone could not update Health sharing.';
+        }
       }
     } finally {
       if (current()) { busy = false; toggle.disabled = !available; }
     }
   }
-  panel.addEventListener('toggle', () => { if (panel.open) void run(false); });
+  panel.addEventListener('toggle', () => { if (panel.open) void run(false); else clearTimeout(statusTimer); });
   toggle.addEventListener('change', () => void run(true));
   return {invalidate, refresh() { if (panel.open) void run(false); }};
 }

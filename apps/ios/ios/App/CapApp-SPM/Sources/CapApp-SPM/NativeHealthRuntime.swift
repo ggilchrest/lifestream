@@ -171,6 +171,11 @@ final class NativeHealthRuntime: NativeHealthPolicySuspending {
         guard current(), root.healthIOCurrent, !preservesPauseHold else { return nil }
         if let progress = sessionOwner?.progress { return progress }
         if let run = observationLocal, observationInterest === run.interest { return ["phase": "reading"] }
+        if let interest = observationInterest, backgroundCollectionEligible, !interest.unsupported,
+           interest.delivering || !interest.delivery.isEmpty ||
+           (!interest.opportunity.isEmpty && (interest.proofReady || interest.renewRequested || interest.renewing)) {
+            return ["phase": "preparing"]
+        }
         return nil
     }
     private func publishSyncProgress() {
@@ -217,6 +222,7 @@ final class NativeHealthRuntime: NativeHealthPolicySuspending {
         let configuration:Configuration,namespace:UUID,revision:Int,current:()->Bool
         var armed=Set<String>(),catchup=Set<String>(),opportunity=Set<String>(),delivery=Set<String>()
         var renewRequested=true,renewing=false,proofReady=false,unsupported=false
+        var delivering=false
         init(_ c:Configuration,_ n:UUID,_ revision:Int,_ current:@escaping()->Bool){configuration=c;namespace=n;self.revision=revision;self.current=current}
     }
     private final class ObservationLocal {
@@ -1482,7 +1488,7 @@ extension NativeHealthRuntime {
         if let i=observationInterest{return i.configuration.matches(c) && i.namespace==namespace && i.revision==revision && i.current()}
         let i=ObservationInterest(c,namespace,revision,fresh)
         i.opportunity.formUnion(c.plans.filter(\.ongoingSharing).map(\.category))
-        observationInterest=i;queueObservationPump();return true
+        observationInterest=i;publishSyncProgress();queueObservationPump();return true
     }
     func stopObservation(){
         precondition(Thread.isMainThread)
@@ -1513,7 +1519,7 @@ extension NativeHealthRuntime {
     func observationForegroundOpportunity(){
         backgroundOpportunity &+= 1
         guard let i=observationInterest,observationCurrent(i) else{return}
-        i.renewRequested=true;i.opportunity.formUnion(i.configuration.plans.map(\.category));queueObservationPump()
+        i.renewRequested=true;i.opportunity.formUnion(i.configuration.plans.map(\.category));publishSyncProgress();queueObservationPump()
     }
     private func queueObservationPump(){
         guard observationInterest != nil,!observationPumpQueued else{return};observationPumpQueued=true
@@ -1529,7 +1535,7 @@ extension NativeHealthRuntime {
         reconcileBackgroundObservation(i)
         guard backgroundCollectionEligible else{return}
         if let category=i.delivery.sorted().first,let sessionOwner{
-            i.delivery.remove(category);observationBegin()
+            i.delivery.remove(category);i.delivering=true;observationBegin();publishSyncProgress()
             sessionOwner.deliverPending(scope:.init(human:rootConfiguration.human,enrollment:i.configuration.enrollment,endpoint:rootConfiguration.endpoint,category:category)){[self] result in
                 sessionOwner.whenDrained{[self] in
                     if backgroundForeground, observationCurrent(i),
@@ -1541,7 +1547,7 @@ extension NativeHealthRuntime {
                         default: break
                         }
                     }
-                    observationEnd()
+                    i.delivering=false;publishSyncProgress();observationEnd()
                 }
             };return
         }
@@ -1563,7 +1569,7 @@ extension NativeHealthRuntime {
             DispatchQueue.main.async{[self] in
                 i.renewing=false;i.proofReady=allowed && observationCurrent(i)
                 // A failed refresh consumes this opportunity. No recursive retry.
-                i.renewRequested=false;observationEnd()
+                i.renewRequested=false;publishSyncProgress();observationEnd()
             }
         }
         snapshot{[self] before in
@@ -1594,7 +1600,7 @@ extension NativeHealthRuntime {
                 self.collectObservation(i,plan:plan,finishSDK:done)
             }
             guard observationCurrent(i) else{return}
-            if accepted{i.armed.insert(plan.category)}else{i.unsupported=true;collector.stop();i.armed.removeAll();return}
+            if accepted{i.armed.insert(plan.category)}else{i.unsupported=true;collector.stop();i.armed.removeAll();publishSyncProgress();return}
         }
     }
     private func collectObservation(_ i:ObservationInterest,plan:NativeHealthCollectionPlan,allowExistingQueue:Bool=false,finishSDK:@escaping()->Void){

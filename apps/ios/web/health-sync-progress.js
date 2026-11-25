@@ -20,6 +20,8 @@ export function createHealthSyncProgress({panel, label, bar, toggle, snapshot, s
     if (!allowed || !toggle.checked) return;
     if (value?.phase === 'reading') {
       label.textContent = 'Reading health records…';
+    } else if (value?.phase === 'preparing') {
+      label.textContent = 'Syncing health records…';
     } else {
       const {phase, confirmed, total} = value ?? {};
       if (!['syncing', 'finished'].includes(phase) || !Number.isSafeInteger(total) || total <= 0 ||
@@ -34,12 +36,11 @@ export function createHealthSyncProgress({panel, label, bar, toggle, snapshot, s
 
   function refresh() {
     const ticket = ++revision;
-    clear();
     if (allowed && toggle.checked) {
       void snapshot().then(value => {
         if (ticket === revision) update(value.healthSyncProgress);
       }).catch(() => {});
-    }
+    } else clear();
   }
 
   toggle.onchange = () => {

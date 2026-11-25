@@ -25,7 +25,7 @@ export function installApp(native) {
  let newChat=true,needsChatResolution=false,chatsLoaded=false;
  let personalGeneration=0,personalSnapshot=null,userLocked=false,pendingLock=null,pendingLockBody=null,unresolvedElsewhere=false,personalAppConfirmed=false;
  const selections=new Map();let disabledAnimations={},physicsPreferences={},rememberedAssistant='',connectionGeneration=0,restoring=false,savedIdentity='',textGeneration=0,textState={},audienceGeneration=0,declaringAudience=0,audienceLeaseId=null,probeActive=false,probeGeneration=0,probeMode='media';
- const pane=settings=>{if(settings)log('settings_opened');$(settings?'status-settings':'status-home').append($('status'));$('settings-pane').hidden=!settings;$('main-pane').hidden=settings;$('open-settings').hidden=settings;$('open-settings').setAttribute('aria-expanded',String(settings));if(settings){$('settings-title').focus();healthSharing.refresh();}window.scrollTo({top:0,behavior:'instant'});};
+const pane=settings=>{if(settings)log('settings_opened');$(settings?'status-settings':'status-home').append($('status'));$('settings-pane').hidden=!settings;$('main-pane').hidden=settings;$('open-settings').hidden=settings;$('open-settings').setAttribute('aria-expanded',String(settings));healthProgress.setPrivate(!settings && !!session && privateAllowed && !document.hidden);if(settings){$('settings-title').focus();healthSharing.refresh();}window.scrollTo({top:0,behavior:'instant'});};
  const saveSettings=()=>native.saveSettings({settings:JSON.stringify({assistantId:$('assistant').value,selections:Object.fromEntries(selections),disabledAnimations,physicsPreferences})}).then(value=>{log('settings_saved');return value;},error=>{log('settings_failed');throw error;});
  const loadSettings=raw=>{selections.clear();disabledAnimations={};physicsPreferences={};rememberedAssistant='';try{const value=JSON.parse(raw??'{}');if(typeof value.assistantId==='string')rememberedAssistant=value.assistantId;for(const [id,item] of Object.entries(value.selections??{}).slice(0,100))if(typeof item?.id==='string'&&typeof item?.digest==='string')selections.set(id,{id:item.id,digest:item.digest});for(const [id,off] of Object.entries(value.disabledAnimations??{}).slice(0,200))if(off===true)disabledAnimations[id]=true;for(const [key,p] of Object.entries(value.physicsPreferences??{}).slice(0,100))if(p&&['hair','soft','collision'].every(k=>typeof p[k]==='boolean'))physicsPreferences[key]={hair:p.hair,soft:p.soft,collision:p.collision};}catch{/* Invalid old preferences use safe defaults. */}};
  const animations=item=>{
@@ -67,7 +67,7 @@ export function installApp(native) {
  const controls=()=>{
   const key=healthOwner()?.key ?? null;
   if(key!==healthOwnerKey){healthOwnerKey=key;healthSharing.invalidate();if(key&&!$('settings-pane').hidden)healthSharing.refresh();}
-  healthProgress.setPrivate(!!session && privateAllowed && !document.hidden);
+  healthProgress.setPrivate(!!session && privateAllowed && !document.hidden && !$('main-pane').hidden);
   $('health-inventory-panel').hidden=!session||!privateAllowed;$('calendar-connections-panel').hidden=!session||!privateAllowed;
   const active=!!nativeState.active,busy=!!textState.busy||!!appearanceLoad,historyUnavailable=historyBusy||!!history?.isPending()||needsChatResolution;renderActivity(nativeState,textState);
   $('refresh').disabled=!!appearanceLoad;
