@@ -254,6 +254,13 @@ export function installApp(native) {
  $('text-input').oninput=controls;
  $('text-input').onkeydown=event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();if(!$('send-text').disabled)$('text-chat').requestSubmit();}};
  let nextItemRevision,sourceSurface;
+ function showChatSurface(target,messages,owner,assistantId){
+  renderChatSurface(target,messages,(name,item,revision)=>{
+   if(textState.busy||session!==owner||!privateAllowed||document.hidden||$('assistant').value!==assistantId)return;
+   sourceSurface=target;nextItemRevision=revision;$('text-input').value=name==='chat'?item:name+' '+item+(name==='snooze'?' for 10 minutes':'');
+   $('text-chat').requestSubmit();nextItemRevision=undefined;sourceSurface=undefined;
+  });
+ }
  $('text-chat').onsubmit=run(async()=>{
   const source=sourceSurface,itemRevision=nextItemRevision,prompt=$('text-input').value.trim();if(!prompt||textState.busy)return;
   if(!session||!$('assistant').value||nativeState.active||starting||restoring)throw Error('Stop listening and select an Assistant before sending text.');
@@ -265,12 +272,7 @@ export function installApp(native) {
    if(ticket!==textGeneration||!privateAllowed||document.hidden)return;
    if(result.trace!==trace||typeof result.text!=='string')throw Error('The text response did not match this message.');
    message('assistant',result.text,trace);
-   const render=target=>renderChatSurface(target,result.surface,(name,item,revision)=>{
-    if(textState.busy||session!==owner||!privateAllowed||document.hidden||$('assistant').value!==assistantId)return;
-    sourceSurface=target;nextItemRevision=revision;$('text-input').value=name==='chat'?item:name+' '+item+(name==='snooze'?' for 10 minutes':'');
-    $('text-chat').requestSubmit();nextItemRevision=undefined;sourceSurface=undefined;
-   });
-   if(result.surface){render($('transcript').lastElementChild.lastElementChild);if(source?.isConnected)render(source);}
+   if(result.surface){showChatSurface($('transcript').lastElementChild.lastElementChild,result.surface,owner,assistantId);if(source?.isConnected)showChatSurface(source,result.surface,owner,assistantId);}
    textState={complete:true};chatsLoaded=false;status('Text reply received. Microphone remains off.');
   }catch(error){if(ticket!==textGeneration)return;
    // Only the native client's recognized pre-inference rejection is safe to
@@ -311,6 +313,11 @@ export function installApp(native) {
    nativeState=event.state;$('route').textContent=event.state.route||'System route';if(!textState.busy)status(event.state.phase);
    renderer?.applyState(event.state.playing?'speaking':event.state.active?'listening':'idle');
    if(event.state.authorizationLost===true){userLocked=true;personalSnapshot=null;protect();}controls();
+  }else if(event.type==='listSurface'){
+   if(privateAllowed&&!document.hidden&&session){
+    const entry=[...$('transcript').children].find(x=>x.dataset.role==='assistant'&&x.dataset.trace===event.trace);
+    if(entry)showChatSurface(entry.lastElementChild,event.messages,session,$('assistant').value);
+   }
   }else if(event.type==='transcript'){message('user',event.text,event.trace,false,true);if(event.reviewListRequest===true&&privateAllowed&&!document.hidden&&!$('text-input').value)$('text-input').value=event.text;}else if(event.type==='textDelta')message('assistant',event.text,event.trace,true);
  });
  // Reconcile after listener registration so early native restore events are not lost.

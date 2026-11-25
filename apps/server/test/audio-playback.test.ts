@@ -63,3 +63,16 @@ test('a dictated list change produces a reviewable draft and bypasses inference 
  assert.ok(f.events.some(e=>e.type==='transcript'&&e.text===text&&e.reviewListRequest===true));
  assert.ok(f.events.some(e=>e.event?.payload?.type==='textDelta'&&e.event.payload.text.includes('personal chat')));
 });
+
+test('verified speech reads back the saved list through the same operation as typed chat',async t=>{
+ const f=await fixture();t.after(()=>f.session.close());
+ const {Database}=await import('@lifestream/storage-sqlite'),{personalListReply}=await import('../src/runtime/list-surface.ts');
+ const db=new Database({path:':memory:'});db.migrate();t.after(()=>db.close());
+ f.deps.stt={async *transcribe(){yield {kind:'data',payload:{type:'committed',text:'Add bolts to my hardware list'}};yield {kind:'terminal',outcome:'succeeded'};}};
+ f.deps.prepareSpokenList=(_request:unknown,trace:string,command:Parameters<typeof personalListReply>[2])=>
+  ()=>personalListReply(db,'synthetic-speaker',command,trace,'UTC',Date.now());
+ await f.turn();
+ assert.ok(f.events.some(e=>e.type==='listSurface'&&JSON.stringify(e.messages).includes('bolts')));
+ assert.ok(f.events.some(e=>e.event?.payload?.type==='textDelta'&&e.event.payload.text.includes('bolts')));
+ assert.match(personalListReply(db,'synthetic-speaker',{kind:'show',list:'hardware'},randomUUID(),'UTC',Date.now()).text,/bolts/);
+});

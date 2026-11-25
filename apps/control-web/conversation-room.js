@@ -46,6 +46,7 @@ export function installConversationRoom({anchor,api,context}){
  const output=new ConversationOutput({onState:state,onReplyAudio:detail=>window.dispatchEvent(new CustomEvent('lifestream-response-playback',{detail})),onClosed:()=>{urgent?.audioClosed();capture?.stop(false);renderBusy();},onError:error=>{capture?.stop();status(error.message,true);renderBusy();},
  onMessage:message=>{
   if(message.type==='turnStarted'){if(!same(voiceScope,voiceEpoch))throw new Error('Voice scope changed.');$('timing').textContent='No pending timing adjustment.';capture.receive(message);output.beginReply(message.interactionTraceId);renderBusy();return true;}
+  if(message.type==='listSurface'){if(!capture?.traces.has(message.interactionTraceId)||!same(voiceScope,voiceEpoch))return true;const entry=voiceTurns.get(message.interactionTraceId);if(entry)renderList(message.messages,entry,voiceScope,voiceEpoch);return true;}
   if(message.type==='transcript'){if(!capture?.traces.has(message.interactionTraceId)||!same(voiceScope,voiceEpoch)||typeof message.text!=='string'||message.text.length>16000)throw new Error('Unexpected voice transcript.');const entry=addTurn('user',message.text);mark(entry,'Recognized voice');if(message.reviewListRequest===true&&!$('message').value)$('message').value=message.text;return true;}
   if(message.event?.payload.type==='terminal'){capture?.receive(message);renderBusy();}
   return false;

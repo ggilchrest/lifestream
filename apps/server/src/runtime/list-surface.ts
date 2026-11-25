@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { describeItem, type ListItem } from './personal-lists.ts';
+import type { Database } from '@lifestream/storage-sqlite';
+import { executeList, describeItem, type ListItem } from './personal-lists.ts';
 
 export function listSurface(
   heading: string,
@@ -127,4 +128,21 @@ export function reminderForm(title: string) {
     },
   ];
   return [{ surfaceUpdate: { surfaceId, components } }, { beginRendering: { surfaceId, root: 'root' } }];
+}
+
+export function personalListReply(
+  db: Database,
+  owner: string,
+  command: Parameters<typeof executeList>[2],
+  key: string,
+  zone: string,
+  now: number,
+) {
+  if (command.kind === 'remind' && !command.cue && !command.clock)
+    return {
+      text: 'Choose a date and time, or tell me when to remind you.',
+      messages: reminderForm(command.title),
+    };
+  const result = executeList(db, owner, command, key, zone, now);
+  return { text: result.text, messages: listSurface(result.heading, result.items, zone, result.next) };
 }

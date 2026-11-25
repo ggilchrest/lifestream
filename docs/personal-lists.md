@@ -1,4 +1,4 @@
-﻿# Personal lists and reminder displays
+# Personal lists and reminder displays
 
 Use the conversation room or iPhone text chat in a signed-in personal session. The host saves items under the authenticated principal. A new chat or a second sign-in for that principal reads the same SQLite records.
 
@@ -16,7 +16,7 @@ Use the conversation room or iPhone text chat in a signed-in personal session. T
 | Change the trigger | `Reschedule check the finish to 5 PM` or `Reschedule check the finish to next time in the shop` |
 | Snooze or cancel | `Snooze check the finish for 10 minutes` or `Cancel check the finish` |
 
-An unspecified cue opens a picker when the host has no matching inference. Time requests use the submitting client's IANA time zone. A committed speech transcript from an unidentified speaker goes into the personal chat draft for review and submission. Existing text in the draft takes precedence.
+An unspecified cue opens a picker when the host has no matching inference. Time requests use the submitting client's IANA time zone. A host with a trusted per-turn speaker verifier can execute a spoken operation for the verified account and speak the saved result. A committed speech transcript from an unidentified speaker goes into the personal chat draft for review and submission. Existing text in the draft takes precedence.
 
 The server streams both a text reply and an A2UI v0.8 surface. Desktop and mobile share the local renderer. Button actions carry the saved item ID and revision. [Google A2UI v0.8 wire schema](https://github.com/google/A2UI/blob/main/specification/v0_8/json/server_to_client_with_standard_catalog.json)
 

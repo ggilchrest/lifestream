@@ -214,6 +214,21 @@ test('4 PM through signed-in chat, published PWCE transport, an offline phone an
   const poll = async (shown?: string) =>
     JSON.parse((await post(wall, '/api/runtime/v1/reminder-display', { assistantId, shown })).data)
       .cards;
+  if (process.env.PLAYWRIGHT_MODULE) {
+    const { browserWallCheck } = await import('./reminder-wall-browser.mjs');
+    await browserWallCheck({
+      module: process.env.PLAYWRIGHT_MODULE,
+      origin: 'http://127.0.0.1:' + port,
+      assistantId,
+      windows,
+      wall,
+      advance: () => t.mock.timers.setTime(start + 60000),
+      closeWindows: () => post(windows, '/api/auth/v1/sign-out', {}),
+      newWindows: () => signIn(windows),
+    });
+    assert.ok(calls.includes('context.query'));
+    return;
+  }
   await chat(windows, 'Remind me at 4 PM to check the glue-up');
   await post(windows, '/api/auth/v1/sign-out', {});
   assert.deepEqual(await poll(), []);
