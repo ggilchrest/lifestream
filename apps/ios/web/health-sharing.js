@@ -50,6 +50,13 @@ async function prepareSource(call) {
   return source;
 }
 
+function sharingPermission(review, input, purpose) {
+  const status = review.statuses?.find(row => row.purpose === purpose);
+  requireResult(review.state === 'review' && status && review.source?.sourceNamespace === input.sourceNamespace &&
+    review.source.enrollmentId === input.enrollmentId && review.source.category === input.category, 'The server could not verify Health sharing permissions.');
+  return status.consentState;
+}
+
 async function consent(call, source, category, purpose) {
   const input = {sourceNamespace:source.sourceNamespace, enrollmentId:source.currentEnrollmentId, category};
   let review = await call('healthLoadSourceConsent', input);
@@ -57,17 +64,20 @@ async function consent(call, source, category, purpose) {
     await call('healthRecoverSourceConsent');
     review = await call('healthLoadSourceConsent', input);
   }
-  const status = review.statuses?.find(row => row.purpose === purpose);
-  requireResult(review.state === 'review' && status && review.source?.sourceNamespace === input.sourceNamespace &&
-    review.source.enrollmentId === input.enrollmentId && review.source.category === category, 'The server could not verify Health sharing permissions.');
-  if (status.consentState === 'valid') return;
+  if (sharingPermission(review, input, purpose) === 'valid') return;
   review = await call('healthRequestSourceConsent', {reviewId:review.reviewId, purpose, validity:{kind:'untilRevoked'},
     reviewDeadlineAt:new Date(Date.now() + 5 * 60000).toISOString()});
   requireResult(review.state === 'review' && review.approvalAvailable === true && review.request?.scope?.purpose === purpose,
     'The server could not approve sharing from this phone.');
-  const receipt = await call('healthConfirmSourceConsent', {reviewId:review.reviewId, humanConfirmed:true});
+  let receipt = await call('healthConfirmSourceConsent', {reviewId:review.reviewId, humanConfirmed:true});
+  const needsReceipt = receipt.state === 'held';
+  if (needsReceipt) receipt = await call('healthRecoverSourceConsent');
   requireResult(receipt.state === 'recorded' && receipt.decision === 'approved' && receipt.purpose === purpose && receipt.category === category,
-    'The server did not confirm Health sharing permission.');
+    'Couldn’t verify sharing permission. Turn sharing on again to check.');
+  if (needsReceipt) {
+    const current = await call('healthLoadSourceConsent', input);
+    requireResult(sharingPermission(current, input, purpose) === 'valid', 'Sharing permission is no longer active for this phone.');
+  }
 }
 
 export async function enableHealthSharing(call, context, notify) {

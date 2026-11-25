@@ -5,7 +5,7 @@ import {enableHealthSharing, stopHealthSharing} from '../web/health-sharing.js';
 const context = {endpointId:'phone', revision:7};
 function fixture() {
   const calls = [], grants = new Set();
-  let enrollment, source, action, consent, prepared = false, sharing = false;
+  let enrollment, source, action, consent, pendingApproval, prepared = false, sharing = false;
   async function call(name, input = {}) {
     calls.push(name);
     switch (name) {
@@ -39,8 +39,18 @@ function fixture() {
         consent.purpose = input.purpose;
         return {state:'review',reviewId:'reserved',approvalAvailable:true,request:{scope:consent}};
       case 'healthConfirmSourceConsent':
+        assert.equal(pendingApproval, undefined, 'a pending approval must be checked before another write');
         grants.add(consent.category + consent.purpose);
-        return {state:'recorded',decision:'approved',category:consent.category,purpose:consent.purpose};
+        pendingApproval = {state:'recorded',decision:'approved',category:consent.category,purpose:consent.purpose};
+        // The server acknowledges the write. The native bridge holds it until
+        // reconciliation returns the original operation's final receipt.
+        return {state:'held',reason:'original_result_unconfirmed'};
+      case 'healthRecoverSourceConsent': {
+        assert.ok(pendingApproval);
+        const receipt = pendingApproval;
+        pendingApproval = undefined;
+        return receipt;
+      }
       case 'healthPreparePhoneStorage':
         assert.ok(grants.has(input.category + 'transmission'));
         return {ready:true};
@@ -65,6 +75,8 @@ test('one switch opens Apple first, sets up a new phone and stops its saved upda
   await enableHealthSharing(call,context,()=>{});
   assert.equal(calls[0],'healthChooseRecords');
   assert.equal(calls.filter(c=>c==='healthApplyRemoteSetup').length,3);
+  assert.equal(calls.filter(c=>c==='healthConfirmSourceConsent').length,10);
+  assert.equal(calls.filter(c=>c==='healthRecoverSourceConsent').length,10);
   assert.equal(calls.at(-1),'healthRememberedChoice');
   await stopHealthSharing(call);
   assert.equal((await call('healthSavedRecoveryChoice')).persistence,'savedDisabled');
@@ -82,4 +94,32 @@ test('failed server confirmation leaves sharing off', async () => {
   await assert.rejects(enableHealthSharing((name,input)=>name==='healthApplyRemoteSetup' ?
     {state:'recorded',kind:'enroll',outcome:'rejected'} : call(name,input),context,()=>{}),/did not confirm/);
   assert.ok(!calls.includes('healthRememberedChoice'));
+});
+test('an unconfirmed permission stops setup without repeating the approval', async () => {
+  const {call,calls} = fixture();
+  await assert.rejects(enableHealthSharing((name,input)=>name==='healthRecoverSourceConsent' ?
+    {state:'held',reason:'transport_or_context'} : call(name,input),context,()=>{}),/permission/i);
+  assert.equal(calls.filter(c=>c==='healthConfirmSourceConsent').length,1);
+  assert.ok(!calls.includes('healthPreparePhoneStorage'));
+  assert.ok(!calls.includes('healthRememberedChoice'));
+});
+test('retry checks an approval left pending by the previous build', async () => {
+  const {call,calls} = fixture();
+  let interrupted = false;
+  await assert.rejects(enableHealthSharing(async (name,input) => {
+    const result = await call(name,input);
+    if (name === 'healthConfirmSourceConsent') { interrupted = true; throw Error('App closed'); }
+    return result;
+  },context,()=>{}), /App closed/);
+  const offset = calls.length;
+  await enableHealthSharing(async (name,input) => {
+    if (interrupted && name === 'healthLoadSourceConsent') {
+      interrupted = false;
+      return {state:'held',reason:'original_pending'};
+    }
+    return call(name,input);
+  },context,()=>{});
+  assert.equal(calls.slice(offset).filter(name=>name==='healthConfirmSourceConsent').length,9);
+  assert.equal(calls.filter(name=>name==='healthRecoverSourceConsent').length,10);
+  assert.equal(calls.at(-1),'healthRememberedChoice');
 });
