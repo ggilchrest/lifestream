@@ -85,13 +85,14 @@ async function assistantSharing(call, context, source, action, category) {
     enrollmentId:source.currentEnrollmentId, ...(category ? {category} : {})});
 }
 async function allowAnswers(call, context, source) {
-  if ((await assistantSharing(call,context,source,'status')).enabled) return;
+  if ((await assistantSharing(call,context,source,'status')).enabled) return false;
   for (const category of source.categories) {
     const result = await assistantSharing(call,context,source,'allowCategory',category);
     requireResult(result.approved === true, 'Could not share this Health category with your Assistant.');
   }
   requireResult((await assistantSharing(call,context,source,'enable')).enabled === true,
     'Your Assistant could not confirm access to your Health records.');
+  return true;
 }
 
 export async function enableHealthSharing(call, context, notify) {
@@ -100,15 +101,40 @@ export async function enableHealthSharing(call, context, notify) {
   requireResult(access.completed === true, 'Apple Health could not finish the permission request.');
   notify('Connecting this phone to Lifestream…');
   let choices = await call('healthSetupChoices');
+  let source = await prepareSource(call);
+  const selected = source.categories.filter(c => categories.includes(c));
+  requireResult(selected.length, 'This Health source has no supported record types.');
   if (!choices.choices?.length) {
-    const source = await prepareSource(call);
-    const selected = source.categories.filter(c => categories.includes(c));
-    requireResult(selected.length, 'This Health source has no supported record types.');
     for (const category of selected) {
       for (const purpose of ['collection', 'transmission']) await consent(call, source, category, purpose);
       const storage = await call('healthPreparePhoneStorage', {enrollmentId:source.currentEnrollmentId, category});
       requireResult(storage.ready === true, 'The server could not prepare storage for these records.');
     }
+  }
+  const newlyShared = await allowAnswers(call,context,source);
+  try {
+    if (newlyShared) {
+      // Changing the recipient can revise the source. Retire the previous
+      // native configuration before binding the phone to the new revision.
+      const fresh = await phoneSource(call);
+      requireResult(fresh?.currentEnrollmentId === source.currentEnrollmentId && fresh.sourceNamespace === source.sourceNamespace,
+        'The Health source changed during setup.');
+      if (fresh.policyRevision !== source.policyRevision || choices.choices?.length) {
+        const released = await call('healthReleaseSharingProfile',{enrollmentId:fresh.currentEnrollmentId});
+        requireResult(released.ready, 'This phone is finishing its previous Health sync.');
+        choices = await call('healthSetupChoices');
+      }
+      source = fresh;
+    }
+    await finishPhoneSharing(call,context,choices,source,selected);
+  } catch (error) {
+    if (newlyShared) await assistantSharing(call,context,source,'disable');
+    throw error;
+  }
+}
+
+async function finishPhoneSharing(call, context, choices, source, selected) {
+  if (!choices.choices?.length) {
     const now = Date.now();
     const prepared = await call('healthPrepareExistingSource', {schemaVersion:'1.0.0', sourceNamespace:source.sourceNamespace,
       enrollmentId:source.currentEnrollmentId, endpointId:context.endpointId, contextRevision:context.revision, policyRevision:source.policyRevision,
@@ -125,9 +151,7 @@ export async function enableHealthSharing(call, context, notify) {
   }
   const saved = await call('healthRememberedChoice', {...binding, operation:'remember', humanConfirmed:true, updatesEnabled:true});
   requireResult(saved.persistence === 'savedEnabled' && saved.updatesEnabled === true, 'This phone could not save the sharing preference.');
-  const currentSource = await phoneSource(call);
-  requireResult(currentSource, 'This phone could not find its Health source.');
-  await allowAnswers(call,context,currentSource);
+
 }
 
 export async function stopHealthSharing(call) {

@@ -17,6 +17,7 @@ function fixture() {
   async function call(name, input = {}) {
     calls.push(name);
     switch (name) {
+      case 'healthReleaseSharingProfile': prepared=false;return {ready:true};
       case 'healthAssistantSharing':
         assert.equal(input.assistantId,context.assistantId);
         if(input.action==='allowCategory')return {approved:true};
@@ -89,7 +90,7 @@ test('one switch opens Apple first, sets up a new phone and stops its saved upda
   assert.equal(calls.filter(c=>c==='healthApplyRemoteSetup').length,3);
   assert.equal(calls.filter(c=>c==='healthConfirmSourceConsent').length,10);
   assert.equal(calls.filter(c=>c==='healthRecoverSourceConsent').length,10);
-  assert.equal(calls.at(-1),'healthAssistantSharing');
+  assert.equal(calls.at(-1),'healthRememberedChoice');
   await stopHealthSharing(call);
   assert.equal((await call('healthSavedRecoveryChoice')).persistence,'savedDisabled');
   const offset=calls.length;
@@ -133,7 +134,7 @@ test('retry checks an approval left pending by the previous build', async () => 
   },context,()=>{});
   assert.equal(calls.slice(offset).filter(name=>name==='healthConfirmSourceConsent').length,9);
   assert.equal(calls.filter(name=>name==='healthRecoverSourceConsent').length,10);
-  assert.equal(calls.at(-1),'healthAssistantSharing');
+  assert.equal(calls.at(-1),'healthRememberedChoice');
 });
 
 test('the switch shares every selected category with the same Assistant and revokes access on stop', async () => {
@@ -161,4 +162,29 @@ test('a failed category grant cannot complete Assistant sharing', async () => {
     return call(name,input);
   },context,()=>{}), /Could not share/);
   assert.equal(enabled,false);
+});
+
+test('a new recipient revision is read before the phone saves its sync configuration', async () => {
+  const {call} = fixture();let revision=1,preparedAt,releaseCount=0;
+  await enableHealthSharing(async (name,input) => {
+    if(name==='healthInventory'){
+      const result=await call(name,input);
+      return {sources:result.sources.map(s=>({...s,policyRevision:revision}))};
+    }
+    if(name==='healthAssistantSharing'&&input.action==='enable')revision=2;
+    if(name==='healthReleaseSharingProfile')releaseCount++;
+    if(name==='healthPrepareExistingSource')preparedAt=input.policyRevision;
+    return call(name,input);
+  },context,()=>{});
+  assert.equal(releaseCount,1);
+  assert.equal(preparedAt,2);
+});
+test('failed local setup withdraws a newly granted Assistant permission', async () => {
+  const {call}=fixture();let withdrawn=false;
+  await assert.rejects(enableHealthSharing(async(name,input)=>{
+    if(name==='healthPrepareExistingSource')return {state:'unavailable'};
+    if(name==='healthAssistantSharing'&&input.action==='disable'){withdrawn=true;return {enabled:false};}
+    return call(name,input);
+  },context,()=>{}),/prepare this phone/);
+  assert.equal(withdrawn,true);
 });

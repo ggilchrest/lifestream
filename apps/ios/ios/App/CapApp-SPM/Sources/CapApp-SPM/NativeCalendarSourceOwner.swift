@@ -1194,6 +1194,15 @@ extension NativeCalendarSourceOwner {
 extension NativeCalendarSourceOwner {
     /// An explicit original session restore first retires the SAME Health owner.
     /// Unknown callbacks retain this waiter; there is no fallback/reset timeout.
+    func releaseSharingProfile(enrollment: UUID, completion: @escaping (Bool) -> Void) {
+        guard !composed, active == nil, !controlRetiring, applicationRestoreCompletion == nil,
+              savedRecoveryJob == nil, transport.effectiveIsSelf else { completion(false); return }
+        guard connection.hasHealthConfigurationForSavedRecovery else { completion(true); return }
+        guard let runtime = controlRuntime, connection.host.runtime === runtime,
+              runtime.configuration?.enrollment == enrollment, let binding = controlBinding,
+              current(binding) else { completion(false); return }
+        prepareApplicationConnectionRestore { [self] in completion(authorityCurrent(binding)) }
+    }
     func prepareApplicationConnectionRestore(_ done:@escaping()->Void){
         guard applicationRestoreCompletion==nil else{return}
         applicationRestoreCompletion=done;applicationRestoreOwnerReleased=false
