@@ -1,3 +1,4 @@
+import {renderChatSurface} from './chat-surface.js';
 import {AcknowledgmentCache} from './acknowledgments.js';
 import {installIncidentReview} from './incidents.js';
 import { installAutomaticMemory } from "./automatic-memory.js";
@@ -45,7 +46,8 @@ export function installConversationRoom({anchor,api,context}){
  const output=new ConversationOutput({onState:state,onReplyAudio:detail=>window.dispatchEvent(new CustomEvent('lifestream-response-playback',{detail})),onClosed:()=>{urgent?.audioClosed();capture?.stop(false);renderBusy();},onError:error=>{capture?.stop();status(error.message,true);renderBusy();},
  onMessage:message=>{
   if(message.type==='turnStarted'){if(!same(voiceScope,voiceEpoch))throw new Error('Voice scope changed.');$('timing').textContent='No pending timing adjustment.';capture.receive(message);output.beginReply(message.interactionTraceId);renderBusy();return true;}
-  if(message.type==='transcript'){if(!capture?.traces.has(message.interactionTraceId)||!same(voiceScope,voiceEpoch)||typeof message.text!=='string'||message.text.length>16000)throw new Error('Unexpected voice transcript.');const entry=addTurn('user',message.text);mark(entry,'Recognized voice');return true;}
+  if(message.type==='listSurface'){if(!capture?.traces.has(message.interactionTraceId)||!same(voiceScope,voiceEpoch))return true;const entry=voiceTurns.get(message.interactionTraceId);if(entry)renderList(message.messages,entry,voiceScope,voiceEpoch);return true;}
+  if(message.type==='transcript'){if(!capture?.traces.has(message.interactionTraceId)||!same(voiceScope,voiceEpoch)||typeof message.text!=='string'||message.text.length>16000)throw new Error('Unexpected voice transcript.');const entry=addTurn('user',message.text);mark(entry,'Recognized voice');if(message.reviewListRequest===true&&!$('message').value)$('message').value=message.text;return true;}
   if(message.event?.payload.type==='terminal'){capture?.receive(message);renderBusy();}
   return false;
  },onReplyText:(trace,text)=>{if(!same(voiceScope,voiceEpoch))throw new Error('Voice scope changed.');let entry=voiceTurns.get(trace);if(!entry){entry=addTurn('assistant','',{interactionId:trace});voiceTurns.set(trace,entry);if(voiceTurns.size>64)voiceTurns.delete(voiceTurns.keys().next().value);}entry.text=text;entry.node.querySelector('.room-turn-text').textContent=text;mark(entry,'Voice response · playback pending');},onReplyComplete:trace=>{const entry=voiceTurns.get(trace);if(entry)mark(entry,'Voice playback finished locally');state('Openings off');if(capture?.active)capture.onState('Microphone on · speak to reply or interrupt');status('Voice reply completed. Openings remain off until you enable them.');renderBusy();},onStopped:(trace,reason)=>{if(urgent?.stopped(trace)){state('Speech stopped');return;}const entry=deliveries.get(trace)||voiceTurns.get(trace);if(entry){entry.stopped=true;mark(entry,reason);}if(trace)state('Speech stopped');},onComplete:trace=>{
@@ -114,9 +116,17 @@ export function installConversationRoom({anchor,api,context}){
    entry.acceptance=(mode==='speech'?output.accept(delivery):Promise.resolve()).then(()=>acknowledge(entry,'endpointAccepted'));await entry.acceptance;if(!same(s,ticket))return;
    if(!entry.stopped)mark(entry,mode==='speech'?'Endpoint accepted · playback pending':'Endpoint accepted');status('Synthetic opening received in this conversation. Human reception is not inferred.');
   }catch(error){if(epoch===ticket)output.stop(error.message);if(!controller.signal.aborted)throw error;}finally{if(request===controller)request=null;if(epoch===ticket){busy=false;renderBusy();}}});
- $('message-form').onsubmit=run(async()=>{const s=scope(),ticket=epoch,text=$('message').value.trim();if(!text||busy)return;busy=true;renderBusy();let entry,controller;try{capture.stop();await suspend();if(!same(s,ticket))return;addTurn('user',text);$('message').value='';entry=addTurn('assistant','');mark(entry,'Responding');status('Responding…');presentation.state('preparing');controller=request=new AbortController();
-  const response=await fetch('/api/runtime/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-lifestream-csrf':auth().session.csrfToken},body:JSON.stringify({assistantId:s.assistantId,...(s.relationshipId?{relationshipId:s.relationshipId}:{}),userInput:text}),signal:controller.signal});if(!response.ok)throw new Error(`Conversation request failed (${response.status}).`);const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='',completed=false;
-   while(true){const {done,value}=await reader.read();if(done)break;if(!same(s,ticket))throw new Error('Conversation scope changed.');buffer+=decoder.decode(value,{stream:true});if(buffer.length>262144)throw new Error('Response exceeded its stream limit.');const chunks=buffer.split('\n\n');buffer=chunks.pop()||'';for(const chunk of chunks){const event=chunk.match(/^event: (.+)$/m)?.[1],raw=chunk.match(/^data: (.+)$/m)?.[1];if(!raw)continue;const data=JSON.parse(raw);if(event==='message.delta'){entry.text+=data.text||'';if(entry.text.length>64000)throw new Error('Response exceeded its display limit.');entry.node.querySelector('.room-turn-text').textContent=entry.text;}if(event==='interaction.error')throw new Error(data.message||'Response failed.');if(event==='interaction.completed')completed=true;}}
+ let buttonRevision,buttonSource;
+ function renderList(messages,entry,s,ticket){
+  renderChatSurface(entry.node.querySelector('.room-turn-text'),messages,(name,item,revision)=>{
+   if(busy||!same(s,ticket))return;
+   buttonSource=entry;buttonRevision=revision;$('message').value=name==='chat'?item:name+' '+item+(name==='snooze'?' for 10 minutes':'');
+   $('message-form').requestSubmit();buttonRevision=undefined;buttonSource=undefined;
+  });
+ }
+ $('message-form').onsubmit=run(async()=>{const s=scope(),ticket=epoch,source=buttonSource,itemRevision=buttonRevision,text=$('message').value.trim();if(!text||busy)return;busy=true;renderBusy();let entry,controller;try{capture.stop();await suspend();if(!same(s,ticket))return;addTurn('user',text);$('message').value='';entry=addTurn('assistant','');mark(entry,'Responding');status('Responding…');presentation.state('preparing');controller=request=new AbortController();
+  const response=await fetch('/api/runtime/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-lifestream-csrf':auth().session.csrfToken},body:JSON.stringify({assistantId:s.assistantId,...(s.relationshipId?{relationshipId:s.relationshipId}:{}),userInput:text,itemRevision,requestId:crypto.randomUUID(),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone}),signal:controller.signal});if(!response.ok){const error=await response.json().catch(()=>null);if(error?.code==='list_operation_failed')throw Error(error.message);throw new Error(`Conversation request failed (${response.status}).`);}const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='',completed=false;
+   while(true){const {done,value}=await reader.read();if(done)break;if(!same(s,ticket))throw new Error('Conversation scope changed.');buffer+=decoder.decode(value,{stream:true});if(buffer.length>262144)throw new Error('Response exceeded its stream limit.');const chunks=buffer.split('\n\n');buffer=chunks.pop()||'';for(const chunk of chunks){const event=chunk.match(/^event: (.+)$/m)?.[1],raw=chunk.match(/^data: (.+)$/m)?.[1];if(!raw)continue;const data=JSON.parse(raw);if(event==='message.delta'){entry.text+=data.text||'';if(entry.text.length>64000)throw new Error('Response exceeded its display limit.');entry.node.querySelector('.room-turn-text').textContent=entry.text;}if(event==='message.surface'){renderList(data.messages,entry,s,ticket);if(source?.node.isConnected)renderList(data.messages,source,s,ticket);}if(event==='interaction.error')throw new Error(data.message||'Response failed.');if(event==='interaction.completed')completed=true;}}
    if(!same(s,ticket))return;if(!completed)throw new Error('Response ended without a successful completion.');mark(entry,'Completed');$('timing').textContent='No pending timing adjustment.';status('Reply completed. Openings remain off until you enable them.');presentation.state('idle');
   }catch(error){if(entry)mark(entry,controller?.signal.aborted?'Stopped':'Failed');if(!controller?.signal.aborted)throw error;}finally{if(request===controller)request=null;if(epoch===ticket){busy=false;renderBusy();}}
  });
@@ -129,6 +139,49 @@ export function installConversationRoom({anchor,api,context}){
   if(mode==='speech'&&!value.endpoint.outputModalities.includes('audio'))value=await api('/api/runtime/v1/session-context',{method:'POST',body:JSON.stringify({expectedRevision:value.revision,mode:'audio',audienceScope:value.endpoint.privacyClass==='personal'?'authenticatedSession':'unknown'})});
   if(!same(s,ticket))throw Error('Conversation changed during urgent output setup.');session=value;renderDisclosure();renderBusy();
  }});
+ const wall=document.createElement('section');wall.setAttribute('aria-label','Reminders');$('turns').before(wall);
+ let polling=false;
+ const cards=new Map();
+ function clearWall(){cards.clear();wall.replaceChildren();}
+ async function pollWall(){
+  if(polling||!session?.reminderDisplay||document.hidden||location.hash!=='#conversation')return;
+  const s=scope(),ticket=epoch;
+  const poll=shown=>api('/api/runtime/v1/reminder-display',{method:'POST',body:JSON.stringify({assistantId:s.assistantId,shown})});
+  polling=true;
+  try{
+   const result=await poll();
+   if(!same(s,ticket)||document.hidden)return;
+   const visible=new Set();
+   for(const card of result.cards){
+    if(!same(s,ticket)||document.hidden)return;
+    visible.add(card.key);
+    if(cards.has(card.key)&&cards.get(card.key).dataset.disclosure!==card.disclosure){cards.get(card.key).remove();cards.delete(card.key);}
+    if(!cards.has(card.key)){
+     const section=document.createElement('article');section.dataset.disclosure=card.disclosure;
+     if(!renderChatSurface(section,card.surface,(name,item,revision)=>{
+      if(!same(s,ticket)||busy)return;
+      buttonRevision=revision;$('message').value=name==='chat'?item:name+' '+item+(name==='snooze'?' for 10 minutes':'');
+      $('message-form').requestSubmit();buttonRevision=undefined;
+     }))continue;
+     cards.set(card.key,section);wall.append(section);
+    }
+    const buttons=cards.get(card.key).querySelectorAll('button');
+    for(const button of buttons)button.disabled=!card.delivered;
+    if(!card.delivered){
+     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+     if(!same(s,ticket)||document.hidden||!cards.get(card.key)?.isConnected)return;
+     const receipt=await poll(card.key);
+     if(!same(s,ticket)||document.hidden)return;
+     if(receipt.cards.some(x=>x.key===card.key&&x.delivered&&x.disclosure===card.disclosure))for(const button of buttons)button.disabled=false;
+    }
+   }
+   for(const [key,section] of cards)if(!visible.has(key)){section.remove();cards.delete(key);}
+  }catch{clearWall();}finally{polling=false;}
+ }
+ const wallTimer=setInterval(()=>void pollWall().catch(clearWall),1500);
+ for(const event of ['lifestream-audience','lifestream-auth','lifestream-assistant','lifestream-session-context','hashchange'])window.addEventListener(event,clearWall);
+ document.addEventListener('visibilitychange',clearWall);
+ window.addEventListener('pagehide',()=>{clearInterval(wallTimer);clearWall();});
  const scopeChanged=()=>{let next='';try{next=JSON.stringify(scope());}catch{}if(next===scopeKey)return;clear();scopeKey=next;$('scope').textContent=next?'Refresh to read this Assistant’s session.':'Sign in and select an Assistant.';if(next){presentation.refresh();automaticMemory.refresh();}if(next)void refresh().catch(error=>status(error.message,true));};
  for(const event of ['lifestream-auth','lifestream-assistant','lifestream-relationship'])window.addEventListener(event,scopeChanged);
  // Presentation owns these event resets and refreshes. A second reset here

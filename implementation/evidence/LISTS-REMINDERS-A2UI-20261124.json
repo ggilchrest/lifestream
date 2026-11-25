@@ -1,0 +1,93 @@
+{
+  "feature": "Personal lists, reminders and Google A2UI chat surfaces",
+  "disposition": "complete",
+  "scope": "Source implementation and controlled host, gateway and browser verification",
+  "branch": "codex/lists-reminders-a2ui",
+  "baseRevision": "a75dd2d150bdc81d4500b8c010d7b500546ce9c0",
+  "sourceRevision": "c5f9ac8acf927948e36cd4a2b38dd005bd8e3b4d",
+  "environment": "Isolated Node 24 Linux host with synthetic accounts, local SQLite, controlled clock and fixture PWCE transport. Browser checks used Windows Chrome and Linux headless Chromium.",
+  "checks": [
+    {
+      "commands": [
+        "node scripts/build.mjs",
+        "node node_modules/eslint/bin/eslint.js .",
+        "node scripts/workspace.mjs check",
+        "node apps/ios/scripts/build-web.mjs",
+        "git diff a75dd2d..HEAD --check"
+      ],
+      "result": "passed"
+    },
+    {
+      "command": "node --test scripts/workspace.test.mjs",
+      "environment": "Linux",
+      "passed": 44
+    },
+    {
+      "command": "node --test --test-concurrency=1 apps/server/test/audio-playback.test.ts apps/server/test/personal-lists.test.ts apps/server/test/personal-lists-http.test.ts apps/server/test/reminder-wall-http.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "command": "node --test apps/control-web/test/urgent-attention.test.mjs apps/control-web/test/chat-surface.test.mjs apps/control-web/test/conversation-camera.test.mjs",
+      "environment": "Windows with PLAYWRIGHT_MODULE set to a local Playwright installation",
+      "passed": 27,
+      "skipped": 0
+    },
+    {
+      "command": "PLAYWRIGHT_MODULE=/tmp/ls-chrome-verifier/driver.mjs NODE_COMPILE_CACHE=/tmp/ls-node-cache node --test apps/server/test/reminder-wall-http.test.ts",
+      "environment": "Linux with headless Chromium",
+      "passed": 1,
+      "skipped": 0
+    },
+    {
+      "check": "Ajv validated list with pagination, trigger form, private reminder card and generic reminder card against the Google A2UI v0.8 standard catalog server-to-client schema",
+      "schemaSha256": "375103d0a361003424c6fc182d7421f74290b15cdf05fc0ba34812b2e0bf839d",
+      "schema": "https://raw.githubusercontent.com/google/A2UI/main/specification/v0_8/json/server_to_client_with_standard_catalog.json",
+      "messagesPassed": 8
+    },
+    {
+      "command": "NODE_COMPILE_CACHE=/tmp/ls-node-cache node --test --test-concurrency=4 --experimental-strip-types 'tests/**/*.test.ts' 'packages/**/*.test.ts' 'apps/**/*.test.ts'",
+      "total": 2874,
+      "passed": 2871,
+      "failed": 2,
+      "skipped": 1,
+      "failures": [
+        "Game reflection deadline exceeded",
+        "Telegram candidate startup polling deadline exceeded"
+      ],
+      "skip": "Generated browser pixels traverse authenticated frame transport and are disposed after interpretation"
+    },
+    {
+      "command": "NODE_COMPILE_CACHE=/tmp/ls-node-cache node --test --test-concurrency=1 apps/server/test/game-activity-memory.test.ts apps/server/test/telegram-candidate.test.ts",
+      "passed": 18,
+      "failed": 1,
+      "detail": "Game reflection passed. The Telegram candidate startup polling deadline recurred."
+    },
+    {
+      "commands": [
+        "NODE_COMPILE_CACHE=/tmp/ls-node-cache node scripts/start-candidate.mjs --help",
+        "NODE_COMPILE_CACHE=/tmp/ls-node-cache node --test apps/server/test/telegram-candidate.test.ts"
+      ],
+      "passed": 1,
+      "failed": 0,
+      "detail": "The original Telegram launcher test passed with a warm Node compile cache."
+    }
+  ],
+  "browserScenarios": [
+    "Windows Chrome added wood glue to a shopping list in chat, displayed the saved list, activated Done and opened a new authenticated session that showed the completed item.",
+    "Windows Chrome set a 4 PM reminder in America/Chicago and closed the authoring session. The synthetic phone remained offline. Fresh person-specific shop presence routed the due reminder to one visible wall card. Repolling did not duplicate it. The render receipt recorded delivery. Done recorded acknowledgment. A fresh Windows session showed the completed item and no remaining work."
+  ],
+  "fixtureCoverage": [
+    "Authenticated typed and verified-speaker turns, unidentified speaker draft, trusted component actions",
+    "Principal isolation, audience-redacted cards and stale action fencing",
+    "Time, place and affirmative departure cues, explicit-time precedence and loss of signal",
+    "Snooze, reschedule, cancel, restart and retry with the same delivery identity"
+  ],
+  "qualificationOutstanding": [
+    "Actual person and zone bindings through the deployed PWCE gateway",
+    "Physical display audience and visibility changes, phone fallback and lost-receipt reconnect",
+    "Trusted speaker verification on device",
+    "Signed native iPhone build, asset and audio acceptance, native chat and buttons",
+    "Native Windows host qualification. Windows Chrome used the Linux host because the existing recovery journal directory fsync failed on the Windows host."
+  ]
+}

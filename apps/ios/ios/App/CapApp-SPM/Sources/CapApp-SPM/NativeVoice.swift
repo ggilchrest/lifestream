@@ -264,7 +264,7 @@ final class NativeVoice {
             if orderedInput.isResolved(final.inputSequence) { return }
             guard orderedInput.acceptFinal(sequence:final.inputSequence,revision:final.revision) else{throw VoiceError.invalidMessage}
             let event=VoiceDiagnostic.transcript(final.text);diagnosticTurn?(event,nil,inFlightDiagnostics[final.inputSequence])
-            if event == .voiceTranscribed { activity.transcribed();publish();emit(["type":"transcript","role":"user","text":final.text,"trace":final.trace]) };return
+            if event == .voiceTranscribed { activity.transcribed();publish();emit(["type":"transcript","role":"user","text":final.text,"trace":final.trace,"reviewListRequest":m["reviewListRequest"] as? Bool ?? false]) };return
         }
         if reply.retired.contains(trace){
             if type=="response",let payload=event?["payload"] as? [String:Any],payload["type"] as? String=="terminal",let turn=auditTurns[trace],let labels=transport.audit.correlation(){_=transport.audit.record(.retiredTerminal,session:labels.session,attempt:labels.attempt,turn:turn)}
@@ -275,6 +275,10 @@ final class NativeVoice {
             outputGeneration += 1;playback.begin(generation:outputGeneration);lastAudioArrival=nil;played=0;armResponseDeadline();activity.committed();phase="Transcribing your speech";publish();return}
         guard trace==reply.trace else{throw VoiceError.staleTurn}
         if type=="stopPlayback"{interruptReply("Stopped by runtime");if let reason=m["reason"] as? String,["audio_input_scope_changed","runtime_input_stale"].contains(reason){authorizationChanged?()};return}
+        if type=="listSurface" {
+            guard reply.trace==trace,let messages=m["messages"] as? [[String:Any]],messages.count==2 else{return}
+            emit(["type":"listSurface","trace":trace,"messages":messages]);return
+        }
         if type=="response",let payload=event?["payload"] as? [String:Any]{
             if payload["type"] as? String == "textDelta",let text=payload["text"] as? String,text.count<=16000{activity.receivedText();emit(["type":"textDelta","text":text,"trace":trace])}
             if payload["type"] as? String == "terminal"{let state=payload["state"] as? String;auditRecord(state=="completed" ? .terminalCompleted:state=="interrupted" ? .terminalInterrupted:.terminalFailed);let problem=payload["error"] as? [String:Any];if let failure=VoiceDiagnostic.terminal(state:payload["state"] as? String,code:problem?["code"] as? String){let origin=FailureOrigin.decode(payload["failureOrigin"]);diagnosticFailure?(failure.0,failure.1,replyDiagnosticTurn,origin);outputGeneration += 1;playback.stop(generation:outputGeneration);player?.stop();reply.retire();turnPending=false;deadline?.invalidate();phase=VoiceDiagnostic.userFailureMessage(origin.stage);publish();return};try reply.finish(trace);diagnosticTurn?(.voiceGenerationDone,nil,replyDiagnosticTurn);activity.generationFinished();applyPlayback(playback.finish(generation:outputGeneration,at:ProcessInfo.processInfo.systemUptime));completeIfReady()}

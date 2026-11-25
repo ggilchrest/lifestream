@@ -1,3 +1,5 @@
+import type {personalListReply} from './list-surface.ts';
+import {listCommand} from './personal-lists.ts';
 import {startVisualTurnEvidence,type VisualTurnRecorder,type VisualTurnOutcome} from './visual-turn-evidence.ts';
 import {AudioPlayback} from "./audio-playback.ts";
 import { randomUUID } from "node:crypto";
@@ -26,7 +28,7 @@ export const hasAudioEnergy = (dataBase64: string, threshold = 0.015): boolean =
 export const VOICE_TURN_DEADLINE_MS = 180_000;
 export const SPEECH_SEGMENT_DEADLINE_MS = 45_000;
 export type AudioOutputLease={current:()=>boolean;release:()=>void};
-export type AudioDependencies = { stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; resolveVoice?:(request:{assistantId?:string})=>VoiceBinding; acknowledgment?:(request:AudioRequest)=>{revision:number;binding:string;clipIds:string[]}|null; inputCurrent?: (request: AudioRequest) => boolean; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
+export type AudioDependencies = { prepareSpokenList?:(request:AudioRequest,trace:string,command:NonNullable<ReturnType<typeof listCommand>>)=>(()=>ReturnType<typeof personalListReply>)|undefined; stt: SpeechToTextProvider; inference: InferenceProvider; tts: VoxCpmProvider; resolveVoice?:(request:{assistantId?:string})=>VoiceBinding; acknowledgment?:(request:AudioRequest)=>{revision:number;binding:string;clipIds:string[]}|null; inputCurrent?: (request: AudioRequest) => boolean; foregroundStarted?: (request:{assistantId?:string;relationshipId?:string})=>(()=>void); outputLease?: (endpointId:string,deadlineAt:string)=>AudioOutputLease; prepare?: (request: { assistantId?: string; relationshipId?: string; userInput: string; endpointId: string }) => HostRuntimeInput };
 export type SpeechExpressionObservation={speechStage:"providerReported"|"audioEmitted"|"synthesized";mappingRevision:string;disposition:"notObserved"|"fullyApplied"|"partiallyApplied"|"providerFailure"|"cancelled"|"timedOut";degradedDimensions:string[];appliedDelivery:{deliveryMode?:string;pace?:number;energy?:number}};
 export type OutputOnlySpeech={assistantId?:string;urgency?:'low'|'critical';expressionObserved?:(observation:SpeechExpressionObservation)=>void;text:string;interactionId:string;endpointId:string;deadlineAt:string;warmth:number;signal:AbortSignal;current:()=>boolean;beforeEmission:()=>void;emitted:()=>void;synthesized?:(signal:AbortSignal)=>Promise<void>;interrupted?:(reason:"expired"|"cancelled")=>void};
 
@@ -223,6 +225,7 @@ export class AudioSession {
     const audio = async function* () { for (const frame of frames) { if (!current()) throw new Error("Audio input scope changed before recognition consumed the frame."); yield { type: "frame" as const, audioInputId: request.audioInputId, frame }; } yield { type: "end" as const, audioInputId: request.audioInputId, nextSequence: frames.length, sampleCount: frames.reduce((total, frame) => total + frame.sampleCount, 0) }; }();
     try {
       let transcript: string | undefined;
+      let command:ReturnType<typeof listCommand>,spokenList:(()=>ReturnType<typeof personalListReply>)|undefined;
       for await (const stt of this.deps.stt.transcribe({ deadlineAt: new Date(Math.min(Date.parse(deadlineAt), Date.now() + 30_000)).toISOString(), now: () => new Date().toISOString() }, audio, this.controller.signal)) {
         // A recognizer can finish a buffered result after cancellation. Input
         // scope may still be current, but that result no longer owns output.
@@ -233,7 +236,9 @@ export class AudioSession {
         if (stt.kind === "terminal" && stt.outcome !== "succeeded") throw new Error(`Speech recognition ${stt.outcome}; check the selected STT service and retry this turn.`);
         if (stt.kind !== "data" || stt.payload.type !== "committed" || transcript !== undefined) continue;
         transcript = stt.payload.text;
-        send(this.socket, { type: "transcript", interactionTraceId: traceId, state: "committed", text: stt.payload.text });
+        command=listCommand(transcript);
+        if(command)spokenList=this.deps.prepareSpokenList?.(request,traceId,command);
+        send(this.socket, { type: "transcript", interactionTraceId: traceId, state: "committed", text: stt.payload.text,...(command&&!spokenList?{reviewListRequest:true}:{}) });
       }
       // Finish recognition and its transport/deadline before starting the
       // independently bounded inference/speech phases. Never emit a completed
@@ -283,6 +288,17 @@ export class AudioSession {
         const generation = (async () => {
         this.invalidateIfStale();if(controller.signal.aborted)throw new Error('audio turn interrupted');
         if (this.currentInput?.admitWorld && !this.currentInput.admitWorld()) throw new Error("World context expired before speech inference admission");
+        if(command){
+          if(!admissionCurrent())throw Error('Voice scope changed.');
+          // The verified binding is checked again after STT settles. Unidentified
+          // speech is a draft that can be submitted in the authenticated chat.
+          const reply=spokenList?.();
+          answer=reply?.text??'Review the recognized list request and send it from your personal chat.';
+          response(this.socket,traceId,this.sequence++,{type:'textDelta',text:answer});
+          if(reply)send(this.socket,{type:'listSurface',interactionTraceId:traceId,messages:reply.messages});
+          for(const part of [...segmenter.push(answer),...segmenter.flush()])await queue.put(part.text);
+          queue.close();return;
+        }
         if(!controller.signal.aborted&&current()&&(!outputLease||outputLease.current())){try{const catalog=this.deps.acknowledgment?.(request);if(catalog?.clipIds.length){playback?.emittedOutput();send(this.socket,{type:'acknowledgment',interactionTraceId:traceId,catalog});}}catch{/* Optional cached presentation cannot fail an ordinary reply. */}}
         try{this.currentInput?.onInferenceRequest?.(prompt);}catch{/* Optional inclusion bookkeeping is not speech authority. */}
         this.invalidateIfStale();

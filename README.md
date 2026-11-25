@@ -22,6 +22,8 @@ The private specification is a separate Git repository at `.private/`; its conte
 
 The application workspace is implemented. Its current package metadata requires Node 24 or newer and pins `pnpm@10.0.0`. Application checks are `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build`, and `pnpm test:browser-surface`; actual-browser and selected-provider checks have additional environment requirements documented by their harnesses. Bootstrap checks alone do not exercise the application.
 
+For personal chat commands and host display setup, see [Personal lists and reminder displays](docs/personal-lists.md).
+
 ## License
 
 This repository contains an [Apache 2.0 license](LICENSE). This does not resolve licensing of private specification content or authorize its publication; release/licensing reconciliation remains a recorded specification decision.
