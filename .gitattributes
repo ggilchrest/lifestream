@@ -3,3 +3,4 @@
 *.json text eol=lf
 packages/contracts/src/provider-messages.ts text eol=lf
 packages/contracts/src/game-activity.ts text eol=lf
+packages/storage-sqlite/src/migrations/0091_personal_lists.sql text eol=lf

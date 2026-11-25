@@ -2,7 +2,7 @@ import { backup, DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import type { StatementSync } from "node:sqlite";
-import { loadMigrations } from "./migrations/index.ts";
+import { loadMigrations, migrationDigest } from "./migrations/index.ts";
 
 export interface Transaction {
   readonly database: DatabaseSync;
@@ -44,6 +44,18 @@ export class Database {
   migrate(): MigrationRecord[] {
     this.connection.exec("CREATE TABLE IF NOT EXISTS schema_migrations (id INTEGER PRIMARY KEY, name TEXT NOT NULL, digest TEXT NOT NULL, applied_at TEXT NOT NULL)");
     return withTransaction(this.connection, (tx) => {
+      // The preview used this exact SQL as 69, an ID also used by other deployments.
+      const lists = this.migrations.find(migration => migration.id === 91 && migration.name === "personal_lists");
+      if (lists) {
+        const preview = tx.get<{ digest: string }>("SELECT digest FROM schema_migrations WHERE id = 69 AND name = 'personal_lists'");
+        if (preview) {
+          const windowsPreviewDigest = migrationDigest(lists.sql.replace(/\r?\n/g, "\r\n"));
+          if (preview.digest !== lists.digest && preview.digest !== windowsPreviewDigest) {
+            throw new Error("Personal lists preview migration digest mismatch");
+          }
+          tx.run("UPDATE schema_migrations SET id = ?, digest = ? WHERE id = 69", lists.id, lists.digest);
+        }
+      }
       for (const migration of this.migrations) {
         const existing = tx.get<{ id: number; name: string; digest: string }>("SELECT id, name, digest FROM schema_migrations WHERE id = ?", migration.id);
         if (existing && (existing.name !== migration.name || existing.digest !== migration.digest)) throw new Error(`Migration ${migration.id} digest mismatch`);
